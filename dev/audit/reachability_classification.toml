@@ -176,6 +176,8 @@ evidence = "Landed alongside the contabilidad package from the same concurrent w
 
 [[symbol_cluster]]
 name = "approval staleness with no persisted draft to go stale"
+area = "application/filing"
+resolved = true
 class = "should-be-live"
 symbols = []
 evidence = "CLOSED across three steps, each of which unblocked the next. Nothing wrote the encrypted filing-draft namespace, so the staleness lifecycle had no persisted approved draft to refresh; the workflow gate's draft builder now persists it (src/cadrumo/application/modelo/workflow_gate.py). With a subject in the store, drafts_pending recomputes an APROBADO draft's verdict before classifying it, reaching refresh_review_status and making the APROBACION_CADUCADA row reachable (src/cadrumo/application/review/_adapters.py). Finally the row carries the reasons as stable enum tokens and the queue projection renders them through describe_stale_reason (src/cadrumo/application/review/operator.py), so an operator is told WHICH of eight upstream axes moved rather than only that something did. The tokens ride on the item rather than being folded into its summary because FindingReviewItem.summary is a Translatable, an abstract catalogue key that cannot absorb rendered prose; the projection is the boundary where a key becomes words and is therefore the only place a reason may be described. Covered by src/cadrumo/application/review/tests/test_adapters_approval_staleness.py, whose detection case was A/B-confirmed to fail without the wiring and which pairs each assertion with a control."
@@ -183,6 +185,8 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "dead duplicates of a name that is live elsewhere"
+area = "entrypoints/cli"
+resolved = true
 class = "superseded"
 symbols = [
   "load_transactions",
@@ -193,6 +197,8 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "diagnostics-discarding calculate wrapper only tests reach"
+area = "application/modelo"
+resolved = true
 class = "test-support"
 symbols = []
 evidence = "RESOLVED 2026-09-07 by relocation. calculate_modelo_revision_from_bucket_aggregation delegated straight to the _with_diagnostics variant and returned .revision, dropping the non-blocking source advisories, and all twenty-five of its call sites across ten modules were tests while the operator-facing CLI used the diagnostics variant. It now lives at src/cadrumo/tests/bucket_aggregation_calculate.py, so production has ONE way into the source mesh and that way returns the diagnostics with the revision rather than beside it. The hazard was its existence rather than its disuse: the shorter of two adjacent names is the one a future caller reaches for, and it was the one that silently lost the advisories. The shim forwards **kwargs instead of restating twenty-one parameters, because a second copy of the calculate signature could drift from the real one while still type-checking; the wrapper's own filing-repository default was redundant, since the diagnostics variant resolves the same default itself."
@@ -200,6 +206,8 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "approval basis stamped against a catalogue the refresh never sees"
+area = "application/modelo"
+resolved = true
 class = "should-be-live"
 symbols = []
 evidence = "A defect this campaign CREATED, found by re-reading the two wirings together and proved by A/B. Persisting the approved draft gave the staleness lifecycle a subject, and recomputing the verdict in drafts_pending made the aged-out row reachable, but the workflow gate stamped the approval basis against a transient empty TransactionCatalogue while the review queue recomputes it from whatever the bucket holds. Those two disagree by construction in any bucket with a ledger, so every stored draft read as an aged-out approval the first time anyone opened the queue: a permanent high-severity row that is always wrong. The catalogue reaches approval as a fingerprint and nothing else, so approving against the bucket's own catalogue does not give the calculation revision's evidence a second owner; it makes the recorded digest mean what the refresh assumes it means. Fixed at src/cadrumo/application/modelo/workflow_gate.py and covered by test_a_freshly_approved_draft_is_not_immediately_stale in src/cadrumo/application/modelo/tests/test_file_flow_draft_persistence.py, which seeds a bucket transaction first: against an empty ledger the two digests agree by accident and the assertion holds however the basis is stamped. Reverting the fix reproduces TRANSACTION_CATALOGUE_CHANGED on a freshly approved draft."
@@ -207,6 +215,7 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "empty-digest overrides for approvals against a sentinel bucket"
+area = "application/filing"
 class = "test-support"
 symbols = [
   "empty_prior_filing_observations_fingerprint",
@@ -217,6 +226,8 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "lazy profile-key attribute and the alias beside it"
+area = "domain/contribuyente"
+resolved = true
 class = "superseded"
 symbols = [
   "__getattr__",
@@ -227,6 +238,7 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "required half of a symmetric profile-key view"
+area = "domain/contribuyente"
 class = "test-support"
 symbols = [
   "required_profile_keys",
@@ -236,6 +248,7 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "shared scenario validator body two harnesses reach"
+area = "core"
 class = "harness-code"
 symbols = [
   "hydrate_scenario_filing_period",
@@ -245,6 +258,7 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "period vocabulary enumerators kept symmetric"
+area = "core"
 class = "test-support"
 symbols = [
   "accepted_period_codes",
@@ -255,6 +269,8 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "read and write pairs swept for one-sided use"
+area = "adapters/persistence/storage"
+resolved = true
 class = "test-support"
 symbols = []
 evidence = "Adjudicated 2026-09-08 after an independent cross-check. The bucket output-language hint was a read-never-written pair the secure-store gate could not see, because a file-backed artefact is not a SecureBoundRepository, so the shape was swept for directly: same-module function pairs under read/write, load/save, load/store, read/persist, get/set, fetch/persist and decode/encode, where production uses one side and not the other. Five pairs in the shipped tree. Four are already recorded in this ledger with matching evidence -- load_encrypted_envelope, decode_mnemonic, save_corpus_manifest and write_cached_transcription -- and the fifth, load_trace, is not an exact finding at all: observability traces are written by run_context and read back by a human outside the product, not by it. So the sweep surfaced no unrecorded debt, which is the useful result: an independently derived detector rediscovering only adjudicated symbols is evidence this shape is fully covered. No gate was added for it. A fail-closed check over this population could only ever report symbols already carrying a decision, and a check that cannot change state is not a signal."
@@ -1241,6 +1257,7 @@ evidence = "A 4 MiB literal sitting in the block that re-exports the current pub
 
 [[symbol_cluster]]
 name = "checkpoint discard nothing reaches"
+resolved = true
 class = "should-be-live"
 area = "application/flows"
 symbols = ["discard_checkpoint"]
@@ -1256,6 +1273,7 @@ remedy_requires_decision = true
 
 [[symbol_cluster]]
 name = "declared type distinctions nothing annotates"
+resolved = true
 class = "should-be-live"
 area = "core"
 symbols = ["OptionalSourceUrl"]
@@ -1344,6 +1362,7 @@ method = "a reference counts only when it appears as an ast.Name load, an attrib
 
 [[symbol_cluster]]
 name = "collaboration audit trail nothing writes"
+area = "application/modelo"
 class = "should-be-live"
 symbols = [
   "emit_collab_review_only_workspace_opened_event",
@@ -1465,6 +1484,8 @@ remedy_requires_decision = true
 
 [[symbol_cluster]]
 name = "bucket output-language hint read by production and written by nothing"
+area = "adapters/persistence/storage"
+resolved = true
 class = "should-be-live"
 symbols = []
 evidence = "RESOLVED 2026-09-08 by wiring the writer. The hint answers one question the encrypted preference cannot: which language to speak BEFORE the profile is unlocked. resolve_active_profile_output_language falls back to it whenever no bucket session is bound, and the reader fails soft on absence, so while nothing wrote it that fallback always returned None and a language the operator deliberately chose during setup silently reverted to the settings default on every pre-login surface. The custody port carried only the read; it now carries the write and the clear too, and apply_profile_fact_changes mirrors the preference into the hint. That door is the sole place the preference can change and already special-cased the same path to clear the i18n cache, so the mirror sits beside the invalidation it belongs with. Clearing the preference clears the hint, so the two cannot disagree about an absence. The mirror swallows failure for the same reason the read does -- it carries a convenience, and a hint that could not be written must not fail the fact write that owns the real value. Covered by src/cadrumo/application/user_profile/tests/test_language_resolver.py, A/B-confirmed to fail without the call, with a control for the clear."
@@ -1517,6 +1538,7 @@ evidence = "The module is mostly live -- encrypt_review_package_for_recipient, d
 
 [[symbol_cluster]]
 name = "review-only workspace feature with no opener or guard"
+area = "application/modelo"
 class = "should-be-live"
 symbols = [
   "open_review_only_workspace",
@@ -1669,6 +1691,7 @@ evidence = "Two module-level facades over the login-session port. Re-tested agai
 
 [[symbol_cluster]]
 name = "workspace header and draft adapter with live equivalents"
+resolved = true
 class = "superseded"
 area = "application/modelo"
 symbols = ["ModeloWorkspaceVersionHeader", "ModeloDraftBuilderAdapter"]
