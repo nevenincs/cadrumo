@@ -74,9 +74,26 @@ def evaluate(root: Path = _PACKAGE_ROOT, baseline_path: Path = _BASELINE) -> Ref
 
 
 def main() -> int:
-    """Report the verdict; exit 1 when the tree and the baseline disagree."""
+    """Report the verdict; exit 1 when the tree and the baseline disagree.
+
+    A clean run names the debt it is still carrying. Every recorded module is
+    an accepted dangling reference, and a ratchet whose accepted set is not
+    empty must not print nothing when it passes: silence reads as "no dangling
+    references anywhere", which is the opposite of what a non-empty baseline
+    means.
+    """
     verdict = evaluate()
     if verdict.ok:
+        carried = count_dangling()
+        total = sum(carried.values())
+        if not carried:
+            sys.stdout.write("no dangling docstring references; the baseline is empty\n")
+            return 0
+        sys.stdout.write(
+            f"{len(carried)} module(s) carry {total} recorded dangling reference(s), unchanged:\n",
+        )
+        for path, count in sorted(carried.items()):
+            sys.stdout.write(f"  = {path} ({count})\n")
         return 0
     if verdict.added:
         total = sum(verdict.added.values())

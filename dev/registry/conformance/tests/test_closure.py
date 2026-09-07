@@ -265,10 +265,11 @@ def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_
     result = CliRunner().invoke(app, ["closure", "--check", "--as-of", _AS_OF.isoformat()])
 
     assert result.exit_code == 1, result.output
-    assert "release_eligible=false" in result.output
-    assert f"revisions={len(canonical_report.rows)}" in result.output
-    assert "secure_replay:authority_unavailable" in result.output
-    assert "no canonical two-channel filing-export proof authority was supplied" not in result.output
+    assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
+    assert "release_eligible=false" in result.stdout
+    assert f"revisions={len(canonical_report.rows)}" in result.stdout
+    assert "secure_replay:authority_unavailable" in result.stdout
+    assert "no canonical two-channel filing-export proof authority was supplied" not in result.stdout
 
 
 def test_cli_offline_mode_explicitly_restores_the_no_proof_refusal() -> None:
@@ -279,9 +280,10 @@ def test_cli_offline_mode_explicitly_restores_the_no_proof_refusal() -> None:
     )
 
     assert result.exit_code == 1, result.output
-    assert "release_eligible=false" in result.output
-    assert "no canonical two-channel filing-export proof authority was supplied" in result.output
-    assert "secure_replay:authority_unavailable" not in result.output
+    assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
+    assert "release_eligible=false" in result.stdout
+    assert "no canonical two-channel filing-export proof authority was supplied" in result.stdout
+    assert "secure_replay:authority_unavailable" not in result.stdout
 
 
 def test_actual_cli_ignores_a_precomposed_eligible_context_claim() -> None:
@@ -300,8 +302,9 @@ def test_actual_cli_ignores_a_precomposed_eligible_context_claim() -> None:
 
     assert canned_claim.release_eligible
     assert result.exit_code == 1, result.output
-    assert "release_eligible=false" in result.output
-    assert "closure as_of=2026-08-24 registry_validated=true release_eligible=false" in result.output
+    assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
+    assert "release_eligible=false" in result.stdout
+    assert "closure as_of=2026-08-24 registry_validated=true release_eligible=false" in result.stdout
 
 
 def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
@@ -328,8 +331,9 @@ def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
     )
 
     assert result.exit_code == 1, result.output
-    assert "release_eligible=false" in result.output
-    assert "secure_replay:authority_unavailable" in result.output
+    assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
+    assert "release_eligible=false" in result.stdout
+    assert "secure_replay:authority_unavailable" in result.stdout
     assert source.calls == []
     assert filing.calls == []
 

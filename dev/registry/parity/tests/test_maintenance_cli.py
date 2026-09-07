@@ -81,7 +81,8 @@ def test_a_verified_non_empty_workbook_root_exits_zero(tmp_path: pathlib.Path) -
     result = _invoke("workbooks-verify", "--root", str(tmp_path))
 
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    assert result.stderr == "", "the machine-readable report must not leak onto stderr"
+    payload = json.loads(result.stdout)
     assert payload["workbook_count"] == 1
     assert payload["failed_count"] == 0
 
@@ -97,7 +98,8 @@ def test_an_empty_workbook_root_refuses_rather_than_reporting_a_clean_audit(tmp_
     result = _invoke("workbooks-verify", "--root", str(tmp_path))
 
     assert result.exit_code != 0
-    payload = json.loads(result.output)
+    assert result.stderr == "", "the machine-readable report must not leak onto stderr"
+    payload = json.loads(result.stdout)
     assert payload["workbook_count"] == 0
     assert payload["failed_count"] == 0
 
@@ -115,7 +117,8 @@ def test_the_workbook_verdict_and_the_exit_code_agree(tmp_path: pathlib.Path) ->
     _write_formula_workbook(tmp_path / "modelo_390" / "files" / "390-test.xlsx")
 
     result = _invoke("workbooks-verify", "--root", str(tmp_path))
-    failed = json.loads(result.output)["failed_count"]
+    assert result.stderr == "", "the machine-readable report must not leak onto stderr"
+    failed = json.loads(result.stdout)["failed_count"]
 
     assert (result.exit_code != 0) == bool(failed)
 
