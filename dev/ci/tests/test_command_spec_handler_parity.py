@@ -14,17 +14,35 @@ All three surfaced to the operator as a generic refusal that named nothing, and
 none of them was caught by a test of the verb's behaviour, because the verb
 never reached its body.
 """
+
 from __future__ import annotations
+
 import importlib
 import inspect
 from typing import Final
+
 import pytest
+
 from cadrumo.entrypoints.cli.command_spec import CommandSpec
 from cadrumo.entrypoints.cli.command_specs import COMMAND_SPECS
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-_SEQUENCE_HINTS: Final = ('list[', 'tuple[', 'Sequence[')
+
+_SEQUENCE_HINTS: Final = ("list[", "tuple[", "Sequence[")
+
+#: The floor below which this module is not measuring the corpus it claims to.
+#: Both gates below assert the ABSENCE of an offender, and every spec whose
+#: handler does not resolve is skipped -- so a corpus that stopped yielding
+#: bindings would report the same empty offender list as a corpus that agrees
+#: with every handler. 307 of 370 specs bind a handler today; the remaining 63
+#: are group nodes that dispatch nothing.
 _MINIMUM_HANDLER_BINDINGS: Final = 250
+
+#: Likewise for the inner loop: a resolved signature compared against no
+#: parameter at all is a spec this module walked past. 1276 declared parameters
+#: across the corpus today.
 _MINIMUM_DECLARED_PARAMETERS: Final = 1000
+
 
 def _handler_signature(spec: CommandSpec) -> inspect.Signature | None:
     """Return the signature of the handler ``spec`` dispatches to, or ``None``.
@@ -44,13 +62,15 @@ def _handler_signature(spec: CommandSpec) -> inspect.Signature | None:
         return None
     module = importlib.import_module(target.module)
     resolved = module
-    for part in target.qualname.split('.'):
+    for part in target.qualname.split("."):
         resolved = getattr(resolved, part)
     return inspect.signature(resolved)
+
 
 def _annotation_text(parameter: inspect.Parameter) -> str:
     annotation = parameter.annotation
     return annotation if isinstance(annotation, str) else str(annotation)
+
 
 def test_every_spec_parameter_is_accepted_by_its_handler() -> None:
     """A spec may not declare a parameter the handler cannot receive."""
@@ -60,12 +80,13 @@ def test_every_spec_parameter_is_accepted_by_its_handler() -> None:
         if signature is None:
             continue
         accepted = set(signature.parameters)
-        if any((p.kind is inspect.Parameter.VAR_KEYWORD for p in signature.parameters.values())):
+        if any(p.kind is inspect.Parameter.VAR_KEYWORD for p in signature.parameters.values()):
             continue
         for parameter in spec.parameters:
             if parameter.name not in accepted:
-                unknown.append(f'{spec.key}: {parameter.name}')
-    assert not unknown, 'spec parameters the handler cannot accept: ' + ', '.join(sorted(unknown))
+                unknown.append(f"{spec.key}: {parameter.name}")
+    assert not unknown, "spec parameters the handler cannot accept: " + ", ".join(sorted(unknown))
+
 
 def test_repeatable_options_match_the_arity_their_handler_expects() -> None:
     """``multiple`` must agree with whether the handler types a sequence.
@@ -84,11 +105,18 @@ def test_repeatable_options_match_the_arity_their_handler_expects() -> None:
             if target is None or target.annotation is inspect.Parameter.empty:
                 continue
             text = _annotation_text(target)
-            expects_sequence = any((hint in text for hint in _SEQUENCE_HINTS))
-            declared_many = bool(_dp_getattr('dev/ci/tests/test_command_spec_handler_parity.py:115:getattr', parameter, 'multiple', False))
-            if declared_many is not expects_sequence and (not _dp_getattr('dev/ci/tests/test_command_spec_handler_parity.py:116:getattr', parameter, 'is_flag', False)):
-                mismatched.append(f'{spec.key}: {parameter.name} multiple={declared_many} but handler types {text}')
-    assert not mismatched, 'option arity disagrees with the handler: ' + '; '.join(sorted(mismatched))
+            expects_sequence = any(hint in text for hint in _SEQUENCE_HINTS)
+            # `multiple` and `is_flag` are read defensively because they are
+            # genuinely absent from `ArgumentSpec`: 122 of the 1276 declared
+            # parameters are positionals, for which both are false by
+            # construction. Unlike the reads above this fallback is not silent
+            # -- renaming `OptionSpec.multiple` makes every repeatable option
+            # read as scalar and this gate reports 45 mismatches.
+            declared_many = bool(getattr(parameter, "multiple", False))
+            if declared_many is not expects_sequence and not getattr(parameter, "is_flag", False):
+                mismatched.append(f"{spec.key}: {parameter.name} multiple={declared_many} but handler types {text}")
+    assert not mismatched, "option arity disagrees with the handler: " + "; ".join(sorted(mismatched))
+
 
 def test_the_parity_gates_walk_the_corpus_they_claim_to() -> None:
     """Both gates above assert an absence; this asserts they had something to look at.
@@ -99,6 +127,12 @@ def test_the_parity_gates_walk_the_corpus_they_claim_to() -> None:
     nothing. The floors are the standing claim that it compared something.
     """
     bound = [spec for spec in COMMAND_SPECS if _handler_signature(spec) is not None]
-    declared = sum((len(spec.parameters) for spec in COMMAND_SPECS))
-    assert len(bound) >= _MINIMUM_HANDLER_BINDINGS, f'only {len(bound)} of {len(COMMAND_SPECS)} specs resolved a handler signature; the parity gates compare nothing below {_MINIMUM_HANDLER_BINDINGS}'
-    assert declared >= _MINIMUM_DECLARED_PARAMETERS, f'the corpus declares only {declared} parameters; the parity gates compare nothing below {_MINIMUM_DECLARED_PARAMETERS}'
+    declared = sum(len(spec.parameters) for spec in COMMAND_SPECS)
+    assert len(bound) >= _MINIMUM_HANDLER_BINDINGS, (
+        f"only {len(bound)} of {len(COMMAND_SPECS)} specs resolved a handler signature; "
+        f"the parity gates compare nothing below {_MINIMUM_HANDLER_BINDINGS}"
+    )
+    assert declared >= _MINIMUM_DECLARED_PARAMETERS, (
+        f"the corpus declares only {declared} parameters; "
+        f"the parity gates compare nothing below {_MINIMUM_DECLARED_PARAMETERS}"
+    )
