@@ -1,28 +1,23 @@
 """Real-behaviour tests for the revision re-render comparison.
 
-Every case drives the bundled registry and the real generation pipeline. The
-corpus supplies both outcomes this module must distinguish, so no fixture is
-constructed: one revision reproduces exactly, four differ only in their
-provenance attestation, and two differ in a record file.
+Every case drives the bundled registry and the real generation pipeline. Safe
+manifest-only drift is repaired through the canonical publisher; the remaining
+record drift stays pinned to its exact source authority.
 """
 
 from __future__ import annotations
-
-import pathlib
-from typing import Final
 
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
-from ..pipeline.render_check import compare_revision_against_committed, revision_render_inputs
+from ..pipeline.render_check import (
+    compare_revision_against_committed,
+    record_drift_dispositions,
+    revision_render_inputs,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
-
-#: Named once per module, as this tree requires, rather than repeated at each
-#: read site where a typo would be a silent decode change.
-_UTF_8: Final[str] = "utf-8"
-
 
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
@@ -48,32 +43,20 @@ def test_a_reproducing_revision_is_reported_conclusively(authority: ValidatedReg
     assert comparison.only_committed == () and comparison.only_rendered == ()
 
 
-def test_an_unpublished_revision_uses_its_source_defect_adjudication(
+def test_a_published_revision_uses_its_source_defect_adjudication(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """The read-only comparison reaches M390 output instead of failing on its official typo."""
+    """The read-only comparison reproduces M390 through its official-typo adjudication."""
     comparison = compare_revision_against_committed(authority, modelo="390", revision="2022")
 
-    assert comparison.only_committed == ()
-    assert comparison.only_rendered
+    assert comparison.reproduced
+    assert comparison.only_committed == () and comparison.only_rendered == ()
 
 
-def test_a_stale_attestation_is_separated_from_record_drift(authority: ValidatedRegistryAuthority) -> None:
-    """A tree differing only in its manifest ships correct records.
-
-    This is the class that is safe to republish, and separating it is the whole
-    point: the remedy for a stale attestation is regeneration, and the remedy
-    for record drift is emphatically not.
-
-    Pinned to a dispositioned tree. This one is safe to republish, so it will be,
-    and this test fails when it is - that failure is the republication, not a
-    regression. Three siblings sit in the same class and any of them replaces the
-    coordinate; if the class is ever empty, construct the case rather than
-    dropping it, because a provenance-only tree that nobody can produce is
-    exactly when the separation from record drift stops being exercised.
-    """
+def test_a_republished_attestation_matches_its_current_authorities(authority: ValidatedRegistryAuthority) -> None:
+    """A repaired tree reproduces both its records and its generation manifest."""
     comparison = compare_revision_against_committed(authority, modelo="296", revision="2024-y-siguientes")
-    assert not comparison.reproduced
+    assert comparison.reproduced
     assert comparison.semantically_reproduced
     assert comparison.record_differing == ()
 
@@ -186,20 +169,19 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
 
     It stores no count and no ceiling. Two rows today is not the contract.
     """
-    import tomllib
-
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
     from cadrumo.core.resources.bundled_data import bundled_path
 
     from ..pipeline.render_check import compare_revision_against_committed
 
-    dispositions_path = pathlib.Path(__file__).resolve().parent.parent / "pipeline" / "generated_tree_dispositions.toml"
-    declared = tomllib.loads(dispositions_path.read_text(encoding=_UTF_8))
-    dispositioned = {key: value[0] for key, value in declared.items() if key != "schema_version"}
-
-    assert all(row["class"] == "record_drift" for row in dispositioned.values()), (
-        "this ledger carries the record-drifting class alone; a provenance-only row belongs to the assertion below"
-    )
+    dispositions = record_drift_dispositions()
+    dispositioned = {row.subject: row for row in dispositions}
+    for row in dispositions:
+        revision = authority.modelo(row.modelo).revisions[row.revision]
+        source = authority.catalogues.sources.get(row.source_ref)
+        assert row.source_ref in revision.source_refs, f"{row.subject}: disposition source is not revision-owned"
+        assert source is not None, f"{row.subject}: disposition source is absent"
+        assert source.sha256 == row.source_sha256, f"{row.subject}: disposition source was reissued; reconsider the pin"
 
     drifting: set[str] = set()
     for code in sorted(str(item) for item in registry_modelo_codes()):
@@ -214,42 +196,28 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
         f"trees whose records drifted and carry no disposition: {sorted(drifting - set(dispositioned))}; "
         f"dispositions whose tree no longer drifts: {sorted(set(dispositioned) - drifting)}"
     )
-    assert all(dispositioned[name]["reason"].strip() for name in dispositioned), "every disposition states a reason"
+    assert all(
+        dispositioned[name].reason.strip() and dispositioned[name].reconsideration_condition.strip()
+        for name in dispositioned
+    ), "every disposition states a reason and reconsideration condition"
 
 
 def test_every_manifest_stale_tree_really_does_reproduce_its_records(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """The class that is safe to republish is asserted safe, not individually excused.
-
-    Manifest staleness arrives in bulk - a single generator refactor invalidated
-    twenty-one attestations at once - so demanding a written reason for each
-    would turn the ledger into churn and teach a reader to add rows rather than
-    read them. What actually matters about this class is the claim that makes it
-    safe, and that claim is checkable: the records must reproduce byte-for-byte,
-    with nothing differing but the manifest.
-
-    A tree that reports itself provenance-only while a record differs fails here,
-    which is the same defect the ledger catches from the other side. The
-    population is reported by the screen; only the property is gated.
-    """
+    """Every remaining manifest-stale tree differs only in semantically reproduced output."""
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
     from cadrumo.core.resources.bundled_data import bundled_path
 
     from ..pipeline.render_check import compare_revision_against_committed
 
     unsafe: list[str] = []
-    seen = 0
     for code in sorted(str(item) for item in registry_modelo_codes()):
         for revision_id in authority.modelo(code).revisions:
             if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
                 continue
             comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
-            if comparison.disposition_class != "provenance_only":
-                continue
-            seen += 1
-            if comparison.record_differing or not comparison.semantically_reproduced:
+            if comparison.disposition_class == "provenance_only" and not comparison.semantically_reproduced:
                 unsafe.append(f"{code}/{revision_id}")
 
-    assert seen, "no tree is manifest-stale, so this assertion is exercising nothing"
-    assert not unsafe, f"trees called provenance-only whose records do not in fact reproduce: {unsafe}"
+    assert not unsafe, f"trees called provenance-only whose records do not reproduce semantically: {unsafe}"

@@ -20,10 +20,13 @@
 # This is not a ratchet. It stores no counts and no ceilings, and shrinking it
 # is not the measure of progress.
 
-schema_version = 1
+schema_version = 2
 
-[["347/2011-2024"]]
-class = "record_drift"
+[[dispositions]]
+modelo = "347"
+revision = "2011-2024"
+source_ref = "aeat-dr-347-2011"
+source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809"
 reason = """
 The shipped declarado record repeats over binding rows and carries nine
 binding-kind fields, so one authored row becomes one emitted record. A fresh
@@ -40,10 +43,15 @@ the three things to author on the map: the record repeat, the binding record,
 and the per-row casilla identities. Read it before attempting the repair; it is
 the authoritative statement of the remedy and it predates this disposition.
 """
+reconsideration_condition = "Remove this pin when the current semantic map reproduces the published binding_rows repeat and all per-row casilla identities."
 
-[["347/2025-y-siguientes"]]
-class = "record_drift"
+[[dispositions]]
+modelo = "347"
+revision = "2025-y-siguientes"
+source_ref = "aeat-dr-347-2025"
+source_sha256 = "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361"
 reason = """
 Same defect as the earlier revision of this modelo, in the same declarado
 record. Must not be republished.
 """
+reconsideration_condition = "Remove this pin when the current semantic map reproduces the published binding_rows repeat and all per-row casilla identities."
