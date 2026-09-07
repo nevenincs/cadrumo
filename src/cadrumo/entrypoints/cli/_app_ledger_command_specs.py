@@ -9,6 +9,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
+from ..tui_capability import TuiCapability
 from ._app_ledger_bienes_inversion_command_specs import LEDGER_BIENES_INVERSION_COMMAND_SPECS
 from ._app_ledger_classification_command_specs import LEDGER_CLASSIFICATION_COMMAND_SPECS
 from ._app_ledger_counterparty_command_specs import LEDGER_COUNTERPARTY_COMMAND_SPECS
@@ -27,7 +28,6 @@ from ._app_ledger_prorrata_command_specs import LEDGER_PRORRATA_COMMAND_SPECS
 from ._app_ledger_ratios_command_specs import LEDGER_RATIOS_COMMAND_SPECS
 from ._app_ledger_rule_command_specs import LEDGER_RULE_COMMAND_SPECS
 from .command_spec import BindingState, CommandNodeKind, CommandSpec, SchemaState
-from ..tui_capability import TuiCapability
 
 _LEDGER_SUBOPERATION_ID_PATTERN: Final[re.Pattern[str]] = re.compile(r"ledger(?:\.[a-z][a-z0-9_]*)+")
 

@@ -8,14 +8,13 @@ records and resolve deferred targets only at their owning boundary.
 
 from __future__ import annotations
 
-from ..tui_capability import TuiCapability
-
 from dataclasses import dataclass
 from enum import Enum, StrEnum
 from types import MappingProxyType
 from typing import Final, Literal
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+from ..tui_capability import TuiCapability
 
 
 class CommandNodeKind(StrEnum):

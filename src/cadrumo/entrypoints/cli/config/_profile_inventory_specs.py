@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...tui_capability import TuiCapability
 from ..command_spec import (
     CommandNodeKind,
     CommandSpec,
@@ -15,7 +16,6 @@ from ..command_spec import (
     TranslationKey,
     ValueContract,
 )
-from ...tui_capability import TuiCapability
 from ._spec_policies import CALCULATION_READ, PROFILE_READ
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))

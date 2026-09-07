@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from ...tui_capability import TuiCapability
 from ..command_spec import (
     FLAG_VALUE,
     PATH_VALUE,
@@ -32,7 +33,6 @@ from ..command_spec import (
     SchemaState,
     ValueContract,
 )
-from ...tui_capability import TuiCapability
 from ..command_spec import translation_key as _key
 from ._spec_policies import (
     BOOTSTRAP_DESTRUCTIVE,
