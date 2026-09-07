@@ -1,0 +1,915 @@
+[[revisions.2023.export_layouts]]
+id = 'generated-modelo-390-2023-fichero'
+
+[[revisions.2023.export_layouts.records]]
+id = 'modelo-390-page-07'
+record_type = 'page_07'
+order = 6
+encoding = 'iso-8859-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-open'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '390'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-number'
+offset = 6
+length = 5
+kind = 'literal'
+literal = '07000'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-end'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-12-indicador-de-pagina-complementaria'
+offset = 12
+length = 1
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.12-12.indicador-de-pagina-complementaria'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-adquisiciones-interiores-exentas'
+offset = 13
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.adquisiciones-interiores-exentas'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-20',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-adquisiciones-intracomunitarias-exentas'
+offset = 30
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.adquisiciones-intracomunitarias-exentas'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-26',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-importaciones-exentas'
+offset = 47
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.importaciones-exentas'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-27',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-base-iva-soportado-no-deducible'
+offset = 64
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.base-iva-soportado-no-deducible'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-92',
+    'ley-37-1992:art-95',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-operaciones-derecho-devolucion-mensual'
+offset = 81
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.operaciones-derecho-devolucion-mensual'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-115',
+    'ley-37-1992:art-116',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-entrega-interior-inversion-triangular'
+offset = 98
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.entrega-interior-inversion-triangular'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-26',
+    'ley-37-1992:art-84',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-servicios-tai-inversion-sujeto-pasivo'
+offset = 115
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.servicios-tai-inversion-sujeto-pasivo'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-84',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-criterio-caja-entregas-base'
+offset = 132
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.criterio-caja-entregas.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-duodecies',
+    'ley-37-1992:art-163-undecies',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-criterio-caja-entregas-cuota'
+offset = 149
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.criterio-caja-entregas.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-duodecies',
+    'ley-37-1992:art-163-undecies',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-criterio-caja-adquisiciones-base'
+offset = 166
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.criterio-caja-adquisiciones.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-quaterdecies',
+    'ley-37-1992:art-163-terdecies',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-casilla-criterio-caja-adquisiciones-cuota'
+offset = 183
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.especificas.criterio-caja-adquisiciones.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-quaterdecies',
+    'ley-37-1992:art-163-terdecies',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-200-prorratas-1-actividad-desarrollada'
+offset = 200
+length = 40
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.200-239.prorratas-1-actividad-desarrollada'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-240-prorratas-1-codigo-cnae'
+offset = 240
+length = 3
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.240-242.prorratas-1-codigo-cnae'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-243-prorratas-1-importe-de-operaciones'
+offset = 243
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.243-259.prorratas-1-importe-de-operaciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-260-prorratas-1-importe-de-operaciones-con-derecho-a-ded'
+offset = 260
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.260-276.prorratas-1-importe-de-operaciones-con-derecho-a-deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'ley-37-1992:art-94',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-277-prorratas-1-tipo-de-prorrata'
+offset = 277
+length = 1
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.277-277.prorratas-1-tipo-de-prorrata'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-278-prorratas-1-porcentaje-de-prorrata'
+offset = 278
+length = 5
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.278-282.prorratas-1-porcentaje-de-prorrata'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-283-prorratas-2-actividad-desarrollada'
+offset = 283
+length = 40
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.283-322.prorratas-2-actividad-desarrollada'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-323-prorratas-2-codigo-cnae'
+offset = 323
+length = 3
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.323-325.prorratas-2-codigo-cnae'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-326-prorratas-2-importe-de-operaciones'
+offset = 326
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.326-342.prorratas-2-importe-de-operaciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-343-prorratas-2-importe-de-operaciones-con-derecho-a-ded'
+offset = 343
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.343-359.prorratas-2-importe-de-operaciones-con-derecho-a-deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'ley-37-1992:art-94',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-360-prorratas-2-tipo-de-prorrata'
+offset = 360
+length = 1
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.360-360.prorratas-2-tipo-de-prorrata'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-361-prorratas-2-porcentaje-de-prorrata'
+offset = 361
+length = 5
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.361-365.prorratas-2-porcentaje-de-prorrata'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-366-prorratas-3-actividad-desarrollada'
+offset = 366
+length = 40
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.366-405.prorratas-3-actividad-desarrollada'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-406-prorratas-3-codigo-cnae'
+offset = 406
+length = 3
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.406-408.prorratas-3-codigo-cnae'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-409-prorratas-3-importe-de-operaciones'
+offset = 409
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.409-425.prorratas-3-importe-de-operaciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-426-prorratas-3-importe-de-operaciones-con-derecho-a-ded'
+offset = 426
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.426-442.prorratas-3-importe-de-operaciones-con-derecho-a-deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'ley-37-1992:art-94',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-443-prorratas-3-tipo-de-prorrata'
+offset = 443
+length = 1
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.443-443.prorratas-3-tipo-de-prorrata'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-444-prorratas-3-porcentaje-de-prorrata'
+offset = 444
+length = 5
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.444-448.prorratas-3-porcentaje-de-prorrata'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-449-prorratas-4-actividad-desarrollada'
+offset = 449
+length = 40
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.449-488.prorratas-4-actividad-desarrollada'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-489-prorratas-4-codigo-cnae'
+offset = 489
+length = 3
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.489-491.prorratas-4-codigo-cnae'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-492-prorratas-4-importe-de-operaciones'
+offset = 492
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.492-508.prorratas-4-importe-de-operaciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-509-prorratas-4-importe-de-operaciones-con-derecho-a-ded'
+offset = 509
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.509-525.prorratas-4-importe-de-operaciones-con-derecho-a-deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'ley-37-1992:art-94',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-526-prorratas-4-tipo-de-prorrata'
+offset = 526
+length = 1
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.526-526.prorratas-4-tipo-de-prorrata'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-527-prorratas-4-porcentaje-de-prorrata'
+offset = 527
+length = 5
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.527-531.prorratas-4-porcentaje-de-prorrata'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-532-prorratas-5-actividad-desarrollada'
+offset = 532
+length = 40
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.532-571.prorratas-5-actividad-desarrollada'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-572-prorratas-5-codigo-cnae'
+offset = 572
+length = 3
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.572-574.prorratas-5-codigo-cnae'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-101',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-575-prorratas-5-importe-de-operaciones'
+offset = 575
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.575-591.prorratas-5-importe-de-operaciones'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-592-prorratas-5-importe-de-operaciones-con-derecho-a-ded'
+offset = 592
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.592-608.prorratas-5-importe-de-operaciones-con-derecho-a-deduccion'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-104',
+    'ley-37-1992:art-94',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-609-prorratas-5-tipo-de-prorrata'
+offset = 609
+length = 1
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.609-609.prorratas-5-tipo-de-prorrata'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-610-prorratas-5-porcentaje-de-prorrata'
+offset = 610
+length = 5
+kind = 'binding'
+binding = 'modelo-390-2023.page_7.610-614.prorratas-5-porcentaje-de-prorrata'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-103',
+    'ley-37-1992:art-104',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-reserved-615'
+offset = 615
+length = 150
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-07-close'
+offset = 765
+length = 12
+kind = 'literal'
+literal = '</T39007000>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[revisions.2023.export_layouts.records.row_field_casilla_ids]

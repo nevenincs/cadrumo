@@ -121,34 +121,6 @@ def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_2024_design() -> No
 
 
 @pytest.mark.parametrize(
-    ("revision", "source_ref", "source_sha256", "filing_year"),
-    (
-        ("2022", "aeat-dr-390-2022", "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe", 2022),
-        ("2023", "aeat-dr-390-2023", "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7", 2023),
-        ("2024", "aeat-dr-390-2024", "8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0", 2024),
-        ("2025", "aeat-dr-390-2025", "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252", 2025),
-    ),
-)
-def test_bootstrap_targets_pin_the_m390_manual_layout_references_they_retire(
-    revision: str,
-    source_ref: str,
-    source_sha256: str,
-    filing_year: int,
-) -> None:
-    """Every M390 cutover names its exact superseded construct member."""
-    target = _bootstrap_target(
-        _Invocation("390", revision, source_ref, filing_year, "0A"),
-        source_sha256=source_sha256,
-    )
-
-    assert target.layout_id == f"generated-modelo-390-{revision}-fichero"
-    assert target.line_ending == "crlf"
-    assert target.source_ref == source_ref
-    assert target.supersedes_layout_id == f"modelo-390-{revision}-fichero-boe"
-    assert target.superseded_construct_references == 1
-
-
-@pytest.mark.parametrize(
     ("layout_ids", "expected_references", "found_references"),
     (
         ([], 1, 0),

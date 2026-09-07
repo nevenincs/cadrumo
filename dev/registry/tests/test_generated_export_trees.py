@@ -152,9 +152,12 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("303", "2024-desde-09-y-3t", "aeat-dr-303-2024-late", "2024-late", 2024, "3T"),
     _GeneratedTree("303", "2025", "aeat-dr-303-2025", "2025", 2025, "4T"),
     _GeneratedTree("303", "2026-y-siguientes", "aeat-dr-303-2026", "2026", 2026, "4T"),
-    # The 2022 annual IVA summary, whose eight numbered pages carry the only
-    # adjudicated source defect in the estate.
+    # The four exact-source annual IVA summaries. The first two carry the two
+    # hash-pinned instances of the adjudicated page-seven source defect.
     _GeneratedTree("390", "2022", "aeat-dr-390-2022", "2022", 2022, "0A"),
+    _GeneratedTree("390", "2023", "aeat-dr-390-2023", "2023", 2023, "0A"),
+    _GeneratedTree("390", "2024", "aeat-dr-390-2024", "2024", 2024, "0A"),
+    _GeneratedTree("390", "2025", "aeat-dr-390-2025", "2025", 2025, "0A"),
 )
 
 
@@ -379,8 +382,8 @@ def test_every_pending_check_mode_entry_names_an_enrolled_tree() -> None:
     )
 
 
-def test_m390_bootstrap_isolation_excludes_both_export_authorities_and_keeps_required_support(tmp_path: Path) -> None:
-    """The enrolled-tree harness stages and validates the same bootstrap candidate as the CLI."""
+def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_support(tmp_path: Path) -> None:
+    """The enrolled-tree harness renders without copying either export authority."""
     tree = next(item for item in _GENERATED_TREES if item.modelo == "390" and item.revision == "2022")
 
     registry_root = _isolated_authority(tree, tmp_path)

@@ -1,0 +1,1382 @@
+[[revisions.2022.export_layouts]]
+id = 'generated-modelo-390-2022-fichero'
+
+[[revisions.2022.export_layouts.records]]
+id = 'modelo-390-page-02'
+record_type = 'page_02'
+order = 1
+encoding = 'iso-8859-1'
+line_ending = 'crlf'
+required = true
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-open'
+offset = 1
+length = 2
+kind = 'literal'
+literal = '<T'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3111-2009:art-1']
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-modelo'
+offset = 3
+length = 3
+kind = 'literal'
+literal = '390'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3111-2009:art-1']
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-number'
+offset = 6
+length = 5
+kind = 'literal'
+literal = '02000'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3111-2009:art-1']
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-end'
+offset = 11
+length = 1
+kind = 'literal'
+literal = '>'
+data_type = 'text'
+required = true
+padding = 'none'
+justification = 'none'
+signed = false
+legal_refs = ['orden-eha-3111-2009:art-1']
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-complementaria-indicator'
+offset = 12
+length = 1
+kind = 'filler'
+data_type = 'text'
+required = false
+padding = 'right_space'
+justification = 'left'
+signed = false
+legal_refs = [
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-0-base'
+offset = 13
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-0.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-0-cuota'
+offset = 30
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-0.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-4-base'
+offset = 47
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-4.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-4-cuota'
+offset = 64
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-4.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-5-base'
+offset = 81
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-5.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+    'real-decreto-ley-11-2022:art-18',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-5-cuota'
+offset = 98
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-5.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+    'real-decreto-ley-11-2022:art-18',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-10-base'
+offset = 115
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-10.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-10-cuota'
+offset = 132
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-10.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-21-base'
+offset = 149
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-21.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-tipo-21-cuota'
+offset = 166
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.tipo-21.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-0-base'
+offset = 183
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-0.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-0-cuota'
+offset = 200
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-0.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-4-base'
+offset = 217
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-4.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-4-cuota'
+offset = 234
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-4.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-5-base'
+offset = 251
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-5.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-5-cuota'
+offset = 268
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-5.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-10-base'
+offset = 285
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-10.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-10-cuota'
+offset = 302
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-10.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-21-base'
+offset = 319
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-21.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-intragrupo-tipo-21-cuota'
+offset = 336
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.intragrupo.tipo-21.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-nonies',
+    'ley-37-1992:art-163-sexies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-0-base'
+offset = 353
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-0.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-0-cuota'
+offset = 370
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-0.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-4-base'
+offset = 387
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-4.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-4-cuota'
+offset = 404
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-4.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-5-base'
+offset = 421
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-5.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-5-cuota'
+offset = 438
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-5.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-10-base'
+offset = 455
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-10.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-10-cuota'
+offset = 472
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-10.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-21-base'
+offset = 489
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-21.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-criterio-caja-tipo-21-cuota'
+offset = 506
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-21.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-163-decies',
+    'ley-37-1992:art-163-undecies',
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-0-base'
+offset = 523
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-0.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-0-cuota'
+offset = 540
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-0.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-4-base'
+offset = 557
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-4.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-4-cuota'
+offset = 574
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-4.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-5-base'
+offset = 591
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-5.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-5-cuota'
+offset = 608
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-5.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-10-base'
+offset = 625
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-10.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-10-cuota'
+offset = 642
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-10.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-21-base'
+offset = 659
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-21.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-bienes-usados-tipo-21-cuota'
+offset = 676
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-21.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-agencias-viajes-tipo-21-base'
+offset = 693
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.agencias-viajes.tipo-21.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-repercutido-agencias-viajes-tipo-21-cuota'
+offset = 710
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.repercutido.agencias-viajes.tipo-21.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-88',
+    'ley-37-1992:art-90',
+    'ley-37-1992:art-91',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-0-base'
+offset = 727
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-0.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-0-cuota'
+offset = 744
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-0.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-4-base'
+offset = 761
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-4.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-4-cuota'
+offset = 778
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-4.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-5-base'
+offset = 795
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-5.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-5-cuota'
+offset = 812
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-5.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-10-base'
+offset = 829
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-10.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-10-cuota'
+offset = 846
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-10.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-21-base'
+offset = 863
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-21.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-21-cuota'
+offset = 880
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-21.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-servicios-tipo-0-base'
+offset = 897
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.servicios.tipo-0.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-servicios-tipo-0-cuota'
+offset = 914
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.servicios.tipo-0.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-servicios-tipo-4-base'
+offset = 931
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.servicios.tipo-4.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-servicios-tipo-4-cuota'
+offset = 948
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.servicios.tipo-4.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-servicios-tipo-5-base'
+offset = 965
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.servicios.tipo-5.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-servicios-tipo-5-cuota'
+offset = 982
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.servicios.tipo-5.cuota'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-servicios-tipo-10-base'
+offset = 999
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.servicios.tipo-10.base'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[revisions.2022.export_layouts.records.row_field_casilla_ids]
