@@ -277,6 +277,47 @@ def test_rehearsal_receipt_binds_only_declared_component_paths(tmp_path: Path, m
     assert (retained_root / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
+def test_rehearsal_refuses_a_supplied_inventory_that_differs_from_the_verified_copy(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    stale_inventory, manifest, component = _fixture(repo)
+    _write(repo, "dev/concurrent_helper.py", b"helper_runtime = 1\n")
+    current_inventory = scan((repo / "src", repo / "dev"), repo)
+
+    assert to_json(current_inventory)["inventory_digest"] != to_json(stale_inventory)["inventory_digest"]
+    with pytest.raises(
+        ObjectNameRehearsalError, match="snapshot inventory differs from the supplied current inventory"
+    ):
+        rehearse_object_name_component(
+            manifest,
+            inventory=stale_inventory,
+            component=component,
+            repo_root=repo,
+        )
+
+
+def test_rehearsal_records_current_inventory_without_rebinding_the_authored_manifest(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _authored_inventory, manifest, _authored_component = _fixture(repo)
+    _write(repo, "dev/concurrent_helper.py", b"helper_runtime = 1\n")
+    current_inventory = scan((repo / "src", repo / "dev"), repo)
+    current_digest = to_json(current_inventory)["inventory_digest"]
+    current_component = build_manifest_components(
+        manifest,  # ty: ignore[invalid-argument-type]
+        inventory=current_inventory,  # ty: ignore[invalid-argument-type]
+    )[0]
+
+    assert current_digest != manifest.inventory_digest
+    receipt = rehearse_object_name_component(
+        manifest,
+        inventory=current_inventory,
+        component=current_component,
+        repo_root=repo,
+    )
+
+    assert receipt.inventory_digest == current_digest
+    assert receipt.manifest_digest == object_name_manifest_digest(manifest)
+
+
 def test_incremental_allowed_path_inventory_matches_full_rescan(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     before, _manifest, _component = _fixture(repo)

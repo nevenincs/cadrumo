@@ -6,7 +6,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:69dd724ccadbd51ee86e272ac985c86e7f751ddc9a68a4f37fcbf0263e2998b8'
+body_hash: 'sha256:28a71f0ea08fb381cf5a623e68b6a75b9b318e89ff1394826799cb056e985b9f'
 related:
   - '[[2026-09-02-object-name-declustering-W01-P01-S01]]'
   - '[[2026-09-02-object-name-declustering-W01-P01-S02]]'
@@ -41,6 +41,7 @@ related:
   - '[[2026-09-02-object-name-declustering-W03-P09-S25]]'
   - '[[2026-09-02-object-name-declustering-W03-P09-S26]]'
   - '[[2026-09-02-object-name-declustering-W03-P09-summary]]'
+  - '[[2026-09-02-object-name-declustering-W04-P10-S27]]'
   - '[[2026-09-02-object-name-declustering-adr]]'
   - '[[2026-09-02-object-name-declustering-pilot-rehearsal-audit]]'
   - '[[2026-09-02-object-name-declustering-plan]]'
@@ -65,6 +66,7 @@ related:
   - '[[2026-09-03-object-name-declustering-final-code-review-audit]]'
   - '[[2026-09-03-object-name-declustering-s25-graph-cache-review-audit]]'
   - '[[2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit]]'
+  - '[[2026-09-07-object-name-declustering-s27-implementation-review-audit]]'
 ---
 
 # `object-name-declustering` feature index
@@ -99,6 +101,7 @@ Auto-generated index of all documents tagged with `#object-name-declustering`.
 - `2026-09-03-object-name-declustering-final-code-review-audit` - `object-name-declustering` audit: `final code review`
 - `2026-09-03-object-name-declustering-s25-graph-cache-review-audit` - `object-name-declustering` audit: `S25 graph cache review`
 - `2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit` - `object-name-declustering` audit: `receipt scope and teardown authority`
+- `2026-09-07-object-name-declustering-s27-implementation-review-audit` - `object-name-declustering` audit: `S27 implementation review`
 
 ### exec
 
@@ -135,6 +138,7 @@ Auto-generated index of all documents tagged with `#object-name-declustering`.
 - `2026-09-02-object-name-declustering-W03-P09-S25` - Build the sole rehearsal component once from the verified disposable snapshot
 - `2026-09-02-object-name-declustering-W03-P09-S26` - Apply the reviewed pilot receipt and verify live reduction
 - `2026-09-02-object-name-declustering-W03-P09-summary` - `object-name-declustering` `W03.P09` summary
+- `2026-09-02-object-name-declustering-W04-P10-S27` - Carry the S23 distinction through rehearsal: require the copied inventory to equal the supplied current inventory, record that current digest in the receipt, and leave the authored inventory value bound only through the exact manifest digest, since the receipt currently records the manifest value and refuses at the next mandatory phase whatever the validator tolerated (Terra xhigh fixes and refactors)
 
 ### plan
 

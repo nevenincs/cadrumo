@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:b3381bcc9ad63ec01bc0c0d7353f66309caa9a231d9d9f673cc6d85c3206a813'
+body_hash: 'sha256:c003824c63cd2501f6b2589fc827ad3e2c6abd8c08b9bb2d8e3cf64c523b05c2'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -114,7 +114,7 @@ Reopen the S23 objective. The accepted ADR requires that finding identity surviv
 
 Rehearsal records the current scanned inventory digest, replay compares it against a freshly scanned current inventory, and the authored inventory value stays bound only through the exact manifest digest. The remedy is the one the S23 review already wrote; what is missing is that it never reached receipt generation and replay, and that the test which should have caught it perturbs a non-Python file.
 
-- [ ] `W04.P10.S27` - Carry the S23 distinction through rehearsal: require the copied inventory to equal the supplied current inventory, record that current digest in the receipt, and leave the authored inventory value bound only through the exact manifest digest, since the receipt currently records the manifest value and refuses at the next mandatory phase whatever the validator tolerated (Terra xhigh fixes and refactors); `dev/quality/object_name_rehearsal.py, dev/quality/object_name_replay.py`.
+- [x] `W04.P10.S27` - Carry the S23 distinction through rehearsal: require the copied inventory to equal the supplied current inventory, record that current digest in the receipt, and leave the authored inventory value bound only through the exact manifest digest, since the receipt currently records the manifest value and refuses at the next mandatory phase whatever the validator tolerated (Terra xhigh fixes and refactors); `dev/quality/object_name_rehearsal.py, dev/quality/object_name_replay.py`.
 - [ ] `W04.P10.S28` - Require replay to compare the receipt inventory against a freshly scanned current inventory and the exact manifest digest, without also equating current inventory to the authored value, so unrelated declaration churn no longer invalidates a leaf operation whose own bytes and graph evidence are unchanged (Terra xhigh fixes and refactors); `dev/quality/object_name_replay.py`.
 - [ ] `W04.P10.S29` - Replace the vacuous churn test with one that can fail: perturb a real Python declaration so the current inventory digest actually moves, drive it through component derivation, rehearsal, receipt generation and replay preflight, and prove the case fails when receipt/current global-inventory equality is reintroduced, closing the end-to-end-churn-teeth gap S23 opened and S24 left standing (Luna max audit and mechanical); `dev/quality/tests/`.
 - [ ] `W04.P10.S30` - Measure the surviving validity window against live conditions, recording inventory-affecting commit rate, dirty-file count and cycle wall clock, and state plainly whether a rehearse-and-apply cycle can complete under concurrent development or whether the campaign requires an exclusive worktree (Luna max audit); `.vault/audit/`.
