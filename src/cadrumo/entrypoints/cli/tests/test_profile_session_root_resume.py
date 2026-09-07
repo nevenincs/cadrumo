@@ -172,7 +172,7 @@ class TestSilentResume:
         output = semantic_cli_output(result)
         assert "aeat config login" not in output
         # The verb decrypted its read model, so the session really opened.
-        assert '"rows"' in output or "rows" in output
+        assert "rows" in output
 
     def test_resume_advances_the_idle_deadline(self, _isolated_root: Path) -> None:
         require_os_credential_store()
