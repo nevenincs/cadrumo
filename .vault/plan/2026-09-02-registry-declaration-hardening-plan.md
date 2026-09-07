@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:5a7e988e1223afb9858ac152fa51a7930f9483faee2521abfbdbf157d11ac61c'
+body_hash: 'sha256:2216777cbadb2ebfad11c2c9ad4d0f2b14305454d31263684a12faf45eba8cc3'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1381,6 +1381,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1012` - Remove the facade import-site docstring's count, which described a tree that still held forwarding initialisers; `dev/quality/facade_retirement.py`.
 - [x] `W06.P13.S1013` - Cap tolerated unreadable test files at a named absolute rather than a tenth of the corpus, and name them whatever the count; `dev/tests/test_lane_reachability.py`.
 - [x] `W06.P13.S1014` - Retract the identity-gate protocol's claim to be the real signature and record why omitting execution_policy is safe; `dev/agent_eval/_live_scoring.py`.
+- [x] `W06.P13.S1015` - Verify the seventy-six file restore of the checkpoint-absorbed instrumentation, including comment recovery and absence of clobbered work; `dev/ci, dev/packaging, dev/deploy, dev/release, dev/containers`.
 
 ### Phase `W06.P14` - declaration contract migration
 
