@@ -13,3 +13,5 @@ source_ref = "aeat-dr-390-2022"
 source_sha256 = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
 layout_id = "generated-modelo-390-2022-fichero"
 line_ending = "crlf"
+supersedes_layout_id = "modelo-390-2022-fichero-boe"
+superseded_construct_references = 1

@@ -78,11 +78,6 @@ __all__ = [
     "parsed_tree_file",
 ]
 
-#: The serializer convention token is the renderer's to state; a second
-#: copy here would let the two drift into disagreeing about what a
-#: rendered tree is.
-_SERIALIZER_CONVENTION = SERIALIZER_CONVENTION
-
 #: The generation manifest attests which inputs produced the tree, so it changes
 #: whenever an input or the generator does. A tree differing ONLY here ships
 #: correct records with a stale attestation; a tree differing in a record file
@@ -227,9 +222,11 @@ class GeneratedExportBootstrapTransport:
     """The explicit static transport identity for an unpublished generated tree.
 
     A revision without a committed generated layout cannot lend its transport
-    fields to the generator. Bootstrap callers therefore name this typed
-    identity, which is checked against the generator's revision-keyed layout-id
-    convention rather than inferred from a neighbouring tree.
+    fields to the generator. It may still carry a superseded manual layout, but
+    that is bootstrap evidence rather than generated transport authority.
+    Bootstrap callers therefore name this typed identity, which is checked
+    against the generator's revision-keyed layout-id convention rather than
+    inferred from either a neighbouring or superseded tree.
     """
 
     layout_id: str
@@ -281,13 +278,7 @@ def revision_render_inputs(
     if epoch is None:  # pragma: no cover - filtered above, restated for the type checker
         raise ValueError(f"source {selected_source_ref} declares no design epoch")
 
-    if selected.export_layouts:
-        layout = selected.export_layouts[0]
-        layout_id = str(layout.id)
-        line_ending = layout.records[0].line_ending
-    else:
-        if bootstrap_transport is None:
-            raise ValueError(f"{modelo}/{revision} declares no export layout to render")
+    if bootstrap_transport is not None:
         expected_layout_id = f"generated-modelo-{modelo}-{revision}-fichero"
         if bootstrap_transport.layout_id != expected_layout_id:
             raise ValueError(
@@ -305,6 +296,12 @@ def revision_render_inputs(
             )
         layout_id = bootstrap_transport.layout_id
         line_ending = bootstrap_transport.line_ending
+    else:
+        if not selected.export_layouts:
+            raise ValueError(f"{modelo}/{revision} declares no export layout to render")
+        layout = selected.export_layouts[0]
+        layout_id = str(layout.id)
+        line_ending = layout.records[0].line_ending.value
 
     semantic_root = _AUTHORED_ROOT / "mappings" / f"modelo_{modelo}" / epoch
     profile_root = _AUTHORED_ROOT / "render_profiles" / f"modelo_{modelo}" / epoch
@@ -325,11 +322,7 @@ def revision_render_inputs(
         filing_year=selected.valid_from.year,
         design_epoch=epoch,
     )
-    if (
-        bootstrap_transport is not None
-        and not selected.export_layouts
-        and bootstrap_transport.source_sha256 != intermediate.source.source_sha256
-    ):
+    if bootstrap_transport is not None and bootstrap_transport.source_sha256 != intermediate.source.source_sha256:
         raise ValueError(f"{modelo}/{revision} bootstrap source changed while assembling render inputs")
     inspection = RegistryRevisionInspection.from_revision(
         modelo=definition,
@@ -352,7 +345,7 @@ def revision_render_inputs(
         format="fixed_width",
         encoding=ExportEncoding.ISO_8859_1,
         line_ending=line_ending,
-        serializer_convention=_SERIALIZER_CONVENTION,
+        serializer_convention=SERIALIZER_CONVENTION,
     )
 
     return RevisionRenderInputs(

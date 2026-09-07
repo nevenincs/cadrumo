@@ -11,7 +11,6 @@ from __future__ import annotations
 import re
 import shutil
 import tempfile
-import tomllib
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -34,6 +33,11 @@ from ._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
+from .candidate_staging import (
+    GeneratedExportBootstrapTarget,
+    generated_export_bootstrap_target,
+    stage_generated_export_candidate,
+)
 from .render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, revision_render_inputs
 from .source_defects import source_defects_for
 
@@ -66,44 +70,20 @@ class _PreparedInvocation:
     published_modelo_root: Path | None
 
 
-@dataclass(frozen=True, slots=True)
-class _BootstrapTarget:
-    modelo: str
-    revision: str
-    source_ref: str
-    source_sha256: str
-    layout_id: str
-    line_ending: Literal["crlf", "lf", "none"]
-
-
-def _bootstrap_target(invocation: _Invocation, *, source_sha256: str) -> _BootstrapTarget:
+def _bootstrap_target(invocation: _Invocation, *, source_sha256: str) -> GeneratedExportBootstrapTarget:
     """Load the reviewed bootstrap authority for one explicitly owed tree."""
-    payload = tomllib.loads((Path(__file__).with_name("generated_export_bootstrap_targets.toml")).read_text("utf-8"))
-    matches = [
-        row
-        for row in payload.get("targets", [])
-        if row.get("modelo") == invocation.modelo
-        and row.get("revision") == invocation.revision
-        and row.get("source_ref") == invocation.source_ref
-        and row.get("source_sha256") == source_sha256
-    ]
-    if len(matches) != 1:
+    target = generated_export_bootstrap_target(
+        modelo=invocation.modelo,
+        revision=invocation.revision,
+        source_ref=invocation.source_ref,
+        source_sha256=source_sha256,
+    )
+    if target is None:
         raise ValueError(
             "no reviewed generated-export bootstrap target matches "
             f"{invocation.modelo}/{invocation.revision}/{invocation.source_ref}; publication is refused",
         )
-    row = matches[0]
-    line_ending = row.get("line_ending")
-    if line_ending not in {"crlf", "lf", "none"}:
-        raise ValueError("reviewed generated-export bootstrap target has invalid line ending")
-    return _BootstrapTarget(
-        modelo=str(row["modelo"]),
-        revision=str(row["revision"]),
-        source_ref=str(row["source_ref"]),
-        source_sha256=str(row["source_sha256"]),
-        layout_id=str(row["layout_id"]),
-        line_ending=line_ending,
-    )
+    return target
 
 
 def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
@@ -116,15 +96,16 @@ def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
         None,
     )
     bootstrap = None
+    bootstrap_target: GeneratedExportBootstrapTarget | None = None
     if not target_export_root.exists():
         if source is None:
             raise ValueError(f"no source {invocation.source_ref!r} exists for bootstrap target selection")
-        target = _bootstrap_target(invocation, source_sha256=source.sha256)
+        bootstrap_target = _bootstrap_target(invocation, source_sha256=source.sha256)
         bootstrap = GeneratedExportBootstrapTransport(
-            layout_id=target.layout_id,
-            line_ending=target.line_ending,
-            source_ref=target.source_ref,
-            source_sha256=target.source_sha256,
+            layout_id=bootstrap_target.layout_id,
+            line_ending=bootstrap_target.line_ending,
+            source_ref=bootstrap_target.source_ref,
+            source_sha256=bootstrap_target.source_sha256,
         )
     try:
         inputs = revision_render_inputs(
@@ -138,10 +119,13 @@ def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
         raise ValueError(str(error)) from error
 
     candidate_root = root / "candidate" / "registry" / "aeat"
-    _stage_candidate(
+    stage_generated_export_candidate(
+        target_root,
         candidate_root,
         modelo=invocation.modelo,
         revision=invocation.revision,
+        supporting_modelos=_supporting_modelos(invocation.modelo),
+        bootstrap_target=bootstrap_target,
     )
     validation = GeneratedExportTreeValidationContext(
         registry_root=candidate_root,
@@ -169,22 +153,6 @@ def _prepare(invocation: _Invocation, root: Path) -> _PreparedInvocation:
         target_export_root=target_export_root,
         published_modelo_root=_stage_published_modelo(root, modelo=invocation.modelo, revision=invocation.revision),
     )
-
-
-def _stage_candidate(candidate_root: Path, *, modelo: str, revision: str) -> None:
-    """Copy the selected non-export authority into an isolated candidate tree."""
-    source_root = bundled_path("registry", "aeat")
-    shutil.copytree(source_root / "legal", candidate_root / "legal")
-    if modelo == "303":
-        shutil.copytree(source_root / "m303_orden_anual", candidate_root / "m303_orden_anual")
-    source_modelo_root = source_root / "modelos" / modelo
-    staged_modelo_root = candidate_root / "modelos" / modelo
-    shutil.copytree(source_modelo_root, staged_modelo_root, ignore=shutil.ignore_patterns("export"))
-    for sibling in (staged_modelo_root / "revisions").iterdir():
-        if sibling.name != revision:
-            shutil.rmtree(sibling)
-    for supporting_modelo in _supporting_modelos(modelo):
-        shutil.copytree(source_root / "modelos" / supporting_modelo, candidate_root / "modelos" / supporting_modelo)
 
 
 def _supporting_modelos(modelo: str) -> frozenset[str]:

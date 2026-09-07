@@ -21,6 +21,7 @@ from ..pipeline._tree_publication import (
     GeneratedExportTreeTargetStateReceipt,
     _require_expected_target_state,
 )
+from ..pipeline.candidate_staging import retarget_bootstrap_construct_export_layout
 from ..pipeline.cli import (
     _bootstrap_target,
     _check,
@@ -28,7 +29,6 @@ from ..pipeline.cli import (
     _prepare,
     _PreparedInvocation,
     _publish,
-    _render_candidate,
     app,
 )
 from ..pipeline.render_check import (
@@ -113,6 +113,59 @@ def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_2024_design() -> No
     assert target.layout_id == "generated-modelo-200-2024-fichero"
     assert target.line_ending == "crlf"
     assert target.source_ref == "aeat-dr-200-2024"
+    assert target.supersedes_layout_id is None
+    assert target.superseded_construct_references == 0
+
+
+def test_bootstrap_target_pins_the_m390_manual_layout_reference_it_retires() -> None:
+    """The first M390 cutover names its superseded construct member exactly."""
+    target = _bootstrap_target(
+        _Invocation("390", "2022", "aeat-dr-390-2022", 2022, "0A"),
+        source_sha256="7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe",
+    )
+
+    assert target.supersedes_layout_id == "modelo-390-2022-fichero-boe"
+    assert target.superseded_construct_references == 1
+
+
+@pytest.mark.parametrize(
+    ("layout_ids", "expected_references", "found_references"),
+    (
+        ([], 1, 0),
+        (["manual-layout"], 2, 1),
+        (["manual-layout", "manual-layout"], 1, 2),
+    ),
+    ids=("missing", "stale-pin", "widened"),
+)
+def test_bootstrap_construct_retarget_refuses_reference_count_drift_without_mutation(
+    tmp_path: Path,
+    layout_ids: list[str],
+    expected_references: int,
+    found_references: int,
+) -> None:
+    """Missing, stale, or widened superseded membership invalidates its explicit pin."""
+    path = tmp_path / "revisions" / "2022" / "constructs" / "0001-constructs.toml"
+    path.parent.mkdir(parents=True)
+    original = (
+        (f'[[revisions."2022".constructs]]\nid = "annual"\nexport_layouts = {layout_ids!r}\n')
+        .replace("'", '"')
+        .encode()
+    )
+    path.write_bytes(original)
+
+    with pytest.raises(
+        ValueError,
+        match=rf"expected {expected_references} construct reference\(s\), found {found_references}",
+    ):
+        retarget_bootstrap_construct_export_layout(
+            tmp_path,
+            revision="2022",
+            superseded_layout_id="manual-layout",
+            generated_layout_id="generated-layout",
+            expected_references=expected_references,
+        )
+
+    assert path.read_bytes() == original
 
 
 def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> None:
@@ -336,13 +389,17 @@ def test_modelo_200_bootstrap_assembly_reaches_the_real_join_and_renderer(tmp_pa
 
 
 def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_path: Path) -> None:
-    """The operator path renders the adjudicated source typo through its shared catalogue."""
+    """The operator path validates M390 without consulting either prior export tree."""
     prepared = _prepare(
         _Invocation("390", "2022", "aeat-dr-390-2022", 2022, "0A"),
         tmp_path,
     )
 
-    rendered = _render_candidate(prepared)
+    staged_revision = prepared.candidate_root / "modelos" / "390" / "revisions" / "2022"
+    assert not (staged_revision / "export").exists()
+    assert not (staged_revision / "export_layouts").exists()
+
+    result, rendered, _target_state = _check(prepared)
     close = next(
         field
         for record in rendered.layout.records
@@ -350,4 +407,5 @@ def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_p
         if str(field.id) == "modelo-390-page-07-close"
     )
 
+    assert result == "publishable_absence"
     assert close.literal == "</T39007000>"
