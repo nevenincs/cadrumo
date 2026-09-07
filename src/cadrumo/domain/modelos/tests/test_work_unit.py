@@ -576,7 +576,12 @@ def test_no_parallel_work_unit_model_outside_canonical_module() -> None:
     canonical = source_root / "domain" / "modelos" / "work_unit.py"
     forbidden = "class WorkUnit("
     offenders = []
-    for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
+    modules = scan_directory(source_root, pattern="*.py", recursive=True, require_root=True)
+    assert modules, (
+        f"the sweep of {source_root} matched no module; "
+        "a walk that reads nothing reports no parallel WorkUnit exactly as a tree with one canonical model does"
+    )
+    for py_file in modules:
         if py_file == canonical:
             continue
         if py_file.name.startswith("test_"):
@@ -620,7 +625,12 @@ def test_no_parallel_work_unit_storage_namespace() -> None:
     }
     forbidden_namespace = '"cadrumo.domain.modelos.work_units"'
     offenders = []
-    for py_file in scan_directory(source_root, pattern="*.py", recursive=True):
+    modules = scan_directory(source_root, pattern="*.py", recursive=True, require_root=True)
+    assert modules, (
+        f"the sweep of {source_root} matched no module; "
+        "a walk that reads nothing reports no parallel WorkUnit exactly as a tree with one canonical model does"
+    )
+    for py_file in modules:
         if py_file in allowlisted:
             continue
         if py_file.name.startswith("test_"):

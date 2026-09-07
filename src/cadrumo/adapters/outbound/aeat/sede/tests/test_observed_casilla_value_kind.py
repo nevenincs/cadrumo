@@ -179,7 +179,12 @@ def _carrier_consuming_modules() -> list[Path]:
     casillas, a ``.value`` converted to a Decimal is the read this rule governs.
     """
     modules: list[Path] = []
-    for path in scan_directory(_SRC_ROOT, pattern="*.py", recursive=True):
+    modules = scan_directory(_SRC_ROOT, pattern="*.py", recursive=True, require_root=True)
+    assert modules, (
+        f"the sweep of {_SRC_ROOT} matched no module; "
+        "a walk that reads nothing reports no direct decimal read of a carrier value exactly as a clean tree does"
+    )
+    for path in modules:
         parts = path.relative_to(_SRC_ROOT).parts
         if "tests" in parts or parts[0] == "_data":
             continue

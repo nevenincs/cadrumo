@@ -322,7 +322,7 @@ def assemble_modelo_lifecycle_history(
     admitted = admitted_modelo_history_event_types()
     wanted_year = None if filing_year is None else str(filing_year)
 
-    collected = []
+    collected: list[BucketEvent] = []
     for event in repository.load().events.values():
         if event.event_type not in admitted:
             continue
