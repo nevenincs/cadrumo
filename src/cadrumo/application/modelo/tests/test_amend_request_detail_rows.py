@@ -117,8 +117,10 @@ def test_rows_reach_the_authority_as_the_exact_domain_rows_submitted() -> None:
 
     request = _request(detail_rows=(wire_detail_row(row).model_dump(),))
 
-    assert len(request.detail_rows or ()) == 1
-    translated = (request.detail_rows or ())[0].to_row()
+    carried = request.detail_rows
+    assert carried is not None
+    assert len(carried) == 1
+    translated = carried[0].to_row()
     assert translated == row
     assert type(translated) is type(row)
 
@@ -135,7 +137,9 @@ def test_every_detail_row_kind_can_be_carried_by_an_amendment(kind: str) -> None
 
     request = _request(detail_rows=(mirror.model_dump(),))
 
-    assert (request.detail_rows or ())[0].to_row() == expected
+    carried = request.detail_rows
+    assert carried is not None
+    assert carried[0].to_row() == expected
 
 
 def test_all_three_states_survive_the_journal_round_trip() -> None:

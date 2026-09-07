@@ -31,6 +31,7 @@ import yaml
 from ....domain.modelos.row_models import Modelo347ContraparteRow
 from .._modelo import _resolve_amendment_detail_rows
 from .._modelo_core_command_specs import MODELO_CORE_COMMAND_SPECS
+from ..command_spec import CommandSpec, OptionSpec
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -44,9 +45,14 @@ _AMEND_ROW_KEYS = (
 _ROW_SPEC = "contraparte nif=B12345674 nombre=Acme importe_Q1=1000.00 clave_operacion=B pais_codigo=ES"
 
 
-def _amend_spec() -> object:
-    """The live amend command declaration, found by token rather than index."""
+def _amend_spec() -> CommandSpec:
+    """The live amend command declaration, found by key rather than index."""
     return next(spec for spec in MODELO_CORE_COMMAND_SPECS if spec.key == "app_modelo_work_amend")
+
+
+def _amend_options() -> tuple[OptionSpec, ...]:
+    """Only the option parameters; an argument carries no declarations."""
+    return tuple(option for option in _amend_spec().parameters if isinstance(option, OptionSpec))
 
 
 def test_no_row_flags_at_all_says_nothing_rather_than_declaring_none() -> None:
@@ -88,7 +94,9 @@ def test_several_rows_are_carried_in_the_order_given() -> None:
 
     resolved = _resolve_amendment_detail_rows((_ROW_SPEC, other), declared_none=False)
 
-    assert [row.nif for row in resolved or ()] == ["B12345674", "B12345675"]
+    assert resolved is not None
+    contrapartes = [row for row in resolved if isinstance(row, Modelo347ContraparteRow)]
+    assert [row.nif for row in contrapartes] == ["B12345674", "B12345675"]
 
 
 def test_declaring_none_while_also_giving_rows_is_refused() -> None:
@@ -109,9 +117,7 @@ def test_a_malformed_row_spec_is_refused_at_the_boundary() -> None:
 
 def test_the_command_declares_both_row_options() -> None:
     """An option the resolver honours but argv cannot supply is unreachable."""
-    declarations = {
-        declaration for option in _amend_spec().parameters for declaration in getattr(option, "declarations", ())
-    }
+    declarations = {declaration for option in _amend_options() for declaration in option.declarations}
 
     assert "--row" in declarations
     assert "--no-detail-rows" in declarations
@@ -123,11 +129,7 @@ def test_the_nil_declaration_is_a_flag_rather_than_a_value_option() -> None:
     A flag that accepted a value would give the operator a second way to say
     "no" that this command does not read.
     """
-    flag = next(
-        option
-        for option in _amend_spec().parameters
-        if "--no-detail-rows" in getattr(option, "declarations", ())
-    )
+    flag = next(option for option in _amend_options() if "--no-detail-rows" in option.declarations)
 
     assert flag.is_flag is True
     assert flag.name == "no_detail_rows"

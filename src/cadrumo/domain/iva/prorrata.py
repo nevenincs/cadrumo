@@ -63,6 +63,15 @@ Legal sources (Ley 37/1992 del IVA, BOE-A-1992-28740):
   computes the predicate; sector identification itself is a profile/
   registry concern carried in :class:`ProrrataSector`.
 
+  DECLARED, NOT YET REACHED. The general and especial regimes of this
+  substrate are computed by the live calculation path; the sectoral one is
+  not. Nothing calls :func:`requires_sectoral_separation` or
+  :func:`compute_sectoral_prorrata`, so a taxpayer whose activities do form
+  differentiated sectors deducts without the separation art. 9.1.c requires.
+  Said here rather than left to a caller search, because everything around
+  it in this module IS reached and a reader has no way to tell the two
+  apart.
+
 The substrate distinguishes *provisional* and *definitiva* prorrata
 percentages explicitly (LIVA arts. 105 and 109). The provisional
 percentage applies during quarterly/monthly Modelo 303 filings and is
