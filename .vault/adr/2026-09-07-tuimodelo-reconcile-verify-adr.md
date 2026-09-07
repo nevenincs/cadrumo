@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c03a1aa22b6acbd96d7af34e3707d354e93a5a714df0fa4a3e691de22252d354'
+body_hash: 'sha256:ee374ff2968b940f2b6f80e6bed4978b29887c7222197131d468179857092f6b'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-modelo-edit-contract-adr]]"
@@ -14,7 +14,7 @@ related:
   - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
-# `tuimodelo` adr: `reconciliation and verification surfacing` | (**status:** `proposed`)
+# `tuimodelo` adr: `reconciliation and verification surfacing` | (**status:** `accepted`)
 
 ## Problem Statement
 

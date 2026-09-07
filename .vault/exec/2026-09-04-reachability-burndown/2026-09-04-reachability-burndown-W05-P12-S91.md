@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e95ead4d9672124c3175aa17ccf4494841209ce07022e632a3eadc333af56f7'
+body_hash: 'sha256:51a1819e241eea719aae772cfdb38b8e238ddf24a75f4936e2fcb1419beb1e01'
 step_id: 'S91'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Sweep the shipped tree for the docstring shape the filing-status token carried, an unreached symbol whose own sentence asserts a live consumer, and correct the two real ones: the corpus-drift assertion claimed the CI gate uses it when only its package test does, and the first-slice routing table claimed the snapshot-time referential-integrity gate confirms its targets when that confirmation is performed by the routing test instead. Do not ship the scan as a gate: half its hits are grammatical, the claim verb attaching to a different noun.
 

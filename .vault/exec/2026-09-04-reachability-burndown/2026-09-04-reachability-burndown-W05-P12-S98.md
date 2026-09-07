@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbeb5be93280288455fd48c2532f30e242bfaeb85dd23ed2dc0ec6ee701d664a'
+body_hash: 'sha256:b4b303371440393bcb63e25690a4842a06410be1d28634d6ce74c5cab80b5064'
 step_id: 'S98'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Rank the whole residue by how well its modules hide it, since a partially-live module argues against a reader noticing the one path that is not reached, and act on the highest-stakes entry: sixteen open findings sit in modules that are at least sixty percent live, led by a custody port facade at ninety-seven percent and the sectoral withholding rate set at ninety, whose professional and statutory neighbours all reach the inference while it alone is consulted by nothing, so a retencion matching two or one percent is classified by whatever general rule applies rather than as a sectoral apartado.
 

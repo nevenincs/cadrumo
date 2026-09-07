@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e208d4882c0254ecc29059d98a40c76ac3d911b5d6999e12bff389f01564dded'
+body_hash: 'sha256:94b7ed869065b71944b7bf9926a2cc9c96a80cc02a2613ef5a86c1e9482b3046'
 step_id: 'S96'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Gate the class the escaso-valor threshold belonged to: every constant in the external-constants file is either referenced by shipped code or carries a ledger entry saying why it is not, since a legally grounded figure sitting among enforced ones reads as enforced and no other gate sees the difference. Sweep the file first, finding eight unapplied constants and all eight already adjudicated, so the gate starts green over a real population rather than a repaired one.
 

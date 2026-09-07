@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:b4689ddffdfdce6a1128255f71ab30f6b77131a21f3fd6d210bc25cd439d9627'
+body_hash: 'sha256:e747b1e8b725bfa32697f7ef891d610f2a047bcb01bb94695843704ec816ee0e'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -15,7 +15,7 @@ related:
   - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
-# `tuimodelo` adr: `filing lifecycle, history and status surfacing` | (**status:** `proposed`)
+# `tuimodelo` adr: `filing lifecycle, history and status surfacing` | (**status:** `accepted`)
 
 ## Problem Statement
 

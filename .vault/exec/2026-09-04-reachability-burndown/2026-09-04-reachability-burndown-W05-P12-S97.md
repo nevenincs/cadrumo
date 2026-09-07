@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:218ed37e9f89dde8159cd7a5f224b8da4d0749563f88a4aa7242c332552b7524'
+body_hash: 'sha256:fc340b29f202608cc4fccd1c073df8f98060ea667d636c20b12f948ddcafb532'
 step_id: 'S97'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Re-verify every open ledger claim with the alias-aware counting the previous step's bug exposed, finding none contradicted, then close the silence around the sectoral prorrata regime: the general and especial regimes of that substrate are computed by the live path and the differentiated-sectors one is not, so a taxpayer whose activities do form distinct sectors deducts without the separation art. 9.1.c requires. Wiring it stays a filing-grade capability decision; the module now says which of its regimes is reached, because everything around the sectoral path is.
 

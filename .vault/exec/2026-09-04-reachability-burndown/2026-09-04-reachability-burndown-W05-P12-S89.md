@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8081a2093fe6723cd64906e6055ee1bf9dbc8aa3a23158d858ba893dc4c79670'
+body_hash: 'sha256:0012e7928c7671f40156dc683ae42f976aade841dbf86799ad58d5d52fad2e5c'
 step_id: 'S89'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Apply the run-the-owning-gate rule to every artefact this campaign edits, which found all of them green, then re-test the root CLI tty cluster and split it: the interactivity refusal is in force through a richer construct that weighs stdout and the terminal type as well as stdin, and the entry's colour claim went stale when this campaign fixed the localised error path earlier while the prose kept the old sentence. The progress rule is waiting on a widget no entrypoint renders.
 

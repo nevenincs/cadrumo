@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:231f0593e8d881e0e704d48357ede8dcb37e38107f4f3c43854ab2332fc86e42'
+body_hash: 'sha256:66885eabee64d13350ff021c982201c178220664a3e4bd83475445e79e6573c2'
 step_id: 'S492'
 related:
   - "[[2026-08-11-tui-architecture-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Take the custody keychain lane from thirty three failures to two by diagnosing every case individually against its own locals refusal code or production log rather than the marker, guarding only those the store actually causes so the passing count never moves, and leaving the two that are not the store visible with their failing expressions recorded
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:853d0c26e332444d5673478305ea945f40db92eb13b63fd2e46602f2727080c1'
+body_hash: 'sha256:969280f4e4323df5f7d135334251cecc01a3243b4762ad32e1b47ac8965642c4'
 step_id: 'S94'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Sweep for the shape the workspace port turned out to be, an unreached Protocol whose members shipped classes do satisfy, and act on what it finds: the generated-artifact contract was recorded as having no implementer at all because it requires a sources member no class provides, and two classes in its own module provide all eight. Seven of the eight are bare annotations, so any derivation reading only the class dictionary sees one member and concludes wrongly, which a first draft of the gate reproduced. Give the contract a conformance gate and harden the previous step's the same way.
 

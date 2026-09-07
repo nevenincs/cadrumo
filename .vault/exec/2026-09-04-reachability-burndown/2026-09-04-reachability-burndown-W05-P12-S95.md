@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:b42c1291e325db02bda52a7feed007ed17d22510e6ec5e35df65f2380c055427'
+body_hash: 'sha256:05e1d6d43d458307b04d938f15c10245d44c059a64bf930eb385c45c11ea5df4'
 step_id: 'S95'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Check whether the wrong-derivation error that produced a false structural claim recurs elsewhere, finding no open cluster still makes one, then close the silence around the art-108 escaso-valor threshold: the figure sits among enforced thresholds in the external constants with nothing saying it is not one, while the bienes-de-inversion register takes eligibility as an operator boolean and stores no acquisition value to compare. Whether the product should judge art. 108 stays an owner decision; the constant now states that it is declared and not yet applied.
 

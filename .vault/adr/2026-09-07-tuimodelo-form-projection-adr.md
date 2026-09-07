@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:08372fc220272c83d23b8b08e49b98e077e279546f7ff78e05c27f0ef2465cb6'
+body_hash: 'sha256:7e2624fdd4e52559c45e235eac40dd6f58f9804d17763e6b1a4b0f3cb3ebd481'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]"
@@ -17,7 +17,7 @@ related:
   - "[[2026-09-07-tuimodelo-reconcile-verify-adr]]"
 ---
 
-# `tuimodelo` adr: `declared form projection for schema-derived declaration surfaces` | (**status:** `proposed`)
+# `tuimodelo` adr: `declared form projection for schema-derived declaration surfaces` | (**status:** `accepted`)
 
 ## Problem Statement
 

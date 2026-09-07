@@ -5,14 +5,14 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:3671144a1c8a81ea4a319caca7b869f4b0f21dfd6f444ba61ac47572da385605'
+body_hash: 'sha256:86f02c28b5c43c070519eb449f8830a11a0e8f57dc6a3fdbc78e200a9ce2a4c1'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
 ---
 
-# `tuimodelo` adr: `satellite command family dispositions` | (**status:** `proposed`)
+# `tuimodelo` adr: `satellite command family dispositions` | (**status:** `accepted`)
 
 ## Problem Statement
 

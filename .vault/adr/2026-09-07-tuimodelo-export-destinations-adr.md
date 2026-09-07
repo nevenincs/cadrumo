@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:d6b5cac81b0d8be652cbc1b6969332facff9953ef07dc51d782151d2566fc1ac'
+body_hash: 'sha256:f3e257e98dd50be7e270aa00b4a2cafc40490d252e9e01377bb7a2ae6c116b0d'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -14,7 +14,7 @@ related:
   - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
-# `tuimodelo` adr: `export destinations and import surfaces` | (**status:** `proposed`)
+# `tuimodelo` adr: `export destinations and import surfaces` | (**status:** `accepted`)
 
 ## Problem Statement
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a0655e60f234681dabda41027843b0a425cb2b9f3755152a7b67a85610c9fb5'
+body_hash: 'sha256:95eb67e77393eadb822b9a6d3316cb7f549a21e3e03f160692421886d85ae3ee'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -15,7 +15,7 @@ related:
   - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
-# `tuimodelo` adr: `period-driven declaration creator` | (**status:** `proposed`)
+# `tuimodelo` adr: `period-driven declaration creator` | (**status:** `accepted`)
 
 ## Problem Statement
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe622c8de682ed50cf9d609e2da55cca478c85d1a1f8bd4cede1fda394c8ad90'
+body_hash: 'sha256:ba566efc73cb3e08610d0e41673f864f3709272395bf6899876faf364d099139'
 step_id: 'S90'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Sweep every open cluster for the stale-prose shape found twice by reading, then correct the one false docstring the sweep's subject exposed: five clusters name a live symbol inside an unreached-claim sentence and all five are legitimate contrast mentions, so no further staleness exists. The filing-status token's docstring asserted that mounted live command families use it while none reads it, and a sentence claiming a wiring the tree does not have outranks the code until someone checks; correct it rather than leaving the false half waiting on the routing decision.
 

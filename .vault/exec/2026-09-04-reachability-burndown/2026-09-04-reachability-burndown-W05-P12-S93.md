@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e157b39f7cb8341602fe8b70819f679a2b530cff2147c2c5f6237d014ecf229e'
+body_hash: 'sha256:7cdeffec89199add413bd26703b87820b050f17b4a552715aaee59bb08d575e0'
 step_id: 'S93'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Sweep every open finding against its module siblings' in-package consumer counts, which is what exposed the execution-policy cluster, and find none at the threshold that discriminated there; then close the last member of the public-types cluster, which is not the displaced shape the other six were. The workspace atomic projection port is the contract its module says eight envelope realizations exist to satisfy, and structural typing let that claim go unchecked, so give it a conformance gate deriving the required members from the Protocol rather than restating them.
 

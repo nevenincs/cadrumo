@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:00c16fefa5d6e530e0d4bee7faeb2129b88dd09f91d24bc111447a862ac9baf5'
+body_hash: 'sha256:b09e7376792207f7967f69347d31520cb52e5d81dad1475018b46cc692ed0a1c'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -14,7 +14,7 @@ related:
   - "[[2026-09-07-tuimodelo-satellite-families-adr]]"
 ---
 
-# `tuimodelo` adr: `adapter to backend migration boundary` | (**status:** `proposed`)
+# `tuimodelo` adr: `adapter to backend migration boundary` | (**status:** `accepted`)
 
 ## Problem Statement
 
