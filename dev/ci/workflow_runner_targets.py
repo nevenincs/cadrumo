@@ -35,6 +35,8 @@ import re
 from collections.abc import Mapping, Sequence
 from typing import Any, Final, cast
 
+from .workflow_run_text import executed_text
+
 #: The dimension a `runs-on:` expression selects, e.g. `os` in `${{ matrix.os }}`.
 _MATRIX_DIMENSION: Final = re.compile(r"matrix\.([A-Za-z_][\w-]*)")
 
@@ -190,11 +192,12 @@ def _runtime_matrix_targets(expression: str, workflow: Mapping[str, Any]) -> lis
 def _runner_label_literals(script: str) -> list[object]:
     """Return the runner labels ``script`` names, in first-appearance order.
 
-    Comment lines are dropped before matching. A label named only in a comment
-    is not a label the step emits, and reading one as a target would let a
-    workflow be judged on prose it does not execute.
+    Comment lines are dropped before matching, by the shared reader rather
+    than a private copy of its rule. A label named only in a comment is not a
+    label the step emits, and reading one as a target would let a workflow be
+    judged on prose it does not execute.
     """
-    executed = "\n".join(line for line in script.splitlines() if not line.strip().startswith("#"))
+    executed = executed_text(script)
     grouped: list[tuple[str, ...]] = []
     for group in _RUNNER_LABEL_GROUP.finditer(executed):
         members = tuple(member.group("label") for member in _GROUP_MEMBER.finditer(group.group("body")))

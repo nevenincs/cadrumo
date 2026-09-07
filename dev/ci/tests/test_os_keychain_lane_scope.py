@@ -33,6 +33,7 @@ from typing import Final
 import pytest
 
 from ..._paths import REPO_ROOT
+from ..workflow_run_text import executed_lines
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -43,11 +44,7 @@ _PACKAGE_ROOT: Final = REPO_ROOT / "src" / "cadrumo"
 def _lane_paths() -> tuple[Path, ...]:
     """Return the path arguments the os-keychain recipe selects."""
     justfile = (REPO_ROOT / "justfile").read_text(encoding="utf-8")
-    selecting = [
-        line
-        for line in justfile.splitlines()
-        if f"-m {_MARKER}" in line and "pytest" in line and not line.lstrip().startswith("#")
-    ]
+    selecting = [line for line in executed_lines(justfile) if f"-m {_MARKER}" in line and "pytest" in line]
     assert selecting, "no recipe selects the os_keychain marker; this gate would measure nothing"
     assert len(selecting) == 1, f"expected exactly one os_keychain selector, found {len(selecting)}"
     tokens = [token for token in selecting[0].split() if token.startswith("src/")]

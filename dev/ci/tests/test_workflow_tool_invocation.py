@@ -28,6 +28,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
+from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -104,16 +105,12 @@ def _executable_run_surface(text: str) -> str:
     assert isinstance(document, dict)
     jobs = document["jobs"]
     assert isinstance(jobs, dict)
-    lines: list[str] = []
-    for job in jobs.values():
-        for step in job.get("steps") or []:
-            if not isinstance(step, dict) or "run" not in step:
-                continue
-            for line in str(step["run"]).splitlines():
-                stripped = line.strip()
-                if stripped and not stripped.startswith("#"):
-                    lines.append(stripped)
-    return "\n".join(lines)
+    return executed_text(
+        step["run"]
+        for job in jobs.values()
+        for step in job.get("steps") or []
+        if isinstance(step, dict) and "run" in step
+    )
 
 
 def test_compatibility_workflow_uses_module_entry_points() -> None:

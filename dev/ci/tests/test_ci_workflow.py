@@ -14,6 +14,7 @@ import yaml
 from ..._paths import REPO_ROOT
 from ...packaging._command import run_command
 from ..lane_reachability import declared_lanes, resolved_recipe_commands
+from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -137,13 +138,7 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
     assert job.get("continue-on-error") is not True
     assert job["timeout-minutes"] <= 15
 
-    executed = "\n".join(
-        line
-        for step in job["steps"]
-        if "run" in step
-        for line in str(step["run"]).splitlines()
-        if line.strip() and not line.strip().startswith("#")
-    )
+    executed = executed_text(step.get("run") for step in job["steps"])
     assert ".github/workflows/*.yml" in executed, "the linter must read every workflow, not a chosen few"
     verification = executed.index("sha256sum --check --strict")
     assert verification < executed.index("-no-color"), "the archive is executed before its digest is checked"

@@ -16,6 +16,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
+from ..workflow_run_text import executed_lines, executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -51,22 +52,23 @@ def _triggers(document: dict[str, Any]) -> dict[str, Any]:
     return triggers
 
 
+def _run_steps(job: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return the job's steps that carry a ``run`` script."""
+    return [step for step in job.get("steps", []) if isinstance(step, dict) and "run" in step]
+
+
 def _run_lines(job: dict[str, Any]) -> list[str]:
-    """Return executable run lines, excluding comments and blank lines."""
-    lines: list[str] = []
-    for step in job.get("steps", []):
-        if not isinstance(step, dict) or "run" not in step:
-            continue
-        for line in str(step["run"]).splitlines():
-            stripped = line.strip()
-            if stripped and not stripped.startswith("#"):
-                lines.append(stripped)
-    return lines
+    """Return executable run lines, excluding comments and blank lines.
+
+    The comment rule is :mod:`dev.ci.workflow_run_text`'s, not a local copy of
+    it: a command named only in a comment is not a command the job runs.
+    """
+    return [line for step in _run_steps(job) for line in executed_lines(step["run"])]
 
 
 def _run_surface(job: dict[str, Any]) -> str:
     """Return the executable surface of a job as one searchable string."""
-    return "\n".join(_run_lines(job))
+    return executed_text(step["run"] for step in _run_steps(job))
 
 
 def _steps_with_run(job: dict[str, Any]) -> list[dict[str, Any]]:
