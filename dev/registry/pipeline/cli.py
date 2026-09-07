@@ -1,4 +1,4 @@
-"""Operator invocation surface for one generated registry export tree.
+"""Operator check, publication, and digest-bound republication for one generated tree.
 
 This privileged development CLI intentionally has no product-CLI registration.
 It assembles one explicitly selected revision from the validated registry, then
@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
 from ._export_tree import RenderedExportTree, render_complete_export_tree
-from ._provenance_manifest import ExportFragmentTarget
+from ._provenance_manifest import SHA256_PATTERN, ExportFragmentTarget
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -39,12 +39,18 @@ from .candidate_staging import (
     stage_continuity_metadata,
     stage_generated_export_candidate,
 )
-from .render_check import GeneratedExportBootstrapTransport, RevisionRenderInputs, revision_render_inputs
+from .render_check import (
+    GeneratedExportBootstrapTransport,
+    RenderComparison,
+    RevisionRenderInputs,
+    compare_export_tree_roots,
+    revision_render_inputs,
+)
 from .source_defects import source_defects_for
 
 app = typer.Typer(
     name="pipeline",
-    help="Check or transactionally publish one generated AEAT registry export tree.",
+    help="Check, publish, or digest-bound republish one generated AEAT registry export tree.",
     no_args_is_help=True,
 )
 
@@ -58,6 +64,7 @@ class _Invocation:
     source_ref: str
     filing_year: int
     period: str
+    expected_manifest_sha256: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -281,10 +288,67 @@ def _publish(
     )
 
 
+def _require_republication_eligibility(
+    invocation: _Invocation,
+    target_state: GeneratedExportTreeTargetStateReceipt,
+    comparison: RenderComparison,
+) -> None:
+    """Admit one explicitly digest-bound manifest repair and nothing broader."""
+    expected = invocation.expected_manifest_sha256
+    if expected is None or re.fullmatch(SHA256_PATTERN, expected) is None:
+        raise ValueError("republish requires an exact lowercase 64-character target manifest sha256")
+    if target_state.manifest_sha256 is None:
+        raise ValueError("republish requires an existing generated export tree")
+    if target_state.manifest_sha256 != expected:
+        raise ValueError(
+            "republish target manifest sha256 differs from the explicitly reviewed digest: "
+            f"expected {expected}, found {target_state.manifest_sha256}",
+        )
+    if comparison.modelo != invocation.modelo or comparison.revision != invocation.revision:
+        raise ValueError("republish comparison identity differs from the explicitly selected target")
+    if comparison.disposition_class != "provenance_only":
+        raise ValueError(
+            "republish is restricted to semantically reproduced attestation drift; "
+            f"differing={list(comparison.differing)!r} "
+            f"only_committed={list(comparison.only_committed)!r} "
+            f"only_rendered={list(comparison.only_rendered)!r}",
+        )
+
+
+def _republish(prepared: _PreparedInvocation, target_state: GeneratedExportTreeTargetStateReceipt) -> None:
+    """Replace one stale manifest only after an exact target-bound safety proof."""
+    rendered = _render_candidate(prepared)
+    candidate_export_root = (
+        prepared.candidate_root
+        / "modelos"
+        / prepared.invocation.modelo
+        / "revisions"
+        / prepared.invocation.revision
+        / "export"
+    )
+    comparison = compare_export_tree_roots(
+        modelo=prepared.invocation.modelo,
+        revision=prepared.invocation.revision,
+        layout_id=prepared.inputs.layout_id,
+        committed_root=prepared.target_export_root,
+        rendered_root=candidate_export_root,
+    )
+    _require_republication_eligibility(prepared.invocation, target_state, comparison)
+    validate_generated_export_tree(
+        context=_bootstrap_validation(prepared.validation),
+        joined=prepared.inputs.joined,
+        semantic_map=prepared.inputs.semantic_map,
+        rendered=rendered,
+        render_profile=prepared.inputs.render_profile,
+        render_profile_source_evidence=prepared.inputs.render_profile_source_evidence,
+    )
+    _publish(prepared, rendered, target_state)
+
+
 def _run(
     invocation: _Invocation,
     *,
-    action: Literal["check", "publish"],
+    action: Literal["check", "publish", "republish"],
     temporary_directory: Callable[..., tempfile.TemporaryDirectory[str]] = tempfile.TemporaryDirectory,
 ) -> None:
     """Run one explicit lifecycle action without retaining a staging tree."""
@@ -299,11 +363,14 @@ def _run(
                     f"modelo={invocation.modelo} revision={invocation.revision} source={invocation.source_ref} "
                     f"result={result}",
                 )
-            else:
+            elif action == "publish":
                 # Publishing is never the first question: a candidate must first
                 # pass the independent read-only proof against its live target.
                 _result, rendered, target_state = _check(prepared)
                 _publish(prepared, rendered, target_state)
+            else:
+                target_state = GeneratedExportTreeTargetStateReceipt.observe(prepared.target_export_root)
+                _republish(prepared, target_state)
     except (RegistryError, ValueError) as error:
         typer.echo(f"refused: {error}", err=True)
         raise typer.Exit(code=1) from error
@@ -339,6 +406,26 @@ def publish_command(
     """Check, then transactionally publish one target through the canonical authority."""
     _run(_Invocation(modelo, revision, source_ref, filing_year, period), action="publish")
     typer.echo(f"published modelo={modelo} revision={revision} source={source_ref}")
+
+
+@app.command("republish")
+def republish_command(
+    modelo: _MODELO,
+    revision: _REVISION,
+    source_ref: _SOURCE,
+    filing_year: _FILING_YEAR,
+    period: _PERIOD,
+    expected_manifest_sha256: Annotated[
+        str,
+        typer.Argument(help="Exact current manifest sha256 reviewed for provenance-only replacement."),
+    ],
+) -> None:
+    """Replace one digest-pinned tree only when its records reproduce semantically."""
+    _run(
+        _Invocation(modelo, revision, source_ref, filing_year, period, expected_manifest_sha256),
+        action="republish",
+    )
+    typer.echo(f"republished modelo={modelo} revision={revision} source={source_ref}")
 
 
 __all__ = ["app"]

@@ -67,7 +67,7 @@ from ..pipeline.candidate_staging import (
     stage_continuity_metadata,
     stage_generated_export_candidate,
 )
-from ..pipeline.render_check import parsed_tree_file
+from ..pipeline.render_check import compare_revision_against_committed, parsed_tree_file, record_drift_dispositions
 from ..pipeline.source_defects import source_defects_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -95,6 +95,17 @@ class _GeneratedTree:
     @override
     def __str__(self) -> str:
         return f"m{self.modelo}-{self.revision}"
+
+
+@dataclass(frozen=True)
+class _ReproductionPendingPin:
+    """One source-bound reason a semantically reproducible tree cannot yet be republished."""
+
+    source_ref: str
+    source_sha256: str
+    reason: str
+    reconsideration_condition: str
+    check_mode_refusal: str
 
 
 def _generated_trees() -> tuple[_GeneratedTree, ...]:
@@ -145,6 +156,120 @@ def _generated_trees() -> tuple[_GeneratedTree, ...]:
 
 
 _GENERATED_TREES = _generated_trees()
+_RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispositions()}
+_REPRODUCTION_PENDING = {
+    "m185-2025-y-siguientes": _ReproductionPendingPin(
+        source_ref="aeat-dr-185-2026",
+        source_sha256="102dc91b4e9484b830c81e790cf08569be95e2854fee1138f63f363d35d2bcae",
+        reason="revision earns applicability authority, below the publisher's calculation-grade floor",
+        reconsideration_condition=(
+            "Reconsider when the revision earns calculation authority or the generated tree is withdrawn."
+        ),
+        check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
+    ),
+    "m222-2025-y-siguientes": _ReproductionPendingPin(
+        source_ref="aeat-dr-222-2025",
+        source_sha256="0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51",
+        reason="revision earns applicability authority, below the publisher's calculation-grade floor",
+        reconsideration_condition=(
+            "Reconsider when the revision earns calculation authority or the generated tree is withdrawn."
+        ),
+        check_mode_refusal="cannot satisfy the requested 'filing' snapshot authority",
+    ),
+    "m202-2019-2022": _ReproductionPendingPin(
+        source_ref="aeat-dr-202-2019",
+        source_sha256="96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db",
+        reason="isolated validation makes cross-revision singleton semantic roles appear on exactly one casilla",
+        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
+        check_mode_refusal="appears on exactly one casilla",
+    ),
+    "m202-2023-2024": _ReproductionPendingPin(
+        source_ref="aeat-dr-202-2023",
+        source_sha256="1e4881439e25417df5a8584bffd7149ca0952e2df53963b19c0346572259bec7",
+        reason="isolated validation makes cross-revision singleton semantic roles appear on exactly one casilla",
+        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
+        check_mode_refusal="appears on exactly one casilla",
+    ),
+    "m202-2025-y-siguientes": _ReproductionPendingPin(
+        source_ref="aeat-dr-202-2025",
+        source_sha256="04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c",
+        reason="isolated validation loses exact source-revision coverage needed by the cross-modelo relation",
+        reconsideration_condition="Reconsider when generated validation preserves Modelo 202 cross-revision facts.",
+        check_mode_refusal="lacks exact source revision coverage",
+    ),
+    "m303-2022": _ReproductionPendingPin(
+        source_ref="aeat-dr-303-2022",
+        source_sha256="6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60",
+        reason=(
+            "the committed attestation predates current record serialization, while attempted republication is "
+            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
+        ),
+        reconsideration_condition=(
+            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
+        ),
+        check_mode_refusal="export provenance output-file digests do not match generated tree",
+    ),
+    "m303-2023": _ReproductionPendingPin(
+        source_ref="aeat-dr-303-2023",
+        source_sha256="72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4",
+        reason=(
+            "the committed attestation predates current record serialization, while attempted republication is "
+            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
+        ),
+        reconsideration_condition=(
+            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
+        ),
+        check_mode_refusal="export provenance output-file digests do not match generated tree",
+    ),
+    "m303-2024-desde-09-y-3t": _ReproductionPendingPin(
+        source_ref="aeat-dr-303-2024-late",
+        source_sha256="2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8",
+        reason=(
+            "the committed attestation predates current record serialization, while attempted republication is "
+            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
+        ),
+        reconsideration_condition=(
+            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
+        ),
+        check_mode_refusal="export provenance output-file digests do not match generated tree",
+    ),
+    "m303-2024-hasta-08-y-2t": _ReproductionPendingPin(
+        source_ref="aeat-dr-303-2024-early",
+        source_sha256="8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9",
+        reason=(
+            "the committed attestation predates current record serialization, while attempted republication is "
+            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
+        ),
+        reconsideration_condition=(
+            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
+        ),
+        check_mode_refusal="export provenance output-file digests do not match generated tree",
+    ),
+    "m303-2025": _ReproductionPendingPin(
+        source_ref="aeat-dr-303-2025",
+        source_sha256="6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6",
+        reason=(
+            "the committed attestation predates current record serialization, while attempted republication is "
+            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
+        ),
+        reconsideration_condition=(
+            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
+        ),
+        check_mode_refusal="export provenance output-file digests do not match generated tree",
+    ),
+    "m303-2026-y-siguientes": _ReproductionPendingPin(
+        source_ref="aeat-dr-303-2026",
+        source_sha256="0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b",
+        reason=(
+            "the committed attestation predates current record serialization, while attempted republication is "
+            "refused because generated DP30305 fields lack matching casilla export_refs in isolated validation"
+        ),
+        reconsideration_condition=(
+            "Reconsider when every generated field is declared by its owning casilla and the tree can be republished."
+        ),
+        check_mode_refusal="export provenance output-file digests do not match generated tree",
+    ),
+}
 
 
 def _isolated_authority(tree: _GeneratedTree, root: Path) -> Path:
@@ -253,99 +378,10 @@ def _authorities(tree: _GeneratedTree):
     return semantic_map, render_profile, joined, evidence, transport
 
 
-#: Why check mode cannot yet pass for a committed tree, per tree. Check mode runs
-#: the FULL candidate validation, so it demands a filing-complete revision, not
-#: merely a correctly generated layout. Each entry names the outstanding
-#: precondition; an entry that stops being true fails, which is what forces this
-#: gate to be upgraded rather than left permanently soft.
+#: Check mode's exact current refusal, projected from the same source-bound pins
+#: that govern pending republication. A changed refusal makes the owning row red.
 _CHECK_MODE_PENDING: dict[str, str] = {
-    # Both 232 revisions validate on every family now -- the reserved-byte
-    # defect is fixed and the DR23200 auxiliary header is emitted through the
-    # typed prefix contract -- so what check mode still refuses is the
-    # unreviewed revision itself, the same wall m210 sits behind.
-    # 353 and 322 both validate on every revision now, including 322's 2008-2025
-    # export layout, which was the last authoring gap either of them had. What
-    # check mode still refuses is `review_status = "pending_review"` on the
-    # revision itself: a filing-grade snapshot requires a REVIEWED revision, and
-    # that stamp is a human tax reviewer's to make against official sources, not
-    # an authoring step. It is the same wall m210 sits behind.
-    # 202 is the one tree blocked by a NEIGHBOUR rather than by itself. Its
-    # candidate registry has to carry modelo 200 -- 202's pagos fraccionados are
-    # the Sociedades annual return's instalments, so 200 is a supporting modelo
-    # the isolation must admit -- and 200 declares no export layout at all while
-    # claiming filing grade. Pinning 200's own refusal rather than the generic
-    # envelope keeps the entry honest: the day 200's layout lands, this fails and
-    # 202's remaining blocker (its per-revision singleton semantic roles, present
-    # at HEAD and untouched by the layout work) has to be looked at on its own.
-    #
-    # 200's layout HAS now landed, and the entry above did its job: these three
-    # rows failed the moment it did. What they were shadowing turns out to be one
-    # thing, and it is NOT a modelo 202 data defect -- both reasons below are
-    # produced by this test's own isolation.
-    #
-    # The candidate registry keeps EXACTLY the target revision and prunes every
-    # sibling, because a sibling makes the revision selection ambiguous. Modelo
-    # 202 has three revisions, and both facts these rows trip on span them:
-    #
-    #   - the singleton semantic roles are singletons only after pruning.
-    #     `is_pf_mod_40_2_base_pago_fraccionado` is declared once in EACH of
-    #     202's three revisions, so the full registry sees three observations and
-    #     the typo check never fires.
-    #   - 200's relation to 202's pagos fraccionados folds source year 2024 at
-    #     filing_year_delta 0, which needs 202's `2023-2024` revision -- the one
-    #     the isolation just deleted.
-    #
-    # The control is the full authority, which loads CLEAN with all three
-    # revisions present. So these pins record a harness limitation: a
-    # cross-revision fact cannot be validated under an isolation that keeps one
-    # revision. Do not go looking for the defect in 202's casillas; it is not
-    # there.
-    # This pins `pending_review`, and a SECOND defect is known to sit behind
-    # it and is recorded here so clearing the stamp does not lose it. Each cites a
-    # source whose applicability window does not overlap its own life, which was
-    # observed directly by stamping the revision, watching check mode refuse on
-    # the window instead, and then removing the stamp again:
-    #
-    #   353/2008-2025  cites 2026 contribuyente calendars; revision ends 2025-12-31
-    #   322/2008-2025  cites a 2026 calendar; same shape
-    #   151/2015-2022  RESOLVED, and the note is kept only so the next reader
-    #                  does not go looking. It formerly cited the 2023 diseno on
-    #                  six casillas its own 2015-rendered tree does not address.
-    #                  Re-measured at HEAD: every source_ref reachable from the
-    #                  revision -- casillas, layout, and every record field -- is
-    #                  `aeat-dr-151-2015`, and the string "151-2023" appears
-    #                  nowhere in the revision tree. Only the two window rows
-    #                  above remain live.
-    #
-    # Whoever stamps one of these must expect the window refusal next, and fix it
-    # rather than re-pin it.
-    # 185 and 222 are STALE grades, not wrong ones. Each revision carries a
-    # human applicability review stamped 2026-08-21 recording "no export layout
-    # of either kind is declared" and reaching "scheduling and applicability
-    # only". The generated export-tree installs (5bff9d5332e for 185,
-    # 8fdb80c99f6 for 222) then landed a fixed_width layout and the casillas
-    # WITHOUT touching revision.toml, so measured at HEAD both statements are
-    # false: 185 declares 21 casillas and one layout, 222 declares 76 and one.
-    #
-    # The enrolment is not the wrong half: all 21 enrolled rows declare exactly
-    # one export layout, and the grade enum itself states that "an informative
-    # modelo carrying export layouts and no formulas can legitimately reach
-    # FILING". Promotion is an attestation no program may make, so these stay
-    # red until a human tax reviewer raises them. The entries retire themselves
-    # on that attestation.
-    "m185-2025-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
-    "m222-2025-y-siguientes": "cannot satisfy the requested 'filing' snapshot authority",
-    # 232 is not a grade or data defect -- it validates cleanly at BOTH
-    "m202-2019-2022": "appears on exactly one casilla",
-    "m202-2023-2024": "appears on exactly one casilla",
-    "m202-2025-y-siguientes": "lacks exact source revision coverage",
-    # Both 151 revisions resolve every enrolled family and validate through the
-    # real authority, so what is left is the reviewer stamp -- the same wall
-    # m210, m322 and m353 sit behind. Worth noting for whoever reviews them: the
-    # 2015-2022 layout was a hand transcription before the generated tree became
-    # authoritative, and it was
-    # two positions SHORT of AEAT's own envelope, omitting the AUX block's
-    # programa and NIF-desarrollo fields. The generated tree carries both.
+    subject: pin.check_mode_refusal for subject, pin in _REPRODUCTION_PENDING.items()
 }
 
 
@@ -366,6 +402,30 @@ def test_every_pending_check_mode_entry_names_an_enrolled_tree() -> None:
         "its entry with it; deleting the entry instead silently drops the reason this gate is "
         "allowed to be pending."
     )
+
+
+def test_every_reproduction_pending_pin_is_live_and_source_bound() -> None:
+    """A publication exclusion names current evidence and retires when its cause does."""
+    enrolled = {str(tree): tree for tree in _GENERATED_TREES}
+    assert set(_REPRODUCTION_PENDING) <= set(enrolled), (
+        f"reproduction pins name no enrolled tree: {sorted(set(_REPRODUCTION_PENDING) - set(enrolled))}"
+    )
+    authority = bundled_authority()
+    for subject, pin in _REPRODUCTION_PENDING.items():
+        tree = enrolled[subject]
+        assert tree.source_ref == pin.source_ref
+        source = authority.catalogues.sources.get(pin.source_ref)
+        assert source is not None
+        assert source.sha256 == pin.source_sha256, f"{subject}: source was reissued; reconsider the pin"
+        assert pin.reason.strip() and pin.reconsideration_condition.strip()
+        comparison = compare_revision_against_committed(
+            authority,
+            modelo=tree.modelo,
+            revision=tree.revision,
+        )
+        assert comparison.disposition_class == "provenance_only", (
+            f"{subject}: reproduction pin is dormant or its failure class changed"
+        )
 
 
 def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_support(tmp_path: Path) -> None:
@@ -476,7 +536,28 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         if (parsed := parsed_tree_file(name, (tree.committed / name).read_bytes())) is None
         or parsed != parsed_tree_file(name, (fresh_root / name).read_bytes())
     ]
-    assert differing == [], f"{tree}: committed export fragment(s) differ from a fresh render: {differing}"
+    if differing:
+        subject = f"{tree.modelo}/{tree.revision}"
+        disposition = _RECORD_DRIFT_DISPOSITIONS.get(subject)
+        comparison = compare_revision_against_committed(
+            bundled_authority(),
+            modelo=tree.modelo,
+            revision=tree.revision,
+        )
+        if disposition is not None:
+            assert disposition.source_ref == tree.source_ref
+            assert comparison.disposition_class == "record_drift", (
+                f"{tree}: record-drift pin is dormant and must be removed"
+            )
+            return
+        reproduction_pin = _REPRODUCTION_PENDING.get(str(tree))
+        assert reproduction_pin is not None, (
+            f"{tree}: committed export fragment(s) differ from a fresh render: {differing}"
+        )
+        assert reproduction_pin.source_ref == tree.source_ref
+        assert comparison.disposition_class == "provenance_only", (
+            f"{tree}: reproduction pin is dormant or its failure class changed"
+        )
 
     candidate_root = tmp_path / "candidate"
     registry_root = _isolated_authority(tree, candidate_root)

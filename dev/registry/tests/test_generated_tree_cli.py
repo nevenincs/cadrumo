@@ -32,10 +32,12 @@ from ..pipeline.cli import (
     _prepare,
     _PreparedInvocation,
     _publish,
+    _require_republication_eligibility,
     app,
 )
 from ..pipeline.render_check import (
     GeneratedExportBootstrapTransport,
+    RenderComparison,
     RevisionRenderInputs,
     revision_render_inputs,
 )
@@ -55,6 +57,90 @@ def test_pipeline_cli_registers_the_separate_check_and_publish_verbs() -> None:
     assert result.exit_code == 0, result.output
     assert "check" in result.output
     assert "publish" in result.output
+    assert "republish" in result.output
+
+
+def _republish_invocation(expected_manifest_sha256: str) -> _Invocation:
+    return _Invocation("296", "2024-y-siguientes", "aeat-dr-296-2024", 2024, "0A", expected_manifest_sha256)
+
+
+def _republish_comparison(*, differing: tuple[str, ...]) -> RenderComparison:
+    return RenderComparison(
+        modelo="296",
+        revision="2024-y-siguientes",
+        layout_id="generated-modelo-296-2024-y-siguientes-fichero",
+        files_compared=3,
+        differing=differing,
+        only_committed=(),
+        only_rendered=(),
+    )
+
+
+def test_republish_requires_the_exact_reviewed_target_manifest_digest() -> None:
+    """A stale observation cannot authorize replacement of a different target."""
+    actual = "a" * 64
+    state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=actual, output_files=())
+
+    with pytest.raises(ValueError, match="exact lowercase 64-character"):
+        _require_republication_eligibility(
+            _republish_invocation("not-a-digest"),
+            state,
+            _republish_comparison(differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,)),
+        )
+    with pytest.raises(ValueError, match="differs from the explicitly reviewed digest"):
+        _require_republication_eligibility(
+            _republish_invocation("b" * 64),
+            state,
+            _republish_comparison(differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,)),
+        )
+
+
+def test_republish_admits_only_provenance_only_drift() -> None:
+    """An explicit digest never turns record drift into a publishable target."""
+    digest = "a" * 64
+    state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
+
+    _require_republication_eligibility(
+        _republish_invocation(digest),
+        state,
+        _republish_comparison(differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,)),
+    )
+    _require_republication_eligibility(
+        _republish_invocation(digest),
+        state,
+        RenderComparison(
+            modelo="296",
+            revision="2024-y-siguientes",
+            layout_id="generated-modelo-296-2024-y-siguientes-fichero",
+            files_compared=3,
+            differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0002-record-m296-declarado.toml"),
+            only_committed=(),
+            only_rendered=(),
+            serialization_only=("0002-record-m296-declarado.toml",),
+        ),
+    )
+    with pytest.raises(ValueError, match="restricted to semantically reproduced attestation drift"):
+        _require_republication_eligibility(
+            _republish_invocation(digest),
+            state,
+            _republish_comparison(
+                differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0002-record-m296-declarado.toml"),
+            ),
+        )
+    with pytest.raises(ValueError, match="restricted to semantically reproduced attestation drift"):
+        _require_republication_eligibility(
+            _republish_invocation(digest),
+            state,
+            RenderComparison(
+                modelo="296",
+                revision="2024-y-siguientes",
+                layout_id="generated-modelo-296-2024-y-siguientes-fichero",
+                files_compared=3,
+                differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME,),
+                only_committed=(),
+                only_rendered=("0003-unexpected-record.toml",),
+            ),
+        )
 
 
 def test_pipeline_cli_refuses_a_bootstrap_source_absent_from_the_catalogue() -> None:
@@ -411,5 +497,5 @@ def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_p
         if str(field.id) == "modelo-390-page-07-close"
     )
 
-    assert result == "publishable_absence"
+    assert result == "matched"
     assert close.literal == "</T39007000>"

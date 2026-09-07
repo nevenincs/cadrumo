@@ -50,6 +50,7 @@ from pathlib import Path
 from typing import Literal
 
 import rtoml
+from pydantic import BaseModel, ConfigDict, Field
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -73,9 +74,12 @@ from .source_defects import source_defects_for
 
 __all__ = [
     "GeneratedExportBootstrapTransport",
+    "GeneratedTreeRecordDriftDisposition",
     "RenderComparison",
+    "compare_export_tree_roots",
     "compare_revision_against_committed",
     "parsed_tree_file",
+    "record_drift_dispositions",
 ]
 
 #: The generation manifest attests which inputs produced the tree, so it changes
@@ -89,6 +93,43 @@ __all__ = [
 #: which this was the one nobody would have found when it changed.
 _PROVENANCE_MANIFEST = EXPORT_FRAGMENT_PROVENANCE_FILENAME
 _AUTHORED_ROOT = Path(__file__).resolve().parent.parent
+_DISPOSITIONS_PATH = Path(__file__).with_name("generated_tree_dispositions.toml")
+
+
+class _StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True, strict=True)
+
+
+class GeneratedTreeRecordDriftDisposition(_StrictModel):
+    """One source-bound declaration for a tree that must not be republished."""
+
+    modelo: str = Field(pattern=r"^[0-9]{3}$")
+    revision: str = Field(min_length=1)
+    source_ref: str = Field(min_length=1)
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    reason: str = Field(min_length=1)
+    reconsideration_condition: str = Field(min_length=1)
+
+    @property
+    def subject(self) -> str:
+        """Return the canonical modelo/revision disposition identity."""
+        return f"{self.modelo}/{self.revision}"
+
+
+class _GeneratedTreeDispositionLedger(_StrictModel):
+    schema_version: Literal[2]
+    dispositions: tuple[GeneratedTreeRecordDriftDisposition, ...]
+
+
+def record_drift_dispositions() -> tuple[GeneratedTreeRecordDriftDisposition, ...]:
+    """Load the strict pipeline-owned record-drift declaration set."""
+    ledger = _GeneratedTreeDispositionLedger.model_validate_json(
+        json.dumps(rtoml.load(_DISPOSITIONS_PATH)),
+    )
+    subjects = tuple(item.subject for item in ledger.dispositions)
+    if len(subjects) != len(set(subjects)):
+        raise ValueError("generated tree disposition ledger contains duplicate subjects")
+    return ledger.dispositions
 
 
 @dataclass(frozen=True, slots=True)
@@ -373,7 +414,6 @@ def compare_revision_against_committed(
     inputs = revision_render_inputs(authority, modelo=modelo, revision=revision)
 
     committed_root = bundled_path("registry", "aeat", "modelos", modelo, "revisions", revision, "export")
-    committed = _tree_bytes(committed_root)
     with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-") as scratch:
         target = Path(scratch) / "export"
         render_complete_export_tree(
@@ -386,7 +426,26 @@ def compare_revision_against_committed(
             render_profile_source_evidence=inputs.render_profile_source_evidence,
             source_defects=source_defects_for(str(inputs.transport_profile.source_ref)),
         )
-        rendered = _tree_bytes(target)
+        return compare_export_tree_roots(
+            modelo=modelo,
+            revision=revision,
+            layout_id=inputs.layout_id,
+            committed_root=committed_root,
+            rendered_root=target,
+        )
+
+
+def compare_export_tree_roots(
+    *,
+    modelo: str,
+    revision: str,
+    layout_id: str,
+    committed_root: Path,
+    rendered_root: Path,
+) -> RenderComparison:
+    """Compare one exact staged candidate with its selected published target."""
+    committed = _tree_bytes(committed_root)
+    rendered = _tree_bytes(rendered_root)
 
     shared = sorted(set(committed) & set(rendered))
     differing = tuple(name for name in shared if committed[name] != rendered[name])
@@ -400,7 +459,7 @@ def compare_revision_against_committed(
     return RenderComparison(
         modelo=modelo,
         revision=revision,
-        layout_id=inputs.layout_id,
+        layout_id=layout_id,
         files_compared=len(shared),
         differing=differing,
         serialization_only=serialization_only,
