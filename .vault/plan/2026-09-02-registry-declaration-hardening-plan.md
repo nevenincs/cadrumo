@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:ebe86fcdd1e65c468bd81c8121fc47294e4d2a49b1fd98ec257c011dbb4847ab'
+body_hash: 'sha256:01f30e577b37ca2edbd22c3198a9eb16427969b2b695e98ff4f4819e93a6eb2e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1388,6 +1388,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1019` - Revert the playwright external_tool marker that left the test in no lane, recording why the obvious fix is wrong; `dev/env/tests/test_playwright_doctor.py`.
 - [x] `W06.P13.S1020` - Join the README demo's displayed command to the argv it actually runs, which a prefix check could not distinguish; `dev/readme/tests/test_readme_cli_demo.py`.
 - [x] `W06.P13.S1021` - Invert the facade-discovery gate that demanded cadrumo.core still export, and floor its live-tree walk; `dev/tests/test_import_hygiene_scan.py`.
+- [x] `W06.P13.S1022` - Retire the name-collision disposition whose collision a peer refactor resolved, leaving the explanation outliving its cause; `dev/quality/name_collision_dispositions.toml`.
+- [x] `W06.P13.S1023` - Aggregate the secure-store write-path check, a static-checks recipe check-all never ran while the gate table looked complete; `dev/quality/suite.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

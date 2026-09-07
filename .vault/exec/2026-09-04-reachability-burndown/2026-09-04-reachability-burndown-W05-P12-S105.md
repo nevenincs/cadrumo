@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b7d103bfec7146aa81b2f8025f45eab7b6d73499e95036efaa184c28b2e5693'
+body_hash: 'sha256:e96595ba79c8f0e2191e2e7cd1d1eb61b3cde8357c63b6fa2adc245c8479cf4f'
 step_id: 'S105'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Narrow the delegator sweep to the body shape the three deletions actually shared, returning only part of what a sibling returned, and correct the entry a previous pass got wrong: nineteen such delegators exist and sixteen are reached and legitimate, so the shape alone is not a defect and only an unreached one is. Delete the place-of-supply nature narrowing, whose docstring Raises clause documents what its callee raises rather than behaviour it adds, and record the two remaining unreached narrowings for a later step.
 
