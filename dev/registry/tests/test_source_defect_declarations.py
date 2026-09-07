@@ -194,7 +194,7 @@ class TestTheDeclarationMustBePinnedToTheParsedSource:
 
     def test_evidence_is_required(self) -> None:
         """A declaration without its reasoning is unreviewed, not merely terse."""
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match="evidence"):
             _declaration(evidence="")
 
 

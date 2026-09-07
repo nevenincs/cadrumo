@@ -453,7 +453,7 @@ def test_parity_scenario_rejects_malformed_output_identifier(tmp_path: Path) -> 
         ),
     )
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="output_cells.*key"):
         ParityScenario(
             id="modelo-130-basic",
             modelo="130",

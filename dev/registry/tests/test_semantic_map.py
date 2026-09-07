@@ -239,7 +239,7 @@ def test_semantic_map_compiles_a_raw_projection_ref_through_the_canonical_compil
 
 def test_semantic_map_still_refuses_a_malformed_projection_ref() -> None:
     """The compiler is what makes the mapping path safe, so it must still bite."""
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="projection_ref.*field"):
         SemanticMapEntry.model_validate(
             _entry_payload(
                 "projection",

@@ -573,7 +573,7 @@ def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsaf
         load_export_fragment_provenance_manifest(
             canonical_json_bytes(manifest.model_dump(mode="json") | {"timestamp": "2026-08-10T00:00:00Z"}),
         )
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="derivation_code"):
         ExportFieldDerivation.model_validate(_field_derivation().model_dump() | {"derivation_code": "default"})
 
 

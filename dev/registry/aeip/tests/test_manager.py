@@ -346,7 +346,7 @@ def test_oversize_title_on_a_single_revision_programme_is_not_blocked(inventory)
 def test_oversize_slug_is_refused_by_the_real_constraint() -> None:
     """The length guard is not decorative: the schema rejects the long form."""
     oversize = chain_id_for("x" * 200)
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="at most 128 characters"):
         _CHAIN_ID_ADAPTER.validate_python(oversize)
 
 
