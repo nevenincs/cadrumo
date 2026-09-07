@@ -38,6 +38,7 @@ from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
 from ...ci.lane_reachability import resolve_just_executable
+from ...ci.workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -76,18 +77,53 @@ _DEPLOY_RECIPES = frozenset({"docs-deploy", "docs-stack-deploy"})
 #: costs nothing while missing one would hide the very edge being gated.
 _CHECK_PREFIXES = ("check", "test", "audit", "docs-check", "packaging", "lint", "verify", "ci")
 
-#: A recipe body reaching another recipe by running the binary, e.g.
-#: ``just --no-deps docs-deploy``. Interior flags are skipped so a flagged
-#: invocation is still attributed to the recipe it names.
-_JUST_INVOCATION = re.compile(r"\bjust\s+((?:--?[\w-]+(?:\s+\S+)?\s+)*)([a-z][\w-]*)")
+#: The word ``just`` used as a COMMAND, not the four letters wherever they
+#: fall. The lookbehinds admit every prefix a justfile body or a shell line
+#: puts in front of it -- ``@just`` (quiet), ``-just`` (ignore-error),
+#: ``uv run just``, a separator -- while refusing ``adjust`` and ``ad-just``.
+#:
+#: No recipe name is captured here. The names are read from the tokens that
+#: follow, because just's argument grammar accepts several recipes in one
+#: invocation (``just docs-check docs-deploy``) and flags that carry a value
+#: (``just --set workers 4 docs-deploy``). The pattern this replaces captured
+#: ONE trailing name and got both forms wrong in the same direction: it missed
+#: ``docs-deploy`` in the first, and in the second it landed on the flag VALUE
+#: ``workers`` -- not a recipe, so the intersection below discarded it and the
+#: edge vanished entirely. A vanished edge here is a silent pass of the very
+#: severance this module exists to hold.
+_JUST_COMMAND = re.compile(r"(?<!\w)(?<!\w-)just(?=\s)", re.MULTILINE)
 
-#: The three ways a workflow step can reach a publisher: the verb, the module,
-#: or the confirmation phrase that authorises it.
+#: One argument token of such an invocation. Quotes and separators are not
+#: modelled: the caller's real recipe set decides which token is a name.
+_INVOCATION_TOKEN = re.compile(r"[\w.\-/=]+")
+
+#: The two ways a workflow step can reach a publisher other than by naming the
+#: verb. The verb itself is read through :func:`_recipes_invoked_in`, for the
+#: reason above: a pattern demanding the recipe immediately after ``just``
+#: cannot see ``just --no-deps docs-deploy``, and an unseen publisher does not
+#: fail this gate -- it drops out of the census the gate compares.
 _DEPLOY_IN_WORKFLOW = (
-    re.compile(r"just\s+(?:docs-deploy|docs-stack-deploy)\b"),
     re.compile(r"dev\.deploy\.docs_static_site"),
     re.compile(r"--confirm\s+(?:publish|provision)-cadrumo-\w+"),
 )
+
+
+def _recipes_invoked_in(text: str, names: frozenset[str] | set[str]) -> set[str]:
+    """Return every recipe named by a ``just`` invocation in ``text``.
+
+    Every non-flag token of the invocation line is offered and the caller's
+    real recipe set decides, rather than a pattern deciding which token is
+    the name. Over-including costs nothing here -- the question is whether
+    verification CAN reach publication, and a spurious edge fails loudly --
+    while missing one hides the edge being gated.
+    """
+    invoked: set[str] = set()
+    for match in _JUST_COMMAND.finditer(text):
+        tail = text[match.end() :].split("\n", 1)[0]
+        tokens = _INVOCATION_TOKEN.findall(tail)
+        invoked |= {token for token in tokens if not token.startswith("-")} & set(names)
+    return invoked
+
 
 #: The one workflow permitted to publish, and the environment that gates it.
 _DELIVERY_WORKFLOW = "docs-publish.yml"
@@ -137,7 +173,7 @@ def _recipe_graph(justfile: Path) -> dict[str, set[str]]:
         fragments: list[str] = []
         for line in body.get("body", []):
             fragments.extend(part if isinstance(part, str) else json.dumps(part) for part in line)
-        edges |= {match.group(2) for match in _JUST_INVOCATION.finditer("\n".join(fragments))} & names
+        edges |= _recipes_invoked_in("\n".join(fragments), names)
         graph[name] = edges
     return graph
 
@@ -172,6 +208,57 @@ def test_no_development_check_lane_can_reach_a_deploy_verb() -> None:
     violations = {lane: sorted(_reachable(graph, lane) & _DEPLOY_RECIPES) for lane in lanes}
     reaching = {lane: hit for lane, hit in violations.items() if hit}
     assert reaching == {}, f"check lanes reaching a deploy verb: {reaching}"
+
+
+@pytest.mark.parametrize(
+    ("invocation", "why"),
+    [
+        ("just docs-check docs-deploy", "two recipes in one invocation"),
+        ("just --set workers 4 docs-deploy", "a flag carrying a value"),
+        ("just --no-deps docs-deploy", "a bare flag"),
+        ("@just docs-deploy", "just's quiet prefix"),
+        ("-just docs-deploy", "just's ignore-error prefix"),
+    ],
+    ids=["multi-recipe", "valued-flag", "bare-flag", "quiet", "ignore-error"],
+)
+def test_a_body_reaching_a_publisher_is_seen_however_it_is_written(tmp_path: Path, invocation: str, why: str) -> None:
+    """Detector teeth for the edge reader, against an isolated justfile.
+
+    Each form runs the publisher. The pattern this replaced saw only the
+    first token after ``just``: it missed ``docs-deploy`` behind a second
+    recipe name and, behind a valued flag, landed on ``workers`` -- a name
+    no recipe carries, so the intersection dropped it and the edge did not
+    exist. A dropped edge does not fail the severance claim above; it
+    removes the lane from the walk, which is the silent pass this module
+    is here to prevent.
+    """
+    justfile = tmp_path / "justfile"
+    justfile.write_text(
+        f'docs-deploy:\n    @echo "publish"\n\ndocs-check:\n    @echo "check"\n\ncheck-reaching:\n    {invocation}\n',
+        encoding="utf-8",
+    )
+
+    graph = _recipe_graph(justfile)
+
+    assert "docs-deploy" in _reachable(graph, "check-reaching"), f"{why} hid the publisher edge: {graph}"
+
+
+def test_a_body_that_only_mentions_a_publisher_is_not_an_edge(tmp_path: Path) -> None:
+    """Negative control: the reader must not manufacture an edge from prose.
+
+    ``adjust`` contains the four letters and the line names a real recipe.
+    Reading an edge here would report a severance violation that does not
+    exist, which is the other half of trusting a harvested identifier.
+    """
+    justfile = tmp_path / "justfile"
+    justfile.write_text(
+        'docs-deploy:\n    @echo "publish"\n\ncheck-quiet:\n    @echo "adjust docs-deploy by hand"\n',
+        encoding="utf-8",
+    )
+
+    graph = _recipe_graph(justfile)
+
+    assert graph["check-quiet"] == set(), graph
 
 
 def test_nothing_at_all_reaches_a_deploy_verb() -> None:
@@ -267,7 +354,9 @@ def test_only_the_delivery_workflow_runs_a_publisher() -> None:
         for job_name, job in (document.get("jobs") or {}).items():
             for step in job.get("steps") or []:
                 command = str(step.get("run", "") or "")
-                if any(pattern.search(command) for pattern in _DEPLOY_IN_WORKFLOW):
+                if _recipes_invoked_in(executed_text(command), _DEPLOY_RECIPES) or any(
+                    pattern.search(command) for pattern in _DEPLOY_IN_WORKFLOW
+                ):
                     publishing.setdefault(path.name, []).append(job_name)
 
     assert set(publishing) == {_DELIVERY_WORKFLOW}, (

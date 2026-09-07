@@ -73,6 +73,29 @@ one that is never ordinary -- a run whose matrix SHRANK, which strands the
 frames of every surface it no longer asks for."""
 
 
+class ThemeName(StrEnum):
+    """The appearances a frame may be reviewed under.
+
+    The one definition of the vocabulary. It was previously a bare tuple of
+    strings in the command line, checked only where the command line parsed
+    its own ``--theme`` option: every record that CARRIED a theme typed it
+    ``str``, so a manifest read back from disk, or a frame built by hand,
+    could name an appearance that has never been rendered and be reported as
+    a reviewed one.
+
+    The values are the renderable subset of the application's own
+    :class:`~cadrumo.core.config_support.TuiAppearance`. ``AUTO`` is excluded
+    deliberately: it defers the choice to the host terminal, so a frame
+    recorded under it would name no appearance at all, and a review has to
+    know which one it is looking at. The join to that vocabulary is asserted
+    by this package's tests rather than derived here, so the two spellings
+    cannot drift apart unnoticed.
+    """
+
+    DARK = "dark"
+    LIGHT = "light"
+
+
 class RenderedFrame(BaseModel):
     """One surface rendered at one viewport under one theme."""
 
@@ -83,7 +106,7 @@ class RenderedFrame(BaseModel):
     columns: int
     rows: int
     orientation: Orientation
-    theme: str
+    theme: ThemeName
     png: str
     svg: str
     text: str
@@ -194,7 +217,7 @@ class FailedFrame(BaseModel):
 
     surface: str
     viewport: ViewportName
-    theme: str
+    theme: ThemeName
     kind: FrameFailureKind
     attempts: int = 1
     detail: str = ""
@@ -217,7 +240,7 @@ class SkippedFrame(BaseModel):
 
     surface: str
     viewport: ViewportName
-    theme: str
+    theme: ThemeName
     reason: str
 
     @property
@@ -725,6 +748,7 @@ __all__ = [
     "RenderedFrame",
     "SkippedFrame",
     "StaleArtifactPurgeRefusedError",
+    "ThemeName",
     "commit_staged_run",
     "digest",
     "known_runs",

@@ -501,6 +501,58 @@ def test_a_commented_out_recipe_line_is_not_read_as_an_invocation(tmp_path: Path
     assert discovered[0].arguments == (_TARGET_DIRECTORY, "-m", "unit", _NO_WORKERS)
 
 
+def test_a_parameterised_recipe_header_is_read_as_its_own_recipe(tmp_path: Path) -> None:
+    """Detector teeth for the header pattern, against an isolated fixture.
+
+    just lets a recipe take parameters -- ``test-unit durations="":`` --
+    and sixteen of this repository's recipes do. A header pattern that
+    models only the bare ``name:`` form does not REJECT such a header, it
+    simply fails to match it, and the reader then keeps attributing body
+    lines to the recipe above. The pytest invocation below is therefore
+    the exact defect the reader must not reproduce: filed under
+    ``ghost-plain`` it would be measured as a lane that does not run it,
+    while the lane that does run it would not exist to be measured at all.
+    Both consuming gates stay green either way, which is why this is the
+    fixture and not an assertion about the live justfile.
+    """
+    justfile = tmp_path / "justfile"
+    justfile.write_text(
+        "ghost-plain:\n"
+        f"    uv run pytest {_TARGET_DIRECTORY} -m unit -n0\n"
+        "\n"
+        'ghost-parameterised durations="" *ARGS:\n'
+        f"    uv run pytest {_TARGET_DIRECTORY} -m serial -n0\n",
+        encoding="utf-8",
+    )
+
+    discovered = packaging_pytest_recipes(justfile=justfile)
+
+    assert [recipe.name for recipe in discovered] == [
+        "ghost-plain",
+        "ghost-parameterised",
+    ], discovered
+    assert discovered[1].arguments == (_TARGET_DIRECTORY, "-m", "serial", _NO_WORKERS)
+
+
+def test_a_pytest_line_with_no_recipe_above_it_refuses(tmp_path: Path) -> None:
+    """A lane the reader cannot attribute must fail loudly, not silently.
+
+    An unattributed invocation used to be filed under the empty name, which
+    every downstream gate reads as an ordinary recipe with an odd label
+    rather than as a reading the parser could not make.
+    """
+    justfile = tmp_path / "justfile"
+    justfile.write_text(
+        f"    uv run pytest {_TARGET_DIRECTORY} -m unit -n0\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AssertionError) as refusal:
+        packaging_pytest_recipes(justfile=justfile)
+
+    assert "before any recipe header matched" in str(refusal.value), refusal.value
+
+
 @pytest.mark.parametrize(
     "argv",
     [

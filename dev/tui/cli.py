@@ -32,6 +32,7 @@ from ._artifacts import (
     RenderedFrame,
     SkippedFrame,
     StaleArtifactPurgeRefusedError,
+    ThemeName,
     commit_staged_run,
     digest,
     known_runs,
@@ -55,7 +56,13 @@ app = typer.Typer(
     add_completion=False,
 )
 
-THEMES = ("dark", "light")
+THEMES = tuple(ThemeName)
+"""Every appearance a render may be asked for, in declaration order.
+
+Derived from the vocabulary rather than restating it: this tuple used to
+be the only place the two words were written down, and nothing that
+RECORDED a theme consulted it.
+"""
 DEFAULT_RUN = DEFAULT_RUN_NAME
 
 
@@ -186,7 +193,7 @@ def _attempt_frame(
     surface: str,
     shape: _viewports.Viewport,
     *,
-    theme: str,
+    theme: ThemeName,
     svg_path: Path,
     png_path: Path,
     locale: str | None,
@@ -244,6 +251,19 @@ def _resolve_viewports(names: list[str] | None) -> tuple[_viewports.Viewport, ..
     if len(chosen) == 1 and chosen[0] == "all":
         chosen = tuple(_viewports.VIEWPORTS)
     return tuple(_viewports.resolve(name) for name in chosen)
+
+
+def _resolve_themes(names: list[str] | None) -> tuple[ThemeName, ...]:
+    if not names:
+        return THEMES
+    chosen: list[ThemeName] = []
+    for name in names:
+        try:
+            chosen.append(ThemeName(name))
+        except ValueError:
+            accepted = ", ".join(THEMES)
+            raise typer.BadParameter(f"unknown theme {name!r}; accepted: {accepted}") from None
+    return tuple(chosen)
 
 
 def _resolve_surfaces(names: list[str] | None, available: tuple[_harness.Surface, ...]) -> tuple[str, ...]:
@@ -310,10 +330,7 @@ def render_command(
 
     chosen_surfaces = _resolve_surfaces(surface, available)
     chosen_viewports = _resolve_viewports(viewport)
-    chosen_themes = tuple(theme) if theme else THEMES
-    for name in chosen_themes:
-        if name not in THEMES:
-            raise typer.BadParameter(f"unknown theme {name!r}; accepted: {', '.join(THEMES)}")
+    chosen_themes = _resolve_themes(theme)
 
     directory = run_directory(run)
     directory.mkdir(parents=True, exist_ok=True)

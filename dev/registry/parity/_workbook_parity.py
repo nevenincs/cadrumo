@@ -595,22 +595,16 @@ def convert_binary_xls_with_libreoffice(
                 started=started,
             )
     except _BinaryXlsConversionError as exc:
-        error = str(exc)
-        if "timed out" in error:
-            return _failed_conversion_report(
-                relative=context.relative,
-                modelo=context.modelo,
-                byte_count=context.byte_count,
-                digest=context.digest,
-                error=error,
-                started=started,
-            )
+        # A timeout and any other conversion failure both resolve to the same
+        # "failed" WorkbookConversionReport: WorkbookConversionStatus carries no
+        # distinct timed-out member, so there is nothing for a timeout branch to
+        # report that the general failure path does not already carry in `error`.
         return _failed_conversion_report(
             relative=context.relative,
             modelo=context.modelo,
             byte_count=context.byte_count,
             digest=context.digest,
-            error=error,
+            error=str(exc),
             started=started,
         )
     kind = _classify_xlsx(context.relative, formulas)
