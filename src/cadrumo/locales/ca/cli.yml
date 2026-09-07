@@ -182,6 +182,10 @@ cli:
         extract_off_host_provider_is_local: --off-host-provider local és el valor
           per defecte i no envia res fora de l'equip. Omet l'opció o indica un proveïdor
           allotjat.
+        extract_off_host_unclassified: 'Es rebutja aquesta lectura fora de l''equip:
+          el control de consentiment ha retornat {outcome}, per al qual aquesta ordre
+          no té text. Una resposta no reconeguda es tracta com un rebuig perquè les
+          proves no surtin d''aquest equip per una decisió que ningú no ha declarat.'
         extract_provider_without_acknowledge: Llegir aquest document fora de l'equip
           envia el seu contingut a un tercer. Afegeix --acknowledge-off-host per confirmar-ho,
           només per a aquesta lectura.

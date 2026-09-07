@@ -184,6 +184,10 @@ cli:
         extract_off_host_provider_is_local: --off-host-provider local es el valor
           por defecto y no envía nada fuera del equipo. Omite la opción o indica un
           proveedor alojado.
+        extract_off_host_unclassified: 'Se rechaza esta lectura fuera del equipo:
+          el control de consentimiento devolvió {outcome}, para lo que este comando
+          no tiene texto. Una respuesta no reconocida se trata como rechazo para que
+          las pruebas no salgan de este equipo por una decisión que nadie declaró.'
         extract_provider_without_acknowledge: Leer este documento fuera del equipo
           envía su contenido a un tercero. Añade --acknowledge-off-host para confirmarlo,
           solo para esta lectura.
