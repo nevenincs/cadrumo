@@ -303,6 +303,14 @@ check-unused-symbol-ratchet:
 check-secure-store-write-path:
     @uv run --no-sync python -m dev.quality.secure_store_write_path
 
+# A function whose whole body is `return sibling(...).field` returns strictly
+# less than the sibling it calls. Five were removed for dropping a refusal, a
+# coverage manifest, or a superseded_by pointer that the caller needed.
+# Verify no shipped function narrows a sibling's result with nothing calling it.
+[group('static-checks')]
+check-narrowing-delegators:
+    @uv run --no-sync python -m dev.quality.narrowing_delegators
+
 [group('static-checks')]
 check-docstring-reference-ratchet:
     @uv run --no-sync python -m dev.quality.docstring_reference_ratchet

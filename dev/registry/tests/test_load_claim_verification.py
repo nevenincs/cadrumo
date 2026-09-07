@@ -3,15 +3,20 @@
 The comparison is pure and is tested against constructed module sets, so these
 run without paying for two registry loads. The probe that produces those sets is
 tested for the one property that matters and cannot be inferred: that a failed
-load raises rather than returning nothing.
+load raises rather than returning nothing. That property is exercised through a
+real subprocess -- the probe source is swapped for one that prints nothing, so
+the production ``subprocess.run`` call and the ``RuntimeError`` it raises both
+execute for real, rather than being asserted about secondhand through the pure
+comparison's behaviour on empty input.
 """
 
 from __future__ import annotations
 
 import pytest
 
+from ..analysis import load_claim_verification
 from ..analysis.load_census_classification import RULES
-from ..analysis.load_claim_verification import ClaimFinding, verify_live_claims
+from ..analysis.load_claim_verification import ClaimFinding, loaded_modules, verify_live_claims
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -72,3 +77,21 @@ def test_an_empty_regime_pair_reports_every_live_member() -> None:
     behaviour: empty input means every claim is unsupported, loudly.
     """
     assert len(verify_live_claims((), ())) == len(_live_members())
+
+
+def test_a_probe_with_no_output_raises_instead_of_reporting_an_empty_load(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The probe itself must never let a failed load read as an empty module set.
+
+    ``loaded_modules`` spawns a real subprocess and treats empty stdout as
+    failure. The subprocess and the interpreter it runs are real; only the
+    embedded probe source is swapped for one that imports nothing and prints
+    nothing, so the real ``subprocess.run`` call executes and the real
+    ``if not lines: raise RuntimeError(...)`` branch is what fires -- not a
+    stand-in for it.
+    """
+    monkeypatch.setattr(load_claim_verification, "_PROBE", "pass\n")
+
+    with pytest.raises(RuntimeError, match="the load probe produced no module list"):
+        loaded_modules(cold=False)

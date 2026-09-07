@@ -632,7 +632,7 @@ MODELO_ACTION_CLASSIFICATIONS: Final[Mapping[str, ModeloWorkspaceActionClassific
             "direct-effect mutation rather than the read-only query this row once recorded"
         ),
         evidence_reference="the accepted Modelo Workspace interface decision's C1-C4 cohort disposition framing",
-        reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
+        reopening_condition="reopens once the C3/C4 conformance suites are green and this is enrolled as a C4 action",
     ),
     "modelo.review_package.import_feedback": modelo_action_classification(
         "modelo.review_package.import_feedback",

@@ -133,3 +133,26 @@ def test_a_renamed_recipe_is_named_rather_than_read_as_invoking_nothing(tmp_path
 
     justfile.write_text("lint-all:\n    echo linting\n", encoding=_UTF_8)
     assert _unresolved_workflow_callees(tmp_path) == ["lane.yml runs `just lint`, which no justfile recipe declares"]
+
+
+def test_a_recipe_named_only_in_a_comment_is_not_read_as_invoked() -> None:
+    """A recipe body is a script with prose in it, and prose invokes nothing.
+
+    Six comment lines in this repository's justfile name a real recipe inside an
+    explanatory sentence -- "Verify the result with `just playwright-doctor`" --
+    and reading the raw body counted every one as a call. Five of those recipes
+    were invoked for real elsewhere, so they cost nothing. ``check-rag`` was
+    reached by nothing else and was reported CI-invoked on the strength of a
+    sentence mentioning it.
+
+    The direction is what makes it worth a test. A phantom call ADDS a recipe to
+    the reached set, so the lanes behind it read as covered by CI when no
+    workflow runs them -- the walk goes quiet about a real hole instead of
+    naming one. Both directions are asserted, because a reader that resolved
+    nothing would satisfy the negative half on its own.
+    """
+    body = "    echo building\n    # Verify the result with `just playwright-doctor`.\n    just lint\n"
+
+    assert _recipes_invoked_by(body) == {"lint"}
+    assert _recipes_invoked_by("    # just playwright-doctor\n") == set()
+    assert _recipes_invoked_by("    just playwright-doctor\n") == {"playwright-doctor"}

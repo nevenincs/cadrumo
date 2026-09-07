@@ -81,7 +81,7 @@ def test_stale_classification_for_action_no_longer_live_reds() -> None:
         owning_authority="test-fixture",
         reason="a fabricated stale row proving the stale-entry rejection path",
         evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
-        reopening_condition="never: this row exists only to prove a rejection path",
+        reopening_condition="reopens only if a future accepted decision moves this into scope",
     )
     augmented = {**MODELO_ACTION_CLASSIFICATIONS, "modelo.work.phantom_action": phantom}
     denominator = ModeloWorkspaceActionDenominatorV1(
@@ -143,7 +143,7 @@ def test_placeholder_reason_is_refused_at_construction() -> None:
             owning_authority="tui-architecture",
             reason="n/a",
             evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
-            reopening_condition="never",
+            reopening_condition="never reopens: terminal C1 disposition",
         )
 
 
@@ -161,7 +161,7 @@ def test_out_of_scope_identity_is_refused_at_construction() -> None:
             owning_authority="test-fixture",
             reason="proving the out-of-scope refusal",
             evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
-            reopening_condition="never",
+            reopening_condition="reopens only if a future accepted decision moves this into scope",
         )
 
 
@@ -244,7 +244,10 @@ def test_the_taxonomy_offers_an_arm_a_delivered_mutation_can_occupy() -> None:
             owning_authority="test-fixture",
             reason="proving the delivered arm accepts a wired row",
             evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
-            reopening_condition="never: this row exists only to prove the arm is occupiable",
+            reopening_condition=(
+                "reopens once the C3/C4 conformance suites are green and this is "
+                "enrolled as a C4 action"
+            ),
         )
         assert row.disposition is disposition
         assert row.tui_capability is TuiCapability.AVAILABLE
@@ -270,7 +273,10 @@ def _contradiction(
             owning_authority="test-fixture",
             reason="driving one quadrant of the contradiction rule",
             evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
-            reopening_condition="never: this row exists only to exercise the rule",
+            reopening_condition=(
+                "reopens once the C3/C4 conformance suites are green and this is "
+                "enrolled as a C4 action"
+            ),
         )
 
     return _disposition_contradiction(row(ModeloWorkspaceActionDisposition.NOT_VISUAL), row(disposition))
@@ -365,3 +371,40 @@ def test_a_delivered_read_claim_is_refused_until_read_routing_is_observable() ->
     )
 
     assert any("not yet observable" in error and subject in error for error in errors), errors
+
+
+def test_a_reopening_condition_from_another_arm_is_refused_at_construction() -> None:
+    """Teeth for the arm-coherence rule, using the defect that motivated it.
+
+    A row reclassified from read to mutation once kept the read arm's
+    reopening condition, so it was scheduled behind the read migration while
+    recorded as a mutation. Nothing detected it, because only the reason was
+    validated. This proves the contradiction is now refused where it is
+    written rather than surviving until someone counts arms against
+    conditions.
+    """
+    with pytest.raises(ValidationError, match="belongs to a different disposition"):
+        ModeloWorkspaceActionClassificationV1(
+            action_identity="modelo.review_package.encrypt_for_recipient",
+            disposition=ModeloWorkspaceActionDisposition.C4_MUTATION_PENDING,
+            command_key="app_modelo_review_package_encrypt_for_recipient",
+            write_route="profile-bound",
+            side_effects=("local-state",),
+            has_action_catalogue_entry=False,
+            tui_capability=TuiCapability.NOT_IMPLEMENTED,
+            is_surface_dispatchable=False,
+            owning_authority="test-fixture",
+            reason="a mutation row carrying the read arm's reopening condition",
+            evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
+            reopening_condition="reopens on migration to a numbered C1/C2 destination in the same commit",
+        )
+
+
+def test_every_recorded_row_carries_the_reopening_condition_of_its_own_arm() -> None:
+    """The whole table satisfies the rule, so the teeth above bite a real invariant."""
+    conditions_by_arm: dict[ModeloWorkspaceActionDisposition, set[str]] = {}
+    for row in MODELO_ACTION_CLASSIFICATIONS.values():
+        conditions_by_arm.setdefault(row.disposition, set()).add(row.reopening_condition)
+
+    inconsistent = {arm: sorted(conditions) for arm, conditions in conditions_by_arm.items() if len(conditions) > 1}
+    assert not inconsistent, f"an arm carries more than one reopening condition: {inconsistent}"
