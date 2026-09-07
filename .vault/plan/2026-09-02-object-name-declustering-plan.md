@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:366ba4f4bd77ee037fd3969d052142e64ab49d2639460abd1b5c9c7077dec404'
+body_hash: 'sha256:cfdb5349cb6653a01079f3dc89eb43ad2bde392138d3d1fe069183abab1b515f'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -117,7 +117,7 @@ Rehearsal records the current scanned inventory digest, replay compares it again
 - [x] `W04.P10.S27` - Carry the S23 distinction through rehearsal: require the copied inventory to equal the supplied current inventory, record that current digest in the receipt, and leave the authored inventory value bound only through the exact manifest digest, since the receipt currently records the manifest value and refuses at the next mandatory phase whatever the validator tolerated (Terra xhigh fixes and refactors); `dev/quality/object_name_rehearsal.py, dev/quality/object_name_replay.py`.
 - [x] `W04.P10.S28` - Require replay to compare the receipt inventory against a freshly scanned current inventory and the exact manifest digest, without also equating current inventory to the authored value, so unrelated declaration churn no longer invalidates a leaf operation whose own bytes and graph evidence are unchanged (Terra xhigh fixes and refactors); `dev/quality/object_name_replay.py`.
 - [x] `W04.P10.S29` - Replace the vacuous churn test with one that can fail: perturb a real Python declaration so the current inventory digest actually moves, drive it through component derivation, rehearsal, receipt generation and replay preflight, and prove the case fails when receipt/current global-inventory equality is reintroduced, closing the end-to-end-churn-teeth gap S23 opened and S24 left standing (Luna max audit and mechanical); `dev/quality/tests/`.
-- [ ] `W04.P10.S30` - Measure the surviving validity window against live conditions, recording inventory-affecting commit rate, dirty-file count and cycle wall clock, and state plainly whether a rehearse-and-apply cycle can complete under concurrent development or whether the campaign requires an exclusive worktree (Luna max audit); `.vault/audit/`.
+- [x] `W04.P10.S30` - Measure the surviving validity window against live conditions, recording inventory-affecting commit rate, dirty-file count and cycle wall clock, and state plainly whether a rehearse-and-apply cycle can complete under concurrent development or whether the campaign requires an exclusive worktree (Luna max audit); `.vault/audit/`.
 
 ### Phase `W04.P11` - teardown authority and transaction disposition
 
