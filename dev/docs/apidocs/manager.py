@@ -13,6 +13,28 @@ class ApiDocsError(RuntimeError):
     """Raised on API documentation stub management errors."""
 
 
+class StubRemovalRefusedError(ApiDocsError):
+    """Raised when one scaffold run would delete more stubs than its declared bound.
+
+    The refusal exists because the drift gate and its remedy pull in opposite
+    directions. :meth:`ApiStubManager.check` compares a live population (the
+    modules :meth:`ApiStubManager.excludes_source` admits) against a committed
+    artefact (the ``docs/api/*.rst`` tree), and the documented remedy for any
+    orphan it reports is :meth:`ApiStubManager.scaffold`, which DELETES the
+    orphan. So a defect that narrows the live population is detected exactly
+    once: the gate reds, the prescribed fix removes the pages rather than the
+    cause, and every later run is green over a smaller tree with no record that
+    the pages ever existed.
+
+    The blast radius is not hypothetical. Measured against the committed tree,
+    adding one segment to :data:`_EXCLUDED_PACKAGES` makes ``scaffold`` delete
+    118 stubs for ``entrypoints``, 257 for ``core``, 296 for ``adapters``, 486
+    for ``domain``, and 651 for ``application``; a rule that admitted nothing
+    would delete 1829 of the 1830 stubs on disk. Ordinary churn removes one or
+    two.
+    """
+
+
 @dataclass(frozen=True)
 class ScaffoldResult:
     """Summary of a scaffold operation.
@@ -71,6 +93,20 @@ _EXCLUDED_SUBTREES: frozenset[tuple[str, ...]] = frozenset({CLI_REFERENCE_SUBTRE
 
 # Individual filenames excluded from stub coverage even inside included packages.
 _EXCLUDED_FILENAMES: frozenset[str] = frozenset({"conftest.py"})
+
+#: Stubs one :meth:`ApiStubManager.scaffold` run may delete before it refuses.
+#:
+#: A declaration on the artefact, not a speed or tidiness budget. It separates
+#: ordinary churn — a rename or a retired module, one or two stubs — from every
+#: measured collapse: excluding one top-level package under ``src/cadrumo/``
+#: removes 31 stubs for ``llm``, 118 for ``entrypoints``, 257 for ``core``, 296
+#: for ``adapters``, 486 for ``domain``, and 651 for ``application``. The value
+#: sits below the smallest of those, and
+#: ``dev/docs/tests/test_pruning_remedies_are_bounded.py`` re-derives the figure
+#: against the live tree so a layout change cannot leave it stale. A run above
+#: the bound is asking to delete published API reference pages because a filter
+#: changed, and must say so out loud through ``removal_allowance``.
+MAX_STUB_REMOVALS_PER_RUN: int = 25
 
 _UTF_8: str = UTF_8_ENCODING
 
@@ -415,19 +451,34 @@ class ApiStubManager:
 
     # ── Public API ───────────────────────────────────────────────────────────
 
-    def scaffold(self) -> ScaffoldResult:
+    def scaffold(self, *, removal_allowance: int | None = None) -> ScaffoldResult:
         """Write and sync ``docs/api/*.rst`` to match the current source tree.
 
         Creates missing stubs, regenerates all existing stubs with canonical
         content, and removes stale stubs that no longer correspond to a source
         module.
 
+        Removals are bounded. The orphan set is computed first and compared
+        against *removal_allowance* BEFORE anything is unlinked, so a refused
+        run leaves the tree exactly as it found it; see
+        :class:`StubRemovalRefusedError` for why an unbounded prune is the wrong
+        remedy for the drift the gate detects.
+
+        Args:
+            removal_allowance: Stubs this run may delete. Defaults to
+                :data:`MAX_STUB_REMOVALS_PER_RUN`. Pass a larger value to
+                authorise a deliberate bulk retirement; the number is then a
+                reviewable claim in the diff rather than a silent consequence.
+
         Returns:
             A :class:`ScaffoldResult` summarising what changed.
 
         Raises:
             ApiDocsError: When the docs API directory cannot be created.
+            StubRemovalRefusedError: When the run would delete more stubs than
+                *removal_allowance* permits. Nothing is written or removed.
         """
+        allowance = MAX_STUB_REMOVALS_PER_RUN if removal_allowance is None else removal_allowance
         try:
             self.docs_api.mkdir(parents=True, exist_ok=True)
         except OSError as exc:
@@ -435,6 +486,20 @@ class ApiStubManager:
 
         expected_contents = self._expected_stub_contents()
         expected = set(expected_contents)
+
+        # Decided before the first write: a refusal must leave the tree
+        # untouched, not half-regenerated with the deletions skipped.
+        on_disk = scan_directory(self.docs_api, pattern="*.rst")
+        doomed = [path for path in on_disk if path.name not in expected]
+        if len(doomed) > allowance:
+            listed = ", ".join(sorted(path.name for path in doomed)[:10])
+            raise StubRemovalRefusedError(
+                f"scaffold would delete {len(doomed)} of the {len(on_disk)} committed stub(s), over the declared "
+                f"bound of {allowance}. Nothing was written or removed. A prune this size means the module "
+                "eligibility rule stopped admitting a subtree, not that the pages became unwanted: fix the rule, "
+                f"or pass removal_allowance to authorise the retirement explicitly. First removals: {listed}"
+            )
+
         written = 0
         unchanged = 0
 
@@ -451,8 +516,11 @@ class ApiStubManager:
             written += 1
 
         removed_names: list[str] = []
-        for existing in scan_directory(self.docs_api, pattern="*.rst"):
-            if existing.name not in expected:
+        for existing in doomed:
+            # Re-checked rather than trusted: the bound was measured against
+            # this exact list, so unlinking anything outside it would delete a
+            # file the allowance never covered.
+            if existing.exists():
                 existing.unlink()
                 removed_names.append(existing.name)
 
