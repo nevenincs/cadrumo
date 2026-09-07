@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8698e7acd49dddc1b6ba16dadb6e1dd2ee7d3e033f872cf205baf759d0fce41'
+body_hash: 'sha256:603b38bea19f2ad5d2c6bd1e99bf4ae1632e6db9a293bb05d0d91f454f616cb7'
 related:
   - "[[2026-09-07-tuimodelo-plan]]"
 ---
@@ -14,7 +14,8 @@ related:
 
 ## Scope
 
-Eight gate failures were measured before this campaign changed anything, so that a later wave
+Eight gate failures were measured before this campaign changed anything, one of which has since
+been resolved by its owning lane and is marked below rather than removed, so that a later wave
 meeting a red can tell an inherited one from a regression it caused. Each entry names the gate, the
 exact failing subject, and who owns it. Anything not listed here and failing later is this
 campaign's until proven otherwise; anything listed here stays another lane's until that lane fixes
@@ -75,12 +76,18 @@ set. It is another lane's burndown rather than a defect this campaign introduced
 been falling. Work here adds to it only if a new public name collides; that was checked when this
 campaign split a module and added public names, and it added none.
 
-### import-contracts | medium | One contract broken by two application-layer edges.
+### import-contracts | medium | RESOLVED by the owning lane; recorded because the baseline moved.
 
-The import linter reports one broken contract of the set, violated by two edges from the
-application layer into an adapter and into the language-model package. Both files are unmodified
-here. Both are subjects of this campaign's own migration wave, so the entry doubles as a record
-that the wave starts from a known-violated boundary rather than a clean one.
+The import linter reported one broken contract of the set, violated by two edges from the
+application layer into an adapter and into the language-model package, and this campaign's
+migration wave was recorded as starting from a known-violated boundary.
+
+IT IS NOW CLEAN. The linter reports twelve contracts kept and none broken, and the contract count
+itself grew from eleven, so the set was extended as well as repaired. The repair belongs to the
+ledger lane and not to this campaign; it is recorded here so that a later wave neither claims the
+improvement nor plans around a violation that no longer exists. The entry stays in this record
+rather than being deleted, because a baseline that silently loses entries cannot be audited
+against what it originally claimed.
 
 ### formatting | low | One unrelated module is unformatted.
 

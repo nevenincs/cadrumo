@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:efd539c6398af3c05d4f2460d735d96ff2d3ba877bee7df52b05159fc91fd45d'
+body_hash: 'sha256:6fb7cca5944296a35a45f56db30fb3f141d36722d286e1f0bce15716eb13ae15'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -113,8 +113,10 @@ otherwise choose, it has become policy.
 
 This campaign takes four groups, and the fourth is named because an earlier reading of this
 decision omitted it and left a whole phase unchartered. The modelo lane, being the eighteen violations in the surfaces
-the interface renders. The shared capability declaration, which both adapters need and only one
-can currently reach. The frontend-side violations, being its duplicated composition and its
+the interface renders. The shared capability declaration, which was chartered here on the reading
+that both adapters need it and only one can reach it; measurement has since shown no full-screen
+module reads it at all, so that group is a precondition awaiting a named consumer rather than work
+this campaign performs. The frontend-side violations, being its duplicated composition and its
 own direct persistence imports, because a boundary that binds one adapter and not the other is
 not a boundary. And a small set of correctness divergences that cross lane lines - a coerced
 zero, a hardcoded availability, a period-token rule - which are taken here rather than deferred
@@ -148,11 +150,22 @@ implementation under this decision, and the only constraint it inherits is the a
 relocation carries: the canonical definition, every consumer, every dynamic reference and the
 tests move together, with no transitional shim.
 
-The relocation does carry one ordering obligation, which belongs here because it follows from the
-boundary rather than from a plan's convenience. The action denominator imports the command-line
-package that declares the capability today, so the relocation must land before the denominator is
-extended to observe capability. Extending first would have the gate read a declaration through
-the very import the boundary exists to remove.
+AMENDED BY MEASUREMENT, 2026-09-07. This clause previously stated an ordering obligation: that the
+relocation must land before the action denominator is extended to observe capability, because the
+denominator would otherwise read the declaration through the very import the boundary exists to
+remove. THAT IS WRONG, and the correction matters because the obligation was load-bearing for a
+whole phase's ordering. The denominator is a development-tree gate, and development code may
+import the command-line package freely; the boundary this decision defines governs the shipped
+adapters, not the tooling that inspects them. The extension was completed with the declaration
+left where it was, and no ordering constraint exists between them.
+
+The relocation itself is likewise not yet warranted. No module under the full-screen package reads
+the capability, so the declaration is not stranded from any consumer that exists; it is simply
+declared where its only readers are. It becomes real work when a modelo surface needs a command's
+routing posture, and at that point it moves to the core ring rather than beside either adapter,
+because two sibling entrypoints may not reach into each other and a genuinely common dependency
+belongs to the core. Performing it earlier builds a shared layer nobody imports, which this
+decision's own boundary-by-shape reasoning would reject anywhere else.
 
 ## Rationale
 
