@@ -30,6 +30,7 @@ from typing import IO, Any, cast
 import pytest
 
 from ..._paths import REPO_ROOT
+from .._distribution_names import normalise_distribution_name
 from .._hashing import sha256_path
 from .._smoke_common import (
     create_pip_venv,
@@ -111,7 +112,7 @@ def _installed_script(venv: Path, name: str) -> Path:
 def _requirement_name(requirement: str) -> str:
     """Return the distribution name of one core-metadata ``Requires-Dist`` line."""
     match = _REQUIREMENT_NAME_PATTERN.match(requirement)
-    return match.group(0).lower().replace("_", "-") if match else ""
+    return normalise_distribution_name(match.group(0)) if match else ""
 
 
 def _text_sha256(value: str) -> str:

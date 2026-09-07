@@ -45,16 +45,12 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from .._distribution_names import normalise_distribution_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = REPO_ROOT
 _SHIPPED_ROOT = _REPO_ROOT / "src" / "cadrumo"
-
-
-def _normalise(name: str) -> str:
-    """PEP 503 normalisation, so ``Pillow`` and ``pillow`` compare equal."""
-    return name.strip().lower().replace("_", "-").replace(".", "-")
 
 
 def _requirement_names(requirements: object) -> set[str]:
@@ -69,7 +65,7 @@ def _requirement_names(requirements: object) -> set[str]:
         for separator in ("[", "=", ">", "<", "!", "~", " "):
             name = name.split(separator)[0]
         if name:
-            names.add(_normalise(name))
+            names.add(normalise_distribution_name(name))
     return names
 
 
@@ -99,7 +95,7 @@ def _dev_only_import_names() -> set[str]:
     dev_only = _dev_only_distributions()
     names: set[str] = set()
     for import_name, distributions in packages_distributions().items():
-        if any(_normalise(dist) in dev_only for dist in distributions):
+        if any(normalise_distribution_name(dist) in dev_only for dist in distributions):
             names.add(import_name)
     # A distribution absent from this environment cannot be inverted, so fall
     # back to its own normalised name. Being unable to resolve a package must

@@ -987,7 +987,7 @@ def install_wheel(
     # assert_installed_cohort later re-checks.
     target = digest_install_target("cadrumo", wheel, extras=extras)
     companion_targets = tuple(
-        digest_install_target(companion.name.split("-")[0].replace("_", "-"), companion)
+        digest_install_target(normalise_distribution_name(companion.name.split("-")[0]), companion)
         for companion in companion_wheels
     )
     run_checked(

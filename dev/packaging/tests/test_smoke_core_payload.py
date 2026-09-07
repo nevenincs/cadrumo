@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import shutil
 import tomllib
@@ -15,6 +14,7 @@ from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from ..._paths import REPO_ROOT
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
+from .._hashing import sha256_path
 from .._smoke_common import (
     _CORPUS_SOURCE_PREFIX,
     _RENTA_PDF_ALLOW_LIST,
@@ -147,7 +147,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         retained = cohort_dir / artifact.name
         shutil.copy2(artifact, retained)
         filenames[name] = retained.name
-        digests[name] = hashlib.sha256(retained.read_bytes()).hexdigest()
+        digests[name] = sha256_path(retained)
     add_test_source_archive(cohort_dir, filenames, digests)
     add_test_runtime_wheelhouse(cohort_dir, filenames, digests)
     (cohort_dir / "python-cohort.json").write_text(

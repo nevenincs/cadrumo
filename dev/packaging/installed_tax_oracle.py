@@ -8,7 +8,6 @@ the calculation response and the persisted public observation surface.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import re
@@ -28,6 +27,7 @@ if not __package__:
     __package__ = "dev.packaging"
 
 from ._command import CommandResult, run_command  # noqa: E402
+from ._hashing import sha256_path  # noqa: E402
 from ._installed_wheel_binding import installed_wheel_payload_sha256  # noqa: E402
 from ._recovery_enrollment import enrolled_profile_creation  # noqa: E402
 
@@ -470,7 +470,7 @@ def run_installed_tax_oracle(
     resolved_cli = requested_cli.resolve(strict=True)
     if not resolved_cli.is_file():
         raise InstalledTaxOracleError(f"installed CLI is not a file: {resolved_cli}")
-    executable_sha256 = hashlib.sha256(resolved_cli.read_bytes()).hexdigest()
+    executable_sha256 = sha256_path(resolved_cli)
     installed_payload_sha256 = installed_wheel_payload_sha256(resolved_cli)
     resolved_work_dir = work_dir.resolve()
     resolved_work_dir.mkdir(parents=True, exist_ok=True)

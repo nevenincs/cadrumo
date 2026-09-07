@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import hashlib
 import json
 import os
 import re
@@ -33,6 +32,7 @@ from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
 from ._command import run_command
+from ._hashing import sha256_path
 from ._installed_wheel_binding import installed_distribution_payload_sha256
 from ._recovery_enrollment import enrolled_profile_creation
 from .installed_tax_oracle import (
@@ -605,7 +605,7 @@ def run_installed_mcp_oracle(
         cohort_manifest_sha256=cohort_manifest_sha256,
         cohort_root_wheel_sha256=cohort_root_wheel_sha256,
         cohort_harness_wheel_sha256=cohort_harness_wheel_sha256,
-        server_executable_sha256=hashlib.sha256(runtime_server.read_bytes()).hexdigest(),
+        server_executable_sha256=sha256_path(runtime_server),
         runtime_server_executable=str(runtime_server),
         runtime_project_root=runtime_project_root,
         installed_cli_payload_sha256=installed_distribution_payload_sha256(sibling_cli, "cadrumo"),
