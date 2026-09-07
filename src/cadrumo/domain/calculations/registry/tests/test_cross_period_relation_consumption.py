@@ -27,7 +27,7 @@ import pytest
 
 from .....core.modelo import Modelo
 from ..authority import bundled_authority
-from ..handoffs import relation_consumption_index, relation_is_consumed
+from ..handoffs import relation_consumption_channels, relation_consumption_index
 from ..schema_surfaces import CasillaDefinition
 from ._registry_schema_support import _committed_registry_tree
 
@@ -66,7 +66,7 @@ def test_relation_consumption_includes_real_alternate_binding_channel() -> None:
     )
 
     assert relation.target_binding not in {item.binding for item in revision.casillas}
-    assert relation_is_consumed(relation, relation_consumption_index(revision))
+    assert relation_consumption_channels(relation, relation_consumption_index(revision))
 
 
 def test_no_inert_value_feeding_cross_period_relations() -> None:
@@ -90,7 +90,7 @@ def test_no_inert_value_feeding_cross_period_relations() -> None:
                 role = getattr(relation, "dependency_role", None)
                 if role not in _VALUE_FEEDING_ROLES:
                     continue
-                if not relation_is_consumed(relation, index):
+                if not relation_consumption_channels(relation, index):
                     gaps.append(
                         f"{modelo.id}/{revision_id}: relation {relation.id!r} "
                         f"(role={role!r}, target_binding="
@@ -120,7 +120,7 @@ def test_evidence_relations_are_the_only_unconsumed_relations() -> None:
                 continue
             index = relation_consumption_index(revision)
             for relation in relations:
-                if not relation_is_consumed(relation, index):
+                if not relation_consumption_channels(relation, index):
                     unconsumed_roles.add(relation.dependency_role)
 
     assert unconsumed_roles <= {_EVIDENCE_ROLE}, (

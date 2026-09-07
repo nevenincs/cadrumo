@@ -20,6 +20,7 @@ construction sites already satisfied it; that they still do is the control.
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import cast
 
 import pytest
 from pydantic import ValidationError
@@ -30,7 +31,7 @@ from ..suggestions import OperatorIvaDerivationResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-_TRANSACTION_ID = TransactionId("a" * 64)
+_TRANSACTION_ID = cast("TransactionId", "a" * 64)
 _A_CATEGORY = next(iter(IvaCategory))
 
 

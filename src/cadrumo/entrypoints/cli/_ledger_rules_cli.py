@@ -13,27 +13,12 @@ from ...core.i18n.render import tr
 from ...domain.transactions.enums import BusinessClassification
 from ._common import active_bucket_id_or_refuse as _rule_bucket_id
 from ._common import bad, emit_envelope
+from ._ledger_support import validate_category_id
 
 
 def _short_display_id(value: str) -> str:
     """Return the 16-char prefix of an id with an ellipsis, for table display."""
     return f"{value[:16]}..."
-
-
-def validate_category_id(category_id: str | None) -> str | None:
-    if category_id is None:
-        return None
-    from ...domain.categories.spending_category import SpendingCategory
-
-    value = category_id.strip()
-    if not value:
-        return None
-    if value not in {category.value for category in SpendingCategory}:
-        known = ", ".join(category.value for category in SpendingCategory)
-        raise bad(
-            tr("cli.ledger.errors.invalid_category", category=value, known=known),
-        )
-    return value
 
 
 def rule_add(

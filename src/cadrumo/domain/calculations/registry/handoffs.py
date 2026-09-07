@@ -58,7 +58,6 @@ __all__ = [
     "audit_registry_relation_handoffs",
     "relation_consumption_channels",
     "relation_consumption_index",
-    "relation_is_consumed",
 ]
 
 
@@ -199,11 +198,6 @@ def relation_consumption_channels(
     if relation.target_binding in index.formula_bindings:
         channels.append(RelationConsumptionChannelKind.FORMULA_BINDING)
     return tuple(channels)
-
-
-def relation_is_consumed(relation: RelationDefinition, index: _RelationConsumptionIndex) -> bool:
-    """Return whether a formula or bound casilla consumes ``relation``."""
-    return bool(relation_consumption_channels(relation, index))
 
 
 class RelationHandoffRecord(BaseModel):

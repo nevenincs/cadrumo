@@ -16,7 +16,7 @@ from .._validate_relation_periods import select_relation_source_revisions
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids
 from ..errors import RegistryValidationError
-from ..handoffs import relation_consumption_index, relation_is_consumed
+from ..handoffs import relation_consumption_channels, relation_consumption_index
 from ..iva_wallet_relation_targets import is_iva_wallet_owned_relation_target
 from ..relations import relation_source_requirements
 from ..runtime_graph import expression_relation_refs
@@ -49,7 +49,7 @@ def _validated_registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCa
 
 def _consumed_relation_refs(revision: ModeloRevision) -> set[str]:
     index = relation_consumption_index(revision)
-    return {str(relation.id) for relation in revision.relations if relation_is_consumed(relation, index)}
+    return {str(relation.id) for relation in revision.relations if relation_consumption_channels(relation, index)}
 
 
 def test_cross_dependency_roles_match_supported_modelo_hierarchy() -> None:
