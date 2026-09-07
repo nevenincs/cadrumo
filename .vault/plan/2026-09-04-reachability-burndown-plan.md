@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:b5034e8d42dd124cc24f6a9770a0f4abc2e4b06768e8d2f092d5b4630c23daca'
+body_hash: 'sha256:98c7d852f536628f3e782f2c54368580bd38ccb565735ec590a51ee8ab2337c1'
 ---
 
 # `reachability-burndown` plan
@@ -205,6 +205,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S104` - Sweep for the shape the relation predicate turned out to be, an unreached one-line delegator whose target is reached elsewhere, and delete the one real hazard it finds: the prorrata seed variant returned only the seed and dropped the operator-facing blocker and advisory findings its own docstring said to use the other function for, nothing called it anywhere, and the evaluator it wrapped is invoked by the register CLI. Repoint the two production docstrings that pointed readers at the discarding variant.; `src/cadrumo/application/prorrata_register/seed.py,src/cadrumo/application/prorrata_register/sector_lifecycle.py,src/cadrumo/core/prorrata_register.py,dev/quality/unused_symbol_ratchet.toml,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S105` - Narrow the delegator sweep to the body shape the three deletions actually shared, returning only part of what a sibling returned, and correct the entry a previous pass got wrong: nineteen such delegators exist and sixteen are reached and legitimate, so the shape alone is not a defect and only an unreached one is. Delete the place-of-supply nature narrowing, whose docstring Raises clause documents what its callee raises rather than behaviour it adds, and record the two remaining unreached narrowings for a later step.; `src/cadrumo/domain/iva/place_of_supply.py,src/cadrumo/domain/iva/tests/test_place_of_supply_grounding.py,src/cadrumo/domain/iva/tests/test_classification_carries_place_of_supply.py,dev/quality/unused_symbol_ratchet.toml,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S106` - Repair the dangling docstring reference the previous deletion left, which the reference ratchet caught and which a transient-looking red had already hinted at, then take the deferred custody-carry narrowing: it dropped the coverage manifest and the refusal beside it, since the live payload builder returns the rows with their namespace-coverage fact and raises when a full profile carries unclassified namespaces, so a caller reaching for the shorter name got rows where the product refuses. Point its five test consumers at the payload builder rather than the private helper it narrowed.; `src/cadrumo/domain/iva/place_of_supply.py,src/cadrumo/application/user_profile/custody_carry.py,src/cadrumo/application/user_profile/tests/test_custody_roundtrip.py,dev/quality/unused_symbol_ratchet.toml,dev/audit/reachability_classification.toml`.
+- [ ] `W05.P12.S107` - Remove the fifth findings-discarding narrowing (is_active_censo_modelo) and gate the whole class with dev/quality/narrowing_delegators; `justfile`.
 
 ## Parallelization
 

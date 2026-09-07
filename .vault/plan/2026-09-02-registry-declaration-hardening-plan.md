@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:01f30e577b37ca2edbd22c3198a9eb16427969b2b695e98ff4f4819e93a6eb2e'
+body_hash: 'sha256:12d5e8cabe9f97d39a83c3f0a6f84c8009dc19648e5d41542620cb22e5e3aa68'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1390,6 +1390,9 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1021` - Invert the facade-discovery gate that demanded cadrumo.core still export, and floor its live-tree walk; `dev/tests/test_import_hygiene_scan.py`.
 - [x] `W06.P13.S1022` - Retire the name-collision disposition whose collision a peer refactor resolved, leaving the explanation outliving its cause; `dev/quality/name_collision_dispositions.toml`.
 - [x] `W06.P13.S1023` - Aggregate the secure-store write-path check, a static-checks recipe check-all never ran while the gate table looked complete; `dev/quality/suite.py`.
+- [x] `W06.P13.S1024` - Retire the transient-tree naming site whose assertion was removed, leaving the declaration describing a walk that no longer names the snapshot; `dev/tests/test_tracked_content_excludes_transient_trees.py`.
+- [x] `W06.P13.S1025` - Delete the two cleaned files from the UTF-8 ratchet, which stood as silent pre-authorisations after their violations were fixed; `dev/tests/test_utf8_enrollment_inventory.py`.
+- [x] `W06.P13.S1026` - Record the retired generated-evidence population instead of leaving its vacuity guard permanently red, keeping the watch for the next artefact; `dev/tests/test_generated_evidence_is_gated.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

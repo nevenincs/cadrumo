@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:abdfe4f0b004c8cd00629e6bd12b23f3a6f568b25f1793ac2772b34ade625407'
+body_hash: 'sha256:f7af8fc0dda492ebcdbee36882d4b53eb9c1f8639f201de9b61647bafeb952ad'
 ---
 
 # `tuimodelo` plan
@@ -79,7 +79,7 @@ Annotate absorbed rows with their new owner, publish the coverage baseline, and 
 
 - [x] `W01.P03.S08` - Annotate each of the 25 open rows in the two source plans with its disposition here or its retention there, naming every row rather than referring to them collectively; `.vault/plan`.
 - [x] `W01.P03.S167` - Record the gate state this campaign starts from, including the size budget already failing on two of its own target files, so no wave mistakes an inherited red for one it caused SCOPE CORRECTED BY MEASUREMENT: the deliverable is a vault audit, not a file under the development audit tree. Searched first and found no cross-gate known-red registry anywhere in the repository; that tree holds only per-gate ratchet data that a gate reads, and NOTHING would consume a campaign baseline placed there, so it would be an inert artefact in a code tree. The code-stands-alone mandate separately forbids development code from carrying campaign state. The baseline is therefore recorded as an audit beside this campaign's other audit, which is the sanctioned home for a measured record.; `.vault/audit`.
-- [ ] `W01.P03.S12` - Publish the campaign coverage baseline as a standing artefact derived from the denominator; `dev/quality`.
+- [x] `W01.P03.S12` - Publish the campaign coverage baseline as a standing artefact derived from the denominator PREMISE CORRECTED BY MEASUREMENT: no artefact is published, because the standing artefact already exists. The classification table IS the coverage baseline -- the governing satellite-families decision states that every family keeps its row there carrying its disposition, reason and reopening condition, which is what makes a deferral auditable rather than a silence -- and the validator plus the contradiction rule already enforce it. A generated file beside it would rebuild the 1132-line denominator snapshot that commit 280ec80a67 deleted for being reproducible from the builder, in the one tree where nothing would consume it, in the shape two standing rules forbid as a frozen corpus count. WHAT WAS GENUINELY MISSING is arm coherence of the narrative fields: only the reason was validated, so the condition a row is SCHEDULED BY could contradict the arm it is scheduled AS. That hole was occupied by a live defect this campaign itself introduced one step earlier, and the reopening-condition vocabulary is now closed per arm and refused at construction.; `dev/quality`.
 - [ ] `W01.P03.S141` - Reopen the edit capability projection under the surviving mechanism, replacing the retired condition it still cites, since every editor step routes through a seam nothing currently opens; `src/cadrumo/application/modelo/_edit_facade.py`.
 - [ ] `W01.P03.S142` - Relocate the capability projection out of the private underscore module to a public defining module, because a frontend import of it is otherwise forbidden by the architecture boundary; `src/cadrumo/application/modelo`.
 - [ ] `W01.P03.S128` - Open the sibling adapter-purity campaign for the residual violations, deriving the figure from the 159-row inventory rather than rounding it, and record that the ledger lane's prior owner is archived so the work is not orphaned twice; `.vault`.

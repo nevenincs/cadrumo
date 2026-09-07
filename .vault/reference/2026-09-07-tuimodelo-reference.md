@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:18f0fd7ef6474a4bde4663ffea7a26ad539802e498a67653f676710ee56ada3c'
+body_hash: 'sha256:e12a3c50a5e3bed90e6fe9696501d0b4e2d949e7bbd99559e6d54c6d5f690ee3'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -288,26 +288,37 @@ candidate set from production imports only, never a filesystem walk, and diffs t
 candidate set against a closed hand-reviewed table. A new modelo command reds the gate
 immediately rather than inheriting a mechanical classification. Its dispositions are
 bounded review, read pending, mutation pending, flow owned, deferred, and a reserved
-non-visual case. Measured green at 11 passing tests, with 79 classifications over 79 live
-identities and zero violations: 43 read pending, 31 mutation pending, 2 flow owned, 2 bounded
-review, 1 deferred.
+non-visual case, and two delivered arms added since. Measured green at 19 passing tests, with
+79 classifications over 79 live identities and zero violations: 42 read pending, 32 mutation
+pending, 2 flow owned, 2 bounded review, 1 deferred.
 
-It is a scope enumerator, not an admission gate, and the distinction is load-bearing. Its
-drift check compares only the four fields named in `_SIGNATURE_FIELDS` at
-`dev/quality/modelo_workspace_action_denominator.py:156` — command key, write route, side
-effects, and action-catalogue membership. Neither the recorded disposition nor the interface
-capability is observed, so moving a row's disposition, enrolling its operation, or wiring a
-route changes no gate outcome. The closed taxonomy also offers no arm a delivered mutation can
-occupy: the only completed arm is read-only, leaving all 31 mutation rows without a
-destination. Two review-package rows compound this by declaring no write route while carrying
-local-state side effects, a contradiction the drift check cannot see because it compares
-against the spec's own declaration.
+UPDATED AS DELIVERED. The paragraphs below described the gate as it stood when this reference
+was written; the admission work has since landed and the description is corrected here rather
+than left to mislead a later reader.
+
+It was a scope enumerator rather than an admission gate, and the distinction was load-bearing.
+Its drift check compared only four mechanical fields, so neither the recorded disposition nor
+the interface capability was observed and wiring a route changed no gate outcome. The taxonomy
+also offered no arm a delivered mutation could occupy. IT NOW OBSERVES SIX FIELDS, the four
+mechanical ones plus the interface capability and surface dispatchability, named in
+`_SIGNATURE_FIELDS` at `dev/quality/modelo_workspace_action_denominator.py:218`; the taxonomy
+carries a delivered arm for reads and one for mutations, both still unoccupied; and a recorded
+disposition contradicting the observed shape now reds.
+
+One review-package row declared no write route while performing a profile-bound write, which
+the drift check could not see because it compares against the spec's own declaration. That row
+is corrected. Its sibling was measured and is correctly declared: the route field is
+write-scoped only, and roughly half the identities carrying encrypted facts declare no write
+route while reading bucket storage.
 
 Making it an admission gate requires observing interface capability and dispatchability
 alongside the mechanical fields, adding delivered arms, and failing when a recorded disposition
 contradicts the observed shape — applied to the intersection of the command graph and the
-dispatch table only, which is the boundary the module's own comment at `:192` draws and
-explains.
+dispatch table only, which is the boundary the module's own comment at `:261` draws and
+explains. That is delivered. The intersection clause is satisfied by construction rather than
+by a scoping predicate, because being wired requires dispatch membership; the false-delivery
+arm is deliberately unscoped, since a row claiming delivery while dispatchable by nothing sits
+outside the intersection by construction.
 
 Five enrolment registries exist and none is aware of the others: the modelo workspace
 destination table, the shell destination catalogue, the visual-verification surface list,
@@ -415,8 +426,9 @@ field, no resolution action, and authored English prose rather than locale keys.
 
 ### Action denominator
 
-79 live action identities, 79 classifications, zero violations, 11 passing tests. Dispositions
-divide 43 read pending, 31 mutation pending, 2 flow owned, 2 bounded review and 1 deferred; the
+79 live action identities, 79 classifications, zero violations, 19 passing tests. Dispositions
+divide 42 read pending, 32 mutation pending, 2 flow owned, 2 bounded review and 1 deferred, with
+the two delivered arms and the reserved non-visual arm unoccupied; the
 work family alone contributes 13 reads and 6 mutations. Seven modelo operations are registered,
 and the frontend dispatch table is keyed to the same seven, so every other mutation writes
 outside the supervisor.
