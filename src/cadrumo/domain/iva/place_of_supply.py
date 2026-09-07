@@ -66,7 +66,6 @@ __all__ = [
     "load_place_of_supply_table",
     "place_of_supply_rule",
     "place_of_supply_years",
-    "required_supply_nature_for_rule",
 ]
 
 
@@ -317,20 +316,3 @@ def place_of_supply_rule(rule_id: str, *, on: date) -> IvaPlaceOfSupplyRule:
     return rule
 
 
-def required_supply_nature_for_rule(rule_id: str, *, on: date) -> SupplyNature | None:
-    """Return the nature this rule's provisions fix, or ``None`` when silent.
-
-    Args:
-        rule_id: The classification rule's declared id.
-        on: A date in the filing year whose table applies.
-
-    Returns:
-        The fixed :class:`~domain.iva.SupplyNature`, or ``None`` when the cited
-        provisions do not determine it -- a domestic rule settled by its rate
-        tier, or a territorial rule that reaches both limbs alike.
-
-    Raises:
-        IvaCatalogueError: When the rule is not grounded at all, which is a
-            different condition from being grounded and silent.
-    """
-    return place_of_supply_rule(rule_id, on=on).supply_nature

@@ -90,6 +90,45 @@ def validate_confidence_range(value: Decimal | None) -> Decimal | None:
     return value
 
 
+def classification_for_business_share(share: Decimal) -> BusinessClassification:
+    """Return the classification a business share of this size implies.
+
+    The inverse of :func:`validate_business_pct_coupling`, and its other half:
+    that one answers "may this classification carry a share", this one answers
+    "which classification does this share mean". Kept beside it because the two
+    describe one relationship, and a surface that knew only one of them had to
+    invent the other.
+
+    A whole share is wholly business and a zero share wholly personal --
+    neither is a mixture, and calling either MIXED would be a false statement
+    about the row rather than a conservative one. Only a share strictly between
+    is genuinely apportioned. An allocate path that hard-coded MIXED labelled a
+    fully-business expense as mixed-use, which is the mistake this exists to
+    stop repeating.
+
+    Args:
+        share: The business proportion, as a unit proportion in ``0..1``.
+
+    Returns:
+        The classification the share implies.
+
+    Raises:
+        TransactionValidationError: When ``share`` is not a unit proportion.
+            A proportion outside ``0..1`` names no classification at all, and
+            answering MIXED for one would carry the bad value onward.
+    """
+    if not is_unit_proportion(share):
+        raise TransactionValidationError(
+            "a business share must be within the inclusive 0..1 range to imply a classification",
+            context={"business_pct": str(share)},
+        )
+    if share == 1:
+        return BusinessClassification.BUSINESS
+    if share == 0:
+        return BusinessClassification.PERSONAL
+    return BusinessClassification.MIXED
+
+
 def validate_business_pct_coupling(
     state: BusinessClassification,
     pct: Decimal | None,

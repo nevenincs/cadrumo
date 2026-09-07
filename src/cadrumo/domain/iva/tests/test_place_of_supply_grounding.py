@@ -31,7 +31,6 @@ from ..place_of_supply import (
     IvaPlaceOfSupplyRule,
     load_place_of_supply_table,
     place_of_supply_rule,
-    required_supply_nature_for_rule,
 )
 from ..supply_nature import SupplyNature
 
@@ -126,7 +125,7 @@ def test_a_domestic_rule_is_silent_on_the_nature(rule_id: str) -> None:
     the axis eager and refuse invoices for a distinction their own treatment
     ignores.
     """
-    assert required_supply_nature_for_rule(rule_id, on=_ON) is None
+    assert place_of_supply_rule(rule_id, on=_ON).supply_nature is None
 
 
 def test_the_cross_border_branches_are_where_the_fork_appears() -> None:
