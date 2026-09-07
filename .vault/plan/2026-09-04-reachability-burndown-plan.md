@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:faa15ac06a57ccecf60b8c4899e387e31d6246f028eedcd61ccb5165331f93b3'
+body_hash: 'sha256:06ab97802c8d5524a79d870010b612a79d3b2caa3b9340b5b02b808ab921e879'
 ---
 
 # `reachability-burndown` plan
@@ -179,6 +179,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S78` - Remove the module-level lazy attribute hook from the profile-key registry and the alias beside it: the hook resolved a PROFILE_KEYS attribute declared only under TYPE_CHECKING, no shipped module imported it, and its four test importers were racing the wizard registration the hook fires against, which the registry's own docstring already warned about; all four now call the call-time function production already used. The alias was a pure module-level restatement of the canonical classmethod. Keep the required half of the symmetric filtered view, whose optional half is live.; `src/cadrumo/domain/contribuyente/keys.py,src/cadrumo/domain/contribuyente/__init__.py,src/cadrumo/application/user_profile/keys_validation.py,src/cadrumo/application/wizard/compiler.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S79` - Convert the lazy-facade gate from policing a retreating mechanism to asserting its absence, since removing the last shipped dispatch hook left it scanning only the test package's own permanent facade: its non-vacuity guard asserted merely that SOME lazy facade was found, which stayed true, so a gate written to protect shipped code was passing on a test helper exactly as its own docstring warned would happen. Assert that no shipped module defines a module-level __getattr__, keep the map-versus-TYPE_CHECKING agreement checks for the one permitted facade, and refuse if that facade ever stops being one.; `src/cadrumo/tests/test_lazy_facade_static_bindings.py`.
 - [x] `W05.P12.S80` - Test the previous step's lesson across every gate rather than only the one that bit, and adjudicate the period vocabulary: thirty-nine tree-scanning gates assert emptiness with no population floor, but none scans a path that no longer exists, so the false-green shape found in the lazy-facade gate did not repeat; the twelve missing literals are all synthetic fixture paths inside detector-teeth cases. Classify the scenario validator body as reached by the two harnesses its docstring names, and keep the period enumerator family whole on the symmetry argument.; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S81` - Make the module ratchet report what it carries when it passes, since the intentional dispositions and derived deferrals are excluded from both failure directions by design and the passing path is therefore the only one that can ever show them to an operator, yet it printed nothing at all: seven accepted exceptions and two deferred clusters were invisible exactly when nothing else was wrong, which teaches a reader that green means empty. Print the same report on stdout on the clean path and cover it with a verdict-level case plus a control for a tree that carries nothing.; `dev/quality/unreachable_module_ratchet.py,dev/tests/test_unreachable_module_ratchet_gate.py`.
 
 ## Parallelization
 
