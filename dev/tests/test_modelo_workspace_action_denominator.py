@@ -13,12 +13,14 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ..quality.modelo_workspace_action_denominator import (
-    MODELO_ACTION_CLASSIFICATIONS,
-    SCHEMA_VERSION,
+from ..quality.modelo_workspace_action_classification import (
     ModeloWorkspaceActionClassificationV1,
-    ModeloWorkspaceActionDenominatorV1,
     ModeloWorkspaceActionDisposition,
+)
+from ..quality.modelo_workspace_action_classification_table import MODELO_ACTION_CLASSIFICATIONS
+from ..quality.modelo_workspace_action_denominator import (
+    SCHEMA_VERSION,
+    ModeloWorkspaceActionDenominatorV1,
     build_modelo_workspace_action_denominator,
     discover_dispatchable_modelo_action_identities,
     discover_live_modelo_action_signatures,

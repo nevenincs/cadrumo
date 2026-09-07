@@ -343,8 +343,22 @@ def census(package_root: Path = REGISTRY_PACKAGE_ROOT) -> tuple[ModeloModuleReco
     """Derive every modelo-specific module under ``package_root``, with evidence."""
     codes = modelo_codes()
     records: list[ModeloModuleRecord] = []
+    unread: list[str] = []
     for path in _iter_package_modules(package_root):
-        tree = ast.parse(path.read_text(encoding=_UTF_8))
+        try:
+            tree = ast.parse(path.read_text(encoding=_UTF_8))
+        except FileNotFoundError:
+            # The tree is walked live and peers create and remove scratch modules
+            # under it; a file that vanishes between listing and reading carries
+            # no evidence for this census to derive.
+            continue
+        except (SyntaxError, UnicodeDecodeError) as error:
+            # The same race, one step earlier: a peer mid-write leaves a module
+            # that exists but does not parse. Parsing sat outside the guard, so
+            # that far likelier case killed the whole census instead of costing
+            # one file's evidence.
+            unread.append(f"{path}: {type(error).__name__}: {error}")
+            continue
         by_signal: dict[DerivationSignal, set[str]] = {
             DerivationSignal.MODULE_NAME: _tokens(path.stem, codes),
             DerivationSignal.MODELO_REFERENCE: _modelo_member_codes(tree, codes),
@@ -362,6 +376,11 @@ def census(package_root: Path = REGISTRY_PACKAGE_ROOT) -> tuple[ModeloModuleReco
                 evidence=_collect_evidence(tree, relative),
             )
         )
+    report_unread(
+        "modelo embed census",
+        "a modelo-specific module hiding regulatory-literal evidence is absent from this census",
+        unread,
+    )
     return tuple(records)
 
 

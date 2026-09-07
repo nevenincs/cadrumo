@@ -6,7 +6,7 @@
   "generated": {
     "scanned_modules": 6846,
     "scanned_callables": 16074,
-    "module_entries": 58,
+    "module_entries": 57,
     "callable_entries": 18
   },
   "notes": {},
@@ -20,7 +20,6 @@
     "dev/packaging/python_cohort.py": 1626,
     "dev/quality/fixture_census.py": 1499,
     "dev/quality/import_hygiene_scan.py": 3938,
-    "dev/quality/modelo_workspace_action_denominator.py": 1317,
     "dev/registry/analysis/m200_2024_full_reconciliation.py": 1538,
     "dev/registry/conformance/manager.py": 1550,
     "dev/registry/filing_export_proof.py": 1616,

@@ -772,7 +772,9 @@ def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
 
     assert classify(refusal) is FrameFailureKind.REFUSED
     assert classify(crash) is FrameFailureKind.CRASHED
-    assert classify("") is FrameFailureKind.CRASHED, "an unreadable failure must not be mistaken for a considered refusal"
+    assert classify("") is FrameFailureKind.CRASHED, (
+        "an unreadable failure must not be mistaken for a considered refusal"
+    )
 
 
 def test_a_refusal_that_follows_a_traceback_still_reads_as_a_crash() -> None:

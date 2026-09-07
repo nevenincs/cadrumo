@@ -684,7 +684,6 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
 __all__ = [
     "DEFAULT_RUN_NAME",
     "FRAME_ARTEFACT_KINDS",
-    "FrameFailureKind",
     "INDEX_NAME",
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",
@@ -694,6 +693,7 @@ __all__ = [
     "RUN_ROOT",
     "SCRATCH_DIR",
     "FailedFrame",
+    "FrameFailureKind",
     "InterfaceRecord",
     "Manifest",
     "ManifestVersionError",

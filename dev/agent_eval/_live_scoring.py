@@ -631,11 +631,26 @@ class IdentityStateProtocol(Protocol):
 
 
 class IdentityGateRefusalFn(Protocol):
-    """The real ``identity_gate_refusal`` signature, caller-injected.
+    """The part of ``identity_gate_refusal`` this replay injects, not its whole signature.
 
     Returns a refusal string when a mutating call runs under an unconfirmed or
     re-armed identity, else ``None``; records an identity-read verb and re-arms on
     a profile-switch verb as a side effect on ``state``.
+
+    The real function also accepts ``execution_policy``, and the MCP server
+    always supplies it (``descriptor.execution_policy``) while this replay never
+    does. That omission is deliberate and safe, and the reason is worth writing
+    down because the signatures alone suggest otherwise: omitting the argument
+    makes the gate fall back to ``command_policy(command_key)``, which resolves
+    from the SAME already-materialised descriptor set the server reads
+    ``descriptor.execution_policy`` out of. There is no second policy map for the
+    two to disagree about, so the replayed classification is the served one.
+
+    Claiming to be "the real signature" was the part that could mislead: a reader
+    checking whether this replay is faithful would compare the two signatures,
+    find a parameter missing, and have nothing here to tell them whether that
+    mattered. If the fallback ever stops resolving from the descriptor set, this
+    protocol must grow the argument rather than keep relying on it.
     """
 
     def __call__(self, command_key: str, *, state: IdentityStateProtocol) -> str | None: ...  # pragma: no cover
