@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final, get_args, override
+from typing import Final, override
 
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
@@ -19,6 +19,7 @@ from .entries import LedgerEntriesScreen
 from .evidence import LedgerEvidenceScreen
 from .import_flow import LedgerImportScreen
 from .models import (
+    LEDGER_DESTINATION_BY_AREA,
     LedgerClassificationSubmitterV1,
     LedgerDestinationIdV1,
     LedgerImportSubmitterV1,
@@ -26,6 +27,7 @@ from .models import (
     LedgerPreparedImportV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
+    declared_ledger_destination_ids,
 )
 from .overview import LedgerOverviewScreen
 from .reconciliation import LedgerReconciliationScreen
@@ -80,28 +82,40 @@ class LedgerRouteV1:
     factory: LedgerInternalScreenFactoryV1 | None
 
 
-LEDGER_ROUTES: Final[tuple[LedgerRouteV1, ...]] = (
-    LedgerRouteV1("ledger.overview", LedgerWorkspaceArea.OVERVIEW, LedgerOverviewScreen),
-    LedgerRouteV1("ledger.entries", LedgerWorkspaceArea.ENTRIES, LedgerEntriesScreen),
-    LedgerRouteV1("ledger.review", LedgerWorkspaceArea.REVIEW, LedgerReviewScreen),
-    LedgerRouteV1("ledger.import", LedgerWorkspaceArea.IMPORT, LedgerImportScreen),
-    LedgerRouteV1("ledger.classification", LedgerWorkspaceArea.CLASSIFICATION, LedgerClassificationScreen),
-    LedgerRouteV1("ledger.evidence", LedgerWorkspaceArea.EVIDENCE, LedgerEvidenceScreen),
-    LedgerRouteV1("ledger.reconciliation", LedgerWorkspaceArea.RECONCILIATION, LedgerReconciliationScreen),
+#: Which read body each area opens. Only the screens are declared here; the
+#: destination each area resolves to comes from the canonical pairing, so this
+#: catalogue cannot disagree with the controller about where an area leads.
+_SCREEN_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerInternalScreenFactoryV1 | None]] = {
+    LedgerWorkspaceArea.OVERVIEW: LedgerOverviewScreen,
+    LedgerWorkspaceArea.ENTRIES: LedgerEntriesScreen,
+    LedgerWorkspaceArea.REVIEW: LedgerReviewScreen,
+    LedgerWorkspaceArea.IMPORT: LedgerImportScreen,
+    LedgerWorkspaceArea.CLASSIFICATION: LedgerClassificationScreen,
+    LedgerWorkspaceArea.EVIDENCE: LedgerEvidenceScreen,
+    LedgerWorkspaceArea.RECONCILIATION: LedgerReconciliationScreen,
+}
+
+LEDGER_ROUTES: Final[tuple[LedgerRouteV1, ...]] = tuple(
+    LedgerRouteV1(destination, area, _SCREEN_BY_AREA.get(area))
+    for area, destination in LEDGER_DESTINATION_BY_AREA.items()
 )
 _ROUTES_BY_ID: Final = {route.destination: route for route in LEDGER_ROUTES}
 
 
-def declared_ledger_destination_ids() -> frozenset[str]:
-    """Read the internal closed destination set from its defining type alias."""
-    return frozenset(item for item in get_args(LedgerDestinationIdV1.__value__) if isinstance(item, str))
-
-
 def _require_total_routes() -> None:
+    """Refuse at import unless every area has a body and a distinct destination.
+
+    The destination half is settled by the pairing this builds from, so what
+    is left to check here is the screen half: an area absent from
+    ``_SCREEN_BY_AREA`` yields a route with no factory, which reaches the
+    operator as a raise rather than a typed refusal.
+    """
     if frozenset(_ROUTES_BY_ID) != declared_ledger_destination_ids() or len(_ROUTES_BY_ID) != len(LEDGER_ROUTES):
         raise ValueError("Ledger routes must cover the internal destination catalogue exactly once")
     if tuple(route.area for route in LEDGER_ROUTES) != tuple(LedgerWorkspaceArea):
         raise ValueError("Ledger routes must preserve canonical workspace area order")
+    if frozenset(_SCREEN_BY_AREA) != frozenset(LedgerWorkspaceArea):
+        raise ValueError("Ledger routes must name a read body for every workspace area")
 
 
 _require_total_routes()
@@ -162,7 +176,6 @@ __all__ = [
     "LedgerInternalScreenFactoryV1",
     "LedgerRouteV1",
     "LedgerUnavailableScreen",
-    "declared_ledger_destination_ids",
     "ledger_screen_factory",
     "resolve_ledger_screen",
 ]

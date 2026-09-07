@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
-from typing import Literal, Never, Protocol, SupportsIndex, override
+from typing import Final, Literal, Never, Protocol, SupportsIndex, get_args, override
 from weakref import WeakKeyDictionary
 
 from pydantic import BaseModel, model_validator
@@ -37,6 +37,61 @@ type LedgerDestinationIdV1 = Literal[
     "ledger.evidence",
     "ledger.reconciliation",
 ]
+
+
+def declared_ledger_destination_ids() -> frozenset[str]:
+    """Read the internal closed destination set from its defining type alias.
+
+    Defined beside the alias it reads rather than beside a consumer, so the
+    set and its declaration cannot drift apart.
+    """
+    return frozenset(item for item in get_args(LedgerDestinationIdV1.__value__) if isinstance(item, str))
+
+
+#: The one pairing of workspace area to internal destination.
+#:
+#: Declared here rather than beside either consumer because both need it and
+#: the route catalogue imports the controller, so neither module can own it.
+#:
+#: It used to be written twice: once in the route catalogue, whose totality
+#: gate checked it, and once in the controller behind a ``cast`` to this
+#: alias. A ``cast`` asserts rather than validates, so the controller copy was
+#: checked by nothing at all -- not by the type checker, which believed the
+#: assertion, and not by the route gate, which never read it. A destination
+#: misspelled there stayed invisible until an operator selected that area and
+#: the route lookup raised ``KeyError``; a destination swapped between two
+#: areas surfaced as a disagreement refusal at the same moment. Both are
+#: import-time facts about a closed set, so they are settled at import now.
+LEDGER_DESTINATION_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerDestinationIdV1]] = {
+    LedgerWorkspaceArea.OVERVIEW: "ledger.overview",
+    LedgerWorkspaceArea.ENTRIES: "ledger.entries",
+    LedgerWorkspaceArea.REVIEW: "ledger.review",
+    LedgerWorkspaceArea.IMPORT: "ledger.import",
+    LedgerWorkspaceArea.CLASSIFICATION: "ledger.classification",
+    LedgerWorkspaceArea.EVIDENCE: "ledger.evidence",
+    LedgerWorkspaceArea.RECONCILIATION: "ledger.reconciliation",
+}
+
+
+def _require_total_destination_pairing() -> None:
+    """Refuse at import unless the pairing is a bijection in canonical order.
+
+    Totality over the enum is what keeps navigation from raising on an area
+    nobody remembered to map; uniqueness of the destinations is what keeps two
+    areas from resolving to one screen. Order is checked because the route
+    catalogue presents areas in enum order and reads its destinations from
+    here.
+    """
+    if tuple(LEDGER_DESTINATION_BY_AREA) != tuple(LedgerWorkspaceArea):
+        raise ValueError("Ledger destinations must cover every workspace area in canonical order")
+    destinations = tuple(LEDGER_DESTINATION_BY_AREA.values())
+    if frozenset(destinations) != declared_ledger_destination_ids() or len(frozenset(destinations)) != len(
+        destinations
+    ):
+        raise ValueError("Ledger destinations must cover the internal catalogue exactly once")
+
+
+_require_total_destination_pairing()
 
 
 class LedgerRouteTargetV1(BaseModel):
@@ -265,6 +320,7 @@ type LedgerReconciliationSourceV1 = (
 
 
 __all__ = [
+    "LEDGER_DESTINATION_BY_AREA",
     "LedgerClassificationSubmissionV1",
     "LedgerClassificationSubmitterV1",
     "LedgerDestinationIdV1",
@@ -279,4 +335,5 @@ __all__ = [
     "LedgerReviewRowV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",
+    "declared_ledger_destination_ids",
 ]

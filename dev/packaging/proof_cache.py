@@ -27,7 +27,6 @@ byte-identity was already proven on this exact toolchain" in seconds.
 
 from __future__ import annotations
 
-import hashlib
 import os
 import platform
 import shutil
@@ -41,6 +40,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from cadrumo.core.directory_scan import iter_directory
 
 from .._paths import UTF_8
+from ._hashing import sha256_text
 
 _UTF_8: Final[str] = UTF_8
 _CACHE_DIR_ENV: Final[str] = "CADRUMO_PROOF_CACHE_DIR"
@@ -108,7 +108,7 @@ def source_fingerprint(repo_root: Path) -> str | None:
     if drift.strip():
         return None
     listing = _git_output(repo_root, "ls-files", "-s", "--", *PROOF_SCOPE_PATHS)
-    return hashlib.sha256(listing.encode(_UTF_8)).hexdigest()
+    return sha256_text(listing)
 
 
 def environment_fingerprint() -> str:
@@ -136,7 +136,7 @@ def environment_fingerprint() -> str:
         platform.python_version(),
         uv_version,
     )
-    return hashlib.sha256("|".join(parts).encode(_UTF_8)).hexdigest()[:16]
+    return sha256_text("|".join(parts))[:16]
 
 
 def default_cache_dir() -> Path:

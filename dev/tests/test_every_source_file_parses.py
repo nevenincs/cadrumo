@@ -134,8 +134,24 @@ def test_every_source_file_parses() -> None:
     batches -- one mechanical sweep produced three -- and a gate that reports
     only the first turns a single list into a serial rediscovery.
     """
-    scanned = sum(len(_python_files(root)) for root in _PARSED_ROOTS if root.is_dir())
-    assert scanned, "no source files were scanned; this gate would pass vacuously"
+    # Every declared root must EXIST and contribute, rather than be filtered out
+    # of the scan by ``is_dir()``. Filtering is how this measurement dies
+    # quietly: a root that moves is dropped, the remaining roots still make the
+    # total non-zero, and the gate reports a clean parse over a tree it no
+    # longer reaches. That exact loss is on record in this repository -- a
+    # census whose roster was filtered the same way silently became one root
+    # when the top-level tests tree moved under src. An aggregate guard cannot
+    # catch it either: measured here the roots hold 5928, 1015 and 6 modules,
+    # so the largest alone keeps any total-based check satisfied.
+    missing = tuple(str(root) for root in _PARSED_ROOTS if not root.is_dir())
+    assert not missing, (
+        "declared parse root(s) no longer exist, so this gate would report a clean parse "
+        f"over a tree it never reached: {missing}"
+    )
+    per_root = {str(root): len(_python_files(root)) for root in _PARSED_ROOTS}
+    empty = {name: count for name, count in per_root.items() if count == 0}
+    assert not empty, f"declared parse root(s) contributed no modules, so nothing in them was parsed: {empty}"
+    scanned = sum(per_root.values())
 
     failures = _syntax_failures()
     assert not failures, (
@@ -153,3 +169,28 @@ def test_parser_rejects_syntax_newer_than_the_supported_floor() -> None:
     """A newer interpreter must not make newer-only syntax look supported."""
     with pytest.raises(SyntaxError):
         _parse_source('value = t"template {name}"', filename="newer_syntax.py")
+
+
+def test_the_independent_prune_list_still_matches_the_shared_one() -> None:
+    """The copy above is required; nothing was making it stay a copy.
+
+    ``_python_files`` deliberately restates the prune names rather than
+    importing them, for the reason its own docstring gives: importing the
+    shared inventory pulls the package import graph, and this gate exists for
+    the state in which that graph is broken. That independence is right, and
+    it is also why the two lists can drift apart without anything noticing --
+    each walk stays self-consistent, so a divergence changes which tree is
+    scanned and nothing compares the two.
+
+    The join is placed here, in the module that owns the copy, and imports
+    inside the function body on purpose: the module still imports with only
+    the standard library, so a broken graph fails THIS test alone and leaves
+    the parse gate above running, which is the whole point of the copy.
+    """
+    from ._project_inventory import _PRUNE_DIRECTORY_NAMES as SHARED_PRUNE_DIRECTORY_NAMES
+
+    assert SHARED_PRUNE_DIRECTORY_NAMES == _PRUNE_DIRECTORY_NAMES, (
+        "the independent prune list has drifted from the shared inventory's, so the two walks "
+        f"no longer cover the same tree: here={sorted(_PRUNE_DIRECTORY_NAMES)} "
+        f"shared={sorted(SHARED_PRUNE_DIRECTORY_NAMES)}"
+    )

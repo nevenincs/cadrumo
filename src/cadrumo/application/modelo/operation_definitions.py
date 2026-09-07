@@ -105,7 +105,6 @@ from .edit_models import (
     ModeloEditDetailRowIntentKind,
     ModeloEditExecutionNoEffectV1,
     ModeloEditMutationFamily,
-    ModeloEditMutationResultReceiptV1,
     ModeloEditPermittedSurfaceEntryV1,
     ModeloEditRowAddressV1,
     ModeloEditRowIntentKind,
@@ -126,10 +125,8 @@ from .workspace_models import ModeloWorkspaceRefreshTargetV1
 if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloScalar
-    from ...domain.modelos.verification_report import VerificationReport
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
-    from .export import ModeloExportResult
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
@@ -458,18 +455,6 @@ class ModeloWorkVerifyPublicResultV1(BaseModel):
     granted_verificado_completo: bool
     finding_count: NonNegativeInt
     missing_required_casilla_count: NonNegativeInt
-
-
-def project_modelo_work_verify_result(report: VerificationReport) -> ModeloWorkVerifyPublicResultV1:
-    """Project one persisted report onto the safe public result."""
-    return ModeloWorkVerifyPublicResultV1(
-        verification_report_id=str(report.verification_report_id),
-        calculation_revision_id=str(report.calculation_revision_id),
-        completeness_status=str(report.completeness_status),
-        granted_verificado_completo=report.granted_verificado_completo,
-        finding_count=len(report.findings),
-        missing_required_casilla_count=len(report.missing_required_casilla_ids),
-    )
 
 
 # DELEGATED PHASE REPORTING, stated once for every executor in this module that
@@ -814,17 +799,6 @@ class ModeloExportPublicResultV1(BaseModel):
     handoff_required: bool = True
 
 
-def project_modelo_export_result(result: ModeloExportResult) -> ModeloExportPublicResultV1:
-    """Project one export outcome onto the safe public result."""
-    return ModeloExportPublicResultV1(
-        calculation_revision_id=str(result.calculation_revision_id),
-        output_path=str(result.output_path),
-        byte_size=result.byte_size,
-        file_sha256=str(result.file_sha256),
-        export_format=str(result.format),
-    )
-
-
 class ModeloExportExecutor:
     """Export one revision through the existing authority, locally only.
 
@@ -954,6 +928,14 @@ class ModeloWorkAmendOverride(BaseModel):
         return Decimal(self.value)
 
 
+#: How many detail rows one amendment may carry.
+#:
+#: An engineering bound on a journalled request, not a legal cardinality: no
+#: official record design caps the counterparties an M347 declares, so a limit
+#: near the override cap would refuse a lawful return from a busy gestoria.
+_MAX_AMENDMENT_DETAIL_ROWS: Final = 20_000
+
+
 class ModeloWorkAmendRequest(CredentialFreeOperationRequest):
     """One amendment: which baseline, which corrections, and why.
 
@@ -969,6 +951,33 @@ class ModeloWorkAmendRequest(CredentialFreeOperationRequest):
     overrides: Annotated[tuple[ModeloWorkAmendOverride, ...], Field(min_length=1, max_length=500)]
     reason: Annotated[str, Field(min_length=1, max_length=500)]
     m303_rectificativa_motive: M303RectificativaMotive | None = None
+
+    #: The rows this amendment declares, or ``None`` where it declares none.
+    #:
+    #: THREE STATES, NOT TWO, and the authority reads all three. For M184,
+    #: M232, M347 and M349 the per-counterpart rows ARE the declaration, so
+    #: ``None`` -- the caller having said nothing -- is refused rather than
+    #: guessed: a complementaria COMPLETES a return while a sustitutiva
+    #: REPLACES it (LGT art. 122.2 para. 2), and silence would be read
+    #: differently by each. An empty tuple is not that silence; it is the
+    #: positive statement that the period had no rows, and is accepted as one.
+    #: Every other modelo has no rows to declare, so ``None`` there is simply
+    #: its ordinary shape.
+    #:
+    #: Optional here rather than required because those other modelos are the
+    #: majority of this operation's traffic; the refusal that makes the
+    #: distinction binding lives with the authority that knows which modelo the
+    #: baseline belongs to, which this request does not carry.
+    #:
+    #: The rows cross as their payload-safe wire mirror rather than the domain
+    #: ``ModeloDetailRow``: two of those six hydrate registry codes through
+    #: before-validators, which the payload-graph gate refuses because a
+    #: published schema would then not describe what validation accepts. The
+    #: mirror already exists for the edit operation, and reusing it keeps one
+    #: translation rather than a second free to drift.
+    detail_rows: Annotated[tuple[ModeloDetailRowWireV1, ...], Field(max_length=_MAX_AMENDMENT_DETAIL_ROWS)] | None = (
+        None
+    )
 
     #: The operator this invocation acts as. The platform binds an actor at
     #: submission, never at composition, so baking one into a definition would
@@ -1016,6 +1025,7 @@ class ModeloWorkAmendExecutor:
             overrides={override.casilla_id: override.as_decimal() for override in payload.overrides},
             amendment_kind=payload.amendment_kind,
             m303_rectificativa_motive=payload.m303_rectificativa_motive,
+            detail_rows=(None if payload.detail_rows is None else tuple(row.to_row() for row in payload.detail_rows)),
             reason=payload.reason,
             actor=request.payload.actor,
         )
@@ -1363,7 +1373,7 @@ class _WireDetailRowMirror(BaseModel):
         return cls.model_validate(_wire_row_payload(row))
 
 
-class ModeloEditApply184MemberRowV1(_WireDetailRowMirror):
+class Modelo184MemberRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo184MemberRow with decimal amounts as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1416,7 +1426,7 @@ class ModeloEditApply184MemberRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply232VinculadaRowV1(_WireDetailRowMirror):
+class Modelo232VinculadaRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo232VinculadaRow carrying its codes unhydrated."""
 
     model_config = _WIRE_CONFIG
@@ -1443,7 +1453,7 @@ class ModeloEditApply232VinculadaRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply349OperadorRowV1(_WireDetailRowMirror):
+class Modelo349OperadorRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo349OperadorRow with its importe as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1466,7 +1476,7 @@ class ModeloEditApply349OperadorRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply349RectificacionRowV1(_WireDetailRowMirror):
+class Modelo349RectificacionRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo349RectificacionRow with its bases as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1495,7 +1505,7 @@ class ModeloEditApply349RectificacionRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply347ContraparteRowV1(_WireDetailRowMirror):
+class Modelo347ContraparteRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo347ContraparteRow with quarterly amounts as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1524,7 +1534,7 @@ class ModeloEditApply347ContraparteRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply210AgrupacionRentaRowV1(_WireDetailRowMirror):
+class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo210AgrupacionRentaRow with its rates as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1553,24 +1563,24 @@ class ModeloEditApply210AgrupacionRentaRowV1(_WireDetailRowMirror):
         )
 
 
-type ModeloEditApplyDetailRowV1 = Annotated[
-    ModeloEditApply184MemberRowV1
-    | ModeloEditApply232VinculadaRowV1
-    | ModeloEditApply349OperadorRowV1
-    | ModeloEditApply349RectificacionRowV1
-    | ModeloEditApply347ContraparteRowV1
-    | ModeloEditApply210AgrupacionRentaRowV1,
+type ModeloDetailRowWireV1 = Annotated[
+    Modelo184MemberRowWireV1
+    | Modelo232VinculadaRowWireV1
+    | Modelo349OperadorRowWireV1
+    | Modelo349RectificacionRowWireV1
+    | Modelo347ContraparteRowWireV1
+    | Modelo210AgrupacionRentaRowWireV1,
     Field(discriminator="row_type"),
 ]
 """The wire mirror of the per-modelo detail-row union, discriminated as it is."""
 
 
-_DETAIL_ROW_ADAPTER: Final[TypeAdapter[ModeloEditApplyDetailRowV1]] = TypeAdapter(
-    ModeloEditApplyDetailRowV1,
+_DETAIL_ROW_ADAPTER: Final[TypeAdapter[ModeloDetailRowWireV1]] = TypeAdapter(
+    ModeloDetailRowWireV1,
 )
 
 
-def wire_detail_row(row: BaseModel) -> ModeloEditApplyDetailRowV1:
+def wire_detail_row(row: BaseModel) -> ModeloDetailRowWireV1:
     """Mirror any domain detail row onto the discriminated wire union.
 
     Dispatches through the union's own ``row_type`` discriminator rather than
@@ -1579,6 +1589,14 @@ def wire_detail_row(row: BaseModel) -> ModeloEditApplyDetailRowV1:
     seventh row kind should not require remembering this site.
     """
     return _DETAIL_ROW_ADAPTER.validate_python(_wire_row_payload(row))
+
+
+# ``ModeloWorkAmendRequest`` is declared above the wire union it carries, so its
+# annotation cannot resolve at class creation. Rebuilt here, at the first point
+# where the union exists, rather than left to pydantic's implicit deferred
+# rebuild -- an unresolved model that is only ever validated would otherwise
+# fail at its first use rather than at import.
+ModeloWorkAmendRequest.model_rebuild()
 
 
 class ModeloEditApplyDetailRowAddressV1(BaseModel):
@@ -1626,7 +1644,7 @@ class ModeloEditApplyDetailRowIntentV1(BaseModel):
 
     address: ModeloEditApplyDetailRowAddressV1
     kind: ModeloEditDetailRowIntentKind
-    row: ModeloEditApplyDetailRowV1 | None = None
+    row: ModeloDetailRowWireV1 | None = None
 
     def to_intent(self) -> ModeloDetailRowEditIntentV1:
         """Translate back to the real, fully re-validated domain intent."""
@@ -1775,14 +1793,6 @@ class ModeloEditApplyPublicResultV1(BaseModel):
     result_version: int = 1
     receipt_id: Annotated[str, Field(min_length=1, max_length=128)]
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
-
-
-def project_modelo_edit_apply_result(receipt: ModeloEditMutationResultReceiptV1) -> ModeloEditApplyPublicResultV1:
-    """Project one settled receipt onto the safe public result."""
-    return ModeloEditApplyPublicResultV1(
-        receipt_id=str(receipt.receipt_id),
-        calculation_revision_id=str(receipt.calculation_revision_id),
-    )
 
 
 class ModeloEditApplyExecutor:
@@ -2000,9 +2010,6 @@ __all__ = [
     "build_modelo_work_rename_registration",
     "build_modelo_work_verify_definition",
     "build_modelo_work_verify_registration",
-    "project_modelo_edit_apply_result",
-    "project_modelo_export_result",
-    "project_modelo_work_verify_result",
 ]
 
 

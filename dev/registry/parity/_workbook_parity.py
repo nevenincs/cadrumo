@@ -294,14 +294,26 @@ def scan_workbook(path: Path, *, root: Path, options: WorkbookScanOptions | None
             started=started,
         )
     except Exception as exc:
+        # Deliberately broad and deliberately not rendering ``exc``'s own text:
+        # this branch is everything openpyxl's read-only XML parser can raise
+        # beyond the three types measured positional-only above, and it is not
+        # a small closed set -- confirmed empirically, a malformed <row r="..">
+        # attribute drives openpyxl's own row-number coercion into a bare
+        # ``ValueError`` whose message embeds that raw XML attribute verbatim,
+        # while a different malformation (non-well-formed XML) raises a
+        # ``ParseError`` carrying only a line/column position. Composing from
+        # the exception's type name and the already-known relative path keeps
+        # the message useful without gambling on which of those two shapes (or
+        # an unenumerated third) fired. ``exc_info=True`` still attaches the
+        # full exception to the log record for local diagnosis.
         _log.warning(
             "workbook parity scan unexpected error for %s: %s",
             relative,
-            exc,
+            type(exc).__name__,
             exc_info=True,
         )
         raise RegistryValidationError(
-            f"Unexpected error scanning workbook {relative}: {type(exc).__name__}: {exc}",
+            f"Unexpected error scanning workbook {relative}: {type(exc).__name__}",
         ) from exc
     kind = _classify_xlsx(relative, formulas)
     evidence_tier, not_evidence_for = _evidence_for_workbook_kind(kind)
@@ -459,6 +471,24 @@ def detect_workbook_runner() -> WorkbookRunnerAvailability:
     )
 
 
+def _subprocess_failure_detail(completed: subprocess.CalledProcessError | subprocess.CompletedProcess[str]) -> str:
+    """Summarize a failed LibreOffice invocation from fields this project owns.
+
+    ``completed.stdout``/``completed.stderr`` are text the external LibreOffice
+    process chose to emit -- arbitrary, locale-dependent, and able to echo
+    workbook content this project has no license to interpolate wholesale into
+    a raised message (confirmed empirically: a crafted subprocess exit wrote
+    an unrelated local path and an unrelated secret-shaped string to
+    stdout/stderr, and the previous newline-joined composition rendered both
+    verbatim). The exit code and captured byte lengths are this project's
+    own observation of the failure and are safe to show; the raw text is
+    discarded rather than rendered.
+    """
+    stdout_len = len(completed.stdout) if completed.stdout else 0
+    stderr_len = len(completed.stderr) if completed.stderr else 0
+    return f"exit code {completed.returncode} ({stdout_len} stdout chars, {stderr_len} stderr chars captured)"
+
+
 def run_workbook_with_libreoffice(
     workbook_path: Path,
     *,
@@ -529,12 +559,14 @@ def run_workbook_with_libreoffice(
         except subprocess.TimeoutExpired as exc:
             raise RegistryValidationError("LibreOffice workbook recalculation timed out") from exc
         except subprocess.CalledProcessError as exc:
-            detail = "\n".join(part for part in (exc.stdout, exc.stderr) if part)
-            raise RegistryValidationError(f"LibreOffice workbook recalculation failed: {detail}") from exc
+            raise RegistryValidationError(
+                f"LibreOffice workbook recalculation failed: {_subprocess_failure_detail(exc)}",
+            ) from exc
         recalculated_path = output_dir / working_copy.name
         if not recalculated_path.is_file():
-            detail = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
-            raise RegistryValidationError(f"LibreOffice did not produce recalculated workbook: {detail}")
+            raise RegistryValidationError(
+                f"LibreOffice did not produce recalculated workbook: {_subprocess_failure_detail(completed)}",
+            )
         recalculated = load_workbook(recalculated_path, data_only=True, read_only=True)
         try:
             return {
@@ -685,12 +717,14 @@ def _converted_binary_xls_path(
         except subprocess.TimeoutExpired as exc:
             raise _BinaryXlsConversionError("LibreOffice binary XLS conversion timed out") from exc
         except subprocess.CalledProcessError as exc:
-            detail = "\n".join(part for part in (exc.stdout, exc.stderr) if part)
-            raise _BinaryXlsConversionError(f"LibreOffice binary XLS conversion failed: {detail}") from exc
+            raise _BinaryXlsConversionError(
+                f"LibreOffice binary XLS conversion failed: {_subprocess_failure_detail(exc)}",
+            ) from exc
         outputs = scan_directory(output_dir, pattern="*.xlsx")
         if len(outputs) != 1:
-            detail = "\n".join(part for part in (completed.stdout, completed.stderr) if part)
-            raise _BinaryXlsConversionError(f"LibreOffice did not produce exactly one XLSX workbook: {detail}")
+            raise _BinaryXlsConversionError(
+                f"LibreOffice did not produce exactly one XLSX workbook: {_subprocess_failure_detail(completed)}",
+            )
         converted_path = outputs[0]
         _BINARY_XLS_CONVERSION_BYTES_CACHE[cache_key] = converted_path.read_bytes()
         yield converted_path

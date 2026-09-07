@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import platform
 import re
@@ -21,7 +20,7 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
 from ._command import CommandResult
-from ._hashing import sha256_path
+from ._hashing import sha256_path, sha256_text
 from .cohort_manifest import (
     ArtifactRecord,
     LoadedReleaseCohort,
@@ -41,15 +40,23 @@ def _is_sha256(value: str) -> bool:
     return _SHA256_RE.fullmatch(value) is not None
 
 
-def _artifact_digest(artifacts: Mapping[str, str]) -> str:
-    """Hash an artifact-name/digest map using the compatibility-runner format."""
+def artifact_map_digest(artifacts: Mapping[str, str]) -> str:
+    """Hash an artifact-name/digest map into the value ``artifact_sha256`` carries.
+
+    The one derivation of this rule. The compatibility runner mints
+    ``artifact_sha256`` with it and this module's validator re-derives the same
+    value to check what it was handed, so the two sides of that comparison
+    cannot drift apart: a second implementation would agree only for as long as
+    four ``json.dumps`` keyword arguments happened to match in two packages,
+    and nothing would have reported the day they stopped.
+    """
     canonical = json.dumps(
         dict(sorted(artifacts.items())),
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
-    ).encode(_UTF_8)
-    return hashlib.sha256(canonical).hexdigest()
+    )
+    return sha256_text(canonical)
 
 
 class EvidenceStatus(StrEnum):
@@ -119,7 +126,7 @@ class InstallationOutcome(BaseModel):
             raise ValueError("installation artifact names cannot be empty")
         if any(not _is_sha256(digest) for digest in self.artifact_digests.values()):
             raise ValueError("installation artifact digests must be lowercase SHA-256 values")
-        expected = _artifact_digest(self.artifact_digests)
+        expected = artifact_map_digest(self.artifact_digests)
         if self.artifact_sha256 != expected:
             raise ValueError(
                 "installation artifact_sha256 must bind the canonical artifact digest map",
@@ -210,8 +217,8 @@ class CommandTranscript(BaseModel):
             started_at=started_at,
             completed_at=completed_at,
             exit_status=exit_status,
-            stdout_sha256=hashlib.sha256(stdout.encode("utf-8")).hexdigest(),
-            stderr_sha256=hashlib.sha256(stderr.encode("utf-8")).hexdigest(),
+            stdout_sha256=sha256_text(stdout),
+            stderr_sha256=sha256_text(stderr),
             relevant_output=relevant_output,
         )
 
@@ -321,19 +328,19 @@ class DistributionEvidence(EvidenceIdentityPayload):
         return self
 
 
-def _canonical_json(document: Mapping[str, object]) -> bytes:
+def _canonical_json(document: Mapping[str, object]) -> str:
     return json.dumps(
         document,
         ensure_ascii=False,
         separators=(",", ":"),
         sort_keys=True,
-    ).encode(_UTF_8)
+    )
 
 
 def evidence_identifier(evidence: EvidenceIdentityPayload) -> str:
     """Return the SHA-256 identifier for all evidence content except its id."""
     document = evidence.model_dump(mode="json", exclude={"evidence_id"})
-    return hashlib.sha256(_canonical_json(document)).hexdigest()
+    return sha256_text(_canonical_json(document))
 
 
 def bind_cohort(cohort: LoadedReleaseCohort) -> CohortBinding:

@@ -285,6 +285,16 @@ def _mint_extract_consent(
     refusal_key = _OFF_HOST_REFUSAL_LOCALE_KEYS.get(outcome)
     if refusal_key is not None:
         raise bad(tr(refusal_key))
+    # Only the one consented outcome may reach the minting path below. The
+    # wording table above covers the refusals that exist today, so reaching
+    # here with anything else means an outcome was added to the classifier and
+    # not given a sentence -- and the default for an unclassified answer on a
+    # consent gate has to be refusal. Falling through on the strength of "no
+    # refusal wording was found" would mint a token authorising financial
+    # evidence to leave this host, which is the one thing the default-off
+    # posture exists to prevent.
+    if outcome is not OffHostEvidenceReadOutcome.OFF_HOST_CONSENTED:
+        raise bad(tr("cli.app.ledger.evidence.extract_off_host_unclassified", outcome=outcome.value))
 
     # The token binds to the BYTES, so a read with no content-addressable record
     # behind it cannot mint one. An attachment-only extract is exactly that case:

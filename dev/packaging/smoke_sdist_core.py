@@ -9,6 +9,8 @@ from pathlib import Path
 
 from .._paths import REPO_ROOT
 from ._smoke_common import (
+    _configured_corpus_binary_suffixes,
+    _is_corpus_source_binary,
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
     assert_installed_data,
@@ -33,21 +35,35 @@ from .python_cohort import (
 def _assert_sdist_contains_data(repo_root: Path, sdist: Path) -> None:
     """Verify every tracked shipped-data file appears in the source distribution."""
     expected = tracked_source_data_paths(repo_root)
-    _assert_sdist_contains_expected_data(sdist, expected)
+    _assert_sdist_contains_expected_data(
+        sdist,
+        expected,
+        corpus_binary_suffixes=_configured_corpus_binary_suffixes(repo_root),
+    )
 
 
-def _assert_sdist_contains_expected_data(sdist: Path, expected: set[str]) -> None:
-    """Verify expected runtime data is present and companion-owned bytes are absent."""
+def _assert_sdist_contains_expected_data(
+    sdist: Path,
+    expected: set[str],
+    *,
+    corpus_binary_suffixes: tuple[str, ...],
+) -> None:
+    """Verify expected runtime data is present and companion-owned bytes are absent.
+
+    ``corpus_binary_suffixes`` is supplied by the caller rather than written
+    here, because the set of companion-owned corpus binaries is declared once in
+    the root wheel's ``exclude`` configuration. A literal repeated at this
+    boundary makes the leak check a screen over a population it does not read:
+    a seventh excluded suffix would be split out of the root sdist and this
+    assertion would still report clean, having never measured it.
+    """
     with tarfile.open(sdist, "r:gz") as archive:
         names = set(archive.getnames())
     missing = sorted(path for path in expected if not any(name.endswith(f"/{path}") for name in names))
     if missing:
         raise SystemExit(f"sdist is missing {len(missing)} tracked shipped-data files; first ten: {missing[:10]!r}")
     leaked = sorted(
-        name
-        for name in names
-        if "/src/cadrumo/_data/corpus/" in name
-        and name.lower().endswith((".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"))
+        name for name in names if "/src/cadrumo/_data/corpus/" in name and name.lower().endswith(corpus_binary_suffixes)
     )
     if leaked:
         raise SystemExit(
@@ -90,17 +106,18 @@ def main(argv: list[str] | None = None) -> int:
 
     cohort = load_python_cohort(args.cohort_dir)
     print("using supplied immutable sdist cohort", flush=True)
+    corpus_binary_suffixes = _configured_corpus_binary_suffixes(repo_root)
     expected_data_paths = {
         path
         for path in tracked_source_data_paths(repo_root)
-        if not (
-            path.startswith("src/cadrumo/_data/corpus/")
-            and path.lower().endswith((".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"))
-        )
-        and "/tests/" not in path
+        if not _is_corpus_source_binary(path, corpus_binary_suffixes) and "/tests/" not in path
     }
     sdist = cohort.root_sdist
-    _assert_sdist_contains_expected_data(sdist, expected_data_paths)
+    _assert_sdist_contains_expected_data(
+        sdist,
+        expected_data_paths,
+        corpus_binary_suffixes=corpus_binary_suffixes,
+    )
 
     print("creating stdlib venv and installing sdist plus exact companions", flush=True)
     venv_path = create_pip_venv(work_dir, args.python)

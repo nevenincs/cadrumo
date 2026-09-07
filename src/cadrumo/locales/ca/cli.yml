@@ -182,6 +182,10 @@ cli:
         extract_off_host_provider_is_local: --off-host-provider local és el valor
           per defecte i no envia res fora de l'equip. Omet l'opció o indica un proveïdor
           allotjat.
+        extract_off_host_unclassified: 'Es rebutja aquesta lectura fora de l''equip:
+          el control de consentiment ha retornat {outcome}, per al qual aquesta ordre
+          no té text. Una resposta no reconeguda es tracta com un rebuig perquè les
+          proves no surtin d''aquest equip per una decisió que ningú no ha declarat.'
         extract_provider_without_acknowledge: Llegir aquest document fora de l'equip
           envia el seu contingut a un tercer. Afegeix --acknowledge-off-host per confirmar-ho,
           només per a aquesta lectura.
@@ -1258,6 +1262,13 @@ cli:
           externament. Requereix un filing record amb evidència oficial importada
           de l'AEAT
         amend_missing_options: 'Una esmena requereix totes aquestes opcions: %{missing}.'
+        amend_no_detail_rows_help: Declarar que aquesta esmena no té registres de
+          detall. En els models 184, 232, 347 i 349 els registres són la declaració,
+          de manera que declarar que no n'hi ha cap no és el mateix que no dir res;
+          si s'ometen aquesta opció i --row, l'esmena es rebutja en lloc de
+          suposar-se.
+        amend_rows_contradiction: Feu servir --row o --no-detail-rows, però no tots
+          dos; --no-detail-rows declara que no hi ha registres de detall.
         amend_set_required: --set és obligatori almenys una vegada per a una complementària.
         amend_wizard_export_next_action: Rectificació presentada com a registre intern
           en esborrany. Exporta el fitxer BOE compatible amb l'AEAT amb `aeat app

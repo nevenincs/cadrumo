@@ -111,11 +111,50 @@ def _search(query: str, mime_prefixes: tuple[str, ...], limit: int = 20) -> list
     return out
 
 
+PROVENANCE_SIDECAR_SUFFIX: Final[str] = ".provenance.json"
+"""The suffix :func:`_save` appends to a payload name to make its sidecar."""
+
+
+def orphaned_provenance_sidecars(root: Path) -> tuple[str, ...]:
+    """Sidecars under *root* whose payload is not there.
+
+    The direction nothing walked. Every existing gate over this corpus starts
+    from the payload files and asks whether each carries a sidecar, and the
+    listing that feeds them filters the sidecars out by suffix -- so a
+    sidecar left behind by a payload that went away is invisible to all of
+    them, in the tree whose whole purpose is to say where evidence came from.
+
+    The pair is removed together and restored together only if whoever
+    restores it knows there are two halves. This corpus has already been
+    through one full removal and re-add of eight payloads with their
+    sidecars; it survived because both halves moved in the same commit.
+    Nothing enforced that.
+
+    A licence, a source URL and a content address for a file that no longer
+    exists is not harmless bookkeeping: it is an attestation with nothing
+    under it, and the next fixture added at that name inherits it.
+
+    Args:
+        root: The corpus directory to walk.
+
+    Returns:
+        Sidecar names, sorted, whose payload is absent.
+    """
+    if not root.is_dir():
+        return ()
+    orphans = [
+        sidecar.name
+        for sidecar in sorted(root.glob(f"*{PROVENANCE_SIDECAR_SUFFIX}"))
+        if not root.joinpath(sidecar.name.removesuffix(PROVENANCE_SIDECAR_SUFFIX)).is_file()
+    ]
+    return tuple(orphans)
+
+
 def _save(name: str, data: bytes, *, source_url: str, licence: str, title: str, kind: str) -> None:
     _CORPUS.mkdir(parents=True, exist_ok=True)
     target = _CORPUS / name
     target.write_bytes(data)
-    sidecar = target.with_suffix(target.suffix + ".provenance.json")
+    sidecar = target.with_suffix(target.suffix + PROVENANCE_SIDECAR_SUFFIX)
     sidecar.write_text(
         json.dumps(
             {

@@ -1376,7 +1376,20 @@ def clear_profile_output_language_hint(*, storage_root: Path, bucket_id: str) ->
 
 
 def default_profile_secure_object_inventory() -> ProfileSecureObjectInventoryPort:
-    """Return active-bucket namespace inventory through the application port."""
+    """Return active-bucket namespace inventory through the application port.
+
+    DECLARED, NOT YET REACHED. No application module lists namespaces, so this
+    accessor has no caller and neither does the port method under it. Its
+    siblings do -- the crypto port at four production references, bucket
+    storage at three, the output-language hint at two -- which is why the
+    absence is invisible from inside a module this live.
+
+    The operation itself is real and performed: the participation index calls
+    ``list_keys`` straight on its own ``SecureObjectRepository``. That is an
+    adapter using persistence it owns, which is allowed, and it is why this is a
+    port waiting for an application-layer consumer rather than a facade some
+    other construct displaced.
+    """
     return profile_custody_port().secure_object_inventory()
 
 

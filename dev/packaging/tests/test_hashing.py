@@ -13,7 +13,7 @@ from typing import Final
 import pytest
 
 from ..._paths import REPO_ROOT
-from .._hashing import sha256_path
+from .._hashing import sha256_path, sha256_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -22,6 +22,20 @@ _REHOMED_STREAMED_DIGEST_SITES: Final[tuple[str, ...]] = (
     "dev/packaging/cohort_manifest.py",
     "dev/packaging/smoke_homebrew.py",
     "dev/corpus/sync_aeat_record_design_corpus.py",
+)
+
+
+#: Production modules that digest a STRING and now route the codec through the
+#: one owner. Each held its own ``value.encode(...)`` before this, and between
+#: them they spelled the same codec three ways.
+_REHOMED_TEXT_DIGEST_SITES: Final[tuple[str, ...]] = (
+    "dev/packaging/smoke_homebrew.py",
+    "dev/packaging/distribution_evidence_emit.py",
+    "dev/packaging/evidence.py",
+    "dev/packaging/proof_cache.py",
+    "dev/packaging/cohort_manifest.py",
+    "dev/packaging/python_cohort.py",
+    "dev/ci/python_runtime_compatibility.py",
 )
 
 
@@ -122,6 +136,91 @@ def test_a_private_streamed_digest_helper_is_detected_however_it_is_written(labe
     defined = [node for node in ast.walk(tree) if isinstance(node, _FUNCTION_DEFINITIONS)]
 
     assert [node.name for node in defined if _streams_sha256(node)] == ["_digest"], label
+
+
+def _encodes_sha256(function: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """Report whether ``function`` builds its own text digest.
+
+    The conjunction is a ``sha256`` call and an ``encode`` in the same helper,
+    which is the private text-digest helper the owner replaces. A digest of
+    bytes already in hand chooses no codec and so duplicates nothing.
+    """
+    builds_digest = any(_builds_sha256_digest(node) for node in ast.walk(function))
+    encodes_text = any(
+        isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "encode"
+        for node in ast.walk(function)
+    )
+    return builds_digest and encodes_text
+
+
+_PLANTED_PRIVATE_TEXT_HELPERS: Final = {
+    "attribute callee": "def _digest(value):"
+    + chr(10)
+    + '    return hashlib.sha256(value.encode("utf-8")).hexdigest()',
+    "bare imported callee": "def _digest(value):" + chr(10) + '    return sha256(value.encode("utf-8")).hexdigest()',
+    "async attribute callee": "async def _digest(value):"
+    + chr(10)
+    + '    return hashlib.sha256(value.encode("utf-8")).hexdigest()',
+    "codec from a constant": "def _digest(value):"
+    + chr(10)
+    + "    return hashlib.sha256(value.encode(_UTF_8)).hexdigest()",
+}
+
+
+def test_sha256_text_measures_the_string_in_utf_8(tmp_path: Path) -> None:
+    """The owner's digest is the standard-library digest of the UTF-8 bytes.
+
+    Asserted over non-ASCII text, because that is the only input on which two
+    codecs disagree; over ASCII every plausible mistake computes the same
+    answer and the contract would be untestable.
+    """
+    value = "cohort-\u00f1-\u20ac-contract"
+
+    assert sha256_text(value) == hashlib.sha256(value.encode("utf-8")).hexdigest()
+    assert sha256_text(value) != hashlib.sha256(value.encode("utf-16")).hexdigest()
+
+    artifact = tmp_path / "text.bin"
+    artifact.write_bytes(value.encode("utf-8"))
+    assert sha256_text(value) == sha256_path(artifact), "the two owners must agree on the same bytes"
+
+
+@pytest.mark.parametrize("label", sorted(_PLANTED_PRIVATE_TEXT_HELPERS))
+def test_a_private_text_digest_helper_is_detected_however_it_is_written(label: str) -> None:
+    """Teeth: the absence claim below is only as wide as the spellings it parses."""
+    tree = ast.parse(_PLANTED_PRIVATE_TEXT_HELPERS[label] + chr(10))
+    defined = [node for node in ast.walk(tree) if isinstance(node, _FUNCTION_DEFINITIONS)]
+
+    assert [node.name for node in defined if _encodes_sha256(node)] == ["_digest"], label
+
+
+def test_a_bytes_digest_is_not_a_text_duplicate() -> None:
+    """Hashing bytes in hand picks no codec, so it is not the owner's job."""
+    tree = ast.parse("def _digest(payload):" + chr(10) + "    return sha256(payload).hexdigest()" + chr(10))
+    defined = [node for node in ast.walk(tree) if isinstance(node, _FUNCTION_DEFINITIONS)]
+
+    assert [node.name for node in defined if _encodes_sha256(node)] == []
+
+
+@pytest.mark.parametrize("relative_path", _REHOMED_TEXT_DIGEST_SITES)
+def test_rehomed_text_digest_site_declares_no_private_text_helper(relative_path: str) -> None:
+    """Every production string digest resolves through the one codec owner."""
+    tree = ast.parse((REPO_ROOT / relative_path).read_text(encoding="utf-8"))
+    defined = [node for node in ast.walk(tree) if isinstance(node, _FUNCTION_DEFINITIONS)]
+
+    assert len(defined) >= _MINIMUM_SITE_FUNCTIONS, (
+        f"{relative_path} defines only {len(defined)} function(s); below this it declares no "
+        "private digest helper because it declares almost nothing"
+    )
+
+    assert [node.name for node in defined if _encodes_sha256(node)] == []
+
+
+@pytest.mark.parametrize("module_name", ("smoke_homebrew", "distribution_evidence_emit", "evidence", "proof_cache"))
+def test_rehomed_text_digest_module_uses_the_canonical_helper(module_name: str) -> None:
+    """The re-homed module resolves string digests through the one owner."""
+    module = importlib.import_module(f"dev.packaging.{module_name}")
+
+    assert module.sha256_text is sha256_text
 
 
 def test_an_in_memory_digest_is_not_a_streamed_duplicate() -> None:

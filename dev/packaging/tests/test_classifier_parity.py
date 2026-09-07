@@ -15,11 +15,26 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _REPO_ROOT = Path(__file__).parents[3]
 
-_PYPROJECTS = {
-    "root": _REPO_ROOT / "pyproject.toml",
-    "cadrumo_data_manuals": _REPO_ROOT / "packaging" / "cadrumo_data_manuals" / "pyproject.toml",
-    "cadrumo_data_official": _REPO_ROOT / "packaging" / "cadrumo_data_official" / "pyproject.toml",
-}
+#: The roster is derived, never restated. A hand-written roster passes green
+#: over a companion project it does not name: the new distribution's
+#: classifiers are simply never compared, and no assertion here can notice an
+#: absence it was never told about. The floor keeps an empty or truncated glob
+#: from satisfying a comparison between two nearly empty sides.
+_MINIMUM_COHORT_PYPROJECTS = 3
+
+
+def _cohort_pyprojects(root: Path) -> dict[str, Path]:
+    """Return every packaging manifest the release cohort publishes, keyed by name."""
+    companions = sorted((root / "packaging").glob("*/pyproject.toml"))
+    manifests = {"root": root / "pyproject.toml"}
+    manifests.update({path.parent.name: path for path in companions})
+    return manifests
+
+
+_PYPROJECTS = _cohort_pyprojects(_REPO_ROOT)
+assert len(_PYPROJECTS) >= _MINIMUM_COHORT_PYPROJECTS, (
+    f"the cohort classifier roster derived only {sorted(_PYPROJECTS)} from {_REPO_ROOT}"
+)
 
 _DEV_STATUS_PREFIX = "Development Status ::"
 _PYTHON_CLASSIFIER_PREFIX = "Programming Language :: Python :: "
@@ -76,7 +91,7 @@ def _assert_python_classifier_policy(
 
 
 def test_development_status_classifiers_are_identical_across_cohort() -> None:
-    """All three cohort pyprojects must declare the same Development Status classifier."""
+    """Every cohort pyproject must declare the same Development Status classifier."""
     statuses = {name: _extract_dev_status(path) for name, path in _PYPROJECTS.items()}
     unique_values = set(statuses.values())
     assert len(unique_values) == 1, "Development Status classifiers diverge across cohort distributions:\n" + "\n".join(
@@ -122,3 +137,21 @@ def test_python_classifier_gate_rejects_unproven_and_prerelease_rows() -> None:
             eligible_minors=frozenset({"3.13"}),
             prerelease_minor=inventory.next.minor,
         )
+
+
+def test_the_roster_covers_every_packaging_manifest_on_disk(tmp_path: Path) -> None:
+    """A companion added under ``packaging/`` joins the roster without an edit here."""
+    assert set(_PYPROJECTS) == {"root", "cadrumo_data_manuals", "cadrumo_data_official"}
+
+    (tmp_path / "pyproject.toml").write_text("", encoding="utf-8")
+    for companion in ("cadrumo_data_manuals", "cadrumo_data_official", "cadrumo_data_forms"):
+        manifest = tmp_path / "packaging" / companion / "pyproject.toml"
+        manifest.parent.mkdir(parents=True)
+        manifest.write_text("", encoding="utf-8")
+
+    assert set(_cohort_pyprojects(tmp_path)) == {
+        "root",
+        "cadrumo_data_manuals",
+        "cadrumo_data_official",
+        "cadrumo_data_forms",
+    }

@@ -654,6 +654,10 @@ live:
 llm:
   evidence:
     consent:
+      binding_mismatch: 'Rebutjat: l''autorització per a la lectura fora de l''equip
+        es va atorgar per a un altre document. El consentiment queda vinculat als
+        bytes exactes per als quals es va concedir, de manera que no es pot
+        reutilitzar per enviar aquest.'
       dispatch_refused: 'Rebutjat: aquesta sol·licitud llegeix un document del contribuent
         i l''enviaria al proveïdor extern %{provider} sense una autorització de consentiment
         per a aquesta invocació.'

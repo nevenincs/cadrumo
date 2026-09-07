@@ -161,6 +161,28 @@ def _git_grep(root: Path, args: list[str]) -> list[str]:
     return [line for line in result.stdout.splitlines() if line]
 
 
+def _tracked_file_count(root: Path, pathspec: tuple[str, ...] = ()) -> int:
+    """Return how many tracked files a pathspec actually reaches.
+
+    ``git grep`` reports no match for a pathspec that reaches no file, and
+    exits 1 doing so -- the same status, and the same empty output, as a scan
+    that searched the whole tree and found nothing. The tree-wide bans below
+    are therefore floored on what their pathspecs REACH, not only on what they
+    return, so a scaffolding exclusion grown to cover the tree is refused
+    rather than read as clean. A count is all the floor needs, so the plain
+    line-oriented listing is used rather than the NUL-delimited one.
+    """
+    result = subprocess.run(  # noqa: S603 - fixed git argv over the tracked tree
+        ["git", "ls-files", "--", *(pathspec or (".",))],  # noqa: S607 - git from PATH like every dev gate
+        cwd=root,
+        capture_output=True,
+        text=True,
+        errors="replace",
+        check=True,
+    )
+    return len([entry for entry in result.stdout.splitlines() if entry])
+
+
 def _untracked_files(root: Path) -> list[str]:
     """Return untracked, non-ignored paths -- the half ``git grep`` cannot see.
 
@@ -295,6 +317,14 @@ def test_no_operator_identifying_tokens_in_tracked_files() -> None:
     root = _repo_root()
     offenders: list[str] = []
 
+    reached = _tracked_file_count(root)
+    shipped = _tracked_file_count(root, (".", *_SCAFFOLDING_EXCLUSIONS))
+    assert reached > 20000 and shipped > 20000, (
+        f"the scan reached {reached} tracked files and {shipped} shipped-surface files; the corpus "
+        "collapsed, so an empty offender list would mean nothing was searched rather than nothing "
+        "is wrong"
+    )
+
     for token in _BANNED_LITERALS:
         for hit in _git_grep(root, ["-F", "-e", token]):
             if not _is_allowlisted(hit, token):
@@ -334,6 +364,18 @@ def test_no_cross_project_identifier_in_tracked_files() -> None:
     """
     root = _repo_root()
     offenders: list[str] = []
+
+    # The same floor the sibling tracked-file ban carries, for the same reason:
+    # an empty offender list is the output of a scan that searched everything and
+    # of one that searched nothing. The untracked ban below is deliberately NOT
+    # floored -- an empty untracked set is the normal state of a clean checkout,
+    # so a floor there would refuse the healthy case.
+    reached = _tracked_file_count(root)
+    assert reached > 20000, (
+        f"the scan reached {reached} tracked files; the corpus collapsed, so an empty offender "
+        "list would mean nothing was searched rather than nothing is wrong"
+    )
+
     for token in _BANNED_CROSS_PROJECT_LITERALS:
         offenders.extend(f"[{token!r}] {hit}" for hit in _git_grep(root, ["-F", "-e", token]))
     for pattern in _BANNED_CROSS_PROJECT_PATTERNS:

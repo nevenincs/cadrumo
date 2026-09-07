@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Annotated, Final, Literal
 
 import rtoml
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, ValidationError, model_validator
 
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.hashing import content_hash_hex, sha256_file
@@ -33,6 +33,7 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.record_design_pdf_rows import ABSENT_NATURALEZA_TYPE_CODE
 
+from ._pydantic_error_detail import validation_error_detail
 from ._record_design_ir import RecordDesignIntermediateField
 from ._semantic_map_join import JoinedRecordDesign
 
@@ -413,6 +414,10 @@ def load_render_profile(profile_directory: Path) -> RenderProfile:
             raise RegistryValidationError(f"render profile fragment must be a regular file: {path}")
         try:
             fragments.append(RenderProfileFragment.model_validate_json(json.dumps(rtoml.load(path))))
+        except ValidationError as exc:
+            raise RegistryValidationError(
+                f"invalid render profile fragment {path.name!r}: {validation_error_detail(exc)}",
+            ) from exc
         except (OSError, ValueError, TypeError) as exc:
             raise RegistryValidationError(f"invalid render profile fragment {path.name!r}: {exc}") from exc
     profile = _compile_fragments(fragments)

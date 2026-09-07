@@ -15,6 +15,7 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
 from ..burned_versions import (
     LEDGER_PATH,
@@ -22,6 +23,7 @@ from ..burned_versions import (
     BurnedVersionLedgerError,
     burn_reason,
     burned_versions,
+    canonical_version,
     is_burned,
     read_ledger,
 )
@@ -123,6 +125,91 @@ def test_a_duplicated_version_refuses(tmp_path: Path) -> None:
     ledger = tmp_path / "burned_versions.json"
     ledger.write_text(json.dumps({"burned": [entry, {**entry, "reason": "z" * 50}]}), encoding="utf-8")
     with pytest.raises(BurnedVersionLedgerError, match="more than once"):
+        read_ledger(ledger)
+
+
+@pytest.mark.parametrize(
+    "spelling",
+    ["0.02.1", "0.2.01", "v0.2.1", " 0.2.1 ", "0.2.1.0", "0.2.1.0.0"],
+    ids=[
+        "leading-zero",
+        "trailing-zero",
+        "v-prefix",
+        "surrounding-space",
+        "padded-release-segment",
+        "twice-padded-release-segment",
+    ],
+)
+def test_a_respelt_burned_number_is_still_burned(spelling: str) -> None:
+    """A burn is a NUMBER, not a string, so every spelling of it is refused.
+
+    Measured against the reader before the ledger owned this rule: ``0.02.1``,
+    ``v0.2.1`` and ``" 0.2.1 "`` each answered "not burned" for the number the
+    ledger's second seeded entry burns. An index resolves all of them to
+    ``0.2.1``, so each was a publishable spelling of a number the world already
+    holds bytes for -- and the refusal that should have stopped it never fired.
+
+    ``0.2.1.0`` is the spelling that survived owning the rule but comparing
+    canonical STRINGS: PEP 440 keeps the padding segment in the canonical form
+    while comparing it away, so the ledger held one canonical spelling and the
+    candidate carried another, and the membership test answered "not burned"
+    for a number every resolver reads as the burned one. Moving the comparison
+    onto the parsed number is what closes it, which is why the assertion below
+    compares a :class:`~packaging.version.Version` and not text.
+    """
+    assert canonical_version(spelling) == Version("0.2.1")
+    assert is_burned(spelling), f"{spelling} resolves to a burned number and must be refused"
+    assert burn_reason(spelling) is not None
+
+
+def test_an_unparseable_version_is_answerable_rather_than_an_error() -> None:
+    """Asking about a non-version has an answer, because no entry can be one."""
+    assert canonical_version("not-a-version") is None
+    assert not is_burned("not-a-version")
+    assert burn_reason("not-a-version") is None
+
+
+@pytest.mark.parametrize(
+    "respelling",
+    ["0.02.1", "0.2.1.0"],
+    ids=["leading-zero", "padded-release-segment"],
+)
+def test_two_spellings_of_one_number_are_one_burn_not_two(tmp_path: Path, respelling: str) -> None:
+    """The duplicate refusal compares numbers, so a respelling cannot slip past it.
+
+    Before the reader canonicalised, this ledger parsed to two entries with
+    conflicting evidence for one release -- the exact state the duplicate
+    refusal exists to prevent, wearing a different spelling.
+
+    ``0.2.1.0`` is the second round of that: canonicalising to a string moved
+    the refusal from raw spellings to canonical ones without moving it onto the
+    number, and a padded release segment is its own canonical string. It parsed
+    as a separate burn for the same reason ``0.02.1`` once did.
+    """
+    ledger = tmp_path / "burned_versions.json"
+    ledger.write_text(
+        json.dumps(
+            {
+                "burned": [
+                    {"version": "0.2.1", "burned_on": "2026-07-27", "reason": "y" * 50},
+                    {"version": respelling, "burned_on": "2026-07-28", "reason": "z" * 50},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(BurnedVersionLedgerError, match="more than once"):
+        read_ledger(ledger)
+
+
+def test_an_unparseable_entry_version_refuses(tmp_path: Path) -> None:
+    """An entry whose version is not a version burns nothing and must not parse."""
+    ledger = tmp_path / "burned_versions.json"
+    ledger.write_text(
+        json.dumps({"burned": [{"version": "latest", "burned_on": "2026-07-27", "reason": "y" * 50}]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(BurnedVersionLedgerError, match="unparseable version"):
         read_ledger(ledger)
 
 

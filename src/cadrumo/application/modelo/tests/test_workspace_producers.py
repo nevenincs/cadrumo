@@ -455,7 +455,13 @@ def test_every_port_realization_satisfies_the_atomic_projection_port() -> None:
     # second declaration of the same contract and drifts the moment the port
     # gains or renames a member, which is the failure this exists to refuse
     port = workspace_producers.ModeloWorkspaceAtomicProjectionPortV1
-    required = tuple(sorted(name for name in vars(port) if not name.startswith("_")))
+    # annotations AND vars: a Protocol may declare a member as a bare
+    # annotation, which ``vars`` does not see. This port happens to declare
+    # all three with a body; the sibling contract in the registry declares
+    # seven of eight as annotations, and deriving from ``vars`` alone found
+    # one of them.
+    declared = set(getattr(port, "__annotations__", {})) | set(vars(port))
+    required = tuple(sorted(name for name in declared if not name.startswith("_")))
     assert len(required) >= 3, "the port declares fewer members than expected; the derivation broke"
     missing = {
         realization.__name__: [member for member in required if not hasattr(realization, member)]

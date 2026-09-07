@@ -30,8 +30,8 @@ from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from .models import (
+    LEDGER_DESTINATION_BY_AREA,
     LedgerClassificationSubmissionV1,
-    LedgerDestinationIdV1,
     LedgerEntryRowV1,
     LedgerEvidenceRowV1,
     LedgerLinkResultV1,
@@ -42,16 +42,6 @@ from .models import (
     LedgerRouteTargetV1,
 )
 from .workspace_injection import LedgerWorkspaceInjection
-
-_DESTINATION_BY_AREA: Final = {
-    LedgerWorkspaceArea.OVERVIEW: "ledger.overview",
-    LedgerWorkspaceArea.ENTRIES: "ledger.entries",
-    LedgerWorkspaceArea.REVIEW: "ledger.review",
-    LedgerWorkspaceArea.IMPORT: "ledger.import",
-    LedgerWorkspaceArea.CLASSIFICATION: "ledger.classification",
-    LedgerWorkspaceArea.EVIDENCE: "ledger.evidence",
-    LedgerWorkspaceArea.RECONCILIATION: "ledger.reconciliation",
-}
 
 _IMPLEMENTED_AREAS: Final = frozenset(
     {
@@ -177,8 +167,15 @@ class LedgerWorkspaceController:
         return self._states[area]
 
     def route_target(self, area: LedgerWorkspaceArea) -> LedgerRouteTargetV1:
-        """Build an internal semantic target without invoking it."""
-        return LedgerRouteTargetV1(destination=cast("LedgerDestinationIdV1", _DESTINATION_BY_AREA[area]), area=area)
+        """Build an internal semantic target without invoking it.
+
+        The destination comes from the canonical pairing rather than a copy
+        held here, so this cannot name a screen the route catalogue does not
+        have. The lookup needs no ``cast``: the pairing is typed as the
+        destination alias, so a misspelling is a type error at the
+        declaration instead of an assertion the checker believes.
+        """
+        return LedgerRouteTargetV1(destination=LEDGER_DESTINATION_BY_AREA[area], area=area)
 
     def _selection_refusal(
         self,

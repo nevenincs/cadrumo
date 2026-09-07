@@ -25,7 +25,7 @@ from cadrumo.core.directory_scan import scan_directory
 from .._paths import REPO_ROOT, UTF_8
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
-from ._hashing import sha256_path
+from ._hashing import sha256_path, sha256_text
 from ._proof_ledger import record_proof
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
@@ -413,8 +413,8 @@ def _run(argv: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
 
 
 def _projection_digest(value: object) -> str:
-    payload = json.dumps(value, sort_keys=True, separators=(",", ":")).encode(_UTF_8)
-    return hashlib.sha256(payload).hexdigest()
+    payload = json.dumps(value, sort_keys=True, separators=(",", ":"))
+    return sha256_text(payload)
 
 
 def _artifact_command_projection(

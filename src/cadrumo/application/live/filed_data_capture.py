@@ -1550,6 +1550,13 @@ def filed_period_selection_rows(
     performs is per PERIOD, not per pair: one ``(modelo, ejercicio)`` query can
     return several periods, each with its own duplicate count.
 
+    DECLARED, NOT YET REACHED. Nothing calls this.
+    ``FiledHistoryOnboardingRun.selection_rows`` defaults to an empty tuple and
+    neither construction site fills it, so the operator's selection table is
+    always empty rather than showing what the sweep collapsed. Wiring it needs
+    ``declarations_by_pair`` and ``selected`` carried up to the composition
+    site, and neither survives the capture stage today.
+
     Args:
         declarations_by_pair: The register rows each walked pair returned.
         selected: The observations captured from them.
@@ -1678,6 +1685,14 @@ def classify_register_scoping_signal(
     neither widen nor narrow the grid, and it MUST NOT be rendered as a settled
     answer -- see :class:`~core.RegisterScopingSignal`, whose members are all
     hedges precisely so that it cannot be.
+
+    DECLARED, NOT YET REACHED. Nothing calls this either. Both construction
+    sites pass ``RegisterScopingSignal.INCONCLUSIVE`` literally, which is a
+    hedge and so not untrue, but it is the LEAST informative hedge and the one
+    the product would report even where this discriminator could say more.
+    Wiring it needs the availability report carried on
+    :class:`FiledHistoryDiscoveryReport`, which consumes it and does not retain
+    it.
 
     The evidence is asymmetric, and so is the confidence.
     :attr:`~core.RegisterScopingSignal.LIKELY_UNIVERSAL` is a positive

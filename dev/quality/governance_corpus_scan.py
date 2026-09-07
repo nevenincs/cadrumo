@@ -60,6 +60,7 @@ from .import_hygiene_scan import (
     _docstring_constant_ids,
     _prose_string_lines,
 )
+from .unread_inputs import report_unread
 
 __all__ = [
     "GOVERNANCE_TREE_ROOTS",
@@ -314,16 +315,24 @@ def find_governance_path_violations(
         src_root: Source root used to resolve relative paths.
     """
     violations: list[GovernanceTreePathViolation] = []
+    unread: list[str] = []
     for path in py_files:
         rel = path.relative_to(src_root).as_posix()
         try:
             tree = ast.parse(path.read_text(encoding=UTF_8), filename=str(path))
         except (OSError, SyntaxError, UnicodeDecodeError):
+            unread.append(rel)
             continue
         violations.extend(
             GovernanceTreePathViolation(rel, lineno, form, root, detail)
             for lineno, form, root, detail in governance_path_hits(tree)
         )
+    report_unread(
+        "governance-tree path scan",
+        "these modules were not read or parsed, so a governance-tree path built inside one would "
+        "not appear in the violations below",
+        unread,
+    )
     return sorted(violations, key=lambda v: (v.module_path, v.lineno, v.form, v.detail))
 
 
@@ -344,12 +353,14 @@ def find_governance_prose_violations(
         src_root: Source root used to resolve relative paths.
     """
     violations: list[GovernanceProseViolation] = []
+    unread: list[str] = []
     for path in py_files:
         rel = path.relative_to(src_root).as_posix()
         try:
             source = path.read_text(encoding=UTF_8)
             tree = ast.parse(source, filename=str(path))
         except (OSError, SyntaxError, UnicodeDecodeError):
+            unread.append(rel)
             continue
         for kind, lines in (("string", _prose_string_lines(tree)), ("comment", _comment_lines(source))):
             for lineno, text in lines:
@@ -358,6 +369,12 @@ def find_governance_prose_violations(
                     if root is not None:
                         violations.append(GovernanceProseViolation(rel, lineno, kind, root, text.strip()))
                         break
+    report_unread(
+        "governance-tree prose scan",
+        "these modules were not read or parsed, so a governance-tree reference in a docstring or "
+        "comment inside one would not appear in the violations below",
+        unread,
+    )
     return sorted(violations, key=lambda v: (v.module_path, v.lineno, v.source_kind))
 
 
@@ -418,10 +435,17 @@ def find_scaffolding_data_references(
         src_root: Source root used to resolve relative paths.
     """
     references: list[ScaffoldingDataReference] = []
+    unread: list[str] = []
     for path in data_files:
         try:
             text = path.read_text(encoding=UTF_8)
-        except (OSError, UnicodeDecodeError):
+        except UnicodeDecodeError:
+            # The documented binary skip: a file that is not text carries no
+            # scaffolding reference to find. Split from OSError below, which is
+            # not a statement about the file at all.
+            continue
+        except OSError as refusal:
+            unread.append(f"{path} ({refusal})")
             continue
         rel = path.relative_to(src_root).as_posix()
         for lineno, line in enumerate(text.splitlines(), start=1):
@@ -431,6 +455,12 @@ def find_scaffolding_data_references(
                 continue
             if _TOOLING_PATH_TOKEN_RE.search(line) is not None:
                 references.append(ScaffoldingDataReference(rel, lineno, DEV_TOOLING_ROOT, line.strip()))
+    report_unread(
+        "scaffolding data reference scan",
+        "these data files could not be opened, so a scaffolding reference inside one would not "
+        "appear in the references below; a file skipped for being binary is NOT counted here",
+        unread,
+    )
     return sorted(references, key=lambda r: (r.file_path, r.lineno))
 
 

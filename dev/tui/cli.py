@@ -34,6 +34,7 @@ from ._artifacts import (
     commit_staged_run,
     digest,
     known_runs,
+    missing_artifacts,
     now,
     purge_stale_artifacts,
     read_manifest,
@@ -587,6 +588,27 @@ def rasterise_command(
         raise typer.Exit(code=1)
 
 
+def _refuse_a_run_whose_manifest_outlives_its_frames(name: str, directory: Path, manifest: Manifest) -> None:
+    """Refuse a comparison whose inputs are claims without bytes.
+
+    The manifest is the only side anything walked. `stale_artifacts` asks
+    which files the manifest fails to name; nothing asked which names fail
+    to find a file, so a run that lost frames after its manifest was
+    written still reads as complete everywhere a reviewer looks. The diff
+    then opens a recorded path and raises `FileNotFoundError`, which names
+    one file and says nothing about the run it came from.
+    """
+    absent = missing_artifacts(directory, manifest)
+    if not absent:
+        return
+    _echo(
+        f"run {name!r} names {len(absent)} file(s) its directory does not hold, so its manifest "
+        "claims frames that are not there. Nothing was compared; re-render or repaint the run. "
+        + ", ".join(absent[:10]),
+    )
+    raise typer.Exit(code=1)
+
+
 @app.command("diff")
 def diff_command(
     baseline: Annotated[str, typer.Argument(help="Run to compare against.")],
@@ -599,6 +621,8 @@ def diff_command(
     """Report what changed between two runs."""
     baseline_root, candidate_root = run_directory(baseline), run_directory(candidate)
     before, after = _load_manifest(baseline), _load_manifest(candidate)
+    _refuse_a_run_whose_manifest_outlives_its_frames(baseline, baseline_root, before)
+    _refuse_a_run_whose_manifest_outlives_its_frames(candidate, candidate_root, after)
     diffs = _diff.compare(baseline_root, before, candidate_root, after)
     _echo(_diff.render_report(diffs))
 

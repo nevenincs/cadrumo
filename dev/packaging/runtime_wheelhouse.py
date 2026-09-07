@@ -42,11 +42,6 @@ WHEELHOUSE_SCHEMA: Final[str] = "cadrumo.runtime-wheelhouse.v3"
 WHEELHOUSE_MANIFEST: Final[str] = "runtime-wheelhouse.json"
 WHEELHOUSE_PREFIX: Final[str] = "wheels/"
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
-_DEFAULT_RUNTIME_ROWS: Final[tuple[tuple[str, bool], ...]] = (
-    ("3.13", True),
-    ("3.14", True),
-    ("3.15", False),
-)
 _PYTHON_MINOR_RE: Final[re.Pattern[str]] = re.compile(r"^3\.(?P<minor>[0-9]+)$")
 _DOWNLOAD_TIMEOUT_SECONDS: Final[float] = 180.0
 _DOWNLOAD_WORKERS: Final[int] = 8
@@ -169,17 +164,14 @@ def _runtime_rows(repo_root: Path, python_versions: Sequence[str] | None) -> tup
     if python_versions is not None:
         rows = tuple((_canonical_python_minor(value), True) for value in python_versions)
     else:
-        inventory_path = repo_root / "dev" / "ci" / "python-runtime-matrix.json"
-        if not inventory_path.is_file():
-            rows = _DEFAULT_RUNTIME_ROWS
-        else:
-            try:
-                from ..ci.python_runtime_matrix import RuntimeMatrixError, load_runtime_inventory
+        from ..ci.python_runtime_matrix import RuntimeMatrixError, load_runtime_inventory
 
-                inventory = load_runtime_inventory(inventory_path)
-            except RuntimeMatrixError as exc:
-                raise SystemExit(f"runtime inventory cannot drive wheelhouse construction: {exc}") from exc
-            rows = (*((row.minor, True) for row in inventory.stable), (inventory.next.minor, False))
+        inventory_path = repo_root / "dev" / "ci" / "python-runtime-matrix.json"
+        try:
+            inventory = load_runtime_inventory(inventory_path)
+        except RuntimeMatrixError as exc:
+            raise SystemExit(f"runtime inventory cannot drive wheelhouse construction: {exc}") from exc
+        rows = tuple((row.minor, row.blocking) for row in inventory.rows)
     if not rows:
         raise SystemExit("runtime wheelhouse runtime set is empty")
     if len({minor for minor, _blocking in rows}) != len(rows):

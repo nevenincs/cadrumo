@@ -17,6 +17,7 @@ import typer
 
 from ...application.modelo.action_errors import (
     AmendmentComplementariaLiabilityDecreaseError,
+    AmendmentDetailRowsRequiredError,
     AmendmentEvidenceMissingError,
     AmendmentKindNotPermittedError,
     AmendmentM303RectificativaMotiveError,
@@ -42,6 +43,7 @@ from ...core.i18n.render import tr
 from ...core.modelo import Modelo
 from ...domain.modelos.calculation_revision import CalculationRevisionAmendmentKind
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
+from ...domain.modelos.row_models import ModeloDetailRow
 from ._common import activate_subcommand_output_language
 from ._modelo_behavior_support import (
     require_active_profile as _require_active_profile,
@@ -57,6 +59,9 @@ from ._modelo_cli_support import (
 )
 from ._modelo_cli_support import (
     parse_kv_spec as _parse_kv_spec,
+)
+from ._modelo_cli_support import (
+    parse_row_spec,
 )
 from ._modelo_cli_support import resolve_default_actor as _resolve_default_actor
 from ._modelo_cli_support import (
@@ -327,6 +332,35 @@ def _required_amendment_inputs(
     return from_filing_record_id, kind, reason, tuple(set_overrides or ())
 
 
+def _resolve_amendment_detail_rows(
+    row_specs: tuple[str, ...],
+    *,
+    declared_none: bool,
+) -> tuple[ModeloDetailRow, ...] | None:
+    """Translate the two row flags into the three states the authority reads.
+
+    An amendment to an M184, M232, M347 or M349 is a statement about which
+    counterparts it declares, and the two amendment kinds read silence
+    differently -- a complementaria COMPLETES the return it corrects while a
+    sustitutiva REPLACES it (LGT art. 122.2 para. 2). So "no rows given" and
+    "no rows exist" cannot be the same argv shape: an absent ``--row`` returns
+    ``None``, which the authority refuses for those four modelos, and
+    ``--no-detail-rows`` returns the empty tuple, which is the positive
+    declaration that the period had none.
+
+    Passing both is a contradiction rather than a precedence question, so it
+    is refused here rather than resolved by a rule the operator would have to
+    know.
+    """
+    if declared_none and row_specs:
+        raise typer.BadParameter(tr("cli.app.modelo.work.amend_rows_contradiction"))
+    if declared_none:
+        return ()
+    if not row_specs:
+        return None
+    return tuple(parse_row_spec(spec) for spec in row_specs)
+
+
 def _parse_amendment_overrides(set_overrides: tuple[str, ...]) -> dict[CasillaId, Decimal]:
     """Parse ``--set`` values into validated ``CasillaId`` decimal overrides."""
     overrides: dict[CasillaId, Decimal] = {}
@@ -346,6 +380,8 @@ def work_amend(
     m303_rectificativa_motive: M303RectificativaMotive | None = None,
     actor: str | None = None,
     set_overrides: list[str] | None = None,
+    row: list[str] | None = None,
+    no_detail_rows: bool = False,
 ) -> None:
     """Build a complementaria amendment over an externally-filed return.
 
@@ -373,6 +409,7 @@ def work_amend(
     )
     _require_active_profile()
     overrides = _parse_amendment_overrides(set_specs)
+    detail_rows = _resolve_amendment_detail_rows(tuple(row or ()), declared_none=no_detail_rows)
 
     try:
         from ...adapters.persistence.profile.justificante import JustificanteRepository
@@ -382,6 +419,7 @@ def work_amend(
             overrides=overrides,
             amendment_kind=kind,
             m303_rectificativa_motive=m303_rectificativa_motive,
+            detail_rows=detail_rows,
             reason=reason,
             actor=actor or _resolve_default_actor(),
             justificante_repository=JustificanteRepository(),
@@ -393,6 +431,7 @@ def work_amend(
         AmendmentKindNotPermittedError,
         AmendmentM303RectificativaMotiveError,
         AmendmentComplementariaLiabilityDecreaseError,
+        AmendmentDetailRowsRequiredError,
         CalculationRevisionNotFoundError,
         CalculationRevisionStateError,
         WorkUnitNotFoundError,

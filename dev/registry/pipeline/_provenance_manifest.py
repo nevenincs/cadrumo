@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
+from ._pydantic_error_detail import validation_error_detail
 from ._record_design_ir import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateField,
@@ -634,7 +635,9 @@ def load_export_fragment_provenance_manifest(raw: bytes) -> ExportFragmentProven
         # solely to reject duplicate object keys before this typed parse.
         manifest = ExportFragmentProvenanceManifest.model_validate_json(raw)
     except ValidationError as exc:
-        raise RegistryValidationError(f"export provenance manifest violates the current contract: {exc}") from exc
+        raise RegistryValidationError(
+            f"export provenance manifest violates the current contract: {validation_error_detail(exc)}",
+        ) from exc
     if raw != export_fragment_provenance_manifest_json_bytes(manifest):
         raise RegistryValidationError("export provenance manifest is not canonical JSON")
     return manifest

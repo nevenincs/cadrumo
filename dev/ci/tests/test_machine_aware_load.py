@@ -15,6 +15,7 @@ import re
 import sys
 from dataclasses import replace
 from pathlib import Path
+from textwrap import dedent
 from typing import Any, Final
 
 import pytest
@@ -576,3 +577,55 @@ def test_the_recipe_body_reader_drops_a_commented_line() -> None:
     assert bodies, "the justfile parsed to no recipe at all"
     commented = {recipe: line for recipe, body in bodies.items() for line in body if line.startswith("#")}
     assert commented == {}
+
+
+def test_marker_resolution_reads_both_spellings_of_the_same_pytest_marker(tmp_path: Path) -> None:
+    """A marker written ``mark.NAME`` resolves exactly as ``pytest.mark.NAME`` does.
+
+    The two spellings are the same marker at collection, so a resolver that
+    reads only the dotted one measures part of the class it declares. The
+    narrowing is invisible rather than red: an unresolved marker does not make
+    a test read as absent, it makes it read as SELECTED by every lane that
+    negates the marker. The last assertion is that consequence stated directly
+    -- drop ``serial`` and ``integration and not serial`` claims the test.
+    """
+    lane = "integration and not serial"
+    modules = {
+        "test_dotted.py": dedent("""\
+            import pytest
+
+
+            @pytest.mark.integration
+            @pytest.mark.serial
+            def test_case():
+                pass
+            """),
+        "test_imported.py": dedent("""\
+            from pytest import mark
+
+
+            @mark.integration
+            @mark.serial
+            def test_case():
+                pass
+            """),
+        "test_module_level.py": dedent("""\
+            from pytest import mark
+
+            pytestmark = [mark.integration, mark.serial]
+
+
+            def test_case():
+                pass
+            """),
+    }
+    for name, text in modules.items():
+        module = tmp_path / name
+        module.write_text(text, encoding="utf-8")
+        entries = marker_sets_in(module)
+        assert entries is not None, name
+        assert [entry.test for entry in entries] == ["test_case"], name
+        assert entries[0].markers == frozenset({"integration", "serial"}), name
+        assert not expression_selects(lane, entries[0].markers), name
+
+    assert expression_selects(lane, frozenset({"integration"}))

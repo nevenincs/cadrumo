@@ -48,6 +48,40 @@ _CURRENT_PAGE_KEYS = ("01", "100", "200", "300", "resto")
 _HISTORICAL_PAGE_KEYS = ("h01", "h100", "h200", "h300", "hresto")
 _RECORD_DESIGN_SUFFIXES = frozenset({".pdf", ".xls", ".xlsx", ".xlsm", ".xsd"})
 
+#: Filenames a model directory legitimately holds without a manifest entry:
+#: the manifest itself, and the derivatives other tooling writes beside a
+#: payload. Everything else in there is corpus content, and corpus content
+#: without a manifest entry has no source URL, licence, digest or retrieval
+#: date attached to it.
+_MANIFEST_NAME: Final[str] = "manifest.json"
+#: Project-authored classification declarations that sit beside a payload
+#: rather than being one. They carry their own reasoning and are not AEAT
+#: content, so no artefact entry describes them.
+_DECLARATION_NAMES: Final[frozenset[str]] = frozenset(
+    {_MANIFEST_NAME, "declared-non-record-sheets.json"},
+)
+_DERIVED_SUFFIXES: Final[tuple[str, ...]] = (
+    ".extracted.md",
+    ".extracted.json",
+    ".record-design-correction.json",
+)
+
+#: Payload files that are present in the corpus and named by no manifest.
+#:
+#: This is a census of known debt, not a suppression: :func:`check` requires
+#: the observed set to EQUAL this one, so a new unattested file fails and so
+#: does attesting one of these without removing it from here.
+#:
+#: The single entry is a partial revert. A bulk pass removed 25 ``.xlsx``
+#: copies that each had an ``.xls`` sibling, and dropped their manifest
+#: entries with them. One was then restored, because ``xlrd`` cannot read
+#: formula text and the modelo 200 totals assertion is grounded in the
+#: ``=SUM(C6:C118)`` the ``.xlsx`` carries. The bytes came back; the manifest
+#: entry did not. The corpus census therefore reads 248 while 249
+#: provenance-bearing files sit on disk, and the one that is missing is
+#: load-bearing evidence for an AEAT authority check.
+_UNATTESTED_CORPUS_FILES: Final[tuple[str, ...]] = ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
+
 
 @dataclass(frozen=True)
 class _RequiredArtifact:
@@ -396,6 +430,45 @@ def _load_manifests() -> dict[str, _Manifest]:
     return manifests
 
 
+def unattested_corpus_files(corpus_root: Path) -> tuple[str, ...]:
+    """Corpus files under ``corpus_root`` that no manifest declares.
+
+    :func:`check` walks the manifests and confirms every declared artefact
+    is on disk with the recorded size and digest. That direction cannot see
+    a file the manifests do not mention, and the manifest has no way to say
+    'present but not yet attested': an artefact is either a fully described
+    entry or absent. So a run that writes payload bytes and stops before
+    rewriting the manifests, or a partial revert of a bulk removal, leaves
+    corpus content carrying no source URL, licence, digest or retrieval date
+    while every count in every manifest still reconciles.
+
+    Under-declaration of exactly this kind is silent, which is why the walk
+    runs in both directions.
+
+    Args:
+        corpus_root: Directory holding the ``modelo_*`` corpus directories.
+
+    Returns:
+        Corpus-root-relative POSIX paths, sorted, of every present file that
+        is neither a declaration, a known derivative, nor a declared artefact.
+    """
+    unattested: list[str] = []
+    for model_dir in scan_directory(corpus_root, pattern="modelo_*"):
+        manifest_path = model_dir / _MANIFEST_NAME
+        if not manifest_path.exists():
+            continue
+        manifest = json.loads(manifest_path.read_text(encoding=_UTF_8))
+        declared = {model_dir / artifact["stored_path"] for artifact in manifest["artefacts"]}
+        for candidate in sorted(model_dir.rglob("*")):
+            if not candidate.is_file() or candidate.name in _DECLARATION_NAMES:
+                continue
+            if candidate.name.endswith(_DERIVED_SUFFIXES):
+                continue
+            if candidate not in declared:
+                unattested.append(candidate.relative_to(corpus_root).as_posix())
+    return tuple(sorted(unattested))
+
+
 def _load_historical_exclusions() -> _HistoricalExclusions:
     """Read the classified historical-URL exclusions.
 
@@ -642,6 +715,14 @@ def check() -> None:
     conflicting_exclusions = sorted(set(exclusion_urls) & represented_urls)
     if conflicting_exclusions:
         failures.append(f"historical exclusions are already represented: {conflicting_exclusions[:5]!r}")
+    observed_unattested = unattested_corpus_files(_CORPUS)
+    if observed_unattested != _UNATTESTED_CORPUS_FILES:
+        appeared = sorted(set(observed_unattested) - set(_UNATTESTED_CORPUS_FILES))
+        attested = sorted(set(_UNATTESTED_CORPUS_FILES) - set(observed_unattested))
+        failures.append(
+            "corpus files carrying no manifest entry have changed: "
+            f"newly unattested {appeared}, no longer unattested {attested}"
+        )
     required_urls = {required.url for required in _REQUIRED}
     required_exclusions = sorted(set(exclusion_urls) & required_urls)
     if required_exclusions:

@@ -97,6 +97,48 @@ def test_an_answer_that_is_not_404_is_read_as_carried() -> None:
         assert pypi_projects_owning(_CANDIDATE, index_url=origin.url) == PYPI_PROJECTS
 
 
+@pytest.mark.parametrize(
+    ("spelling", "asked"),
+    [
+        ("09.9.9", "9.9.9"),
+        ("v9.9.9", "9.9.9"),
+        (" 9.9.9 ", "9.9.9"),
+        ("9.9.9.0", "9.9.9.0"),
+    ],
+    ids=["leading-zero", "v-prefix", "surrounding-space", "padded-release-segment"],
+)
+def test_the_index_is_asked_under_the_spelling_an_index_stores(spelling: str, asked: str) -> None:
+    """The URL carries the canonical spelling, which is the index's own key.
+
+    An index stores one spelling per release and answers 404 for the rest, and
+    a 404 here is read as free -- so asking under the operator's spelling
+    returns a clean answer about a version the index carries, and ``" 9.9.9 "``
+    does not even form a valid path.
+
+    The padded case is the divergence, and it is deliberate. Release identity
+    compares ``9.9.9.0`` and ``9.9.9`` as one release, and the ledger and the
+    ref namespaces must, because a burn and a tag are facts about a release.
+    An index is not asked about a release; it is asked for a stored key, and
+    PEP 440 keeps the padding segment in the canonical spelling an index files
+    the upload under. Normalising further here would ask for a key the index
+    does not hold and read the resulting 404 as free -- the very failure the
+    canonicalisation was added to close, reintroduced by over-applying it.
+    """
+    with _index_answering(200) as origin:
+        assert pypi_projects_owning(spelling, projects=["cadrumo"], index_url=origin.url) == ("cadrumo",)
+
+    assert origin.requested == [f"/pypi/cadrumo/{asked}/json"]
+
+
+def test_a_candidate_that_names_no_release_refuses_before_asking() -> None:
+    """An unaskable question refuses rather than reading a 404 as free."""
+    with _index_answering(404) as origin:
+        with pytest.raises(VersionIdentityError, match="not a valid version"):
+            pypi_projects_owning("latest", projects=["cadrumo"], index_url=origin.url)
+
+        assert origin.requested == []
+
+
 @pytest.mark.parametrize("status", [403, 429, 500, 503])
 def test_an_index_that_cannot_answer_refuses_rather_than_reading_as_absence(status: int) -> None:
     """An index that failed to answer has not said the version is free.

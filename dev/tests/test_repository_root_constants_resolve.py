@@ -92,9 +92,13 @@ def _declared_repository_roots() -> tuple[tuple[Path, str, Path | None], ...]:
                 # Unparseability is owned elsewhere; its consequence is owned here.
                 # A module that never parses contributes no root constant, so a
                 # wrong parents[N] inside it is never resolved and never reported.
-                # The floor below counts constants FOUND, and forty-seven are found
-                # against a floor of thirty: seventeen could vanish this way before
-                # anything fired, and nothing would say why.
+                # The floor below counts constants FOUND, and the live population
+                # sits about half again above it: roughly a third of the constants
+                # could vanish this way before anything fired, and nothing would say
+                # why. The exact count is deliberately not restated -- the figure
+                # recorded here had already drifted once, and correcting a number
+                # only restarts the clock on the next drift; the RATIO is what the
+                # argument needs, and it survives an ordinary addition.
                 # An UNREADABLE module loses the same constant by a different
                 # route: the walk can list a path a peer removes before the read
                 # reaches it. Announced here rather than ending the run in a
