@@ -108,7 +108,6 @@
 "cadrumo.application.operator_surface.models" = 1
 "cadrumo.application.overview.calendar" = 1
 "cadrumo.application.overview.calendar_warnings" = 1
-"cadrumo.application.prorrata_register.seed" = 1
 "cadrumo.application.provisioning" = 2
 "cadrumo.application.registry.source_connectivity" = 6
 "cadrumo.application.repair_integrity" = 4

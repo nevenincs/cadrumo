@@ -381,6 +381,16 @@ symbols = [
 evidence = "The operator-facing corpus-drift assertion at src/cadrumo/core/corpus_manifest/manifest.py, reached only by its own package test. Its docstring called it the assertion USED BY the CI gate; no gate calls it, and that false half is corrected 2026-09-09 to say it is the assertion a gate would call. Staged rather than orphaned: build_corpus_bundle and verify_corpus_manifest beside it are the live manifest surface, and this is the one-call form a drift gate would use over them. Whether to mount such a gate is an owner's call; the sentence no longer asserts one exists."
 remedy_requires_decision = true
 
+[[symbol_cluster]]
+name = "findings-discarding prorrata seed variant"
+area = "application/prorrata_register"
+class = "superseded"
+resolved = true
+symbols = [
+  "seed_carried_prior_definitiva_entry",
+]
+evidence = "A findings-DISCARDING variant, deleted 2026-09-09. seed_carried_prior_definitiva_entry in src/cadrumo/application/prorrata_register/seed.py delegated to evaluate_carried_prior_definitiva_seed and returned only the seed, dropping the operator-facing blocker and advisory findings that explain why a seed did or did not resolve. Its own docstring said to call the other one when those findings are needed. Nothing called it -- not production, not dev, not tests -- while the evaluator carries three production references and is invoked by the register CLI, so the live path already keeps the findings. The two production docstrings that pointed readers at the discarding variant now name the evaluator. Same class as the calculate wrapper relocated earlier in this campaign: under no-silent-under-declaration the hazard is the existence of a shorter name that silently drops diagnostics, not its disuse. Found by a sweep for unreached one-line delegators whose target is reached elsewhere."
+
 [[test_module]]
 name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
 follows = "symbol"

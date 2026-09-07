@@ -27,8 +27,12 @@ staged-cohort framing):
   destination (``modelo.work.review``).
 - ``C1_OR_C2_READ_PENDING`` -- an in-scope read query (no direct effect) not
   yet migrated to a numbered C1 or C2 Workspace destination.
+- ``READ_DELIVERED`` -- a read whose surface an operator can reach and invoke.
 - ``C4_MUTATION_PENDING`` -- an in-scope direct-effect mutation; no visual
   lifecycle control may appear before its C3/C4 conformance suites are green.
+- ``MUTATION_DELIVERED`` -- a mutation whose surface an operator can reach and
+  invoke, observed as an available routing posture together with surface
+  dispatchability.
 - ``FLOW_OWNED`` -- a guided-wizard command owned by a flow renderer rather
   than a Workspace destination.
 - ``DEFERRED`` -- owned by an authority entirely OUTSIDE this interface plan
@@ -53,7 +57,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from cadrumo.entrypoints.cli.command_api import command_spec_nodes
-from cadrumo.entrypoints.cli.command_spec import SchemaState
+from cadrumo.entrypoints.cli.command_spec import SchemaState, TuiCapability
 
 from .modelo_workspace_action_classification import (
     MODELO_IDENTITY_PREFIX,
@@ -156,6 +160,61 @@ def build_modelo_workspace_action_denominator() -> ModeloWorkspaceActionDenomina
     )
 
 
+def _disposition_contradiction(
+    observed: ModeloWorkspaceActionClassificationV1,
+    recorded: ModeloWorkspaceActionClassificationV1,
+) -> str | None:
+    """Return why a recorded disposition contradicts the observed shape, or ``None``.
+
+    Pure, so the quadrants can be exercised directly. The validator never
+    accepts a live signature from a caller, so a table fixture alone cannot
+    reach the wired half of this rule; testing it through a helper is what
+    keeps the live-side invariant intact instead of opening an injection seam
+    that would defeat it.
+
+    THE RULE IS ARM-RELATIVE because the two delivery arms are not observable
+    the same way. Dispatchability is membership of the mutation dispatch
+    table, so it can never be true for a read; a single conjunction applied to
+    both arms would make a delivered read permanently unclaimable and would
+    red forever on the first row that earned it. Reads therefore fail closed
+    with their own reason until a read-routing fact is observed, rather than
+    being judged against a fact that does not describe them.
+
+    THE MUTATION RULE IS CONFINED TO THE COMMAND-GRAPH AND DISPATCH
+    INTERSECTION WITHOUT A SCOPING PREDICATE, and that is worth stating
+    because a later reader will meet this loop running over every classified
+    row. Being wired REQUIRES surface dispatchability, which requires dispatch
+    membership, and the row is live by construction; so the stale-pending arm
+    can only fire inside the intersection. The false-delivery arm deliberately
+    is NOT confined: a row claiming delivery while dispatchable by nothing sits
+    outside the intersection by construction, so scoping it there would exclude
+    from the rule exactly the input the rule exists to catch.
+    """
+    if recorded.disposition is ModeloWorkspaceActionDisposition.READ_DELIVERED:
+        return (
+            "recorded as a delivered read, which is not yet observable: the gate observes "
+            "dispatchability of mutations and a declared routing posture, and neither "
+            "establishes that an operator can reach a read"
+        )
+
+    wired = observed.tui_capability is TuiCapability.AVAILABLE and observed.is_surface_dispatchable
+
+    if recorded.disposition is ModeloWorkspaceActionDisposition.MUTATION_DELIVERED and not wired:
+        return (
+            "recorded as a delivered mutation but observed unwired: routing posture "
+            f"{observed.tui_capability.value!r} and surface dispatchable "
+            f"{observed.is_surface_dispatchable}"
+        )
+
+    if wired and recorded.disposition is ModeloWorkspaceActionDisposition.C4_MUTATION_PENDING:
+        return (
+            "observed wired, being an available routing posture together with surface "
+            "dispatchability, but recorded as a pending mutation"
+        )
+
+    return None
+
+
 _SIGNATURE_FIELDS: Final[tuple[str, ...]] = (
     "command_key",
     "write_route",
@@ -226,6 +285,10 @@ def validate_modelo_workspace_action_denominator(
                 f"observed={ {name: getattr(observed, name) for name in drifted} }, "
                 f"recorded={ {name: getattr(recorded, name) for name in drifted} }",
             )
+
+        contradiction = _disposition_contradiction(observed, recorded)
+        if contradiction is not None:
+            errors.append(f"contradicted disposition for {identity!r}: {contradiction}")
 
     return errors
 
