@@ -10,7 +10,7 @@ related:
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-31-aeat-export-fragment-generator-authority-source-defect-adjudication-adr]]'
 modified: '2026-09-07'
-body_hash: 'sha256:6688bbd02499c3b4f4b0da9422caa65bc2d9f1e3c5aac533857e0bc526fb84a2'
+body_hash: 'sha256:6e4d0ef1e3f081e26e270e095477c043ef58cd07315d061a4560e78da57acf88'
 ---
 
 <!-- RETIRED: S19, S26, S65, S93 -->
@@ -180,6 +180,7 @@ Regenerate the highest-priority calculation-model revisions and discharge the he
 - [x] `W04.P07.S129` - Define one shared candidate-staging boundary that excludes both generated export and superseded manual export_layouts authority, stages the required supplementary Orden closure, applies only an explicit count-pinned bootstrap retargeting of superseded construct members, and expands the authored M390 2022 construct to the generated layout's exact legal-reference closure; use the boundary in the operator CLI and enrolled drift gate, and prove the real bootstrap candidate validates without consulting either tree; `dev/registry/pipeline/, dev/registry/tests/, src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/constructs/`.
 - [x] `W04.P07.S130` - Declare the three remaining Modelo 390 generated-export bootstrap targets for revisions 2023, 2024, and 2025 through exact modelo, revision, record-design source, source digest, generated layout, CRLF transport, superseded manual layout identity, and one-reference construct pins, and prove wrong-source and supersession-count drift refuse before S21 publication; `dev/registry/pipeline/generated_export_bootstrap_targets.toml, dev/registry/tests/test_generated_tree_cli.py`.
 - [x] `W04.P07.S131` - Make generated-export continuity witnesses close transitively over every source-declared predecessor instead of copying only the target revision immediate predecessors, centralize that staging boundary for the operator CLI and enrolled gate, and expand the Modelo 390 2023 through 2025 constructs to the exact legal-reference unions required by their generated layouts before S21 publication; `dev/registry/pipeline/candidate_staging.py, dev/registry/pipeline/cli.py, dev/registry/tests/test_generated_export_trees.py, dev/registry/tests/test_generated_tree_cli.py, src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/constructs/0001-constructs.toml, src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/constructs/0001-constructs.toml, src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/constructs/0001-constructs.toml`.
+- [x] `W04.P07.S132` - Replace the hand-maintained generated-tree enrolment table with a deterministic projection of every provenance-attested export tree in the validated registry, derive each check coordinate through canonical law-selection coordinates, prove every published generated tree is included automatically and every filing revision without generated provenance remains explicitly accounted for by the canonical filing-export residue authority, and remove stale claims that explicit manual enrolment is authoritative without loosening any generator matcher or adding casts.; `dev/registry/tests/test_generated_export_trees.py, dev/registry/tests/test_declaration_invariant_gates.py, dev/registry/tests/test_m303_generated_envelope_proof.py`.
 
 ### Phase `W04.P08` - campaign integration and release
 
