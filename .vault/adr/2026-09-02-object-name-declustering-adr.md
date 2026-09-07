@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#object-name-declustering'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:64e54a00c5619f049c402be9378ab4d3fc9f037782b728fb64abf2e4a4ca47e3'
+body_hash: 'sha256:59b0074a70a2338418cf36c646ad30ab3c68d676d8fa539a24d83cf87431dc22'
 related:
   - "[[2026-09-02-object-name-declustering-research]]"
   - "[[2026-09-02-object-name-declustering-reference]]"
@@ -42,6 +42,7 @@ The object-name audit identifies lexical collisions and plural names, but its fi
 - AST fingerprints, semantic findings, clone evidence, and path proximity are annotations or gates, never rename or merge authority.
 - Lexical batches cannot execute `merge-authority`. Consolidation requires a separate approved semantic-consolidation decision and plan.
 - Module moves and symbol renames remain distinct operation kinds.
+- Teardown follows the unit-of-work boundary: cleanup of an artefact outside the unit of work is best-effort and may never convert a verified result into failure; cleanup whose success is semantically meaningful remains strict. Verified-copy roots are disposable litter; transaction roots are retained evidence until verified disposition.
 
 ## Implementation
 

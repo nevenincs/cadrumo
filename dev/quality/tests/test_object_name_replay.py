@@ -1204,3 +1204,33 @@ def test_verified_copy_cleanup_failure_never_rolls_back_a_passing_replay(
     assert result.receipt_id == receipt.receipt_id
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
     assert not replay_module.transaction_root_for(repo, receipt.receipt_id).exists()
+
+
+def test_generator_copy_cleanup_failure_never_rolls_back_a_passing_replay(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    repo, inventory, manifest, component, receipt = _generated_case(tmp_path)
+    real_rmtree = replay_module.shutil.rmtree
+    refused: list[Path] = []
+
+    def _refuse_generator_copy_removal(path: Path, **kwargs: object) -> None:
+        if Path(path).name.startswith("cadrumo-object-name-generator-"):
+            refused.append(Path(path))
+            raise OSError(145, "The directory is not empty")
+        real_rmtree(path, **cast("Any", kwargs))
+
+    monkeypatch.setattr(replay_module.shutil, "rmtree", _refuse_generator_copy_removal)
+
+    result = replay_object_name_component(
+        manifest,
+        inventory=inventory,
+        component=component,
+        receipt=receipt,
+        repo_root=repo,
+    )
+
+    assert refused, "the generator verified copy removal must actually have been exercised"
+    assert result.receipt_id == receipt.receipt_id
+    assert (repo / "dev/generated.txt").read_bytes() == b"generated Widget\n"
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+    assert not replay_module.transaction_root_for(repo, receipt.receipt_id).exists()

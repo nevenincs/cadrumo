@@ -10,7 +10,7 @@ related:
   - '[[2026-09-02-object-name-declustering-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:cfdb5349cb6653a01079f3dc89eb43ad2bde392138d3d1fe069183abab1b515f'
+body_hash: 'sha256:45ea570c631a2814afc063ce9ba30fdf24cb26dbd2c2472e2376335c1234dd1c'
 ---
 
 <!-- RETIRED: S21, S22 -->
@@ -123,7 +123,7 @@ Rehearsal records the current scanned inventory digest, replay compares it again
 
 State and enforce the invariant a cleanup path violated: removal of an artefact outside the unit of work is best-effort and may never convert a verified result into a failure, while removal whose success is semantically meaningful stays strict and says so. Then give the deliberately retained transaction root a recorded disposition, so `explicit operator inspection` resolves to an action rather than an accumulating directory.
 
-- [ ] `W04.P11.S31` - State the teardown invariant in the accepted record and enforce it at both verified-copy removal sites, distinguishing an artefact that is evidence from one that is litter, since a WinError 145 raised from a finally converted an apply whose six gates had all passed into a rolled-back failure (Sol architecture); `.vault/adr/, dev/quality/object_name_replay.py`.
+- [x] `W04.P11.S31` - State the teardown invariant in the accepted record and enforce it at both verified-copy removal sites, distinguishing an artefact that is evidence from one that is litter, since a WinError 145 raised from a finally converted an apply whose six gates had all passed into a rolled-back failure (Sol architecture); `.vault/adr/, dev/quality/object_name_replay.py`.
 - [ ] `W04.P11.S32` - Give the retained transaction root a disposition path that verifies inertness before removal -- absent-paths empty and every backup byte-identical to both the live tree and the receipt baseline -- so operator inspection resolves to a recorded action, and dispose of the two roots outstanding from 2026-09-05 and 2026-09-06 (Terra xhigh fixes and refactors); `dev/quality/`.
 
 ## Parallelization
