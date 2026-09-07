@@ -444,3 +444,48 @@ def test_rehearsal_roots_are_counted_without_sweeping_in_unrelated_temp_entries(
 def test_a_missing_temporary_root_reports_no_rehearsal_roots(tmp_path: Path) -> None:
     """An absent directory is an empty family, not a crash mid-report."""
     assert object_name_rehearsal_roots(tmp_path / "does-not-exist") == ()
+
+
+def test_a_root_that_exists_but_cannot_be_scanned_refuses_rather_than_reporting_none(
+    tmp_path: Path,
+) -> None:
+    """A failed scan must not print the empty that a genuinely clean box prints.
+
+    The absent root above is a legitimate empty and is absorbed. A root that
+    exists and cannot be read is not: returning no verdicts there reports
+    "spared: 0 of 0 sessions", which is exactly what a machine with nothing to
+    reclaim reports, so a scan failure would reach the operator as good news.
+    """
+    unreadable = tmp_path / "temp"
+    unreadable.write_text("a file standing where the session root belongs", encoding="utf-8")
+
+    with pytest.raises(OSError):
+        assess_claude_sessions(unreadable, transcript_root=tmp_path, own_session_id="")
+
+
+def test_a_partial_removal_reports_none_of_the_bytes_it_did_not_free(tmp_path: Path) -> None:
+    """The byte total is printed to the operator as removed, so it may only under-report.
+
+    ``reclaim`` absorbs a failed ``rmtree`` deliberately: another process
+    holding a file open is expected, and the next run finishes the job. What
+    must not survive that absorption is the byte count, which would otherwise
+    claim space that is still occupied. Holding one file open reproduces the
+    partial failure on this host without simulating anything.
+    """
+    now = time.time()
+    temp = tmp_path / "temp"
+    transcripts = tmp_path / "transcripts"
+    over = IDLE_CEILING_SECONDS + 3600
+    session = _session_tree(temp, _SESSION, now=now, root_idle=over, content_idle=over)
+    _transcript(transcripts, _SESSION, now=now, idle=over)
+    verdicts = assess_claude_sessions(temp, now=now, transcript_root=transcripts, own_session_id="")
+    assert [item.reclaimable for item in verdicts] == [True]
+
+    with (session / "scratchpad" / "work.txt").open("rb"):
+        reclaimed = reclaim(verdicts)
+        survived = session.exists()
+
+    if survived:
+        assert reclaimed == 0, "bytes were reported freed while the directory still stands"
+    else:
+        assert reclaimed > 0, "a completed removal must report the bytes it freed"
