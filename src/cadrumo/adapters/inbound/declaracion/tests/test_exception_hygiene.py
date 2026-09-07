@@ -20,15 +20,31 @@ _PDF_PACKAGE = _DECLARACION_PACKAGE.parent / "pdf"
 
 @cache
 def _production_modules() -> tuple[Path, ...]:
+    """Return the production modules every assertion in this module sweeps.
+
+    Floored and root-checked. Each of the five gates below has the shape
+    ``assert offenders == []`` over this corpus, so an empty sweep reports the
+    same green as a clean one: a moved or renamed package would disarm all
+    five at once and say nothing. `require_root=True` turns a missing package
+    into a raise instead of an empty tuple, and the count is asserted because
+    a package that exists but yields no module is the same blindness.
+    """
     packages = (_DECLARACION_PACKAGE, _PDF_PACKAGE)
-    return tuple(
+    modules = tuple(
         sorted(
             path
             for package in packages
-            for path in scan_directory(package, pattern="*.py")
+            for path in scan_directory(package, pattern="*.py", require_root=True)
             if not path.name.startswith("test_") and path.name != "conftest.py"
         ),
     )
+    if not modules:
+        message = (
+            f"the exception-hygiene sweep reached no production module under {packages}; "
+            "a scan matching nothing cannot find a broad except, a bare suppress, or a swallowed error"
+        )
+        raise AssertionError(message)
+    return modules
 
 
 def _production_trees(source_tree_ast: Mapping[Path, ast.AST]) -> tuple[tuple[Path, ast.AST], ...]:

@@ -138,18 +138,19 @@ def _imported_files(
     produced. An operator importing a quarter of statements lost the whole run
     to one bad file.
 
-    A LONE file is deliberately different. There is no rest of the folder to
-    protect, and reporting an import that imported nothing as a success is
-    worse than refusing, so its failure is re-raised unchanged. The same holds
-    when a folder yields no readable statement at all: there is a total to
-    report only if something was read.
+    A LONE unreadable file must still be a hard refusal — reporting an import
+    that imported nothing as a success is worse than refusing — but that is NOT
+    decided here. Collecting its refusal leaves ``results`` empty, and the
+    caller refuses on exactly that: there is a total to report only if
+    something was read. One rule covers the lone file and the folder whose
+    every statement is unreadable, so this loop needs no special case for
+    either.
 
     Only the project's own failure taxonomy is caught. A ``TypeError`` here is
     a defect and must still crash rather than be reported as a bad statement.
     """
     results: list[LedgerSourceImportResult] = []
     refusals: list[_RefusedImportFile] = []
-    guards_the_rest = len(import_paths) > 1
     for file_path in import_paths:
         try:
             results.append(
@@ -160,8 +161,6 @@ def _imported_files(
                 ),
             )
         except TransactionValidationError as exc:
-            if not guards_the_rest:
-                raise ledger_transaction_validation_no_recovery(exc) from None
             refusals.append(_RefusedImportFile(path=file_path, error=exc))
     return _ImportedFolder(results=results, refusals=refusals)
 
