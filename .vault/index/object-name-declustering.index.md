@@ -6,7 +6,7 @@ tags:
 date: '2026-09-03'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:ba1f11742c4a4d64e13cf8537200b146fa5d411d3a3ce19b637c4af1dcd0dfa4'
+body_hash: 'sha256:44df80b4b65c5b0f4097fccc957f9ea218c118aa9a2af2b5ba7496bdc9273cc2'
 related:
   - '[[2026-09-02-object-name-declustering-W01-P01-S01]]'
   - '[[2026-09-02-object-name-declustering-W01-P01-S02]]'
@@ -43,6 +43,7 @@ related:
   - '[[2026-09-02-object-name-declustering-W03-P09-summary]]'
   - '[[2026-09-02-object-name-declustering-W04-P10-S27]]'
   - '[[2026-09-02-object-name-declustering-W04-P10-S28]]'
+  - '[[2026-09-02-object-name-declustering-W04-P10-S29]]'
   - '[[2026-09-02-object-name-declustering-adr]]'
   - '[[2026-09-02-object-name-declustering-pilot-rehearsal-audit]]'
   - '[[2026-09-02-object-name-declustering-plan]]'
@@ -70,6 +71,7 @@ related:
   - '[[2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit]]'
   - '[[2026-09-07-object-name-declustering-s27-implementation-review-audit]]'
   - '[[2026-09-07-object-name-declustering-s28-implementation-review-audit]]'
+  - '[[2026-09-07-object-name-declustering-s29-detector-review-audit]]'
 ---
 
 # `object-name-declustering` feature index
@@ -107,6 +109,7 @@ Auto-generated index of all documents tagged with `#object-name-declustering`.
 - `2026-09-07-object-name-declustering-receipt-scope-and-teardown-authority-audit` - `object-name-declustering` audit: `receipt scope and teardown authority`
 - `2026-09-07-object-name-declustering-s27-implementation-review-audit` - `object-name-declustering` audit: `S27 implementation review`
 - `2026-09-07-object-name-declustering-s28-implementation-review-audit` - `object-name-declustering` audit: `S28 scoped replay freshness implementation review`
+- `2026-09-07-object-name-declustering-s29-detector-review-audit` - `object-name-declustering` audit: `S29 end-to-end churn detector review`
 
 ### exec
 
@@ -145,6 +148,7 @@ Auto-generated index of all documents tagged with `#object-name-declustering`.
 - `2026-09-02-object-name-declustering-W03-P09-summary` - `object-name-declustering` `W03.P09` summary
 - `2026-09-02-object-name-declustering-W04-P10-S27` - Carry the S23 distinction through rehearsal: require the copied inventory to equal the supplied current inventory, record that current digest in the receipt, and leave the authored inventory value bound only through the exact manifest digest, since the receipt currently records the manifest value and refuses at the next mandatory phase whatever the validator tolerated (Terra xhigh fixes and refactors)
 - `2026-09-02-object-name-declustering-W04-P10-S28` - Require replay to compare the receipt inventory against a freshly scanned current inventory and the exact manifest digest, without also equating current inventory to the authored value, so unrelated declaration churn no longer invalidates a leaf operation whose own bytes and graph evidence are unchanged (Terra xhigh fixes and refactors)
+- `2026-09-02-object-name-declustering-W04-P10-S29` - Replace the vacuous churn test with one that can fail: perturb a real Python declaration so the current inventory digest actually moves, drive it through component derivation, rehearsal, receipt generation and replay preflight, and prove the case fails when receipt/current global-inventory equality is reintroduced, closing the end-to-end-churn-teeth gap S23 opened and S24 left standing (Luna max audit and mechanical)
 
 ### plan
 

@@ -187,27 +187,46 @@ def test_successful_symbol_replay_applies_exact_receipt_and_preserves_unrelated_
     assert not replay_module.transaction_root_for(repo, receipt.receipt_id).exists()
 
 
-def test_successful_symbol_replay_tolerates_unrelated_post_receipt_bytes(tmp_path: Path) -> None:
-    repo, inventory, manifest, component, receipt = _case(tmp_path)
+def test_successful_symbol_replay_tolerates_real_inventory_churn_across_receipt(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    _authored_inventory, manifest, authored_component = _fixture(repo)
     unrelated = repo / "dev/concurrent_helper.py"
-    unrelated.write_bytes(b"def helper_runtime() -> None:\n    pass\n")
-    current_inventory = scan((repo / "src", repo / "dev"), repo)
-    assert to_json(current_inventory)["inventory_digest"] != to_json(inventory)["inventory_digest"]
-    current_component = build_manifest_components(
+    rehearsal_payload = b"def helper_runtime() -> None:\n    pass\n"
+    unrelated.write_bytes(rehearsal_payload)
+    rehearsal_inventory = scan((repo / "src", repo / "dev"), repo)
+    assert to_json(rehearsal_inventory)["inventory_digest"] != manifest.inventory_digest
+    rehearsal_component = build_manifest_components(
+        cast("Any", manifest),
+        inventory=cast("Any", rehearsal_inventory),
+        hard_edges=authored_component.hard_edges,
+    )[0]
+    receipt = rehearse_object_name_component(
         manifest,
-        inventory=cast("Any", current_inventory),
-        hard_edges=component.hard_edges,
+        inventory=rehearsal_inventory,
+        component=rehearsal_component,
+        repo_root=repo,
+    )
+    assert receipt.inventory_digest == to_json(rehearsal_inventory)["inventory_digest"]
+
+    replay_payload = rehearsal_payload + b"\ndef second_helper() -> None:\n    pass\n"
+    unrelated.write_bytes(replay_payload)
+    replay_inventory = scan((repo / "src", repo / "dev"), repo)
+    assert to_json(replay_inventory)["inventory_digest"] != receipt.inventory_digest
+    replay_component = build_manifest_components(
+        cast("Any", manifest),
+        inventory=cast("Any", replay_inventory),
+        hard_edges=rehearsal_component.hard_edges,
     )[0]
 
     replay_object_name_component(
         manifest,
-        inventory=current_inventory,
-        component=current_component,
+        inventory=replay_inventory,
+        component=replay_component,
         receipt=receipt,
         repo_root=repo,
     )
 
-    assert unrelated.read_bytes() == b"def helper_runtime() -> None:\n    pass\n"
+    assert unrelated.read_bytes() == replay_payload
     assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
 
 
