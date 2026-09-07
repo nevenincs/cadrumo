@@ -40,6 +40,8 @@ from typing import TYPE_CHECKING
 import pytest
 from pydantic import TypeAdapter
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from .test_cold_start_wizard_registration import _register_profile_for_cold_run, _run_cli_cold
 
 if TYPE_CHECKING:
@@ -74,6 +76,7 @@ def test_a_named_profile_resolves_in_a_process_that_did_not_write_it(tmp_path: P
     its keys, and the named-profile path reported ``missing_profile_record``
     because nothing had bound a custody session serving that bucket.
     """
+    require_os_credential_store()
     _register_profile_for_cold_run(tmp_path, _LABEL, **_FACTS)
 
     shown = _run_cli_cold(tmp_path, ["--format", "json", "config", "profile", "view", _LABEL])

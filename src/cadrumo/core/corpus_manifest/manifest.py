@@ -495,8 +495,13 @@ def assert_corpus_clean(corpus_root: Path) -> None:
     """Verify the on-disk manifest matches the corpus root.
 
     Loads the manifest sidecar, walks the corpus, and raises
-    :class:`CorpusManifestDriftError` on any drift. This is the
-    operator-facing assertion used by the CI gate.
+    :class:`CorpusManifestDriftError` on any drift.
+
+    The sentence here used to call this the operator-facing assertion used by
+    the CI gate. No gate calls it; its only caller is this package's own test.
+    The assertion is the one a gate WOULD call, and saying so is the honest
+    form -- a docstring naming a consumer that does not exist is a claim a
+    reader has no way to check.
     """
     manifest = load_corpus_manifest(manifest_path_for(corpus_root))
     diff = verify_corpus_manifest(corpus_root, manifest=manifest)

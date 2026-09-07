@@ -1499,6 +1499,7 @@ tui:
       open: Obre la revisió
       title: Revisió del llibre comptable
     review_status:
+      excluded: Exclòs
       pending: Pendent
       reviewed: Revisat
       skipped: Omès

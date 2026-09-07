@@ -1467,6 +1467,7 @@ tui:
       open: Open review
       title: Ledger review
     review_status:
+      excluded: Excluded
       pending: Pending
       reviewed: Reviewed
       skipped: Skipped

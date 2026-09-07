@@ -1513,6 +1513,7 @@ tui:
       open: Abrir revisión
       title: Revisión del libro contable
     review_status:
+      excluded: Excluido
       pending: Pendiente
       reviewed: Revisado
       skipped: Omitido
