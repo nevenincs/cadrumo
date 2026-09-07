@@ -150,15 +150,15 @@ evidence = "Consumed by cadrumo.application.flows copy, definition and line_fron
 
 [[module]]
 name = "cadrumo.application.wizard._registered_values"
-class = "orphaned"
-evidence = "No non-test consumer anywhere in src/cadrumo or dev/. A registered-values projection for the setup flow's review overview whose caller is gone; the ratchet names the wizard flow surfaces among the orphaned-domain cluster."
-remedy_requires_decision = true
+class = "deferred-by-ownership"
+evidence = "RECLASSIFIED 2026-09-08 from orphaned. The caller is not gone; it is inside the frozen TUI cluster. project_registered_values produces the registered_values mapping that src/cadrumo/entrypoints/tui/flows/app.py threads through FlowScreen and reads at line 1257 to fill the review overview's registered cell. Every link in that chain exists except the composition that would pass the mapping in: select_flow_frontend takes registered_values and has no shipped caller, and no module outside the TUI package references FlowScreen or run_flow_tui at all. The wizard is in-flight work owned elsewhere and cadrumo.entrypoints.tui is a frozen prefix in both ratchets, so wiring the composition is not this campaign's to do. The module ratchet could not reach this conclusion on its own: its transitive deferral is read from the live import graph, and a supplier whose consumer does not import it YET supplies nothing, which its own docstring states as a deliberate bound on the exemption. That is exactly the judgement this ledger exists to carry, and the ratchet's frozen_prefixes comment already names the shape -- the cluster's application-layer projections live outside the prefix because the dependency direction requires it."
+remedy_requires_decision = false
 
 [[module]]
 name = "cadrumo.domain.portals.drift"
-class = "should-be-live"
-evidence = "cadrumo.application.preflight.probe_portal_registry_health accepts drift_events and grades a drift by URL stability tier, but no production caller ever passes them: evaluate_portal_drift, the only producer, is reached solely by tests. The portal-registry:health row therefore always takes the offline default and always reports OK, so it cannot distinguish no-drift from drift-never-evaluated. The missing wiring is the defect."
-remedy_requires_decision = true
+class = "staged-capability"
+evidence = "REVERSED 2026-09-08. The entry said the missing wiring was the defect: probe_portal_registry_health accepts drift_events, no production caller passes them, so the portal-registry:health row always took the offline default. Re-tested against the live design and the premise is wrong. No shipped module reads PORTAL_REGISTRY at all except that health row, which only counts its entries, so nothing navigates to a registered portal URL and nothing can observe the live value evaluate_portal_drift compares against. The events are not un-passed, they are unobservable: the remedy is a live portal-read surface, which is product capability rather than wiring, and the module docstring says so -- the catalogue package performs no live AEAT access and this module only describes a divergence someone else observed. Staged capability. What WAS a defect is that the row reported a bare drift_count of zero, asserting a proven zero the product has never measured; it now reports drift_evaluated False beside it so a reader can tell no drift from never looked (src/cadrumo/application/preflight.py, covered by test_preflight.py with a control that the flag flips when an observation is supplied)."
+remedy_requires_decision = false
 
 # ---------------------------------------------------------------------------
 # staged-capability -- new domain packages landing from concurrent work
