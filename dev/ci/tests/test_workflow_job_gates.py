@@ -26,7 +26,9 @@ from ..workflow_job_gates import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_FORK_GUARD = "github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository"
+_FORK_GUARD = (
+    "github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository"
+)
 _DEV_IMAGE_GUARD = "${{ github.event_name == 'workflow_dispatch' && inputs.include_dev_image }}"
 
 

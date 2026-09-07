@@ -160,7 +160,5 @@ def job_gate(document: dict[str, Any], job_name: str, events: tuple[str, ...]) -
         return JobGate(events=())
     condition = job.get("if")
     defaults = dispatch_input_defaults(document)
-    opt_in = tuple(
-        name for name in opt_in_conjuncts(condition) if defaults.get(name, None) in _FALSY_DEFAULTS
-    )
+    opt_in = tuple(name for name in opt_in_conjuncts(condition) if defaults.get(name, None) in _FALSY_DEFAULTS)
     return JobGate(events=narrowed_events(condition, events), opt_in=opt_in)
