@@ -151,7 +151,7 @@ evidence = "Consumed by cadrumo.application.flows copy, definition and line_fron
 [[module]]
 name = "cadrumo.application.wizard._registered_values"
 class = "deferred-by-ownership"
-evidence = "RECLASSIFIED 2026-09-08 from orphaned. The caller is not gone; it is inside the frozen TUI cluster. project_registered_values produces the registered_values mapping that src/cadrumo/entrypoints/tui/flows/app.py threads through FlowScreen and reads at line 1257 to fill the review overview's registered cell. Every link in that chain exists except the composition that would pass the mapping in: select_flow_frontend takes registered_values and has no shipped caller, and no module outside the TUI package references FlowScreen or run_flow_tui at all. The wizard is in-flight work owned elsewhere and cadrumo.entrypoints.tui is a frozen prefix in both ratchets, so wiring the composition is not this campaign's to do. The module ratchet could not reach this conclusion on its own: its transitive deferral is read from the live import graph, and a supplier whose consumer does not import it YET supplies nothing, which its own docstring states as a deliberate bound on the exemption. That is exactly the judgement this ledger exists to carry, and the ratchet's frozen_prefixes comment already names the shape -- the cluster's application-layer projections live outside the prefix because the dependency direction requires it."
+evidence = "RECLASSIFIED 2026-09-08 from orphaned. The caller is not gone; it is inside the frozen TUI cluster. project_registered_values, defined at src/cadrumo/application/wizard/_registered_values.py, produces the registered_values mapping that src/cadrumo/entrypoints/tui/flows/app.py threads through FlowScreen and reads at line 1257 to fill the review overview's registered cell. Every link in that chain exists except the composition that would pass the mapping in: select_flow_frontend takes registered_values and has no shipped caller, and no module outside the TUI package references FlowScreen or run_flow_tui at all. The wizard is in-flight work owned elsewhere and cadrumo.entrypoints.tui is a frozen prefix in both ratchets, so wiring the composition is not this campaign's to do. The module ratchet could not reach this conclusion on its own: its transitive deferral is read from the live import graph, and a supplier whose consumer does not import it YET supplies nothing, which its own docstring states as a deliberate bound on the exemption. That is exactly the judgement this ledger exists to carry, and the ratchet's frozen_prefixes comment already names the shape -- the cluster's application-layer projections live outside the prefix because the dependency direction requires it."
 remedy_requires_decision = false
 
 [[module]]
@@ -179,7 +179,10 @@ name = "approval staleness with no persisted draft to go stale"
 area = "application/filing"
 resolved = true
 class = "should-be-live"
-symbols = []
+symbols = [
+  "refresh_review_status",
+  "describe_stale_reason",
+]
 evidence = "CLOSED across three steps, each of which unblocked the next. Nothing wrote the encrypted filing-draft namespace, so the staleness lifecycle had no persisted approved draft to refresh; the workflow gate's draft builder now persists it (src/cadrumo/application/modelo/workflow_gate.py). With a subject in the store, drafts_pending recomputes an APROBADO draft's verdict before classifying it, reaching refresh_review_status and making the APROBACION_CADUCADA row reachable (src/cadrumo/application/review/_adapters.py). Finally the row carries the reasons as stable enum tokens and the queue projection renders them through describe_stale_reason (src/cadrumo/application/review/operator.py), so an operator is told WHICH of eight upstream axes moved rather than only that something did. The tokens ride on the item rather than being folded into its summary because FindingReviewItem.summary is a Translatable, an abstract catalogue key that cannot absorb rendered prose; the projection is the boundary where a key becomes words and is therefore the only place a reason may be described. Covered by src/cadrumo/application/review/tests/test_adapters_approval_staleness.py, whose detection case was A/B-confirmed to fail without the wiring and which pairs each assertion with a control."
 remedy_requires_decision = false
 
@@ -200,17 +203,10 @@ name = "diagnostics-discarding calculate wrapper only tests reach"
 area = "application/modelo"
 resolved = true
 class = "test-support"
-symbols = []
+symbols = [
+  "calculate_modelo_revision_from_bucket_aggregation",
+]
 evidence = "RESOLVED 2026-09-07 by relocation. calculate_modelo_revision_from_bucket_aggregation delegated straight to the _with_diagnostics variant and returned .revision, dropping the non-blocking source advisories, and all twenty-five of its call sites across ten modules were tests while the operator-facing CLI used the diagnostics variant. It now lives at src/cadrumo/tests/bucket_aggregation_calculate.py, so production has ONE way into the source mesh and that way returns the diagnostics with the revision rather than beside it. The hazard was its existence rather than its disuse: the shorter of two adjacent names is the one a future caller reaches for, and it was the one that silently lost the advisories. The shim forwards **kwargs instead of restating twenty-one parameters, because a second copy of the calculate signature could drift from the real one while still type-checking; the wrapper's own filing-repository default was redundant, since the diagnostics variant resolves the same default itself."
-remedy_requires_decision = false
-
-[[symbol_cluster]]
-name = "approval basis stamped against a catalogue the refresh never sees"
-area = "application/modelo"
-resolved = true
-class = "should-be-live"
-symbols = []
-evidence = "A defect this campaign CREATED, found by re-reading the two wirings together and proved by A/B. Persisting the approved draft gave the staleness lifecycle a subject, and recomputing the verdict in drafts_pending made the aged-out row reachable, but the workflow gate stamped the approval basis against a transient empty TransactionCatalogue while the review queue recomputes it from whatever the bucket holds. Those two disagree by construction in any bucket with a ledger, so every stored draft read as an aged-out approval the first time anyone opened the queue: a permanent high-severity row that is always wrong. The catalogue reaches approval as a fingerprint and nothing else, so approving against the bucket's own catalogue does not give the calculation revision's evidence a second owner; it makes the recorded digest mean what the refresh assumes it means. Fixed at src/cadrumo/application/modelo/workflow_gate.py and covered by test_a_freshly_approved_draft_is_not_immediately_stale in src/cadrumo/application/modelo/tests/test_file_flow_draft_persistence.py, which seeds a bucket transaction first: against an empty ledger the two digests agree by accident and the assertion holds however the basis is stamped. Reverting the fix reproduces TRANSACTION_CATALOGUE_CHANGED on a freshly approved draft."
 remedy_requires_decision = false
 
 [[symbol_cluster]]
@@ -243,7 +239,7 @@ class = "test-support"
 symbols = [
   "required_profile_keys",
 ]
-evidence = "Reached only by three test modules, and deliberately kept. It is the REQUIRED half of a symmetric pair whose OPTIONAL half, optional_profile_keys, is consumed in production by src/cadrumo/application/user_profile/keys_validation.py. Deleting one side of a symmetric filtered view leaves a registry that can report its optional keys and not its required ones, which is a worse surface than an unused function."
+evidence = "Reached only by three test modules, and deliberately kept. It is the REQUIRED half of a symmetric pair whose OPTIONAL half, optional_profile_keys, is consumed in production by src/cadrumo/application/user_profile/keys_validation.py; both are defined in src/cadrumo/domain/contribuyente/keys.py. Deleting one side of a symmetric filtered view leaves a registry that can report its optional keys and not its required ones, which is a worse surface than an unused function."
 remedy_requires_decision = false
 
 [[symbol_cluster]]
@@ -266,227 +262,6 @@ symbols = [
 ]
 evidence = "A coherent two-by-two family -- {registry, filing} x {codes, patterns} -- enumerating the period vocabulary. Consumers are cross-package tests: the declaracion parser's administrative-period routing test, core's own period test, and the registry selector token-parity test, which enumerates through accepted_period_codes so its coverage cannot drift from the accepted set. Kept whole. Deleting the members with the fewest callers would leave a vocabulary that can enumerate its registry codes but not its filing patterns, and the same asymmetry argument that kept required_profile_keys applies: half a symmetric view is a worse surface than an unused function."
 remedy_requires_decision = false
-
-[[symbol_cluster]]
-name = "read and write pairs swept for one-sided use"
-area = "adapters/persistence/storage"
-resolved = true
-class = "test-support"
-symbols = []
-evidence = "Adjudicated 2026-09-08 after an independent cross-check. The bucket output-language hint was a read-never-written pair the secure-store gate could not see, because a file-backed artefact is not a SecureBoundRepository, so the shape was swept for directly: same-module function pairs under read/write, load/save, load/store, read/persist, get/set, fetch/persist and decode/encode, where production uses one side and not the other. Five pairs in the shipped tree. Four are already recorded in this ledger with matching evidence -- load_encrypted_envelope, decode_mnemonic, save_corpus_manifest and write_cached_transcription -- and the fifth, load_trace, is not an exact finding at all: observability traces are written by run_context and read back by a human outside the product, not by it. So the sweep surfaced no unrecorded debt, which is the useful result: an independently derived detector rediscovering only adjudicated symbols is evidence this shape is fully covered. No gate was added for it. A fail-closed check over this population could only ever report symbols already carrying a decision, and a check that cannot change state is not a signal."
-remedy_requires_decision = false
-
-# ---------------------------------------------------------------------------
-# Orphaned test modules
-#
-# A test is reported orphaned when every shipped subject it exercises is itself
-# a finding. Measured against the live audit, the whole non-TUI population is
-# DERIVATIVE: each of the nineteen follows either a module finding already
-# classified above, or an unused symbol in a module that is otherwise reachable.
-# None is an independent problem, and none carries its own remedy.
-#
-# That is why these entries record `follows` rather than a class. A test whose
-# subject is a `staged-capability` module is not dead -- it is the proof that
-# capability still works, and deleting it would leave the staged module
-# unguarded. A test following a symbol finding resolves when that symbol does,
-# which is the symbol wave's work rather than this one's.
-#
-# `follows` is `module` or `symbol`; `anchor` names the finding it depends on.
-# ---------------------------------------------------------------------------
-
-[[test_module]]
-name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
-follows = "symbol"
-anchor = "cadrumo.adapters.persistence.storage.schema_lineage:deregister_secure_object_schema_upgrader"
-subjects = 2
-
-[[test_module]]
-name = "cadrumo.application.aggregation.tests.test_iva_rate_tier_concurrency_guard"
-follows = "symbol"
-anchor = "cadrumo.application.aggregation.iva_ledger:_iva_rate_kind_for"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.application.operator_surface.tests.test_crud_contract"
-follows = "module"
-anchor = "cadrumo.application.operator_surface.crud_contract"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.application.operator_surface.tests.test_crud_registry"
-follows = "module"
-anchor = "cadrumo.application.operator_surface.crud_contract"
-subjects = 2
-
-[[test_module]]
-name = "cadrumo.application.user_profile.tests.test_custody_retryable_codes_are_declared"
-follows = "symbol"
-anchor = "cadrumo.core.errors.error_codes:declared_error_codes"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.core.tests.test_compatibility_lifecycle"
-follows = "module"
-anchor = "cadrumo.core.compatibility_lifecycle"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.core.tests.test_compatibility_lifecycle_gate"
-follows = "module"
-anchor = "cadrumo.core.compatibility_lifecycle"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.core.tests.test_persisted_format_enrolment_binding"
-follows = "module"
-anchor = "cadrumo.core.compatibility_lifecycle"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.core.tests.test_regenerable_persisted_format_floors"
-follows = "module"
-anchor = "cadrumo.core.compatibility_lifecycle"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.domain.contribuyente.tests.test_constants"
-follows = "symbol"
-anchor = "cadrumo.domain.contribuyente.constants:ProfileName"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.domain.fincas.tests.test_amortization_ledger"
-follows = "module"
-anchor = "cadrumo.domain.fincas.amortization_ledger"
-subjects = 5
-
-[[test_module]]
-name = "cadrumo.domain.fincas.tests.test_expense_rollup"
-follows = "module"
-anchor = "cadrumo.domain.fincas.enums"
-subjects = 3
-
-[[test_module]]
-name = "cadrumo.domain.fincas.tests.test_imputacion_regime"
-follows = "module"
-anchor = "cadrumo.domain.fincas.enums"
-subjects = 3
-
-[[test_module]]
-name = "cadrumo.domain.fincas.tests.test_tier_resolver"
-follows = "module"
-anchor = "cadrumo.domain.fincas.enums"
-subjects = 5
-
-[[test_module]]
-name = "cadrumo.entrypoints.cli.tests.test_cli_resolution_cost_budget"
-follows = "symbol"
-anchor = "cadrumo.entrypoints.cli:command_graph"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.entrypoints.cli.tests.test_machine_secret_channels_subprocess"
-follows = "symbol"
-anchor = "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap:bootstrap_interpreter"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.entrypoints.cli.tests.test_overview_explain_verb"
-follows = "symbol"
-anchor = "cadrumo.entrypoints.cli.command_api:command_spec_nodes"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.entrypoints.cli.tests.test_resolution_defers_capabilities"
-follows = "symbol"
-anchor = "cadrumo.entrypoints.cli:command_graph"
-subjects = 1
-
-[[test_module]]
-name = "cadrumo.entrypoints.cli.tests.test_state_free_capability_isolation"
-follows = "symbol"
-anchor = "cadrumo.entrypoints.cli:command_graph"
-subjects = 1
-
-# ---------------------------------------------------------------------------
-# Exact-confidence symbol partition
-#
-# 602 of the 1408 symbol findings are `exact` -- resolved through the import
-# graph rather than by attribute-name matching -- and the audit's own guidance
-# is to start a cleanup there. The `name-match` and `name-match-data` tiers are
-# members reached by attribute access the scan cannot bind to a type, so they
-# are candidates for review rather than findings to act on.
-#
-# The exact tier contains only functions, constants and classes. Every
-# enum-member, attribute and method finding sits in the lower tiers, which is
-# why this campaign's symbol work is bounded by the counts below rather than by
-# the headline 1408.
-#
-# The population splits by OUTSIDE USE, exactly as the modules did, and the
-# split is what determines the remedy:
-#
-#   test-only     a symbol only its tests reach. Either the behaviour has no
-#                 production caller and retires with its test, or the test is
-#                 exercising a seam that should be reached and the missing call
-#                 is the defect.
-#   unreferenced  nothing reaches it at all. The sharpest population, and where
-#                 supersession concentrates.
-#   dev-reached   reached from `dev/`; follows its module's harness-code remedy.
-#
-# SUPERSESSION IS DETECTABLE, NOT GUESSED. For a constant, the test is whether
-# its literal VALUE still appears in production outside its defining module: the
-# value moved to a declaration and the name was left behind. Applied to the
-# sixteen unreferenced constants carrying an inspectable string literal, eleven
-# proved superseded, with the live holder named in each case -- the error-code
-# registry, the namespace registry, and the CommandSpec declarations. A name
-# search cannot produce that evidence, which is why the governing decision
-# requires it for this class.
-# ---------------------------------------------------------------------------
-
-[symbol_partition]
-measured = "2026-09-04"
-exact_total = 602
-test_only = 350
-unreferenced = 198
-dev_reached = 54
-
-[symbol_partition.by_kind]
-"test-only.function" = 233
-"test-only.constant" = 90
-"test-only.class" = 27
-"unreferenced.function" = 83
-"unreferenced.constant" = 89
-"unreferenced.class" = 26
-"dev-reached.function" = 30
-"dev-reached.constant" = 20
-"dev-reached.class" = 4
-
-[symbol_partition.by_area]
-"domain/calculations" = 106
-"entrypoints/cli" = 77
-"application/modelo" = 60
-"adapters/persistence" = 46
-"entrypoints/tui" = 22
-"application/user_profile" = 21
-"application/filing" = 20
-"adapters/outbound" = 17
-"domain/iva" = 17
-"application/aggregation" = 14
-"domain/transactions" = 11
-"application/workflow" = 10
-
-[symbol_partition.supersession_probe]
-constants_with_inspectable_literal = 16
-superseded_with_named_holder = 11
-method = "the constant's literal value still appears in production outside its defining module"
-
-# ---------------------------------------------------------------------------
-# Symbol clusters
-#
-# Some symbol findings resolve as a group through a mechanism that already
-# exists, and recording the group is more honest than repeating one rationale
-# per symbol. A cluster entry names the mechanism that dispositions it.
-# ---------------------------------------------------------------------------
 
 [[symbol_cluster]]
 name = "deferred-source-kind resolvers"
@@ -1487,8 +1262,11 @@ name = "bucket output-language hint read by production and written by nothing"
 area = "adapters/persistence/storage"
 resolved = true
 class = "should-be-live"
-symbols = []
-evidence = "RESOLVED 2026-09-08 by wiring the writer. The hint answers one question the encrypted preference cannot: which language to speak BEFORE the profile is unlocked. resolve_active_profile_output_language falls back to it whenever no bucket session is bound, and the reader fails soft on absence, so while nothing wrote it that fallback always returned None and a language the operator deliberately chose during setup silently reverted to the settings default on every pre-login surface. The custody port carried only the read; it now carries the write and the clear too, and apply_profile_fact_changes mirrors the preference into the hint. That door is the sole place the preference can change and already special-cased the same path to clear the i18n cache, so the mirror sits beside the invalidation it belongs with. Clearing the preference clears the hint, so the two cannot disagree about an absence. The mirror swallows failure for the same reason the read does -- it carries a convenience, and a hint that could not be written must not fail the fact write that owns the real value. Covered by src/cadrumo/application/user_profile/tests/test_language_resolver.py, A/B-confirmed to fail without the call, with a control for the clear."
+symbols = [
+  "write_bucket_output_language_hint",
+  "clear_bucket_output_language_hint",
+]
+evidence = "RESOLVED 2026-09-08 by wiring the writer. The hint answers one question the encrypted preference cannot: which language to speak BEFORE the profile is unlocked. resolve_active_profile_output_language falls back to it whenever no bucket session is bound, and the reader fails soft on absence, so while nothing wrote it that fallback always returned None and a language the operator deliberately chose during setup silently reverted to the settings default on every pre-login surface. The custody port carried only the read; write_bucket_output_language_hint and clear_bucket_output_language_hint at src/cadrumo/adapters/persistence/storage/bucket/output_language_hint.py now reach it too, and apply_profile_fact_changes mirrors the preference into the hint. That door is the sole place the preference can change and already special-cased the same path to clear the i18n cache, so the mirror sits beside the invalidation it belongs with. Clearing the preference clears the hint, so the two cannot disagree about an absence. The mirror swallows failure for the same reason the read does -- it carries a convenience, and a hint that could not be written must not fail the fact write that owns the real value. Covered by src/cadrumo/application/user_profile/tests/test_language_resolver.py, A/B-confirmed to fail without the call, with a control for the clear."
 remedy_requires_decision = false
 
 [[symbol_cluster]]
