@@ -5,3 +5,6 @@ cadrumo.core.casilla_id module
    :members:
    :show-inheritance:
    :ignore-module-all:
+
+.. py:data:: CasillaId
+   :module: cadrumo.core.casilla_id

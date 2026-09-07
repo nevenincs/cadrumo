@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib
+import inspect
 from pathlib import Path
 
 import pytest
@@ -9,7 +11,13 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from ...._paths import REPO_ROOT
-from ..manager import ApiStubManager, DriftResult, ScaffoldResult
+from ..manager import (
+    _NON_OWNER_GENERIC_IMPORTS,
+    _PUBLIC_DATA_ALIASES,
+    ApiStubManager,
+    DriftResult,
+    ScaffoldResult,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -23,16 +31,95 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _MINIMUM_STUB_POPULATION = 1000
 
 
+def test_every_manual_alias_target_resolves_at_the_module_it_claims() -> None:
+    """Each ``_PUBLIC_DATA_ALIASES`` entry re-derives its own qualifying condition.
+
+    ``py:data`` is a MANUAL directive: Sphinx materialises the target whether or
+    not the named object exists, so an entry keyed on a module that has stopped
+    resolving the name publishes an API reference to nothing -- and, because the
+    table holds one canonical home per alias, simultaneously leaves the module
+    that really defines it undocumented. Nothing in the generator can notice:
+    the stub is compared against output the same table produced, so the drift
+    check agrees with itself, and the sibling case below asserts the very line
+    the table just wrote.
+
+    The condition an entry must satisfy is therefore re-derived here from the
+    imported module object rather than trusted because it was once written: the
+    name must resolve at the claimed module (else the target is fabricated), and
+    it must not be a class or function (else ``automodule :members:`` already
+    indexes it and the manual target duplicates the real one). The module object
+    is an independent root -- it cannot be edited into agreement with the table.
+
+    This caught a live entry: ``CasillaId`` was keyed on ``cadrumo.core``, whose
+    package initialiser exports nothing, so the published ``cadrumo.core``
+    reference carried a target for a name that package does not resolve while
+    ``cadrumo.core.casilla_id``, which defines the alias, had none.
+    """
+    assert _PUBLIC_DATA_ALIASES, "the alias table is empty; every claim below is vacuous"
+    unresolved: list[str] = []
+    already_indexed: list[str] = []
+    for module_name, aliases in sorted(_PUBLIC_DATA_ALIASES.items()):
+        assert aliases, f"{module_name!r} claims a manual target for no alias at all"
+        module = importlib.import_module(module_name)
+        for alias in aliases:
+            if not hasattr(module, alias):
+                unresolved.append(f"{module_name}.{alias}")
+                continue
+            member = getattr(module, alias)
+            if inspect.isclass(member) or inspect.isroutine(member):
+                already_indexed.append(f"{module_name}.{alias} ({type(member).__name__})")
+    assert unresolved == [], (
+        "manual py:data targets name aliases their module does not resolve, so the generated "
+        f"reference documents nothing at those anchors: {unresolved}"
+    )
+    assert already_indexed == [], (
+        "manual py:data targets duplicate members automodule already indexes; drop the entry "
+        f"rather than emitting a second Python-domain target: {already_indexed}"
+    )
+
+
+def test_every_generic_exclusion_names_a_symbol_its_module_does_not_own() -> None:
+    """Each ``_NON_OWNER_GENERIC_IMPORTS`` entry re-derives its own condition.
+
+    The entry's warrant is that the named generic base is IMPORTED into the
+    module, not defined there, so excluding it from that module's stub removes a
+    duplicate index rather than real API. Both halves are checked against the
+    imported object: the name must resolve at the consumer (else the exclusion
+    is dead weight), and its ``__module__`` must be some other module (else the
+    consumer OWNS the symbol and ``:exclude-members:`` silently erases a genuine
+    public class from the generated reference, with no drift the generator could
+    report against its own output).
+    """
+    assert _NON_OWNER_GENERIC_IMPORTS, "the exclusion table is empty; every claim below is vacuous"
+    unresolved: list[str] = []
+    owned_here: list[str] = []
+    for module_name, excluded in sorted(_NON_OWNER_GENERIC_IMPORTS.items()):
+        assert excluded, f"{module_name!r} excludes no member at all"
+        module = importlib.import_module(module_name)
+        for name in excluded:
+            if not hasattr(module, name):
+                unresolved.append(f"{module_name}.{name}")
+                continue
+            owner = getattr(getattr(module, name), "__module__", None)
+            if owner == module_name:
+                owned_here.append(f"{module_name}.{name}")
+    assert unresolved == [], f"generic exclusions name symbols their module does not import; remove them: {unresolved}"
+    assert owned_here == [], (
+        "generic exclusions name symbols their module DEFINES, so the stub erases real public API "
+        f"from the generated reference: {owned_here}"
+    )
+
+
 def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) -> None:
     """Public PEP 695 aliases are indexed once at their defining modules."""
     manager = ApiStubManager(src_cadrumo=REPO_ROOT / "src" / "cadrumo", docs_api=tmp_path / "api")
 
     manager.scaffold()
 
-    core_api_text = (tmp_path / "api" / "cadrumo.core.rst").read_text(encoding="utf-8")
+    core_api_text = (tmp_path / "api" / "cadrumo.core.casilla_id.rst").read_text(encoding="utf-8")
     identity_api_text = (tmp_path / "api" / "cadrumo.core.identity.rst").read_text(encoding="utf-8")
     all_stub_text = "\n".join(path.read_text(encoding="utf-8") for path in (tmp_path / "api").glob("*.rst"))
-    assert ".. py:data:: CasillaId\n   :module: cadrumo.core" in core_api_text
+    assert ".. py:data:: CasillaId\n   :module: cadrumo.core.casilla_id" in core_api_text
     assert ".. py:data:: TaxIdIdentityToken\n   :module: cadrumo.core.identity" in identity_api_text
     assert ".. py:data:: SubjectTaxId\n   :module: cadrumo.core.identity" in identity_api_text
     assert ".. py:data:: ContentDigest\n   :module: cadrumo.core.identity" in identity_api_text
