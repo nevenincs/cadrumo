@@ -187,6 +187,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from pydantic import ValidationError as PydanticValidationError
+
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
@@ -910,6 +912,25 @@ def _assert_schema_accepts(revision: str, resolved: _Stamp) -> None:
     refusal registry build would raise. Mirroring the coherence rule in this
     module would let the two drift, and the drift would show up as a manifest
     the loader rejects.
+
+    The probe's own fields carry exactly the reviewer identity and authorship
+    string a caller supplied, so a refusal here formats an exception built from
+    that payload. :exc:`~pydantic.ValidationError` composes its own
+    ``str()``/``repr()`` from :meth:`~pydantic.ValidationError.errors`, which
+    appends an ``input_value=`` fragment holding a (length-truncated, so
+    unpredictably present or absent) repr of the WHOLE probe payload — including
+    ``reviewed_by`` and ``engineered_by`` — regardless of what the failing
+    validator's own message says. A short reviewer identity such as a bare
+    initial or a compact code survives that truncation whole and reaches this
+    exception's text. This module writes registry provenance, never taxpayer
+    data, but a reviewer field is caller-supplied free text and the failure
+    mode is exactly the one the project's diagnostics rule forbids: a raw
+    payload reaching a user-visible message. So the message here is built only
+    from each error's own ``msg`` — the text the failing validator in
+    :mod:`~cadrumo.domain.calculations.registry.schema` or
+    :mod:`~cadrumo.domain.calculations.registry._schema_governance` composed on
+    purpose to be shown, naming the revision, the field, and the shape of the
+    refusal — never from pydantic's own added value dump.
     """
     try:
         ModeloRevision(
@@ -924,6 +945,9 @@ def _assert_schema_accepts(revision: str, resolved: _Stamp) -> None:
             reviewed_by=resolved.reviewed_by,
             reviewed_at=resolved.reviewed_at,
         )
+    except PydanticValidationError as exc:
+        reasons = "; ".join(error["msg"] for error in exc.errors(include_url=False, include_input=False))
+        raise StampError(f"refused governance stamp for revision {revision!r}: {reasons}") from exc
     except (RegistryError, ValueError) as exc:
         raise StampError(f"refused governance stamp for revision {revision!r}: {exc}") from exc
 

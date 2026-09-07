@@ -174,16 +174,6 @@ name = "cadrumo.domain.is_compensation"
 class = "staged-capability"
 evidence = "Landed alongside the contabilidad package from the same concurrent work. Impuesto sobre Sociedades compensacion, the stock of losses a company carries forward; its only non-test consumer is the error registry at core/errors/registry/_application_part2.py."
 
-# ---------------------------------------------------------------------------
-# superseded -- a reachable module already discharges the responsibility
-# ---------------------------------------------------------------------------
-
-[[module]]
-name = "cadrumo.application.ledger.import_preparation"
-class = "superseded"
-evidence = "WITHDRAWN 2026-09-06: the module is deleted, and the ratchet is green. Re-tested against the live design rather than against its own docstring. The guard it performs -- refuse a blank, absent, non-file or unreadable import source before provider resolution, so a --provider auto run does not open a missing path through every candidate provider -- is already performed unconditionally INSIDE the action every caller reaches: _require_readable_source at src/cadrumo/application/ledger/actions_import.py:483, called first thing in import_ledger_source at line 339 and again from _validate_import_source at line 499. The two carry the same rationale in the same words, which is what the preparer's own docstring meant by mirroring the action's guard. So no caller could gain anything by routing through the preparer, and the TUI route host that entry named as the remedy would not have changed that: a prepared import is submitted to import_ledger_source like any other. The path-naming behaviour is where the two actually disagreed, and the live guard is the one in force -- it names the path deliberately so an operator can correct the argument, while the preparer's docstring forbade naming it. Directory expansion, the other half of turning an operator's entry into sources, is plan_ledger_import_sources at line 692. Nothing declared the module: not the error registry, not a dev check, not a contract. Its only reference in the tree was its own test, deleted with it."
-remedy_requires_decision = false
-
 [[symbol_cluster]]
 name = "approval staleness with no persisted draft to go stale"
 class = "should-be-live"
@@ -261,6 +251,13 @@ symbols = [
   "accepted_period_patterns",
 ]
 evidence = "A coherent two-by-two family -- {registry, filing} x {codes, patterns} -- enumerating the period vocabulary. Consumers are cross-package tests: the declaracion parser's administrative-period routing test, core's own period test, and the registry selector token-parity test, which enumerates through accepted_period_codes so its coverage cannot drift from the accepted set. Kept whole. Deleting the members with the fewest callers would leave a vocabulary that can enumerate its registry codes but not its filing patterns, and the same asymmetry argument that kept required_profile_keys applies: half a symmetric view is a worse surface than an unused function."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "read and write pairs swept for one-sided use"
+class = "test-support"
+symbols = []
+evidence = "Adjudicated 2026-09-08 after an independent cross-check. The bucket output-language hint was a read-never-written pair the secure-store gate could not see, because a file-backed artefact is not a SecureBoundRepository, so the shape was swept for directly: same-module function pairs under read/write, load/save, load/store, read/persist, get/set, fetch/persist and decode/encode, where production uses one side and not the other. Five pairs in the shipped tree. Four are already recorded in this ledger with matching evidence -- load_encrypted_envelope, decode_mnemonic, save_corpus_manifest and write_cached_transcription -- and the fifth, load_trace, is not an exact finding at all: observability traces are written by run_context and read back by a human outside the product, not by it. So the sweep surfaced no unrecorded debt, which is the useful result: an independently derived detector rediscovering only adjudicated symbols is evidence this shape is fully covered. No gate was added for it. A fail-closed check over this population could only ever report symbols already carrying a decision, and a check that cannot change state is not a signal."
 remedy_requires_decision = false
 
 # ---------------------------------------------------------------------------
@@ -1468,10 +1465,9 @@ remedy_requires_decision = true
 [[symbol_cluster]]
 name = "bucket output-language hint read by production and written by nothing"
 class = "should-be-live"
-area = "adapters/persistence/storage"
-symbols = ["write_bucket_output_language_hint", "clear_bucket_output_language_hint"]
-evidence = "The mirror of the write-with-no-reader shape recorded elsewhere in this ledger. Here the READ is live: adapters/persistence/storage/profile_custody.py calls read_bucket_output_language_hint, and neither the writer nor the clear is called anywhere in production. The reader is documented to fail soft on absence or drift -- it catches every exception, logs at DEBUG and returns None -- so the hint file never exists, the read always yields None, and every caller silently takes the default output language. A per-bucket language preference therefore cannot take effect, and nothing above DEBUG says so."
-remedy_requires_decision = true
+symbols = []
+evidence = "RESOLVED 2026-09-08 by wiring the writer. The hint answers one question the encrypted preference cannot: which language to speak BEFORE the profile is unlocked. resolve_active_profile_output_language falls back to it whenever no bucket session is bound, and the reader fails soft on absence, so while nothing wrote it that fallback always returned None and a language the operator deliberately chose during setup silently reverted to the settings default on every pre-login surface. The custody port carried only the read; it now carries the write and the clear too, and apply_profile_fact_changes mirrors the preference into the hint. That door is the sole place the preference can change and already special-cased the same path to clear the i18n cache, so the mirror sits beside the invalidation it belongs with. Clearing the preference clears the hint, so the two cannot disagree about an absence. The mirror swallows failure for the same reason the read does -- it carries a convenience, and a hint that could not be written must not fail the fact write that owns the real value. Covered by src/cadrumo/application/user_profile/tests/test_language_resolver.py, A/B-confirmed to fail without the call, with a control for the clear."
+remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "profile inventory persistence pair with neither side wired"
