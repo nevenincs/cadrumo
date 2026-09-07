@@ -13,6 +13,7 @@ import pytest
 
 from ..default_lane_visibility import (
     _REPO_ROOT,
+    declared_roots,
     default_lane_predicate,
     visibility_census,
 )
@@ -32,7 +33,7 @@ def lane() -> tuple[str, frozenset[str]]:
 def test_the_screen_reads_a_real_population(lane: tuple[str, frozenset[str]]) -> None:
     """A scan reaching nothing would report a clean tree and an empty census alike."""
     required, excluded = lane
-    roots = tuple(path for path in (_REPO_ROOT / "dev", _REPO_ROOT / "tests") if path.is_dir())
+    roots = declared_roots(_REPO_ROOT)
     findings = visibility_census(roots, required=required, excluded=excluded)
 
     assert roots, "neither test root exists, so the census scanned nothing"
@@ -118,3 +119,23 @@ def test_a_half_written_module_is_reported_not_dropped(tmp_path: Path, lane: tup
     (tmp_path / "test_half.py").write_text("def (:\n", encoding="utf-8")
     findings = visibility_census((tmp_path,), required=required, excluded=excluded)
     assert [(item.module, item.kind) for item in findings] == [("test_half.py", "unread")]
+
+
+def test_a_declared_root_that_no_longer_exists_is_refused(tmp_path: Path) -> None:
+    """A vanished root must stop the census, not quietly shrink it.
+
+    This is the condition that already occurred: the roster named a
+    top-level ``tests`` tree, that tree moved, and the ``is_dir()`` filter
+    dropped it without a word. The surviving root still cleared the
+    population floor, so nothing in the suite could see the loss.
+    """
+    with pytest.raises(FileNotFoundError, match="never reached"):
+        declared_roots(tmp_path)
+
+
+def test_every_declared_root_resolves_against_this_repository() -> None:
+    """The other direction: the live roster must still describe the tree."""
+    resolved = declared_roots(_REPO_ROOT)
+
+    assert resolved, "the roster declares no test root at all"
+    assert all(path.is_dir() for path in resolved)

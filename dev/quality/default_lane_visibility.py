@@ -62,6 +62,7 @@ import sys
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 #: Exactly one of these must be carried by every test module; the marker
 #: contract in the project configuration is the authority for the set.
@@ -177,6 +178,34 @@ def visibility_census(
     return tuple(findings)
 
 
+#: The test trees this screen declares it covers.
+#:
+#: Declared rather than discovered, and resolved through
+#: :func:`declared_roots`, which REFUSES a root that has stopped existing
+#: instead of dropping it. The previous expression filtered the pair on
+#: ``is_dir()``, so when the top-level ``tests`` tree moved under ``src``
+#: the roster silently became one root and the census kept reporting a
+#: clean scan over half of what it named. A vacuity floor cannot catch
+#: that: the surviving root alone clears any floor the pair would.
+#:
+#: Per-TEST reachability across the whole repository, including the ``src``
+#: tree, belongs to the lane-reachability gate named above. This screen is
+#: the per-MODULE report over the development tree.
+DECLARED_TEST_ROOTS: Final[tuple[str, ...]] = ("dev",)
+
+
+def declared_roots(repository_root: Path) -> tuple[Path, ...]:
+    """Resolve :data:`DECLARED_TEST_ROOTS`, refusing one that no longer exists."""
+    resolved = tuple(repository_root / name for name in DECLARED_TEST_ROOTS)
+    missing = tuple(path.name for path in resolved if not path.is_dir())
+    if missing:
+        raise FileNotFoundError(
+            "declared test root(s) no longer exist, so the census would report a "
+            f"clean scan over a tree it never reached: {', '.join(missing)}"
+        )
+    return resolved
+
+
 def main(argv: list[str] | None = None) -> int:
     """Print one greppable row per module and a closing census; always exit 0."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
@@ -184,7 +213,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     required, excluded = default_lane_predicate(_REPO_ROOT / "pyproject.toml")
-    roots = tuple(path for path in (_REPO_ROOT / "dev", _REPO_ROOT / "tests") if path.is_dir())
+    roots = declared_roots(_REPO_ROOT)
     findings = visibility_census(roots, required=required, excluded=excluded)
     wanted = set(args.kind) if args.kind else None
     tally: collections.Counter[str] = collections.Counter(item.kind for item in findings)

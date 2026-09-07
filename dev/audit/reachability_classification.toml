@@ -1345,10 +1345,11 @@ method = "a reference counts only when it appears as an ast.Name load, an attrib
 [[symbol_cluster]]
 name = "collaboration audit trail nothing writes"
 class = "should-be-live"
-area = "application/modelo"
-symbols = ["emit_collab_review_only_workspace_opened_event"]
-evidence = "Six emitters covering the whole collaboration review-package lifecycle -- package encrypted and decrypted, counter-signature recorded, recipient registered and removed, review-only workspace opened -- each writing to the bucket event history. No production caller reaches any of them. The apparent references are Sphinx :func: cross-links inside sibling docstrings, which is prose rather than a call, so the collaboration flow currently produces no audit record at all. Re-tested against the live design and CONFIRMED rather than reversed: the flow demonstrably runs, because encrypt_review_package_for_recipient and decrypt_review_package_for_recipient are each reached twice, from the modelo review-package CLI and from the feedback service. The encrypt event is now WIRED: the review-package encrypt command emits it against the bucket event history after writing the envelope, so a package leaving the bucket is recorded, and that emitter was removed from this cluster. Five of the six are now WIRED and were removed from this cluster: the encrypt command emits after writing the envelope, counter-sign emits on the counter-signer's bucket, decrypt emits on the recipient's, and the collab recipient add and remove commands emit when trust is granted and revoked, each resolving the bucket once and passing bucket_event_history_repository. Only the review-only workspace opening remains, and it is genuinely blocked rather than skipped: it has no producer to emit from, which is the same gap as the missing workspace opener recorded beside it. An event history that is declared and never written is worse than none, because the empty history reads as 'nothing happened'."
-remedy_requires_decision = true
+symbols = [
+  "emit_collab_review_only_workspace_opened_event",
+]
+evidence = "EVIDENCE CORRECTED 2026-09-08; the prose had gone stale while the symbol list stayed honest. It described six emitters covering the collaboration review-package lifecycle as reached by nothing. Five of them are now wired and were removed from this cluster when they were: package encrypted, decrypted and counter-signed emit from entrypoints/cli/_modelo_review_package_cli.py, and recipient registered and removed from entrypoints/cli/config/_collab.py. Only emit_collab_review_only_workspace_opened_event remains, and it is not an independent decision: nothing opens a review-only workspace, so there is no moment at which to emit the event. It is downstream of the review-only workspace cluster in this ledger and resolves with it. The symbol-level staleness gate could not catch this because it compares the symbols list against the live audit and that list was correct throughout; prose is authorial and nothing checks it."
+remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "sectoral prorrata calculation with no caller"
@@ -1517,9 +1518,11 @@ evidence = "The module is mostly live -- encrypt_review_package_for_recipient, d
 [[symbol_cluster]]
 name = "review-only workspace feature with no opener or guard"
 class = "should-be-live"
-area = "application/modelo"
-symbols = ["open_review_only_workspace", "assert_workspace_permits_official_action"]
-evidence = "The opener for a review-only workspace and the guard refusing an official action inside one. Neither is reached, and the ReviewOnlyWorkspace type they produce and check has exactly one production consumer: review_package_collab_audit.py, whose emit_collab_* emitters this ledger already records as reached by nothing. So the type is held alive only by code that is itself unreached, and the feature has no producer, no authority guard and no audit trail. The guard is the part that matters -- an official action inside a review-only workspace is refused by nothing."
+symbols = [
+  "open_review_only_workspace",
+  "assert_workspace_permits_official_action",
+]
+evidence = "The opener for a review-only workspace and the guard refusing an official action inside one. Neither is reached, and the ReviewOnlyWorkspace type they produce and check has one production consumer, review_package_collab_audit.py. Evidence corrected 2026-09-08: that consumer is no longer held alive only by unreached code -- five of its six collaboration emitters are now wired from the CLI, and the sixth is the workspace-opened emitter that waits on this very cluster. So the feature has no producer and no authority guard, while the audit trail around it is otherwise live. The guard is the part that matters: an official action inside a review-only workspace is refused by nothing today, which is a permission the product declares and does not enforce. Remedy is the opener and its guard together, and it is a product decision about whether the review-only workspace ships rather than a wiring detail."
 remedy_requires_decision = true
 
 [[symbol_cluster]]
