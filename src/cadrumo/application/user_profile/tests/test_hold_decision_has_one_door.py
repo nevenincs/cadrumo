@@ -28,7 +28,24 @@ _OWNING_MODULE = "custody_hold_models.py"
 
 
 def _production_modules() -> list[Path]:
-    return [path for path in _SRC_ROOT.rglob("*.py") if "tests" not in path.parts and path.name != _OWNING_MODULE]
+    """Return the production modules this gate sweeps, refusing an empty walk.
+
+    Measured: with `_SRC_ROOT` pointed at a directory that does not exist, both
+    tests in this module PASSED. `Path.rglob` yields nothing for a missing root
+    rather than raising, so the one-door rule -- that no module outside the
+    owning one reads the raw hold property -- held over zero modules.
+    """
+    if not _SRC_ROOT.is_dir():
+        message = f"the hold-decision sweep root does not exist: {_SRC_ROOT}"
+        raise AssertionError(message)
+    modules = [path for path in _SRC_ROOT.rglob("*.py") if "tests" not in path.parts and path.name != _OWNING_MODULE]
+    if not modules:
+        message = (
+            f"the hold-decision sweep reached no production module under {_SRC_ROOT}; "
+            "a walk matching nothing cannot find a second door onto the raw hold property"
+        )
+        raise AssertionError(message)
+    return modules
 
 
 def _reads_the_raw_property(tree: ast.AST) -> bool:
