@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import json
 from pathlib import Path
 from typing import get_args
 
@@ -351,6 +352,48 @@ def test_fragment_toml_refuses_a_missing_required_value_policy(tmp_path: Path) -
 
     with pytest.raises(RegistryValidationError, match="value_policy"):
         load_render_profile(tmp_path)
+
+
+def test_empty_rules_fragment_refusal_never_carries_a_sibling_fields_value(tmp_path: Path) -> None:
+    """The fragment-level ``ValidationError`` site must never echo an unrelated field.
+
+    ``RenderProfileFragment._require_authored_rules`` is a model-level
+    validator: when it raises, pydantic's ``str(ValidationError)`` embeds an
+    ``input_value=`` repr of the WHOLE fragment dict, not just the fields the
+    validator inspected. Reproduced here with an authored-but-empty fragment
+    (no width-17 or singleton rules) whose ``fragment_id`` -- a field the
+    validator never looks at -- carries a short, easy-to-miss value; that
+    value is proven present in the raw ``ValidationError`` before
+    :func:`load_render_profile` ever sees it, going through the exact
+    rtoml-load-then-JSON-validate pipeline the loader itself uses.
+    """
+    for secret in ("zz", "nif-z"):
+        toml_text = (
+            "schema_version = 1\n"
+            "width_17_rules = []\n"
+            "singleton_rules = []\n"
+            'design_identity = { modelo = "200", design_epoch = "2025", '
+            f'source_ref = "aeat-dr-200-2025", source_sha256 = "{"a" * 64}" }}\n'
+            # Inserted last so pydantic's length-truncated repr of the whole
+            # payload keeps this field in its surviving tail rather than
+            # eliding it -- measured against this exact field ordering, not
+            # assumed.
+            f'fragment_id = "{secret}"\n'
+        )
+
+        with pytest.raises(ValidationError) as raw_excinfo:
+            RenderProfileFragment.model_validate_json(json.dumps(rtoml.load(toml_text)))
+        assert secret in str(raw_excinfo.value), "premise: the raw ValidationError must actually carry the secret"
+
+        (tmp_path / "0001.toml").write_text(toml_text, encoding="utf-8")
+        with pytest.raises(RegistryValidationError) as excinfo:
+            load_render_profile(tmp_path)
+
+        message = str(excinfo.value)
+        assert secret not in message
+        assert "input_value" not in message
+        assert "errors.pydantic.dev" not in message
+        assert "at least one authored rule" in message
 
 
 @pytest.mark.parametrize(

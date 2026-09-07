@@ -948,9 +948,24 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
 
 
 def _marker_name(node: ast.AST) -> str | None:
-    """Return the NAME of a ``pytest.mark.NAME`` node, called or bare."""
+    """Return the NAME of a ``pytest.mark.NAME`` node, called or bare.
+
+    Both spellings of that node are read: the dotted ``pytest.mark.NAME`` and
+    the ``from pytest import mark`` form ``mark.NAME``. Requiring the dotted
+    one would narrow a class this declares whole, and the narrowing does not
+    fail loudly: a marker dropped here does not make a test read as absent, it
+    makes it read as SELECTED by every lane expression that negates the marker
+    -- ``integration and not serial`` reports a serial test reachable once its
+    ``serial`` is invisible. That is coverage claimed over something never
+    measured, so the spelling is a disjunction rather than a requirement.
+    """
     target = node.func if isinstance(node, ast.Call) else node
-    if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Attribute) and target.value.attr == "mark":
+    if not isinstance(target, ast.Attribute):
+        return None
+    owner = target.value
+    if isinstance(owner, ast.Attribute) and owner.attr == "mark":
+        return target.attr
+    if isinstance(owner, ast.Name) and owner.id == "mark":
         return target.attr
     return None
 

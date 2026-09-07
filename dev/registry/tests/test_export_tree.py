@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TypedDict, get_args
 
 import pytest
+import rtoml
 
 from cadrumo.core.directory_scan import (
     scan_directory,
@@ -58,6 +59,38 @@ from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_toml_serialization_refusal_never_carries_the_offending_value() -> None:
+    """``_render_toml_bytes``'s ``rtoml.dumps`` refusal must never echo a payload value.
+
+    ``rtoml.dumps`` raises ``TomlSerializationError`` (a ``ValueError``
+    subclass) whose sole ``args[0]`` bakes the offending value's own ``repr``
+    into the message, with no structured field that omits it -- measured:
+    ``rtoml.dumps({"bad": object()})`` produces a string naming the object's
+    default ``repr`` verbatim. Reproduced here with a payload carrying a
+    short, easy-to-miss string alongside an unserializable object whose
+    ``repr`` embeds that same string, proving the raw exception would carry
+    it before pinning that the registry's own message never does.
+    """
+    secret = "nif-Z-taxpayer-secret"
+
+    class _Unserializable:
+        def __repr__(self) -> str:
+            return f"<unserializable secret={secret}>"
+
+    with pytest.raises(ValueError) as raw_excinfo:
+        rtoml.dumps({"bad": _Unserializable()}, pretty=True, none_value=None)
+    assert secret in str(raw_excinfo.value), "premise: rtoml's own error must actually carry the secret"
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        _export_tree._render_toml_bytes("generated/example.toml", {"bad": _Unserializable()})
+
+    message = str(excinfo.value)
+    assert secret not in message
+    assert "unserializable" not in message
+    assert "cannot serialize generated export TOML" in message
+    assert "generated/example.toml" in message
 
 
 def test_generated_casilla_export_refs_replace_a_displaced_field_with_no_stale_reference(tmp_path: Path) -> None:

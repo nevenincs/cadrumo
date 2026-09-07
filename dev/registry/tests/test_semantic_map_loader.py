@@ -7,6 +7,7 @@ import inspect
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
@@ -16,7 +17,11 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 from cadrumo.domain.calculations.registry.schema_exports import RecordDiscriminator
 
-from ..pipeline._semantic_map_loader import SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION, load_semantic_map
+from ..pipeline._semantic_map_loader import (
+    SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION,
+    SemanticMapFragment,
+    load_semantic_map,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -276,6 +281,51 @@ def test_loader_refuses_invalid_projection_discriminants_and_string_keys(
 
     with pytest.raises(RegistryValidationError, match=message):
         load_semantic_map(root)
+
+
+def test_empty_fragment_refusal_never_carries_a_sibling_fields_value(tmp_path: Path) -> None:
+    """The fragment-level ``ValidationError`` site must never echo an unrelated field.
+
+    ``SemanticMapFragment._require_authored_meaning`` is a model-level
+    validator: when it raises, pydantic's ``str(ValidationError)`` embeds an
+    ``input_value=`` repr of the WHOLE fragment dict, not just the fields the
+    validator inspected. Reproduced here with an authored-but-empty fragment
+    (no records, entries, or variable envelopes) whose ``design_epoch`` --
+    a field the validator never looks at -- carries a short, easy-to-miss
+    value; that value is proven present in the raw ``ValidationError`` before
+    :func:`load_semantic_map` ever sees it.
+    """
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+    for secret in ("X", "nif-Z"):
+        fragment = _fragment(fragment_id="authority", body="", epoch=secret)
+
+        with pytest.raises(ValidationError) as raw_excinfo:
+            SemanticMapFragment.model_validate(
+                {
+                    "schema_version": SEMANTIC_MAP_FRAGMENT_SCHEMA_VERSION,
+                    "fragment_id": "authority",
+                    "modelo": "303",
+                    "source_ref": "aeat-dr-303-2026",
+                    "source_sha256": "a" * 64,
+                    # Inserted last so pydantic's length-truncated repr of the
+                    # whole payload (see the module docstring) keeps this field
+                    # in its surviving tail rather than eliding it -- measured
+                    # against this exact field ordering, not assumed.
+                    "design_epoch": secret,
+                },
+            )
+        assert secret in str(raw_excinfo.value), "premise: the raw ValidationError must actually carry the secret"
+
+        (root / "0001-authority.toml").write_text(fragment, encoding="utf-8")
+        with pytest.raises(RegistryValidationError) as excinfo:
+            load_semantic_map(root)
+
+        message = str(excinfo.value)
+        assert secret not in message
+        assert "input_value" not in message
+        assert "errors.pydantic.dev" not in message
+        assert "records, entries, or variable envelopes" in message
 
 
 def test_lexical_filename_order_determines_the_first_fragment_failure(tmp_path: Path) -> None:

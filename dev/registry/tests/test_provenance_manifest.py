@@ -577,6 +577,46 @@ def test_manifest_refuses_legacy_shapes_schema_drift_duplicate_outputs_and_unsaf
         ExportFieldDerivation.model_validate(_field_derivation().model_dump() | {"derivation_code": "default"})
 
 
+def test_manifest_contract_refusal_never_carries_a_sibling_fields_value() -> None:
+    """The one ``ValidationError`` site in this module must never echo an unrelated field.
+
+    ``str(ValidationError)`` composes an ``input_value=`` fragment holding a
+    length-truncated repr of the WHOLE payload for a model-level validator's
+    own refusal -- not just the field that actually failed. Reproduced here:
+    an unsupported ``manifest_schema_version`` fails the model-level
+    ``_refuse_unknown_schema_or_unordered_outputs`` check while
+    ``design_epoch`` -- an unrelated field -- carries a short, easy-to-miss
+    value; that value is proven present in the raw ``ValidationError`` string
+    before the loader ever sees it, so
+    :func:`load_export_fragment_provenance_manifest` must strip it.
+
+    Measured, not assumed: this manifest is a large nested payload, so
+    pydantic's length-truncated ``input_value=`` repr keeps only a short
+    identity whole (``X``, ``nif-Z``) and elides a longer one
+    (``secret123``) into its middle -- the same string-length dependence
+    documented for the conformance stamp writer. Only the identities proven
+    to survive the truncation are exercised here; the fix removes the
+    dependency on that coincidence regardless.
+    """
+    manifest = _manifest()
+    for secret in ("X", "nif-Z"):
+        payload = manifest.model_dump(mode="json") | {"design_epoch": secret, "manifest_schema_version": 999999}
+        raw = canonical_json_bytes(payload)
+
+        with pytest.raises(ValidationError) as raw_excinfo:
+            ExportFragmentProvenanceManifest.model_validate_json(raw)
+        assert secret in str(raw_excinfo.value), "premise: the raw ValidationError must actually carry the secret"
+
+        with pytest.raises(RegistryValidationError) as excinfo:
+            load_export_fragment_provenance_manifest(raw)
+
+        message = str(excinfo.value)
+        assert secret not in message
+        assert "input_value" not in message
+        assert "errors.pydantic.dev" not in message
+        assert "current contract" in message
+
+
 def test_provenance_contract_has_no_legacy_layout_lookup_or_fallback_surface() -> None:
     """A manifest must only attest supplied generated output, never consult old layouts."""
     module = ast.parse(inspect.getsource(_provenance_manifest))

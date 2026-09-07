@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import io
 import json
 import shutil
+import tarfile
 import tomllib
 import zipfile
 from pathlib import Path
@@ -108,16 +110,10 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         )
 
     expected_sdist_data = {
-        path
-        for path in tracked
-        if not (
-            path.startswith("src/cadrumo/_data/corpus/")
-            and path.lower().endswith((".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"))
-        )
-        and "/tests/" not in path
+        path for path in tracked if not _is_corpus_source_binary(path, suffixes) and "/tests/" not in path
     }
     sdist = build_sdist(tmp_path, uv, build_root=build_root)
-    _assert_sdist_contains_expected_data(sdist, expected_sdist_data)
+    _assert_sdist_contains_expected_data(sdist, expected_sdist_data, corpus_binary_suffixes=suffixes)
     assert sdist.stat().st_size < PYPI_FILE_CAP_BYTES
 
     cohort_dir = tmp_path / "real-cohort"
@@ -317,4 +313,52 @@ def test_wheel_data_gate_detects_both_absent_and_surplus_payload(tmp_path: Path)
     )
     with pytest.raises(SystemExit, match="unexpected="):
         assert_wheel_contains_tracked_data(_REPO_ROOT, surplus, expected)
+    reset_proof_ledger()
+
+
+def _write_corpus_sdist(path: Path, corpus_members: set[str]) -> Path:
+    """Write a minimal ``.tar.gz`` sdist carrying only the named corpus members."""
+    with tarfile.open(path, "w:gz") as archive:
+        for member in sorted(corpus_members):
+            name = f"cadrumo-0.0.0/src/cadrumo/_data/corpus/{member}"
+            info = tarfile.TarInfo(name)
+            info.size = 1
+            archive.addfile(info, io.BytesIO(b"x"))
+    return path
+
+
+def test_sdist_leak_check_screens_the_configured_suffixes_and_only_those(tmp_path: Path) -> None:
+    """Prove the companion-binary leak check reads its population from the build config.
+
+    The check used to carry its own literal suffix tuple. That made it a screen
+    over a population it never read: the root wheel's ``exclude`` configuration
+    is what actually splits a corpus binary out of the sdist, so a suffix added
+    there would be split out and arrive in the sdist unmeasured, and the check
+    would report clean having never looked for it. Both directions are proved
+    here -- a configured suffix is caught, an unconfigured one is not -- and the
+    widened set proves the population is the parameter rather than a constant.
+    """
+    configured = _configured_corpus_binary_suffixes(_REPO_ROOT)
+    assert ".docx" in configured
+    assert ".doc" not in configured
+    reset_proof_ledger()
+
+    # A member whose suffix the configuration excludes must be caught.
+    leaked = _write_corpus_sdist(tmp_path / "leaked.tar.gz", {"aeat_official/a.docx"})
+    with pytest.raises(SystemExit, match="companion-owned corpus binaries"):
+        _assert_sdist_contains_expected_data(leaked, set(), corpus_binary_suffixes=configured)
+
+    # Corpus members the configuration does not exclude are not leaks, and the
+    # archive that carries only those must pass rather than be flagged.
+    clean = _write_corpus_sdist(
+        tmp_path / "clean.tar.gz",
+        {"aeat_official/b.json", "aeat_official/c.html", "aeat_official/d.doc"},
+    )
+    _assert_sdist_contains_expected_data(clean, set(), corpus_binary_suffixes=configured)
+    assert "sdist tracked shipped-data payload" in recorded_proofs()
+
+    # The same archive read against a configuration that DOES exclude ``.doc``
+    # is a leak. A literal tuple in the assertion could not produce this answer.
+    with pytest.raises(SystemExit, match="companion-owned corpus binaries"):
+        _assert_sdist_contains_expected_data(clean, set(), corpus_binary_suffixes=(*configured, ".doc"))
     reset_proof_ledger()
