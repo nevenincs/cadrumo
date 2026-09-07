@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8aa0e39c0a145b1842474fd47ec28700adf60146cea5cfef7d5ac89b1da3d04'
+body_hash: 'sha256:b58c3c838adc7f6e1667faf25ecbbf2af6bb7d261c077f6225dbe15e255f7c62'
 step_id: 'S84'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Close the last open module decision by finding the caller the entry said was gone: the registered-values projection feeds a mapping the TUI flow screen threads through its presenter and reads to fill the review overview's registered cell, and every link exists except the composition that would pass it, which sits inside the frozen TUI prefix both ratchets defer to. Reclassify from orphaned to deferred-by-ownership rather than widening the ratchet's transitive deferral, which is read from the live import graph and deliberately excludes a supplier nothing imports yet.
 

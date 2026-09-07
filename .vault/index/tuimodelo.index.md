@@ -6,11 +6,12 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:dcd842bafbad39444c45f234481d6a4db080229e5dc6b2bbdc54880d7e2cde7b'
+body_hash: 'sha256:9e9bc52419c55a1ab781adc3e824e75346eaccb7a4853e95eb9da240108450a5'
 related:
   - '[[2026-09-07-tuimodelo-export-destinations-adr]]'
   - '[[2026-09-07-tuimodelo-filing-lifecycle-adr]]'
   - '[[2026-09-07-tuimodelo-form-projection-adr]]'
+  - '[[2026-09-07-tuimodelo-plan]]'
   - '[[2026-09-07-tuimodelo-reconcile-verify-adr]]'
   - '[[2026-09-07-tuimodelo-reference]]'
   - '[[2026-09-07-tuimodelo-satellite-families-adr]]'
@@ -31,6 +32,10 @@ Auto-generated index of all documents tagged with `#tuimodelo`.
 - `2026-09-07-tuimodelo-reconcile-verify-adr` - `tuimodelo` adr: `reconciliation and verification surfacing` | (**status:** `proposed`)
 - `2026-09-07-tuimodelo-satellite-families-adr` - `tuimodelo` adr: `satellite command family dispositions` | (**status:** `proposed`)
 - `2026-09-07-tuimodelo-work-creator-adr` - `tuimodelo` adr: `period-driven declaration creator` | (**status:** `proposed`)
+
+### plan
+
+- `2026-09-07-tuimodelo-plan` - `tuimodelo` plan
 
 ### reference
 
