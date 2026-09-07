@@ -31,13 +31,16 @@ from ._artifacts import (
     RenderedFrame,
     SkippedFrame,
     StaleArtifactPurgeRefusedError,
+    commit_staged_run,
     digest,
     known_runs,
     now,
     purge_stale_artifacts,
     read_manifest,
     run_directory,
+    snapshot_staging_directory,
     source_fingerprint,
+    stage_run_copy,
     unaccounted_frames,
     write_index,
     write_manifest,
@@ -492,8 +495,6 @@ def snapshot_command(
     would destroy the evidence this verb exists to keep. ``--replace`` is
     how an operator says the older review is finished with.
     """
-    import shutil
-
     if name == DEFAULT_RUN_NAME:
         _echo(f"{name!r} is the canonical review; choose another name for a snapshot")
         raise typer.Exit(code=1)
@@ -511,11 +512,17 @@ def snapshot_command(
             "Nothing was written. Choose another name, or pass --replace to discard it."
         )
         raise typer.Exit(code=1)
+    # Staged, then swapped. The copy is completed under `scratch/` first and
+    # only then replaces the destination, so the irreversible removal runs
+    # AFTER its replacement is durable rather than before it is begun. In
+    # place, a copy that failed part way through a run of hundreds of files
+    # left the named snapshot destroyed and half-rebuilt -- and still
+    # carrying a manifest, so `known_runs` listed the wreckage as a review.
+    staging = snapshot_staging_directory(destination)
+    stage_run_copy(source, staging)
     # Re-checked rather than trusted: only the exact path the refusal was
     # measured against is removed.
-    if destination.exists():
-        shutil.rmtree(destination)
-    shutil.copytree(source, destination)
+    commit_staged_run(staging, destination)
     _echo(f"snapshot: {destination}")
 
 

@@ -1266,11 +1266,17 @@ evidence = "Five projections turning a validated RegistrySnapshot into connectiv
 
 [[symbol_cluster]]
 name = "displaced CLI execution-policy declarations"
-class = "superseded"
 area = "entrypoints/cli/config"
-symbols = ["CALCULATION_WRITE", "PROFILE_WRITE", "GOOGLE_CALCULATION_WRITE", "GOOGLE_CALCULATION_HANDOFF", "GOOGLE_HANDOFF"]
-evidence = "Public execution-policy constants that no command spec imports. The live modelo command specs declare private equivalents inline, so the canonical home was displaced by copies. The declarations are EQUIVALENT, which took checking: the public CALCULATION_WRITE spells capabilities calculation, encrypted-facts and profile-custody while the private _CALCULATION_WRITE the specs use spells only the first two, but command_spec._IMPLIED_CAPABILITIES maps encrypted-facts onto profile-custody and every policy check runs against expanded_capabilities, so the shorter form expands to the longer one. The finding is therefore displacement alone -- five public constants nothing reads, beside private copies that say the same thing -- and not the under-declaration it first looked like."
-remedy_requires_decision = true
+class = "orphaned"
+resolved = true
+symbols = [
+  "CALCULATION_WRITE",
+  "PROFILE_WRITE",
+  "GOOGLE_CALCULATION_WRITE",
+  "GOOGLE_CALCULATION_HANDOFF",
+  "GOOGLE_HANDOFF",
+]
+evidence = "RESOLVED 2026-09-09 by deletion, and the entry's framing was wrong. It said the canonical home was displaced by private copies in the modelo command specs. src/cadrumo/entrypoints/cli/config/_spec_policies.py is a leading-underscore module, so it is private to the config package and was never a legitimate source for the modelo package under aeat-architecture-boundaries; the modelo specs declaring their own is the correct shape, not a displacement. What the five actually were is declarations the config package does not use: its other policies in that module carry between two and twenty-six in-package consumers each and these carried zero. Their only reader was a hand-listed inventory in src/cadrumo/entrypoints/cli/config/tests/test_spec_policies.py asserting that profile-bound policies declare custody authority, which still covers the seven that are used. Deleted with their __all__ entries and their inventory rows; the audit reports 404 exact findings where it reported 409."
 
 [[symbol_cluster]]
 name = "reserved-source-kind binding families"

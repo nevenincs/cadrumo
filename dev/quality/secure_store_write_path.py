@@ -56,6 +56,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
+from .unread_inputs import report_unread
+
 _REPO_BASE: Final = "SecureBoundRepository"
 _SOURCE_ROOT: Final = Path(__file__).resolve().parents[2] / "src" / "cadrumo"
 _DECLARATION: Final = Path(__file__).resolve().parent / "secure_store_write_path.toml"
@@ -127,15 +129,29 @@ def _is_mutator(method: str) -> bool:
 
 
 def _production_modules(root: Path) -> dict[Path, ast.Module]:
-    """Parse every shipped module, skipping tests and caches."""
+    """Parse every shipped module, skipping tests and caches.
+
+    A module that will not parse is skipped, because a walk over a tree a
+    sibling process is editing must survive a half-written file. It is not
+    skipped silently: this scan decides where a secure store is written,
+    and a module left out contributes neither its reads nor its writes, so
+    a store written only from the unread module reads as written nowhere.
+    """
     trees: dict[Path, ast.Module] = {}
+    unread: list[str] = []
     for path in sorted(root.rglob("*.py")):
         if "tests" in path.parts or "__pycache__" in path.parts or path.name.startswith("test_"):
             continue
         try:
             trees[path] = ast.parse(path.read_text(encoding="utf-8"))
         except (OSError, SyntaxError, UnicodeDecodeError):
+            unread.append(path.relative_to(root).as_posix())
             continue
+    report_unread(
+        "secure-store write-path scan",
+        "their secure-store reads and writes are both absent from the analysis",
+        unread,
+    )
     return trees
 
 

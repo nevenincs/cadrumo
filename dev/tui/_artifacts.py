@@ -15,6 +15,7 @@ diff, which a PNG digest never is.
 from __future__ import annotations
 
 import json
+import shutil
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -335,6 +336,59 @@ def purge_stale_artifacts(
     return tuple(removed)
 
 
+def snapshot_staging_directory(destination: Path) -> Path:
+    """Where a snapshot is assembled before it replaces ``destination``.
+
+    Under ``scratch/`` rather than beside the runs on purpose: a staged copy
+    carries a manifest, so parked inside ``runs/`` it would satisfy
+    :func:`known_runs` and a reviewer would find a half-built directory
+    listed as a review.
+
+    Derived from ``destination`` rather than read off :data:`SCRATCH_DIR`,
+    because the swap in :func:`commit_staged_run` is a rename and a rename
+    cannot cross a filesystem. A fixed constant put the staged copy on
+    whichever drive the repository sits on while the destination was
+    somewhere else entirely, and the swap failed with WinError 17.
+    """
+    return destination.parent.parent / SCRATCH_DIR.name / f"snapshot-{destination.name}"
+
+
+def stage_run_copy(source: Path, staging: Path) -> Path:
+    """Copy ``source`` into ``staging``, discarding any earlier attempt.
+
+    The removal here destroys only a PREVIOUS staging directory, which by
+    construction is the residue of a copy that did not finish and is
+    therefore never the only copy of anything.
+    """
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source, staging)
+    return staging
+
+
+def commit_staged_run(staging: Path, destination: Path) -> Path:
+    """Swap a fully staged copy into ``destination``.
+
+    Split from :func:`stage_run_copy` so the irreversible removal of an
+    existing snapshot happens AFTER its replacement is complete on disk,
+    not before that replacement is begun. Removing first meant a copy that
+    failed part way -- a run is hundreds of files -- left the named
+    snapshot destroyed and replaced by a partial tree that still carried a
+    manifest, so :func:`known_runs` went on listing it as a review.
+
+    The window this leaves is two calls wide: a failure between the removal
+    and the rename leaves ``destination`` absent and the complete copy
+    parked at ``staging``. That state is recoverable by hand and, because
+    the source run is never touched, by running the snapshot again.
+    """
+    if destination.exists():
+        shutil.rmtree(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staging.replace(destination)
+    return destination
+
+
 def unaccounted_frames(
     manifest: Manifest,
     *,
@@ -481,12 +535,15 @@ __all__ = [
     "RenderedFrame",
     "SkippedFrame",
     "StaleArtifactPurgeRefusedError",
+    "commit_staged_run",
     "digest",
     "known_runs",
     "now",
     "purge_stale_artifacts",
     "read_manifest",
     "run_directory",
+    "snapshot_staging_directory",
+    "stage_run_copy",
     "stale_artifacts",
     "unaccounted_frames",
     "write_index",
