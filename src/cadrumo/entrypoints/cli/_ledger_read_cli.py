@@ -660,6 +660,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
         f"{tr('cli.ledger.labels.reviewed')}\t{report.reviewed_count}",
         f"{tr('cli.ledger.labels.skipped')}\t{report.skipped_count}",
     ]
+    readiness_issues: tuple[LedgerReadinessIssueV1, ...] = ()
     if report.period is not None:
         lines.extend(
             [
@@ -671,14 +672,14 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
         )
         from ...application.ledger.readiness_query import read_ledger_readiness
 
-        lines.extend(
-            _ledger_status_readiness_issue_line(issue)
-            for issue in read_ledger_readiness(
-                bucket_id=transaction_repository.bucket_id,
-                period=report.period,
-                transaction_repository=transaction_repository,
-            )
+        # Bound once and reused for both surfaces: reading twice could report a
+        # different set to the JSON consumer than the text lines just listed.
+        readiness_issues = read_ledger_readiness(
+            bucket_id=transaction_repository.bucket_id,
+            period=report.period,
+            transaction_repository=transaction_repository,
         )
+        lines.extend(_ledger_status_readiness_issue_line(issue) for issue in readiness_issues)
     from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ...application.ledger.stale_filing_query import read_stale_ledger_filings
@@ -709,9 +710,19 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
         for finding in stale_filings
     )
 
-    from ._ledger_payloads import LedgerStatusResult
+    from ._ledger_payloads import LedgerReadinessIssuePayload, LedgerStaleFilingPayload, LedgerStatusResult
 
-    emit_envelope(ctx, command="ledger.status", result=strict_round_trip(LedgerStatusResult, report), lines=lines)
+    # The counts round-trip from the report; the two finding lists do not live
+    # on it, so they are attached here from the same values the lines above
+    # rendered. Each element is validated on the way in, so the payload is not
+    # trusted merely because it was built locally.
+    result = strict_round_trip(LedgerStatusResult, report).model_copy(
+        update={
+            "readiness_issues": [strict_round_trip(LedgerReadinessIssuePayload, issue) for issue in readiness_issues],
+            "stale_filings": [strict_round_trip(LedgerStaleFilingPayload, finding) for finding in stale_filings],
+        },
+    )
+    emit_envelope(ctx, command="ledger.status", result=result, lines=lines)
 
 
 def ledger_track(ctx: typer.Context, transaction_id: str) -> None:

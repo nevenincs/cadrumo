@@ -698,6 +698,46 @@ class LedgerViewResult(OutputSchema):
     transaction: TransactionPayload
 
 
+class LedgerReadinessIssuePayload(OutputSchema):
+    """One readiness issue nested in ``aeat app ledger status``.
+
+    Mirrors :class:`~cadrumo.application.ledger.readiness_query.LedgerReadinessIssueV1`.
+    Every explaining fact is optional because it is optional on the row: a
+    deductible transaction missing its category is the finding itself, not a
+    gap in the read, so ``null`` here means "absent on the row" rather than
+    "not looked up".
+    """
+
+    transaction_id: str
+    reason: str
+    detail: str
+    transaction_present: bool
+    business_classification: str | None = None
+    category_id: str | None = None
+    taxable_base: str | None = None
+    iva_rate: str | None = None
+    iva_amount: str | None = None
+
+
+class LedgerStaleFilingPayload(OutputSchema):
+    """One drifted filing nested in ``aeat app ledger status``.
+
+    Mirrors :class:`~cadrumo.application.ledger.stale_filing_query.LedgerStaleFilingV1`,
+    including ``covers_current_fact_set``: ``false`` means the comparison behind
+    the counts was sound but narrower than today's fact set, not that anything
+    additional drifted.
+    """
+
+    modelo: str
+    filing_year: int
+    period: str
+    calculation_revision_id: str
+    work_unit_id: str
+    changed_count: NonNegativeInt
+    removed_count: NonNegativeInt
+    covers_current_fact_set: bool = True
+
+
 class LedgerStatusResult(OutputSchema):
     """JSON envelope for ``aeat app ledger status``.
 
@@ -723,7 +763,19 @@ class LedgerStatusResult(OutputSchema):
     period: Period | None = None
     checked_transaction_count: NonNegativeInt = 0
     readiness_issue_count: NonNegativeInt = 0
+    # Active business rows left OUT of the money totals above because they are
+    # foreign-currency with no conversion applied. A non-zero value says the
+    # totals are partial; without it a JSON consumer cannot tell a complete
+    # roll-up from one missing every unconverted row.
+    unconverted_currency_count: NonNegativeInt = 0
     ready: bool | None = None
+    # The findings behind ``readiness_issue_count``, and the drifted filings the
+    # text output already lists. Both were computed by this command and emitted
+    # only as text lines, so a JSON consumer could see that N issues existed but
+    # never which -- and could not see a stale filing at all. A second frontend
+    # cannot act on a count.
+    readiness_issues: list[LedgerReadinessIssuePayload] = []
+    stale_filings: list[LedgerStaleFilingPayload] = []
 
 
 class LedgerHistoryEventPayload(OutputSchema):
@@ -1288,6 +1340,7 @@ __all__ = [
     "LedgerPeriodPayload",
     "LedgerPreflightIssuePayload",
     "LedgerPreflightResult",
+    "LedgerReadinessIssuePayload",
     "LedgerRemovalBlockerPayload",
     "LedgerRemoveResult",
     "LedgerResetResult",
@@ -1297,6 +1350,7 @@ __all__ = [
     "LedgerSplitChildIdPayload",
     "LedgerSplitChildProposalPayload",
     "LedgerSplitResult",
+    "LedgerStaleFilingPayload",
     "LedgerStashResult",
     "LedgerStatusResult",
     "LedgerTrackResult",
