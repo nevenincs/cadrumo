@@ -39,8 +39,16 @@ def _package_root() -> Path:
 def _constructor_sites() -> list[tuple[str, int, str, frozenset[str]]]:
     """Return every direct régimen-simplificado row constructor call in shipped code and its tests."""
     root = _package_root()
+    scanned = scan_directory(root, pattern="*.py", recursive=True, require_root=True)
+    # Measured: with the root pointed at a directory that does not exist this
+    # funnel returned 0 sites silently, against 11 in the healthy tree, so the
+    # census asserted its omissions over nothing.
+    assert scanned, (
+        f"the regimen-simplificado census reached no module under {root}; "
+        "a walk matching nothing cannot find an undeclared row constructor"
+    )
     sites: list[tuple[str, int, str, frozenset[str]]] = []
-    for path in scan_directory(root, pattern="*.py", recursive=True):
+    for path in scanned:
         source = path.read_text(encoding="utf-8")
         tree = ast.parse(source, filename=str(path))
         relative = path.relative_to(root).as_posix()
