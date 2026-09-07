@@ -2,8 +2,9 @@
 
 This is a real distribution test, not an in-process unit test. It builds the
 committed closed-world wheel cohort including the exact product wheel (the
-retired ``cadrumo[agent]`` extra no longer exists, so the harness installs as
-its own distribution), installs them into a fresh stdlib virtual environment,
+retired ``cadrumo[agent]`` extra no longer exists; the harness is a package
+inside the product distribution, so the plain product wheel carries it),
+installs them into a fresh stdlib virtual environment,
 launches that environment's absolute ``cadrumo-mcp`` console script outside
 the checkout, removes product scripts and ``PYTHONPATH`` from the child
 environment, and completes the public grounded Modelo 200 MCP itinerary
