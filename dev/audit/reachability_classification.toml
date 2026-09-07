@@ -1593,10 +1593,6 @@ area = "application/modelo"
 symbols = ["ModeloWorkspaceVersionHeader", "ModeloDraftBuilderAdapter"]
 evidence = "Two types re-tested against the live design and reversed. The version header is a minimal pre-dispatch shape carrying contract_version bounded only at one or more; the concrete workspace models each pin their own contract_version as a single-value Literal and one cross-checks a baseline against itself, which is a stronger guarantee than the shared header offers, so the pre-dispatch sniff is superseded by per-model pinning. The draft adapter is one implementer of the modelo draft-builder Protocol and a different one is live: the workflow gate constructs _RevisionDraftBuilder, documented as building and locally approving the draft backed by the target work unit, and passes it as the filing_draft_builder the adapter factory requires. A Protocol with a live implementer under another name is supersession, not an unwired capability."
 
-[[module]]
-name = "cadrumo.entrypoints.tui.devtools.modelo_fixtures"
-class = "design-time-authority"
-evidence = "Deterministic, storage-free visual fixtures for the production Modelo screens, so a developer can render them without a configured profile or an encrypted store. The devtools package is read at design time by dev/tui/_coverage.py, which enumerates its screens, and dev/tui/_harness.py, which states that the package owns surface construction. No runtime entrypoint reaches it, which is the intent: a fixture module wired into the shipped TUI would put synthetic taxpayer data one keystroke from an operator."
 
 [[module]]
 name = "cadrumo.entrypoints.tui.modelo.actions"
@@ -1639,14 +1635,35 @@ follows = "module"
 anchor = "cadrumo.domain.fincas"
 subjects = 5
 
-[[test_module]]
-name = "cadrumo.entrypoints.tui.devtools.tests.test_modelo_fixtures"
-follows = "module"
-anchor = "cadrumo.entrypoints.tui.devtools.modelo_fixtures"
-subjects = 1
 
 [[test_module]]
 name = "cadrumo.entrypoints.tui.modelo.tests.test_create_deferred"
 follows = "module"
 anchor = "cadrumo.entrypoints.tui.modelo.actions"
 subjects = 1
+
+[[module]]
+name = "cadrumo.entrypoints.tui.operations.facade"
+class = "deferred-by-ownership"
+evidence = "The single door for presenting a bound OperationController as a modal. No screen calls it yet, but it is not abandoned: src/cadrumo/entrypoints/tui/modelo/action/rename.py, part of a concurrent migration into the modelo action package, states that nothing there presents a modal because presentation is present_operation_modal's job, and returns a controller for a caller to hand to it. The unwired state is the migration's midpoint, and the owning contributor decides when a screen takes the door. Deleting it would strand that design and break the docstring references that name it."
+
+[[module]]
+name = "cadrumo.entrypoints.tui.devtools.home_candidates"
+class = "design-time-authority"
+evidence = "Retained Home layout candidates that stop at selection, reading no state and invoking no application action, so a later prototype measurement can compare layout and keyboard cost without acquiring business authority. dev/tui/_coverage.py is the design-time inventory that governs them and classifies DueDrivenHomeCandidateScreen and TaskLauncherHomeCandidateScreen as development-only retained design candidates, not the production Home factory. Deliberately absent from the devtools SURFACES registry: registering a candidate would present it beside the real surfaces it exists to be compared against."
+
+[[module]]
+name = "cadrumo.entrypoints.tui.components.errors"
+class = "staged-capability"
+evidence = "ErrorPanel and SafeErrorRecord, an inert renderer for already-safe canonical error envelopes. No screen composes it yet. The inertness is the design under sensitive-financial-data-secure-storage-only: the component renders text a caller has already redacted and performs no redaction itself, so wiring it requires a screen that owns the redaction boundary rather than a component that assumes one."
+
+[[module]]
+name = "cadrumo.entrypoints.tui.components.logs"
+class = "staged-capability"
+evidence = "BoundedLogPanel, SafeLogRecord and LogSeverity, the bounded renderer for typed pre-redacted log records, sibling to the error panel and staged for the same reason: no screen composes it, and the bound on retained records is a presentation choice a host screen has yet to make."
+
+[[module]]
+name = "cadrumo.entrypoints.tui.components._safe_text"
+class = "staged-capability"
+evidence = "Validation and visible elision for pre-redacted component prose, reached only through the two panels that stage with it: src/cadrumo/entrypoints/tui/components/errors.py imports bounded_pre_redacted_text from it. Transitively dark rather than separately undecided; it becomes live with the first panel a screen composes."
+

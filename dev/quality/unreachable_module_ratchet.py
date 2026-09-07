@@ -257,11 +257,13 @@ def _declares_in_code(source: str, module: str) -> bool:
     """
     tree = ast.parse(source)
     prose = {
-        docstring
+        id(node.body[0].value)
         for node in ast.walk(tree)
         if isinstance(node, ast.Module | ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
-        for docstring in (ast.get_docstring(node),)
-        if docstring is not None
+        and node.body
+        and isinstance(node.body[0], ast.Expr)
+        and isinstance(node.body[0].value, ast.Constant)
+        and isinstance(node.body[0].value.value, str)
     }
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
@@ -273,7 +275,7 @@ def _declares_in_code(source: str, module: str) -> bool:
         elif (
             isinstance(node, ast.Constant)
             and isinstance(node.value, str)
-            and node.value not in prose
+            and id(node) not in prose
             and module in node.value
         ):
             return True

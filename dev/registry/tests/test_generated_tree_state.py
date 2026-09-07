@@ -10,7 +10,11 @@ from __future__ import annotations
 
 import pytest
 
-from ..analysis.generated_tree_state import STATES, classify_comparison
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
+
+from ..analysis import generated_tree_state as _generated_tree_state_module
+from ..analysis.generated_tree_state import STATES, classify_comparison, tree_states
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -67,3 +71,41 @@ def test_every_declared_state_is_reachable() -> None:
         classify_comparison(("0001-record.toml",), committed=True),
     }
     assert reached == set(STATES)
+
+
+def test_a_comparison_failure_is_excluded_not_reported_reproducible(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A raised comparison failure must never read as the strongest possible claim.
+
+    Substituting an empty diff for a re-render that raised would report
+    ``reproducible`` for a committed tree :func:`tree_states` never actually
+    compared -- indistinguishable from a genuine byte-for-byte match. The
+    revision is excluded from the census instead and named on stderr, the
+    same discipline the sibling analysis screens already apply to their own
+    inapplicable revisions.
+    """
+    authority = bundled_authority()
+    modelo_id, revision_id = next(
+        (str(modelo.id), str(revision_id))
+        for modelo in authority.modelos
+        for revision_id in modelo.revisions
+        if (
+            bundled_path("registry", "aeat", "modelos", str(modelo.id), "revisions", str(revision_id), "export")
+            / _MANIFEST
+        ).is_file()
+    )
+
+    def _broken_compare(authority: object, *, modelo: str, revision: str) -> object:
+        raise ValueError(f"synthetic comparison failure for {modelo}/{revision}")
+
+    monkeypatch.setattr(_generated_tree_state_module, "compare_revision_against_committed", _broken_compare)
+
+    states = tree_states(authority, (modelo_id,))
+
+    assert not any(state.revision == revision_id for state in states)
+    assert states == ()
+    warning = capsys.readouterr().err
+    assert "generated_tree_state:" in warning
+    assert "could not be re-rendered for comparison and were excluded" in warning

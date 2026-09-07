@@ -266,6 +266,33 @@ jobs:
         # dev/ and AST-parses every shipped callable.
         run: just audit-size-budget
 
+      - name: Reachability and classification ratchets
+        # Blocking, for the same reason the size budget above is: each of these
+        # was reachable only by manual dispatch, and a gate nobody runs is a
+        # gate that has stopped checking. All four are green at the time of
+        # wiring and fail only on MOVEMENT, so the lane reddens for whoever
+        # causes it rather than carrying standing debt.
+        #
+        # TWO SIBLING GATES ARE DELIBERATELY NOT WIRED HERE, and the omission is
+        # recorded rather than silent. The canonical-authority fixed point is
+        # red on a duplicate destination authority in the full-screen
+        # navigation module, and the unused-symbol ratchet is red on three
+        # orphaned-test entries its own lane has already resolved without
+        # shrinking the baseline. Wiring either would fail every push in every
+        # lane on a defect the wiring change cannot fix, which is the opposite
+        # of what a per-push gate is for. Each becomes wirable the moment its
+        # owning lane clears it: the fixed point when the duplicate authority
+        # is collapsed, the unused-symbol ratchet when its stale entries are
+        # removed.
+        #
+        # The import architecture check is already wired above and is not
+        # repeated here.
+        run: |
+          just check-modelo-action-denominator
+          just check-unreachable-ratchet
+          just check-unconsumed-export-ratchet
+          just check-docstring-reference-ratchet
+
       - name: Tooling and workflow conformance gates
         # The dev-tree unit AND integration gates (workflow structural pins,
         # evidence-transport conformance, shard-plugin partition proof). This is

@@ -273,13 +273,13 @@ def accounted_for_values(sidecar: dict[str, Any]) -> frozenset[str]:
         synthetic = replacement.get("synthetic")
         if not isinstance(synthetic, str) or not synthetic:
             continue
-        if _is_self_replacement(replacement, synthetic):
+        if is_self_replacement(replacement, synthetic):
             continue
         values.add(_canonical(synthetic))
     return frozenset(values)
 
 
-def _is_self_replacement(replacement: dict[str, Any], synthetic: str) -> bool:
+def is_self_replacement(replacement: dict[str, Any], synthetic: str) -> bool:
     """Whether the entry claims a value was replaced by itself.
 
     The row carries both halves of its own claim: ``synthetic`` is the text
@@ -301,6 +301,10 @@ def _is_self_replacement(replacement: dict[str, Any], synthetic: str) -> bool:
 
     A row carrying no ``real_sha256`` makes no such claim and is admitted
     unchanged; only a row whose own two fields contradict each other is cut.
+
+    Public because the round-trip gate needs the same join: it reads its pool
+    of legitimate synthetics out of the very sidecar it is judging, so a
+    self-replacing row would vouch for the cleartext there too.
     """
     real_sha256 = replacement.get("real_sha256")
     if not isinstance(real_sha256, str):

@@ -285,6 +285,16 @@ check-architecture:
 check-unreachable-ratchet:
     @uv run --no-sync python -m dev.quality.unreachable_module_ratchet
 
+# Verify every live modelo action candidate carries a reviewed classification and
+# that no recorded disposition contradicts the observed shape. The table in
+# dev/quality/modelo_workspace_action_classification_table.py is the reviewed
+# denominator; a new modelo command reds this immediately rather than inheriting
+# a mechanical classification, and a row recorded as delivered while observably
+# unwired reds too.
+[group('static-checks')]
+check-modelo-action-denominator:
+    @uv run --no-sync pytest -q -n0 dev/tests/test_modelo_workspace_action_denominator.py
+
 # Verify no reachable module started carrying unused symbols, and no orphaned
 # test module appeared. The baseline in dev/quality/unused_symbol_ratchet.toml
 # may only shrink; a module that grows, or one absent from the file, fails
