@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:fd21a9a00ce3a57982f950ae85dab14f2fa1d83eac00606d6ee25ec58adb2e73'
+body_hash: 'sha256:2720a4a0871681c2196aceeb821e81f6f8f7774fb6674ed7c4cb61eea3ca664d'
 ---
 
 # `reachability-burndown` plan
@@ -194,6 +194,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S93` - Sweep every open finding against its module siblings' in-package consumer counts, which is what exposed the execution-policy cluster, and find none at the threshold that discriminated there; then close the last member of the public-types cluster, which is not the displaced shape the other six were. The workspace atomic projection port is the contract its module says eight envelope realizations exist to satisfy, and structural typing let that claim go unchecked, so give it a conformance gate deriving the required members from the Protocol rather than restating them.; `src/cadrumo/application/modelo/tests/test_workspace_producers.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S94` - Sweep for the shape the workspace port turned out to be, an unreached Protocol whose members shipped classes do satisfy, and act on what it finds: the generated-artifact contract was recorded as having no implementer at all because it requires a sources member no class provides, and two classes in its own module provide all eight. Seven of the eight are bare annotations, so any derivation reading only the class dictionary sees one member and concludes wrongly, which a first draft of the gate reproduced. Give the contract a conformance gate and harden the previous step's the same way.; `src/cadrumo/domain/calculations/registry/tests/test_static_generated_source_applicability.py,src/cadrumo/application/modelo/tests/test_workspace_producers.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S95` - Check whether the wrong-derivation error that produced a false structural claim recurs elsewhere, finding no open cluster still makes one, then close the silence around the art-108 escaso-valor threshold: the figure sits among enforced thresholds in the external constants with nothing saying it is not one, while the bienes-de-inversion register takes eligibility as an operator boolean and stores no acquisition value to compare. Whether the product should judge art. 108 stays an owner decision; the constant now states that it is declared and not yet applied.; `src/cadrumo/core/external_constants.py,dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S96` - Gate the class the escaso-valor threshold belonged to: every constant in the external-constants file is either referenced by shipped code or carries a ledger entry saying why it is not, since a legally grounded figure sitting among enforced ones reads as enforced and no other gate sees the difference. Sweep the file first, finding eight unapplied constants and all eight already adjudicated, so the gate starts green over a real population rather than a repaired one.; `dev/audit/tests/test_external_constants_are_applied_or_adjudicated.py`.
 
 ## Parallelization
 
