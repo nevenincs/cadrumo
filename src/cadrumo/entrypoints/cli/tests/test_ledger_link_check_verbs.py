@@ -161,7 +161,13 @@ def test_check_refuses_foreign_bucket_id_without_unlocked_session() -> None:
         ["app", "ledger", "check", "--bucket-id", "some-other-bucket"],
     )
     assert result.exit_code != 0, result.output
-    assert "Storage runtime is not ready" in result.output
+    # Asserted on the READINESS CODE, not on the sentence. The refusal is
+    # rendered in the operator's language, so matching English prose passed
+    # only under an English ambient locale and said nothing about WHY the
+    # command refused. ``route_bucket_mismatch`` is the stable transport token
+    # that names this exact cause: the supplied bucket does not match the
+    # session's route, which is the bypass this verb must refuse.
+    assert "route_bucket_mismatch" in result.output, result.output
 
 
 def _line_value(output: str, key: str) -> str:
@@ -303,6 +309,10 @@ def test_check_reports_a_one_sided_invoice_link(tmp_path: Path) -> None:
         "action": {
             "action_id": "operator.ledger.link",
             "target_command_key": "ledger.link",
+            # The resolved path a consumer invokes the action by. Carried
+            # because a second frontend reading this notice needs to know how
+            # to run the remedy, not merely that one exists.
+            "cli_path": ["app", "ledger", "link"],
         },
         "argument_bindings": [
             {
