@@ -1338,10 +1338,13 @@ evidence = "Two envelope-level conveniences over the recovery primitives, each a
 
 [[symbol_cluster]]
 name = "committed custody read and replace side with no caller"
-class = "should-be-live"
 area = "adapters/persistence/storage/custody"
-symbols = ["load_committed_profile_custody_summary_witness", "replace_committed_profile_custody_data_file"]
-evidence = "What remains of the committed profile-custody data path after its reader trio was removed as inert: the summary-witness load and the data-file replace, each referenced in production only by its own __all__. The write side of the same package is live -- write_data_files and write_posix_data_files are reached -- so the product commits custody data and can neither read a summary witness back nor replace a committed file. That asymmetry is the finding, and it is the same shape recorded for the earlier reader trio rather than a new one."
+class = "should-be-live"
+symbols = [
+  "load_committed_profile_custody_summary_witness",
+  "replace_committed_profile_custody_data_file",
+]
+evidence = "What remains of the committed profile-custody data path in src/cadrumo/adapters/persistence/storage/custody/capsule.py after its reader trio was removed as inert: the summary-witness load and the data-file replace, each referenced in production only by its own __all__. Re-tested 2026-09-09 by sibling comparison, which sharpens it. The write side is live -- write_data_files and write_posix_data_files carry two production consumers each -- so the product commits custody data and never observes a summary witness back. More telling, the CAS replace directly below the unreached one, replace_committed_profile_custody_envelope, carries two consumers because a passphrase rotation performs it: same module, same CAS design, one wired and one not. So no product operation replaces a committed custody DATA file, and a record needing correction has no guarded path to it, the guard being precisely what the unreached function is. Wiring that path belongs with the repair-remediation decision recorded elsewhere in this ledger and stays open. Both docstrings now state that they are declared and not yet reached, and name the reached sibling."
 remedy_requires_decision = true
 
 [[symbol_cluster]]

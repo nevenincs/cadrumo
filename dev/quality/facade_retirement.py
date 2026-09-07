@@ -286,7 +286,12 @@ def facade_import_sites(
 
     Submodule traversal is excluded, not reported and skipped: a statement that
     names only submodules has nothing to do with the facade, and counting it
-    would put sixteen sites into a worklist that must not touch them.
+    would put sites into a worklist that must not touch them. The count that
+    once stood here is deliberately gone: it was measured when this tree still
+    held forwarding initialisers, and every one has since been retired, so the
+    figure described a state that no longer exists. Restating a fresh number
+    would only restart that clock; the reason the exclusion exists does not
+    depend on how many statements it currently excludes.
     """
     by_dotted = {package.dotted: package for package in packages}
     sites: list[ImportSite] = []

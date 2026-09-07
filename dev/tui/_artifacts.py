@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import shutil
 from datetime import UTC, datetime
+from enum import StrEnum
 from hashlib import sha256
 from pathlib import Path
 from typing import Final
@@ -127,6 +128,41 @@ class InterfaceRecord(BaseModel):
         return bool(self.rendered_by)
 
 
+class FrameFailureKind(StrEnum):
+    """Why a frame is absent from a run, as the manifest records it.
+
+    The one definition of the vocabulary. It was previously spelled three
+    times over a field typed ``str``, which accepted all of them and checked
+    none: an enum in the harness driver carrying two of the values, a bare
+    ``"raster"`` string literal in the command line, and a prose list in the
+    field docstring naming all three.
+    """
+
+    REFUSED = "refused"
+    """An application guard inside the harness said no.
+
+    Raised while BUILDING the app, before a cell is laid out, so neither the
+    terminal geometry nor the appearance can change the answer. Re-asking the
+    same surface at another size is guaranteed to get the same refusal, which
+    is what makes skipping the rest of that surface honest rather than a
+    guess."""
+
+    CRASHED = "crashed"
+    """The harness process died and printed a raw traceback.
+
+    Nothing caught it, so it is not a considered answer: an import error from
+    a half-finished edit in a shared worktree, a killed process, an exhausted
+    drive. Frequently transient, so this kind earns a retry and never condemns
+    the rest of the surface."""
+
+    RASTER = "raster"
+    """The harness produced a frame this tool could not repaint.
+
+    Never retried: the SVG on disk will be identical next time. The failure
+    belongs to the rasteriser rather than to the harness, which is why the
+    harness never reports this kind and only the manifest carries it."""
+
+
 class FailedFrame(BaseModel):
     """One frame the harness would not produce, and why."""
 
@@ -135,9 +171,7 @@ class FailedFrame(BaseModel):
     surface: str
     viewport: str
     theme: str
-    kind: str
-    """``refused`` for an application guard, ``crashed`` for a dead process,
-    ``raster`` when the frame rendered but could not be repainted."""
+    kind: FrameFailureKind
     attempts: int = 1
     detail: str = ""
 
@@ -650,6 +684,7 @@ def write_index(directory: Path, manifest: Manifest) -> Path:
 __all__ = [
     "DEFAULT_RUN_NAME",
     "FRAME_ARTEFACT_KINDS",
+    "FrameFailureKind",
     "INDEX_NAME",
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",
