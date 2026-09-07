@@ -22,6 +22,7 @@ from ..burned_versions import (
     BurnedVersionLedgerError,
     burn_reason,
     burned_versions,
+    canonical_version,
     is_burned,
     read_ledger,
 )
@@ -123,6 +124,66 @@ def test_a_duplicated_version_refuses(tmp_path: Path) -> None:
     ledger = tmp_path / "burned_versions.json"
     ledger.write_text(json.dumps({"burned": [entry, {**entry, "reason": "z" * 50}]}), encoding="utf-8")
     with pytest.raises(BurnedVersionLedgerError, match="more than once"):
+        read_ledger(ledger)
+
+
+@pytest.mark.parametrize(
+    "spelling",
+    ["0.02.1", "0.2.01", "v0.2.1", " 0.2.1 "],
+    ids=["leading-zero", "trailing-zero", "v-prefix", "surrounding-space"],
+)
+def test_a_respelt_burned_number_is_still_burned(spelling: str) -> None:
+    """A burn is a NUMBER, not a string, so every spelling of it is refused.
+
+    Measured against the reader before the ledger owned this rule: ``0.02.1``,
+    ``v0.2.1`` and ``" 0.2.1 "`` each answered "not burned" for the number the
+    ledger's second seeded entry burns. An index resolves all of them to
+    ``0.2.1``, so each was a publishable spelling of a number the world already
+    holds bytes for -- and the refusal that should have stopped it never fired.
+    """
+    assert canonical_version(spelling) == "0.2.1"
+    assert is_burned(spelling), f"{spelling} resolves to a burned number and must be refused"
+    assert burn_reason(spelling) is not None
+
+
+def test_an_unparseable_version_is_answerable_rather_than_an_error() -> None:
+    """Asking about a non-version has an answer, because no entry can be one."""
+    assert canonical_version("not-a-version") is None
+    assert not is_burned("not-a-version")
+    assert burn_reason("not-a-version") is None
+
+
+def test_two_spellings_of_one_number_are_one_burn_not_two(tmp_path: Path) -> None:
+    """The duplicate refusal compares numbers, so a respelling cannot slip past it.
+
+    Before the reader canonicalised, this ledger parsed to two entries with
+    conflicting evidence for one release -- the exact state the duplicate
+    refusal exists to prevent, wearing a different spelling.
+    """
+    ledger = tmp_path / "burned_versions.json"
+    ledger.write_text(
+        json.dumps(
+            {
+                "burned": [
+                    {"version": "0.2.1", "burned_on": "2026-07-27", "reason": "y" * 50},
+                    {"version": "0.02.1", "burned_on": "2026-07-28", "reason": "z" * 50},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    with pytest.raises(BurnedVersionLedgerError, match="more than once"):
+        read_ledger(ledger)
+
+
+def test_an_unparseable_entry_version_refuses(tmp_path: Path) -> None:
+    """An entry whose version is not a version burns nothing and must not parse."""
+    ledger = tmp_path / "burned_versions.json"
+    ledger.write_text(
+        json.dumps({"burned": [{"version": "latest", "burned_on": "2026-07-27", "reason": "y" * 50}]}),
+        encoding="utf-8",
+    )
+    with pytest.raises(BurnedVersionLedgerError, match="unparseable version"):
         read_ledger(ledger)
 
 

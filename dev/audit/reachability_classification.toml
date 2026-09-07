@@ -719,37 +719,13 @@ evidence = "Three Callable type aliases, each appearing exactly once tree-wide a
 
 [[symbol_cluster]]
 name = "unapplied IVA bien de escaso valor threshold"
-class = "should-be-live"
 area = "core"
-resolved = false
+class = "should-be-live"
+symbols = [
+  "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR",
+]
+evidence = "The Art. 108.Dos.5 LIVA exclusion figure, 3005.06 EUR, the euro equivalent of the 500.000 pesetas the consolidated corpus still states: a good acquired below it is NOT a bien de inversion. Re-tested and CONFIRMED. The bienes-de-inversion register does not compute art-108 eligibility -- src/cadrumo/domain/bienes_inversion/register.py carries art108_elegible as an operator-supplied boolean and stores cuota_soportada, the input IVA borne, with no acquisition-value field to compare against the threshold at all. So applying the figure means adding that field and deriving eligibility rather than trusting the flag, which is a schema change and a decision about whether the product judges art. 108 or the operator does; that decision stays open. What did not have to wait on it is the silence: the constant sat in src/cadrumo/core/external_constants.py among enforced thresholds with nothing saying it is not one, and a legally grounded figure in that file reads as applied. Its comment now states that it is declared and not yet applied, and why. Corrected 2026-09-09."
 remedy_requires_decision = true
-symbols = ["IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"]
-evidence = "The Art. 108.Dos.5 LIVA exclusion figure, 3005.06 EUR, the euro equivalent of the 500.000 pesetas the consolidated corpus still states: a good acquired below it is NOT a bien de inversion. Re-tested against the live design and CONFIRMED, with the reason it cannot simply be wired now stated. The bien-de-inversion register does not compute art-108 eligibility -- it carries art108_elegible as an operator-supplied boolean, documented as marking a good the operator recorded but which is excluded from regularisation -- and the record has no acquisition-value field to compare against the threshold at all, storing cuota_soportada, the input IVA borne, instead. So applying the figure means adding an acquisition-value field and deriving eligibility rather than trusting the flag, which is a schema change and a decision about whether the product judges art-108 or the operator does."
-
-
-# ---------------------------------------------------------------------------
-# Legal figures in external_constants are documented defaults, not dead values
-#
-# Nine constants in core/external_constants.py have no production reader, and
-# the first reading -- that AEAT rules were declared but never enforced -- was
-# WRONG. `domain/contribuyente/deduccion_maternidad.py` states the contract
-# outright: "The registry is the causal authority: a missing revision or
-# parameter is a grounding defect and raises RegistryValidationError rather than
-# falling back to the module constant, which is a documented default the
-# arithmetic must not silently prefer."
-#
-# So the arithmetic reads the dated Modelo 100 registry parameter and the
-# constant records the legal figure for a reader. Being unread is the design
-# holding, exactly as it is for the operator-surface CRUD catalogue: a
-# declaration whose only consumers are a reader and a test is not waiting for a
-# caller.
-#
-# This also explains the shape of the tests that touch them. The
-# `external_constants_centralisation` tests assert WHERE a figure lives, not that
-# a calculation applies it, so a constant can pass its test while no arithmetic
-# reads it -- which is correct here, and would be a defect anywhere the registry
-# was not the causal authority.
-# ---------------------------------------------------------------------------
 
 [[symbol_cluster]]
 name = "external constants documented legal defaults"
@@ -1070,12 +1046,12 @@ evidence = "A Protocol is satisfied structurally, so an implementer never names 
 
 [[symbol_cluster]]
 name = "protocols no implementer satisfies"
-class = "should-be-live"
-area = "domain"
-resolved = false
-remedy_requires_decision = true
-symbols = ["GeneratedArtifactInspection"]
-evidence = "The two protocols the same structural check leaves unmatched, and each fails differently. GeneratedArtifactInspection requires a sources member and NO class in the shipped tree provides it, so the contract has no implementer at all. WizardFlowProtocol is runtime_checkable and its docstring states that domain code reaches the descriptor through this core slot and never imports the application-layer WizardFlow class directly; it appears nowhere outside its own module and __all__, so no domain code annotates or isinstance-checks against it and the layering it describes is not in force. Its single required member is only an id, which is why the structural sweep matched nine unrelated classes and proved nothing either way - the module-level evidence is what settles it. The remedy is to implement the one and to route domain code through the other or withdraw both claims."
+area = "domain/calculations/registry"
+class = "design-time-authority"
+symbols = [
+  "GeneratedArtifactInspection",
+]
+evidence = "REVERSED 2026-09-09; the entry's central claim was false. It said GeneratedArtifactInspection requires a sources member that NO class in the shipped tree provides, so the contract has no implementer at all. Two classes in its own module provide it and every other member: StaticGeneratedArtifactInspection and RegistryRevisionInspection at src/cadrumo/domain/calculations/registry/static_inspection.py each declare all eight. The likely origin of the error is the derivation: seven of the contract's eight members are bare annotations and only sources carries a body, so any check reading the class dictionary alone sees one member and concludes the wrong thing -- the same mistake a first draft of the conformance gate made. Resolved by giving the contract that gate in src/cadrumo/domain/calculations/registry/tests/test_static_generated_source_applicability.py, deriving the required members from the Protocol's annotations and class dictionary together and comparing against both shapes the same way. Renaming a contract member fails it and names both shapes. Design-time authority: structural typing means the shapes conform without naming the Protocol, so a conformance gate is what keeps the contract describing them."
 
 [[symbol_cluster]]
 name = "process-cache reset seam: resolved paths"

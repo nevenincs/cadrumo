@@ -295,13 +295,8 @@ def version_conflicts(
             "dispatched for (drafts included, because a draft holds its tag); cut a new version",
         )
 
-    # The canonical form, because the ledger records one spelling per number
-    # while an index treats every spelling of it as the same release: `0.02.1`
-    # would otherwise walk past a ledger entry for `0.2.1` and publish under a
-    # number the world already holds bytes for.
-    canonical = str(candidate)
-    if is_burned(canonical):
-        refusals.append(f"version {version} is burned and can never be minted again: {burn_reason(canonical)}")
+    if is_burned(version):
+        refusals.append(f"version {version} is burned and can never be minted again: {burn_reason(version)}")
 
     if floor is not None:
         recorded = _parsed(floor, label="manifest floor")

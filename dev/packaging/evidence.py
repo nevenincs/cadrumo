@@ -41,8 +41,16 @@ def _is_sha256(value: str) -> bool:
     return _SHA256_RE.fullmatch(value) is not None
 
 
-def _artifact_digest(artifacts: Mapping[str, str]) -> str:
-    """Hash an artifact-name/digest map using the compatibility-runner format."""
+def artifact_map_digest(artifacts: Mapping[str, str]) -> str:
+    """Hash an artifact-name/digest map into the value ``artifact_sha256`` carries.
+
+    The one derivation of this rule. The compatibility runner mints
+    ``artifact_sha256`` with it and this module's validator re-derives the same
+    value to check what it was handed, so the two sides of that comparison
+    cannot drift apart: a second implementation would agree only for as long as
+    four ``json.dumps`` keyword arguments happened to match in two packages,
+    and nothing would have reported the day they stopped.
+    """
     canonical = json.dumps(
         dict(sorted(artifacts.items())),
         ensure_ascii=False,
@@ -119,7 +127,7 @@ class InstallationOutcome(BaseModel):
             raise ValueError("installation artifact names cannot be empty")
         if any(not _is_sha256(digest) for digest in self.artifact_digests.values()):
             raise ValueError("installation artifact digests must be lowercase SHA-256 values")
-        expected = _artifact_digest(self.artifact_digests)
+        expected = artifact_map_digest(self.artifact_digests)
         if self.artifact_sha256 != expected:
             raise ValueError(
                 "installation artifact_sha256 must bind the canonical artifact digest map",

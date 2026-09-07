@@ -46,6 +46,7 @@ from ..packaging._smoke_common import (
     venv_cadrumo_path,
     venv_python_path,
 )
+from ..packaging.evidence import artifact_map_digest
 from ..packaging.python_cohort import digest_install_target, load_python_cohort
 from ..packaging.runtime_wheelhouse import extract_runtime_wheelhouse, load_runtime_wheelhouse
 
@@ -211,7 +212,7 @@ class ProbeEvidence:
                 raise CompatibilityProbeError(f"{name} must be a lowercase SHA-256 digest")
         if any(_SHA256_RE.fullmatch(digest) is None for digest in self.artifact_digests.values()):
             raise CompatibilityProbeError("artifact_digests contains an invalid SHA-256 digest")
-        if self.artifact_digests and self.artifact_sha256 != _canonical_artifact_digest(self.artifact_digests):
+        if self.artifact_digests and self.artifact_sha256 != artifact_map_digest(self.artifact_digests):
             raise CompatibilityProbeError("artifact_sha256 must bind the canonical artifact digest map")
         if self.status == ProbeStatus.PASSED.value and self.failure is not None:
             raise CompatibilityProbeError("passing compatibility evidence cannot contain a failure")
@@ -250,15 +251,6 @@ class ProbeEvidence:
 
 def _digest_bytes(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
-
-
-def _json_bytes(value: object) -> bytes:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode(_UTF_8)
-
-
-def _canonical_artifact_digest(artifacts: Mapping[str, str]) -> str:
-    """Hash an artifact-name/digest projection when a mode has several artifacts."""
-    return _digest_bytes(_json_bytes(dict(sorted(artifacts.items()))))
 
 
 def _read_lock_digest(path: Path) -> str:
@@ -844,7 +836,7 @@ def _load_binary_artifacts(
             ("cadrumo-data-official", "cadrumo-data-official"),
         )
     }
-    return cohort, artifacts, lock_sha256, _canonical_artifact_digest(digests), builder_python
+    return cohort, artifacts, lock_sha256, artifact_map_digest(digests), builder_python
 
 
 def _source_artifacts(
@@ -935,7 +927,7 @@ def run_probe(
     try:
         if selected_mode is ProbeMode.SOURCE:
             artifacts, lock_sha256, artifact_digests, source_commit = _source_artifacts(repo_root, work_dir)
-            artifact_sha256 = _canonical_artifact_digest(artifact_digests)
+            artifact_sha256 = artifact_map_digest(artifact_digests)
         else:
             if cohort_dir is None:
                 raise CompatibilityProbeError("binary mode requires --cohort-dir", category="cohort-missing")
@@ -962,7 +954,7 @@ def run_probe(
                 expected_lock_sha256=lock_sha256,
             )
             artifact_digests["runtime-wheelhouse"] = cohort.sha256["runtime-wheelhouse"]
-            artifact_sha256 = _canonical_artifact_digest(artifact_digests)
+            artifact_sha256 = artifact_map_digest(artifact_digests)
             cohort_manifest_sha256 = sha256_path(cohort.manifest)
             source_commit = cohort.source_commit
         venv, created = _venv(uv, repo_root=repo_root, work_dir=work_dir, selector=python)

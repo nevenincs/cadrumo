@@ -46,6 +46,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
+from packaging.version import InvalidVersion, Version
+
 from .._paths import UTF_8
 
 _UTF_8: Final[str] = UTF_8
@@ -61,11 +63,41 @@ class BurnedVersionLedgerError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class BurnedVersion:
-    """One burned version and the evidence for why it can never return."""
+    """One burned version and the evidence for why it can never return.
+
+    ``version`` is the spelling the ledger author wrote, kept verbatim because
+    it is what a refusal shows an operator. ``canonical`` is the same number
+    under :func:`canonical_version`, and it is the field every membership test
+    compares.
+    """
 
     version: str
     burned_on: date
     reason: str
+    canonical: str
+
+
+def canonical_version(version: str) -> str | None:
+    """Return the PEP 440 canonical spelling of ``version``, or ``None`` if it is not one.
+
+    Version identity is the rule this ledger turns on, so it is implemented
+    here, at the boundary that owns the question, rather than at each caller. A
+    resolver treats every spelling of a number as the same release -- ``0.02.1``
+    and ``0.2.1`` are one release to an index -- while the ledger records one
+    spelling per number. A membership test over raw strings therefore answers
+    "not burned" for every spelling the file does not happen to hold, and that
+    answer is indistinguishable from a number nobody ever published: exactly
+    the silent pass this ledger exists to make impossible.
+
+    ``None`` rather than a refusal, because asking whether an unparseable
+    string is burned is a question with an answer -- no ledger entry can be
+    that string, since :func:`read_ledger` refuses one -- and raising here
+    would turn a membership query into an error path its callers do not have.
+    """
+    try:
+        return str(Version(version))
+    except InvalidVersion:
+        return None
 
 
 def _parse_entry(raw: object, *, index: int) -> BurnedVersion:
@@ -86,13 +118,16 @@ def _parse_entry(raw: object, *, index: int) -> BurnedVersion:
         raise BurnedVersionLedgerError(f"ledger entry {index} has an empty version")
     if not isinstance(reason, str) or not reason.strip():
         raise BurnedVersionLedgerError(f"ledger entry {index} has an empty reason")
+    canonical = canonical_version(version)
+    if canonical is None:
+        raise BurnedVersionLedgerError(f"ledger entry {index} has an unparseable version: {version!r}")
     try:
         burned_on = date.fromisoformat(str(raw["burned_on"]))
     except ValueError as exc:
         raise BurnedVersionLedgerError(
             f"ledger entry {index} has an unparseable burned_on: {raw['burned_on']!r}",
         ) from exc
-    return BurnedVersion(version=version, burned_on=burned_on, reason=reason)
+    return BurnedVersion(version=version, burned_on=burned_on, reason=reason, canonical=canonical)
 
 
 def read_ledger(path: Path) -> tuple[BurnedVersion, ...]:
@@ -129,9 +164,9 @@ def read_ledger(path: Path) -> tuple[BurnedVersion, ...]:
     entries = tuple(_parse_entry(raw, index=index) for index, raw in enumerate(payload["burned"]))
     seen: set[str] = set()
     for entry in entries:
-        if entry.version in seen:
+        if entry.canonical in seen:
             raise BurnedVersionLedgerError(f"burned-version ledger lists {entry.version} more than once")
-        seen.add(entry.version)
+        seen.add(entry.canonical)
     return entries
 
 
@@ -146,8 +181,15 @@ def burned_versions() -> tuple[BurnedVersion, ...]:
 
 
 def is_burned(version: str) -> bool:
-    """Return whether ``version`` may never be minted again."""
-    return any(entry.version == version for entry in burned_versions())
+    """Return whether ``version`` may never be minted again.
+
+    Compared as numbers rather than as strings: see :func:`canonical_version`
+    for why a spelling-sensitive answer here is a burned release shipping.
+    """
+    canonical = canonical_version(version)
+    if canonical is None:
+        return False
+    return any(entry.canonical == canonical for entry in burned_versions())
 
 
 def burn_reason(version: str) -> str | None:
@@ -157,7 +199,10 @@ def burn_reason(version: str) -> str | None:
     version is refused will reach for the ledger to find out why, and a refusal
     that carries its own evidence saves that round trip.
     """
+    canonical = canonical_version(version)
+    if canonical is None:
+        return None
     for entry in burned_versions():
-        if entry.version == version:
+        if entry.canonical == canonical:
             return entry.reason
     return None
