@@ -53,7 +53,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _PRIVATE_REGISTRY_PREFIX = "cadrumo.domain.calculations.registry._"
 _REGISTRY_SOURCE_ROOT = REPO_ROOT / "src" / "cadrumo"
-_REGISTRY_TEST_ROOT = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
+#: The directory the modelo registry TESTS live in. It named the registry
+#: package instead, and `scan_directory` is non-recursive by default, so the
+#: census below matched 0 files where it should match 40 -- a boundary gate
+#: passing without reading one of its subjects.
+#: The registry PACKAGE, whose modules the re-export sweep reads.
+_REGISTRY_PACKAGE_ROOT = REPO_ROOT / "src" / "cadrumo" / "domain" / "calculations" / "registry"
+
+#: The directory the modelo registry TESTS live in. One constant used to serve
+#: both meanings, and the boundary census below took the package -- which
+#: `scan_directory` does not descend by default -- so it matched 0 files where
+#: it should match 40. The module sweep at the foot of this file wanted the
+#: package and was correct; only the census was wrong, so the two are now
+#: named apart rather than one being bent to fit the other.
+_REGISTRY_TEST_ROOT = _REGISTRY_PACKAGE_ROOT / "tests"
+
+#: Floor for that census. An empty scan and a compliant tree report the same
+#: green, which is precisely how this sat unnoticed.
+_MINIMUM_MODELO_REGISTRY_TESTS = 30
 _PROJECT_PYTHON_ROOTS = (REPO_ROOT / "src", REPO_ROOT / "dev")
 _LEDGER_BINDING_PUBLIC_NAMES = (
     "IvaLedgerObservation",
@@ -199,9 +216,14 @@ def test_every_facade_binding_exemption_still_binds_the_facade() -> None:
 
 
 def test_modelo_registry_tests_use_public_registry_api_boundaries() -> None:
+    scanned = scan_directory(_REGISTRY_TEST_ROOT, pattern="test_modelo_*_registry.py", require_root=True)
+    assert len(scanned) >= _MINIMUM_MODELO_REGISTRY_TESTS, (
+        f"the boundary census reached only {len(scanned)} modelo registry test(s) under "
+        f"{_REGISTRY_TEST_ROOT}; a scan that matches nothing cannot find an offender"
+    )
     offenders = sorted(
         f"{path.name} imports .{module_name}"
-        for path in scan_directory(_REGISTRY_TEST_ROOT, pattern="test_modelo_*_registry.py")
+        for path in scanned
         for module_name in _relative_private_imports(path)
         if module_name in _MODELO_REGISTRY_PRIVATE_MODULES
     )
@@ -345,7 +367,7 @@ def test_no_registry_module_exports_a_symbol_it_does_not_define() -> None:
     then free to move while the forwarder still resolves, and the boundary the
     export list appears to describe is not the one imports actually cross.
     """
-    modules = sorted(p for p in _REGISTRY_TEST_ROOT.glob("*.py") if p.name != "__init__.py")
+    modules = sorted(p for p in _REGISTRY_PACKAGE_ROOT.glob("*.py") if p.name != "__init__.py")
     assert len(modules) > 50, f"registry module sweep collapsed to {len(modules)} files"
 
     borrowed: dict[str, list[str]] = {}
