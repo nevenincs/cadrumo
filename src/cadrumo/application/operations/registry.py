@@ -57,6 +57,26 @@ from .models import (
 from .owner import OperationExecutor, OperationResumableExecutor
 from .secret_submission import OperationEphemeralSecretDeclaration
 
+#: Field-name tokens a credential-free journal request may not carry.
+#:
+#: A NAME tripwire, not the wall. What actually keeps a secret out of the
+#: journal is the storage policy plus the separate ephemeral-secret channel;
+#: this catches the case where a field is added whose name says plainly what it
+#: holds. Matching is on whole ``_``-separated tokens, so it never fires on a
+#: word that merely contains one of these.
+#:
+#: The second group are the words THIS codebase uses for credential material
+#: and that the first group missed: the certificate path spells its material
+#: ``cert``/``certificate``/``pem``/``private``, and the Cl@ve factors are a
+#: ``pin`` and a one-time code. ``certificate_pem``, ``clave_pin`` and
+#: ``otp_code`` all split into tokens the original set did not hold, so each
+#: would have journalled its own name unchallenged.
+#:
+#: ``clave`` is deliberately ABSENT despite naming the Cl@ve authentication
+#: system, because it is a homonym: AEAT also spells an operation key
+#: ``clave``, and ``clave``/``clave_operacion``/``clave_declarado`` are real
+#: fields on the detail rows an amendment journals. Adding it would refuse a
+#: lawful M184 or M347 amendment to catch a credential nothing names that way.
 _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
     {
         "auth",
@@ -80,6 +100,17 @@ _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS = frozenset(
         "transport",
         "verifier",
         "wrapped",
+        "cert",
+        "certificate",
+        "challenge",
+        "jwt",
+        "nonce",
+        "otp",
+        "pem",
+        "pin",
+        "private",
+        "salt",
+        "totp",
     }
 )
 _FORBIDDEN_OPERATION_SCHEMA_FORMATS = frozenset({"binary", "byte", "password"})

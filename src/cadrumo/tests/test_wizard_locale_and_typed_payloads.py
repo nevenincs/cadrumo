@@ -28,7 +28,7 @@ import sys
 import pytest
 import yaml
 
-from ..core.directory_scan import scan_directory
+from ..core.directory_scan import DirectoryEntryKind, scan_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -55,10 +55,30 @@ def _wizard_descriptor_translation_keys() -> set[str]:
     return keys
 
 
+#: Floor for the locale census: the supported locale set is four today, and
+#: flooring below it keeps a new locale from failing the gate on arrival.
+_MINIMUM_LOCALES = 4
+
+
 def test_wizard_status_locale_key_exists_in_all_locales() -> None:
     """The key application.wizard.output_labels.status must exist in all locale files."""
     locales_dir = _SRC_ROOT / "locales"
-    for locale_file in scan_directory(locales_dir, pattern="*.yml"):
+    # One catalogue per LOCALE, not every file. `locales/` holds a directory per
+    # locale, so the previous non-recursive `*.yml` scan matched 0 of 328 files
+    # and this gate -- named for checking all locales -- checked none of them.
+    # Sweeping recursively instead is the opposite error: catalogues are split
+    # by domain and only `application.yml` carries the wizard block, so every
+    # other file would fail for correctly not owning it.
+    catalogues = sorted(
+        directory / "application.yml"
+        for directory in scan_directory(locales_dir, select=DirectoryEntryKind.DIRECTORIES, require_root=True)
+    )
+    assert len(catalogues) >= _MINIMUM_LOCALES, (
+        f"the locale sweep reached only {len(catalogues)} locale(s) under {locales_dir}; "
+        "a scan matching nothing asserts the key exists in every locale by checking none"
+    )
+    for locale_file in catalogues:
+        assert locale_file.is_file(), f"{locale_file.parent.name}: application.yml is missing"
         content = yaml.safe_load(locale_file.read_text(encoding="utf-8")) or {}
         application = content.get("application", {})
         wizard = application.get("wizard", {}) if isinstance(application, dict) else {}
