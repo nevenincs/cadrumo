@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:5f5b5b05b6185c95c4846407835b98c7caeb5e2766f60a0b274fcf01521cfde0'
+body_hash: 'sha256:dc90c1d9406e6e1e14cade0625d7ddddf4acef3e3189c523cd6a34c2b305c944'
 ---
 
 # `reachability-burndown` plan
@@ -176,6 +176,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S75` - Relocate the diagnostics-discarding calculate wrapper to the shared test-support home, since its twenty-five call sites across ten modules are all tests while the operator-facing CLI uses the diagnostics variant, and a production entry point that drops non-blocking source advisories is the hazard rather than its disuse; the move carries roughly twenty-five type imports and touches peer-visible test modules, so it needs a machine that can run those suites.; `src/cadrumo/application/modelo/calculation_actions.py,src/cadrumo/tests`.
 - [x] `W05.P12.S76` - Fix the defect this campaign created: the workflow gate stamped the approval basis against a transient empty transaction catalogue while the review queue recomputes it from whatever the bucket holds, so once drafts were persisted and the verdict recomputed, every stored draft in a bucket with a ledger read as an aged-out approval the first time anyone opened the queue. Approve against the bucket's own catalogue, which the approval consumes as a fingerprint and nothing else, and prove it with a case that seeds a bucket transaction first, since against an empty ledger the two digests agree by accident.; `src/cadrumo/application/modelo/workflow_gate.py,src/cadrumo/application/modelo/tests/test_file_flow_draft_persistence.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S77` - Gate the defect class the previous step fixed by hand: no shipped call to the approval or staleness entry points may pass a basis override, since the recomputation that decides whether an approval aged out self-loads every axis from the bucket and an override supplied at approval time and absent at refresh time makes that axis disagree by construction. Passing the keyword at all is the offence, None included. Prove the teeth against the live tree by reintroducing the exact call the workflow gate used.; `src/cadrumo/application/filing/tests/test_approval_basis_is_bucket_derived.py`.
+- [x] `W05.P12.S78` - Remove the module-level lazy attribute hook from the profile-key registry and the alias beside it: the hook resolved a PROFILE_KEYS attribute declared only under TYPE_CHECKING, no shipped module imported it, and its four test importers were racing the wizard registration the hook fires against, which the registry's own docstring already warned about; all four now call the call-time function production already used. The alias was a pure module-level restatement of the canonical classmethod. Keep the required half of the symmetric filtered view, whose optional half is live.; `src/cadrumo/domain/contribuyente/keys.py,src/cadrumo/domain/contribuyente/__init__.py,src/cadrumo/application/user_profile/keys_validation.py,src/cadrumo/application/wizard/compiler.py,dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
