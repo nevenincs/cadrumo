@@ -31,6 +31,8 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from ....adapters.persistence.storage.custody.acceleration_receipt import (
     delete_profile_session,
     mint_profile_session,
@@ -389,6 +391,7 @@ class TestFailClosedRefusals:
         assert projection.precondition_action.argument_bindings[0].value == _LABEL
 
     def test_idle_expiry_refuses(self, _isolated_root: Path) -> None:
+        require_os_credential_store()
         bucket_id, dek = self._aged_session_material(storage_root=_isolated_root, minutes=20)
         assert profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
 
@@ -409,6 +412,7 @@ class TestFailClosedRefusals:
         assert not profile_session_path(storage_root=_isolated_root, profile_id=UUID(bucket_id)).is_file()
 
     def test_absolute_cap_refuses(self, _isolated_root: Path) -> None:
+        require_os_credential_store()
         # Aged well past the 240-minute cap. Mint clamps the idle deadline to the
         # absolute one, so both are elapsed here; asserting the branch by name is
         # what proves the immutable cap - not the sliding window - did the

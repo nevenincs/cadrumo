@@ -8,6 +8,8 @@ from uuid import UUID
 import keyring
 import pytest
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import now as _now
@@ -72,6 +74,7 @@ def test_isolated_profile_storage_root_reaps_a_discovered_bucket_key(tmp_path: P
     the password envelope, the open bucket session and the handover journal all
     live under it and are all required first.
     """
+    require_os_credential_store()
     profile_id = UUID("11111111-1111-4111-8111-111111111111")
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         storage_root.mkdir(parents=True)
