@@ -31,17 +31,28 @@ Scope is the declaration only. A ``run:`` line invoking ``uv`` with an explicit
 ``--python`` is a per-command selection that does not travel, and is left to the
 gates that read run text.
 """
+
 from __future__ import annotations
+
 from typing import Any, Final
-__all__ = ['UV_PYTHON', 'declared_python_selection', 'uv_python_env']
-UV_PYTHON: Final = 'UV_PYTHON'
+
+__all__ = [
+    "UV_PYTHON",
+    "declared_python_selection",
+    "uv_python_env",
+]
+
+#: uv's interpreter-selection environment variable.
+UV_PYTHON: Final = "UV_PYTHON"
+
 
 def _env(container: Any) -> dict[str, Any]:
     """Return ``container``'s ``env:`` mapping, or an empty one."""
     if not isinstance(container, dict):
         return {}
-    declared = container.get('env')
+    declared = container.get("env")
     return declared if isinstance(declared, dict) else {}
+
 
 def uv_python_env(document: dict[str, Any], job_name: str, step_index: int) -> str | None:
     """Return the ``UV_PYTHON`` in scope for one step, innermost declaration first.
@@ -60,16 +71,17 @@ def uv_python_env(document: dict[str, Any], job_name: str, step_index: int) -> s
     Raises:
         KeyError: when ``job_name`` names no job in ``document``.
     """
-    jobs = _dp_or('dev/ci/workflow_python_selection.py:74:or', lambda: document.get('jobs'), lambda: {})
+    jobs = document.get("jobs") or {}
     if job_name not in jobs:
-        raise KeyError(f'no job named {job_name!r} in this workflow')
-    job = _dp_or('dev/ci/workflow_python_selection.py:77:or', lambda: jobs[job_name], lambda: {})
-    steps = _dp_or('dev/ci/workflow_python_selection.py:78:or', lambda: job.get('steps'), lambda: [])
+        raise KeyError(f"no job named {job_name!r} in this workflow")
+    job = jobs[job_name] or {}
+    steps = job.get("steps") or []
     step = steps[step_index] if 0 <= step_index < len(steps) else None
     for scope in (_env(step), _env(job), _env(document)):
         if UV_PYTHON in scope:
             return str(scope[UV_PYTHON])
     return None
+
 
 def declared_python_selection(document: dict[str, Any], job_name: str, step_index: int) -> str | None:
     """Return the interpreter selection this FILE settles for a ``setup-uv`` step.
@@ -91,12 +103,12 @@ def declared_python_selection(document: dict[str, Any], job_name: str, step_inde
     Raises:
         KeyError: when ``job_name`` names no job in ``document``.
     """
-    jobs = _dp_or('dev/ci/workflow_python_selection.py:106:or', lambda: document.get('jobs'), lambda: {})
+    jobs = document.get("jobs") or {}
     if job_name not in jobs:
-        raise KeyError(f'no job named {job_name!r} in this workflow')
-    steps = _dp_or('dev/ci/workflow_python_selection.py:109:or', lambda: (jobs[job_name] or {}).get('steps'), lambda: [])
+        raise KeyError(f"no job named {job_name!r} in this workflow")
+    steps = (jobs[job_name] or {}).get("steps") or []
     step = steps[step_index] if 0 <= step_index < len(steps) else None
-    with_block = step.get('with') if isinstance(step, dict) else None
-    if isinstance(with_block, dict) and with_block.get('python-version') is not None:
-        return str(with_block['python-version'])
+    with_block = step.get("with") if isinstance(step, dict) else None
+    if isinstance(with_block, dict) and with_block.get("python-version") is not None:
+        return str(with_block["python-version"])
     return uv_python_env(document, job_name, step_index)

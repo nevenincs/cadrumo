@@ -43,7 +43,9 @@ denied``. ``ignore_errors`` swallows exactly that error, so a sweep written
 the obvious way reports success and reclaims nothing; :func:`remove_tree`
 clears the attribute and retries instead.
 """
+
 from __future__ import annotations
+
 import argparse
 import os
 import shutil
@@ -54,10 +56,13 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
+
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.tests.collection_storage_root import process_is_live
+
 from .._paths import REPO_ROOT
+
 
 @dataclass(frozen=True)
 class ScratchFamily:
@@ -67,27 +72,119 @@ class ScratchFamily:
     whose prefix is a single leading dot -- cover every hidden entry an
     operator ever put under ``var/``.
     """
+
     prefix: str
     suffix: str
-RELEASE_COHORT_INTEGRATION_FAMILY: Final[ScratchFamily] = ScratchFamily(prefix='release-cohort-integration-', suffix='-source')
-"Bracket the source clone the real double-build integration proof works from.\n\nThat test clones the repository so both of its builds see one immovable tip,\nand removes the clone in a ``finally`` block. The block covers a test that\nfinishes; it covers neither a killed worker nor a killed session, and this\nsuite's own ceiling documents that a worker parked in ``subprocess.wait()``\nexits uncleanly rather than unwinding.\n"
-RELEASE_STAGING_FAMILY: Final[ScratchFamily] = ScratchFamily(prefix='.', suffix='.staging')
-"Bracket the directory a release cohort is assembled in before it is published.\n\n``build_release_cohort`` builds into a hidden sibling of its output and moves\nit into place at the end, removing it explicitly when the build raises. A kill\nlands between those two, leaving a full cohort's worth of bytes behind -- both\nsdists, the wheelhouse and the several-hundred-megabyte source archive. The\nname carries its owner, so the next build's sweep reclaims it on an observed\nliveness answer rather than leaving it for an operator.\n"
-COHORT_BUILD_TREE_FAMILY: Final[ScratchFamily] = ScratchFamily(prefix='.', suffix='-source')
-'Bracket the extracted Git archive ``uv build`` packages the cohort from.\n\nSome thirty-nine thousand files, extracted beside the cohort output and removed\nin a ``finally`` block -- which is the coverage this module exists because of.\n'
-COHORT_SOURCE_ARCHIVE_FAMILY: Final[ScratchFamily] = ScratchFamily(prefix='.', suffix='-source.zip')
-'Bracket the Git archive the build tree is extracted from.\n\nThe one registered family whose member is a FILE rather than a directory: it is\nmoved into the cohort on the success path, so what survives a kill is a\nseveral-hundred-megabyte archive at the working name.\n'
-COMMAND_SPEC_BYTECODE_FAMILY: Final[ScratchFamily] = ScratchFamily(prefix='.', suffix='-command-spec-bytecode')
-'Bracket the redirected bytecode root the installed CommandSpec probe compiles into.\n\nThe probe reads a tree that defines a published artifact, so its bytecode is\nwritten beside that tree rather than into it. Removed in a ``finally`` block on\nevery path the probe returns from, and left behind by every path it does not.\n'
-VAR_SCRATCH_FAMILIES: Final[tuple[ScratchFamily, ...]] = (RELEASE_COHORT_INTEGRATION_FAMILY, RELEASE_STAGING_FAMILY, COHORT_BUILD_TREE_FAMILY, COHORT_SOURCE_ARCHIVE_FAMILY, COMMAND_SPEC_BYTECODE_FAMILY)
-'Every family this sweep will consider. Anything not matching one is spared.\n\nA family added to a mint site and not to this tuple leaks without bound; a\nfamily named here that no mint site writes reclaims nothing and costs one\nstring comparison. The asymmetry is why every mint site builds its name with\n:func:`var_scratch_name` from one of the constants above rather than spelling\nits own, and why a gate reads this tuple back against the sites.\n'
+
+
+RELEASE_COHORT_INTEGRATION_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix="release-cohort-integration-",
+    suffix="-source",
+)
+"""Bracket the source clone the real double-build integration proof works from.
+
+That test clones the repository so both of its builds see one immovable tip,
+and removes the clone in a ``finally`` block. The block covers a test that
+finishes; it covers neither a killed worker nor a killed session, and this
+suite's own ceiling documents that a worker parked in ``subprocess.wait()``
+exits uncleanly rather than unwinding.
+"""
+
+RELEASE_STAGING_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".",
+    suffix=".staging",
+)
+"""Bracket the directory a release cohort is assembled in before it is published.
+
+``build_release_cohort`` builds into a hidden sibling of its output and moves
+it into place at the end, removing it explicitly when the build raises. A kill
+lands between those two, leaving a full cohort's worth of bytes behind -- both
+sdists, the wheelhouse and the several-hundred-megabyte source archive. The
+name carries its owner, so the next build's sweep reclaims it on an observed
+liveness answer rather than leaving it for an operator.
+"""
+
+COHORT_BUILD_TREE_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".",
+    suffix="-source",
+)
+"""Bracket the extracted Git archive ``uv build`` packages the cohort from.
+
+Some thirty-nine thousand files, extracted beside the cohort output and removed
+in a ``finally`` block -- which is the coverage this module exists because of.
+"""
+
+COHORT_SOURCE_ARCHIVE_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".",
+    suffix="-source.zip",
+)
+"""Bracket the Git archive the build tree is extracted from.
+
+The one registered family whose member is a FILE rather than a directory: it is
+moved into the cohort on the success path, so what survives a kill is a
+several-hundred-megabyte archive at the working name.
+"""
+
+COMMAND_SPEC_BYTECODE_FAMILY: Final[ScratchFamily] = ScratchFamily(
+    prefix=".",
+    suffix="-command-spec-bytecode",
+)
+"""Bracket the redirected bytecode root the installed CommandSpec probe compiles into.
+
+The probe reads a tree that defines a published artifact, so its bytecode is
+written beside that tree rather than into it. Removed in a ``finally`` block on
+every path the probe returns from, and left behind by every path it does not.
+"""
+
+VAR_SCRATCH_FAMILIES: Final[tuple[ScratchFamily, ...]] = (
+    RELEASE_COHORT_INTEGRATION_FAMILY,
+    RELEASE_STAGING_FAMILY,
+    COHORT_BUILD_TREE_FAMILY,
+    COHORT_SOURCE_ARCHIVE_FAMILY,
+    COMMAND_SPEC_BYTECODE_FAMILY,
+)
+"""Every family this sweep will consider. Anything not matching one is spared.
+
+A family added to a mint site and not to this tuple leaks without bound; a
+family named here that no mint site writes reclaims nothing and costs one
+string comparison. The asymmetry is why every mint site builds its name with
+:func:`var_scratch_name` from one of the constants above rather than spelling
+its own, and why a gate reads this tuple back against the sites.
+"""
+
 _STALE_AFTER_SECONDS: Final[float] = 24 * 60 * 60
-'Age past which a scratch entry is reclaimed on mtime alone.\n\nDeliberately the same generous day used for the abandoned storage roots under\nthe OS temp directory, and for the same reason: mtime is only a PROXY for\nliveness. A build that has been quiet for a while is indistinguishable on disk\nfrom an abandoned one, so where mtime is the only signal the threshold has to\nout-wait the slowest plausible quiet period. No release build runs for a day;\none that somehow did would be spared for as long as it kept writing.\n'
+"""Age past which a scratch entry is reclaimed on mtime alone.
+
+Deliberately the same generous day used for the abandoned storage roots under
+the OS temp directory, and for the same reason: mtime is only a PROXY for
+liveness. A build that has been quiet for a while is indistinguishable on disk
+from an abandoned one, so where mtime is the only signal the threshold has to
+out-wait the slowest plausible quiet period. No release build runs for a day;
+one that somehow did would be spared for as long as it kept writing.
+"""
+
 _ABANDONED_AFTER_SECONDS: Final[float] = 10 * 60
-'Grace applied only AFTER the owning process is confirmed gone.\n\nNot a staleness estimate: it covers clock skew on the mtime read and a process\nthat has just exited whose own cleanup is still mid-removal. It applies only to\na name that carries a readable owner, which is the only case where liveness is\nobserved rather than inferred.\n'
+"""Grace applied only AFTER the owning process is confirmed gone.
+
+Not a staleness estimate: it covers clock skew on the mtime read and a process
+that has just exited whose own cleanup is still mid-removal. It applies only to
+a name that carries a readable owner, which is the only case where liveness is
+observed rather than inferred.
+"""
+
 _MAX_OWNER_DIGITS: Final[int] = 10
-_MAX_OWNER_PID: Final[int] = 2 ** 31
-'Bounds on the owner token a scratch name may claim to carry.\n\nA process identifier is a small positive integer on every platform this runs\non. Refusing anything outside that range costs nothing and keeps a hand-created\ndirectory -- whose name this module has no control over -- from reaching\n:func:`int` with a thousand-digit run of decimals, which raises rather than\nreturning a number. The sweep runs from a session hook that suppresses only\n``OSError``, so a value error there would abort collection for the whole suite\ninstead of sparing one directory.\n'
+_MAX_OWNER_PID: Final[int] = 2**31
+"""Bounds on the owner token a scratch name may claim to carry.
+
+A process identifier is a small positive integer on every platform this runs
+on. Refusing anything outside that range costs nothing and keeps a hand-created
+directory -- whose name this module has no control over -- from reaching
+:func:`int` with a thousand-digit run of decimals, which raises rather than
+returning a number. The sweep runs from a session hook that suppresses only
+``OSError``, so a value error there would abort collection for the whole suite
+instead of sparing one directory.
+"""
+
 
 def var_scratch_name(family: ScratchFamily, body: str) -> str:
     """Return one ``var/`` name in ``family``, owned by this process.
@@ -110,8 +207,9 @@ def var_scratch_name(family: ScratchFamily, body: str) -> str:
         A name :func:`matching_family` places in ``family``.
     """
     if not body:
-        raise ValueError(f'a scratch name needs a body to distinguish it: {family!r}')
-    return f'{family.prefix}{os.getpid()}-{body}{family.suffix}'
+        raise ValueError(f"a scratch name needs a body to distinguish it: {family!r}")
+    return f"{family.prefix}{os.getpid()}-{body}{family.suffix}"
+
 
 def matching_family(name: str) -> ScratchFamily | None:
     """Return the scratch family ``name`` belongs to, or ``None`` for anything else.
@@ -120,9 +218,18 @@ def matching_family(name: str) -> ScratchFamily | None:
     reaches this function; nothing reaches the removal without passing it.
     """
     for family in VAR_SCRATCH_FAMILIES:
-        if name.startswith(family.prefix) and name.endswith(family.suffix) and (len(name) > len(family.prefix) + len(family.suffix)):
+        # The length test keeps the two anchors from overlapping, so a bare
+        # ``.staging`` -- prefix and suffix satisfied by the same characters --
+        # is not read as a member of a family whose real names carry a body
+        # between them.
+        if (
+            name.startswith(family.prefix)
+            and name.endswith(family.suffix)
+            and len(name) > len(family.prefix) + len(family.suffix)
+        ):
             return family
     return None
+
 
 def _owning_pid(name: str, family: ScratchFamily) -> int | None:
     """Return the process identifier ``name`` carries, or ``None`` if it carries none.
@@ -139,13 +246,20 @@ def _owning_pid(name: str, family: ScratchFamily) -> int | None:
     would abort collection for every packaging test rather than spare one
     directory.
     """
-    owner = name.removeprefix(family.prefix).split('-', maxsplit=1)[0]
+    owner = name.removeprefix(family.prefix).split("-", maxsplit=1)[0]
     if not owner.isdecimal() or len(owner) > _MAX_OWNER_DIGITS:
         return None
     pid = int(owner)
     return pid if 0 < pid < _MAX_OWNER_PID else None
 
-def _is_reclaimable(candidate: Path, family: ScratchFamily, reference: float, *, reclaim_by_age: bool) -> bool:
+
+def _is_reclaimable(
+    candidate: Path,
+    family: ScratchFamily,
+    reference: float,
+    *,
+    reclaim_by_age: bool,
+) -> bool:
     """Decide whether ``candidate`` may be removed, erring towards retention.
 
     Two independent grounds. The first is OBSERVED: the name carries an owner,
@@ -179,7 +293,8 @@ def _is_reclaimable(candidate: Path, family: ScratchFamily, reference: float, *,
     if age <= _ABANDONED_AFTER_SECONDS:
         return False
     pid = _owning_pid(candidate.name, family)
-    return pid is not None and (not process_is_live(pid))
+    return pid is not None and not process_is_live(pid)
+
 
 def remove_tree(directory: Path) -> bool:
     """Remove ``directory`` whole, clearing read-only attributes that block it.
@@ -198,12 +313,13 @@ def remove_tree(directory: Path) -> bool:
     def _clear_read_only(action: Callable[[str], object], path: str, _exc: BaseException) -> None:
         os.chmod(path, stat.S_IWRITE)
         action(path)
+
     try:
         shutil.rmtree(directory, onexc=_clear_read_only)
     except OSError:
-        _dp_mark('dev/packaging/build_scratch_reclaim.py:319:except')
         return not directory.exists()
     return True
+
 
 def remove_scratch(candidate: Path) -> bool:
     """Remove one judged scratch entry, whichever kind it is.
@@ -222,11 +338,17 @@ def remove_scratch(candidate: Path) -> bool:
         os.chmod(candidate, stat.S_IWRITE)
         candidate.unlink(missing_ok=True)
     except OSError:
-        _dp_mark('dev/packaging/build_scratch_reclaim.py:340:except')
         return not candidate.exists()
     return True
 
-def reclaimable_scratch(var_root: Path, *, now: float | None=None, exclude: Path | None=None, reclaim_by_age: bool=False) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
+
+def reclaimable_scratch(
+    var_root: Path,
+    *,
+    now: float | None = None,
+    exclude: Path | None = None,
+    reclaim_by_age: bool = False,
+) -> tuple[tuple[Path, ...], tuple[Path, ...]]:
     """Judge every ``var_root`` entry, deleting nothing.
 
     Separated from the removal so the decision is inspectable on its own: an
@@ -250,6 +372,10 @@ def reclaimable_scratch(var_root: Path, *, now: float | None=None, exclude: Path
             spared.append(candidate)
             continue
         try:
+            # A link is not the tree it names, and the families here are
+            # anchored on a name rather than on an inode: removing a link
+            # because its name matched would remove whatever an operator
+            # pointed it at.
             if is_link_like(candidate):
                 continue
             verdict = _is_reclaimable(candidate, family, reference, reclaim_by_age=reclaim_by_age)
@@ -257,9 +383,16 @@ def reclaimable_scratch(var_root: Path, *, now: float | None=None, exclude: Path
             spared.append(candidate)
             continue
         (reclaimable if verdict else spared).append(candidate)
-    return (tuple(reclaimable), tuple(spared))
+    return tuple(reclaimable), tuple(spared)
 
-def sweep_var_scratch(var_root: Path, *, now: float | None=None, exclude: Path | None=None, reclaim_by_age: bool=False) -> tuple[int, int]:
+
+def sweep_var_scratch(
+    var_root: Path,
+    *,
+    now: float | None = None,
+    exclude: Path | None = None,
+    reclaim_by_age: bool = False,
+) -> tuple[int, int]:
     """Reclaim abandoned build scratch under ``var_root``, sparing everything else.
 
     Safe to run concurrently and repeatedly: nothing it removes belongs to a
@@ -287,7 +420,12 @@ def sweep_var_scratch(var_root: Path, *, now: float | None=None, exclude: Path |
         safety evidence: a sweep that took everything and a sweep that took
         only what it should both report a removal count.
     """
-    reclaimable, spared = reclaimable_scratch(var_root, now=now, exclude=exclude, reclaim_by_age=reclaim_by_age)
+    reclaimable, spared = reclaimable_scratch(
+        var_root,
+        now=now,
+        exclude=exclude,
+        reclaim_by_age=reclaim_by_age,
+    )
     removed = 0
     retained = len(spared)
     for candidate in reclaimable:
@@ -295,14 +433,16 @@ def sweep_var_scratch(var_root: Path, *, now: float | None=None, exclude: Path |
             removed += 1
         else:
             retained += 1
-    return (removed, retained)
+    return removed, retained
+
 
 def _scratch_bytes(candidate: Path) -> int:
     if candidate.is_file():
         return candidate.stat().st_size
-    return sum((entry.stat().st_size for entry in scan_directory(candidate, recursive=True) if entry.is_file()))
+    return sum(entry.stat().st_size for entry in scan_directory(candidate, recursive=True) if entry.is_file())
 
-def main(argv: list[str] | None=None) -> int:
+
+def main(argv: list[str] | None = None) -> int:
     """Report abandoned ``var/`` build scratch, and reclaim it under ``--apply``.
 
     The operator switch for the inferred ground. Every automatic caller acts
@@ -311,28 +451,55 @@ def main(argv: list[str] | None=None) -> int:
     has -- is reported here and removed only when asked.
     """
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--var-root', type=Path, default=REPO_ROOT / 'var')
-    parser.add_argument('--apply', action='store_true', help='remove the scratch entries judged abandoned; without it nothing is deleted')
-    parser.add_argument('--observed-only', action='store_true', help='consider only scratch whose named owner is confirmed gone, as the automatic callers do')
+    parser.add_argument("--var-root", type=Path, default=REPO_ROOT / "var")
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="remove the scratch entries judged abandoned; without it nothing is deleted",
+    )
+    parser.add_argument(
+        "--observed-only",
+        action="store_true",
+        help="consider only scratch whose named owner is confirmed gone, as the automatic callers do",
+    )
     arguments = parser.parse_args(argv)
     var_root = arguments.var_root.resolve()
     reclaimable, spared = reclaimable_scratch(var_root, reclaim_by_age=not arguments.observed_only)
-    print(f'build scratch under {var_root}', file=sys.stdout)
+
+    print(f"build scratch under {var_root}", file=sys.stdout)
     for candidate in spared:
-        print(f'  SPARE {candidate.name}', file=sys.stdout)
+        print(f"  SPARE {candidate.name}", file=sys.stdout)
     total = 0
     for candidate in reclaimable:
         size = _scratch_bytes(candidate)
         total += size
-        print(f'  REAP  {candidate.name}  {size / 1000000000:.3f} GB', file=sys.stdout)
-    verb = 'reclaimed' if arguments.apply else 'reclaimable'
-    print(f'  {verb}: {total / 1000000000:.3f} GB   spared: {len(spared)}', file=sys.stdout)
+        print(f"  REAP  {candidate.name}  {size / 1_000_000_000:.3f} GB", file=sys.stdout)
+    verb = "reclaimed" if arguments.apply else "reclaimable"
+    print(f"  {verb}: {total / 1_000_000_000:.3f} GB   spared: {len(spared)}", file=sys.stdout)
     if arguments.apply:
         for candidate in reclaimable:
             remove_scratch(candidate)
     else:
-        print('  nothing was deleted; pass --apply to act on the REAP lines above', file=sys.stdout)
+        print("  nothing was deleted; pass --apply to act on the REAP lines above", file=sys.stdout)
     return 0
-__all__ = ['COHORT_BUILD_TREE_FAMILY', 'COHORT_SOURCE_ARCHIVE_FAMILY', 'COMMAND_SPEC_BYTECODE_FAMILY', 'RELEASE_COHORT_INTEGRATION_FAMILY', 'RELEASE_STAGING_FAMILY', 'VAR_SCRATCH_FAMILIES', 'ScratchFamily', 'matching_family', 'reclaimable_scratch', 'remove_scratch', 'remove_tree', 'sweep_var_scratch', 'var_scratch_name']
-if __name__ == '__main__':
+
+
+__all__ = [
+    "COHORT_BUILD_TREE_FAMILY",
+    "COHORT_SOURCE_ARCHIVE_FAMILY",
+    "COMMAND_SPEC_BYTECODE_FAMILY",
+    "RELEASE_COHORT_INTEGRATION_FAMILY",
+    "RELEASE_STAGING_FAMILY",
+    "VAR_SCRATCH_FAMILIES",
+    "ScratchFamily",
+    "matching_family",
+    "reclaimable_scratch",
+    "remove_scratch",
+    "remove_tree",
+    "sweep_var_scratch",
+    "var_scratch_name",
+]
+
+
+if __name__ == "__main__":
     raise SystemExit(main())

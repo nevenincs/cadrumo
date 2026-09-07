@@ -31,16 +31,33 @@ model that narrowed it would report ten per-push jobs as unreachable on push and
 bury the one real finding in noise. Refusing to narrow what it cannot prove is
 what keeps the single true case legible.
 """
+
 from __future__ import annotations
+
 import re
 from dataclasses import dataclass
 from typing import Any, Final
-__all__ = ['JobGate', 'dispatch_input_defaults', 'job_gate', 'narrowed_events', 'opt_in_conjuncts']
-_INTERPOLATION: Final = re.compile('\\$\\{\\{(?P<body>.*?)\\}\\}', re.DOTALL)
-_EVENT_IS: Final = re.compile('github\\.event_name\\s*==\\s*[\'\\"](?P<event>[A-Za-z_]+)[\'\\"]')
-_EVENT_IS_NOT: Final = re.compile('github\\.event_name\\s*!=\\s*[\'\\"](?P<event>[A-Za-z_]+)[\'\\"]')
-_BARE_INPUT: Final = re.compile('^inputs\\.(?P<name>[A-Za-z_][A-Za-z0-9_-]*)$')
-_FALSY_DEFAULTS: Final = (None, False, '', 'false', 'False', 0)
+
+__all__ = [
+    "JobGate",
+    "dispatch_input_defaults",
+    "job_gate",
+    "narrowed_events",
+    "opt_in_conjuncts",
+]
+
+#: ``${{ ... }}`` wrappers, which carry no meaning for this analysis.
+_INTERPOLATION: Final = re.compile(r"\$\{\{(?P<body>.*?)\}\}", re.DOTALL)
+
+_EVENT_IS: Final = re.compile(r"github\.event_name\s*==\s*['\"](?P<event>[A-Za-z_]+)['\"]")
+_EVENT_IS_NOT: Final = re.compile(r"github\.event_name\s*!=\s*['\"](?P<event>[A-Za-z_]+)['\"]")
+_BARE_INPUT: Final = re.compile(r"^inputs\.(?P<name>[A-Za-z_][A-Za-z0-9_-]*)$")
+
+#: Values a ``workflow_dispatch`` input default can carry that leave the gated
+#: job unreached by an ordinary dispatch. ``None`` is the absent default, which
+#: GitHub treats as empty and therefore falsy for a boolean gate.
+_FALSY_DEFAULTS: Final = (None, False, "", "false", "False", 0)
+
 
 @dataclass(frozen=True, slots=True)
 class JobGate:
@@ -52,6 +69,7 @@ class JobGate:
     requires a ``workflow_dispatch`` input whose declared default is falsy, so
     even a plain press of the button does not reach it.
     """
+
     events: tuple[str, ...]
     opt_in: tuple[str, ...] = ()
 
@@ -60,13 +78,15 @@ class JobGate:
         """Return whether an ordinary run of a reaching event still skips this job."""
         return bool(self.opt_in)
 
+
 def _condition_text(condition: object) -> str:
     """Return a job ``if:`` as bare expression text, or the empty string."""
     if condition is None:
-        return ''
+        return ""
     text = str(condition).strip()
     match = _INTERPOLATION.fullmatch(text)
-    return (match.group('body') if match is not None else text).strip()
+    return (match.group("body") if match is not None else text).strip()
+
 
 def narrowed_events(condition: object, events: tuple[str, ...]) -> tuple[str, ...]:
     """Return ``events`` minus what ``condition`` provably excludes.
@@ -77,15 +97,16 @@ def narrowed_events(condition: object, events: tuple[str, ...]) -> tuple[str, ..
     rather than narrowing wrongly.
     """
     text = _condition_text(condition)
-    if not text or '||' in text:
+    if not text or "||" in text:
         return events
-    required = {match.group('event') for match in _EVENT_IS.finditer(text)}
-    forbidden = {match.group('event') for match in _EVENT_IS_NOT.finditer(text)}
+    required = {match.group("event") for match in _EVENT_IS.finditer(text)}
+    forbidden = {match.group("event") for match in _EVENT_IS_NOT.finditer(text)}
     kept = set(events)
     if required:
         kept &= required
     kept -= forbidden
     return tuple(sorted(kept))
+
 
 def opt_in_conjuncts(condition: object) -> tuple[str, ...]:
     """Return the input names a condition requires as bare truthiness.
@@ -96,14 +117,15 @@ def opt_in_conjuncts(condition: object) -> tuple[str, ...]:
     not proven -- the same refusal :func:`narrowed_events` makes about ``||``.
     """
     text = _condition_text(condition)
-    if not text or '||' in text:
+    if not text or "||" in text:
         return ()
     names = []
-    for conjunct in text.split('&&'):
-        match = _BARE_INPUT.match(conjunct.strip().strip('()').strip())
+    for conjunct in text.split("&&"):
+        match = _BARE_INPUT.match(conjunct.strip().strip("()").strip())
         if match is not None:
-            names.append(match.group('name'))
+            names.append(match.group("name"))
     return tuple(names)
+
 
 def dispatch_input_defaults(document: dict[str, Any]) -> dict[str, Any]:
     """Return the ``workflow_dispatch`` input defaults declared by a workflow.
@@ -114,16 +136,17 @@ def dispatch_input_defaults(document: dict[str, Any]) -> dict[str, Any]:
     and an empty default map would report every gated job as reachable by an
     ordinary dispatch -- the silently-empty answer this module exists to refuse.
     """
-    block = _dp_get('dev/ci/workflow_job_gates.py:139:get', document, 'on', document.get(True))
+    block = document.get("on", document.get(True))
     if not isinstance(block, dict):
         return {}
-    dispatch = block.get('workflow_dispatch')
+    dispatch = block.get("workflow_dispatch")
     if not isinstance(dispatch, dict):
         return {}
-    inputs = dispatch.get('inputs')
+    inputs = dispatch.get("inputs")
     if not isinstance(inputs, dict):
         return {}
-    return {str(name): spec.get('default') if isinstance(spec, dict) else None for name, spec in inputs.items()}
+    return {str(name): spec.get("default") if isinstance(spec, dict) else None for name, spec in inputs.items()}
+
 
 def job_gate(document: dict[str, Any], job_name: str, events: tuple[str, ...]) -> JobGate:
     """Return the events reaching ``job_name`` and the opt-in inputs it requires.
@@ -132,10 +155,10 @@ def job_gate(document: dict[str, Any], job_name: str, events: tuple[str, ...]) -
     a declared job whose guard narrows to nothing: both yield an empty event
     tuple, and the caller that cares reads ``job_name in document["jobs"]``.
     """
-    job = (document.get('jobs') or {}).get(job_name)
+    job = (document.get("jobs") or {}).get(job_name)
     if not isinstance(job, dict):
         return JobGate(events=())
-    condition = job.get('if')
+    condition = job.get("if")
     defaults = dispatch_input_defaults(document)
-    opt_in = tuple((name for name in opt_in_conjuncts(condition) if _dp_get('dev/ci/workflow_job_gates.py:163:get', defaults, name, None) in _FALSY_DEFAULTS))
+    opt_in = tuple(name for name in opt_in_conjuncts(condition) if defaults.get(name, None) in _FALSY_DEFAULTS)
     return JobGate(events=narrowed_events(condition, events), opt_in=opt_in)

@@ -17,15 +17,24 @@ CLI's. Local, bundle-local-wheel rows (``cadrumo`` and the two data companions)
 are excluded via ``--no-emit-package``; only genuine third-party leaves are
 pinned.
 """
+
 from __future__ import annotations
+
 import shutil
 import subprocess
 import tomllib
 from pathlib import Path
+
 from .._paths import UTF_8
+
 _UTF_8 = UTF_8
-_EXPORTED_PACKAGE = 'cadrumo'
-_CONSTRAINTS_HEADER = '# Runtime dependency closure pinned from the tested uv.lock.\n# Generated at packaging time; do not edit by hand.\n'
+#: The distribution whose resolution is exported.
+_EXPORTED_PACKAGE = "cadrumo"
+_CONSTRAINTS_HEADER = (
+    "# Runtime dependency closure pinned from the tested uv.lock.\n"
+    "# Generated at packaging time; do not edit by hand.\n"
+)
+
 
 def local_product_packages(*, repo_root: Path) -> tuple[str, ...]:
     """Return the workspace-local package names, read from ``uv.lock``.
@@ -46,14 +55,24 @@ def local_product_packages(*, repo_root: Path) -> tuple[str, ...]:
     that is not ``registry``, so asking it removes the restatement instead of
     maintaining a second copy of it.
     """
-    lock = repo_root / 'uv.lock'
+    lock = repo_root / "uv.lock"
     if not lock.is_file():
-        raise SystemExit(f'uv.lock not found at {lock}')
+        raise SystemExit(f"uv.lock not found at {lock}")
     document = tomllib.loads(lock.read_text(encoding=_UTF_8))
-    names = tuple(sorted((str(entry['name']) for entry in _dp_get('dev/packaging/uv_constraints.py:65:get', document, 'package', ()) if isinstance(entry, dict) and 'name' in entry and ('registry' not in (entry.get('source') or {})))))
+    names = tuple(
+        sorted(
+            str(entry["name"])
+            for entry in document.get("package", ())
+            if isinstance(entry, dict) and "name" in entry and "registry" not in (entry.get("source") or {})
+        )
+    )
     if not names:
-        raise SystemExit(f"no workspace-local package found in {lock}; with an empty exclusion set the product's own bundle-local wheels would be pinned as index requirements")
+        raise SystemExit(
+            f"no workspace-local package found in {lock}; with an empty exclusion set the "
+            "product's own bundle-local wheels would be pinned as index requirements"
+        )
     return names
+
 
 def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
     """Return the pinned third-party runtime requirement lines from ``uv.lock``.
@@ -66,33 +85,53 @@ def export_runtime_constraints(*, repo_root: Path) -> tuple[str, ...]:
     closure is the whole runtime surface the installers need — the agent
     server's requirements are cadrumo's requirements.
     """
-    lock = repo_root / 'uv.lock'
+    lock = repo_root / "uv.lock"
     if not lock.is_file():
-        raise SystemExit(f'uv.lock not found at {lock}')
-    uv = shutil.which('uv')
+        raise SystemExit(f"uv.lock not found at {lock}")
+    uv = shutil.which("uv")
     if uv is None:
-        raise SystemExit('uv is required to export the pinned dependency constraints')
-    command = [uv, 'export', '--frozen', '--no-dev', '--no-default-groups', '--package', _EXPORTED_PACKAGE, '--no-hashes', '--no-annotate', '--no-header', '--no-emit-project']
+        raise SystemExit("uv is required to export the pinned dependency constraints")
+    command = [
+        uv,
+        "export",
+        "--frozen",
+        "--no-dev",
+        "--no-default-groups",
+        "--package",
+        _EXPORTED_PACKAGE,
+        "--no-hashes",
+        "--no-annotate",
+        "--no-header",
+        "--no-emit-project",
+    ]
     for package in local_product_packages(repo_root=repo_root):
-        command.extend(('--no-emit-package', package))
-    result = subprocess.run(command, cwd=repo_root, capture_output=True, text=True, check=False, encoding=_UTF_8)
+        command.extend(("--no-emit-package", package))
+    result = subprocess.run(  # noqa: S603 - fixed uv argv against the repository lockfile
+        command,
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        encoding=_UTF_8,
+    )
     if result.returncode != 0:
-        raise SystemExit(f'uv export failed: {result.stderr.strip()}')
+        raise SystemExit(f"uv export failed: {result.stderr.strip()}")
     lines: list[str] = []
     for raw in result.stdout.splitlines():
         stripped = raw.strip()
-        if not stripped or stripped.startswith('#'):
+        if not stripped or stripped.startswith("#"):
             continue
-        if stripped.startswith(('./', '../', '-e ', '-r ', 'file:')):
-            raise SystemExit(f'uv export emitted a non-pinned local row: {stripped!r}')
-        if '==' not in stripped:
-            raise SystemExit(f'uv export row is not version-pinned: {stripped!r}')
+        if stripped.startswith(("./", "../", "-e ", "-r ", "file:")):
+            raise SystemExit(f"uv export emitted a non-pinned local row: {stripped!r}")
+        if "==" not in stripped:
+            raise SystemExit(f"uv export row is not version-pinned: {stripped!r}")
         lines.append(stripped)
     if not lines:
-        raise SystemExit('uv export produced an empty runtime constraint closure')
+        raise SystemExit("uv export produced an empty runtime constraint closure")
     return tuple(lines)
 
-def render_constraints_file(lines: tuple[str, ...], *, min_uv_version: str | None=None) -> str:
+
+def render_constraints_file(lines: tuple[str, ...], *, min_uv_version: str | None = None) -> str:
     """Render the pinned requirement lines as a deterministic pip constraints file.
 
     When ``min_uv_version`` is supplied, the header additionally states the
@@ -101,5 +140,8 @@ def render_constraints_file(lines: tuple[str, ...], *, min_uv_version: str | Non
     """
     header = _CONSTRAINTS_HEADER
     if min_uv_version is not None:
-        header += f'# Requires uv >= {min_uv_version}: uv sync honours [tool.uv] constraint-dependencies only from that release; an older uv ignores these pins.\n'
-    return header + ''.join((f'{line}\n' for line in lines))
+        header += (
+            f"# Requires uv >= {min_uv_version}: uv sync honours [tool.uv] "
+            "constraint-dependencies only from that release; an older uv ignores these pins.\n"
+        )
+    return header + "".join(f"{line}\n" for line in lines)

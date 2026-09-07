@@ -2937,8 +2937,6 @@ cli:
       command_input_invalid_fallback: un o més camps no han superat la validació
       confirm_required: Passa --yes per confirmar aquesta operació destructiva del
         llibre.
-      invalid_category: 'Categoria de despesa desconeguda ''{category}''. Categories
-        conegudes: {known}.'
       invalid_decimal: 'Valor decimal no vàlid per a %{label}: %{raw}. Utilitzeu el
         punt com a separador decimal i sense separador de milers, p. ex. 1234.56.'
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica

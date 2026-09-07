@@ -8,85 +8,156 @@ workflow topology), so these gates pin the boundaries: the T0 carve-out set,
 the T2 detector's paths, the fork pull-request guard on every fleet-facing job, the
 repo-wide zero-Actions-artifact posture, and the workflow naming convention.
 """
+
 from __future__ import annotations
+
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Final
+
 import pytest
 import yaml
+
 from cadrumo.core.directory_scan import scan_directory
+
 from ..._paths import REPO_ROOT
 from ..workflow_permissions import granted_level
 from ..workflow_run_text import executed_text
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-_WORKFLOWS_DIR: Final = REPO_ROOT / '.github' / 'workflows'
-_TRIGGER: Final = _WORKFLOWS_DIR / 'packaging-campaign-trigger.yml'
-_CI: Final = _WORKFLOWS_DIR / 'ci.yml'
-_QUICK: Final = _WORKFLOWS_DIR / 'packaging-quick.yml'
-_FULL: Final = _WORKFLOWS_DIR / 'ci-full.yml'
-_DOCS: Final = _WORKFLOWS_DIR / 'docs.yml'
-_COMPATIBILITY: Final = _WORKFLOWS_DIR / 'python-runtime-compatibility.yml'
-_COMPATIBILITY_INPUTS: Final = frozenset({'.github/workflows/python-runtime-compatibility.yml', '.python-version', 'pyproject.toml', 'uv.lock', 'dev/**', 'src/**', 'packaging/**'})
-_CODE_LANE_CARVE_OUT: Final = frozenset({'.vault/**', '.vaultspec/**', '.claude/**', '.codex/**', '.gemini/**', '.agents/**', 'docs/**', '**.md'})
-_T2_RELEASE_ARTIFACT_SURFACE: Final = frozenset({'pyproject.toml', 'uv.lock', 'packaging/**', 'dev/packaging/**', '.github/workflows/packaging-smoke.yml'})
-_SAME_REPO_GUARD: Final = "github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository"
+
+_WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
+_TRIGGER: Final = _WORKFLOWS_DIR / "packaging-campaign-trigger.yml"
+_CI: Final = _WORKFLOWS_DIR / "ci.yml"
+_QUICK: Final = _WORKFLOWS_DIR / "packaging-quick.yml"
+_FULL: Final = _WORKFLOWS_DIR / "ci-full.yml"
+_DOCS: Final = _WORKFLOWS_DIR / "docs.yml"
+_COMPATIBILITY: Final = _WORKFLOWS_DIR / "python-runtime-compatibility.yml"
+
+_COMPATIBILITY_INPUTS: Final = frozenset(
+    {
+        ".github/workflows/python-runtime-compatibility.yml",
+        ".python-version",
+        "pyproject.toml",
+        "uv.lock",
+        "dev/**",
+        "src/**",
+        "packaging/**",
+    }
+)
+
+# The carve-out on the PYTHON code lanes: everything that never reaches the
+# Python code or artifact surface those lanes gate. Shared verbatim by every
+# per-push T1 Python workflow so a path cannot be carved out for one lane and
+# not the other.
+#
+# `docs/**` joined the set when it gained its own lane. It is not a "runs
+# nothing" path — that is the point. Before the split the carve-out was keyed on
+# file SUFFIX rather than on role, so `**.md` held `docs/index.md` out while
+# `docs/**.rst` (2,051 files) started the full Python unit suite and still
+# produced no documentation verdict. A path belongs here when the PYTHON lanes
+# cannot observe its regressions, and a path that belongs here needs a lane of
+# its own — which is what docs.yml is, and what
+# `test_every_code_lane_carve_out_path_has_a_lane_of_its_own` enforces so the
+# set cannot become a silent dumping ground.
+_CODE_LANE_CARVE_OUT: Final = frozenset(
+    {
+        ".vault/**",
+        ".vaultspec/**",
+        ".claude/**",
+        ".codex/**",
+        ".gemini/**",
+        ".agents/**",
+        "docs/**",
+        "**.md",
+    }
+)
+
+# The T2 boundary: the files that define the shipped artifact set. A push
+# touching any of these auto-dispatches the full campaign.
+_T2_RELEASE_ARTIFACT_SURFACE: Final = frozenset(
+    {
+        "pyproject.toml",
+        "uv.lock",
+        "packaging/**",
+        "dev/packaging/**",
+        ".github/workflows/packaging-smoke.yml",
+    }
+)
+
+_SAME_REPO_GUARD: Final = (
+    "github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository"
+)
+
 
 def _document(path: Path) -> dict[str, Any]:
-    return yaml.safe_load(path.read_text(encoding='utf-8'))
+    return yaml.safe_load(path.read_text(encoding="utf-8"))
+
 
 def _triggers(document: dict[str, Any]) -> Any:
-    return document[True] if True in document else document['on']
+    return document[True] if True in document else document["on"]
+
 
 def _assert_compatibility_lane_contract(document: dict[str, Any]) -> None:
     """Require the rolling lane to be a guarded code-change verification surface."""
     triggers = _triggers(document)
-    assert set(triggers) == {'workflow_dispatch', 'push', 'pull_request'}
-    for event in ('push', 'pull_request'):
+    assert set(triggers) == {"workflow_dispatch", "push", "pull_request"}
+    for event in ("push", "pull_request"):
         trigger = triggers[event]
-        assert trigger['branches'] == ['main']
-        assert set(trigger['paths']) >= _COMPATIBILITY_INPUTS
-        assert 'paths-ignore' not in trigger
-    jobs = document['jobs']
+        assert trigger["branches"] == ["main"]
+        assert set(trigger["paths"]) >= _COMPATIBILITY_INPUTS
+        assert "paths-ignore" not in trigger
+
+    jobs = document["jobs"]
     assert jobs
     for job_name, job in jobs.items():
-        assert job.get('if') == _SAME_REPO_GUARD, f'compatibility workflow job {job_name} lacks the fork guard'
-        assert job.get('runs-on') == ['self-hosted', 'Linux', 'X64'], job_name
+        assert job.get("if") == _SAME_REPO_GUARD, f"compatibility workflow job {job_name} lacks the fork guard"
+        assert job.get("runs-on") == ["self-hosted", "Linux", "X64"], job_name
+
 
 def test_t2_trigger_paths_pin_the_release_artifact_surface() -> None:
     """The campaign auto-dispatch fires exactly on the release-artifact paths."""
     document = _document(_TRIGGER)
     triggers = _triggers(document)
-    assert set(triggers) == {'push'}
-    push = triggers['push']
-    assert push['branches'] == ['main']
-    assert set(push['paths']) == set(_T2_RELEASE_ARTIFACT_SURFACE)
+    assert set(triggers) == {"push"}
+    push = triggers["push"]
+    assert push["branches"] == ["main"]
+    assert set(push["paths"]) == set(_T2_RELEASE_ARTIFACT_SURFACE)
+
 
 def test_t2_trigger_dispatches_the_full_campaign_and_nothing_else() -> None:
     """One tiny job that presses the packaging-smoke dispatch button on main."""
     document = _document(_TRIGGER)
-    assert 'Cadrumo' in document['name']
-    assert document['permissions'] == {'actions': 'write', 'contents': 'read'}
-    assert set(document['jobs']) == {'dispatch-full-campaign'}
-    job = document['jobs']['dispatch-full-campaign']
-    assert job['timeout-minutes'] <= 10
-    commands = '\n'.join((str(_dp_get('dev/ci/tests/test_change_class_tiers.py:136:get', step, 'run', '')) for step in job['steps']))
-    dispatched = executed_text((step.get('run') for step in job['steps']))
-    assert 'gh workflow run packaging-smoke.yml' in dispatched
-    assert '--ref main' in dispatched
-    for forbidden in ('just packaging', 'campaign.py', 'evidence', 'gh release'):
+    assert "Cadrumo" in document["name"]
+    assert document["permissions"] == {"actions": "write", "contents": "read"}
+    assert set(document["jobs"]) == {"dispatch-full-campaign"}
+    job = document["jobs"]["dispatch-full-campaign"]
+    assert job["timeout-minutes"] <= 10
+    commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
+    # The dispatch is asserted against what the job EXECUTES: this workflow
+    # explains itself at length in comments, and a dispatch line commented out
+    # still satisfies a reading of the raw block while pressing no button.
+    dispatched = executed_text(step.get("run") for step in job["steps"])
+    assert "gh workflow run packaging-smoke.yml" in dispatched
+    assert "--ref main" in dispatched
+    # The trigger never runs the campaign inline or mints evidence itself.
+    for forbidden in ("just packaging", "campaign.py", "evidence", "gh release"):
         assert forbidden not in commands, forbidden
+
 
 def test_compatibility_workflow_is_enrolled_in_change_class_and_fork_safety() -> None:
     """Runtime changes trigger the dedicated lane, with every fleet job guarded."""
     document = _document(_COMPATIBILITY)
     _assert_compatibility_lane_contract(document)
 
+
 def test_compatibility_lane_guard_has_detector_teeth() -> None:
     """A missing fork guard is refused rather than hidden by a healthy sibling job."""
     document = deepcopy(_document(_COMPATIBILITY))
-    document['jobs']['compatibility-source']['if'] = 'always()'
-    with pytest.raises(AssertionError, match='lacks the fork guard'):
+    document["jobs"]["compatibility-source"]["if"] = "always()"
+    with pytest.raises(AssertionError, match="lacks the fork guard"):
         _assert_compatibility_lane_contract(document)
+
 
 def test_code_lane_carve_out_is_identical_across_every_python_lane_and_trigger() -> None:
     """The Python lanes agree EXACTLY on what never reaches the code surface.
@@ -106,10 +177,11 @@ def test_code_lane_carve_out_is_identical_across_every_python_lane_and_trigger()
     """
     for path in (_CI, _QUICK):
         triggers = _triggers(_document(path))
-        for event in ('push', 'pull_request'):
-            assert event in triggers, f'{path.name} lost its {event} trigger'
-            carve_out = set(triggers[event]['paths-ignore'])
-            assert carve_out == set(_CODE_LANE_CARVE_OUT), f'{path.name}:{event}'
+        for event in ("push", "pull_request"):
+            assert event in triggers, f"{path.name} lost its {event} trigger"
+            carve_out = set(triggers[event]["paths-ignore"])
+            assert carve_out == set(_CODE_LANE_CARVE_OUT), f"{path.name}:{event}"
+
 
 def test_every_code_lane_carve_out_path_has_a_lane_of_its_own() -> None:
     """A path carved out of the Python lanes is verified elsewhere or is inert.
@@ -121,14 +193,16 @@ def test_every_code_lane_carve_out_path_has_a_lane_of_its_own() -> None:
     that names it. `docs/**` is a product surface, so it is held to the second
     standard.
     """
-    inert = {'.vault/**', '.vaultspec/**', '.claude/**', '.codex/**', '.gemini/**', '.agents/**', '**.md'}
-    owned = {'docs/**': _DOCS}
-    assert inert | set(owned) == set(_CODE_LANE_CARVE_OUT), 'a carve-out path is neither inert nor lane-owned'
+    inert = {".vault/**", ".vaultspec/**", ".claude/**", ".codex/**", ".gemini/**", ".agents/**", "**.md"}
+    owned = {"docs/**": _DOCS}
+    assert inert | set(owned) == set(_CODE_LANE_CARVE_OUT), "a carve-out path is neither inert nor lane-owned"
+
     for carved, workflow in owned.items():
-        assert workflow.exists(), f'{carved} is carved out of the Python lanes with no lane of its own'
+        assert workflow.exists(), f"{carved} is carved out of the Python lanes with no lane of its own"
         triggers = _triggers(_document(workflow))
-        for event in ('push', 'pull_request'):
-            assert carved in set(triggers[event]['paths']), f'{workflow.name}:{event} does not claim {carved}'
+        for event in ("push", "pull_request"):
+            assert carved in set(triggers[event]["paths"]), f"{workflow.name}:{event} does not claim {carved}"
+
 
 def test_the_docs_lane_claims_every_input_its_build_reads() -> None:
     """The docs lane triggers on the docs tree, its generators, and its corpus.
@@ -139,11 +213,13 @@ def test_the_docs_lane_claims_every_input_its_build_reads() -> None:
     change to either can break the build without touching `docs/` at all.
     """
     triggers = _triggers(_document(_DOCS))
-    for event in ('push', 'pull_request'):
-        paths = set(triggers[event]['paths'])
-        assert {'docs/**', 'dev/docs/**', 'src/cadrumo/_data/terminology/**'} <= paths, event
-    commands = '\n'.join((str(_dp_get('dev/ci/tests/test_change_class_tiers.py:220:get', step, 'run', '')) for step in _document(_DOCS)['jobs']['cadrumo-docs']['steps']))
-    assert 'just docs-check' in commands, 'the docs lane runs no docs check'
+    for event in ("push", "pull_request"):
+        paths = set(triggers[event]["paths"])
+        assert {"docs/**", "dev/docs/**", "src/cadrumo/_data/terminology/**"} <= paths, event
+
+    commands = "\n".join(str(step.get("run", "")) for step in _document(_DOCS)["jobs"]["cadrumo-docs"]["steps"])
+    assert "just docs-check" in commands, "the docs lane runs no docs check"
+
 
 def test_the_docs_verification_lane_never_publishes() -> None:
     """Verification and delivery stay separate lanes with separate triggers.
@@ -154,21 +230,32 @@ def test_the_docs_verification_lane_never_publishes() -> None:
     acquires deploy credentials it has no use for.
     """
     document = _document(_DOCS)
-    assert set(_triggers(document)) == {'workflow_dispatch', 'push', 'pull_request'}
-    assert document['permissions'] == {'contents': 'read'}
-    job = document['jobs']['cadrumo-docs']
-    assert 'environment' not in job, 'the verification lane must not enter the deploy environment'
-    assert granted_level(document, 'cadrumo-docs', 'id-token') == 'none', 'the verification lane needs no OIDC federation'
-    commands = '\n'.join((str(_dp_get('dev/ci/tests/test_change_class_tiers.py:241:get', step, 'run', '')) for step in job['steps']))
-    for forbidden in ('docs_static_site', 'publish', '--confirm'):
+    assert set(_triggers(document)) == {"workflow_dispatch", "push", "pull_request"}
+    assert document["permissions"] == {"contents": "read"}
+
+    job = document["jobs"]["cadrumo-docs"]
+    assert "environment" not in job, "the verification lane must not enter the deploy environment"
+    assert granted_level(document, "cadrumo-docs", "id-token") == "none", (
+        "the verification lane needs no OIDC federation"
+    )
+    commands = "\n".join(str(step.get("run", "")) for step in job["steps"])
+    for forbidden in ("docs_static_site", "publish", "--confirm"):
         assert forbidden not in commands, forbidden
-    delivery = _triggers(_document(_WORKFLOWS_DIR / 'docs-publish.yml'))
-    assert set(delivery) == {'release', 'workflow_dispatch'}
+
+    # And the delivery lane stays free of push and pull-request triggers, so no
+    # ordinary commit can reach it.
+    delivery = _triggers(_document(_WORKFLOWS_DIR / "docs-publish.yml"))
+    assert set(delivery) == {"release", "workflow_dispatch"}
+
 
 def test_no_lane_verifies_a_website_this_repository_does_not_contain() -> None:
     """Refuse external-site source or CI ownership in the product repository."""
-    assert not (REPO_ROOT / 'frontend' / 'package.json').exists(), 'external-site source does not belong in the product repository'
-    assert not (_WORKFLOWS_DIR / 'frontend.yml').exists(), 'an external-site lane entered the product repository'
+    # Check the tracked source marker rather than ignored build residue.
+    assert not (REPO_ROOT / "frontend" / "package.json").exists(), (
+        "external-site source does not belong in the product repository"
+    )
+    assert not (_WORKFLOWS_DIR / "frontend.yml").exists(), "an external-site lane entered the product repository"
+
 
 def test_no_workflow_installs_python_dependencies_unfrozen() -> None:
     """Every lane installs from the committed lock, never a live resolve.
@@ -189,13 +276,14 @@ def test_no_workflow_installs_python_dependencies_unfrozen() -> None:
     offending: list[str] = []
     for path in sorted(_workflow_paths()):
         document = _document(path)
-        for job_name, job in (document.get('jobs') or {}).items():
-            for step in job.get('steps') or []:
-                for line in str(_dp_get('dev/ci/tests/test_change_class_tiers.py:281:get', step, 'run', '')).splitlines():
+        for job_name, job in (document.get("jobs") or {}).items():
+            for step in job.get("steps") or []:
+                for line in str(step.get("run", "")).splitlines():
                     stripped = line.strip()
-                    if stripped.startswith('uv sync') and '--frozen' not in stripped:
-                        offending.append(f'{path.name}:{job_name}: {stripped}')
+                    if stripped.startswith("uv sync") and "--frozen" not in stripped:
+                        offending.append(f"{path.name}:{job_name}: {stripped}")
     assert offending == [], offending
+
 
 def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> None:
     """Every pull_request workflow carries the same-repo guard on every job.
@@ -204,11 +292,16 @@ def test_every_pull_request_workflow_guards_every_job_against_fork_heads() -> No
     """
     for path in sorted(_workflow_paths()):
         document = _document(path)
-        if 'pull_request' not in set(_triggers(document)):
+        if "pull_request" not in set(_triggers(document)):
             continue
-        for job_name, job in document['jobs'].items():
-            assert job.get('if') == _SAME_REPO_GUARD, f'{path.name}:{job_name} lacks the fork guard'
+        for job_name, job in document["jobs"].items():
+            assert job.get("if") == _SAME_REPO_GUARD, f"{path.name}:{job_name} lacks the fork guard"
+
+
+#: Below this the workflow walk has stopped covering the lane directory. A
+#: floor, not a pinned count: sixteen workflows ship today.
 _MINIMUM_WORKFLOWS = 8
+
 
 def _workflow_paths() -> list[Path]:
     """Every committed workflow, with the walk itself asserted.
@@ -219,10 +312,24 @@ def _workflow_paths() -> list[Path]:
     over an empty set holds whichever direction it points, so the walk is
     guarded once here rather than trusted five times.
     """
-    assert _WORKFLOWS_DIR.is_dir(), f'no workflow directory at {_WORKFLOWS_DIR}; a relocated root walks nothing and every lane gate in this module would report the workflows clean'
-    found = sorted({*scan_directory(_WORKFLOWS_DIR, pattern='*.yml'), *scan_directory(_WORKFLOWS_DIR, pattern='*.yaml')})
-    assert len(found) >= _MINIMUM_WORKFLOWS, f'only {len(found)} workflow(s) were walked; below this an empty finding list says nothing about what the lanes actually do'
+    assert _WORKFLOWS_DIR.is_dir(), (
+        f"no workflow directory at {_WORKFLOWS_DIR}; a relocated root walks nothing and "
+        "every lane gate in this module would report the workflows clean"
+    )
+
+    found = sorted(
+        {
+            *scan_directory(_WORKFLOWS_DIR, pattern="*.yml"),
+            *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml"),
+        }
+    )
+
+    assert len(found) >= _MINIMUM_WORKFLOWS, (
+        f"only {len(found)} workflow(s) were walked; below this an empty finding list says "
+        "nothing about what the lanes actually do"
+    )
     return found
+
 
 def test_no_workflow_downloads_an_artifact_from_another_run() -> None:
     """Artifact storage hands files between jobs of one run, and no further.
@@ -236,22 +343,36 @@ def test_no_workflow_downloads_an_artifact_from_another_run() -> None:
     offending: list[str] = []
     for path in _workflow_paths():
         document = _document(path)
-        for job_name, job in (document.get('jobs') or {}).items():
-            for step in job.get('steps') or []:
-                if 'download-artifact' not in str(_dp_get('dev/ci/tests/test_change_class_tiers.py:348:get', step, 'uses', '')):
+        for job_name, job in (document.get("jobs") or {}).items():
+            for step in job.get("steps") or []:
+                if "download-artifact" not in str(step.get("uses", "")):
                     continue
-                if 'run-id' in (step.get('with') or {}):
-                    offending.append(f'{path.name}:{job_name}')
+                if "run-id" in (step.get("with") or {}):
+                    offending.append(f"{path.name}:{job_name}")
     assert offending == [], offending
+
 
 def test_the_cross_run_artifact_gate_refuses_a_run_id_read(tmp_path: Path) -> None:
     """The gate has teeth: a cross-run read in a fixture workflow is detected."""
-    workflow = tmp_path / 'offender.yml'
-    workflow.write_text('name: offender\non: [workflow_dispatch]\njobs:\n  take:\n    runs-on: [self-hosted, Linux, X64]\n    steps:\n      - uses: actions/download-artifact@v8\n        with:\n          name: dist\n          run-id: 1234567890\n', encoding='utf-8')
-    document = yaml.safe_load(workflow.read_text(encoding='utf-8'))
-    step = document['jobs']['take']['steps'][0]
-    assert 'download-artifact' in step['uses']
-    assert 'run-id' in step['with']
+    workflow = tmp_path / "offender.yml"
+    workflow.write_text(
+        "name: offender\n"
+        "on: [workflow_dispatch]\n"
+        "jobs:\n"
+        "  take:\n"
+        "    runs-on: [self-hosted, Linux, X64]\n"
+        "    steps:\n"
+        "      - uses: actions/download-artifact@v8\n"
+        "        with:\n"
+        "          name: dist\n"
+        "          run-id: 1234567890\n",
+        encoding="utf-8",
+    )
+    document = yaml.safe_load(workflow.read_text(encoding="utf-8"))
+    step = document["jobs"]["take"]["steps"][0]
+    assert "download-artifact" in step["uses"]
+    assert "run-id" in step["with"]
+
 
 def test_no_workflow_carries_a_schedule_trigger() -> None:
     """Operator ruling 2026-07-21: manual cadence, no standing compute.
@@ -261,14 +382,16 @@ def test_no_workflow_carries_a_schedule_trigger() -> None:
     compute this gate refuses.
     """
     for path in sorted(_workflow_paths()):
-        assert 'schedule' not in set(_triggers(_document(path))), path.name
+        assert "schedule" not in set(_triggers(_document(path))), path.name
+
 
 def test_every_workflow_name_carries_the_product_identity() -> None:
     """Naming convention: kebab-case filenames, `name:` contains "Cadrumo"."""
     for path in sorted(_workflow_paths()):
         document = _document(path)
-        assert 'Cadrumo' in document['name'], path.name
+        assert "Cadrumo" in document["name"], path.name
         assert path.stem == path.stem.lower(), path.name
+
 
 def test_durable_maintenance_gates_moved_into_the_full_lane() -> None:
     """The retired weekly workflow's two gates live on in ci-full.yml.
@@ -276,14 +399,15 @@ def test_durable_maintenance_gates_moved_into_the_full_lane() -> None:
     The vault structural-drift audit and the ledger + storage roundtrip suite
     (aeat-quality-gates: never removed without a replacement).
     """
-    assert not (_WORKFLOWS_DIR / 'durable-maintenance-gates.yml').exists()
-    commands = executed_text((step.get('run') for step in _document(_FULL)['jobs']['cadrumo-full-conformance']['steps']))
-    assert 'vaultspec-core vault check all' in commands
-    assert 'dev/tests/test_roundtrip_coverage.py' in commands
-    assert 'src/cadrumo/application/ledger/tests' in commands
-    assert 'src/cadrumo/adapters/persistence/storage' in commands
-    assert 'src/cadrumo/adapters/persistence/profile' in commands
-    assert '-k roundtrip' in commands
+    assert not (_WORKFLOWS_DIR / "durable-maintenance-gates.yml").exists()
+    commands = executed_text(step.get("run") for step in _document(_FULL)["jobs"]["cadrumo-full-conformance"]["steps"])
+    assert "vaultspec-core vault check all" in commands
+    assert "dev/tests/test_roundtrip_coverage.py" in commands
+    assert "src/cadrumo/application/ledger/tests" in commands
+    assert "src/cadrumo/adapters/persistence/storage" in commands
+    assert "src/cadrumo/adapters/persistence/profile" in commands
+    assert "-k roundtrip" in commands
+
 
 def test_drift_detector_targets_exist_on_disk() -> None:
     """Every drift-detector pytest target must exist on disk.
@@ -292,12 +416,13 @@ def test_drift_detector_targets_exist_on_disk() -> None:
     targets moved leaves a red cron nobody attributes.
     """
     repo_root = _WORKFLOWS_DIR.parents[1]
-    document = _document(_WORKFLOWS_DIR / 'aeat-drift-detector.yml')
-    commands = executed_text((step.get('run') for job in document['jobs'].values() for step in job['steps']))
-    targets = [token for token in commands.replace('\\', ' ').split() if token.startswith('src/')]
-    assert targets, 'drift detector runs no src-tree pytest targets'
+    document = _document(_WORKFLOWS_DIR / "aeat-drift-detector.yml")
+    commands = executed_text(step.get("run") for job in document["jobs"].values() for step in job["steps"])
+    targets = [token for token in commands.replace("\\", " ").split() if token.startswith("src/")]
+    assert targets, "drift detector runs no src-tree pytest targets"
     for target in targets:
-        assert (repo_root / target).exists(), f'drift-detector target moved or deleted: {target}'
+        assert (repo_root / target).exists(), f"drift-detector target moved or deleted: {target}"
+
 
 def test_the_workflow_presence_gates_read_what_a_job_executes() -> None:
     """Teeth for the positive command readings above, over the real documents.
@@ -307,12 +432,19 @@ def test_the_workflow_presence_gates_read_what_a_job_executes() -> None:
     that mattered is the executed one -- asserted here in both directions over
     the same input rather than trusted.
     """
-    cases = ((_TRIGGER, 'dispatch-full-campaign', 'gh workflow run packaging-smoke.yml'), (_FULL, 'cadrumo-full-conformance', 'vaultspec-core vault check all'))
+    cases = (
+        (_TRIGGER, "dispatch-full-campaign", "gh workflow run packaging-smoke.yml"),
+        (_FULL, "cadrumo-full-conformance", "vaultspec-core vault check all"),
+    )
     for path, job_name, command in cases:
-        steps = _document(path)['jobs'][job_name]['steps']
-        assert command in executed_text((step.get('run') for step in steps)), f'{path.name}: {command}'
+        steps = _document(path)["jobs"][job_name]["steps"]
+        assert command in executed_text(step.get("run") for step in steps), f"{path.name}: {command}"
+
         newline = chr(10)
-        commented = [{**step, 'run': '# ' + str(step['run']).replace(newline, newline + '# ')} if 'run' in step else step for step in deepcopy(steps)]
-        raw = ''.join((str(_dp_get('dev/ci/tests/test_change_class_tiers.py:448:get', step, 'run', '')) for step in commented))
-        assert command in raw, f'{path.name}: the raw reading no longer finds the degraded command'
-        assert command not in executed_text((step.get('run') for step in commented)), f'{path.name}: {command}'
+        commented = [
+            {**step, "run": "# " + str(step["run"]).replace(newline, newline + "# ")} if "run" in step else step
+            for step in deepcopy(steps)
+        ]
+        raw = "".join(str(step.get("run", "")) for step in commented)
+        assert command in raw, f"{path.name}: the raw reading no longer finds the degraded command"
+        assert command not in executed_text(step.get("run") for step in commented), f"{path.name}: {command}"

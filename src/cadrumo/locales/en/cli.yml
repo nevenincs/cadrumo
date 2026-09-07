@@ -2730,8 +2730,6 @@ cli:
       command_input_invalid: 'Refused. The transaction is invalid: {details}'
       command_input_invalid_fallback: one or more fields failed validation
       confirm_required: Pass --yes to confirm this destructive ledger operation.
-      invalid_category: 'Unknown spending category ''{category}''. Known categories:
-        {known}.'
       invalid_decimal: 'Invalid decimal value for %{label}: %{raw}. Use a dot decimal
         separator with no thousands grouping, e.g. 1234.56.'
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass

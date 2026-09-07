@@ -25,12 +25,28 @@ neither level declares anything, the effective grant comes from repository
 settings that no file here can see, so it is reported as unknown rather than
 guessed at.
 """
+
 from __future__ import annotations
+
 from typing import Any, Final
-__all__ = ['LEVELS', 'effective_job_permissions', 'granted_level', 'jobs_granting', 'jobs_with_unsettled_grant']
-LEVELS: Final = ('none', 'read', 'write')
-_SHORTHAND: Final = {'read-all': 'read', 'write-all': 'write', 'none': 'none'}
+
+__all__ = [
+    "LEVELS",
+    "effective_job_permissions",
+    "granted_level",
+    "jobs_granting",
+    "jobs_with_unsettled_grant",
+]
+
+#: Permission levels in increasing order of capability. ``none`` is a real
+#: declared level, distinct from a scope that was never mentioned.
+LEVELS: Final = ("none", "read", "write")
+
+#: The scalar shorthands, each standing for one level across every scope.
+_SHORTHAND: Final = {"read-all": "read", "write-all": "write", "none": "none"}
+
 _ABSENT: Final = object()
+
 
 def effective_job_permissions(document: dict[str, Any], job_name: str) -> dict[str, str] | str | None:
     """Return the permission declaration the runtime applies to ``job_name``.
@@ -40,13 +56,14 @@ def effective_job_permissions(document: dict[str, Any], job_name: str) -> dict[s
     neither level declared anything, so the grant comes from repository
     settings and is not knowable from the workflow file.
     """
-    jobs = _dp_or('dev/ci/workflow_permissions.py:59:or', lambda: document.get('jobs'), lambda: {})
+    jobs = document.get("jobs") or {}
     if job_name not in jobs:
-        raise KeyError(f'no job named {job_name!r} in this workflow')
-    declared = _dp_get('dev/ci/workflow_permissions.py:62:get', jobs[job_name] or {}, 'permissions', _ABSENT)
+        raise KeyError(f"no job named {job_name!r} in this workflow")
+    declared = (jobs[job_name] or {}).get("permissions", _ABSENT)
     if declared is not _ABSENT:
-        return declared
-    return document.get('permissions')
+        return declared  # type: ignore[no-any-return]
+    return document.get("permissions")
+
 
 def granted_level(document: dict[str, Any], job_name: str, scope: str) -> str | None:
     """Return the level ``job_name`` effectively holds for ``scope``.
@@ -62,9 +79,10 @@ def granted_level(document: dict[str, Any], job_name: str, scope: str) -> str | 
         return None
     if isinstance(resolved, str):
         return _SHORTHAND.get(resolved)
-    return str(_dp_get('dev/ci/workflow_permissions.py:82:get', resolved, scope, 'none'))
+    return str(resolved.get(scope, "none"))
 
-def jobs_granting(document: dict[str, Any], scope: str, level: str='write') -> tuple[str, ...]:
+
+def jobs_granting(document: dict[str, Any], scope: str, level: str = "write") -> tuple[str, ...]:
     """Return every job whose effective grant for ``scope`` reaches ``level``.
 
     The confinement primitive: a caller naming the jobs allowed to hold a
@@ -72,14 +90,15 @@ def jobs_granting(document: dict[str, Any], scope: str, level: str='write') -> t
     text, so a job added later that takes the capability is named here.
     """
     if level not in LEVELS:
-        raise ValueError(f'unknown permission level {level!r}; expected one of {LEVELS}')
+        raise ValueError(f"unknown permission level {level!r}; expected one of {LEVELS}")
     floor = LEVELS.index(level)
     granted: list[str] = []
-    for job_name in document.get('jobs') or {}:
+    for job_name in document.get("jobs") or {}:
         held = granted_level(document, job_name, scope)
         if held in LEVELS and LEVELS.index(held) >= floor:
             granted.append(job_name)
     return tuple(granted)
+
 
 def jobs_with_unsettled_grant(document: dict[str, Any], scope: str) -> tuple[str, ...]:
     """Return every job whose grant for ``scope`` this file does not settle.
@@ -95,4 +114,6 @@ def jobs_with_unsettled_grant(document: dict[str, Any], scope: str) -> tuple[str
     answer from settings. An explicit ``permissions: {}``, or a declared map that
     omits ``scope``, is settled: both grant nothing, and both are answers.
     """
-    return tuple((str(job_name) for job_name in document.get('jobs') or {} if granted_level(document, job_name, scope) is None))
+    return tuple(
+        str(job_name) for job_name in document.get("jobs") or {} if granted_level(document, job_name, scope) is None
+    )

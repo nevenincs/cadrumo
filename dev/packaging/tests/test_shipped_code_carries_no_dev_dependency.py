@@ -31,19 +31,27 @@ dependency group that appears in neither ``[project] dependencies`` nor any
 optional-dependencies extra. Listing it would freeze a moment and quietly stop
 covering whatever was added afterwards.
 """
+
 from __future__ import annotations
+
 import ast
 import tomllib
 from collections.abc import Iterator
 from importlib.metadata import packages_distributions
 from pathlib import Path
+
 import pytest
+
 from cadrumo.core.directory_scan import scan_directory
+
 from ..._paths import REPO_ROOT
 from .._distribution_names import normalise_distribution_name
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 _REPO_ROOT = REPO_ROOT
-_SHIPPED_ROOT = _REPO_ROOT / 'src' / 'cadrumo'
+_SHIPPED_ROOT = _REPO_ROOT / "src" / "cadrumo"
+
 
 def _requirement_names(requirements: object) -> set[str]:
     names: set[str] = set()
@@ -51,25 +59,31 @@ def _requirement_names(requirements: object) -> set[str]:
         return names
     for requirement in requirements:
         if not isinstance(requirement, str):
+            # A dependency group may include another group as a table.
             continue
-        name = requirement.split(';')[0].strip()
-        for separator in ('[', '=', '>', '<', '!', '~', ' '):
+        name = requirement.split(";")[0].strip()
+        for separator in ("[", "=", ">", "<", "!", "~", " "):
             name = name.split(separator)[0]
         if name:
             names.add(normalise_distribution_name(name))
     return names
 
+
 def _dev_only_distributions() -> set[str]:
     """Distributions available to developers and to nobody who installs this."""
-    with (_REPO_ROOT / 'pyproject.toml').open('rb') as handle:
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         pyproject = tomllib.load(handle)
-    shipped = _requirement_names(_dp_get('dev/packaging/tests/test_shipped_code_carries_no_dev_dependency.py:77:get', pyproject['project'], 'dependencies', []))
-    for extra in _dp_get('dev/packaging/tests/test_shipped_code_carries_no_dev_dependency.py:78:get', pyproject['project'], 'optional-dependencies', {}).values():
+
+    shipped = _requirement_names(pyproject["project"].get("dependencies", []))
+    for extra in pyproject["project"].get("optional-dependencies", {}).values():
         shipped |= _requirement_names(extra)
+
     grouped: set[str] = set()
-    for group in _dp_get('dev/packaging/tests/test_shipped_code_carries_no_dev_dependency.py:82:get', pyproject, 'dependency-groups', {}).values():
+    for group in pyproject.get("dependency-groups", {}).values():
         grouped |= _requirement_names(group)
+
     return grouped - shipped
+
 
 def _dev_only_import_names() -> set[str]:
     """The import names those distributions provide, inverted from the environment.
@@ -81,9 +95,13 @@ def _dev_only_import_names() -> set[str]:
     dev_only = _dev_only_distributions()
     names: set[str] = set()
     for import_name, distributions in packages_distributions().items():
-        if any((normalise_distribution_name(dist) in dev_only for dist in distributions)):
+        if any(normalise_distribution_name(dist) in dev_only for dist in distributions):
             names.add(import_name)
+    # A distribution absent from this environment cannot be inverted, so fall
+    # back to its own normalised name. Being unable to resolve a package must
+    # not silently shrink what the gate looks for.
     return names | dev_only
+
 
 def _is_test_surface(path: Path) -> bool:
     """True for anything the wheel build excludes or that exists to serve tests.
@@ -92,19 +110,24 @@ def _is_test_surface(path: Path) -> bool:
     OUTSIDE the excluded ``tests`` directories, so a path-segment check alone
     would treat pytest infrastructure as shipped code and report it.
     """
-    return _dp_or('dev/packaging/tests/test_shipped_code_carries_no_dev_dependency.py:113:or', lambda: 'tests' in path.parts, lambda: path.name == 'conftest.py')
+    return "tests" in path.parts or path.name == "conftest.py"
+
 
 def _top_level_imports(path: Path) -> Iterator[str]:
-    tree = ast.parse(path.read_text(encoding='utf-8'), filename=str(path))
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                yield alias.name.split('.')[0]
+                yield alias.name.split(".")[0]
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            yield node.module.split('.')[0]
+            yield node.module.split(".")[0]
+
 
 def _shipped_modules() -> list[Path]:
-    return [path for path in scan_directory(_SHIPPED_ROOT, pattern='*.py', recursive=True) if not _is_test_surface(path)]
+    return [
+        path for path in scan_directory(_SHIPPED_ROOT, pattern="*.py", recursive=True) if not _is_test_surface(path)
+    ]
+
 
 def test_no_shipped_module_imports_a_development_only_dependency() -> None:
     """A module that ships cannot depend on tooling an operator does not have.
@@ -115,12 +138,19 @@ def test_no_shipped_module_imports_a_development_only_dependency() -> None:
     that branch, which is worse.
     """
     dev_only = _dev_only_import_names()
+
     offenders: dict[str, list[str]] = {}
     for path in _shipped_modules():
         for import_name in _top_level_imports(path):
             if import_name in dev_only:
                 offenders.setdefault(path.relative_to(_REPO_ROOT).as_posix(), []).append(import_name)
-    assert offenders == {}, f'these SHIPPED modules import development-only dependencies, so they are non-production code living in the wheel: {offenders}. Move the module under dev/, or -- if it is genuinely a product feature -- promote the dependency out of the dev group and say why it ships.'
+
+    assert offenders == {}, (
+        "these SHIPPED modules import development-only dependencies, so they are non-production code "
+        f"living in the wheel: {offenders}. Move the module under dev/, or -- if it is genuinely a "
+        "product feature -- promote the dependency out of the dev group and say why it ships."
+    )
+
 
 def test_the_gate_is_looking_at_something() -> None:
     """Non-vacuity: three independent ways this could pass over nothing.
@@ -129,12 +159,29 @@ def test_the_gate_is_looking_at_something() -> None:
     stopped matching would each produce a green run indistinguishable from a
     clean tree.
     """
-    assert _SHIPPED_ROOT.is_dir(), f'the shipped package is not at {_SHIPPED_ROOT}'
+    assert _SHIPPED_ROOT.is_dir(), f"the shipped package is not at {_SHIPPED_ROOT}"
+
     dev_only = _dev_only_distributions()
-    assert {'pytest', 'ruff'} <= dev_only, f'pytest and ruff must resolve as development-only; got {sorted(dev_only)[:10]}... if they now ship, this gate is measuring the wrong set'
+    assert {"pytest", "ruff"} <= dev_only, (
+        f"pytest and ruff must resolve as development-only; got {sorted(dev_only)[:10]}... "
+        "if they now ship, this gate is measuring the wrong set"
+    )
+
     modules = _shipped_modules()
-    assert len(modules) > 1500, f'only {len(modules)} shipped modules found against a tree of about 2,100; the scan is reading part of the shipped surface, so a clean result covers less than it appears to'
-    assert any((_top_level_imports(path) for path in modules)), 'no imports parsed from any shipped module'
+    # Live the walk reaches 2,122 shipped modules, so `> 100` let 95% of the
+    # shipped tree go unscanned while this gate still reported no development
+    # dependency anywhere. The floor is set from the walk's own shape: losing
+    # `recursive=True` leaves exactly 1 module, and dropping the largest
+    # subpackage (application, 651) leaves 1,471. It deliberately does NOT
+    # catch losing a smaller subpackage alone - adapters is 295, and a floor
+    # tight enough for that would sit 300 below live and red on any ordinary
+    # removal. A floor, not a pinned count.
+    assert len(modules) > 1500, (
+        f"only {len(modules)} shipped modules found against a tree of about 2,100; the scan "
+        "is reading part of the shipped surface, so a clean result covers less than it appears to"
+    )
+    assert any(_top_level_imports(path) for path in modules), "no imports parsed from any shipped module"
+
 
 def test_the_test_surface_is_excluded_because_it_does_not_ship() -> None:
     """The tests exception is structural, and this checks it stayed that way.
@@ -144,11 +191,16 @@ def test_the_test_surface_is_excluded_because_it_does_not_ship() -> None:
     exemption would become a hole rather than a courtesy -- so the exclusion is
     asserted here rather than assumed.
     """
-    with (_REPO_ROOT / 'pyproject.toml').open('rb') as handle:
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         pyproject = tomllib.load(handle)
-    excluded = pyproject['tool']['hatch']['build']['targets']['wheel']['exclude']
-    assert 'src/cadrumo/tests' in excluded
-    assert 'src/cadrumo/**/tests' in excluded
-    assert 'src/cadrumo/**/tests/**' in excluded
-    sample = next(_SHIPPED_ROOT.rglob('tests/test_*.py'))
-    assert _is_test_surface(sample), f'{sample} is a test module the exemption failed to recognise'
+
+    excluded = pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
+
+    assert "src/cadrumo/tests" in excluded
+    assert "src/cadrumo/**/tests" in excluded
+    assert "src/cadrumo/**/tests/**" in excluded
+
+    # And the exemption predicate must actually cover a real test module, or the
+    # scan above is quietly excluding nothing.
+    sample = next(_SHIPPED_ROOT.rglob("tests/test_*.py"))
+    assert _is_test_surface(sample), f"{sample} is a test module the exemption failed to recognise"

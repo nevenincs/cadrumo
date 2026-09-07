@@ -36,20 +36,31 @@ so the mapping tracks what is actually installed instead of drifting from it --
 ``PIL`` to ``pillow`` is the mapping this gate was written for, and hard-coding
 it would have made the gate an assertion about its own table.
 """
+
 from __future__ import annotations
+
 import ast
 import tomllib
 from collections.abc import Iterator
 from importlib.metadata import packages_distributions
 from pathlib import Path
+
 import pytest
+
 from cadrumo.core.directory_scan import scan_directory
+
 from ..._paths import REPO_ROOT
 from .._distribution_names import normalise_distribution_name
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
 _REPO_ROOT = REPO_ROOT
-_INFERENCE_PACKAGE = _REPO_ROOT / 'src' / 'cadrumo' / 'llm'
-_NOT_THIRD_PARTY = frozenset({'cadrumo', 'cadrumo_data', 'dev'})
+_INFERENCE_PACKAGE = _REPO_ROOT / "src" / "cadrumo" / "llm"
+
+#: Import names that are the standard library or this project itself, so they
+#: are never expected to appear in a dependency declaration.
+_NOT_THIRD_PARTY = frozenset({"cadrumo", "cadrumo_data", "dev"})
+
 
 def _declared_distributions() -> set[str]:
     """Every distribution the built distribution's own metadata promises.
@@ -59,21 +70,27 @@ def _declared_distributions() -> set[str]:
     treats them; a gate that compared raw strings would fail on capitalisation
     and teach everyone to distrust it.
     """
-    with (_REPO_ROOT / 'pyproject.toml').open('rb') as handle:
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
         pyproject = tomllib.load(handle)
-    requirement_lists: list[list[str]] = [_dp_get('dev/packaging/tests/test_inference_imports_are_declared.py:76:get', pyproject['project'], 'dependencies', [])]
-    requirement_lists.extend(_dp_get('dev/packaging/tests/test_inference_imports_are_declared.py:77:get', pyproject['project'], 'optional-dependencies', {}).values())
+
+    requirement_lists: list[list[str]] = [pyproject["project"].get("dependencies", [])]
+    requirement_lists.extend(pyproject["project"].get("optional-dependencies", {}).values())
+    # `[dependency-groups]` is deliberately absent: it is not published in the
+    # distribution metadata, so it promises an installer of the wheel nothing.
+
     declared: set[str] = set()
     for requirements in requirement_lists:
         for requirement in requirements:
             if not isinstance(requirement, str):
+                # Defensive: a non-string entry is not a requirement specifier.
                 continue
-            name = requirement.split(';')[0].strip()
-            for separator in ('[', '=', '>', '<', '!', '~', ' '):
+            name = requirement.split(";")[0].strip()
+            for separator in ("[", "=", ">", "<", "!", "~", " "):
                 name = name.split(separator)[0]
             if name:
                 declared.add(normalise_distribution_name(name))
     return declared
+
 
 def _top_level_imports(path: Path) -> Iterator[str]:
     """Yield the top-level module name of every absolute import in ``path``.
@@ -81,20 +98,22 @@ def _top_level_imports(path: Path) -> Iterator[str]:
     Relative imports are skipped: they address this project, which is not a
     declarable dependency of itself.
     """
-    tree = ast.parse(path.read_text(encoding='utf-8'), filename=str(path))
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                yield alias.name.split('.')[0]
+                yield alias.name.split(".")[0]
         elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
-            yield node.module.split('.')[0]
+            yield node.module.split(".")[0]
+
 
 def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
     """Map each third-party import name to the repo-relative files importing it."""
     stdlib_and_local = _NOT_THIRD_PARTY | _stdlib_names()
     found: dict[str, list[str]] = {}
-    for path in scan_directory(root, pattern='*.py', recursive=True):
-        if 'tests' in path.relative_to(root).parts:
+    for path in scan_directory(root, pattern="*.py", recursive=True):
+        if "tests" in path.relative_to(root).parts:
+            # Not shipped by either build target, so not a shipped reliance.
             continue
         for name in _top_level_imports(path):
             if name in stdlib_and_local:
@@ -102,9 +121,12 @@ def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
             found.setdefault(name, []).append(path.relative_to(_REPO_ROOT).as_posix())
     return found
 
+
 def _stdlib_names() -> frozenset[str]:
     import sys
+
     return frozenset(sys.stdlib_module_names)
+
 
 def test_every_third_party_import_in_the_inference_path_is_declared() -> None:
     """No module under the inference package relies on an undeclared package.
@@ -115,16 +137,24 @@ def test_every_third_party_import_in_the_inference_path_is_declared() -> None:
     """
     declared = _declared_distributions()
     import_to_distributions = packages_distributions()
+
     undeclared: dict[str, list[str]] = {}
     for import_name, files in _third_party_imports_under(_INFERENCE_PACKAGE).items():
-        distributions = {normalise_distribution_name(name) for name in _dp_get('dev/packaging/tests/test_inference_imports_are_declared.py:143:get', import_to_distributions, import_name, [])}
+        distributions = {normalise_distribution_name(name) for name in import_to_distributions.get(import_name, [])}
         if not distributions:
-            _dp_mark('dev/packaging/tests/test_inference_imports_are_declared.py:144:ifnot')
+            # Not installed in this environment, so the mapping cannot be
+            # resolved and the import name is the best available key.
             distributions = {normalise_distribution_name(import_name)}
-        if not distributions & declared:
-            _dp_mark('dev/packaging/tests/test_inference_imports_are_declared.py:148:ifnot')
+        if not (distributions & declared):
             undeclared[import_name] = files
-    assert undeclared == {}, f'these packages are imported directly by the inference path but named in no pyproject declaration, so they are relied on as incidental transitives: {undeclared}. Declare each in [project] dependencies or in the extra whose feature needs it -- do not remove the import and leave the reliance somewhere less visible.'
+
+    assert undeclared == {}, (
+        "these packages are imported directly by the inference path but named in no pyproject "
+        f"declaration, so they are relied on as incidental transitives: {undeclared}. Declare each "
+        "in [project] dependencies or in the extra whose feature needs it -- do not remove the "
+        "import and leave the reliance somewhere less visible."
+    )
+
 
 def test_the_imaging_package_is_declared_even_though_nothing_imports_it_by_name() -> None:
     """Pillow is the reliance that no import statement reveals.
@@ -136,7 +166,13 @@ def test_the_imaging_package_is_declared_even_though_nothing_imports_it_by_name(
     stood. Asserted directly for that reason, and the asymmetry is the finding
     rather than an exception to it.
     """
-    assert 'pillow' in _declared_distributions(), 'pillow is not declared in pyproject. The page rasteriser calls to_pil() and save() on the result, which is a direct reliance; without a declaration it arrives only because pdfplumber and pikepdf happen to require it, and either dropping it breaks page rendering at runtime with no resolution-time signal'
+    assert "pillow" in _declared_distributions(), (
+        "pillow is not declared in pyproject. The page rasteriser calls to_pil() and save() on the "
+        "result, which is a direct reliance; without a declaration it arrives only because pdfplumber "
+        "and pikepdf happen to require it, and either dropping it breaks page rendering at runtime "
+        "with no resolution-time signal"
+    )
+
 
 def test_the_scan_finds_imports_at_all() -> None:
     """Non-vacuity: a scan that sees nothing would satisfy every assertion above.
@@ -145,10 +181,11 @@ def test_the_scan_finds_imports_at_all() -> None:
     directory and an AST walk that stops matching import nodes. Both look
     exactly like a clean run.
     """
-    assert _INFERENCE_PACKAGE.is_dir(), f'the inference package is not at {_INFERENCE_PACKAGE}'
+    assert _INFERENCE_PACKAGE.is_dir(), f"the inference package is not at {_INFERENCE_PACKAGE}"
     imports = _third_party_imports_under(_INFERENCE_PACKAGE)
-    assert imports, 'no third-party imports found under the inference path; the scan is not reading anything'
-    assert _declared_distributions(), 'no dependencies parsed out of pyproject; the declaration reader is broken'
+    assert imports, "no third-party imports found under the inference path; the scan is not reading anything"
+    assert _declared_distributions(), "no dependencies parsed out of pyproject; the declaration reader is broken"
+
 
 def test_a_development_group_entry_is_not_a_declaration() -> None:
     """The hole this reader was widened by: a dev group promises the wheel nothing.
@@ -160,6 +197,11 @@ def test_a_development_group_entry_is_not_a_declaration() -> None:
     incidental-transitive reliance it was written to refuse.
     """
     declared = _declared_distributions()
-    assert 'pytest' not in declared, "a [dependency-groups] entry is being counted as a declaration. Groups are development-only and never reach the built distribution's metadata, so accepting one lets a shipped module rely on a package the wheel does not require"
-    assert 'anthropic' in declared, 'the reader stopped seeing optional-dependencies extras'
-    assert 'pydantic' in declared, 'the reader stopped seeing [project] dependencies'
+
+    assert "pytest" not in declared, (
+        "a [dependency-groups] entry is being counted as a declaration. Groups are development-only "
+        "and never reach the built distribution's metadata, so accepting one lets a shipped module "
+        "rely on a package the wheel does not require"
+    )
+    assert "anthropic" in declared, "the reader stopped seeing optional-dependencies extras"
+    assert "pydantic" in declared, "the reader stopped seeing [project] dependencies"
