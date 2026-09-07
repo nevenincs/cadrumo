@@ -101,16 +101,26 @@ def test_the_gate_still_recognises_logger_bindings() -> None:
 def test_no_shipped_module_binds_a_logger_it_never_uses() -> None:
     """The direction the gate exists for."""
     offenders: list[str] = []
+    unread: list[str] = []
     for path in _shipped_modules():
         try:
             text = path.read_text(encoding="utf-8")
         except OSError:
+            # A module skipped here is one this gate did not examine, and an
+            # empty offender list would then read as a clean tree. The skip is
+            # correct -- a walk over a tree a sibling process is editing must
+            # survive a half-written file -- but it cannot be silent, because
+            # the unread module is exactly where an offender would hide.
+            unread.append(path.relative_to(REPO_ROOT).as_posix())
             continue
         for name in _unused_bindings(text):
             offenders.append(f"{path.relative_to(REPO_ROOT).as_posix()}:{name}")
     assert not offenders, (
         "these modules bind a logger and never log through it, so the binding "
         f"instruments nothing and scrubs nothing; remove it or log: {offenders}"
+    )
+    assert not unread, (
+        f"this gate could not read these shipped modules, so a clean result does not cover them: {unread}"
     )
 
 
