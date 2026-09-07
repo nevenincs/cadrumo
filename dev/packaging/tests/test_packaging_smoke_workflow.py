@@ -246,11 +246,11 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
         step for step in job["steps"] if step.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
     )
 
-    assert "cadrumo-python-cohort-linux.tar.gz" in cohort_publish["run"]
-    assert "var/packaging-smoke-cohort/python" in cohort_publish["run"]
-    assert "packaging-smoke-evidence-linux.tar.gz" in evidence_publish["run"]
-    assert "var/packaging-smoke-evidence" in evidence_publish["run"]
-    assert "installed-cohorts" in evidence_publish["run"]
+    assert "cadrumo-python-cohort-linux.tar.gz" in executed_text(cohort_publish["run"])
+    assert "var/packaging-smoke-cohort/python" in executed_text(cohort_publish["run"])
+    assert "packaging-smoke-evidence-linux.tar.gz" in executed_text(evidence_publish["run"])
+    assert "var/packaging-smoke-evidence" in executed_text(evidence_publish["run"])
+    assert "installed-cohorts" in executed_text(evidence_publish["run"])
     assert checkpoint["if"] == "always()"
     assert evidence_publish["if"] == "always()"
     assert job["steps"].index(campaign) < job["steps"].index(checkpoint)
@@ -268,8 +268,8 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
         leg_checkpoint = next(
             s for s in leg["steps"] if s.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
         )
-        assert str(spec["cohort_asset"]) in leg_cohort["run"]
-        assert str(spec["evidence_asset"]) in leg_evidence["run"]
+        assert str(spec["cohort_asset"]) in executed_text(leg_cohort["run"])
+        assert str(spec["evidence_asset"]) in executed_text(leg_evidence["run"])
         assert leg_checkpoint["if"] == "always()"
         assert leg_evidence["if"] == "always()"
         assert leg["steps"].index(leg_campaign) < leg["steps"].index(leg_checkpoint)

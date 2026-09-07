@@ -344,7 +344,9 @@ class SearchRecordMetadata(BaseModel):
     legal_consolidated_as_of: date | None = None
     legal_review_status: str | None = Field(default=None, min_length=1, max_length=64)
     legal_reviewed_at: date | None = None
-    legal_reviewed_by: str | None = Field(default=None, min_length=1, max_length=160)
+    # Unbounded for the same reason as `LegalSearchRecord.reviewed_by`: a cap
+    # narrower than the authority's turns valid provenance into a crash.
+    legal_reviewed_by: str | None = Field(default=None, min_length=1)
     legal_notes: str | None = None
     legal_required_text: tuple[str, ...] = ()
 

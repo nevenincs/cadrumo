@@ -163,7 +163,12 @@ class LegalSearchRecord(SearchRecordBase):
     consolidated_as_of: date | None = None
     review_status: str | None = Field(default=None, min_length=1, max_length=64)
     reviewed_at: date | None = None
-    reviewed_by: str | None = Field(default=None, min_length=1, max_length=160)
+    # No upper bound, mirroring the registry authority's own
+    # `reviewed_by: Field(default=None, min_length=1)`. This is a free-text
+    # provenance attribution, not a label: an invented 160-character cap here
+    # rejected 16 of the 1374 authority-valid stamps (longest 626) and took the
+    # whole legal projection -- and every gate built on it -- down with them.
+    reviewed_by: str | None = Field(default=None, min_length=1)
     notes: str | None = None
     required_text: tuple[str, ...] = ()
     search_aliases: tuple[str, ...] = ()

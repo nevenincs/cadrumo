@@ -101,7 +101,7 @@ def test_a_call_site_landing_without_its_catalogue_entry_is_refused(repo: Path) 
     assert finding.kind == "uncatalogued-call-site"
     assert finding.key == "surface.farewell"
     for locale in _LOCALES:
-        assert f"{locale}.yml" in finding.detail
+        assert locale in finding.detail
 
 
 def test_a_partially_catalogued_call_site_names_only_the_absent_locales(repo: Path) -> None:
@@ -116,7 +116,7 @@ def test_a_partially_catalogued_call_site_names_only_the_absent_locales(repo: Pa
     result = check_colanding(_manager(repo), "last", repo)
 
     (finding,) = result.findings
-    assert "hu.yml" in finding.detail
+    assert "hu" in finding.detail
     assert "en.yml" not in finding.detail
 
 
@@ -233,3 +233,66 @@ def test_an_unrecognised_change_selector_is_refused(repo: Path) -> None:
     """A typo'd selector must fail loudly rather than silently comparing nothing."""
     with pytest.raises(LocaleError, match="unrecognised change selector"):
         resolve_change("yesterday", repo)
+
+
+def _write_sharded_catalogues(repo: Path, entries: dict[str, str]) -> None:
+    """Write the same key set to every locale as a SHARD DIRECTORY.
+
+    The shape the shipped tree actually carries. The flat writer above is the
+    legacy shape, and every test using it passed while the hook was blind,
+    because the hook globbed flat files that the real catalogue no longer has.
+    """
+    locales_dir = repo / "src" / "cadrumo" / "locales"
+    for locale in _LOCALES:
+        shard_dir = locales_dir / locale
+        shard_dir.mkdir(parents=True, exist_ok=True)
+        flat = locales_dir / f"{locale}.yml"
+        if flat.exists():
+            flat.unlink()
+        lines = ["surface:"]
+        for leaf, value in entries.items():
+            lines.append(f"  {leaf}: '{value} ({locale})'")
+        (shard_dir / "surface.yml").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def test_the_catalogue_key_sets_are_not_empty_for_a_sharded_tree(repo: Path) -> None:
+    """Anti-vacuity: a sharded catalogue must yield one non-empty key set PER LOCALE.
+
+    This is the proof the hook lacked. It read the catalogue with a glob for
+    the flat shape, so once the tree was resharded the glob matched nothing,
+    every key set was absent, and every co-landing check passed by finding no
+    catalogue to be absent from. An empty result read as a clean pass.
+
+    Keying is asserted per locale rather than per file because a key lives in
+    exactly one shard: a per-file key set would report every key as missing
+    from every shard but its own.
+    """
+    from .._colanding import _catalogue_key_sets
+
+    _write_sharded_catalogues(repo, {"greeting": "Hola"})
+    _run(repo, "add", "-A")
+    _run(repo, "commit", "-qm", "reshard the catalogues")
+
+    key_sets = _catalogue_key_sets(_manager(repo), repo, "HEAD")
+
+    assert set(key_sets) == set(_LOCALES), f"expected one key set per locale, got {sorted(key_sets)}"
+    for locale, keys in sorted(key_sets.items()):
+        assert keys, f"{locale} produced an empty key set, which reads as a clean pass"
+        assert "surface.greeting" in keys, f"{locale} lost a key the shard declares: {sorted(keys)}"
+
+
+def test_a_missing_translation_reds_when_the_catalogue_is_sharded(repo: Path) -> None:
+    """The teeth, against the shape the tree carries rather than the legacy one."""
+    _write_sharded_catalogues(repo, {"greeting": "Hola"})
+    _run(repo, "add", "-A")
+    _run(repo, "commit", "-qm", "reshard the catalogues")
+
+    _write_module(repo, ("surface.greeting", "surface.farewell"))
+    _run(repo, "add", "-A")
+    _run(repo, "commit", "-qm", "add a call site with no catalogue entry")
+
+    result = check_colanding(_manager(repo), "HEAD~1..HEAD", repo)
+
+    assert any(finding.key == "surface.farewell" for finding in result.findings), (
+        f"a sharded catalogue missing the key did not red: {result.findings}"
+    )

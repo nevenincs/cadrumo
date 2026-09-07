@@ -237,7 +237,7 @@ def test_generated_tree_validation_refuses_direct_revision_legacy_and_loader_bre
     )
     (export_root / rendered.output_files[0]).write_text("[revisions\n", encoding="utf-8")
 
-    with pytest.raises(RegistryError):
+    with pytest.raises(RegistryError) as _debug_excinfo:
         validate_generated_export_tree(
             context=context,
             joined=joined,
