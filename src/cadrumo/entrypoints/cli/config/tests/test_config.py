@@ -164,7 +164,10 @@ def test_non_cadrumo_error_in_profile_show_read_wraps_to_config_boundary_error(t
 
     assert result.exit_code == 2, result.output
     output_text = result.output
-    assert "profile_record_unreadable" in output_text or "unreadable" in output_text
+    # The machine token, not a word inside it. "unreadable" is a substring of
+    # "profile_record_unreadable", so accepting either accepted only the
+    # weaker one -- and the payload this test is named for went unchecked.
+    assert "profile_record_unreadable" in output_text
 
 
 def test_non_cadrumo_error_cause_chain_reaches_config_boundary_error(tmp_path: Path) -> None:
