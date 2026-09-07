@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
   - '[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]'
 modified: '2026-09-07'
-body_hash: 'sha256:275ae722f3988c46f6c7bf0d0a852f8ea2edb27ed01d70ed3bf211a565f52048'
+body_hash: 'sha256:7b7bcd869ff8925865e8a6ab981084be9d4280ec03c10ef91b8b0e0da0392f6c'
 ---
 
 <!-- RETIRED: W01, W02, W03, W04, W05, W06, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P21, P22, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70, S71, S72, S73, S74, S75, S76, S77, S78, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S95, S96, S97, S98, S99, S100, S101, S102, S103 -->
@@ -91,7 +91,7 @@ The void-assertion audit measured a population and also wrote the rule that clos
 
 Extend the family from assertions to verdicts. A gate's reporting layer converts output into a pass/fail claim, and `dev/audit/report.py` did so with a containment test that could not represent nine of twelve real contract verdicts -- green, accurately named, and blind for months. Close that decidable class, and bring the second hand-maintained census to the sanctioned declaration pattern rather than tidying its rows.
 
-- [ ] `W08.P28.S119` - Repair the import-linter verdict parser in dev/audit/report.py so a contract verdict is read as the last word before its optional parenthetical rather than by suffix containment, since `KEPT (3 ignored imports)` is the form nine of twelve contracts emit and the layer that exists to detect an aborted run could not see any of them (Terra xhigh fixes and refactors); `dev/audit/report.py`.
+- [x] `W08.P28.S119` - Repair the import-linter verdict parser in dev/audit/report.py so a contract verdict is read as the last word before its optional parenthetical rather than by suffix containment, since `KEPT (3 ignored imports)` is the form nine of twelve contracts emit and the layer that exists to detect an aborted run could not see any of them (Terra xhigh fixes and refactors); `dev/audit/report.py`.
 - [ ] `W08.P28.S120` - Land the verdict-grammar detector: a containment, prefix or suffix test applied to a gate output token whose real grammar admits a trailing parenthetical is fixed on the weaker reading and cannot fail for the reason it was written, decidable from the AST joined against the gate's declared output shape (Terra xhigh fixes and refactors); `dev/quality/`.
 - [ ] `W08.P28.S121` - Give the verdict-grammar detector a gate carrying a positive control that fires on the repaired report.py shape and an anti-vacuity floor that fails when the swept verdict-consumer population collapses, and kill that gate with mutmut under the standing scope (Luna max audit and mechanical); `dev/quality/tests/`.
 - [ ] `W08.P28.S122` - Reconcile the live two-drift-direction deferred-edge declaration: remove the 26 stale rows, classify the 8 undeclared live edges with checked site-specific rationale, and retire the generic _DECLARED aggregate in favour of PINNED_DEFERRED_CROSS_LAYER_IMPORTS, since the existing undeclared and stale tests correctly failed in both directions (Terra xhigh fixes and refactors); `src/cadrumo/tests/`.
