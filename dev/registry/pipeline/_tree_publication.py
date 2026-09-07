@@ -45,6 +45,7 @@ from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
+from ..conformance.manager import reset_conformance_cache
 from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
 from ._export_tree import RenderedExportTree
 from ._provenance_manifest import (
@@ -58,7 +59,6 @@ from ._provenance_manifest import (
     loader_semantic_digest,
     verify_export_fragment_provenance_manifest,
 )
-from ..conformance.manager import reset_conformance_cache
 from ._render_profile import RenderProfile, RenderProfileSourceEvidence
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign

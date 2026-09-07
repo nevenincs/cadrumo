@@ -61,10 +61,10 @@ from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code
 from ...domain.transactions.volumen_ingresos import counts_toward_volumen_de_ingresos
 from . import _renta_income_evidence, _shared_issue_reasons
 from ._business_proportion import business_proportion
-from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from ._source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
+from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from .errors import AggregationPeriodError, AggregationValidationError, t
 
 # The only casilla income aggregation feeds for M130 actividad económica direct estimation.

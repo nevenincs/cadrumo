@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest import mock
 
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
+from ...conformance.manager import load_locale_coverage_index
 from ..checklist import CHECKLIST, render_checklist
 from ..manager import NewModeloError, NewModeloScaffoldManager, ScaffoldResult
 
@@ -71,15 +71,23 @@ def test_scaffold_invalidates_the_conformance_snapshot_cache_only_when_it_writes
     """
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
 
-    with mock.patch("dev.registry.newmodelo.manager.reset_conformance_cache") as spy:
-        first = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
-    assert first.written
-    spy.assert_called_once_with()
+    # The memoised read returns the SAME object until something clears it, so
+    # object identity across calls is the cache state itself -- no seam to stub.
+    primed = load_locale_coverage_index()
+    assert load_locale_coverage_index() is primed, "a live cache must serve the identical object"
 
-    with mock.patch("dev.registry.newmodelo.manager.reset_conformance_cache") as spy:
-        second = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    first = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+    assert first.written
+    after_write = load_locale_coverage_index()
+    assert after_write is not primed, (
+        "a scaffold that wrote must have dropped the conformance snapshot cache"
+    )
+
+    second = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
     assert not second.written
-    spy.assert_not_called()
+    assert load_locale_coverage_index() is after_write, (
+        "a no-op scaffold must leave the cache intact"
+    )
 
 
 def test_scaffold_force_overwrites_existing_placeholders(tmp_path: Path) -> None:
