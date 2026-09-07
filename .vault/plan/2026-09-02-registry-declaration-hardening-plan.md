@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:c9083cf703bf1297c7a8db55504b4642b8f837c3c09904b16f30ebd57cb49bec'
+body_hash: 'sha256:446d010d2cdd8c4d46db39a0d12c09e9c134a7acb0b9dd0491bee8a322ae969f'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1404,6 +1404,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1035` - Enforce the reachable-is-a-subset-of-shipped invariant on the unreachable-code result, which rendered a self-refuting coverage headline because three constructors took both counts as free parameters; `dev/audit/unreachable_code.py`.
 - [x] `W06.P13.S1036` - Enforce that the import-hygiene fix classification's consumer count matches the modules it lists, since both derive from one set yet the operator-facing workload figure was a free parameter; `dev/quality/import_hygiene_scan.py`.
 - [x] `W06.P13.S1037` - Join the declustering CLI's argparse surface to its dispatch surface, replacing a completeness claim whose two sides both descended from the same mode tuple and cancelled under the loss it named; `dev/quality/tests/test_object_name_declustering.py`.
+- [x] `W06.P13.S1038` - Floor the anchor corpus against its one independent figure, since the colocation partition compares two numbers from a single report and a shrunken corpus moved both together past a toothless greater-than-zero guard; `dev/ingest_harness/tests/test_corpus_anchors.py`.
+- [x] `W06.P13.S1039` - Correct a doc-privacy test docstring claiming both halves of the ban when the call passes an empty literal tuple and exercises only the pattern family, which a sibling case complements; `dev/quality/tests/test_doc_privacy.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

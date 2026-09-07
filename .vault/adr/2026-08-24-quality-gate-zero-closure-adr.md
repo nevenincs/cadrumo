@@ -3,15 +3,16 @@ tags:
   - '#adr'
   - '#quality-gate-zero-closure'
 date: '2026-08-24'
-modified: '2026-08-24'
+modified: '2026-09-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:09722d317f87bbd1af8687a5628b5e0e193989d6302f006115fe04857eaf636c'
+body_hash: 'sha256:106cc24d5562df3d5e5cb595db912b3f8970067d1e4cab237ff5af9b1ed7d61c'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-static-gate-matrix-research]]"
   - "[[2026-08-24-quality-gate-zero-closure-failure-cluster-topology-reference]]"
   - "[[2026-07-14-honest-all-green-adr]]"
   - "[[2026-06-09-quality-hardening-campaign-adr]]"
   - "[[2026-06-04-repo-health-triage-adr]]"
+  - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
 ---
 # `quality-gate-zero-closure` adr: `Perpetual rolling ratchet with revision-scoped exact-zero checkpoints` | (**status:** `accepted`)
 
@@ -82,3 +83,15 @@ Mechanism completion and repository state must be reported separately. The insta
 The current failure matrix ceases to be an execution contract. It remains useful for immediate triage, but new findings and ownership changes flow through the ratchet and, where implementation authority is needed, into bounded owner work rather than a single perpetual plan.
 
 Vault warnings and separately governed lanes remain visible beside every checkpoint. The resulting report is intentionally narrower than a claim of universal repository health, and any broader claim requires the evidence of those independent authorities.
+
+## 2026-09-07 amendment: this ADR's plan is repurposed, and the controller has no installation vehicle
+
+`2026-09-07-quality-gate-zero-closure-blind-green-gates-adr` takes `2026-08-24-quality-gate-zero-closure-plan` as its owning implementation plan. That plan was this record's finite installation vehicle. The amendment is written here, in the record it changes, because a carve-out recorded only in the sibling would leave this document reading as though nothing had changed while a second accepted record ruled the other way.
+
+Two things change.
+
+**Implementation authority.** The constraint above — "Active feature plans remain the implementation authority for their owned paths... may not silently take over an owned surface" — is unchanged for every surface except one. The blind-green detector surface has no owning feature plan and had none when its evidence was measured on 2026-08-04, which is why that evidence sat undisposed. For that surface only, this plan is the owner. The rule is not weakened elsewhere: the controller still routes to owners and still may not take over a surface that has one.
+
+**The controller now has no installation plan.** Phases `W07.P21` and `W07.P22` and Steps `S95`-`S103` are retired into the plan's record. Those Steps were the repair-and-recheck loop and the revision-scoped checkpoint — the mechanism this ADR's Implementation section requires a finite plan to install. Nothing installs it now. That is a real loss and it is stated rather than absorbed: the controller described here is accepted and unimplemented, and a successor plan must be opened to install it. The two closed observation Steps `S93` and `S94` remain as the only activation work performed.
+
+The decision this record makes is untouched. Exact zero remains the checkpoint predicate, a green claim remains scoped to the revision that earned it, and no threshold, baseline, exclusion, suppression, or allowlist is authorised by either record.

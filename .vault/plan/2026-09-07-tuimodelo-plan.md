@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:b668d1e0566c1ea0dc1cb32a604a6b460cd2ec4ad43a4a518782f2664ebd3553'
+body_hash: 'sha256:88e661430b3c450100dc9b946cb21985ce58abe90c4dda5c31d37e018d146355'
 ---
 
 # `tuimodelo` plan
@@ -108,7 +108,7 @@ Share the capability declaration both adapters need. The frontend already author
 Give history, casilla visibility, effective lifecycle state and cross-modelo binding queries application owners, so a second surface can call them instead of reimplementing them.
 
 - [x] `W02.P05.S16` - Give modelo history an application service owning the event taxonomy, filing-year fallback, filtering and ordering the handler holds today; `src/cadrumo/application/modelo/history.py`.
-- [ ] `W02.P05.S17` - Reconcile the relocated history vocabulary with the frontend lifecycle kind under the lifecycle-vocabulary decision; `src/cadrumo/application/modelo`.
+- [x] `W02.P05.S17` - Reconcile the relocated history vocabulary with the frontend lifecycle kind under the lifecycle-vocabulary decision; `src/cadrumo/application/modelo`.
 - [ ] `W02.P05.S18` - Move casilla visibility and effective work-unit state derivation out of the payload renderer into the application layer; `src/cadrumo/entrypoints/cli/_modelo_rendering.py`.
 - [ ] `W02.P05.S19` - Give the cross-modelo binding query an application owner that refuses rather than silently dropping modelos that fail; `src/cadrumo/application/modelo/binding_resolution.py`.
 - [ ] `W02.P05.S20` - Adjudicate the history model module rather than deleting it: it has no production writer but is imported by the custody-carry resolver, so establish whether it is retired with a custody migration or kept and typed; `src/cadrumo/application/filing/history_models.py`.

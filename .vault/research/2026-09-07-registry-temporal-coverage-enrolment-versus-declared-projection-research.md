@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:b800d5f37e49d896262308e48941199f1f328b0044e9765917e3c406a6766d3d'
+body_hash: 'sha256:842932dce66309831ba857e456b974bb0aaab257e1f2cc4e9fc74e9a3ac070ca'
 related:
   - '[[2026-08-28-registry-narrow-mechanism-widening-adr]]'
   - '[[2026-08-24-registry-completeness-closure-adr]]'

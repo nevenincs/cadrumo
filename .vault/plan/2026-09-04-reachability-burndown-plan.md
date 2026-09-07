@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:a1db7d4fc0302cd0ddf54d6ef5e1e2ca267cc6fc918fb02e9892e4e4fcc22573'
+body_hash: 'sha256:11cfc4283c9fa3140a6840e1e94ef2e9161eb1a07d2d8b4ba8b443db22989ef4'
 ---
 
 # `reachability-burndown` plan
@@ -212,6 +212,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S111` - Wire the profile journey shell into the devtools surfaces with a schema-derived presentation fixture, closing its coverage gap; `src/cadrumo/entrypoints/tui/devtools/surfaces.py`.
 - [x] `W05.P12.S112` - Classify the censal review screen against the placeholder the product already shows, and ratchet the unrendered TUI interface set; `justfile`.
 - [x] `W05.P12.S113` - Classify the last unadjudicated unreachable module and verify the duplication campaign closed on adjudicated residue; `dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S114` - Pay the unpaid symbol-ratchet shrinkage and gate the orphan-test backlog against its classifications; `dev/quality/tests/test_orphan_test_records_agree.py`.
 
 ## Parallelization
 
