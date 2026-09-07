@@ -6,8 +6,9 @@ tags:
 date: '2026-08-26'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:e2d923dd74cfa259e77ade1bb0316a832acac332c9285016f27eb04db8f20650'
+body_hash: 'sha256:b34fb884886e9b4eb7d96705687da4c78b26ad73b8ae60ea2efd26ced6c7c9b9'
 related:
+  - '[[2026-08-14-registry-temporal-coverage-W01-P09-S32]]'
   - '[[2026-08-14-registry-temporal-coverage-adr]]'
   - '[[2026-08-14-registry-temporal-coverage-audit]]'
   - '[[2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr]]'
@@ -51,6 +52,7 @@ related:
   - '[[2026-08-31-registry-temporal-coverage-reference]]'
   - '[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]'
   - '[[2026-09-07-registry-temporal-coverage-enrolment-versus-declared-projection-research]]'
+  - '[[2026-09-07-registry-temporal-coverage-s32-in-file-enrollment-census-review-audit]]'
 ---
 
 # `registry-temporal-coverage` feature index
@@ -98,10 +100,12 @@ Auto-generated index of all documents tagged with `#registry-temporal-coverage`.
 - `2026-08-27-registry-temporal-coverage-coverage-residue-state-audit` - `registry-temporal-coverage` audit: `coverage residue state`
 - `2026-08-27-registry-temporal-coverage-successor-bounding-outcomes-audit` - `registry-temporal-coverage` audit: `Successor-bounding outcomes across five design gaps`
 - `2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit` - `registry-temporal-coverage` audit: `Live remeasurement of the registry coverage surface and the re-grounding the proposed coverage ADR now needs`
+- `2026-09-07-registry-temporal-coverage-s32-in-file-enrollment-census-review-audit` - `registry-temporal-coverage` audit: `S32 in-file enrolment census review`
 
 ### exec
 
 - `2026-08-14-registry-temporal-coverage-ledger` - `registry-temporal-coverage` ledger
+- `2026-08-14-registry-temporal-coverage-W01-P09-S32` - Reconcile the already-landed property-based Modelo 303 semantic-map census that discovers every authored design epoch dynamically, then extend temporal drift detection beyond year-token filenames to module-level literal (modelo, revision) enrolment collections. Derive the expected universe from the canonical law-selected temporal projection, require every exclusion to be an explicit source-digest-bound per-subject pin that goes dormant on reissue, and prove detector teeth with isolated yearless fixtures whose removed or altered pair reports the exact missing or extra identity without frozen corpus counts or double-counting imported collections.
 
 ### plan
 
