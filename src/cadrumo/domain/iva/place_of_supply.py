@@ -31,9 +31,10 @@ invoices for a fact their own treatment ignores, which is the laziness property
 the supply-nature axis exists to keep.
 
 **Refusal rather than a guess.** :func:`place_of_supply_rule` raises for a rule
-with no row, and :func:`required_supply_nature_for_rule` returns ``None`` for a
-rule whose provisions are silent. Neither substitutes a default; a caller that
-cannot determine the placement is expected to say so.
+with no row, and carries a ``supply_nature`` of ``None`` for a rule whose
+provisions are silent. Neither substitutes a default; a caller that cannot
+determine the placement is expected to say so, and the two conditions stay
+distinguishable -- an ungrounded rule raises where a silent one answers.
 
 See Also:
     :class:`~domain.iva.IvaCategory`

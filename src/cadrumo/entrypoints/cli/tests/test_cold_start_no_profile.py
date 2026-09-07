@@ -66,6 +66,20 @@ def _cold_start_verbs() -> tuple[tuple[str, ...], ...]:
             "--revision",
             m303_revision_id,
         ),
+        # Newly profile-bound: its collaboration audit event writes the bucket
+        # event history, so it joins the cold-start contract rather than
+        # skipping the guard the way its former route let it.
+        (
+            "app",
+            "modelo",
+            "review-package",
+            "encrypt-for-recipient",
+            "package.aeatpkg",
+            "--recipient",
+            "recipient",
+            "--output",
+            "sealed.json",
+        ),
         ("app", "modelo", "work", "list"),
         ("app", "modelo", "work", "revisions"),
         ("app", "ledger", "list"),

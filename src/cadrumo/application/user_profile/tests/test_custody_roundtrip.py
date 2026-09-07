@@ -30,7 +30,7 @@ from ....domain.buckets.event import (
 )
 from ....tests.aeat_literal_fixtures import aeat_url
 from ....tests.secure_sql import isolated_two_bucket_runtime
-from ..custody_carry import restore_carried_objects, serialize_carried_objects
+from ..custody_carry import build_secure_object_custody_payload, restore_carried_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -72,13 +72,13 @@ def test_structured_profile_excludes_attachment_evidence_bytes(tmp_path: Path) -
         AttachmentStore().put_bytes(_EVIDENCE_BYTES)
         _seed_bucket_event(runtime.primary.bucket_id)
 
-        structured = serialize_carried_objects(
+        structured, _ = build_secure_object_custody_payload(
             bucket_id=runtime.primary.bucket_id,
-            profile=StorageCustodyProfile.STRUCTURED,
+            custody_profile=StorageCustodyProfile.STRUCTURED,
         )
-        full = serialize_carried_objects(
+        full, _ = build_secure_object_custody_payload(
             bucket_id=runtime.primary.bucket_id,
-            profile=StorageCustodyProfile.FULL,
+            custody_profile=StorageCustodyProfile.FULL,
         )
 
         structured_namespaces = {o.namespace for o in structured}
@@ -147,7 +147,9 @@ def test_full_custody_carry_restores_evidence_bytes_and_audit_trail(tmp_path: Pa
         event_id = _seed_bucket_event(source_bucket)
         justificante_csv = _seed_justificante()
 
-        carried = serialize_carried_objects(bucket_id=source_bucket, profile=StorageCustodyProfile.FULL)
+        carried, _ = build_secure_object_custody_payload(
+            bucket_id=source_bucket, custody_profile=StorageCustodyProfile.FULL
+        )
 
         carried_namespaces = {obj.namespace for obj in carried}
         assert "cadrumo.domain.attachments.blobs" in carried_namespaces
@@ -249,7 +251,9 @@ def test_reconciliation_records_survive_the_custody_carry_with_grounding(tmp_pat
         event_id = _seed_reconciliation_record(source_bucket)
 
         # Serialising must not raise, and must actually carry the namespace.
-        carried = serialize_carried_objects(bucket_id=source_bucket, profile=StorageCustodyProfile.STRUCTURED)
+        carried, _ = build_secure_object_custody_payload(
+            bucket_id=source_bucket, custody_profile=StorageCustodyProfile.STRUCTURED
+        )
         assert "cadrumo.modelo.reconciliation.records" in {obj.namespace for obj in carried}
 
         with runtime.switch_to_secondary():

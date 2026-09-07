@@ -330,6 +330,56 @@ class TestFailClosedRefusals:
         assert result.exit_code != 0
         assert "aeat config login" in semantic_cli_output(result)
 
+    def test_a_newly_profile_bound_verb_still_offers_login_rather_than_create(self) -> None:
+        """A registered-but-logged-out operator is told to log in, not to create a second profile.
+
+        This is the regression a prior write-route review recorded: moving a
+        command onto the profile-bound route lets the root storage-write gate
+        refuse BEFORE the handler is reached, and that gate's verdict names the
+        profile-creation action unconditionally. The handler refusal it
+        pre-empts deliberately distinguishes "no profile registered at all"
+        from "registered but not logged in", so a pre-emption here would tell
+        an operator who already has a profile to create another one.
+
+        It is asserted through a real root dispatch rather than by projecting a
+        policy verdict, because that same review recorded projection-level
+        tests as the reason the earlier regression shipped unnoticed.
+        """
+        _create_profile()
+        close_active_bucket_session()
+
+        result = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "review-package",
+                "encrypt-for-recipient",
+                "package.aeatpkg",
+                "--recipient",
+                "recipient",
+                "--output",
+                "sealed.json",
+            ],
+        )
+
+        assert result.exit_code != 0
+        rendered = semantic_cli_output(result)
+        document = json.loads(rendered)
+        action = document.get("error", {}).get("action")
+        assert action is not None, f"refusal carried no typed action: {rendered}"
+        action_id = action.get("action", {}).get("action_id")
+        assert action_id == "operator.profile.login", (
+            "a registered-but-logged-out operator must be offered login, not profile creation; "
+            f"got {action_id!r} from: {rendered}"
+        )
+        assert action["failed_condition_id"] == "profile.session.logged_in", (
+            "the session-resume precondition must win over the cold-root storage-write verdict, "
+            "whose action names profile creation unconditionally: "
+            f"{action['failed_condition_id']}"
+        )
+
     def test_absent_session_login_action_keeps_the_executable_profile_label(self) -> None:
         """The typed login action carries the public label, never the bucket UUID."""
         bucket_id = _create_profile()
