@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:9166bf05cd830b41f5361d2a066e7674b860110b82bd6746bb48e8c31fde5ddd'
+body_hash: 'sha256:c4c29afc26c8bcf8ab97de135e61e44e65ff25fc126c147621794a55304f06c6'
 ---
 
 # `tuimodelo` plan
@@ -64,8 +64,8 @@ Resolve the five still-open rows an archived campaign left held and the rows who
 
 Extend the denominator so a delivered surface and its recorded classification must agree, and correct the specs that under-declare their write route.
 
-- [x] `W01.P02.S13` - Share the interface capability declaration out of the command-line package so a full-screen surface can read a command's capability posture without importing the adapter; `src/cadrumo/entrypoints/cli/command_spec.py`.
-- [x] `W01.P02.S14` - Relocate the capability model to a shared owner both adapters may consume, sequencing it before the denominator extension that reads it; `src/cadrumo/entrypoints/cli/command_spec.py`.
+- [ ] `W01.P02.S13` - Share the interface capability declaration out of the command-line package so a full-screen surface can read a command's capability posture without importing the adapter; `src/cadrumo/entrypoints/cli/command_spec.py`.
+- [ ] `W01.P02.S14` - Relocate the capability model to a shared owner both adapters may consume, sequencing it before the denominator extension that reads it; `src/cadrumo/entrypoints/cli/command_spec.py`.
 - [x] `W01.P02.S170` - Create headroom on the denominator module before extending it, which sits 63 lines under a ceiling that three steps in this phase and six later steps must share; `dev/quality/modelo_workspace_action_denominator.py`.
 - [x] `W01.P02.S04` - Extend the observed action signature with interface capability and dispatchability so the gate can see a wired surface; `dev/quality/modelo_workspace_action_denominator.py`.
 - [x] `W01.P02.S05` - Add delivered dispositions for reads and for mutations to the closed taxonomy, which today offers no arm a delivered mutation can occupy; `dev/quality/modelo_workspace_action_classification.py`.

@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:2216777cbadb2ebfad11c2c9ad4d0f2b14305454d31263684a12faf45eba8cc3'
+body_hash: 'sha256:6e73453c05e6742ee0f01a475d403ea3ee570f3e969fa5b269d74a7d7378f2a5'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1382,6 +1382,9 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1013` - Cap tolerated unreadable test files at a named absolute rather than a tenth of the corpus, and name them whatever the count; `dev/tests/test_lane_reachability.py`.
 - [x] `W06.P13.S1014` - Retract the identity-gate protocol's claim to be the real signature and record why omitting execution_policy is safe; `dev/agent_eval/_live_scoring.py`.
 - [x] `W06.P13.S1015` - Verify the seventy-six file restore of the checkpoint-absorbed instrumentation, including comment recovery and absence of clobbered work; `dev/ci, dev/packaging, dev/deploy, dev/release, dev/containers`.
+- [x] `W06.P13.S1016` - Announce the files the canonical-authority scan could not read or parse, so an empty text is not read as an absent forbidden reference; `dev/quality/import_hygiene_scan.py`.
+- [x] `W06.P13.S1017` - Record that the run-integrity verdict roster is the classifier's set and not the printed vocabulary, which also carries unreadable; `dev/quality/run_integrity.py`.
+- [x] `W06.P13.S1018` - Hold the provisioning-dependent playwright probe out of the default lane with a per-function external_tool marker; `dev/env/tests/test_playwright_doctor.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
