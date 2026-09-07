@@ -30,6 +30,7 @@ from ._artifacts import (
     ManifestVersionError,
     RenderedFrame,
     SkippedFrame,
+    StaleArtifactPurgeRefusedError,
     digest,
     known_runs,
     now,
@@ -431,9 +432,19 @@ def render_command(
             "different builds and no reviewer can tell which is which. Nothing was written. "
             "Re-run against a settled tree."
         )
-    discarded = purge_stale_artifacts(directory, manifest)
+    # Written BEFORE the sweep, not after. The sweep is the only destructive
+    # step in a command that takes about twenty-five minutes, and running it
+    # first meant any refusal or filesystem error inside it discarded the
+    # manifest and index of a render that had already succeeded.
     write_manifest(directory, manifest)
     write_index(directory, manifest)
+
+    discarded: tuple[Path, ...] = ()
+    purge_refusal: str | None = None
+    try:
+        discarded = purge_stale_artifacts(directory, manifest)
+    except StaleArtifactPurgeRefusedError as exc:
+        purge_refusal = str(exc)
 
     _echo("")
     _echo(f"wrote {len(frames)} frames to {directory}")
@@ -448,10 +459,13 @@ def render_command(
         _echo(f"blocked: {name} produced no frame — {reason}")
     if discarded:
         _echo(f"removed {len(discarded)} stale frames left by an earlier run")
+    if purge_refusal is not None:
+        _echo(f"stale frames kept: {purge_refusal}")
     if skipped:
         _echo(f"{len(skipped)} frames not attempted behind a refusing surface")
     if failures:
         _echo(f"{len(failures)} failed")
+    if failures or purge_refusal is not None:
         raise typer.Exit(code=1)
 
 

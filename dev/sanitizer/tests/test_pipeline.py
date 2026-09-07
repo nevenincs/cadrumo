@@ -254,6 +254,45 @@ class TestRefuseIfSigned:
             with pytest.raises(SignaturePresentError, match=r"signature|SigFlags|signed|AcroForm"):
                 sanitize_pdf(buffer.getvalue(), TokenMap())
 
+    def test_raises_when_the_signature_field_is_nested_under_a_parent(self) -> None:
+        """/Fields is the root of a TREE, and the harm is anywhere in it.
+
+        A signature field may sit under a non-terminal parent that carries no
+        /FT of its own. Sweeping only the top row reports such a document as
+        unsigned, and the sanitiser then rewrites it and voids the signature it
+        was written to protect. /SigFlags is deliberately omitted here: it is a
+        producer-written hint on the very dictionary the nesting hides the
+        field in, so it cannot stand in for reading the tree.
+        """
+        pdf = pikepdf.Pdf.new()
+        pdf.add_blank_page(page_size=(612, 792))
+        kid = pdf.make_indirect(pikepdf.Dictionary(FT=pikepdf.Name.Sig, T="signature"))
+        parent = pdf.make_indirect(pikepdf.Dictionary(T="group", Kids=pikepdf.Array([kid])))
+        pdf.Root["/AcroForm"] = pdf.make_indirect(pikepdf.Dictionary(Fields=pikepdf.Array([parent])))
+        buffer = io.BytesIO()
+        pdf.save(buffer)
+
+        with pytest.raises(SignaturePresentError, match=r"signature field"):
+            sanitize_pdf(buffer.getvalue(), TokenMap())
+
+    def test_an_unsigned_field_tree_is_walked_without_looping(self) -> None:
+        """A /Kids array pointing back at an ancestor must not wedge the walk.
+
+        Malformed, but perfectly representable, and a cycle in a guard that
+        runs before every sanitisation is a hang rather than a refusal.
+        """
+        pdf = pikepdf.Pdf.new()
+        pdf.add_blank_page(page_size=(612, 792))
+        parent = pdf.make_indirect(pikepdf.Dictionary(T="group", FT=pikepdf.Name.Tx))
+        parent["/Kids"] = pikepdf.Array([parent])
+        pdf.Root["/AcroForm"] = pdf.make_indirect(pikepdf.Dictionary(Fields=pikepdf.Array([parent])))
+        buffer = io.BytesIO()
+        pdf.save(buffer)
+
+        result = sanitize_pdf(buffer.getvalue(), TokenMap())
+
+        assert result.output_bytes, "an unsigned document with a cyclic field tree still sanitises"
+
 
 class TestRefuseIfAlreadySanitized:
     """The orchestrator refuses re-sanitising a known-sanitised SHA.

@@ -54,6 +54,15 @@ MANIFEST_SCHEMA_VERSION: Final[int] = 2
 than upgraded -- see :func:`read_manifest`."""
 INDEX_NAME: Final[str] = "index.md"
 
+MAX_STALE_FILES_PER_PURGE: Final[int] = 24
+"""How many unclaimed files one purge may delete before it refuses.
+
+Twenty-four is one surface's full matrix: four viewports times two themes
+times the three files a frame writes. A surface that was renamed strands
+exactly that many, so the bound admits the ordinary case and refuses the
+one that is never ordinary -- a run whose matrix SHRANK, which strands the
+frames of every surface it no longer asks for."""
+
 
 class RenderedFrame(BaseModel):
     """One surface rendered at one viewport under one theme."""
@@ -268,17 +277,62 @@ def stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
     return tuple(found)
 
 
-def purge_stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
+def purge_stale_artifacts(
+    directory: Path,
+    manifest: Manifest,
+    *,
+    removal_allowance: int | None = None,
+) -> tuple[Path, ...]:
     """Delete the frames this run did not produce, and report what went.
 
     Deliberately narrow: only regular files under the three frame directories
     of THIS run, only those the manifest does not name. The manifest, index and
     log are never touched, and nothing outside the run directory is considered.
+
+    Narrow is not the same as bounded. Membership in the manifest answers
+    "did this run name that file", and the question that decides whether the
+    delete is safe is "does this run have a replacement for it" -- the same
+    property for a re-rendered frame, a different one for a frame this run was
+    never asked to render. The bound is what keeps the second case reviewable;
+    see :class:`StaleArtifactPurgeRefusedError`.
+
+    Args:
+        directory: The run directory to sweep.
+        manifest: The manifest this run is about to write.
+        removal_allowance: Files this purge may delete. Defaults to
+            :data:`MAX_STALE_FILES_PER_PURGE`. Pass a larger value to
+            authorise a deliberate bulk retirement.
+
+    Returns:
+        The paths that were actually unlinked, in sorted order.
+
+    Raises:
+        StaleArtifactPurgeRefusedError: The sweep found more unclaimed files
+            than *removal_allowance* permits. Nothing is removed.
     """
-    removed = stale_artifacts(directory, manifest)
-    for path in removed:
-        path.unlink()
-    return removed
+    allowance = MAX_STALE_FILES_PER_PURGE if removal_allowance is None else removal_allowance
+    doomed = stale_artifacts(directory, manifest)
+    if len(doomed) > allowance:
+        listed = ", ".join(path.name for path in doomed[:10])
+        raise StaleArtifactPurgeRefusedError(
+            f"the sweep would delete {len(doomed)} unclaimed file(s) from {directory}, over the declared bound "
+            f"of {allowance}. Nothing was removed. A sweep this size means the run rendered a SMALLER matrix "
+            "than the one already on disk, so what it would delete is the frames of surfaces it never asked "
+            "for, not residue it replaced; re-render the full matrix, or pass removal_allowance to authorise "
+            f"the retirement explicitly. First removals: {listed}"
+        )
+
+    removed: list[Path] = []
+    for path in doomed:
+        # Re-checked rather than trusted, as the sibling prunes under dev/docs
+        # do: the listing and the unlink are separate passes, and this one runs
+        # at the end of a render measured in tens of minutes. A frame that goes
+        # away in between is a benign race, and an unguarded unlink turns it
+        # into a FileNotFoundError that would have taken the whole run with it.
+        if path.exists():
+            path.unlink()
+            removed.append(path)
+    return tuple(removed)
 
 
 def unaccounted_frames(
@@ -305,6 +359,24 @@ def unaccounted_frames(
 
 class ManifestVersionError(RuntimeError):
     """The manifest on disk was written by a different version of this tool."""
+
+
+class StaleArtifactPurgeRefusedError(RuntimeError):
+    """Raised when one purge would delete more unclaimed files than its bound.
+
+    The purge deletes what THIS run's manifest does not name, which is the
+    right question for a frame a re-render replaced and the wrong one for a
+    frame it never asked for. A run narrowed with ``--surface`` names a
+    fraction of the matrix, so every other surface's frames are unclaimed by
+    construction, and a directory that cost about twenty-five minutes to fill
+    empties down to the one surface that was re-rendered. Nothing warns: the
+    files are gitignored, so there is no diff and no git recovery.
+
+    Bounding it turns that into a reviewable claim. A prune over the bound is
+    reported by name and NOTHING is removed, so a run that meant to re-render
+    one surface keeps the rest and can say so explicitly through
+    ``removal_allowance`` when the retirement is deliberate.
+    """
 
 
 def read_manifest(directory: Path) -> Manifest:
@@ -397,6 +469,7 @@ __all__ = [
     "INDEX_NAME",
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",
+    "MAX_STALE_FILES_PER_PURGE",
     "RENDER_LOG_NAME",
     "RUNS_DIR",
     "RUN_ROOT",
@@ -407,6 +480,7 @@ __all__ = [
     "ManifestVersionError",
     "RenderedFrame",
     "SkippedFrame",
+    "StaleArtifactPurgeRefusedError",
     "digest",
     "known_runs",
     "now",
