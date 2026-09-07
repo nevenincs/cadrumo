@@ -13,6 +13,7 @@ import pytest
 
 from ..default_lane_visibility import (
     _REPO_ROOT,
+    declared_roots,
     default_lane_predicate,
     visibility_census,
 )
@@ -32,7 +33,7 @@ def lane() -> tuple[str, frozenset[str]]:
 def test_the_screen_reads_a_real_population(lane: tuple[str, frozenset[str]]) -> None:
     """A scan reaching nothing would report a clean tree and an empty census alike."""
     required, excluded = lane
-    roots = tuple(path for path in (_REPO_ROOT / "dev", _REPO_ROOT / "tests") if path.is_dir())
+    roots = declared_roots(_REPO_ROOT)
     findings = visibility_census(roots, required=required, excluded=excluded)
 
     assert roots, "neither test root exists, so the census scanned nothing"
@@ -55,6 +56,58 @@ def test_a_module_carrying_no_execution_marker_is_caught(tmp_path: Path, lane: t
     required, excluded = lane
     _write(tmp_path, "test_orphan.py", "pytestmark = [pytest.mark.hex_core]")
     findings = visibility_census((tmp_path,), required=required, excluded=excluded)
+    assert [item.kind for item in findings] == ["no_execution_marker"]
+
+
+def test_a_module_level_mark_without_an_execution_marker_defers_to_its_tests(
+    tmp_path: Path, lane: tuple[str, frozenset[str]]
+) -> None:
+    """A hexagonal-only `pytestmark` must not read as running nowhere.
+
+    The screen asked about per-test decorators only when a module carried no
+    module-level `pytestmark` at all. A module carrying one that names no
+    EXECUTION marker fell straight through to the sharpest condition, so
+    `dev/audit/tests/test_size_budget_dev_corpus.py` -- hexagonal marker at
+    module level, ten `unit` decorators on its tests -- was reported as
+    running nowhere while ten of its tests ran.
+
+    Its sibling above is the discriminator: the same module-level line with
+    UNDECORATED tests is still the sharpest condition, and must stay so.
+    """
+    required, excluded = lane
+    _write(
+        tmp_path,
+        "test_decorated.py",
+        "pytestmark = [pytest.mark.hex_core]",
+        body="@pytest.mark.unit\ndef test_x() -> None:\n    assert True\n",
+    )
+
+    findings = visibility_census((tmp_path,), required=required, excluded=excluded)
+
+    assert [item.kind for item in findings] == ["per_function_markers_only"]
+
+
+def test_a_decorated_fixture_does_not_make_a_module_look_marker_bearing(
+    tmp_path: Path, lane: tuple[str, frozenset[str]]
+) -> None:
+    """Only a decorated TEST defers the question; a decorated fixture does not.
+
+    A fixture confers no marker on anything it serves, so counting any
+    decorated function would report a module as marker-bearing when nothing
+    it runs is -- moving it out of the sharpest channel for the wrong reason.
+    """
+    required, excluded = lane
+    _write(
+        tmp_path,
+        "test_fixture_only.py",
+        "pytestmark = [pytest.mark.hex_core]",
+        body=(
+            "@pytest.fixture\ndef thing() -> int:\n    return 1\n\ndef test_x(thing: int) -> None:\n    assert thing\n"
+        ),
+    )
+
+    findings = visibility_census((tmp_path,), required=required, excluded=excluded)
+
     assert [item.kind for item in findings] == ["no_execution_marker"]
 
 
@@ -118,3 +171,23 @@ def test_a_half_written_module_is_reported_not_dropped(tmp_path: Path, lane: tup
     (tmp_path / "test_half.py").write_text("def (:\n", encoding="utf-8")
     findings = visibility_census((tmp_path,), required=required, excluded=excluded)
     assert [(item.module, item.kind) for item in findings] == [("test_half.py", "unread")]
+
+
+def test_a_declared_root_that_no_longer_exists_is_refused(tmp_path: Path) -> None:
+    """A vanished root must stop the census, not quietly shrink it.
+
+    This is the condition that already occurred: the roster named a
+    top-level ``tests`` tree, that tree moved, and the ``is_dir()`` filter
+    dropped it without a word. The surviving root still cleared the
+    population floor, so nothing in the suite could see the loss.
+    """
+    with pytest.raises(FileNotFoundError, match="never reached"):
+        declared_roots(tmp_path)
+
+
+def test_every_declared_root_resolves_against_this_repository() -> None:
+    """The other direction: the live roster must still describe the tree."""
+    resolved = declared_roots(_REPO_ROOT)
+
+    assert resolved, "the roster declares no test root at all"
+    assert all(path.is_dir() for path in resolved)

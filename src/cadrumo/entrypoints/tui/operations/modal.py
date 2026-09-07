@@ -25,10 +25,12 @@ from textual.widgets import Button, Static
 from textual.worker import Worker, WorkerCancelled, WorkerFailed
 
 from ....application.operations.frontend_contracts import (
+    OperationCancellationRefusalCode,
     OperationCancellationSuccessV1,
     OperationDetachSuccessV1,
     OperationObservationSuccessV1,
     OperationResponseApplyRequestV1,
+    OperationResponseControlRefusalCode,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
 )
@@ -120,6 +122,11 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         super().__init__()
         self._controller = controller
         self._view_model: OperationModalViewModelV1 | None = None
+        # The last operator action this modal refused, held on the screen rather
+        # than written straight to the widget because the poll worker re-renders
+        # on every observation and would erase it within the tick. It is cleared
+        # by the next action that succeeds.
+        self._action_refusal: str | None = None
         self._log_view: OperationModalLogViewV1 = build_initial_log_view(controller.operation_id)
         # The modal renders whatever REVIEW projection an operation publishes,
         # so its interaction state is parameterised by the projection base.
@@ -138,6 +145,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             yield Static("", id="operation-modal-phase")
             yield Static("", id="operation-modal-deadlines")
             yield Static("", id="operation-modal-diagnostic")
+            yield Static("", id="operation-modal-action-refusal")
             yield Static("", id="operation-modal-receipt")
             yield Static("", id="operation-modal-review")
             yield Static("", id="operation-modal-log")
@@ -244,6 +252,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self.query_one("#operation-modal-diagnostic", Static).update(
             f"{tr('operation.modal.detail.diagnostic')}: {diagnostic}" if diagnostic is not None else ""
         )
+        # Repainted with every observation so the poll worker cannot wipe a
+        # refusal the operator has not acted on yet.
+        self._render_action_refusal()
         receipt = self.query_one("#operation-modal-receipt", Static)
         if view_model.receipt_kind == "result":
             receipt.update(f"{tr('operation.modal.detail.receipt_result')}: {view_model.receipt_ref}")
@@ -295,7 +306,14 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             return
         result = await self._controller.cancel(expected_revision=view_model.projection.revision)
         if isinstance(result, OperationCancellationSuccessV1):
+            self._clear_action_refusal()
             return
+        # A refused cancel used to fall off the end of this method. The button
+        # stayed enabled and nothing changed on screen, so the only feedback the
+        # operator got was that pressing Cancel did nothing -- which reads as an
+        # unresponsive control rather than a decision, and the natural response
+        # is to press it again.
+        self._show_action_refusal(result.code)
 
     async def _request_detach(self) -> None:
         view_model = self._view_model
@@ -338,7 +356,39 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 )
             )
         if not isinstance(outcome, OperationResponseMutationSuccessV1):
+            # Same silent discard as the cancel path, and worse here: apply and
+            # reject are how the operator answers a question the operation is
+            # blocked on, so a discarded refusal leaves them pressing a button
+            # against a modal that will not move.
+            self._show_action_refusal(outcome.code)
             return
+        self._clear_action_refusal()
+
+    def _show_action_refusal(
+        self,
+        code: OperationCancellationRefusalCode | OperationResponseControlRefusalCode,
+    ) -> None:
+        """Say why the operator's action was refused, in their own language.
+
+        The copy key is derived from the refusal code's own value rather than
+        read out of a hand-written table, so a code added to either enum cannot
+        be silently unnamed here -- it is the enum that decides which keys must
+        exist, and a completeness gate holds the catalogues to it.
+        """
+        self._action_refusal = tr(f"operation.modal.refusal.{code.value}")
+        self._render_action_refusal()
+
+    def _clear_action_refusal(self) -> None:
+        """Drop a stale refusal once an action succeeds."""
+        self._action_refusal = None
+        self._render_action_refusal()
+
+    def _render_action_refusal(self) -> None:
+        """Paint the retained refusal, if the modal is still composed."""
+        refusal = self._action_refusal
+        self.query_one("#operation-modal-action-refusal", Static).update(
+            "" if refusal is None else f"{tr('operation.modal.detail.action_refused')}: {refusal}"
+        )
 
 
 __all__ = [

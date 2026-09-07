@@ -45,8 +45,10 @@ __all__ = [
     "SynonymCandidateEntry",
     "SynonymCandidateObservation",
     "SynonymRatificationQueue",
+    "carry_forward_review_state",
     "load_synonym_ratification_queue",
     "mine_synonym_candidates",
+    "reviewed_decisions_dropped",
     "synonym_ratification_queue_path",
     "validate_ratification_queue",
 ]
@@ -283,6 +285,80 @@ def mine_synonym_candidates(
         thresholds=thresholds,
         entries=tuple(entries),
     )
+
+
+def carry_forward_review_state(
+    mined: SynonymRatificationQueue,
+    prior: SynonymRatificationQueue,
+) -> SynonymRatificationQueue:
+    """Re-attach ``prior``'s hand-authored review verdicts to a freshly mined queue.
+
+    The queue declares ``generated_by`` and reads as a generator's output, but
+    ``status``/``review_reason``/``reviewed_at`` are written by a human reviewer
+    and :func:`mine_synonym_candidates` cannot emit them: every mined row is
+    born :data:`RatificationStatus.PROPOSED`, and the entry validator forbids a
+    proposed row from carrying review fields at all. A re-mine therefore returns
+    a queue that is internally consistent and missing every decision ever taken.
+
+    Carry-forward rescues the decisions whose rows the miner still produces -
+    in practice the rejected ones. It cannot rescue a *ratified* row: ratified
+    means the candidate landed in the Handbook, and the miner skips candidates
+    already in the shipped query vocabulary by design. Those are recovered only
+    by refusing to drop them, which is what :func:`reviewed_decisions_dropped`
+    exists to detect.
+    """
+    decided = {_review_identity(entry): entry for entry in prior.entries if _is_reviewed(entry)}
+    entries: list[SynonymCandidateEntry] = []
+    for row in mined.entries:
+        decision = decided.get(_review_identity(row))
+        if decision is None:
+            entries.append(row)
+            continue
+        entries.append(
+            SynonymCandidateEntry(
+                concept_id=row.concept_id,
+                source_term=row.source_term,
+                candidate=row.candidate,
+                language=row.language,
+                action=row.action,
+                cosine=row.cosine,
+                nearest_competing_cosine=row.nearest_competing_cosine,
+                competing_concept_id=row.competing_concept_id,
+                status=decision.status,
+                review_reason=decision.review_reason,
+                reviewed_at=decision.reviewed_at,
+            ),
+        )
+    return SynonymRatificationQueue(
+        schema_version=mined.schema_version,
+        generated_by=mined.generated_by,
+        thresholds=mined.thresholds,
+        entries=tuple(entries),
+    )
+
+
+def reviewed_decisions_dropped(
+    replacement: SynonymRatificationQueue,
+    prior: SynonymRatificationQueue,
+) -> tuple[SynonymCandidateEntry, ...]:
+    """Return every reviewed row in ``prior`` that ``replacement`` writes off.
+
+    The whole loss set is computed before any caller writes a byte, so a refusal
+    is atomic and names each decision it is protecting.
+    """
+    survivors = {_review_identity(entry) for entry in replacement.entries if _is_reviewed(entry)}
+    return tuple(entry for entry in prior.entries if _is_reviewed(entry) and _review_identity(entry) not in survivors)
+
+
+def _is_reviewed(entry: SynonymCandidateEntry) -> bool:
+    return entry.status is not RatificationStatus.PROPOSED
+
+
+def _review_identity(
+    entry: SynonymCandidateObservation,
+) -> tuple[str, str, RatificationAction, OutputLanguage]:
+    """Identity used by the queue's own uniqueness validator."""
+    return (entry.concept_id, _normalise(entry.candidate), entry.action, entry.language)
 
 
 def validate_ratification_queue(

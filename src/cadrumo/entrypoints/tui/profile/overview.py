@@ -454,7 +454,18 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
             card.query_one(Button).disabled = not (door_ready and credential_ready)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Launch the pressed source's operation through the injected door only."""
+        """Launch the pressed source's operation through the injected door only.
+
+        Refused while a field write is in flight, for the reason the edit
+        entry points give: an acquisition source rewrites profile facts by
+        merging into the record as it loads it, so one started before the
+        operator's edit had landed would merge into the pre-edit facts and
+        drop that field. This was the one mutation entry point without the
+        guard, and the omission is currently masked rather than harmless --
+        the installed launcher supplies no ``launch_source``, so the button is
+        disabled and the handler returns above. It becomes reachable the moment
+        that door is wired.
+        """
         if self._launch_source is None:
             return
         card = event.button.parent
@@ -464,8 +475,14 @@ class ProfileManagerScreen(TypedAppAccess, Screen[None]):
         source = next(
             (candidate for candidate in known_profile_acquisition_sources() if candidate.key.value == key), None
         )
-        if source is not None:
-            await self._launch_source(source)
+        if source is None:
+            return
+        # Checked here rather than on entry so a press that resolves to no
+        # source at all is not answered with a message about a write.
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        await self._launch_source(source)
 
     # ── rendering ───────────────────────────────────────────────────────
 

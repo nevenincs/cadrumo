@@ -8,9 +8,12 @@ the headword-derived anchor Sphinx generates for the ``glossary`` directive
 These gates prove the two stay in lock-step, so a concept result lands on its
 definition rather than the glossary top:
 
-- :func:`test_anchor_matches_sphinx_ground_truth` locks
-  :func:`glossary_term_anchor` against headword/anchor pairs taken verbatim from
-  the rendered glossary, so a drift in the slug algorithm fails loudly.
+- :func:`test_anchor_helper_matches_sphinx_id_generation` locks
+  :func:`glossary_term_anchor` against the id Sphinx's own
+  :func:`sphinx.util.nodes.make_id` generates for each term, so a drift in
+  either scheme fails loudly. The expected anchors are computed by Sphinx, not
+  declared here, so the gate cannot be satisfied by restating the helper's
+  output.
 - :func:`test_injected_concept_anchors_resolve_in_glossary` proves every
   approved concept's injected anchor matches a real glossary term line, so a
   concept whose headword and id diverge can never again ship a dead deep link.
@@ -24,8 +27,13 @@ definition rather than the glossary top:
 from __future__ import annotations
 
 import re
+from typing import TYPE_CHECKING, cast
 
 import pytest
+from docutils.frontend import get_default_settings
+from docutils.parsers.rst import Parser as RstParser
+from docutils.utils import new_document
+from sphinx.util.nodes import make_id
 
 from ..._paths import REPO_ROOT
 from ..glossary_reference import render_glossary
@@ -34,6 +42,9 @@ from ..terminology._concept_cards import project_concept_cards
 from ..terminology._glossary_anchor import glossary_term_anchor
 from ..terminology.search_record import SearchRecordKind
 from ..terminology.unified_record import to_search_record
+
+if TYPE_CHECKING:
+    from sphinx.environment import BuildEnvironment
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
@@ -46,41 +57,122 @@ def _load_handbook():
     return load_terminology_handbook()
 
 
-def _glossary_term_anchors() -> set[str]:
-    """The anchor set the rendered glossary's term lines will generate.
+def _rendered_term_lines(rst: str) -> list[str]:
+    """Return the glossary's term lines, in render order.
 
     A glossary entry's term lines are indented exactly three spaces; its
-    definition and grounding lines are indented six. Each surviving term line
-    becomes a Sphinx ``:term:`` anchor, so projecting every three-space line
-    through :func:`glossary_term_anchor` yields the page's live anchor set.
+    definition and grounding lines are indented six. The scan starts only after
+    the directive's ``:sorted:`` option, because the generated header comment
+    above it wraps at the same three-space indent and its continuation lines
+    are prose, not terms.
     """
-    rst, _ = render_glossary(_REPO_ROOT, _load_handbook())
-    anchors: set[str] = set()
+    terms: list[str] = []
+    started = False
     for line in rst.splitlines():
+        if not started:
+            if line.strip() == ":sorted:":
+                started = True
+            continue
         if line.startswith("   ") and not line.startswith("      "):
             term = line.strip()
             if term:
-                anchors.add(glossary_term_anchor(term))
-    return anchors
+                terms.append(term)
+    return terms
 
 
-@pytest.mark.parametrize(
-    ("headword", "anchor"),
-    [
-        ("VIES", "term-VIES"),
-        ("IVA", "term-IVA"),
-        ("casilla", "term-casilla"),
-        ("recargo de equivalencia", "term-recargo-de-equivalencia"),
-        ("Impuesto sobre el Valor Añadido", "term-Impuesto-sobre-el-Valor-Anadido"),
-        ("Número de Identificación Fiscal", "term-Numero-de-Identificacion-Fiscal"),
-        ("autoliquidación de IVA", "term-autoliquidacion-de-IVA"),
-        ("sede electrónica", "term-sede-electronica"),
-        ("prorrata especial", "term-prorrata-especial"),
-    ],
+def _glossary_term_anchors() -> set[str]:
+    """The anchor set the rendered glossary's term lines will generate.
+
+    Each term line becomes a Sphinx ``:term:`` anchor, so projecting every one
+    of them through :func:`glossary_term_anchor` yields the page's live anchor
+    set -- an equality the sweep below holds against Sphinx itself.
+    """
+    rst, _ = render_glossary(_REPO_ROOT, _load_handbook())
+    return {glossary_term_anchor(term) for term in _rendered_term_lines(rst)}
+
+
+class _RefusingSerialno:
+    """An ``env`` stand-in that refuses :func:`make_id`'s numbering fallback.
+
+    :func:`sphinx.util.nodes.make_id` falls back to ``term-<serial>`` only when
+    a term yields no usable id at all or collides with an id already present in
+    the document. Neither condition is part of this module's claim, and a
+    silently numbered anchor would turn a parity question into an unrelated
+    pass, so the fallback raises instead of returning.
+    """
+
+    def new_serialno(self, category: str) -> int:
+        raise AssertionError(
+            f"sphinx fell back to serial numbering for {category!r}: the term yielded "
+            "no usable id, which is outside this gate's claim"
+        )
+
+
+def _sphinx_glossary_anchor(term: str) -> str:
+    """Return the anchor Sphinx itself generates for a glossary term line.
+
+    This is the module's independent root. Sphinx's ``glossary`` directive
+    derives a term's node id in ``make_glossary_term`` by calling
+    :func:`sphinx.util.nodes.make_id` with the ``term`` prefix; calling that
+    same function here reproduces the id the built page will carry WITHOUT
+    re-implementing the scheme and without declaring the answer in this file.
+    A drift in either :func:`glossary_term_anchor` or in Sphinx's id algorithm
+    therefore separates the two sides, which a hand-maintained expectation
+    table could never do: that table's only root was the helper under test.
+
+    Each call gets a fresh empty document, so no id is ever taken by a previous
+    term and the result depends solely on the term text.
+    """
+    document = new_document("<glossary-anchor-parity>", get_default_settings(RstParser))
+    return make_id(cast("BuildEnvironment", _RefusingSerialno()), document, "term", term)
+
+
+#: Headword SHAPES the anchor scheme must keep handling, as INPUTS only -- the
+#: expected anchor for each is computed by Sphinx. They guard against the live
+#: handbook losing a shape (all-caps acronym, multi-word phrase, combining
+#: accent, mixed case) and quietly narrowing what the corpus sweep below
+#: exercises; the sweep is the real corpus, these are its floor.
+_ANCHOR_SHAPE_PROBES: tuple[str, ...] = (
+    "VIES",
+    "casilla",
+    "recargo de equivalencia",
+    "Impuesto sobre el Valor Añadido",
+    "Número de Identificación Fiscal",
+    "sede electrónica",
 )
-def test_anchor_matches_sphinx_ground_truth(headword: str, anchor: str) -> None:
-    """The slug helper reproduces the ids Sphinx renders in the live glossary."""
-    assert glossary_term_anchor(headword) == anchor
+
+
+@pytest.mark.parametrize("headword", _ANCHOR_SHAPE_PROBES)
+def test_anchor_helper_matches_sphinx_id_generation(headword: str) -> None:
+    """The slug helper reproduces the id Sphinx generates for the headword."""
+    assert glossary_term_anchor(headword) == _sphinx_glossary_anchor(headword)
+
+
+def test_every_rendered_glossary_term_agrees_with_sphinx() -> None:
+    """Every term the live glossary renders slugs identically on both sides.
+
+    The shape probes above are a floor; this is the corpus. Every three-space
+    term line the real generator emits is put through the helper and through
+    Sphinx, and the two must agree, so a headword the handbook adds tomorrow is
+    covered the day it lands rather than when someone remembers to extend a
+    table.
+
+    The two schemes are NOT equivalent in general: docutils keeps ``.`` and
+    ``_`` inside an id, while :func:`glossary_term_anchor` folds every
+    non-alphanumeric run to a hyphen. No approved headword carries either
+    character today, which is why the corpus agrees; this sweep is what turns
+    the first one that does into a failure instead of a dead deep link.
+    """
+    rst, _ = render_glossary(_REPO_ROOT, _load_handbook())
+    terms = _rendered_term_lines(rst)
+    assert len(terms) > 20, f"the glossary rendered only {len(terms)} term line(s); nothing is being swept"
+
+    divergent = [
+        f"{term!r}: helper {glossary_term_anchor(term)!r} != sphinx {_sphinx_glossary_anchor(term)!r}"
+        for term in terms
+        if glossary_term_anchor(term) != _sphinx_glossary_anchor(term)
+    ]
+    assert not divergent, "glossary anchors diverge from Sphinx id generation:\n" + "\n".join(divergent[:40])
 
 
 #: A grounding line reads ``Legal basis: `<citation> <url>`__ (``<ref>``)``: the

@@ -7,6 +7,7 @@ import yaml
 
 from ..._paths import REPO_ROOT
 from ...ci.workflow_permissions import jobs_granting
+from ...ci.workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -63,9 +64,10 @@ def _executable_lines(script: str) -> str:
 
     A structural assertion must read what the shell RUNS. Prose explaining why
     a token is absent from a branch contains that token, so a naive membership
-    test matches the comment and reports the opposite of the truth.
+    test matches the comment and reports the opposite of the truth. The rule
+    that decides this is :mod:`dev.ci.workflow_run_text`'s, not a copy of it.
     """
-    return chr(10).join(line for line in script.splitlines() if not line.strip().startswith("#"))
+    return executed_text(script)
 
 
 def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:

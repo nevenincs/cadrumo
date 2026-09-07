@@ -41,6 +41,7 @@ def test_cli_scaffold_writes_tree_and_prints_checklist(tmp_path: Path) -> None:
     result = CliRunner().invoke(app, _scaffold_args(tmp_path))
 
     assert result.exit_code == 0, result.stdout
+    assert result.stderr == "", "the scaffold report is the command's sole stdout contract, never a diagnostic stream"
     assert "written" in result.stdout
     assert f"Contributor checklist for a new modelo revision ({len(CHECKLIST)} items):" in result.stdout
     assert (tmp_path / _THROWAWAY_MODELO_ID / "manifest.toml").is_file()
@@ -54,6 +55,7 @@ def test_cli_scaffold_check_exits_nonzero_when_tree_absent(tmp_path: Path) -> No
     )
 
     assert result.exit_code == 1
+    assert result.stderr == "", "the scaffold report is the command's sole stdout contract, never a diagnostic stream"
     assert "missing" in result.stdout
     assert not (tmp_path / _THROWAWAY_MODELO_ID).exists()
 
@@ -62,6 +64,7 @@ def test_cli_scaffold_check_exits_zero_after_real_scaffold(tmp_path: Path) -> No
     """``newmodelo scaffold --check`` is conformant immediately after a real scaffold run."""
     first = CliRunner().invoke(app, _scaffold_args(tmp_path))
     assert first.exit_code == 0
+    assert first.stderr == "", "the scaffold report is the command's sole stdout contract, never a diagnostic stream"
 
     second = CliRunner().invoke(
         app,
@@ -69,6 +72,7 @@ def test_cli_scaffold_check_exits_zero_after_real_scaffold(tmp_path: Path) -> No
     )
 
     assert second.exit_code == 0
+    assert second.stderr == "", "the scaffold report is the command's sole stdout contract, never a diagnostic stream"
     assert "conformant" in second.stdout
 
 
@@ -77,6 +81,7 @@ def test_cli_checklist_command_prints_all_items() -> None:
     result = CliRunner().invoke(app, ["checklist"])
 
     assert result.exit_code == 0
+    assert result.stderr == "", "the checklist report is the command's sole stdout contract, never a diagnostic stream"
     assert f"Contributor checklist for a new modelo revision ({len(CHECKLIST)} items):" in result.stdout
 
 

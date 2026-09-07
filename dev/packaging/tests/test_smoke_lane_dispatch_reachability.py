@@ -20,17 +20,39 @@ No tally is pinned. The gate derives both sides at read time: the module set fro
 the directory, the dispatched set from the dispatch surfaces. Adding a lane and
 wiring it passes; adding a lane and forgetting to wire it fails, which is the one
 outcome that matters.
+
+BOTH SIDES WERE ONCE NARROWER THAN THE QUESTION, in the same way the gate exists
+to catch, so both are stated rather than left to the reader.
+
+The module set was globbed ``smoke_*.py``. ``all_extra_smoke`` is a registered
+core form and a smoke lane by every other measure, and its name puts the word at
+the END, so the population the gate quantified over held eight of the nine lanes
+and the one it could not see was the oddly-named one -- the member a naming
+convention is least likely to keep and a reader is least likely to miss twice.
+It was wired, so the gate was green and would have stayed green had it been
+unwired. Both spellings are read now.
+
+The dispatch set was the RAW text of each surface, so a lane named in a comment
+counted as dispatched: a commented-out invocation, or a module named in a
+rationale note above the command that replaced it, satisfies a substring test
+while nothing runs it. That is precisely the defect
+:mod:`dev.ci.workflow_run_text` was written to remove, and this gate -- the one
+whose whole subject is a lane that looks dispatched and is not -- was reading
+the surfaces the way that module exists to forbid. The surfaces are filtered
+through it now.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Final
 
 import pytest
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from ..._paths import REPO_ROOT as _REPO_ROOT
+from ...ci.workflow_run_text import executed_text
 from ..campaign import _LANES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -39,21 +61,40 @@ _PACKAGING = Path(__file__).resolve().parents[1]
 _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 
 
+#: Both spellings a lane module in this package uses. A single ``smoke_*.py``
+#: glob held eight of the nine lanes and silently dropped ``all_extra_smoke``.
+_LANE_PATTERNS: Final = ("smoke_*.py", "*_smoke.py")
+
+
 def _lane_module_stems() -> frozenset[str]:
-    """Return the stem of every packaging smoke-lane module in the tree."""
-    return frozenset(path.stem for path in iter_directory(_PACKAGING, pattern="smoke_*.py"))
+    """Return the stem of every packaging smoke-lane module in the tree.
+
+    Reads both name orders. The word ``smoke`` leads in eight of the lane
+    modules and trails in one, and a population defined by the majority
+    spelling cannot see the minority one -- which is the member most likely to
+    be forgotten when it is wired, and the member whose absence from the
+    population is hardest to notice, because the gate stays green either way.
+    """
+    return frozenset(path.stem for pattern in _LANE_PATTERNS for path in iter_directory(_PACKAGING, pattern=pattern))
 
 
 def _dispatch_sources() -> dict[str, str]:
-    """Return the text of every surface that can invoke a lane, keyed by a label.
+    """Return the EXECUTED text of every surface that can invoke a lane.
 
     Read as text on purpose. A workflow step and a justfile recipe both invoke a
     lane as a shell word, so there is no structure to walk; what matters is that
     the module is NAMED somewhere a runner will execute.
+
+    "Will execute" is the whole load-bearing word, and reading the file raw does
+    not carry it. A whole-line comment is prose in both formats -- ``#`` opens
+    one in YAML and in a justfile alike -- so a commented-out invocation names
+    the module without running it, and a substring test over raw text calls that
+    dispatch. :func:`~dev.ci.workflow_run_text.executed_text` drops exactly
+    those lines and nothing else.
     """
-    sources = {"justfile": (_REPO_ROOT / "justfile").read_text(encoding="utf-8")}
+    sources = {"justfile": executed_text((_REPO_ROOT / "justfile").read_text(encoding="utf-8"))}
     for workflow in scan_directory(_WORKFLOWS, pattern="*.yml"):
-        sources[f"workflow:{workflow.name}"] = workflow.read_text(encoding="utf-8")
+        sources[f"workflow:{workflow.name}"] = executed_text(workflow.read_text(encoding="utf-8"))
     return sources
 
 
@@ -100,7 +141,7 @@ def test_the_tree_actually_has_lane_modules_and_dispatch_surfaces_to_read() -> N
     silently narrow what counts as dispatched.
     """
     stems = _lane_module_stems()
-    assert stems, f"no smoke_*.py lane modules found under {_PACKAGING}; every check below is vacuous"
+    assert stems, f"no {' / '.join(_LANE_PATTERNS)} lane modules found under {_PACKAGING}; every check below is vacuous"
     sources = _dispatch_sources()
     assert sources, "no dispatch surfaces were read"
     assert any(name.startswith("workflow:") for name in sources), (
@@ -155,3 +196,65 @@ def test_the_detector_accepts_the_path_spelling_a_no_project_workflow_uses() -> 
     """
     sources = {"workflow:x.yml": "uv run --no-project python dev/packaging/smoke_path_one.py --cleanup"}
     assert unreachable_lane_modules(frozenset({"smoke_path_one"}), frozenset(), sources) == frozenset()
+
+
+def test_the_population_holds_the_lane_whose_name_puts_smoke_last() -> None:
+    """The gate's own population had the blind spot the gate exists to report.
+
+    ``all_extra_smoke`` is a registered core form -- the campaign dispatches it
+    -- and a ``smoke_*.py`` glob does not match it. So the module set the
+    reachability assertion quantified over was one short, and short by exactly
+    the lane whose name breaks the convention: unwiring it would have left this
+    file green, which is the outcome it was written to make impossible.
+
+    Pinned to the module rather than to a tally, so adding or deleting a lane
+    never edits this, and re-narrowing the glob fails here rather than passing
+    quietly with a smaller population.
+    """
+    stems = _lane_module_stems()
+
+    assert "all_extra_smoke" in stems, (
+        f"the lane population {sorted(stems)} omits `all_extra_smoke`, a campaign-registered core "
+        "form. A population defined by the majority name order cannot see the minority one, and the "
+        "gate reads as passing whether or not that lane is dispatched."
+    )
+    assert not "all_extra_smoke".startswith("smoke_"), (
+        "this case is only meaningful while the lane's name still trails `smoke`"
+    )
+
+
+def test_a_lane_named_only_in_a_comment_does_not_count_as_dispatched() -> None:
+    """Teeth for the executed-lines discipline, on both surface formats.
+
+    A commented-out invocation is the exact shape of the defect: the module is
+    named, a reader scanning the file sees it, and nothing runs it. Driven with
+    constructed surfaces, so the proof does not depend on the tree happening to
+    contain a commented-out lane -- it does not, which is why the blindness was
+    latent rather than firing.
+    """
+    commented = {
+        "justfile": executed_text("# uv run python -m dev.packaging.smoke_ghost_one --cohort-dir x\n"),
+        "workflow:x.yml": executed_text("        # run: uv run python dev/packaging/smoke_ghost_two.py\n"),
+    }
+    stems = frozenset({"smoke_ghost_one", "smoke_ghost_two"})
+
+    assert unreachable_lane_modules(stems, frozenset(), commented) == stems, (
+        "a lane whose only mention sits behind a `#` is not dispatched by anything; counting it "
+        "as reachable is the substring defect dev.ci.workflow_run_text exists to remove"
+    )
+
+
+def test_the_live_dispatch_surfaces_survive_the_comment_filter() -> None:
+    """The filter must not be strong enough to unwire a real lane.
+
+    The Homebrew workflow is the one lane dispatched by text rather than by the
+    campaign registry, so it is the surface a comment filter could break. If
+    stripping comments dropped its invocation, the gate would go red and the
+    "fix" would be to break the workflow.
+    """
+    sources = _dispatch_sources()
+
+    assert any("dev/packaging/smoke_homebrew.py" in text for text in sources.values()), (
+        "the executed text of no dispatch surface names the Homebrew lane; the comment filter has "
+        f"removed a real invocation. Surfaces read: {sorted(sources)}"
+    )

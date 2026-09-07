@@ -13,6 +13,7 @@ from ....application.operations.registry import OperationPublicContractSetV1
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .controller import AeatSyncWorkspaceController
 from .models import (
+    AEAT_SYNC_DESTINATION_BY_ZONE,
     AeatSyncDestinationIdV1,
     AeatSyncNotificationDocumentHandoffV1,
     AeatSyncOperationHandoffV1,
@@ -64,6 +65,14 @@ if frozenset(_ROUTES_BY_ID) != declared_aeat_sync_destination_ids() or tuple(
     route.zone for route in AEAT_SYNC_ROUTES
 ) != tuple(AeatSyncWorkspaceZone):
     raise ValueError("AEAT Sync routes must cover the closed zone catalogue exactly once and in order")
+
+# Coverage and order are not agreement. The checks above pass just as happily
+# when two routes carry each other's destination, and the controller sends a
+# zone to whichever destination the shared pairing names -- so a swap would
+# route the operator to the wrong screen with every gate green. This is the
+# check that the two sides describe the same routing.
+if {route.zone: route.destination for route in AEAT_SYNC_ROUTES} != dict(AEAT_SYNC_DESTINATION_BY_ZONE):
+    raise ValueError("AEAT Sync routes must address the destination the controller sends for each zone")
 
 
 def resolve_aeat_sync_screen(controller: AeatSyncWorkspaceController, target: AeatSyncRouteTargetV1) -> Screen[None]:

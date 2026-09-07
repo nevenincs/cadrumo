@@ -187,6 +187,8 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
+from pydantic import ValidationError as PydanticValidationError
+
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
@@ -779,6 +781,57 @@ def _assert_reviewer_is_not_tier_shaped(value: str | None) -> None:
     )
 
 
+def _validation_error_cause(exc: BaseException | None) -> PydanticValidationError | None:
+    """Return the nearest :exc:`~pydantic.ValidationError` in ``exc``'s cause chain.
+
+    Every raise site in this module that wraps a registry or schema failure keeps
+    the original exception as ``__cause__`` (a bare ``raise ... from exc``), and
+    the loader wraps its own :exc:`~pydantic.ValidationError` the same way before
+    this module ever sees it. Walking the chain rather than checking ``exc``
+    alone is what makes :func:`_safe_exception_detail` work whether the
+    validation failure reaches this module directly (the schema probe) or
+    nested one layer inside a :class:`~cadrumo.domain.calculations.registry.errors.RegistryError`
+    (a loaded revision).
+    """
+    cause = exc
+    while cause is not None:
+        if isinstance(cause, PydanticValidationError):
+            return cause
+        cause = cause.__cause__
+    return None
+
+
+def _safe_exception_detail(exc: BaseException) -> str:
+    """Render ``exc`` for a refusal message without echoing an arbitrary literal.
+
+    :exc:`~pydantic.ValidationError` composes its own ``str()`` from
+    :meth:`~pydantic.ValidationError.errors`, which appends an ``input_value=``
+    fragment holding a length-truncated repr of the WHOLE validated payload —
+    including any ``reviewed_by`` or ``engineered_by`` string a caller supplied —
+    regardless of what the failing validator's own message says. Measured: a
+    short reviewer identity survives that truncation whole and reaches the
+    message text; a longer one happens to fall inside the elided middle. Neither
+    outcome is something a caller decided, and the module writes registry
+    provenance for a domain whose diagnostics must never carry a raw caller
+    payload.
+
+    So a message built here never touches ``str(ValidationError)`` or its
+    ``input``. When the failure traces back to a :exc:`~pydantic.ValidationError`
+    (see :func:`_validation_error_cause`), the message is built only from each
+    error's own ``msg`` — the text the failing validator in
+    :mod:`~cadrumo.domain.calculations.registry.schema` or
+    :mod:`~cadrumo.domain.calculations.registry._schema_governance` composed on
+    purpose to be shown, naming the revision, the field, and the shape of the
+    refusal. Every other exception this module raises or wraps composes its own
+    message the same deliberate way, so ``str(exc)`` is safe for anything that is
+    not a validation error.
+    """
+    validation_error = _validation_error_cause(exc)
+    if validation_error is None:
+        return str(exc)
+    return "; ".join(error["msg"] for error in validation_error.errors(include_url=False, include_input=False))
+
+
 def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str) -> ModeloRevision:
     """Confirm the revision exists as a COMPILED record, never as a directory listing.
 
@@ -795,7 +848,9 @@ def _assert_revision_is_compiled(modelo_dir: Path, *, modelo: str, revision: str
     try:
         definition = load_modelo_directory(modelo_dir)
     except RegistryError as exc:
-        raise StampError(f"modelo {modelo}: registry refuses to load the modelo: {exc}") from exc
+        raise StampError(
+            f"modelo {modelo}: registry refuses to load the modelo: {_safe_exception_detail(exc)}",
+        ) from exc
     compiled = definition.revisions.get(revision)
     if compiled is None:
         raise StampError(
@@ -910,6 +965,14 @@ def _assert_schema_accepts(revision: str, resolved: _Stamp) -> None:
     refusal registry build would raise. Mirroring the coherence rule in this
     module would let the two drift, and the drift would show up as a manifest
     the loader rejects.
+
+    The probe's own fields carry exactly the reviewer identity and authorship
+    string a caller supplied, so the refusal below is built through
+    :func:`_safe_exception_detail` rather than a bare ``{exc}`` interpolation —
+    see that function for why: pydantic's own ``str(ValidationError)`` echoes a
+    length-truncated repr of the WHOLE probe payload, including
+    ``reviewed_by``/``engineered_by``, whenever the payload is short enough to
+    survive the truncation whole.
     """
     try:
         ModeloRevision(
@@ -925,7 +988,9 @@ def _assert_schema_accepts(revision: str, resolved: _Stamp) -> None:
             reviewed_at=resolved.reviewed_at,
         )
     except (RegistryError, ValueError) as exc:
-        raise StampError(f"refused governance stamp for revision {revision!r}: {exc}") from exc
+        raise StampError(
+            f"refused governance stamp for revision {revision!r}: {_safe_exception_detail(exc)}",
+        ) from exc
 
 
 def _render_toml_value(value: object) -> str:

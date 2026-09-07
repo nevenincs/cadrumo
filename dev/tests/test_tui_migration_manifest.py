@@ -55,7 +55,11 @@ def test_live_tree_is_the_zero_remnant_fixed_point() -> None:
     )
     assert (REPO_ROOT / "dev").is_dir(), "the development root the scan consults is gone"
     package_modules = sum(1 for _ in PKG_ROOT.rglob("*.py"))
-    # A floor, not a pinned count: live the package holds 5,857 modules.
+    # A floor, not a pinned count. The live figure is deliberately not written
+    # here: it was, and it had drifted, and it named a different population
+    # from the one this line counts - the same number appeared in a sibling
+    # gate measuring something else, which is how a copied figure decays
+    # unnoticed. The assertion reports the live count on failure.
     assert package_modules > 3000, (
         f"the scan's package root holds only {package_modules} modules, so an empty "
         "remnant result would mean it read almost nothing"

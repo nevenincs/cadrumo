@@ -338,31 +338,77 @@ def test_the_scanned_markdown_corpus_is_not_empty() -> None:
     assert len(docs) > 20, f"expected the docs corpus, scanned only {len(docs)} markdown page(s)"
 
 
-def test_documentation_install_snippets_cite_the_current_version() -> None:
-    """Every versioned install reference in docs matches the shipped package version.
+#: The three shapes a docs page uses to cite a release version: the wheel
+#: filename, a pinned extras spec, and the prose "release is `X.Y.Z`" line.
+#: The extras alternative is deliberately generic (``[\w,]+``) rather than an
+#: enumeration of the declared extras -- it exists to catch a stale VERSION in
+#: any pinned spec, and an undeclared extra name is a different gate's question.
+_CITED_VERSION_RE = re.compile(
+    r"cadrumo-(\d+\.\d+\.\d+)-py3|cadrumo\[[\w,]+\]==(\d+\.\d+\.\d+)|release is `(\d+\.\d+\.\d+)`"
+)
 
-    The install pages cite the release wheel filename (``cadrumo-X.Y.Z-...whl``)
-    and pinned uvx/pip specs (``cadrumo[agent]==X.Y.Z``). A hardcoded version
-    rots silently on every release — the 0.2.0→0.2.1 bump left five stale
-    install commands behind — so this gate pins every cited version to
-    ``cadrumo.__version__``.
+
+def _stale_version_citations(source: str, relative: str, version: str) -> list[str]:
+    """Return one entry per version citation in ``source`` that is not ``version``."""
+    stale: list[str] = []
+    for match in _CITED_VERSION_RE.finditer(source):
+        cited = next(group for group in match.groups() if group)
+        if cited != version:
+            lineno = source[: match.start()].count("\n") + 1
+            stale.append(f"{relative}:{lineno}: cites {cited}, package is {version}")
+    return stale
+
+
+def test_documentation_install_snippets_cite_the_current_version() -> None:
+    """No docs page cites a release version other than the shipped one.
+
+    A hardcoded version rots silently on every release — the 0.2.0→0.2.1 bump
+    left five stale install commands behind — so every cited version is pinned
+    to ``cadrumo.__version__``.
+
+    This is a standing guard, not a survey of live citations: the docs corpus
+    carries NO pinned version today (the install pages moved to unpinned
+    ``uvx cadrumo`` / wheel-less spellings), so the scan legitimately matches
+    nothing and this gate would report a clean corpus and an empty one exactly
+    alike. Its teeth therefore live in
+    :func:`test_the_version_citation_scan_catches_a_stale_citation`, which runs
+    the same scan over explicit input rather than over the corpus.
     """
     from cadrumo import __version__
 
-    version_re = re.compile(
-        r"cadrumo-(\d+\.\d+\.\d+)-py3|cadrumo\[[\w,]+\]==(\d+\.\d+\.\d+)|release is `(\d+\.\d+\.\d+)`"
-    )
     violations: list[str] = []
     for path in _markdown_docs():
         relative = path.relative_to(_REPO_ROOT).as_posix()
-        source = path.read_text(encoding="utf-8")
-        for match in version_re.finditer(source):
-            cited = next(group for group in match.groups() if group)
-            if cited != __version__:
-                lineno = source[: match.start()].count("\n") + 1
-                violations.append(f"{relative}:{lineno}: cites {cited}, package is {__version__}")
+        violations.extend(_stale_version_citations(path.read_text(encoding="utf-8"), relative, __version__))
 
     assert not violations, "stale install versions in docs:\n" + "\n".join(violations)
+
+
+def test_the_version_citation_scan_catches_a_stale_citation() -> None:
+    """Detector teeth for the scan above, over explicit input.
+
+    Each of the three citation shapes is presented once at a stale version and
+    once at the current one. A stale citation must be reported and a current
+    one must not, so a regex that stopped matching -- the way the corpus itself
+    can no longer tell us -- fails here immediately.
+    """
+    from cadrumo import __version__
+
+    stale_version = "0.0.1"
+    assert stale_version != __version__, "pick a stale version the package does not carry"
+
+    shapes = (
+        "download `cadrumo-{v}-py3-none-any.whl`",
+        "run `uvx cadrumo[llm]=={v}`",
+        "the current release is `{v}`",
+    )
+    for shape in shapes:
+        stale = _stale_version_citations(shape.format(v=stale_version), "probe.md", __version__)
+        assert len(stale) == 1, f"the scan missed a stale citation in {shape.format(v=stale_version)!r}"
+        assert stale_version in stale[0]
+
+        current = _stale_version_citations(shape.format(v=__version__), "probe.md", __version__)
+        assert not current, f"the scan flagged a current citation in {shape.format(v=__version__)!r}: {current}"
 
 
 def test_em_dash_count_ratchets_down_in_docs_prose() -> None:

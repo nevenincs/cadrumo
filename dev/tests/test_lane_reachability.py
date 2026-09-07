@@ -91,6 +91,7 @@ from ..ci.lane_reachability import (
     marker_sets_in,
     tracked_test_directories,
     tracked_test_files,
+    workflow_triggers,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -916,3 +917,64 @@ def test_marker_sets_distinguish_absent_from_testless(tmp_path: Path) -> None:
 
     assert marker_sets_in(empty) == ()
     assert marker_sets_in(tmp_path / "test_never_written.py") is None
+
+
+def test_every_ci_invoked_lane_carries_the_triggers_that_reach_it() -> None:
+    """The trigger model must not degrade to silence for every lane at once.
+
+    ``ci_invoked_lanes`` already drops a lane no workflow reaches, so every
+    lane it returns has a route and therefore at least one event. An empty
+    tuple here means the trigger resolution stopped working, not that a lane
+    is manual.
+
+    This is a real failure mode, not a hypothetical one. In a workflow file
+    the ``on:`` key is a YAML 1.1 boolean: a parser reading ``document['on']``
+    gets ``None`` for every workflow in this repository, because the block is
+    stored under the key ``True``. That spelling yields an empty trigger set
+    everywhere, and every lane would then read as automatic -- reporting full
+    coverage precisely when the instrument had stopped measuring.
+    """
+    lanes = ci_invoked_lanes(REPO_ROOT)
+
+    assert lanes, "no CI-invoked lane was resolved at all"
+    silent = tuple(lane.source for lane in lanes if not lane.triggers)
+    assert silent == (), (
+        "these lanes resolved no trigger, so the model cannot say whether CI runs "
+        "them without a person asking:\n  " + "\n  ".join(silent)
+    )
+
+
+def test_the_trigger_reader_finds_the_on_block_under_its_yaml_boolean_key() -> None:
+    """Read against the workflows themselves, not against the lane model.
+
+    The gate above would still pass if every workflow were genuinely
+    dispatch-only. This one fails instead when the reader stops finding the
+    block at all, which is the shape the boolean key produces.
+    """
+    triggers = workflow_triggers(REPO_ROOT)
+
+    assert len(triggers) > 10, f"only {len(triggers)} workflows were read"
+    unread = tuple(name for name, events in triggers.items() if not events)
+    assert unread == (), (
+        "these workflow files yielded no event at all, which is what reading the "
+        "`on:` key by its string spelling produces:\n  " + "\n  ".join(unread)
+    )
+
+
+def test_at_least_one_lane_runs_without_a_person_asking() -> None:
+    """A vacuity floor over the automatic set.
+
+    Deliberately NOT a gate on how many lanes are manual-only. That number is
+    large -- most of this repository's development gates are reachable only
+    through a dispatch-only workflow -- and whether that is wrong is an
+    operator's decision, not this gate's. What must never happen silently is
+    the automatic set emptying, which would leave nothing gating a push while
+    every lane still resolved.
+    """
+    lanes = ci_invoked_lanes(REPO_ROOT)
+    automatic = tuple(lane for lane in lanes if lane.runs_on_change)
+
+    assert automatic, "no CI-invoked lane runs without a person asking, so nothing this model describes gates a push"
+    assert all(lane.is_manual_only is not lane.runs_on_change for lane in lanes), (
+        "a lane reported as both automatic and manual-only, or as neither"
+    )

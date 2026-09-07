@@ -734,12 +734,23 @@ operation:
       detach: Desvincular
       reject: Rechazar
     detail:
+      action_refused: Acción rechazada
       cleanup_deadline: Plazo de cierre
       diagnostic: Diagnóstico
       execution_deadline: Plazo de ejecución
       phase: Fase
       receipt_refusal: Rechazo
       receipt_result: Resultado
+    refusal:
+      cancellation_unavailable: La cancelación no está disponible ahora mismo. Vuelve a intentarlo en unos instantes.
+      cancellation_unsupported: Esta operación no se puede cancelar una vez iniciada.
+      operation_terminal: La operación ya ha terminado, así que no hay nada que cancelar.
+      response_authority_unavailable: No se ha podido registrar la respuesta ahora mismo. Vuelve a intentarlo en unos instantes.
+      response_not_pending: Esta operación no está esperando ninguna respuesta.
+      stale_operation_revision: La operación avanzó mientras decidías. Espera a que se actualice y vuelve a intentarlo.
+      unknown_operation: El backend ya no conoce esta operación.
+      unsupported_cancellation_version: Esta versión no puede cancelar esa operación. Actualiza Cadrumo.
+      unsupported_response_control_version: Esta versión no puede responder a esa operación. Actualiza Cadrumo.
     status:
       running: En curso
 overview:

@@ -10,6 +10,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
+from ...ci.workflow_run_text import executed_lines, executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -343,15 +344,10 @@ def _executed_lines(job: dict[str, Any]) -> list[str]:
     Comment lines are excluded deliberately. The first version of this gate
     matched the whole run surface, and passed against a mutated workflow because
     the explanatory COMMENT above the invocation contains the very string it
-    asserted. A gate satisfied by its own prose proves nothing.
+    asserted. A gate satisfied by its own prose proves nothing. Which lines
+    execute is decided by :mod:`dev.ci.workflow_run_text`, not restated here.
     """
-    return [
-        line.strip()
-        for step in job["steps"]
-        if "run" in step
-        for line in str(step["run"]).splitlines()
-        if line.strip() and not line.strip().startswith("#")
-    ]
+    return [line for step in job["steps"] if "run" in step for line in executed_lines(step["run"])]
 
 
 def test_the_version_identity_guard_runs_before_the_cohort_is_built() -> None:
@@ -396,7 +392,7 @@ def test_the_seal_guard_asks_no_destination_anything() -> None:
     """
     build = _cohort_build_job()
     guard = next(step for step in build["steps"] if "Refuse to seal" in str(step.get("name", "")))
-    invocation = "\n".join(line.strip() for line in str(guard["run"]).splitlines() if not line.strip().startswith("#"))
+    invocation = executed_text(guard["run"])
     for argument in ("--repository", "--own-source-commit"):
         assert argument not in invocation, f"the seal asks the forge nothing, so {argument} has no meaning here"
     assert "GH_TOKEN" not in str(guard.get("env", {})), "the seal step needs no forge credential"

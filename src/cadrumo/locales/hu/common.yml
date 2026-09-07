@@ -717,12 +717,23 @@ operation:
       detach: Leválaszt
       reject: Elutasit
     detail:
+      action_refused: Elutasított művelet
       cleanup_deadline: Lezárási határidő
       diagnostic: Diagnosztika
       execution_deadline: Végrehajtási határidő
       phase: Fázis
       receipt_refusal: Elutasítás
       receipt_result: Eredmény
+    refusal:
+      cancellation_unavailable: A megszakítás most nem érhető el. Próbáld újra hamarosan.
+      cancellation_unsupported: Ez a művelet az elindítása után nem szakítható meg.
+      operation_terminal: A művelet már befejeződött, nincs mit megszakítani.
+      response_authority_unavailable: A választ most nem sikerült rögzíteni. Próbáld újra hamarosan.
+      response_not_pending: Ez a művelet nem vár választ.
+      stale_operation_revision: A művelet továbblépett, amíg döntöttél. Várd meg a frissítést, és próbáld újra.
+      unknown_operation: A háttérrendszer már nem ismeri ezt a műveletet.
+      unsupported_cancellation_version: Ez a verzió nem tudja megszakítani azt a műveletet. Frissítsd a Cadrumót.
+      unsupported_response_control_version: Ez a verzió nem tud válaszolni arra a műveletre. Frissítsd a Cadrumót.
     status:
       running: Folyamatban
 overview:

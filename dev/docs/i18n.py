@@ -225,9 +225,38 @@ def _language_catalogue_root(docs_root: Path, language: str) -> Path | None:
     return resolved_catalogue_root
 
 
+class CatalogueRemovalRefusedError(RuntimeError):
+    """Raised when one prune would delete more catalogues than its declared bound.
+
+    :func:`prune_orphan_catalogues` is the deletion half of the same shape the
+    stub scaffolder carries: a gate compares a live population (the pages
+    :func:`user_scope_source_pages` admits) against a committed artefact (the
+    ``docs/locales/<lang>/LC_MESSAGES/*.po`` tree), and the documented remedy
+    for a mismatch removes the catalogue. A defect that narrows the page
+    authority therefore costs translated pages once and is invisible after,
+    because the evidence it destroyed is the only record of the loss.
+
+    Measured against the committed tree: 57 authored user-scope pages back 171
+    catalogues across three target languages, and a page authority that
+    admitted nothing would delete all 171 in one pass while reporting success.
+    """
+
+
+#: Catalogues one :func:`prune_orphan_catalogues` pass may delete before it refuses.
+#:
+#: Four authored pages across the three target languages. Retiring a page is a
+#: deliberate, reviewable act that removes exactly ``len(languages)``
+#: catalogues, so a legitimate prune is a small multiple of three; a prune that
+#: is not is the page authority having collapsed, which deletes hand-written
+#: translations that no regeneration can restore.
+MAX_CATALOGUE_REMOVALS_PER_RUN: Final[int] = 12
+
+
 def prune_orphan_catalogues(
     repo_root: Path,
     languages: tuple[str, ...] = TARGET_LANGUAGES,
+    *,
+    removal_allowance: int | None = None,
 ) -> tuple[Path, ...]:
     """Remove catalogues that no longer correspond to an authored user page.
 
@@ -237,9 +266,16 @@ def prune_orphan_catalogues(
     maps it to expected ``.po`` leaves and unlinks only individually validated
     files beneath each language's ``LC_MESSAGES`` root.
 
+    Removals are bounded and the whole set is decided across every language
+    before the first unlink, so a refused pass leaves every catalogue in place
+    rather than emptying the languages it reached first.
+
     Args:
         repo_root: Repository root containing ``docs/``.
         languages: Target-language directory names to inspect.
+        removal_allowance: Catalogues this pass may delete. Defaults to
+            :data:`MAX_CATALOGUE_REMOVALS_PER_RUN`. Pass a larger value to
+            authorise a deliberate bulk retirement.
 
     Returns:
         The removed catalogue paths, in deterministic scan order.
@@ -247,10 +283,14 @@ def prune_orphan_catalogues(
     Raises:
         ValueError: A language name or catalogue path would escape its
             ``docs/locales/<lang>/LC_MESSAGES`` boundary.
+        CatalogueRemovalRefusedError: The pass would delete more catalogues than
+            *removal_allowance* permits. Nothing is removed.
     """
+    allowance = MAX_CATALOGUE_REMOVALS_PER_RUN if removal_allowance is None else removal_allowance
     docs_root = repo_root / "docs"
     expected = {Path(page).with_suffix(".po").as_posix() for page in user_scope_source_pages(docs_root)}
-    removed: list[Path] = []
+    doomed: list[Path] = []
+    inspected = 0
     for language in languages:
         catalogue_root = _language_catalogue_root(docs_root, language)
         if catalogue_root is None:
@@ -261,6 +301,7 @@ def prune_orphan_catalogues(
             recursive=True,
             select=DirectoryEntryKind.FILES,
         ):
+            inspected += 1
             resolved_catalogue = catalogue.resolve()
             try:
                 relative_catalogue = resolved_catalogue.relative_to(catalogue_root)
@@ -268,6 +309,22 @@ def prune_orphan_catalogues(
                 raise ValueError(f"catalogue path escapes {catalogue_root}: {catalogue}") from exc
             if relative_catalogue.as_posix() in expected:
                 continue
+            doomed.append(catalogue)
+
+    if len(doomed) > allowance:
+        listed = ", ".join(str(path.relative_to(docs_root).as_posix()) for path in sorted(doomed)[:10])
+        raise CatalogueRemovalRefusedError(
+            f"pruning would delete {len(doomed)} of the {inspected} committed catalogue(s), over the declared "
+            f"bound of {allowance}. Nothing was removed. The authored page set backing this pass held "
+            f"{len(expected)} page(s); a prune this size means that authority collapsed, and the translations "
+            f"it would delete are hand-written and unrecoverable by regeneration. First removals: {listed}"
+        )
+
+    removed: list[Path] = []
+    for catalogue in doomed:
+        # Re-checked rather than trusted: only the exact paths the bound was
+        # measured against may be unlinked.
+        if catalogue.exists():
             catalogue.unlink()
             removed.append(catalogue)
     return tuple(removed)

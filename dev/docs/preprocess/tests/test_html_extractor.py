@@ -5,7 +5,12 @@ Exercises real corpus HTML through the production extractor (no mocks):
 * a real multi-article consolidated law splits into one unit per article,
   each titled and anchored to its ``#aN`` BOE permalink fragment;
 * real marker-backed and unmarked annex headings become distinct legal units,
-  while only source-supplied fragments are recorded as unit anchors;
+  and an annex heading with no source fragment stays unanchored;
+* article anchors are NOT all source-supplied: where a source carries no
+  bloque marker the extractor derives one from the heading text, and the
+  derived value is written into the same ``anchor`` field as a declared one
+  with nothing marking it as derived - the derivation is lossy, and two
+  distinct articles can collide onto one anchor;
 * the TOC link farm and per-article jurisprudence forms are stripped - known
   boilerplate is ABSENT and known article prose is PRESENT;
 * attribution resolves from the HTML's canonical BOE permalink for a law,
@@ -24,6 +29,7 @@ import pytest
 from ...._paths import REPO_ROOT
 from ..normatives_html import (
     HTML_EXTRACTOR_ID,
+    _anchor_from_heading,
     build_outputs,
     extract_html,
 )
@@ -59,6 +65,9 @@ _MODULES_2025_HTML = _NORMATIVES / "html" / "orden-hac-1347-2024.html"
 _MODULES_2022_HTML = _NORMATIVES / "html" / "orden-hfp-1335-2021.html"
 _APARTADO_ORDINAL_HTML = _NORMATIVES / "html" / "orden-hac-3625-2003-art-3.html"
 _ORDINAL_PARAGRAPH_HTML = _NORMATIVES / "html" / "boe-a-2011-208-modelo-145.html"
+# A real single-article slice whose heading names an ordinal beyond the
+# derivation's recognised set, and which carries no bloque marker of its own.
+_UNMARKED_ORDINAL_SLICE_HTML = _NORMATIVES / "html" / "ley-37-1992-art-163-vicies.html"
 
 
 def test_worked_example_files_exist() -> None:
@@ -368,3 +377,69 @@ def test_tampered_sidecar_is_rejected(tmp_path: Path) -> None:
     json_path.write_text(good.replace(output.source_sha256, "deadbeef"), "utf-8")
     with pytest.raises(PreprocessSidecarError):
         load_sidecar(source_copy)
+
+
+def test_heading_derived_anchor_is_lossy_and_collides_across_articles() -> None:
+    """The heading-derived anchor cannot represent every article it is asked to.
+
+    ``_anchor_from_heading`` is the silent fallback behind
+    ``anchor = anchor or _anchor_from_heading(heading)``: it fires whenever a
+    source supplies no fragment, and its result is stored in the same field a
+    declared fragment would occupy. Its recognised ordinal set stops at the
+    fifth ordinal, so a heading naming a later ordinal is truncated to the
+    bare article number - the anchor of a DIFFERENT provision.
+
+    This gate asserts the collision, not its correctness: two distinct
+    articles must not be representable by one anchor, and the fact that they
+    are is the defect this test makes visible rather than endorses.
+    """
+    assert _anchor_from_heading("Artículo 5. Concepto de empresario.") == "#a5"
+    assert _anchor_from_heading("Artículo 163 quinquies. Opciones.") == "#a163quinquies"
+    # A heading that names no article yields nothing: the fallback does have a
+    # refusal path, so the collision below is a gap in coverage, not absence.
+    assert _anchor_from_heading("Disposición adicional primera.") == ""
+
+    base = _anchor_from_heading("Artículo 163. Régimen especial.")
+    later_ordinals = {
+        heading: _anchor_from_heading(heading)
+        for heading in (
+            "Artículo 163 sexies. Condiciones para la aplicación.",
+            "Artículo 163 vicies. Derecho a la deducción.",
+            "Artículo 163 duovicies. Obligaciones formales.",
+        )
+    }
+    assert base == "#a163"
+    # Every later ordinal collapses onto the base article's own anchor.
+    assert set(later_ordinals.values()) == {base}
+    # And the derived value is well-formed, which is exactly why it is
+    # dangerous: nothing downstream can reject it as malformed.
+    assert all(value.startswith("#a") for value in later_ordinals.values())
+
+
+def test_derived_anchor_is_recorded_indistinguishably_from_a_declared_one() -> None:
+    """A derived anchor reaches ``PreprocessUnit.anchor`` unmarked.
+
+    The law's own units carry fragments the source declares. The unmarked
+    single-article slice carries none, so its anchor is derived - and the two
+    are the same shape in the same field, with no provenance beside them. A
+    consumer holding a unit cannot tell which it got, which is the
+    under-declaration this gate pins: derived and declared are collapsed.
+    """
+    assert _UNMARKED_ORDINAL_SLICE_HTML.is_file(), _UNMARKED_ORDINAL_SLICE_HTML
+
+    declared = build_outputs(_LAW_HTML, repo_root=_REPO_ROOT)[0]
+    article_one = next(u for u in declared.units if u.title and u.title.startswith("Artículo 1."))
+
+    derived_output = build_outputs(_UNMARKED_ORDINAL_SLICE_HTML, repo_root=_REPO_ROOT)[0]
+    assert len(derived_output.units) == 1
+    derived_unit = derived_output.units[0]
+    assert derived_unit.title is not None
+    assert "vicies" in derived_unit.title
+
+    # The slice is article 163 vicies, but its recorded anchor is article 163's.
+    assert derived_unit.anchor == "#a163"
+    # Both units expose exactly the same fields; neither carries a provenance
+    # discriminator, so 'declared' and 'derived' are not separable here.
+    assert set(article_one.model_fields_set) >= {"anchor"}
+    assert set(derived_unit.model_dump()) == set(article_one.model_dump())
+    assert not any("deriv" in name.lower() for name in derived_unit.model_dump())

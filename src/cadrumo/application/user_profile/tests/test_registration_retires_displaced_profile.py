@@ -30,6 +30,8 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from ....adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from ....core.bucket_pointer import read_pointer
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -157,6 +159,7 @@ def test_registration_retires_the_profile_it_displaces_without_waiting_for_a_log
     The probe deliberately runs before any further authentication, so what it
     measures is the create transaction's own effect rather than a later login's.
     """
+    require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Displacement One", _PASSWORD_DISPLACED)["profile_id"]
         opened = _login_in_separate_process(storage_root, displaced, _PASSWORD_DISPLACED)
@@ -184,6 +187,7 @@ def test_the_displaced_profile_is_resumable_until_the_registration_displaces_it(
     reach the material from another process at all, and the suite would pass
     with the defect fully intact.
     """
+    require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         selected = _register_in_separate_process(storage_root, "Resumable One", _PASSWORD_DISPLACED)["profile_id"]
         _login_in_separate_process(storage_root, selected, _PASSWORD_DISPLACED)
@@ -231,6 +235,7 @@ def test_the_entering_profile_keeps_the_session_the_registration_gave_it(
     created. This pins the opposite direction: after the displacement, the new
     profile authenticates and its own receipt resumes.
     """
+    require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Survivor One", _PASSWORD_DISPLACED)["profile_id"]
         _login_in_separate_process(storage_root, displaced, _PASSWORD_DISPLACED)
@@ -266,6 +271,7 @@ def test_a_retirement_that_cannot_complete_refuses_the_registration_in_its_own_w
     -- without it this case would be satisfied by a registration door that
     refuses unconditionally.
     """
+    require_os_credential_store()
     with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
         displaced = _register_in_separate_process(storage_root, "Obstructed One", _PASSWORD_DISPLACED)["profile_id"]
         _login_in_separate_process(storage_root, displaced, _PASSWORD_DISPLACED)

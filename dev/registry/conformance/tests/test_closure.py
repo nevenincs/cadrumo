@@ -258,6 +258,38 @@ def test_row_constructor_refuses_a_present_limb_at_a_different_coordinate() -> N
         )
 
 
+#: Every tag `render_registry_closure_report` ever emits, plus its one literal
+#: trailing `note` line. Closed by reading the renderer itself
+#: (``_kv_line`` callers in ``closure.py``), not by observing today's output.
+_CLOSURE_REPORT_LINE_PREFIXES = (
+    "closure ",
+    "closure_row ",
+    "closure_refusal ",
+    "closure_join_disagreement ",
+    "closure_refusal_reason ",
+    "note ",
+)
+
+
+def _assert_stdout_is_only_closure_report_lines(stdout: str) -> None:
+    """Assert the complement the four CLI tests below only checked by containment.
+
+    Each test already pins several `in stdout` substrings, which a full `repr`
+    of the internal report object -- or any other stray line -- would satisfy
+    without being noticed, since containment never looks at what ELSE is
+    there. `render_registry_closure_report` is a closed, deterministic KV-line
+    renderer (see `closure.py`), so every physical line of `stdout` must start
+    with one of its known tags; nothing pins the total line COUNT, because
+    that scales with the live bundled registry's revision count and pinning it
+    here would make this test brittle to registry growth rather than to a
+    diagnostic leak.
+    """
+    lines = stdout.splitlines()
+    assert lines, "expected at least one rendered closure line"
+    unexpected = [line for line in lines if not line.startswith(_CLOSURE_REPORT_LINE_PREFIXES)]
+    assert not unexpected, f"stdout carries lines outside the closure report's own tags: {unexpected!r}"
+
+
 def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_proof() -> None:
     """Live canonical loading explicitly refuses unavailable encrypted replay."""
     canonical_report = load_registry_closure_report(as_of=_AS_OF, registry_authority=bundled_authority())
@@ -266,6 +298,7 @@ def test_cli_live_mode_uses_canonical_loaders_but_blocks_without_durable_filing_
 
     assert result.exit_code == 1, result.output
     assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
+    _assert_stdout_is_only_closure_report_lines(result.stdout)
     assert "release_eligible=false" in result.stdout
     assert f"revisions={len(canonical_report.rows)}" in result.stdout
     assert "secure_replay:authority_unavailable" in result.stdout
@@ -281,6 +314,7 @@ def test_cli_offline_mode_explicitly_restores_the_no_proof_refusal() -> None:
 
     assert result.exit_code == 1, result.output
     assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
+    _assert_stdout_is_only_closure_report_lines(result.stdout)
     assert "release_eligible=false" in result.stdout
     assert "no canonical two-channel filing-export proof authority was supplied" in result.stdout
     assert "secure_replay:authority_unavailable" not in result.stdout
@@ -303,6 +337,7 @@ def test_actual_cli_ignores_a_precomposed_eligible_context_claim() -> None:
     assert canned_claim.release_eligible
     assert result.exit_code == 1, result.output
     assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
+    _assert_stdout_is_only_closure_report_lines(result.stdout)
     assert "release_eligible=false" in result.stdout
     assert "closure as_of=2026-08-24 registry_validated=true release_eligible=false" in result.stdout
 
@@ -332,6 +367,7 @@ def test_actual_cli_ignores_exact_hostile_authority_context() -> None:
 
     assert result.exit_code == 1, result.output
     assert result.stderr == "", "the closure report is the command's sole stdout contract, never a diagnostic stream"
+    _assert_stdout_is_only_closure_report_lines(result.stdout)
     assert "release_eligible=false" in result.stdout
     assert "secure_replay:authority_unavailable" in result.stdout
     assert source.calls == []

@@ -128,11 +128,16 @@ def test_scan_population_is_non_trivial(head_scan: ScanResult) -> None:
     resolves but the listing comes back empty, which would make every assertion
     in this module vacuously true.
     """
-    # Floors, not pinned counts, with the live figures recorded: HEAD carries
-    # 5,857 modules and 295 facades. Against the previous 1,000 and 100 more
-    # than four fifths of the corpus could disappear while every clean result
-    # above still read green - the same collapse this test exists to catch,
-    # only partial instead of total.
+    # Floors, not pinned counts. They sit near the live population rather than
+    # far below it: against the previous 1,000 and 100, more than four fifths
+    # of the corpus could disappear while every clean result above still read
+    # green - the same collapse this test exists to catch, only partial
+    # instead of total. The live figures are deliberately not written here.
+    # They were, and both had drifted: the corpus had grown past the numbers
+    # the comment named, so the text described a tree that no longer existed
+    # while the floors it explains went on working. Recording them again
+    # would only restart that clock; the assertion below reports the live
+    # count on failure, which is where the number is worth knowing.
     assert head_scan.module_count > 4500, head_scan.module_count
     assert head_scan.facade_count > 200, head_scan.facade_count
 

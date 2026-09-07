@@ -21,6 +21,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
+from ...ci.workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -52,15 +53,11 @@ def _executed(job: dict[str, Any]) -> str:
 
     A gate that matches the whole run surface is satisfied by the explanatory
     comment above the invocation, so a workflow with the guard commented out
-    would still pass. Only executed lines count.
+    would still pass. Only executed lines count, and which lines those are is
+    decided by :func:`~dev.ci.workflow_run_text.executed_text` rather than by a
+    private copy of the same rule.
     """
-    return "\n".join(
-        line
-        for step in job["steps"]
-        if "run" in step
-        for line in str(step["run"]).splitlines()
-        if line.strip() and not line.strip().startswith("#")
-    )
+    return executed_text(step.get("run") for step in job["steps"])
 
 
 def _step_index(job: dict[str, Any], needle: str) -> int:

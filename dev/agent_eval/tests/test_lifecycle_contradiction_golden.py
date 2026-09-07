@@ -40,7 +40,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.cli_envelope import require_schema_envelope
+from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from cadrumo_harness.mcp import build_tool_descriptors
@@ -162,7 +162,21 @@ def _dispatch_readiness() -> bool:
             "--year", str(_FILING_YEAR), "--period", _PERIOD,
         ],
     )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    # `modelo readiness` exits non-zero when it reports NOT ready, which is
+    # precisely the state this tripwire exists to observe. Requiring exit zero
+    # here made the helper fail before the caller's assertion could run -- and
+    # it failed in BOTH directions: bound, the non-zero exit stopped it here;
+    # unbound, readiness would report ready and the caller's assertion would
+    # fail instead. A gate red in either state cannot tell the two apart, so
+    # it had stopped being a tripwire. Refuse only a response carrying no
+    # readiness verdict at all.
+    document = parse_json_object(result.output)
+    if "result" not in document:
+        error = require_error_document(result.output)["error"]
+        raise AssertionError(
+            "modelo readiness returned no verdict, so the binding axis was never "
+            f"observed. The CLI said: [{error['code']}] {error['message']}"
+        )
     payload = require_schema_envelope(result.output)
     assert payload["operation"] == "modelo.readiness"  # sanity: real payload shape, not a stray success envelope
     return bool(payload["ready"])

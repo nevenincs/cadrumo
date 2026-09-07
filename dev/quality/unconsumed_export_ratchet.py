@@ -42,6 +42,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from ..audit.unreachable_code import run_unreachable_code_scan
+from .unread_inputs import report_unread
 
 __all__ = ["ExportVerdict", "count_unconsumed", "evaluate"]
 
@@ -112,6 +113,7 @@ def count_unconsumed(root: Path = _PACKAGE_ROOT, unused: set[tuple[str, str]] | 
         result = run_unreachable_code_scan(REPO_ROOT)
         unused = {(str(finding.path).replace("\\", "/"), finding.name) for finding in result.symbols}
     trees: dict[Path, ast.Module] = {}
+    unread: list[str] = []
     for path in sorted(root.rglob("*.py")):
         # Tests are excluded as publishers AND as consumers, matching the
         # inventory in dev/audit/reachability_classification.toml: a name whose
@@ -122,8 +124,19 @@ def count_unconsumed(root: Path = _PACKAGE_ROOT, unused: set[tuple[str, str]] | 
         try:
             trees[path] = ast.parse(path.read_text(encoding="utf-8"))
         except (OSError, SyntaxError):
+            # A module dropped here leaves the walk with neither its exports
+            # nor its imports, so it can move a count in either direction and
+            # the baseline records the result as though the tree had been read
+            # whole. The skip stays -- a walk over a tree a sibling process is
+            # editing must survive a half-written file -- but it is announced.
+            unread.append(str(path.relative_to(root)).replace(chr(92), "/"))
             continue
 
+    report_unread(
+        "unconsumed-export ratchet",
+        "their exports and their imports are both missing from the count",
+        unread,
+    )
     consumed: set[tuple[str, str]] = set()
     for tree in trees.values():
         consumed |= _imported_pairs(tree)

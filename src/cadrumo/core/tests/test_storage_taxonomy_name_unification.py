@@ -57,7 +57,7 @@ _ROUTE_MODULE = Path(__file__).resolve().parent.parent / "config_storage_route.p
 _STATE_ROOT_MODULE = Path(__file__).resolve().parent.parent / "config_state_root.py"
 _SETTINGS_MODULE = Path(__file__).resolve().parent.parent / "config.py"
 _MASTER_KEY_MODULE = (
-    Path(__file__).resolve().parents[2] / "adapters" / "persistence" / "storage" / "master_key" / "_master_key.py"
+    Path(__file__).resolve().parents[2] / "adapters" / "persistence" / "storage" / "master_key" / "master_key.py"
 )
 _JOURNAL_REPOSITORY_MODULE = Path(__file__).resolve().parents[2] / "application" / "journal_repository.py"
 

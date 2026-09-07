@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Final, cast
-
 from ....application.aeat_sync.workspace import (
     AEAT_SYNC_WORKSPACE_CONTRACT_VERSION,
     AeatSyncWorkspaceAvailability,
@@ -17,21 +15,12 @@ from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from ....application.operator_actions.models import ActionReference
 from ..navigation import TuiScreenContextV1
 from .models import (
-    AeatSyncDestinationIdV1,
+    AEAT_SYNC_DESTINATION_BY_ZONE,
     AeatSyncNotificationDocumentHandoffV1,
     AeatSyncOperationHandoffV1,
     AeatSyncOperationRequestV1,
     AeatSyncRouteTargetV1,
 )
-
-_DESTINATION_BY_ZONE: Final = {
-    AeatSyncWorkspaceZone.OVERVIEW: "aeat_sync.overview",
-    AeatSyncWorkspaceZone.CENSUS: "aeat_sync.census",
-    AeatSyncWorkspaceZone.FILED_DECLARATIONS: "aeat_sync.filed_declarations",
-    AeatSyncWorkspaceZone.NOTIFICATIONS: "aeat_sync.notifications",
-    AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: "aeat_sync.evidence_comparison",
-    AeatSyncWorkspaceZone.RECONCILIATION: "aeat_sync.reconciliation",
-}
 
 
 class AeatSyncWorkspaceController:
@@ -66,7 +55,11 @@ class AeatSyncWorkspaceController:
 
     def target(self, zone: AeatSyncWorkspaceZone) -> AeatSyncRouteTargetV1:
         """Build a semantic internal target without resolving I/O or a screen."""
-        return AeatSyncRouteTargetV1(destination=cast("AeatSyncDestinationIdV1", _DESTINATION_BY_ZONE[zone]), zone=zone)
+        # No cast: the shared pairing is typed as the destination literal, so
+        # the value arrives already narrowed. The local copy this replaced held
+        # plain strings, and the cast that fixed up was the same one that would
+        # have silently accepted a destination the routes do not declare.
+        return AeatSyncRouteTargetV1(destination=AEAT_SYNC_DESTINATION_BY_ZONE[zone], zone=zone)
 
     def replace_projection(self, projection: AeatSyncWorkspaceProjectionV1) -> None:
         """Replace a preloaded snapshot without changing the owning host.

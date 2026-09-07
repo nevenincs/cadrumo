@@ -31,6 +31,16 @@ def scaffold(
         bool,
         typer.Option("--check", help="Check for drift without writing; exit non-zero on any drift."),
     ] = False,
+    allow_removals: Annotated[
+        int | None,
+        typer.Option(
+            "--allow-removals",
+            help=(
+                "Stubs this run may delete before it refuses. Omit to use the declared bound; "
+                "pass a number only to authorise a deliberate bulk retirement of API pages."
+            ),
+        ),
+    ] = None,
 ) -> None:
     """Sync ``docs/api/*.rst`` stubs with the current ``src/cadrumo/`` module tree."""
     manager = _default_manager()
@@ -59,7 +69,7 @@ def scaffold(
                 typer.echo(f"  {name}")
         raise typer.Exit(code=1)
 
-    result = manager.scaffold()
+    result = manager.scaffold(removal_allowance=allow_removals)
     typer.echo(
         f"Scaffolded {result.written} changed stubs, "
         f"left {result.unchanged} unchanged, removed {result.removed} stale stubs.",

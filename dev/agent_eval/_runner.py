@@ -574,6 +574,16 @@ def _execute_safe_recovery_and_retry(
             f"'{scenario.command}' recovery action '{action.action_id}' has unresolved bindings and was not executed",
         )
         return
+    if action.cli_path is None:
+        # `cli_path` is optional on the action contract, and every guard below
+        # this point assumes it is present: the safety check takes a plain
+        # tuple, and the invocation unpacks it. An action declaring no path
+        # would raise TypeError out of this helper instead of recording a
+        # failure, losing the scenario that produced it.
+        failures.append(
+            f"'{scenario.command}' recovery action '{action.action_id}' declares no cli path and could not be executed",
+        )
+        return
     if not _safe_to_execute(action.cli_path):
         failures.append(
             f"'{scenario.command}' recovery action '{action.action_id}' is not safe to execute automatically",

@@ -45,7 +45,21 @@ def _venv_script(venv: Path, command: str) -> str:
 
 
 def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str) -> Path:
-    """Create a clean non-editable dev environment using the frozen lock."""
+    """Create a clean non-editable dev environment using the frozen lock.
+
+    Each claim is recorded at the point the command backing it returns, which
+    is the ledger's rule: a proof is written by the assertion itself, on
+    success. ``run_checked`` raises on a non-zero status, so reaching the line
+    after it IS the success the claim asserts, and recording earlier would
+    promise work that had not happened yet.
+
+    The four records sat after the ``return`` and so never ran. The lane
+    declares all four, and the manifest refuses a declared claim nothing
+    recorded, so this could not have produced a wrong manifest -- it could only
+    have produced a lane that raises ``ProofContractError`` at the end of a full
+    environment build. That it had never been seen is the finding underneath
+    the defect.
+    """
     venv = work_dir / "dev-venv"
     env = {
         **os.environ,
@@ -65,6 +79,10 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
         cwd=repo_root,
         env=env,
     )
+    # One command, two claims: the sync resolves the frozen all-extras closure
+    # AND, being `--no-editable`, is the non-editable project install.
+    record_proof("frozen uv all-extras/all-groups sync")
+    record_proof("non-editable project install")
     run_checked(
         [
             uv,
@@ -80,12 +98,10 @@ def _sync_dev_environment(repo_root: Path, work_dir: Path, uv: str, python: str)
         cwd=repo_root,
         env=env,
     )
-    run_checked([uv, "pip", "check", "--python", str(venv_python_path(venv))], cwd=repo_root)
-    return venv
-    record_proof("frozen uv all-extras/all-groups sync")
-    record_proof("non-editable project install")
     record_proof("uv sync check")
+    run_checked([uv, "pip", "check", "--python", str(venv_python_path(venv))], cwd=repo_root)
     record_proof("pip dependency check")
+    return venv
 
 
 def _assert_dev_commands(
