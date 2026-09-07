@@ -5,3 +5,11 @@ source_ref = "aeat-dr-200-2024"
 source_sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
 layout_id = "generated-modelo-200-2024-fichero"
 line_ending = "crlf"
+
+[[targets]]
+modelo = "390"
+revision = "2022"
+source_ref = "aeat-dr-390-2022"
+source_sha256 = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
+layout_id = "generated-modelo-390-2022-fichero"
+line_ending = "crlf"

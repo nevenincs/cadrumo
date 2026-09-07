@@ -72,14 +72,20 @@ def _owner_uses_it(tree: ast.Module, name: str) -> bool:
     next function in the file. A same-module caller is a real caller.
 
     The name's own ``def`` and its ``__all__`` entry are not uses, so this walks
-    load-context ``Name`` nodes and attribute tails instead of matching text.
+    load-context ``Name`` nodes rather than matching text.
+
+    It deliberately does NOT count an attribute tail. A module-level function is
+    reached from inside its own module by a bare name; ``reading.total_bytes`` is
+    a field read on some object, and counting it would silence a narrowing that
+    happens to share a name with a field -- which, for a detector whose whole
+    subject is functions named after the field they return, is the likeliest
+    collision there is. An over-broad owner check makes the gate quietly inert,
+    a worse failure than the false positives it was added to prevent.
     """
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Name) and node.id == name and isinstance(node.ctx, ast.Load):
-            return True
-        if isinstance(node, ast.Attribute) and node.attr == name:
-            return True
-    return False
+    return any(
+        isinstance(node, ast.Name) and node.id == name and isinstance(node.ctx, ast.Load)
+        for node in ast.walk(tree)
+    )
 
 
 def _referenced_elsewhere(roots: tuple[Path, ...], name: str, owner: Path) -> bool:

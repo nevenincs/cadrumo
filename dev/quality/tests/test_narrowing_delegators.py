@@ -74,7 +74,10 @@ def test_a_subscript_narrowing_is_caught_too(tmp_path: Path) -> None:
     """``result[0]`` discards as surely as ``result.field``."""
     _tree(
         tmp_path,
-        manifest="def _both() -> tuple[int, int]:\n    return (1, 2)\n\n\ndef first() -> int:\n    return _both()[0]\n",
+        manifest=(
+            "def _both() -> tuple[int, int]:\n    return (1, 2)\n\n\n"
+            "def first() -> int:\n    return _both()[0]\n"
+        ),
     )
 
     assert unreached_narrowings(tmp_path) == ["manifest.py::first -> _both(...)"]
@@ -150,3 +153,25 @@ def test_a_full_delegation_is_left_alone(tmp_path: Path) -> None:
     )
 
     assert unreached_narrowings(tmp_path) == []
+
+
+def test_a_field_read_sharing_the_name_does_not_silence_the_gate(tmp_path: Path) -> None:
+    """Regression: an attribute tail is not a reference to a module-level function.
+
+    The owner check once counted any ``.total_bytes`` as a use of a function
+    named ``total_bytes``. For a detector whose subject is functions named after
+    the field they return, that collision is the likeliest one there is, and it
+    made the gate inert exactly where it was needed.
+    """
+    _tree(
+        tmp_path,
+        memory=(
+            "def read_system_memory() -> object:\n    return object()\n\n\n"
+            "def total_bytes() -> int:\n    return read_system_memory().total_bytes\n\n\n"
+            "def unrelated() -> int:\n"
+            "    reading = read_system_memory()\n"
+            "    return reading.total_bytes + 1\n"
+        ),
+    )
+
+    assert unreached_narrowings(tmp_path) == ["memory.py::total_bytes -> read_system_memory(...)"]

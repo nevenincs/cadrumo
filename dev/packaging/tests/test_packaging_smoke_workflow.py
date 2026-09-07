@@ -79,6 +79,21 @@ _COHORT_PUBLISH_STEP: Final = "Archive the tested Cadrumo Python cohort"
 _EVIDENCE_PUBLISH_STEP: Final = "Stage Cadrumo packaging smoke evidence"
 
 
+def _executed_surface(job: dict[str, object]) -> str:
+    """Return the job's run scripts with comment lines removed.
+
+    Substring assertions need this rather than the joined raw scripts. The
+    workflow's scripts carry long explanatory comments - the seal step alone
+    contributes thirteen comment lines naming the very scopes and rules the
+    gate asserts - so a needle matched against the raw surface is satisfied by
+    the prose above the command as readily as by the command. Which lines
+    execute is decided by :mod:`dev.ci.workflow_run_text`, not restated here.
+    """
+    steps = job["steps"]
+    assert isinstance(steps, list)
+    return executed_text(step.get("run") for step in steps if isinstance(step, dict))
+
+
 def _run_command_lines(job: dict[str, object]) -> set[str]:
     """Return every non-empty command line across the job's run scripts.
 
@@ -128,7 +143,7 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     assert checkout["with"]["fetch-depth"] == 0
     build_commands = _run_command_lines(build)
     assert "uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort" in build_commands
-    build_surface = "\n".join(str(step.get("run", "")) for step in build["steps"] if "run" in step)
+    build_surface = _executed_surface(build)
     assert "cadrumo-release-cohort.tar.gz" in build_surface
     build_uses = "\n".join(str(step.get("uses", "")) for step in build["steps"])
     assert "actions/upload-artifact@" in build_uses
@@ -147,12 +162,15 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
         leg = jobs[job_name]
         assert leg["needs"] == "build-release-cohort"
         assert leg["runs-on"] == runs_on
-        surface = "\n".join(str(step.get("run", "")) for step in leg["steps"] if "run" in step)
+        surface = _executed_surface(leg)
         assert "dev.packaging.oracle_emit_cohort" in surface
         assert f"--row-id {row_id}" in surface
         assert "--release-cohort-dir var/release-cohort" in surface
         assert "cadrumo-release-cohort.tar.gz" in surface
-        assert "gh release" not in surface
+        # Deliberately the RAW scripts: the leg must not so much as carry a
+        # publication command, commented out or otherwise, so this one
+        # question is asked of everything the step contains.
+        assert "gh release" not in "\n".join(str(step.get("run", "")) for step in leg["steps"] if "run" in step)
         leg_uses = "\n".join(str(step.get("uses", "")) for step in leg["steps"])
         assert "actions/download-artifact@" in leg_uses
         assert "actions/upload-artifact@" in leg_uses
@@ -359,12 +377,38 @@ def test_the_version_identity_guard_runs_before_the_cohort_is_built() -> None:
     """
     build = _cohort_build_job()
     names = [str(step.get("name", "")) for step in build["steps"]]
-    surface = "\n".join(str(step.get("run", "")) for step in build["steps"] if "run" in step)
+    surface = _executed_surface(build)
 
     assert "dev.release.version_identity" in surface, "seal time must ask the identity authority"
     guard = next(i for i, name in enumerate(names) if "Refuse to seal" in name)
     cohort_build = next(i for i, name in enumerate(names) if "Build the immutable full release cohort" in name)
     assert guard < cohort_build, "the guard must refuse before the cohort exists, not after"
+
+
+def test_the_surface_gate_refuses_an_invocation_that_survives_only_as_a_comment() -> None:
+    """Detector teeth for :func:`_executed_surface`, in both directions.
+
+    This workflow's scripts are heavily commented - the seal step alone carries
+    thirteen comment lines naming the scopes, the collision rules and the
+    authority the gate asserts - so the joined raw scripts contain every needle
+    twice over: once because the command runs, and once because the prose above
+    it explains why. Commenting the commands out leaves the prose, and with it
+    the raw match.
+
+    The raw reading is asserted here to stay green on the degraded job, so this
+    proves the narrowing rather than restating it.
+    """
+    build = _cohort_build_job()
+    steps = [step for step in build["steps"] if "run" in step]
+    needle = "dev.release.version_identity"
+    assert needle in _executed_surface(build), "the undegraded job must execute the authority"
+
+    degraded_steps = [{**step, "run": "# " + str(step["run"]).replace("\n", "\n# ")} for step in steps]
+    degraded = {**build, "steps": degraded_steps}
+
+    raw_surface = "\n".join(str(step["run"]) for step in degraded_steps)
+    assert needle in raw_surface, "the raw scripts still name the authority"
+    assert needle not in _executed_surface(degraded), "a commented invocation is not an invocation"
 
 
 def test_the_seal_guard_uses_the_seal_scope_not_the_publication_scope() -> None:

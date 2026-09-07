@@ -38,14 +38,21 @@ def _document() -> dict[str, Any]:
 def _upload_job(document: dict[str, Any]) -> dict[str, Any]:
     """Return the one job whose run surface performs the index upload."""
     jobs = document["jobs"]
-    uploading = [job for job in jobs.values() if _UPLOAD in _run_surface(job)]
+    uploading = [job for job in jobs.values() if _UPLOAD in _executed(job)]
     assert len(uploading) == 1, f"expected exactly one uploading job, found {len(uploading)}"
     return uploading[0]
 
 
-def _run_surface(job: dict[str, Any]) -> str:
-    """Return every run script in the job, joined."""
-    return "\n".join(str(step.get("run", "")) for step in job["steps"] if "run" in step)
+def _step_executed(step: dict[str, Any]) -> str:
+    """Return one step's run script with comment lines removed.
+
+    Every question this module asks of a single step - which step invokes
+    the guard, which step performs the upload, and which order the two sit
+    in - is a question about what the step EXECUTES. Matching the raw
+    script answers a different question, because a comment naming the
+    guard reads exactly like the guard.
+    """
+    return executed_text(step.get("run"))
 
 
 def _executed(job: dict[str, Any]) -> str:
@@ -63,7 +70,7 @@ def _executed(job: dict[str, Any]) -> str:
 def _step_index(job: dict[str, Any], needle: str) -> int:
     """Return the index of the first step whose run script contains ``needle``."""
     for index, step in enumerate(job["steps"]):
-        if needle in str(step.get("run", "")):
+        if needle in _step_executed(step):
             return index
     raise AssertionError(f"no step in the uploading job runs {needle!r}")
 
@@ -114,7 +121,7 @@ def test_the_upload_supplies_what_the_forge_check_needs() -> None:
 def test_the_guard_reaches_the_forge_with_a_credential() -> None:
     """A forge check without a token refuses, which would block every release."""
     job = _upload_job(_document())
-    guard = next(step for step in job["steps"] if _AUTHORITY in str(step.get("run", "")))
+    guard = next(step for step in job["steps"] if _AUTHORITY in _step_executed(step))
     assert "GH_TOKEN" in guard.get("env", {})
 
 
@@ -134,7 +141,39 @@ def test_the_gate_notices_a_publication_path_that_lost_its_guard() -> None:
     """
     document = _document()
     job = _upload_job(document)
-    job["steps"] = [step for step in job["steps"] if _AUTHORITY not in str(step.get("run", ""))]
+    job["steps"] = [step for step in job["steps"] if _AUTHORITY not in _step_executed(step)]
     assert _AUTHORITY not in _executed(job)
     with pytest.raises(AssertionError, match="no step in the uploading job runs"):
         _step_index(job, _AUTHORITY)
+
+
+def test_the_gate_refuses_a_guard_that_survives_only_as_a_comment() -> None:
+    """Detector teeth in the direction a raw run-text match cannot see.
+
+    Ordering is the whole guarantee, and a step index is only a position in the
+    workflow if it is read off an executed line. A comment naming the authority
+    reads exactly like the authority, so a match against the raw script reports
+    a guarded upload for a workflow whose guard is commented out - and reports
+    it more confidently the earlier the comment sits.
+
+    The degraded document below is that regression: the guard's script is
+    commented out in place, so the authority is still named, still in the
+    uploading job, and still ahead of the upload. The raw ordering is asserted
+    here to hold, so this case proves the fix rather than restating it.
+    """
+    job = _upload_job(_document())
+    degraded = [dict(step) for step in job["steps"]]
+    newline = "\n"
+    for step in degraded:
+        if _AUTHORITY in _step_executed(step):
+            step["run"] = "# " + str(step["run"]).replace(newline, newline + "# ")
+
+    def raw_index(needle: str) -> int:
+        return next(index for index, step in enumerate(degraded) if needle in str(step.get("run", "")))
+
+    assert raw_index(_AUTHORITY) < raw_index(_UPLOAD), "the raw script still reports a guarded upload"
+
+    degraded_job = {**job, "steps": degraded}
+    assert _AUTHORITY not in _executed(degraded_job), "a commented guard is not an invoked guard"
+    with pytest.raises(AssertionError, match="no step in the uploading job runs"):
+        _step_index(degraded_job, _AUTHORITY)
