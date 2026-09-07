@@ -42,9 +42,12 @@ def test_bindings_list_emits_readiness_and_borrador_columns_per_row() -> None:
     assert "operation\tregistry.modelo.bindings.list" in result.output
     assert "binding_id\tsource\treadiness\ttyped_enum\tinput_channel\tborrador_capable" in result.output
     # Every modelo-303 binding currently sources from
-    # ``ledger_iva_aggregation`` so every row's readiness column is
-    # "ledger source".
-    assert "ledger source" in result.output
+    # ``ledger_iva_aggregation``, so every row's readiness column carries the
+    # ledger category, whose catalogue key is ``cli...readiness.datos_libro``.
+    # The expected text is that key's English value: the assertion previously
+    # copied the prose of the docstring above, which names the category
+    # "ledger source", and no locale has ever rendered the key that way.
+    assert "ledger data" in result.output
     # Every binding row ends in either ``True`` or ``False`` for the
     # new column. Detect by matching the binding-id prefix on at
     # least one row.
