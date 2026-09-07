@@ -28,6 +28,7 @@ from typing import Final, override
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import (
     RegistryLoadError,
     RegistryValidationError,
@@ -51,6 +52,10 @@ from ..pipeline._semantic_map_join import join_record_design_semantics
 from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
+from ..pipeline.candidate_staging import (
+    generated_export_bootstrap_target,
+    stage_generated_export_candidate,
+)
 from ..pipeline.render_check import parsed_tree_file
 from ..pipeline.source_defects import source_defects_for
 
@@ -159,44 +164,32 @@ def _isolated_authority(tree: _GeneratedTree, root: Path) -> Path:
     candidate afresh, so copying one would let a stale tree validate itself.
     """
     registry_root = root / "registry" / "aeat"
-    shutil.copytree(bundled_path("registry", "aeat", "legal"), registry_root / "legal")
-    if tree.modelo == "303":
-        # M303's selected snapshot compiles the canonical annual Orden support
-        # authority.  It is registry authority, not an export input, so stage
-        # the same complete bundled directory rather than reconstituting it.
-        shutil.copytree(
-            bundled_path("registry", "aeat", "m303_orden_anual"),
-            registry_root / "m303_orden_anual",
-        )
-    modelo_root = registry_root / "modelos" / tree.modelo
-    shutil.copytree(
-        bundled_path("registry", "aeat", "modelos", tree.modelo),
-        modelo_root,
-        ignore=shutil.ignore_patterns("export"),
+    supporting_modelos = _supporting_modelos(tree)
+    source = next(
+        (item for ref, item in bundled_authority().catalogues.sources.items() if str(ref) == tree.source_ref),
+        None,
     )
-    # Check mode requires the isolated candidate to hold EXACTLY the target
-    # revision: it validates one generated tree against one selected revision,
-    # and a sibling left in place makes the selection ambiguous. Modelo 232
-    # carries two revisions, so the siblings are pruned rather than the whole
-    # tree being hand-assembled.
-    revisions_root = modelo_root / "revisions"
-    for sibling in revisions_root.iterdir():
-        if sibling.name != tree.revision:
-            shutil.rmtree(sibling)
+    assert source is not None, f"{tree}: declared render source {tree.source_ref!r} is absent"
+    bootstrap_target = generated_export_bootstrap_target(
+        modelo=tree.modelo,
+        revision=tree.revision,
+        source_ref=tree.source_ref,
+        source_sha256=source.sha256,
+    )
+    modelo_root = stage_generated_export_candidate(
+        bundled_path("registry", "aeat"),
+        registry_root,
+        modelo=tree.modelo,
+        revision=tree.revision,
+        supporting_modelos=supporting_modelos,
+        bootstrap_target=bootstrap_target,
+    )
     assert not (modelo_root / "revisions" / tree.revision / "export").exists(), (
         f"{tree}: the isolated candidate must not carry a copied export tree"
     )
-    # Every modelo the target REFERENCES comes along too. A cross-modelo binding
-    # or dependency classification resolves against the loaded registry, so a
-    # candidate holding only the target refuses with "references unknown source
-    # modelo" -- a refusal the isolation created, indistinguishable in the
-    # pending table from a real authoring gap. Modelo 353's per-member fan-in
-    # over Modelo 322 is the worked case.
-    for referenced in _supporting_modelos(tree):
-        shutil.copytree(
-            bundled_path("registry", "aeat", "modelos", referenced),
-            registry_root / "modelos" / referenced,
-        )
+    assert not (modelo_root / "revisions" / tree.revision / "export_layouts").exists(), (
+        f"{tree}: the isolated candidate must not carry a copied superseded manual export tree"
+    )
     return registry_root
 
 
@@ -414,6 +407,52 @@ def test_every_pending_check_mode_entry_names_an_enrolled_tree() -> None:
         f"pending check-mode entries name no enrolled tree: {orphaned}. A row rename must carry "
         "its entry with it; deleting the entry instead silently drops the reason this gate is "
         "allowed to be pending."
+    )
+
+
+def test_m390_bootstrap_isolation_excludes_both_export_authorities_and_keeps_required_support(tmp_path: Path) -> None:
+    """The enrolled-tree harness stages and validates the same bootstrap candidate as the CLI."""
+    tree = next(item for item in _GENERATED_TREES if item.modelo == "390" and item.revision == "2022")
+
+    registry_root = _isolated_authority(tree, tmp_path)
+    revision_root = registry_root / "modelos" / "390" / "revisions" / "2022"
+
+    assert not (revision_root / "export").exists()
+    assert not (revision_root / "export_layouts").exists()
+    assert (registry_root / "m303_orden_anual" / "manifest.toml").is_file()
+    construct_text = (revision_root / "constructs" / "0001-constructs.toml").read_text(encoding="utf-8")
+    assert "modelo-390-2022-fichero-boe" not in construct_text
+    assert "generated-modelo-390-2022-fichero" in construct_text
+
+    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    rendered = render_complete_export_tree(
+        revision_root / "export",
+        revision_id=tree.revision,
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=transport,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+        source_defects=source_defects_for(tree.source_ref),
+    )
+    validate_generated_export_tree(
+        context=GeneratedExportTreeValidationContext(
+            registry_root=registry_root,
+            source_root=bundled_path(),
+            target=ExportFragmentTarget(
+                modelo=tree.modelo,
+                revision_id=tree.revision,
+                design_epoch=tree.epoch,
+            ),
+            filing_year=tree.filing_year,
+            period=tree.period,
+            supporting_modelos=_supporting_modelos(tree),
+        ),
+        joined=joined,
+        semantic_map=semantic_map,
+        rendered=rendered,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
     )
 
 

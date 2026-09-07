@@ -4,9 +4,10 @@ An official record design is the authority the export generator compares every
 literal field against byte-for-byte, and that comparison is the only check that
 reads the source document rather than the project's transcription of it. It has
 to stay exact. But a published workbook can contradict itself, and when it does
-no reading of it satisfies both halves: the modelo 390 filing-year 2022 design
-prints an eleven-character close constant into a slot the same cell declares as
-twelve bytes wide, while its seven sibling pages each print twelve into twelve.
+no reading of it satisfies both halves: the modelo 390 filing-year 2022 and 2023
+designs print an eleven-character close constant into a slot the same cell
+declares as twelve bytes wide, while their seven sibling pages each print twelve
+into twelve.
 
 A declaration here records that adjudication as data rather than as a branch in
 the parser or an exemption in a test. It is deliberately narrower than the thing
@@ -93,6 +94,29 @@ _SOURCE_DEFECTS_BY_REF: dict[str, tuple[SourceDefectDeclaration, ...]] = {
                 "the reviewed committed layout already carries. The published reading is unusable rather than "
                 "merely disfavoured, since an eleven-byte literal is refused by the slot-width guard that "
                 "follows this substitution regardless of how the byte comparison is settled."
+            ),
+        ),
+    ),
+    "aeat-dr-390-2023": (
+        SourceDefectDeclaration(
+            source_ref="aeat-dr-390-2023",
+            source_sha256="179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7",
+            sheet="Pág. 7",
+            source_cell="A53",
+            published_content='Constante "</T3900700>"',
+            adjudicated_literal="</T39007000>",
+            evidence=(
+                "Cell A53 states two facts that cannot both hold: the close constant it prints is eleven "
+                "characters, and the slot the same cell declares for it is twelve bytes. Read straight out "
+                "of xl/sharedStrings.xml in the independently hash-pinned 2023 workbook, bypassing project "
+                "code, the file carries </T39001000> through </T39006000> and </T39008000> once each at "
+                "twelve characters, carries no </T39007000>, and carries </T3900700> once at eleven. Three "
+                "independent signals converge on </T39007000>: the seven sibling pages all follow "
+                "</T3900N000> for page N, that value is the only one filling the twelve-byte slot A53 itself "
+                "declares, and it is the value the reviewed revision layout already carries. The published "
+                "reading is unusable rather than merely disfavoured, since an eleven-byte literal is refused "
+                "by the slot-width guard that follows this substitution regardless of how the byte comparison "
+                "is settled."
             ),
         ),
     ),

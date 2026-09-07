@@ -696,6 +696,9 @@ def rehearse_object_name_component(
         copied_inventory_digest = cast("str", to_json(copied_inventory)["inventory_digest"])
         if not isinstance(copied_inventory_digest, str):
             raise ObjectNameRehearsalError("copied inventory did not emit a string digest")
+        supplied_inventory_digest = cast("str", to_json(inventory)["inventory_digest"])
+        if copied_inventory_digest != supplied_inventory_digest:
+            raise ObjectNameRehearsalError("verified snapshot inventory differs from the supplied current inventory")
         try:
             result = plan_object_name_transformation(component_manifest, repo_root=temporary_root)
         except ObjectNameTransformError as exc:

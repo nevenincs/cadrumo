@@ -85,7 +85,7 @@ __all__ = [
 ]
 
 
-SERIALIZER_CONVENTION: Final[str] = "rtoml-pretty-v1"
+SERIALIZER_CONVENTION: Final[Literal["rtoml-pretty-v1"]] = "rtoml-pretty-v1"
 _SAFE_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(r"^[^/\\\x00-\x1f]+$")
 _SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
 # A bare trailing full stop is SENTENCE PUNCTUATION on the official content, not

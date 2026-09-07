@@ -45,6 +45,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: The real modelo 390 filing-year 2022 workbook digest this mechanism was built for.
 _SHA: Final = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
+_SHA_2023: Final = "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7"
 _OTHER_SHA: Final = "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7"
 
 #: The cell content EXACTLY as the production parser hands it to the renderer.
@@ -59,8 +60,18 @@ _PUBLISHED: Final = 'Constante "</T3900700>"'
 _ADJUDICATED: Final = "</T39007000>"
 
 
-def test_pipeline_catalogue_owns_the_hash_pinned_m390_adjudication() -> None:
-    declarations = source_defects_for("aeat-dr-390-2022")
+@pytest.mark.parametrize(
+    ("source_ref", "source_sha256"),
+    (
+        ("aeat-dr-390-2022", _SHA),
+        ("aeat-dr-390-2023", _SHA_2023),
+    ),
+)
+def test_pipeline_catalogue_owns_each_hash_pinned_m390_adjudication(
+    source_ref: str,
+    source_sha256: str,
+) -> None:
+    declarations = source_defects_for(source_ref)
 
     assert len(declarations) == 1
     declaration = declarations[0]
@@ -71,9 +82,8 @@ def test_pipeline_catalogue_owns_the_hash_pinned_m390_adjudication() -> None:
         declaration.source_cell,
         declaration.published_content,
         declaration.adjudicated_literal,
-    ) == ("aeat-dr-390-2022", _SHA, "Pág. 7", "A53", _PUBLISHED, _ADJUDICATED)
+    ) == (source_ref, source_sha256, "Pág. 7", "A53", _PUBLISHED, _ADJUDICATED)
     assert declaration.evidence.strip()
-    assert source_defects_for("aeat-dr-390-2023") == ()
 
 
 def _declaration(**overrides: object) -> SourceDefectDeclaration:
