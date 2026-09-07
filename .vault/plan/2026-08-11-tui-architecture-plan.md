@@ -12,8 +12,8 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
-modified: '2026-09-06'
-body_hash: 'sha256:181bca76f72546d2228d01d42798d4a6ebc08261924bf02ccafcb98a9da02fc6'
+modified: '2026-09-07'
+body_hash: 'sha256:e019ff7ed690d5f3837263f8e57d96ff21429442d59ad6d401f772b35101a9a5'
 ---
 
 <!-- RETIRED: S370 -->
@@ -702,6 +702,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S486` - Re-verify the five named targets that are not the parity prune still hold at current head after the concurrent writers commits, and record that regenerating the export trees would leave a large uncommitted generated diff in a shared worktree which is a second reason to leave that group to its owner; `dev/locales src/cadrumo/entrypoints/tui/modelo`.
 - [x] `W08.P30.S487` - Prepare the parity prune as a reviewable removal manifest without applying it, deriving the one hundred and thirty two keys and a per key verdict from the live authority owning each namespace, and confirm none of them is declared anywhere so the list cannot remove a key the product resolves; `dev/locales`.
 - [x] `W08.P30.S488` - Record that the scoop packaging suite returns a different verdict run to run on this host, since one unchanged command produced a pass a timeout an error set and another pass within an hour varying only by machine load, which makes a single red from it unreadable as evidence; `packaging`.
+- [x] `W08.P30.S489` - Close the codebase to locale parity gate by narrowing the removal manifest against the four authorities the first sweep missed, since the wizard descriptor walk and the identity contract read keys the source scan cannot see, then teach the manager to discover the wizard flow help key it builds by interpolation and retire the google profile option sample whose option the live command specs no longer declare; `dev/locales`.
 
 ## Parallelization
 
