@@ -1001,6 +1001,11 @@ errors:
       no pot disminuir legalment el deute declarat abans de la unificació de l'autoliquidació
       rectificativa. Utilitzeu el procediment de sol·licitud de rectificació per a
       una correcció que redueixi el deute.
+    refused_modelo_amendment_detail_rows_required: En aquest model els registres de
+      detall són la declaració mateixa, de manera que una rectificació els ha d'indicar.
+      Aporta els registres que declara la rectificació (només els afegits en una
+      complementària, el conjunt corregit complet en una substitutiva) o un conjunt
+      buit per declarar que no n'hi ha cap.
     refused_modelo_amendment_kind_not_permitted: El tipus de rectificació sol·licitat
       no està legalment disponible per al període de declaració resolt. El conjunt
       de tipus acceptats figura en el context de l'error.

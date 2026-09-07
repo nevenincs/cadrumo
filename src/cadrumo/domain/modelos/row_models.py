@@ -998,6 +998,20 @@ ModeloDetailRow = (
     | Modelo210AgrupacionRentaRow
 )
 
+#: Modelos whose detail rows ARE the declaration rather than an annex to it.
+#:
+#: For these four the per-counterpart rows carry the substance: M347 declares
+#: counterparties over the threshold, M349 the intra-EU operators, M184 the
+#: members an entity attributes income to, and M232 the operaciones
+#: vinculadas. A return of these filed with no rows declares that there were
+#: none, which is a statement about the period, not an omission of detail.
+#:
+#: Modelo 210 is deliberately ABSENT even though
+#: :class:`Modelo210AgrupacionRentaRow` exists: its agrupación groups several
+#: rentas into one return as a convenience, so a 210 with no grouping rows is
+#: an ordinary single-renta return rather than a nil declaration.
+DETAIL_ROW_BEARING_MODELOS: frozenset[str] = frozenset({"184", "232", "347", "349"})
+
 
 # ---------------------------------------------------------------------------
 # Statutory cross-row / threshold validations (domain-owned)
@@ -1069,6 +1083,7 @@ def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:
 
 
 __all__ = [
+    "DETAIL_ROW_BEARING_MODELOS",
     "M184Clave",
     "M184ClaveDeclarado",
     "M184NaturalezaInmueble",

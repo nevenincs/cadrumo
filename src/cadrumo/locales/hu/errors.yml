@@ -939,6 +939,11 @@ errors:
       (complementaria) az autoliquidación rectificativa egységesítése előtt jogszerűen
       nem csökkentheti az adózó bevallott tartozását. Használja a helyesbítési kérelem
       eljárását a tartozást csökkentő javításhoz.
+    refused_modelo_amendment_detail_rows_required: Ennél a bevallásnál a tételsorok
+      maguk alkotják a bevallást, ezért a módosításnak meg kell adnia őket. Add meg
+      a módosítás által bevallott sorokat - kiegészítő bevallásnál csak a hozzáadottakat,
+      helyettesítő bevallásnál a teljes javított halmazt -, vagy üres halmazt, ha
+      nincs egy sem.
     refused_modelo_amendment_kind_not_permitted: A kért módosítási típus jogilag nem
       elérhető a feloldott bevallási időszakhoz. Az elfogadott típusok listája a hiba
       kontextusában található.

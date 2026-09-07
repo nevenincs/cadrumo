@@ -920,6 +920,11 @@ errors:
       lawfully decrease the taxpayer's declared liability before the autoliquidación
       rectificativa unification. Use the solicitud de rectificación procedure for
       a liability-decreasing correction instead.
+    refused_modelo_amendment_detail_rows_required: This modelo declares its detail
+      rows as the return itself, so an amendment must state them. Supply the rows
+      the amendment declares - only the added ones for a complementaria, the full
+      corrected set for a sustitutiva - or an empty set to declare that there are
+      none.
     refused_modelo_amendment_kind_not_permitted: The requested amendment kind is not
       legally available for the resolved filing period. The accepted kind set is listed
       in the error context.

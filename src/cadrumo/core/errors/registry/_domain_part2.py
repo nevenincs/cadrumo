@@ -548,6 +548,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.AmendmentDetailRowsRequiredError",
+        ErrorCode(
+            code="REFUSED_MODELO_AMENDMENT_DETAIL_ROWS_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_amendment_detail_rows_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.LedgerEvidenceRecaptureRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_LEDGER_EVIDENCE_RECAPTURE",

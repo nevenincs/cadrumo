@@ -994,6 +994,11 @@ errors:
       no puede disminuir legalmente la deuda declarada antes de la unificación de
       la autoliquidación rectificativa. Utilice el procedimiento de solicitud de rectificación
       para una corrección que reduzca la deuda.
+    refused_modelo_amendment_detail_rows_required: En este modelo los registros de
+      detalle son la propia declaración, por lo que una rectificación debe indicarlos.
+      Aporta los registros que declara la rectificación (solo los añadidos en una
+      complementaria, el conjunto corregido completo en una sustitutiva) o un conjunto
+      vacío para declarar que no hay ninguno.
     refused_modelo_amendment_kind_not_permitted: El tipo de rectificación solicitado
       no está legalmente disponible para el período de declaración resuelto. El conjunto
       de tipos aceptados figura en el contexto del error.
