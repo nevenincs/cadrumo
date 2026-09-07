@@ -87,11 +87,13 @@ from ...core.document_shape import PDF_CONTAINER_SHAPES, STRUCTURED_DOCUMENT_SHA
 from ...core.external_constants import XML_MIME_TYPE
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
+from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.iva.supply_nature import SupplyNature
-from ...llm.errors import LLMPdfRasterisationError, LLMProviderError
+from ...llm.errors import LLMConsentError, LLMPdfRasterisationError, LLMProviderError
 from ...llm.models import MultimodalImageInput
+from ...llm.preconditions import LLMPreconditionCondition, llm_no_recovery_verdict
 from ...llm.providers.local import rasterise_pdf_pages_to_base64_png
 from ..provisioning import probe_ollama_vision
 from ..user_profile.capabilities import resolve_active_capability
@@ -123,6 +125,61 @@ if TYPE_CHECKING:
     from ...llm.models import LLMProvider
 
 __all__ = ["extract_invoice_draft_from_evidence"]
+
+
+_CONSENT_BINDING_REFUSAL_LOCALE_KEY = "llm.evidence.consent.binding_mismatch"
+
+
+def _require_consent_token_binds_these_bytes(
+    consent_token: EvidenceConsentToken | None,
+    evidence_input: EvidenceInput,
+) -> None:
+    """Refuse a consent token minted for a document other than this one.
+
+    The token carries a content address precisely so an acknowledgement binds
+    to ONE document rather than to the session, and until this ran nothing
+    checked that binding. The dispatch point cannot: the request it inspects
+    carries the prompt and the images, not the address of the evidence they
+    were built from, so all it can ask is whether SOME token is present.
+
+    Here both facts exist at once. ``content_sha256`` is the address the bytes
+    were actually read under and is enforced against the bytes themselves, so
+    comparing the two is the whole check.
+
+    What it prevents is narrow and serious. The token travels as a parameter
+    beside ``evidence_id`` rather than being derived from it, so a caller can
+    pair them wrongly -- and the CLI pairing them correctly is a property of
+    that one caller, not of this function, which is the door a second frontend
+    comes through. A mismatched pair would send THIS document off-host under
+    an acknowledgement taken for ANOTHER, and then record the other document's
+    address in the consent ledger, so the audit trail would name a document
+    that was never transmitted.
+
+    ``None`` is not a mismatch and is not this function's business: an on-host
+    read needs no token, and an off-host one without a token is refused at the
+    dispatch point, which is where that decision already lives.
+
+    Raises:
+        LLMConsentError: When the token's content address is not the address
+            these bytes were read under.
+    """
+    if consent_token is None:
+        return
+    if consent_token.evidence_content_address == evidence_input.content_sha256:
+        return
+    facts = {
+        "consent_token_binding_valid": False,
+        "evidence_content_address": evidence_input.content_sha256,
+    }
+    raise LLMConsentError(
+        translated_message=_CONSENT_BINDING_REFUSAL_LOCALE_KEY,
+        context=facts,
+        precondition_verdict=llm_no_recovery_verdict(
+            LLMPreconditionCondition.EVIDENCE_TOKEN_BOUND,
+            facts=facts,
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        ),
+    )
 
 
 def extract_invoice_draft_from_evidence(
@@ -220,6 +277,8 @@ def extract_invoice_draft_from_evidence(
                 translated_message="errors.refused.refused_ledger_evidence_input",
             )
         evidence_input = resolve_attachment_evidence_input(attachment_id, store=store)
+
+    _require_consent_token_binds_these_bytes(consent_token, evidence_input)
 
     # Routing order, and the order is itself a control rather than an
     # optimisation: a document carrying a STRUCTURED record is read exactly and

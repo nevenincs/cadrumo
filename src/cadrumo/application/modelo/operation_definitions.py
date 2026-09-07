@@ -105,7 +105,6 @@ from .edit_models import (
     ModeloEditDetailRowIntentKind,
     ModeloEditExecutionNoEffectV1,
     ModeloEditMutationFamily,
-    ModeloEditMutationResultReceiptV1,
     ModeloEditPermittedSurfaceEntryV1,
     ModeloEditRowAddressV1,
     ModeloEditRowIntentKind,
@@ -126,10 +125,8 @@ from .workspace_models import ModeloWorkspaceRefreshTargetV1
 if TYPE_CHECKING:
     from ...domain.deadlines.models import TaxpayerProfile
     from ...domain.filing.schema import ModeloScalar
-    from ...domain.modelos.verification_report import VerificationReport
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
-    from .export import ModeloExportResult
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
@@ -458,18 +455,6 @@ class ModeloWorkVerifyPublicResultV1(BaseModel):
     granted_verificado_completo: bool
     finding_count: NonNegativeInt
     missing_required_casilla_count: NonNegativeInt
-
-
-def project_modelo_work_verify_result(report: VerificationReport) -> ModeloWorkVerifyPublicResultV1:
-    """Project one persisted report onto the safe public result."""
-    return ModeloWorkVerifyPublicResultV1(
-        verification_report_id=str(report.verification_report_id),
-        calculation_revision_id=str(report.calculation_revision_id),
-        completeness_status=str(report.completeness_status),
-        granted_verificado_completo=report.granted_verificado_completo,
-        finding_count=len(report.findings),
-        missing_required_casilla_count=len(report.missing_required_casilla_ids),
-    )
 
 
 # DELEGATED PHASE REPORTING, stated once for every executor in this module that
@@ -812,17 +797,6 @@ class ModeloExportPublicResultV1(BaseModel):
     file_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
     export_format: Annotated[str, Field(min_length=1, max_length=64)]
     handoff_required: bool = True
-
-
-def project_modelo_export_result(result: ModeloExportResult) -> ModeloExportPublicResultV1:
-    """Project one export outcome onto the safe public result."""
-    return ModeloExportPublicResultV1(
-        calculation_revision_id=str(result.calculation_revision_id),
-        output_path=str(result.output_path),
-        byte_size=result.byte_size,
-        file_sha256=str(result.file_sha256),
-        export_format=str(result.format),
-    )
 
 
 class ModeloExportExecutor:
@@ -1821,14 +1795,6 @@ class ModeloEditApplyPublicResultV1(BaseModel):
     calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
 
 
-def project_modelo_edit_apply_result(receipt: ModeloEditMutationResultReceiptV1) -> ModeloEditApplyPublicResultV1:
-    """Project one settled receipt onto the safe public result."""
-    return ModeloEditApplyPublicResultV1(
-        receipt_id=str(receipt.receipt_id),
-        calculation_revision_id=str(receipt.calculation_revision_id),
-    )
-
-
 class ModeloEditApplyExecutor:
     """Run the Edit Contract's guarded compare-and-swap apply under one recorded identity.
 
@@ -2044,9 +2010,6 @@ __all__ = [
     "build_modelo_work_rename_registration",
     "build_modelo_work_verify_definition",
     "build_modelo_work_verify_registration",
-    "project_modelo_edit_apply_result",
-    "project_modelo_export_result",
-    "project_modelo_work_verify_result",
 ]
 
 

@@ -648,6 +648,9 @@ live:
 llm:
   evidence:
     consent:
+      binding_mismatch: 'Elutasítva: a gépen kívüli olvasáshoz adott hozzájárulás egy
+        másik dokumentumra vonatkozott. A hozzájárulás pontosan azokhoz a bájtokhoz
+        kötődik, amelyekre megadták, ezért nem használható fel ennek elküldésére.'
       dispatch_refused: 'Elutasítva: ez a kérés az adózó egyik dokumentumát olvassa,
         és a gépen kívüli %{provider} szolgáltatóhoz küldené az adott híváshoz tartozó
         kifejezett hozzájárulás nélkül.'

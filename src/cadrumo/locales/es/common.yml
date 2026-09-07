@@ -663,6 +663,10 @@ live:
 llm:
   evidence:
     consent:
+      binding_mismatch: 'Rechazado: la autorización para la lectura fuera del equipo
+        se otorgó para otro documento. El consentimiento queda vinculado a los bytes
+        exactos para los que se concedió, por lo que no puede reutilizarse para
+        enviar este.'
       dispatch_refused: 'Rechazado: esta solicitud lee un documento del contribuyente
         y lo enviaría al proveedor externo %{provider} sin una autorización de consentimiento
         para esta invocación.'

@@ -638,6 +638,9 @@ live:
 llm:
   evidence:
     consent:
+      binding_mismatch: 'Refused: the off-host acknowledgement for this invocation
+        was taken for a different document. Consent binds to the exact bytes it
+        was granted for, so it cannot be reused to send this one.'
       dispatch_refused: 'Refused: this request reads a taxpayer document and would
         send it to the off-host provider %{provider} without a per-invocation consent
         acknowledgement.'
