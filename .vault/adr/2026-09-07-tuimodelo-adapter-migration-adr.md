@@ -5,6 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
+body_hash: 'sha256:cf09b51ad2a67ac4ebfd7c172094528d7a9eff8f5a165cedfda1fb6b85525465'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-11-tui-architecture-adr]]"

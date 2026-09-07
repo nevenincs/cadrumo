@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:3aabb302bf83a717dbc934a792f52632fd6892430ab4c7d99e8af72570947962'
+body_hash: 'sha256:08372fc220272c83d23b8b08e49b98e077e279546f7ff78e05c27f0ef2465cb6'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-05-arch-remediation-registry-format-casilla-section-order-adr]]"

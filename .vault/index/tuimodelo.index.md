@@ -6,8 +6,9 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:9e9bc52419c55a1ab781adc3e824e75346eaccb7a4853e95eb9da240108450a5'
+body_hash: 'sha256:2fea01898674ce3557acfbd99cb556491527f61d4aee71021c04fe06cf62a2df'
 related:
+  - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
   - '[[2026-09-07-tuimodelo-export-destinations-adr]]'
   - '[[2026-09-07-tuimodelo-filing-lifecycle-adr]]'
   - '[[2026-09-07-tuimodelo-form-projection-adr]]'
@@ -26,6 +27,7 @@ Auto-generated index of all documents tagged with `#tuimodelo`.
 
 ### adr
 
+- `2026-09-07-tuimodelo-adapter-migration-adr` - `tuimodelo` adr: `adapter to backend migration boundary` | (**status:** `proposed`)
 - `2026-09-07-tuimodelo-export-destinations-adr` - `tuimodelo` adr: `export destinations and import surfaces` | (**status:** `proposed`)
 - `2026-09-07-tuimodelo-filing-lifecycle-adr` - `tuimodelo` adr: `filing lifecycle, history and status surfacing` | (**status:** `proposed`)
 - `2026-09-07-tuimodelo-form-projection-adr` - `tuimodelo` adr: `declared form projection for schema-derived declaration surfaces` | (**status:** `proposed`)

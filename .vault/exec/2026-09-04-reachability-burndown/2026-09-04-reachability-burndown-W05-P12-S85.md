@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:b1a5dba416ad03275cdc8389b079c9f88805a05684ab9d4d929c09c3baf57dda'
+body_hash: 'sha256:65e2cf1cca9c922e3ac7a993706d50692e735bc53dfa3e1fa2f47bc0d9d90b67'
 step_id: 'S85'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Wire the bucket output-language hint, which production read and nothing wrote: the hint answers the one question the encrypted preference cannot, which language to speak before the profile is unlocked, and the resolver falls back to it whenever no session is bound, so a language the operator chose during setup silently reverted to the settings default on every pre-login surface. Extend the custody port from read-only to read, write and clear, and mirror the preference from the sole fact-write door, which already special-cases the same path to invalidate the locale cache.
 

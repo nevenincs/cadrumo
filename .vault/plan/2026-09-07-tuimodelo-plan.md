@@ -12,10 +12,10 @@ related:
   - '[[2026-09-07-tuimodelo-export-destinations-adr]]'
   - '[[2026-09-07-tuimodelo-work-creator-adr]]'
   - '[[2026-09-07-tuimodelo-satellite-families-adr]]'
+  - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
 body_hash: 'sha256:c52b1dbbbef3a1720bec44efbc582fe5c7a0cc56c4d8c2e286f349cd5bff8ed6'
-  - "[[2026-09-07-tuimodelo-adapter-migration-adr]]"
 ---
 
 # `tuimodelo` plan

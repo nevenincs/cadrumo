@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b784034d5247d4ae033147f0870f42519470ac0566d29b8d2eb934770c4f839'
+body_hash: 'sha256:effbfff996ba1739375987a4e6e1816805584c7de7846db57dc85b597fe76614'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
