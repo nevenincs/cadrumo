@@ -28,7 +28,7 @@ from .._artifacts import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-class _InterruptedCopy(RuntimeError):
+class _InterruptedCopyError(RuntimeError):
     """Stands in for anything that can end a copy part way."""
 
 
@@ -70,9 +70,9 @@ def test_a_failure_raised_between_the_two_steps_costs_nothing(tmp_path: Path) ->
     staging = tmp_path / "staging"
     before = _contents(destination)
 
-    with pytest.raises(_InterruptedCopy):
+    with pytest.raises(_InterruptedCopyError):
         stage_run_copy(source, staging)
-        raise _InterruptedCopy("interrupted before the swap")
+        raise _InterruptedCopyError("interrupted before the swap")
 
     assert _contents(destination) == before
     assert _contents(staging) == _contents(source)
@@ -122,11 +122,11 @@ def test_the_old_order_leaves_a_partial_tree_that_still_looks_like_a_run(tmp_pat
     destination = _run_tree(tmp_path / "keep", "old")
     kept = _contents(destination)
 
-    with pytest.raises(_InterruptedCopy):
+    with pytest.raises(_InterruptedCopyError):
         shutil.rmtree(destination)
         destination.mkdir()
         shutil.copy2(source / MANIFEST_NAME, destination / MANIFEST_NAME)
-        raise _InterruptedCopy("interrupted part way through the copy")
+        raise _InterruptedCopyError("interrupted part way through the copy")
 
     assert _contents(destination) != kept
     assert _contents(destination) == {"manifest.json": "new-manifest"}
