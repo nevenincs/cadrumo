@@ -44,7 +44,7 @@ import pytest
 
 from cadrumo.domain.user_profile.loader import load_user_profile_schema
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from cadrumo.tests.cli_envelope import require_schema_envelope
+from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
 from cadrumo.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.profile_capsule import seed_test_profile_record
@@ -194,6 +194,19 @@ def _dispatch_m200_verify() -> tuple[dict[str, Any], ...]:
             "--modelo", "200", "--year", str(_FILING_YEAR), "--period", _PERIOD,
         ],
     )  # fmt: skip
+    document = parse_json_object(result.output)
+    if "result" not in document:
+        # An error document carries no `result` key, so the schema envelope cannot
+        # validate it and reports a shape mismatch instead of the refusal the CLI
+        # actually issued. Surface the CLI's own code and message: a golden gate
+        # that cannot reach the command proves nothing about under-declaration,
+        # and the reason it could not reach it is the whole diagnosis.
+        error = require_error_document(result.output)["error"]
+        raise AssertionError(
+            "modelo work verify refused before any advisory could be evaluated, so "
+            "this gate exercised none of the under-declaration path. The CLI said: "
+            f"[{error['code']}] {error['message']}"
+        )
     payload = require_schema_envelope(result.output)
     return tuple(payload["findings"])
 
