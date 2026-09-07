@@ -28,10 +28,16 @@ from ...core.external_constants import (
 )
 from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
-from ...core.identity import BucketId, CalculationRevisionId, ContentDigest, TransactionId, WorkUnitId
+from ...core.identity import (
+    BucketId,
+    CalculationRevisionId,
+    ContentDigest,
+    TransactionId,
+    TransactionIdReference,
+    WorkUnitId,
+)
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from .id_resolution import TransactionIdReference
 from ...core.parsing import (
     IsoCurrencyCode,
     normalise_iso_3166_alpha2_jurisdiction,

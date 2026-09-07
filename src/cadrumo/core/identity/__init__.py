@@ -270,6 +270,7 @@ __all__ = [
     "SubjectTaxId",
     "TaxIdIdentityToken",
     "TransactionId",
+    "TransactionIdReference",
     "VerificationReportId",
     "WorkUnitId",
     "canonical_bucket_id",

@@ -15,8 +15,6 @@ with the registered ledger payload contracts.
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 import typer
 from pydantic import ValidationError
 
@@ -39,6 +37,7 @@ from ...domain.transactions.enums import (
     takes_business_share,
 )
 from ...domain.transactions.errors import TransactionValidationError
+from ...domain.transactions.model_validation import classification_for_business_share
 from ._common import bad, current_workflow_state, emit_envelope, profile_to_taxpayer, transaction_catalogue_repo
 from ._date_parsing import _parse_iso_date
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
@@ -606,16 +605,13 @@ def ledger_allocate(
     resolved_id = resolve_id(transaction_repository, transaction_id)
     parsed_business_pct = parse_required_decimal(business_pct, label="business-pct")
     validate_business_pct_range(parsed_business_pct)
-    # The classification follows the proportion: a 100% allocation is
-    # BUSINESS, a 0% allocation is PERSONAL, and anything strictly
-    # between is genuinely MIXED. Hard-coding MIXED silently mislabels
-    # a fully-business expense as mixed-use (CLI testimonial, Nuria).
-    if parsed_business_pct == Decimal(1):
-        allocation_classification = BusinessClassification.BUSINESS
-    elif parsed_business_pct == Decimal(0):
-        allocation_classification = BusinessClassification.PERSONAL
-    else:
-        allocation_classification = BusinessClassification.MIXED
+    # WHICH classification a proportion implies is the domain's answer, read
+    # rather than repeated here: it is the inverse of the coupling every write
+    # path already checks, and a second frontend offering this verb would
+    # otherwise have to invent it. Hard-coding MIXED silently mislabelled a
+    # fully-business expense as mixed-use (CLI testimonial, Nuria), which is
+    # the mistake the named rule exists to stop repeating.
+    allocation_classification = classification_for_business_share(parsed_business_pct)
     # A leaked `pydantic.ValidationError` (business_pct out of range, illegal
     # field combination) is caught here and surfaced as the real validator
     # cause, mirroring the `ledger classify` treatment.
