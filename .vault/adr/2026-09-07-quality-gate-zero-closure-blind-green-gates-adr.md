@@ -1,0 +1,129 @@
+---
+tags:
+  - '#adr'
+  - '#quality-gate-zero-closure'
+date: '2026-09-07'
+modified: '2026-09-07'
+body_schema: 'body-v2'
+body_hash: 'sha256:85725539d4a51657c7636784344cc653f80afb9d01b839ca7dede60456f43339'
+related:
+  - "[[2026-08-24-quality-gate-zero-closure-adr]]"
+  - "[[2026-07-25-test-harness-honesty-adr]]"
+  - "[[2026-07-14-honest-all-green-adr]]"
+  - "[[2026-08-04-canonical-storage-management-void-assertion-class-audit]]"
+  - "[[2026-08-30-repo-gate-integrity-wrong-subject-gates-audit]]"
+  - "[[2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr]]"
+---
+
+# `quality-gate-zero-closure` adr: `Blind green is a gate failure, and most of it is mechanically detectable` | (**status:** `accepted`)
+
+## Problem Statement
+
+Every accepted gate decision in this repository governs a gate that can go red. `2026-08-24-quality-gate-zero-closure-adr` makes exact zero the checkpoint predicate. `2026-07-14-honest-all-green-adr` mandates whole-tree honesty. `2026-07-25-test-harness-honesty-adr` requires a scanning gate to prove it discriminates. None of them governs a gate that is green because it *cannot* fail.
+
+A blind gate is invisible to all three. It is green, it is fast, it has a name that describes a real property, and it stays green through the exact defect it was written to catch. Under every existing predicate it is indistinguishable from a healthy gate.
+
+The repository already carries both the instrument and the boundary claim that stopped it. `dev/quality/tautological_assertion_scan.py` names the property well — an assertion is tautological when its truth value is fixed before any operand is understood — and `dev/tests/test_tautological_assertion_gate.py`, its only consumer, sweeps `src/cadrumo` and `dev` with a per-root anti-vacuity floor. A second, independent inline detector in `dev/tests/test_no_tautology.py` sweeps the test-control modules; it does not use the scanner. Neither reaches per-push CI: `just test-ratchets` occurs once in the `justfile` and in no workflow, and `dev/tests` is outside the path set of the per-push `test-dev-ci` lane, reaching CI only through the `workflow_dispatch`-only full run. The scanner's docstring then draws the line:
+
+> WHAT THIS SCAN CANNOT DO, which matters more than what it can. This is the only member of the gate-integrity family a linter can catch. Every other instance in that family needed a person to ask what the assertion was ABOUT: a gate whose assertion is perfectly well-formed and simply irrelevant to its subject is indistinguishable, to any scan, from one that is on point.
+
+Measurement in September 2026 refuted that boundary. Four further classes were found and repaired, each located by static analysis alone, none of them trivially true, none requiring a person to judge what the assertion was about:
+
+- **Subsuming disjunction.** `assert A in X or B in X` where `B` is a substring of `A`. The verdict equals the weaker operand; the specific claim is never required. Seven found.
+- **Self-echoing token.** An assertion keyed on the token the operator typed, which the error message quotes back verbatim, so it cannot separate "the surface is retired" from "it resolved and failed for another reason". Three found.
+- **Locale-bound absence.** `assert X not in output` where `X` is our own English rendering and the ambient test locale is Spanish. Satisfied by every run. The instance in `test_modelo_source_mesh_calculate.py` asserted `"ADVISORY:"` absent while the Spanish catalogue renders the same notice `"AVISO:"` — an under-declaration gate that could not fail if an advisory were surfaced.
+- **Never-emitted literal.** An absence assertion whose literal appears nowhere else in the tree.
+
+Every count above is recorded with its probe design, its false positives, and its two false starts in `2026-09-07-quality-gate-zero-closure-blind-green-measurement-research`. Each is a floor taken at a moving revision while other sessions committed, not a stable population.
+
+Separately, `2026-08-04-canonical-storage-management-void-assertion-class-audit` measured the absence-assertion population at 400, resolving to 213 provably excluded, 13 already safe, and **155 candidates needing examination**. It explicitly deferred disposition: "Do not remediate any site from this audit yet; disposition is a scoping decision for a follow-on plan" and "A follow-on ADR should decide". That deferral has stood unowned since 2026-08-04.
+
+Four decisions are needed: whether blind green is a gate failure with a predicate of its own; how much of it is mechanically detectable; whether mutation testing is adopted and with which tool; and which plan owns the work.
+
+## Considerations
+
+- The refuted boundary is the load-bearing fact. The scanner's claim was not careless — it was true of the classes it enumerated. It generalised from a list of forms to a claim about the family, which is the same error the scanner's own docstring warns against when it says naming the property beats listing the instances.
+- Detectability is per-class, not global. Subsumption is decidable from the AST alone. Locale-binding is decidable by joining the asserted literal against the four catalogues and the test's locale pinning. Never-emitted literals are decidable by a corpus join. "Well-formed but irrelevant to its subject" remains genuinely undecidable by static analysis and stays a human question — but it is exactly the question a surviving mutant answers empirically.
+- Locale pinning takes four forms in this tree. `language_argv.py:26` declares `("--language", "--lang", "--output-language")`, and a test may also pin through `env={"CADRUMO_OUTPUT_LANGUAGE": ...}`. A detector that recognises fewer reports false positives; the first probe recognised two of the four and misreported 8 of 17 hits. `--lang` is currently unused by any test, which is exactly why a detector written from observed usage rather than from the declaration would miss it.
+- Not every disjunction is a defect. Locale-alternative tuples are the sanctioned shape, real boundaries exist, and Click's own messages are untranslated and stable, so asserting them is a real claim. A detector that cannot tell these apart will be silenced rather than fixed.
+- The absence-assertion sweep cannot see literals composed inside helper functions, and demonstrated this against its own corpus by missing `_hash_bucket_tree`. Its count is "a floor, not a population, in a direction the instrument cannot itself measure". Any static detector in this family inherits that property; mutation testing does not, because it perturbs behaviour rather than reading source shape.
+- No mutation tool is present in `pyproject.toml` or `uv.lock` — not merely unconfigured, not installed. `2026-07-12-mutation-harness-extension-audit` is not evidence against adoption: it concerns a retired ruleset-AST mutation suite for an architecture that no longer exists, not mutation testing of the test suite.
+- Cost is the live constraint on mutation testing, not principle. The unit lane already carries a per-test wall ceiling and a documented history of multi-hour wedged runs; a naive whole-suite mutation run multiplies that by the mutant count. Bounded per-package scope is what makes adoption tractable.
+- A surviving mutant and a gate defect are not the same thing. An equivalent mutant changes no observable behaviour, so no assertion could have caught it; counting it as a finding manufactures work and would push the repository toward a mutation score, which is a metric, not a gate.
+- `2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr` is accepted and binding: mechanical gates stay verify-only and out of commit time, because a pre-commit stash destroyed uncommitted work in this repository.
+- `src/cadrumo/tests/test_pinned_taxonomy_literal_conformance.py` is the in-repo template for a gate that survives the "is this itself tautological?" objection: a hand-edited declaration checked against AST-discovered reality, where nobody can keep the gate green without also changing what the test asserts.
+- `2026-08-24-quality-gate-zero-closure-adr` reserves implementation authority to owning feature plans and forbids the ratchet controller from taking over an owned surface. Its plan has been stranded at two closed steps since 2026-08-24, and the blind-green evidence has had no owner at all.
+
+## Considered options
+
+- **O1 — Leave the family to human review, as the scanner's docstring concluded.** Rejected: refuted by measurement. Four classes were located mechanically, and the largest of them sat inside an under-declaration gate that no reviewer had questioned.
+- **O2 — Adopt mutation testing as the sole instrument and build no structural detectors.** Rejected: a surviving mutant proves an assertion is weak but does not name which class it belongs to, so it cannot be turned into a standing gate that refuses the defect at authoring time. Mutation testing measures; detectors prevent. The repository needs both.
+- **O3 — Build structural detectors first and defer mutation testing behind a cost measurement.** Rejected: it inverts the dependency. A detector built with no means of checking that it can itself fail is precisely the artefact under adjudication here, and the repository has already shipped one whose confident boundary claim went unchallenged from the day it was written until it was measured.
+- **O4 — Install mutmut first as the prerequisite instrument, then build per-class structural detectors and a locale axis against a tree it can already judge.** Chosen: mutation testing supplies the ground truth for "can this assertion fail", and every detector built afterwards is held to it, including each detector's own gate.
+- **O5 — Route the work through the ratchet controller as owner-attributed batches with no owning plan.** Rejected: that is what has happened since 2026-08-04 and it produced a measured population with no disposition. The ratchet routes to owners; the defect is that no owner exists.
+
+## Constraints
+
+- Blind green is a gate failure. A gate that cannot fail for the reason it was written is red for the purposes of this decision, whatever its exit status.
+- mutmut is the only mutation engine adopted. A second engine is not added: mutant models differ between tools, so survival counts are not comparable and a disagreement between them would have no adjudicating authority.
+- Mutation runs are bounded per package with a recorded, reproducible invocation. Whole-suite runs are not authorised by this record.
+- A mutation score is never a pass condition, a target, or a reported metric. A surviving mutant is a finding to triage; an equivalent mutant is closed as inert with its reason recorded.
+- Every detector added under this decision sweeps the real tree, ships a positive control proving it fires on a representative defect, and ships an anti-vacuity floor proving it examined a non-trivial population. A detector without all three is not accepted. This is `2026-07-25-test-harness-honesty-adr` applied to the detectors themselves.
+- A detector's finding count is a diagnostic floor. It never becomes a pass condition, an exhaustive worklist, or a debt allowance, and no detector may be satisfied by exhausting a list.
+- This decision authorises no baseline, threshold, exclusion, suppression, skip, xfail, or allowlist. Where a legitimate shape would trip a detector, the detector is made precise about the shape; it is not given an exemption list.
+- Detectors and mutation runs are verify-only and run outside commit time, under `2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr`. No hook is installed.
+- Repairs replace a weakened assertion with the stronger claim it stood for. Removing a redundant branch is a strengthening and must be reported as such, never as a defect fixed, unless the assertion can be shown to pass while the behaviour is broken.
+- The `quality-gate-zero-closure` plan is repurposed as the owning implementation plan for this decision. To the extent that `2026-08-24-quality-gate-zero-closure-adr` reserves implementation authority away from that plan, this record amends it for this surface only: the rolling-ratchet controller's delegation rule is unchanged for every other surface, and the controller's speculative activation steps are superseded rather than deleted from the record.
+- No new feature tag is created. This decision and its plan carry `#quality-gate-zero-closure`.
+
+## Implementation
+
+The work divides into domains that are independently completable and independently expandable, each landing as its own Phase. A domain may grow or shrink as measurement changes; the plan's completion condition is stated over mechanisms, never over populations. The mutation instrument is a prerequisite and lands first.
+
+**Install mutmut as the prerequisite instrument.** mutmut is pinned as a development dependency with a recorded, reproducible invocation. Scope is bounded per package: this suite carries a documented history of multi-hour wedged runs, and an unbounded first run would establish nothing except that mutation testing is expensive. One bounded package is measured for wall clock, mutant count, and killed and surviving counts. Survivors are triaged into assertions that cannot fail and semantically inert mutants. The standing scope and cadence are then declared from the measured cost.
+
+**Correct the recorded boundary.** Amend the `tautological_assertion_scan` docstring so it no longer claims to be the only mechanically catchable member of the family, and states which classes are decidable, which are not, and why. The claim is recent — the scanner was written on 2026-09-01 and the audit finding behind it on 2026-08-30 — so the cost so far is small and the correction is cheap. Left standing, it is a documented reason for the next author not to try.
+
+**Structural detectors, one per decidable class.** Subsumption; self-echoing token; never-emitted literal; locale-bound presence and absence. Each is an AST sweep in `dev/quality/`, exercised by a gate in `dev/tests/` carrying its positive control and anti-vacuity floor, and registered in a named verify lane. Each detector's own gate is then killed with mutmut, so the instruments are held to the standard they enforce. The locale detectors join against all four catalogues and recognise all three pinning forms.
+
+**The locale axis.** A test lane that runs under a non-ambient locale retires the locale-bound classes by construction. The axis must first be demonstrated to fail against a known locale-dependent assertion before any repair, so the axis itself is proven to bite.
+
+**Disposition of the measured population.** The candidate population from the void-assertion audit receives a recorded disposition, re-measured at the current revision because those figures describe 2026-08-04. Sampling is drawn from the candidate frame, never extrapolated from the 19 the original sweep happened to surface.
+
+## Rationale
+
+O4 is chosen because the two instruments answer different questions and the order between them is not arbitrary. Mutation testing answers "can this assertion fail" directly, for any assertion, without anyone having named its failure mode in advance. A structural detector answers "does this assertion belong to a class we have already learned to recognise", which is what makes it enforceable at authoring time and cheap enough to run on every change. Detectors are the standing gates; mutation is the ground truth that tells us a detector is worth writing and that the detector itself is not blind.
+
+Putting mutmut first inverts the order this record first proposed, and the subject matter is the reason. A detector built before any means of checking that it can fail is the exact artefact under adjudication, and one such detector already shipped here and went unchallenged until it was measured. Building the remaining detectors against a tree mutmut can already judge is the only sequence in which the instruments are held to their own standard.
+
+mutmut alone, rather than a survey, because a second mutation engine splits the evidence: mutant models differ, so survival counts from two tools are not comparable and a disagreement between them would have no adjudicating authority.
+
+Repurposing the stranded plan, rather than opening a new one, follows the reason the ratchet ADR itself gives: the ratchet routes findings to owners, and the failure since 2026-08-04 was the absence of an owner. Creating a fourth overlapping feature would reproduce that. The amendment is narrow and names the surface it applies to, so the controller's delegation rule survives everywhere else.
+
+## Consequences
+
+A new class of gate failure becomes reportable, and the first effect is that the repository will look worse before it looks better: assertions that have been green for months will be named as blind. That is the decision working, not a regression, and no Step may reduce the count by weakening a detector.
+
+The `quality-gate-zero-closure` plan stops being the rolling-ratchet installation plan. The controller described by `2026-08-24-quality-gate-zero-closure-adr` therefore has no installation plan until one is opened, and this record does not open one. That is a deliberate cost of repurposing a stranded plan rather than a side effect: the controller has had no owner since 2026-08-24, and pretending otherwise is what stranded it.
+
+mutmut becomes a declared development dependency, so the toolchain grows and its runtime cost lands on whichever lane invokes it. Bounded per-package scope keeps that cost visible and refusable; a future decision to widen it must state the new cost.
+
+Detectors added here will produce false positives on shapes nobody has enumerated yet. The constraint against exemption lists means each one is paid for by making the detector more precise, which is slower than an allowlist and is the point: an allowlist would reintroduce the blind spot under a different name.
+
+Repairs under this decision touch test files across the tree while other sessions edit them concurrently. Every repair is therefore scoped to its own files, and a removed redundant branch is reported as a strengthening rather than as a defect fixed, so the record does not overstate what was broken.
+
+## End signal
+
+This plan completes when the instruments exist and are proven to bite. It does not complete when the tree is free of blind assertions, and it never claims that.
+
+Completion requires all five, each evidenced:
+
+1. mutmut is installed and pinned, one bounded package has a recorded measurement, survivors are triaged into real findings and inert mutants, and the standing scope and cadence are declared from that measured cost.
+2. The recorded boundary in `tautological_assertion_scan` is corrected and states the decidable and undecidable classes.
+3. Every decidable class named in this record has a detector that sweeps the real tree, carries a passing positive control and an anti-vacuity floor, is registered in a named verify lane that CI invokes, and has had its own gate killed by mutmut.
+4. The locale axis exists, is invoked by a named lane, and has been demonstrated failing against at least one real locale-dependent assertion before that assertion was repaired.
+5. The re-measured candidate population has a recorded disposition naming its sampling frame. An empty disposition is not a disposition, and a disposition may not claim to have exhausted a population the instrument cannot bound.
+
+Criterion 3 is the load-bearing one: it is satisfied by mechanisms that demonstrably fail on a real defect, not by a count of sites repaired. No criterion is satisfied by exhausting a list, and none may be satisfied by a threshold, baseline, exclusion, suppression, skip, xfail, or allowlist.
+
+A Phase may be added when a new decidable class is measured, or contracted when a class is shown undecidable or empty; both require evidence and neither reopens the completion condition. Findings produced after completion are routed as ordinary owner work under the rolling ratchet, which is what that controller is for.

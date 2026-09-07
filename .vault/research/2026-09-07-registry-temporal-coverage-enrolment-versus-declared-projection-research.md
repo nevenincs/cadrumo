@@ -6,7 +6,12 @@ date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
 body_hash: 'sha256:b800d5f37e49d896262308e48941199f1f328b0044e9765917e3c406a6766d3d'
-related: []
+related:
+  - '[[2026-08-28-registry-narrow-mechanism-widening-adr]]'
+  - '[[2026-08-24-registry-completeness-closure-adr]]'
+  - '[[2026-08-14-registry-temporal-coverage-adr]]'
+  - '[[2026-08-10-aeat-export-fragment-generator-authority-plan]]'
+  - '[[2026-08-14-registry-temporal-coverage-plan]]'
 ---
 
 # `registry-temporal-coverage` research: `registry temporal coverage`
@@ -134,18 +139,71 @@ reissued. An omission says nothing; a pin says why and expires.
 NOT DONE HERE: the plan is another writer's active surface (99 open steps) and
 S32 is blocked on S84. Proposing the step edit is the operator's call.
 
-## Open questions for the ADR
+## Reconciliation against the accepted record
 
-1. Which gates must project, and which legitimately target one revision (a
-   revision-specific adjudication, for instance)?
-2. Where does the projection live so both the pipeline CLI and the test harness
-   read one home? The `_SOURCE_DEFECTS` split - mechanism in the pipeline, data
-   in a test module - is the same class of problem and is currently blocking
-   m390-2022 publication.
-3. What is the expected coverage denominator: every declared revision, or every
-   revision within a supported temporal window? The registry declares revisions
-   as far back as 2003; a gate that must pass for all 128 is a different contract
-   from one that must pass for the currently filable range.
+Semantic discovery found this problem ALREADY DECIDED and ALREADY MEASURED. Two
+sections above were written before that discovery and are corrected here.
 
-Question 3 is the one that needs a decision before any code moves: it sets what
-"complete" means for every gate that follows.
+**The denominator question is NOT open.** `registry-completeness-closure-adr`
+(accepted) fixes it: the predicate holds over "every LAW-SELECTABLE REGISTERED
+REVISION" - not all 128 declared, and not an arbitrary window. That ADR also names
+this exact anti-pattern in its constraints: the predicate must rest on validated,
+law-selected snapshots "not raw fragments, filesystem presence, similarity between
+designs, or HAND-MAINTAINED MODELO LISTS." `_GENERATED_TREES` is a hand-maintained
+modelo list, so the accepted record already forbids relying on it as coverage
+evidence.
+
+**The enrolment measurement is not new.** `W04.P07.S79` of
+`2026-08-10-aeat-export-fragment-generator-authority-plan` measured it on
+2026-08-31 - "26 trees are enrolled across 13 modelos" against my 29 across 14 -
+and states the consequence in its own words: "ENROLMENT IS THE ONLY STALENESS
+DETECTOR THIS CAMPAIGN HAS, so an unenrolled map silently rots."
+
+**The EEDD question was already scoped correctly, and I mis-scoped it.**
+`W04.P07.S113` tracks the Pag. 1 offset-1006 `Identificador cliente EEDD` anchor
+"whose open question is AEAT developer enrolment rather than authoring" - an
+anchor-ownership judgement, one field among 537. I inflated that into a
+publication blocker for the whole tree. The plan never made that error.
+
+**Ownership.** The completeness ADR assigns generated trees to the export-fragment
+plan, not to temporal coverage: "The export-fragment plan remains the owner of
+official design interpretation, semantic maps, render profiles, generated trees,
+and byte proof." So enrolment findings belong to `W04.P07`, and this research is
+linked to both plans rather than filed only under its own feature tag.
+
+## What survives as a genuine addition
+
+Two things, both narrow.
+
+**1. A detection gap in the census.** `W01.P09.S32` counts files "pegged by a year
+token in the filename" - 36 of 3,515, 38 percent parametrized. `_GENERATED_TREES`
+is a literal list INSIDE `test_generated_export_trees.py`, whose name carries no
+year token, so that metric structurally cannot see it. The census should count
+in-file enrolment lists as well as year-pegged filenames.
+
+**2. The source-defect wiring gap, which no step names.** The publication CLI
+refuses `m390-2022` at `literal 'modelo-390-page-07-close'` because
+`_render_candidate()` in `dev/registry/pipeline/cli.py` calls
+`render_complete_export_tree` WITHOUT `source_defects`, while the adjudication for
+a genuine typo in the official file is declared only in
+`dev/registry/tests/test_generated_export_trees.py`. Mechanism is pipeline-owned;
+data is test-owned; the CLI cannot read it. The test harness renders this tree and
+the CLI cannot, for the same tree and the same design.
+
+## Plan drift observed, needing reconciliation by the owner
+
+`W04.P07.S79` is OPEN, but its subject has substantially landed: the semantic map
+exists at `dev/registry/mappings/modelo_390/2022/` (0001-records.toml,
+0002-entries.toml), Modelo 390 IS now enrolled in `_GENERATED_TREES`, and the
+bootstrap row is committed. The row's own 2026-08-31 measurement ("390 holding
+none") is stale.
+
+`registry-completeness-closure-adr` requires this be settled before any
+completeness claim: "Implementation-versus-plan drift is resolved before the
+claim: independently verify the live behavior, then either correct the
+implementation or reconcile the owning plan's structural state and execution
+record. A commit hash, passing focused test, or unchecked plan row alone cannot
+satisfy reconciliation."
+
+The remaining refusal for that row is the source-defect wiring above, which is not
+named by S79, S112, S113 or S115.

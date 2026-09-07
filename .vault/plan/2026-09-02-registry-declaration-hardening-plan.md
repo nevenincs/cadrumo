@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:80cf7d41c4495d469b129e187ab974cc2c41f980b828c4e698aba143346cabb3'
+body_hash: 'sha256:c9083cf703bf1297c7a8db55504b4642b8f837c3c09904b16f30ebd57cb49bec'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1403,6 +1403,7 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1034` - Retire a decayed floor ratio in the dunder-init gate whose prose still described a single floor of one thousand and a seven-to-one weakness after the floors became per-root; `dev/quality/tests/test_no_dunder_init_module_imports.py`.
 - [x] `W06.P13.S1035` - Enforce the reachable-is-a-subset-of-shipped invariant on the unreachable-code result, which rendered a self-refuting coverage headline because three constructors took both counts as free parameters; `dev/audit/unreachable_code.py`.
 - [x] `W06.P13.S1036` - Enforce that the import-hygiene fix classification's consumer count matches the modules it lists, since both derive from one set yet the operator-facing workload figure was a free parameter; `dev/quality/import_hygiene_scan.py`.
+- [x] `W06.P13.S1037` - Join the declustering CLI's argparse surface to its dispatch surface, replacing a completeness claim whose two sides both descended from the same mode tuple and cancelled under the loss it named; `dev/quality/tests/test_object_name_declustering.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 
