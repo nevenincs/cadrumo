@@ -13,7 +13,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
 modified: '2026-09-07'
-body_hash: 'sha256:d41a9d773cf4f64bcf6ff2bb915d52e33793318a62619a822494638f9feef95d'
+body_hash: 'sha256:46047c34fc94602dab0ce2c5d4224799e512ec95cb325c574ea3b771553dd333'
 ---
 
 <!-- RETIRED: S370 -->
@@ -705,6 +705,7 @@ Close the gaps the workbench landing left explicit: fixtures and renderer covera
 - [x] `W08.P30.S489` - Close the codebase to locale parity gate by narrowing the removal manifest against the four authorities the first sweep missed, since the wizard descriptor walk and the identity contract read keys the source scan cannot see, then teach the manager to discover the wizard flow help key it builds by interpolation and retire the google profile option sample whose option the live command specs no longer declare; `dev/locales`.
 - [ ] `W08.P30.S490` - Establish that the modelo 390 2022 export tree is blocked on a reviewed bootstrap target row rather than on the check mode pin that earlier firings named, since the generated export bootstrap authority carries only two reviewed modelo 200 rows and each attests a reviewed official source by hash, and correct the reading that the pipeline module run as a script passes when it has no main guard and exits zero without running; `dev/registry`.
 - [x] `W08.P30.S491` - Guard the twelve custody cases whose own body raises the keychain unavailable error behind the shared credential store probe, pairing each failure to its test through the junit report rather than a traceback dump, and leave the opaque handover assertions and the absent session action key error red because a marker keyed skip over all of them was measured to discard six passing cases; `src/cadrumo/adapters/persistence/storage src/cadrumo/entrypoints/cli/tests src/cadrumo/tests`.
+- [x] `W08.P30.S492` - Take the custody keychain lane from thirty three failures to two by diagnosing every case individually against its own locals refusal code or production log rather than the marker, guarding only those the store actually causes so the passing count never moves, and leaving the two that are not the store visible with their failing expressions recorded; `src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/adapters/persistence/storage src/cadrumo/tests`.
 
 ## Parallelization
 

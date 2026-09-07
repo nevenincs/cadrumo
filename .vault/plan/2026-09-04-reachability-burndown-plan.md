@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:d8e09c83916aa3fce3eb47583a707ed1987d3b54258ee9f8e1ec51fd07055b68'
+body_hash: 'sha256:12387aad712eb406c98b518f1a4d8064b0bab27c868b190c518e41995c164274'
 ---
 
 # `reachability-burndown` plan
@@ -191,6 +191,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S90` - Sweep every open cluster for the stale-prose shape found twice by reading, then correct the one false docstring the sweep's subject exposed: five clusters name a live symbol inside an unreached-claim sentence and all five are legitimate contrast mentions, so no further staleness exists. The filing-status token's docstring asserted that mounted live command families use it while none reads it, and a sentence claiming a wiring the tree does not have outranks the code until someone checks; correct it rather than leaving the false half waiting on the routing decision.; `src/cadrumo/application/operator_surface/models.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S91` - Sweep the shipped tree for the docstring shape the filing-status token carried, an unreached symbol whose own sentence asserts a live consumer, and correct the two real ones: the corpus-drift assertion claimed the CI gate uses it when only its package test does, and the first-slice routing table claimed the snapshot-time referential-integrity gate confirms its targets when that confirmation is performed by the routing test instead. Do not ship the scan as a gate: half its hits are grammatical, the claim verb attaching to a different noun.; `src/cadrumo/core/corpus_manifest/manifest.py,src/cadrumo/domain/renta/_first_slice_routing.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S92` - Delete the five execution-policy declarations the config package does not use, and correct the entry that called them a displaced canonical home: the module holding them is leading-underscore and therefore private to config, so the modelo specs declaring their own is the correct shape rather than a displacement, and the five are simply declarations with zero in-package consumers where their siblings carry between two and twenty-six each. Record the two spent symbol-ratchet entries this and the output-language wiring left behind.; `src/cadrumo/entrypoints/cli/config/_spec_policies.py,src/cadrumo/entrypoints/cli/config/tests/test_spec_policies.py,dev/quality/unused_symbol_ratchet.toml,dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S93` - Sweep every open finding against its module siblings' in-package consumer counts, which is what exposed the execution-policy cluster, and find none at the threshold that discriminated there; then close the last member of the public-types cluster, which is not the displaced shape the other six were. The workspace atomic projection port is the contract its module says eight envelope realizations exist to satisfy, and structural typing let that claim go unchecked, so give it a conformance gate deriving the required members from the Protocol rather than restating them.; `src/cadrumo/application/modelo/tests/test_workspace_producers.py,dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
