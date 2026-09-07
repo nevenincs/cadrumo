@@ -19,9 +19,9 @@ from ..command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    TuiCapability,
     ValueContract,
 )
+from ...tui_capability import TuiCapability
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, ENCRYPTED_DESTRUCTIVE, STATE_FREE
 

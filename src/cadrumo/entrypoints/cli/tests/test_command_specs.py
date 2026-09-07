@@ -25,9 +25,9 @@ from ..command_spec import (
     LazyBinding,
     ResultSchemaSpec,
     SchemaState,
-    TuiCapability,
     translation_key,
 )
+from ...tui_capability import TuiCapability
 from ..command_specs import COMMAND_GRAPH, COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

@@ -8,6 +8,8 @@ records and resolve deferred targets only at their owning boundary.
 
 from __future__ import annotations
 
+from ..tui_capability import TuiCapability
+
 from dataclasses import dataclass
 from enum import Enum, StrEnum
 from types import MappingProxyType
@@ -722,13 +724,6 @@ class SchemaState(Enum):
     UNAVAILABLE = "unavailable"
 
 
-class TuiCapability(Enum):
-    """Closed TUI routing posture for one command-graph node."""
-
-    NOT_IMPLEMENTED = "not-implemented"
-    AVAILABLE = "available"
-
-
 @dataclass(frozen=True, slots=True)
 class ResultSchemaSpec:
     """Explicit result-schema target or intentional absence/unavailability."""
@@ -1026,6 +1021,5 @@ __all__ = [
     "ResultSchemaSpec",
     "SchemaState",
     "TranslationKey",
-    "TuiCapability",
     "ValueContract",
 ]

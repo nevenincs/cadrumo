@@ -137,6 +137,37 @@ personal-only transaction has been classified, but nothing about it belongs
 in a business calculation."""
 
 
+SHARE_BEARING_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.MIXED,
+    },
+)
+"""Classifications that carry a business share (``business_pct``).
+
+A share answers "how much of this is business", which is only a question for a
+row that is partly both. :attr:`BusinessClassification.BUSINESS` and
+:attr:`BusinessClassification.PERSONAL` are wholly one thing, so a share on
+either is not a refinement but a contradiction, and the unclassified
+dispositions have no economic role to apportion at all.
+
+Named because two surfaces ask it -- the write-path coupling check and the
+command that offers ``--business-pct`` -- and a membership test spelled out at
+each is the same rule declared twice."""
+
+
+def takes_business_share(state: BusinessClassification) -> bool:
+    """Return whether a row with this classification carries a business share.
+
+    Args:
+        state: A :class:`BusinessClassification` value.
+
+    Returns:
+        ``True`` iff a ``business_pct`` belongs on the row -- required when it
+        does, and refused when it does not.
+    """
+    return state in SHARE_BEARING_STATES
+
+
 def is_classified(state: BusinessClassification) -> bool:
     """Return ``True`` when the pipeline has produced a classified outcome.
 

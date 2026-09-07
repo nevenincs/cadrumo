@@ -15,8 +15,8 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    TuiCapability,
 )
+from ..tui_capability import TuiCapability
 
 MODELO_NONWORK_WORK_AMEND_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
