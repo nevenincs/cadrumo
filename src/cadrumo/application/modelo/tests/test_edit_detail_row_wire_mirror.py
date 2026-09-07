@@ -34,12 +34,12 @@ from ...operations.registry import _strict_model_json_schema, _validate_credenti
 from ..edit_models import ModeloEditDetailRowIntentKind
 from ..edit_services import DETAIL_ROW_NATURAL_KEY_SEPARATOR, detail_row_natural_key
 from ..operation_definitions import (
-    ModeloEditApply184MemberRowV1,
-    ModeloEditApply210AgrupacionRentaRowV1,
-    ModeloEditApply232VinculadaRowV1,
-    ModeloEditApply347ContraparteRowV1,
-    ModeloEditApply349OperadorRowV1,
-    ModeloEditApply349RectificacionRowV1,
+    Modelo184MemberRowWireV1,
+    Modelo210AgrupacionRentaRowWireV1,
+    Modelo232VinculadaRowWireV1,
+    Modelo347ContraparteRowWireV1,
+    Modelo349OperadorRowWireV1,
+    Modelo349RectificacionRowWireV1,
     ModeloEditApplyDetailRowAddressV1,
     ModeloEditApplyDetailRowIntentV1,
     ModeloEditApplyOperationRequestV1,
@@ -49,9 +49,9 @@ from ..operation_definitions import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def _m184_pair() -> tuple[ModeloEditApply184MemberRowV1, Modelo184MemberRow]:
+def _m184_pair() -> tuple[Modelo184MemberRowWireV1, Modelo184MemberRow]:
     """Build one M184 member row and the wire mirror carrying the same values."""
-    mirror = ModeloEditApply184MemberRowV1(
+    mirror = Modelo184MemberRowWireV1(
         nif="11111111H",
         nombre="MIEMBRO UNO",
         pais="ES",
@@ -90,9 +90,9 @@ def _m184_pair() -> tuple[ModeloEditApply184MemberRowV1, Modelo184MemberRow]:
     return mirror, row
 
 
-def _m232_pair() -> tuple[ModeloEditApply232VinculadaRowV1, Modelo232VinculadaRow]:
+def _m232_pair() -> tuple[Modelo232VinculadaRowWireV1, Modelo232VinculadaRow]:
     """Build one M232 row whose three codes cross the wire unhydrated."""
-    mirror = ModeloEditApply232VinculadaRowV1(
+    mirror = Modelo232VinculadaRowWireV1(
         nif="B12345674",
         nombre="VINCULADA SL",
         pais="ES",
@@ -113,9 +113,9 @@ def _m232_pair() -> tuple[ModeloEditApply232VinculadaRowV1, Modelo232VinculadaRo
     return mirror, row
 
 
-def _m349_operador_pair() -> tuple[ModeloEditApply349OperadorRowV1, Modelo349OperadorRow]:
+def _m349_operador_pair() -> tuple[Modelo349OperadorRowWireV1, Modelo349OperadorRow]:
     """Build one M349 operador row and its wire mirror."""
-    mirror = ModeloEditApply349OperadorRowV1(
+    mirror = Modelo349OperadorRowWireV1(
         codigo_pais="DE",
         nif_comunitario="123456789",
         razon_social="OPERADOR GMBH",
@@ -132,9 +132,9 @@ def _m349_operador_pair() -> tuple[ModeloEditApply349OperadorRowV1, Modelo349Ope
     return mirror, row
 
 
-def _m349_rectificacion_pair() -> tuple[ModeloEditApply349RectificacionRowV1, Modelo349RectificacionRow]:
+def _m349_rectificacion_pair() -> tuple[Modelo349RectificacionRowWireV1, Modelo349RectificacionRow]:
     """Build one M349 rectificación row and its wire mirror."""
-    mirror = ModeloEditApply349RectificacionRowV1(
+    mirror = Modelo349RectificacionRowWireV1(
         codigo_pais="FR",
         nif_comunitario="987654321",
         razon_social="RECTIFICADA SARL",
@@ -157,9 +157,9 @@ def _m349_rectificacion_pair() -> tuple[ModeloEditApply349RectificacionRowV1, Mo
     return mirror, row
 
 
-def _m347_pair() -> tuple[ModeloEditApply347ContraparteRowV1, Modelo347ContraparteRow]:
+def _m347_pair() -> tuple[Modelo347ContraparteRowWireV1, Modelo347ContraparteRow]:
     """Build one M347 contraparte row with all four quarterly amounts set."""
-    mirror = ModeloEditApply347ContraparteRowV1(
+    mirror = Modelo347ContraparteRowWireV1(
         nif="A12345674",
         nombre="CONTRAPARTE SA",
         importe_Q1="1000.01",
@@ -182,9 +182,9 @@ def _m347_pair() -> tuple[ModeloEditApply347ContraparteRowV1, Modelo347Contrapar
     return mirror, row
 
 
-def _m210_pair() -> tuple[ModeloEditApply210AgrupacionRentaRowV1, Modelo210AgrupacionRentaRow]:
+def _m210_pair() -> tuple[Modelo210AgrupacionRentaRowWireV1, Modelo210AgrupacionRentaRow]:
     """Build one M210 agrupación row and its wire mirror."""
-    mirror = ModeloEditApply210AgrupacionRentaRowV1(
+    mirror = Modelo210AgrupacionRentaRowWireV1(
         source_id="alquiler-2025-01",
         tipo_renta_code="01",
         importe="7500.00",
@@ -246,7 +246,7 @@ def test_a_decimal_amount_crosses_the_wire_without_being_renormalised() -> None:
     ``Decimal("10.5")`` compare equal but are distinguishable, so this is the
     assertion that catches a mirror that reformats an amount in passing.
     """
-    mirror = ModeloEditApply349OperadorRowV1(
+    mirror = Modelo349OperadorRowWireV1(
         codigo_pais="IT",
         nif_comunitario="55555555",
         razon_social="ESATTO SRL",
@@ -281,7 +281,7 @@ def test_the_wire_and_direct_paths_refuse_the_same_malformed_registry_code() -> 
             importe=Decimal("1.00"),
         )
 
-    mirror = ModeloEditApply232VinculadaRowV1(
+    mirror = Modelo232VinculadaRowWireV1(
         nif="B12345674",
         nombre="VINCULADA SL",
         pais="ES",

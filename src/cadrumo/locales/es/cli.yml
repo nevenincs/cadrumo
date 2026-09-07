@@ -1273,6 +1273,13 @@ cli:
           presentada externamente. Requiere un filing record con evidencia oficial
           importada de la AEAT
         amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
+        amend_no_detail_rows_help: Declarar que esta rectificación no tiene registros
+          de detalle. En los modelos 184, 232, 347 y 349 los registros son la
+          declaración, por lo que declarar que no hay ninguno no es lo mismo que no
+          decir nada; si se omiten esta opción y --row, la rectificación se rechaza
+          en vez de suponerse.
+        amend_rows_contradiction: Use --row o --no-detail-rows, pero no ambos;
+          --no-detail-rows declara que no hay registros de detalle.
         amend_set_required: --set es obligatorio al menos una vez para una complementaria.
         amend_wizard_export_next_action: Rectificación presentada como registro interno
           en borrador. Exporta el fichero BOE compatible con la AEAT con `aeat app

@@ -1178,6 +1178,12 @@ cli:
           Requires a filing record with imported AEAT-attested evidence
         amend_missing_options: 'An amendment requires every one of these options:
           %{missing}.'
+        amend_no_detail_rows_help: Declare that this amendment has no detail rows.
+          For M184, M232, M347 and M349 the rows are the declaration, so stating
+          none is different from saying nothing; omit both this and --row and the
+          amendment is refused rather than guessed.
+        amend_rows_contradiction: Pass either --row or --no-detail-rows, not both;
+          --no-detail-rows declares that there are no rows.
         amend_set_required: --set is required at least once for an amendment.
         amend_wizard_export_next_action: Amendment filed as a draft internal record.
           Export the AEAT-importable fichero-BOE with `aeat app modelo export %{work_unit_id}

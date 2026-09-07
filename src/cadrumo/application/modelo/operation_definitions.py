@@ -72,7 +72,6 @@ from ...domain.modelos.row_models import (
     Modelo349ClaveOperacionValue,
     Modelo349OperadorRow,
     Modelo349RectificacionRow,
-    ModeloDetailRow,
 )
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -995,9 +994,16 @@ class ModeloWorkAmendRequest(CredentialFreeOperationRequest):
     #: majority of this operation's traffic; the refusal that makes the
     #: distinction binding lives with the authority that knows which modelo the
     #: baseline belongs to, which this request does not carry.
-    detail_rows: (
-        Annotated[tuple[ModeloDetailRow, ...], Field(max_length=_MAX_AMENDMENT_DETAIL_ROWS)] | None
-    ) = None
+    #:
+    #: The rows cross as their payload-safe wire mirror rather than the domain
+    #: ``ModeloDetailRow``: two of those six hydrate registry codes through
+    #: before-validators, which the payload-graph gate refuses because a
+    #: published schema would then not describe what validation accepts. The
+    #: mirror already exists for the edit operation, and reusing it keeps one
+    #: translation rather than a second free to drift.
+    detail_rows: Annotated[tuple[ModeloDetailRowWireV1, ...], Field(max_length=_MAX_AMENDMENT_DETAIL_ROWS)] | None = (
+        None
+    )
 
     #: The operator this invocation acts as. The platform binds an actor at
     #: submission, never at composition, so baking one into a definition would
@@ -1045,7 +1051,7 @@ class ModeloWorkAmendExecutor:
             overrides={override.casilla_id: override.as_decimal() for override in payload.overrides},
             amendment_kind=payload.amendment_kind,
             m303_rectificativa_motive=payload.m303_rectificativa_motive,
-            detail_rows=payload.detail_rows,
+            detail_rows=(None if payload.detail_rows is None else tuple(row.to_row() for row in payload.detail_rows)),
             reason=payload.reason,
             actor=request.payload.actor,
         )
@@ -1393,7 +1399,7 @@ class _WireDetailRowMirror(BaseModel):
         return cls.model_validate(_wire_row_payload(row))
 
 
-class ModeloEditApply184MemberRowV1(_WireDetailRowMirror):
+class Modelo184MemberRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo184MemberRow with decimal amounts as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1446,7 +1452,7 @@ class ModeloEditApply184MemberRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply232VinculadaRowV1(_WireDetailRowMirror):
+class Modelo232VinculadaRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo232VinculadaRow carrying its codes unhydrated."""
 
     model_config = _WIRE_CONFIG
@@ -1473,7 +1479,7 @@ class ModeloEditApply232VinculadaRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply349OperadorRowV1(_WireDetailRowMirror):
+class Modelo349OperadorRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo349OperadorRow with its importe as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1496,7 +1502,7 @@ class ModeloEditApply349OperadorRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply349RectificacionRowV1(_WireDetailRowMirror):
+class Modelo349RectificacionRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo349RectificacionRow with its bases as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1525,7 +1531,7 @@ class ModeloEditApply349RectificacionRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply347ContraparteRowV1(_WireDetailRowMirror):
+class Modelo347ContraparteRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo347ContraparteRow with quarterly amounts as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1554,7 +1560,7 @@ class ModeloEditApply347ContraparteRowV1(_WireDetailRowMirror):
         )
 
 
-class ModeloEditApply210AgrupacionRentaRowV1(_WireDetailRowMirror):
+class Modelo210AgrupacionRentaRowWireV1(_WireDetailRowMirror):
     """Wire mirror of Modelo210AgrupacionRentaRow with its rates as characters."""
 
     model_config = _WIRE_CONFIG
@@ -1583,24 +1589,24 @@ class ModeloEditApply210AgrupacionRentaRowV1(_WireDetailRowMirror):
         )
 
 
-type ModeloEditApplyDetailRowV1 = Annotated[
-    ModeloEditApply184MemberRowV1
-    | ModeloEditApply232VinculadaRowV1
-    | ModeloEditApply349OperadorRowV1
-    | ModeloEditApply349RectificacionRowV1
-    | ModeloEditApply347ContraparteRowV1
-    | ModeloEditApply210AgrupacionRentaRowV1,
+type ModeloDetailRowWireV1 = Annotated[
+    Modelo184MemberRowWireV1
+    | Modelo232VinculadaRowWireV1
+    | Modelo349OperadorRowWireV1
+    | Modelo349RectificacionRowWireV1
+    | Modelo347ContraparteRowWireV1
+    | Modelo210AgrupacionRentaRowWireV1,
     Field(discriminator="row_type"),
 ]
 """The wire mirror of the per-modelo detail-row union, discriminated as it is."""
 
 
-_DETAIL_ROW_ADAPTER: Final[TypeAdapter[ModeloEditApplyDetailRowV1]] = TypeAdapter(
-    ModeloEditApplyDetailRowV1,
+_DETAIL_ROW_ADAPTER: Final[TypeAdapter[ModeloDetailRowWireV1]] = TypeAdapter(
+    ModeloDetailRowWireV1,
 )
 
 
-def wire_detail_row(row: BaseModel) -> ModeloEditApplyDetailRowV1:
+def wire_detail_row(row: BaseModel) -> ModeloDetailRowWireV1:
     """Mirror any domain detail row onto the discriminated wire union.
 
     Dispatches through the union's own ``row_type`` discriminator rather than
@@ -1609,6 +1615,14 @@ def wire_detail_row(row: BaseModel) -> ModeloEditApplyDetailRowV1:
     seventh row kind should not require remembering this site.
     """
     return _DETAIL_ROW_ADAPTER.validate_python(_wire_row_payload(row))
+
+
+# ``ModeloWorkAmendRequest`` is declared above the wire union it carries, so its
+# annotation cannot resolve at class creation. Rebuilt here, at the first point
+# where the union exists, rather than left to pydantic's implicit deferred
+# rebuild -- an unresolved model that is only ever validated would otherwise
+# fail at its first use rather than at import.
+ModeloWorkAmendRequest.model_rebuild()
 
 
 class ModeloEditApplyDetailRowAddressV1(BaseModel):
@@ -1656,7 +1670,7 @@ class ModeloEditApplyDetailRowIntentV1(BaseModel):
 
     address: ModeloEditApplyDetailRowAddressV1
     kind: ModeloEditDetailRowIntentKind
-    row: ModeloEditApplyDetailRowV1 | None = None
+    row: ModeloDetailRowWireV1 | None = None
 
     def to_intent(self) -> ModeloDetailRowEditIntentV1:
         """Translate back to the real, fully re-validated domain intent."""

@@ -1258,6 +1258,13 @@ cli:
           Importált AEAT-igazolt bizonyítékot tartalmazó benyújtási rekord szükséges.
         amend_missing_options: 'A módosításhoz minden alábbi beállítás szükséges:
           %{missing}.'
+        amend_no_detail_rows_help: Annak kijelentése, hogy ennek a módosításnak nincsenek
+          tételsorai. A 184-es, 232-es, 347-es és 349-es bevallásnál a tételsorok maguk
+          a bevallás, ezért annak kijelentése, hogy nincs egy sem, nem ugyanaz, mint ha
+          semmit sem mondanánk; ha ezt és a --row kapcsolót is elhagyja, a módosítást a
+          rendszer elutasítja, nem pedig kitalálja.
+        amend_rows_contradiction: A --row vagy a --no-detail-rows kapcsolót használja, de
+          ne mindkettőt; a --no-detail-rows azt jelenti ki, hogy nincsenek tételsorok.
         amend_set_required: A --set legalább egyszer kötelező módosításhoz.
         amend_wizard_export_next_action: A helyesbítés belső piszkozatként lett benyújtva.
           Exportáld az AEAT-kompatibilis fichero-BOE fájlt a `aeat app modelo export

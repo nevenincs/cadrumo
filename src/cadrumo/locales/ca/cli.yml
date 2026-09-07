@@ -1258,6 +1258,13 @@ cli:
           externament. Requereix un filing record amb evidència oficial importada
           de l'AEAT
         amend_missing_options: 'Una esmena requereix totes aquestes opcions: %{missing}.'
+        amend_no_detail_rows_help: Declarar que aquesta esmena no té registres de
+          detall. En els models 184, 232, 347 i 349 els registres són la declaració,
+          de manera que declarar que no n'hi ha cap no és el mateix que no dir res;
+          si s'ometen aquesta opció i --row, l'esmena es rebutja en lloc de
+          suposar-se.
+        amend_rows_contradiction: Feu servir --row o --no-detail-rows, però no tots
+          dos; --no-detail-rows declara que no hi ha registres de detall.
         amend_set_required: --set és obligatori almenys una vegada per a una complementària.
         amend_wizard_export_next_action: Rectificació presentada com a registre intern
           en esborrany. Exporta el fitxer BOE compatible amb l'AEAT amb `aeat app

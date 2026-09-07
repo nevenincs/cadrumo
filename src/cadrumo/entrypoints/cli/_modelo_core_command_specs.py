@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from .command_spec import (
+    FLAG_VALUE,
     TEXT_VALUE,
     WHOLE_NUMBER_VALUE,
     ArgumentSpec,
@@ -195,6 +196,19 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 TEXT_VALUE,
                 "cli.app.modelo.work.set_override_help",
                 multiple=True,
+            ),
+            # The rows an amendment declares, and the separate statement that
+            # it declares none. Two flags rather than one because absence and
+            # emptiness are different answers here: see
+            # ``_resolve_amendment_detail_rows``.
+            _option("row", ("--row",), TEXT_VALUE, "cli.app.modelo.work.row_help", multiple=True),
+            OptionSpec(
+                name="no_detail_rows",
+                declarations=("--no-detail-rows",),
+                value=FLAG_VALUE,
+                default=ParameterDefault.value(False),
+                help_key=_key("cli.app.modelo.work.amend_no_detail_rows_help"),
+                is_flag=True,
             ),
         ),
         _CALCULATION_WRITE,
