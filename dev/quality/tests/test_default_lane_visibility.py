@@ -59,6 +59,58 @@ def test_a_module_carrying_no_execution_marker_is_caught(tmp_path: Path, lane: t
     assert [item.kind for item in findings] == ["no_execution_marker"]
 
 
+def test_a_module_level_mark_without_an_execution_marker_defers_to_its_tests(
+    tmp_path: Path, lane: tuple[str, frozenset[str]]
+) -> None:
+    """A hexagonal-only `pytestmark` must not read as running nowhere.
+
+    The screen asked about per-test decorators only when a module carried no
+    module-level `pytestmark` at all. A module carrying one that names no
+    EXECUTION marker fell straight through to the sharpest condition, so
+    `dev/audit/tests/test_size_budget_dev_corpus.py` -- hexagonal marker at
+    module level, ten `unit` decorators on its tests -- was reported as
+    running nowhere while ten of its tests ran.
+
+    Its sibling above is the discriminator: the same module-level line with
+    UNDECORATED tests is still the sharpest condition, and must stay so.
+    """
+    required, excluded = lane
+    _write(
+        tmp_path,
+        "test_decorated.py",
+        "pytestmark = [pytest.mark.hex_core]",
+        body="@pytest.mark.unit\ndef test_x() -> None:\n    assert True\n",
+    )
+
+    findings = visibility_census((tmp_path,), required=required, excluded=excluded)
+
+    assert [item.kind for item in findings] == ["per_function_markers_only"]
+
+
+def test_a_decorated_fixture_does_not_make_a_module_look_marker_bearing(
+    tmp_path: Path, lane: tuple[str, frozenset[str]]
+) -> None:
+    """Only a decorated TEST defers the question; a decorated fixture does not.
+
+    A fixture confers no marker on anything it serves, so counting any
+    decorated function would report a module as marker-bearing when nothing
+    it runs is -- moving it out of the sharpest channel for the wrong reason.
+    """
+    required, excluded = lane
+    _write(
+        tmp_path,
+        "test_fixture_only.py",
+        "pytestmark = [pytest.mark.hex_core]",
+        body=(
+            "@pytest.fixture\ndef thing() -> int:\n    return 1\n\ndef test_x(thing: int) -> None:\n    assert thing\n"
+        ),
+    )
+
+    findings = visibility_census((tmp_path,), required=required, excluded=excluded)
+
+    assert [item.kind for item in findings] == ["no_execution_marker"]
+
+
 def test_a_module_in_another_execution_lane_is_not_called_invisible(
     tmp_path: Path, lane: tuple[str, frozenset[str]]
 ) -> None:

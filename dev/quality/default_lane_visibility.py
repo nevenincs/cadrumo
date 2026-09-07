@@ -11,10 +11,13 @@ The default lane is read from the project's own `addopts` rather than restated
 here, so the screen cannot drift from the selection it describes. Three
 conditions are reported:
 
-- ``no_execution_marker`` - the module carries none of the execution markers,
-  so no lane selects it and its tests run nowhere at all. This is the sharpest
-  condition, because nothing about the module looks unusual and its tests are
-  indistinguishable from tests that pass.
+- ``no_execution_marker`` - neither the module nor any of its tests carries
+  an execution marker, so no lane selects it and its tests run nowhere at
+  all. This is the sharpest condition, because nothing about the module
+  looks unusual and its tests are indistinguishable from tests that pass.
+  Both halves are checked: a module-level ``pytestmark`` holding only a
+  hexagonal marker, with the execution marker on each test, belongs to
+  ``per_function_markers_only`` and not here.
 - ``other_execution_lane`` - the module declares a valid execution marker that
   is not the default lane's. It runs, in its own lane. Reported so that a
   reader asking why a module did not run in the default lane gets an answer
@@ -23,9 +26,11 @@ conditions are reported:
   excludes. Legitimate by design: heavy external tooling and the OS credential
   store cannot run in a plain lane. Reported so the set stays visible and is
   enrolled somewhere, never as a defect on its own.
-- ``per_function_markers_only`` - the module has no module-level `pytestmark`
-  but decorates individual tests. The screen cannot decide visibility from the
-  module level alone and says so rather than guessing.
+- ``per_function_markers_only`` - the module's own markers do not settle the
+  question and its tests are decorated, whether there is no module-level
+  `pytestmark` at all or one carrying no execution marker. The screen cannot
+  decide visibility from the module level alone and says so rather than
+  guessing.
 - ``unread`` - the module could not be read or parsed, so the screen never
   classified it. Reported because silence here is indistinguishable from a
   module the default lane selects fully, and the walk can list a path the read
@@ -160,17 +165,22 @@ def visibility_census(
                 continue
             markers = module_markers(tree)
             if markers is None:
-                decorated = any(
-                    isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.decorator_list
-                    for node in ast.walk(tree)
-                )
-                kind = "per_function_markers_only" if decorated else "no_execution_marker"
+                kind = "per_function_markers_only" if decorates_any_test(tree) else "no_execution_marker"
                 findings.append(LaneVisibility(module=module, kind=kind, markers=()))
                 continue
             held = sorted(set(markers) & excluded)
             execution = sorted(set(markers) & _EXECUTION_MARKERS)
             if not execution:
-                findings.append(LaneVisibility(module=module, kind="no_execution_marker", markers=markers))
+                # A module-level `pytestmark` that carries no EXECUTION marker is
+                # not the same as carrying no markers: the execution marker may sit
+                # on each test. Reaching `no_execution_marker` without asking made
+                # the screen report `dev/audit/tests/test_size_budget_dev_corpus.py`
+                # -- `pytestmark = [hex_core]` plus ten `@pytest.mark.unit`
+                # decorators -- as running nowhere, while ten of its tests ran. A
+                # false positive in the sharpest channel is worse than none at all:
+                # it is the row a reader is meant to act on first.
+                kind = "per_function_markers_only" if decorates_any_test(tree) else "no_execution_marker"
+                findings.append(LaneVisibility(module=module, kind=kind, markers=markers))
             elif held:
                 findings.append(LaneVisibility(module=module, kind="held_out_by_marker", markers=tuple(held)))
             elif required not in markers:
@@ -192,6 +202,21 @@ def visibility_census(
 #: tree, belongs to the lane-reachability gate named above. This screen is
 #: the per-MODULE report over the development tree.
 DECLARED_TEST_ROOTS: Final[tuple[str, ...]] = ("dev",)
+
+
+def decorates_any_test(tree: ast.AST) -> bool:
+    """Whether a test function carries a decorator the module level cannot see.
+
+    Restricted to ``test_``-prefixed functions on purpose: a decorated
+    fixture confers no marker on anything, so counting it would report a
+    module as marker-bearing when nothing it runs is.
+    """
+    return any(
+        isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
+        and node.name.startswith("test_")
+        and bool(node.decorator_list)
+        for node in ast.walk(tree)
+    )
 
 
 def declared_roots(repository_root: Path) -> tuple[Path, ...]:
