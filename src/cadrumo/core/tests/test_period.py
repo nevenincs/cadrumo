@@ -105,7 +105,10 @@ class TestRegistryPeriodCodeValidator:
             _validate_test_model("INVALID")
         error_str = str(exc_info.value).lower()
         assert "standardperiodcode" in error_str or "1t" in error_str
-        assert "event-n" in error_str or "event" in error_str
+        # The EVENT-n family, named as the accepted set spells it. Accepting
+        # bare "event" accepted the word wherever it fell -- and it is a
+        # substring of "event-n", so the specific token was never required.
+        assert "event-n" in error_str
 
 
 class TestRegistryPeriodCodeAccessors:

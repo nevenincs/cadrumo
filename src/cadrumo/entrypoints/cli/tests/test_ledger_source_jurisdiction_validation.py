@@ -136,12 +136,12 @@ def test_ledger_add_refuses_when_source_jurisdiction_omitted_for_non_resident(
     )
     assert result.exit_code != 0, result.output
     combined = result.output or ""
-    assert (
-        "source-jurisdiction" in combined
-        or "source_jurisdiction" in combined
-        or "IRNR" in combined
-        or "TRLIRNR" in combined
-    ), combined
+    # The refusal must name the missing INPUT, not the regime. The profile
+    # axes above already established that the row is IRNR, so accepting
+    # "IRNR" accepted a refusal that never mentioned the option at all --
+    # and since "IRNR" is a substring of "TRLIRNR", that branch was dead.
+    # Both spellings stay: the flag as an operator types it, and the key.
+    assert "source-jurisdiction" in combined or "source_jurisdiction" in combined, combined
 
 
 def test_ledger_add_honours_operator_source_jurisdiction_override_for_resident(

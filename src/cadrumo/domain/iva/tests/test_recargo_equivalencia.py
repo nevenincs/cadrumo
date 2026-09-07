@@ -79,7 +79,13 @@ def test_recargo_corpus_excerpt_present_with_boe_quotes() -> None:
     excerpt = bundled_path("corpus", "normatives", "html", "ley-37-1992-art-161.html")
     assert excerpt.exists()
     body = excerpt.read_text(encoding="utf-8")
-    assert "Tipos del recargo" in body or "Tipos" in body
+    # The substantive BOE phrase, quoted as art. 161 actually writes it. The
+    # old disjunction paired a title-cased "Tipos del recargo" -- which the
+    # excerpt never contains -- with bare "Tipos", so the test rested
+    # entirely on a word that "Articulo 161. Tipos." would satisfy in any
+    # Spanish legal page. Kept accent-free so it does not also assert an
+    # encoding.
+    assert "tipos del recargo de equivalencia" in body
     assert "5,2 por ciento" in body
     assert "1,4 por ciento" in body
     assert "0,50 por ciento" in body
