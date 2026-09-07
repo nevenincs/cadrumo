@@ -25,24 +25,19 @@ The checks map one-to-one onto defects that shipped in this image:
   a download URL. It touches no shared libraries, so it stayed green straight
   through the Debian 13 ``t64`` library rename that broke the image.
 """
-
 from __future__ import annotations
-
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 if not __package__:
-    __package__ = "dev.containers"
-
-from ..ci.lane_reachability import resolve_just_executable  # noqa: E402
-
-_VENV_ROOT = Path("/workspace/.venv")
-
+    _dp_mark('dev/containers/devcontainer_smoke.py:39:ifnot')
+    __package__ = 'dev.containers'
+from ..ci.lane_reachability import resolve_just_executable
+_VENV_ROOT = Path('/workspace/.venv')
 
 def _check_interpreter() -> None:
     """Confirm a login shell resolves `python` to the project virtualenv.
@@ -54,64 +49,39 @@ def _check_interpreter() -> None:
     is the authoritative "am I in a venv" signal.
     """
     if sys.prefix == sys.base_prefix:
-        raise SystemExit(
-            f"FAIL: running outside a virtualenv (prefix {sys.prefix}).\n"
-            "A login shell re-runs /etc/profile, which resets PATH; the image must declare "
-            "the venv in /etc/profile.d as well as in ENV."
-        )
+        raise SystemExit(f'FAIL: running outside a virtualenv (prefix {sys.prefix}).\nA login shell re-runs /etc/profile, which resets PATH; the image must declare the venv in /etc/profile.d as well as in ENV.')
     if Path(sys.prefix) != _VENV_ROOT:
-        raise SystemExit(f"FAIL: virtualenv is {sys.prefix}, expected {_VENV_ROOT}.")
-
-    # Separately confirm PATH ordering, which is what a login shell breaks.
-    on_path = shutil.which("python")
+        raise SystemExit(f'FAIL: virtualenv is {sys.prefix}, expected {_VENV_ROOT}.')
+    on_path = shutil.which('python')
     if on_path is None or _VENV_ROOT not in Path(on_path).parents:
-        raise SystemExit(
-            f"FAIL: `python` on PATH is {on_path}, not the virtualenv's. "
-            "The /etc/profile.d PATH declaration is missing or ordered behind the system bin."
-        )
-    print(f"ok  interpreter          {on_path} (prefix {sys.prefix})")
-
+        raise SystemExit(f"FAIL: `python` on PATH is {on_path}, not the virtualenv's. The /etc/profile.d PATH declaration is missing or ordered behind the system bin.")
+    print(f'ok  interpreter          {on_path} (prefix {sys.prefix})')
 
 def _check_project_import() -> None:
     """Confirm the pre-warmed editable install imports."""
     import cadrumo
-
-    print(f"ok  import cadrumo       {cadrumo.__file__}")
-
+    print(f'ok  import cadrumo       {cadrumo.__file__}')
 
 def _check_just() -> None:
     """Confirm `just` is present for the devcontainer postCreateCommand."""
     try:
         executable = resolve_just_executable()
     except RuntimeError as error:
-        raise SystemExit(
-            "FAIL: `just` is not on PATH in the image, but devcontainer.json's "
-            "postCreateCommand is `just install && just env-setup` — the image would "
-            "build and then fail at container creation."
-        ) from error
-    completed = subprocess.run(  # noqa: S603 - `shutil.which`-resolved executable, fixed argv, no caller input
-        [executable, "--version"], capture_output=True, text=True, check=False
-    )
+        raise SystemExit("FAIL: `just` is not on PATH in the image, but devcontainer.json's postCreateCommand is `just install && just env-setup` — the image would build and then fail at container creation.") from error
+    completed = subprocess.run([executable, '--version'], capture_output=True, text=True, check=False)
     if completed.returncode != 0:
-        raise SystemExit(f"FAIL: `just` at {executable} is present but not runnable.")
-    print(f"ok  just                 {completed.stdout.strip()}")
-
+        raise SystemExit(f'FAIL: `just` at {executable} is present but not runnable.')
+    print(f'ok  just                 {completed.stdout.strip()}')
 
 def _check_unit_collection() -> None:
     """Confirm the unit suite collects against the baked source tree."""
-    completed = subprocess.run(
-        [sys.executable, "-m", "pytest", "--collect-only", "-q", "-m", "unit"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    completed = subprocess.run([sys.executable, '-m', 'pytest', '--collect-only', '-q', '-m', 'unit'], capture_output=True, text=True, check=False)
     if completed.returncode != 0:
         sys.stdout.write(completed.stdout)
         sys.stderr.write(completed.stderr)
-        raise SystemExit("FAIL: unit-test collection failed inside the image.")
+        raise SystemExit('FAIL: unit-test collection failed inside the image.')
     summary = completed.stdout.strip().splitlines()
-    print(f"ok  unit collection      {summary[-1] if summary else 'collected'}")
-
+    print(f"ok  unit collection      {(summary[-1] if summary else 'collected')}")
 
 def _check_chromium_launches() -> None:
     """Actually start headless Chromium and drive a page.
@@ -120,21 +90,19 @@ def _check_chromium_launches() -> None:
     list. A missing lib surfaces here as a launch failure naming the object.
     """
     from playwright.sync_api import sync_playwright
-
     playwright = sync_playwright().start()
     try:
         browser = playwright.chromium.launch()
         try:
             page = browser.new_page()
-            page.goto("data:text/plain,cadrumo")
-            if page.evaluate("1 + 1") != 2:
-                raise SystemExit("FAIL: Chromium launched but could not evaluate JavaScript.")
-            print(f"ok  chromium headless   {browser.version}")
+            page.goto('data:text/plain,cadrumo')
+            if page.evaluate('1 + 1') != 2:
+                raise SystemExit('FAIL: Chromium launched but could not evaluate JavaScript.')
+            print(f'ok  chromium headless   {browser.version}')
         finally:
             browser.close()
     finally:
         playwright.stop()
-
 
 def main() -> int:
     """Run every image check, failing loudly on the first defect."""
@@ -143,9 +111,7 @@ def main() -> int:
     _check_just()
     _check_unit_collection()
     _check_chromium_launches()
-    print("\ndevcontainer image verified: toolchain usable with no further provisioning.")
+    print('\ndevcontainer image verified: toolchain usable with no further provisioning.')
     return 0
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     raise SystemExit(main())

@@ -106,9 +106,7 @@ See Also:
         The directory finding: test directories no lane's path scope sweeps, so
         the next module written into one would be collected by nothing.
 """
-
 from __future__ import annotations
-
 import ast
 import re
 import shlex
@@ -119,106 +117,40 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from types import MappingProxyType
 from typing import Final
-
 import yaml
-
 from cadrumo.core.directory_scan import scan_directory
-
 from .._paths import UTF_8
 from .workflow_job_gates import job_gate, narrowed_events
 from .workflow_run_text import executed_lines
-
 _UTF_8: Final[str] = UTF_8
-
-#: Directories that never contain runnable project tests.
-_PRUNED: Final[frozenset[str]] = frozenset(
-    {".git", ".venv", "node_modules", "__pycache__", "_build", ".mypy_cache", ".ruff_cache", ".pytest_cache"},
-)
-
-#: Top-level directories a pytest invocation can positionally name. A BARE
-#: reference to one of these -- no slash, e.g. a hypothetical `pytest
-#: packaging` -- would otherwise match none of `_paths_of`'s other checks and
-#: silently fall back to the configured testpaths, the same silent-widening
-#: shape as the `--ignore` and `{{}}`-residue defects already fixed here. No
-#: current recipe exercises the bare form -- every real invocation already
-#: names a subpath (`src/cadrumo`, `packaging/homebrew/tests`), which the
-#: `"/" in token` check catches -- so this only closes the gap for whenever
-#: one does.
-_TOP_LEVEL_TEST_DIRS: Final[frozenset[str]] = frozenset({"src", "dev", "packaging"})
-
-#: The ONE place a test directory may be declared deliberately outside every
-#: lane's path scope, mapped to the reason it is. Empty is the correct state and
-#: the honest one: no directory in this tree is currently held out on purpose.
-#:
-#: This is a declaration channel, not an allowlist, and the difference is
-#: enforced rather than asked for. An entry does not merely silence the gate --
-#: :func:`analyse_directory_coverage` reports it back as STALE the moment the
-#: directory becomes swept or stops existing, so a parked problem surfaces
-#: instead of ageing quietly. Nothing belongs here that a lane path could fix;
-#: the remedy for an uncovered directory is a lane, and the remedy for a
-#: directory that should not exist is deleting it.
+_PRUNED: Final[frozenset[str]] = frozenset({'.git', '.venv', 'node_modules', '__pycache__', '_build', '.mypy_cache', '.ruff_cache', '.pytest_cache'})
+_TOP_LEVEL_TEST_DIRS: Final[frozenset[str]] = frozenset({'src', 'dev', 'packaging'})
 UNSWEPT_TEST_DIRECTORIES: Final[Mapping[str, str]] = MappingProxyType({})
-
-#: Where lane declarations live. Anything else is not a lane.
-_WORKFLOW_DIR: Final[str] = ".github/workflows"
-
-#: Workflow events that fire only when somebody asks for them. A lane every one
-#: of whose reaching workflows is triggered solely by these is WIRED and
-#: UNREACHED-IN-PRACTICE: it exists, it is declared, CI can run it, and no push
-#: or pull request ever does. Its failure therefore cannot fail anything until
-#: an operator goes looking, which is a different and weaker guarantee than the
-#: one a green lane list implies. ``repository_dispatch`` is included on the
-#: same reasoning -- an external API call, not a change to this tree -- though
-#: no workflow here uses it today.
-MANUAL_TRIGGERS: Final[frozenset[str]] = frozenset({"workflow_dispatch", "repository_dispatch"})
-
-#: A justfile recipe header: a name at column zero, optional parameters and
-#: attributes, then a bare `:` -- never `:=`, which is a variable assignment.
-_RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\b[^:\n]*:(?![=])")
-
-#: A `just <recipe>` call, in a workflow `run:` or in another recipe's body.
-_JUST_CALL: Final = re.compile(r"\bjust\s+(?P<recipe>[a-z][\w-]*)")
-
-#: A `gh workflow run <file>.yml` call in a workflow `run:` block. This is a
-#: real edge between workflows and the ONLY kind this repository has: no
-#: workflow here declares `workflow_call` or `uses: ./.github/workflows/...`,
-#: so a dispatch-only workflow can still be reached automatically by another
-#: workflow pressing its button. Missing the edge over-reports the target as
-#: manual-only, which is the exact error this whole trigger model exists to
-#: avoid making in the other direction.
-_GH_WORKFLOW_RUN: Final = re.compile(r"\bgh\s+workflow\s+run\s+(?P<workflow>[\w.-]+\.ya?ml)")
-
-#: A bare `{{name}}` justfile interpolation. Deliberately narrow: an expression
-#: like `{{ if durations == "" { "" } else { ... } }}` does not match a bare
-#: identifier and is left exactly as written, per the rule that an unresolved
-#: template must stay visibly unresolved rather than being guessed at.
-_JUST_VARIABLE_REF: Final = re.compile(r"\{\{\s*(?P<name>[A-Za-z_]\w*)\s*\}\}")
-
-#: A `just --evaluate` output line: `name := "value"`, one per top-level variable.
-_JUST_EVALUATE_LINE: Final = re.compile(r'^(?P<name>\S+)\s*:=\s*"(?P<value>.*)"\s*$')
-
+_WORKFLOW_DIR: Final[str] = '.github/workflows'
+MANUAL_TRIGGERS: Final[frozenset[str]] = frozenset({'workflow_dispatch', 'repository_dispatch'})
+_RECIPE_HEADER: Final = re.compile('^(?P<name>[a-z][\\w-]*)\\b[^:\\n]*:(?![=])')
+_JUST_CALL: Final = re.compile('\\bjust\\s+(?P<recipe>[a-z][\\w-]*)')
+_GH_WORKFLOW_RUN: Final = re.compile('\\bgh\\s+workflow\\s+run\\s+(?P<workflow>[\\w.-]+\\.ya?ml)')
+_JUST_VARIABLE_REF: Final = re.compile('\\{\\{\\s*(?P<name>[A-Za-z_]\\w*)\\s*\\}\\}')
+_JUST_EVALUATE_LINE: Final = re.compile('^(?P<name>\\S+)\\s*:=\\s*"(?P<value>.*)"\\s*$')
 
 @dataclass(frozen=True, slots=True)
 class TestMarkers:
     """One test and the effective markers pytest resolves for it."""
-
     test: str
     markers: frozenset[str]
-
 
 @dataclass(frozen=True, slots=True)
 class UnreachableTest:
     """One test no declared lane can select, named so the remedy is decidable."""
-
     path: str
     test: str
     markers: frozenset[str]
 
     def describe(self) -> str:
         """Return a one-line report naming the test and why it is held out."""
-        markers = ", ".join(sorted(self.markers)) or "no markers"
-        return f"{self.path}::{self.test} [{markers}]"
-
+        markers = _dp_or('dev/ci/lane_reachability.py:219:or', lambda: ', '.join(sorted(self.markers)), lambda: 'no markers')
+        return f'{self.path}::{self.test} [{markers}]'
 
 @dataclass(frozen=True, slots=True)
 class ReachabilityReport:
@@ -229,7 +161,6 @@ class ReachabilityReport:
     reader that silently stopped matching is the false-green this whole module
     is built to refuse.
     """
-
     unreachable: tuple[UnreachableTest, ...]
     unnamed: tuple[str, ...]
     analysed: int
@@ -243,7 +174,6 @@ class ReachabilityReport:
         held reachable tests and so never appeared.
         """
         return tuple(sorted({entry.path for entry in self.unreachable}))
-
 
 @dataclass(frozen=True, slots=True)
 class DirectoryCoverageReport:
@@ -259,12 +189,10 @@ class DirectoryCoverageReport:
     or which no longer names a real directory, is reported rather than honoured:
     the entry has stopped describing the tree and now only suppresses.
     """
-
     uncovered: tuple[str, ...]
     analysed: int
     declared: tuple[str, ...]
     stale: tuple[str, ...]
-
 
 def _within(candidate: str, scope: str) -> bool:
     """Return whether ``candidate`` is ``scope`` itself or sits beneath it.
@@ -273,9 +201,8 @@ def _within(candidate: str, scope: str) -> bool:
     spellings of containment drift and only one of them gets the trailing-slash
     case right.
     """
-    normalised = scope.replace("\\", "/").rstrip("/")
-    return candidate == normalised or candidate.startswith(f"{normalised}/")
-
+    normalised = scope.replace('\\', '/').rstrip('/')
+    return _dp_or('dev/ci/lane_reachability.py:277:or', lambda: candidate == normalised, lambda: candidate.startswith(f'{normalised}/'))
 
 @dataclass(frozen=True, slots=True)
 class Lane:
@@ -304,7 +231,6 @@ class Lane:
     this". Folding the second into the first would report a lane nothing reaches
     by default as merely manual, which is a materially stronger claim.
     """
-
     source: str
     paths: tuple[str, ...]
     marker_expression: str | None
@@ -323,7 +249,7 @@ class Lane:
         it is never the whole answer on its own -- pair it with
         :attr:`is_manual_only`.
         """
-        return any(event not in MANUAL_TRIGGERS for event in self.triggers)
+        return any((event not in MANUAL_TRIGGERS for event in self.triggers))
 
     @property
     def is_manual_only(self) -> bool:
@@ -333,7 +259,7 @@ class Lane:
         reaches it is in :data:`MANUAL_TRIGGERS`. A lane no workflow reaches is
         False here, because its problem is the stronger, separately reported one.
         """
-        return bool(self.triggers) and not self.runs_on_change
+        return bool(self.triggers) and (not self.runs_on_change)
 
     def covers(self, relative_path: str) -> bool:
         """Return whether this lane's path scope reaches ``relative_path``.
@@ -344,15 +270,11 @@ class Lane:
         excludes two files under it read as reaching them anyway.
         """
         if not self.paths:
-            # A pathless invocation takes the configured testpaths, which the
-            # caller supplies as this lane's paths. An empty scope reaches
-            # nothing rather than everything: treating it as everything is how a
-            # gate silently reports full coverage.
             return False
-        posix = relative_path.replace("\\", "/")
-        if any(_within(posix, excluded) for excluded in self.exclusions):
+        posix = relative_path.replace('\\', '/')
+        if any((_within(posix, excluded) for excluded in self.exclusions)):
             return False
-        return any(_within(posix, scope) for scope in self.paths)
+        return any((_within(posix, scope) for scope in self.paths))
 
     def covers_directory(self, relative_directory: str) -> bool:
         """Return whether this lane's path scope SWEEPS ``relative_directory``.
@@ -370,24 +292,22 @@ class Lane:
         does, which is what makes the harness package honestly uncovered by the
         corpus lanes that ``--ignore`` it and covered by the one that runs it.
         """
-        posix = relative_directory.replace("\\", "/").rstrip("/")
+        posix = relative_directory.replace('\\', '/').rstrip('/')
         if not self.paths or not posix:
             return False
-        if any(_within(posix, excluded) for excluded in self.exclusions):
+        if any((_within(posix, excluded) for excluded in self.exclusions)):
             return False
-        return any(_within(posix, scope) for scope in self.paths)
-
+        return any((_within(posix, scope) for scope in self.paths))
 
 def _marker_expression_of(tokens: list[str]) -> str | None:
     """Return the ``-m`` value from a pytest argv, or None when absent."""
-    marker_flag = "-m"  # a pytest selector, not a credential
+    marker_flag = '-m'
     for index, token in enumerate(tokens):
         if token == marker_flag and index + 1 < len(tokens):
             return tokens[index + 1]
         if token.startswith(marker_flag) and len(token) > 2:
             return token[2:]
     return None
-
 
 def _paths_of(tokens: list[str]) -> tuple[str, ...]:
     """Return positional path arguments from a pytest argv."""
@@ -397,17 +317,16 @@ def _paths_of(tokens: list[str]) -> tuple[str, ...]:
         if skip_next:
             skip_next = False
             continue
-        if token in {"-m", "-k", "-n", "--timeout", "--ignore", "--durations"}:
+        if token in {'-m', '-k', '-n', '--timeout', '--ignore', '--durations'}:
             skip_next = True
             continue
-        if token.startswith("-"):
+        if token.startswith('-'):
             continue
-        if index == 0 or token in {"pytest", "uv", "run", "python", "-m"}:
+        if index == 0 or token in {'pytest', 'uv', 'run', 'python', '-m'}:
             continue
-        if token.endswith(".py") or "/" in token or token.split("/")[0] in _TOP_LEVEL_TEST_DIRS:
-            paths.append(token.split("::")[0])
+        if token.endswith('.py') or '/' in token or token.split('/')[0] in _TOP_LEVEL_TEST_DIRS:
+            paths.append(token.split('::')[0])
     return tuple(paths)
-
 
 def _exclusions_of(tokens: list[str]) -> tuple[str, ...]:
     """Return every path a pytest argv's ``--ignore`` flags exclude.
@@ -417,21 +336,20 @@ def _exclusions_of(tokens: list[str]) -> tuple[str, ...]:
     excludes the path just as much as the other. Modelling only one form is how
     a lane written the other way keeps reading as if it still reached the file.
     """
-    ignore_flag = "--ignore"  # a pytest selector, not a credential
+    ignore_flag = '--ignore'
     excluded: list[str] = []
     take_next = False
     for token in tokens:
         if take_next:
-            excluded.append(token.split("::")[0])
+            excluded.append(token.split('::')[0])
             take_next = False
             continue
         if token == ignore_flag:
             take_next = True
             continue
-        if token.startswith(f"{ignore_flag}="):
-            excluded.append(token[len(ignore_flag) + 1 :].split("::")[0])
+        if token.startswith(f'{ignore_flag}='):
+            excluded.append(token[len(ignore_flag) + 1:].split('::')[0])
     return tuple(excluded)
-
 
 def _pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...]) -> list[Lane]:
     """Return one lane per pytest invocation in ``text``.
@@ -441,27 +359,19 @@ def _pytest_invocations(text: str, *, source: str, default_paths: tuple[str, ...
     """
     lanes: list[Lane] = []
     for line in executed_lines(text):
-        if "pytest" not in line:
+        if 'pytest' not in line:
             continue
-        # Drop shell continuations and interpolations that shlex cannot parse.
-        cleaned = line.rstrip("\\").replace("${{", "").replace("}}", "")
+        cleaned = line.rstrip('\\').replace('${{', '').replace('}}', '')
         try:
             tokens = shlex.split(cleaned)
         except ValueError:
+            _dp_mark('dev/ci/lane_reachability.py:450:except')
             continue
-        if "pytest" not in tokens and not any(token.endswith("pytest") for token in tokens):
+        if 'pytest' not in tokens and (not any((token.endswith('pytest') for token in tokens))):
             continue
-        paths = _paths_of(tokens) or default_paths
-        lanes.append(
-            Lane(
-                source=source,
-                paths=paths,
-                marker_expression=_marker_expression_of(tokens),
-                exclusions=_exclusions_of(tokens),
-            )
-        )
+        paths = _dp_or('dev/ci/lane_reachability.py:454:or', lambda: _paths_of(tokens), lambda: default_paths)
+        lanes.append(Lane(source=source, paths=paths, marker_expression=_marker_expression_of(tokens), exclusions=_exclusions_of(tokens)))
     return lanes
-
 
 def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
     """Return the justfile's pytest lanes, each attributed to its recipe.
@@ -475,31 +385,17 @@ def _justfile_lanes(text: str, *, default_paths: tuple[str, ...]) -> list[Lane]:
     for raw in text.splitlines():
         header = _RECIPE_HEADER.match(raw)
         if header is not None:
-            current = header.group("name")
+            current = header.group('name')
             continue
-        # A non-indented, non-header, non-comment line ends the preceding recipe
-        # body: an attribute (`[group('testing')]`) or a variable assignment.
-        # Comments do not, because a `#` line between a doc attribute and its
-        # header sits at column zero without interrupting anything.
-        if raw[:1] not in {" ", "\t", "@"} and raw.strip() and not raw.lstrip().startswith("#"):
+        if raw[:1] not in {' ', '\t', '@'} and raw.strip() and (not raw.lstrip().startswith('#')):
             current = None
-        for lane in _pytest_invocations(raw, source="justfile", default_paths=default_paths):
-            lanes.append(
-                Lane(
-                    source=lane.source,
-                    paths=lane.paths,
-                    marker_expression=lane.marker_expression,
-                    recipe=current,
-                    exclusions=lane.exclusions,
-                )
-            )
+        for lane in _pytest_invocations(raw, source='justfile', default_paths=default_paths):
+            lanes.append(Lane(source=lane.source, paths=lane.paths, marker_expression=lane.marker_expression, recipe=current, exclusions=lane.exclusions))
     return lanes
-
 
 def _recipes_invoked_by(text: str) -> set[str]:
     """Return every recipe name a ``just <recipe>`` call in ``text`` names."""
-    return {match.group("recipe") for match in _JUST_CALL.finditer(text)}
-
+    return {match.group('recipe') for match in _JUST_CALL.finditer(text)}
 
 def _recipe_bodies(text: str) -> dict[str, str]:
     """Return each justfile recipe's body, keyed by recipe name."""
@@ -508,26 +404,23 @@ def _recipe_bodies(text: str) -> dict[str, str]:
     for raw in text.splitlines():
         header = _RECIPE_HEADER.match(raw)
         if header is not None:
-            current = header.group("name")
+            current = header.group('name')
             bodies.setdefault(current, [])
             continue
         if current is not None:
-            if raw.strip() and raw[:1] not in {" ", "\t", "@"} and not raw.lstrip().startswith("#"):
+            if raw.strip() and raw[:1] not in {' ', '\t', '@'} and (not raw.lstrip().startswith('#')):
                 current = None
                 continue
             bodies[current].append(raw)
-    return {name: "\n".join(lines) for name, lines in bodies.items()}
-
+    return {name: '\n'.join(lines) for name, lines in bodies.items()}
 
 @dataclass(frozen=True, slots=True)
 class _RunStep:
     """One ``run:`` command with the reach its own job proves, not its workflow's."""
-
     events: tuple[str, ...]
     opt_in: bool
     condition: str | None
     command: str
-
 
 def _workflow_run_steps(text: str, events: tuple[str, ...]) -> tuple[_RunStep, ...]:
     """Return every ``run:`` command in a workflow, attributed to its job's reach.
@@ -551,23 +444,15 @@ def _workflow_run_steps(text: str, events: tuple[str, ...]) -> tuple[_RunStep, .
     if not isinstance(document, dict):
         return ()
     steps: list[_RunStep] = []
-    for name, job in (document.get("jobs") or {}).items():
+    for name, job in (document.get('jobs') or {}).items():
         if not isinstance(job, dict):
             continue
         gate = job_gate(document, str(name), events)
-        condition = job.get("if")
-        for step in job.get("steps") or []:
-            if isinstance(step, dict) and "run" in step:
-                steps.append(
-                    _RunStep(
-                        events=gate.events,
-                        opt_in=gate.is_opt_in,
-                        condition=None if condition is None else str(condition),
-                        command=str(step["run"]),
-                    ),
-                )
+        condition = job.get('if')
+        for step in job.get('steps') or []:
+            if isinstance(step, dict) and 'run' in step:
+                steps.append(_RunStep(events=gate.events, opt_in=gate.is_opt_in, condition=None if condition is None else str(condition), command=str(step['run'])))
     return tuple(steps)
-
 
 def _dispatch_edges(text: str) -> tuple[tuple[str, str | None], ...]:
     """Return each ``gh workflow run`` target with the guard on the pressing job.
@@ -586,9 +471,8 @@ def _dispatch_edges(text: str) -> tuple[tuple[str, str | None], ...]:
     edges: list[tuple[str, str | None]] = []
     for step in _workflow_run_steps(text, ()):
         for match in _GH_WORKFLOW_RUN.finditer(step.command):
-            edges.append((match.group("workflow"), step.condition))
+            edges.append((match.group('workflow'), step.condition))
     return tuple(edges)
-
 
 def _workflow_events(text: str) -> tuple[str, ...]:
     """Return the event names in a workflow's ``on:`` block.
@@ -604,15 +488,14 @@ def _workflow_events(text: str) -> tuple[str, ...]:
     document = yaml.safe_load(text)
     if not isinstance(document, dict):
         return ()
-    block = document.get("on", document.get(True))
+    block = _dp_get('dev/ci/lane_reachability.py:607:get', document, 'on', document.get(True))
     if isinstance(block, str):
         return (block,)
     if isinstance(block, list):
-        return tuple(sorted(str(item) for item in block))
+        return tuple(sorted((str(item) for item in block)))
     if isinstance(block, dict):
-        return tuple(sorted(str(key) for key in block))
+        return tuple(sorted((str(key) for key in block)))
     return ()
-
 
 def workflow_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     """Return each workflow's EFFECTIVE events, keyed by repository-relative path.
@@ -634,33 +517,24 @@ def workflow_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
         return MappingProxyType({})
-
     events: dict[str, set[str]] = {}
     dispatches: dict[str, tuple[tuple[str, str | None], ...]] = {}
-    for workflow in scan_directory(workflow_dir, pattern="*.yml"):
+    for workflow in scan_directory(workflow_dir, pattern='*.yml'):
         text = workflow.read_text(encoding=_UTF_8)
         events[workflow.name] = set(_workflow_events(text))
         dispatches[workflow.name] = _dispatch_edges(text)
-
     changed = True
     while changed:
         changed = False
         for name, edges in dispatches.items():
             for target, condition in edges:
                 if target not in events:
-                    # A dispatch of a workflow this directory does not hold is
-                    # reported by neither widening nor narrowing anything: an
-                    # invented entry would claim a lane source that is not here.
                     continue
                 pressed = set(narrowed_events(condition, tuple(sorted(events[name]))))
                 if not pressed <= events[target]:
                     events[target] |= pressed
                     changed = True
-
-    return MappingProxyType(
-        {f"{_WORKFLOW_DIR}/{name}": tuple(sorted(found)) for name, found in events.items()},
-    )
-
+    return MappingProxyType({f'{_WORKFLOW_DIR}/{name}': tuple(sorted(found)) for name, found in events.items()})
 
 def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     """Return every CI-invoked recipe mapped to the events that reach it.
@@ -681,26 +555,23 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     build-and-probe of the contributor image as push-triggered when no push has
     ever run it.
     """
-    justfile = root / "justfile"
+    justfile = root / 'justfile'
     bodies = _recipe_bodies(justfile.read_text(encoding=_UTF_8)) if justfile.exists() else {}
-
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
         return MappingProxyType({})
-
     effective = workflow_triggers(root)
     accumulated: dict[str, set[str]] = {}
-    for workflow in scan_directory(workflow_dir, pattern="*.yml"):
+    for workflow in scan_directory(workflow_dir, pattern='*.yml'):
         text = workflow.read_text(encoding=_UTF_8)
-        events = effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ())
+        events = _dp_get('dev/ci/lane_reachability.py:695:get', effective, f'{_WORKFLOW_DIR}/{workflow.name}', ())
         for step in _workflow_run_steps(text, events):
             reached = _recipes_invoked_by(step.command)
-            # Close over recipe-to-recipe calls until nothing new is reached.
             frontier = set(reached)
             while frontier:
                 nxt: set[str] = set()
                 for name in frontier:
-                    for called in _recipes_invoked_by(bodies.get(name, "")):
+                    for called in _recipes_invoked_by(_dp_get('dev/ci/lane_reachability.py:703:get', bodies, name, '')):
                         if called not in reached:
                             reached.add(called)
                             nxt.add(called)
@@ -708,7 +579,6 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
             for name in reached:
                 accumulated.setdefault(name, set()).update(step.events)
     return MappingProxyType({name: tuple(sorted(events)) for name, events in accumulated.items()})
-
 
 def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
     """Return the CI-invoked recipes EVERY route to which is behind an opt-in flag.
@@ -726,15 +596,13 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
     weakenings are individually documented and jointly unremarked, which is
     exactly why the union has to be computed rather than read.
     """
-    justfile = root / "justfile"
+    justfile = root / 'justfile'
     bodies = _recipe_bodies(justfile.read_text(encoding=_UTF_8)) if justfile.exists() else {}
-
     workflow_dir = root / _WORKFLOW_DIR
     if not workflow_dir.is_dir():
         return frozenset()
-
     routed: dict[str, set[bool]] = {}
-    for workflow in scan_directory(workflow_dir, pattern="*.yml"):
+    for workflow in scan_directory(workflow_dir, pattern='*.yml'):
         text = workflow.read_text(encoding=_UTF_8)
         for step in _workflow_run_steps(text, ()):
             reached = _recipes_invoked_by(step.command)
@@ -742,20 +610,18 @@ def ci_invoked_recipe_opt_in(root: Path) -> frozenset[str]:
             while frontier:
                 nxt: set[str] = set()
                 for name in frontier:
-                    for called in _recipes_invoked_by(bodies.get(name, "")):
+                    for called in _recipes_invoked_by(_dp_get('dev/ci/lane_reachability.py:745:get', bodies, name, '')):
                         if called not in reached:
                             reached.add(called)
                             nxt.add(called)
                 frontier = nxt
             for name in reached:
                 routed.setdefault(name, set()).add(step.opt_in)
-    return frozenset(name for name, states in routed.items() if states == {True})
-
+    return frozenset((name for name, states in routed.items() if states == {True}))
 
 def ci_invoked_recipes(root: Path) -> frozenset[str]:
     """Return every justfile recipe a workflow reaches, transitively."""
     return frozenset(ci_invoked_recipe_triggers(root))
-
 
 def ci_invoked_lanes(root: Path) -> tuple[Lane, ...]:
     """Return only the lanes CI actually runs.
@@ -777,27 +643,24 @@ def ci_invoked_lanes(root: Path) -> tuple[Lane, ...]:
     :attr:`Lane.is_manual_only`.
     """
     invoked = ci_invoked_recipes(root)
-    return tuple(lane for lane in declared_lanes(root) if lane.recipe is None or lane.recipe in invoked)
-
+    return tuple((lane for lane in declared_lanes(root) if lane.recipe is None or lane.recipe in invoked))
 
 def configured_testpaths(root: Path) -> tuple[str, ...]:
     """Return the ``testpaths`` a pathless invocation inherits."""
-    text = (root / "pyproject.toml").read_text(encoding=_UTF_8)
-    match = re.search(r"^testpaths\s*=\s*\[(.*?)\]", text, re.MULTILINE | re.DOTALL)
+    text = (root / 'pyproject.toml').read_text(encoding=_UTF_8)
+    match = re.search('^testpaths\\s*=\\s*\\[(.*?)\\]', text, re.MULTILINE | re.DOTALL)
     if not match:
         return ()
-    return tuple(item.strip().strip("\"'") for item in match.group(1).split(",") if item.strip())
-
+    return tuple((item.strip().strip('"\'') for item in match.group(1).split(',') if item.strip()))
 
 def configured_marker_expression(root: Path) -> str | None:
     """Return the default ``-m`` expression from addopts, if any."""
-    text = (root / "pyproject.toml").read_text(encoding=_UTF_8)
-    match = re.search(r"^addopts\s*=\s*\"(.*?)\"", text, re.MULTILINE)
+    text = (root / 'pyproject.toml').read_text(encoding=_UTF_8)
+    match = re.search('^addopts\\s*=\\s*\\"(.*?)\\"', text, re.MULTILINE)
     if not match:
         return None
-    inner = re.search(r"-m\s+'([^']+)'", match.group(1)) or re.search(r'-m\s+"([^"]+)"', match.group(1))
+    inner = _dp_or('dev/ci/lane_reachability.py:798:or', lambda: re.search("-m\\s+'([^']+)'", match.group(1)), lambda: re.search('-m\\s+"([^"]+)"', match.group(1)))
     return inner.group(1) if inner else None
-
 
 def resolve_just_executable() -> str:
     """Return the absolute path to ``just`` on PATH.
@@ -808,12 +671,11 @@ def resolve_just_executable() -> str:
     exactly the failure mode the module docstring's reachability rationale
     warns against, generalised to every ``just``-dependent gate and script.
     """
-    executable = shutil.which("just")
+    executable = shutil.which('just')
     if executable is None:
-        message = "just is not on PATH"
+        message = 'just is not on PATH'
         raise RuntimeError(message)
     return executable
-
 
 def _just_variables(root: Path) -> dict[str, str]:
     """Return every top-level justfile variable, resolved by ``just`` itself.
@@ -835,19 +697,13 @@ def _just_variables(root: Path) -> dict[str, str]:
     indistinguishable from a correct empty result.
     """
     just = resolve_just_executable()
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
-        [just, "--evaluate"],
-        cwd=root,
-        capture_output=True,
-        check=True,
-    )
+    completed = subprocess.run([just, '--evaluate'], cwd=root, capture_output=True, check=True)
     variables: dict[str, str] = {}
     for line in completed.stdout.decode(_UTF_8).splitlines():
         match = _JUST_EVALUATE_LINE.match(line)
         if match is not None:
-            variables[match.group("name")] = match.group("value")
+            variables[match.group('name')] = match.group('value')
     return variables
-
 
 def _substitute_just_variables(text: str, variables: dict[str, str]) -> str:
     """Replace every bare ``{{name}}`` reference in ``text`` with its value.
@@ -856,8 +712,7 @@ def _substitute_just_variables(text: str, variables: dict[str, str]) -> str:
     unrecognised name, or a richer expression this module does not attempt --
     is left exactly as written rather than guessed at.
     """
-    return _JUST_VARIABLE_REF.sub(lambda match: variables.get(match.group("name"), match.group(0)), text)
-
+    return _JUST_VARIABLE_REF.sub(lambda match: _dp_get('dev/ci/lane_reachability.py:859:get', variables, match.group('name'), match.group(0)), text)
 
 def resolved_justfile_text(root: Path) -> str:
     """Return the justfile's text with every top-level ``{{name}}`` resolved.
@@ -870,11 +725,10 @@ def resolved_justfile_text(root: Path) -> str:
     no justfile, so a caller can treat "no justfile" and "empty justfile" the
     same way without a separate existence check.
     """
-    justfile = root / "justfile"
+    justfile = root / 'justfile'
     if not justfile.exists():
-        return ""
+        return ''
     return _substitute_just_variables(justfile.read_text(encoding=_UTF_8), _just_variables(root))
-
 
 def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:
     """Return one justfile recipe's command lines, resolved and ``@``-stripped.
@@ -885,15 +739,8 @@ def resolved_recipe_commands(root: Path, recipe: str) -> tuple[str, ...]:
     matching the moment a recipe's paths move into a variable -- exactly the
     shape that broke when the harness recipe's member paths did.
     """
-    body = _recipe_bodies(resolved_justfile_text(root)).get(recipe, "")
-    # `_recipe_bodies` does not treat an unindented comment as ending a body (a
-    # doc comment can sit between a header and its own body without splitting
-    # it), so a trailing comment block belonging to the NEXT recipe reads as
-    # part of THIS one until the next non-comment line. A real command line is
-    # never a bare comment, so it is filtered here rather than by widening the
-    # shared boundary rule other callers already depend on.
-    return tuple(line.removeprefix("@") for line in executed_lines(body))
-
+    body = _dp_get('dev/ci/lane_reachability.py:888:get', _recipe_bodies(resolved_justfile_text(root)), recipe, '')
+    return tuple((line.removeprefix('@') for line in executed_lines(body)))
 
 def declared_lanes(root: Path) -> tuple[Lane, ...]:
     """Return every lane declared by config, recipes, and workflows.
@@ -912,40 +759,25 @@ def declared_lanes(root: Path) -> tuple[Lane, ...]:
     recipe_triggers = ci_invoked_recipe_triggers(root)
     default_expression = configured_marker_expression(root)
     lanes: list[Lane] = []
-
     text = resolved_justfile_text(root)
     if text:
         lanes.extend(_justfile_lanes(text, default_paths=testpaths))
-
     workflow_dir = root / _WORKFLOW_DIR
     if workflow_dir.is_dir():
         effective = workflow_triggers(root)
-        for workflow in scan_directory(workflow_dir, pattern="*.yml"):
+        for workflow in scan_directory(workflow_dir, pattern='*.yml'):
             text = workflow.read_text(encoding=_UTF_8)
-            events = effective.get(f"{_WORKFLOW_DIR}/{workflow.name}", ())
-            # Per RUN STEP, not per file: an inline invocation inherits the
-            # reach of the job holding it, and reading the whole workflow text
-            # would hand a gated job the events that start the run without it.
+            events = _dp_get('dev/ci/lane_reachability.py:925:get', effective, f'{_WORKFLOW_DIR}/{workflow.name}', ())
             for step in _workflow_run_steps(text, events):
-                lanes.extend(
-                    replace(lane, triggers=step.events, opt_in=step.opt_in)
-                    for lane in _pytest_invocations(
-                        step.command,
-                        source=f"{_WORKFLOW_DIR}/{workflow.name}",
-                        default_paths=testpaths,
-                    )
-                )
-
-    # A pathless invocation inherits both testpaths and the addopts expression.
+                lanes.extend((replace(lane, triggers=step.events, opt_in=step.opt_in) for lane in _pytest_invocations(step.command, source=f'{_WORKFLOW_DIR}/{workflow.name}', default_paths=testpaths)))
     opt_in_recipes = ci_invoked_recipe_opt_in(root)
     resolved: list[Lane] = []
     for lane in lanes:
         expression = lane.marker_expression if lane.marker_expression is not None else default_expression
-        triggers = lane.triggers if lane.recipe is None else recipe_triggers.get(lane.recipe, ())
+        triggers = lane.triggers if lane.recipe is None else _dp_get('dev/ci/lane_reachability.py:944:get', recipe_triggers, lane.recipe, ())
         opt_in = lane.opt_in if lane.recipe is None else lane.recipe in opt_in_recipes
         resolved.append(replace(lane, marker_expression=expression, triggers=triggers, opt_in=opt_in))
     return tuple(resolved)
-
 
 def _marker_name(node: ast.AST) -> str | None:
     """Return the NAME of a ``pytest.mark.NAME`` node, called or bare.
@@ -963,12 +795,11 @@ def _marker_name(node: ast.AST) -> str | None:
     if not isinstance(target, ast.Attribute):
         return None
     owner = target.value
-    if isinstance(owner, ast.Attribute) and owner.attr == "mark":
+    if isinstance(owner, ast.Attribute) and owner.attr == 'mark':
         return target.attr
-    if isinstance(owner, ast.Name) and owner.id == "mark":
+    if isinstance(owner, ast.Name) and owner.id == 'mark':
         return target.attr
     return None
-
 
 def _module_markers(tree: ast.Module) -> frozenset[str]:
     """Return the module-level ``pytestmark`` markers every test inherits."""
@@ -976,7 +807,7 @@ def _module_markers(tree: ast.Module) -> frozenset[str]:
     for node in tree.body:
         if not isinstance(node, ast.Assign):
             continue
-        if not any(isinstance(target, ast.Name) and target.id == "pytestmark" for target in node.targets):
+        if not any((isinstance(target, ast.Name) and target.id == 'pytestmark' for target in node.targets)):
             continue
         values = node.value.elts if isinstance(node.value, ast.List | ast.Tuple) else [node.value]
         for value in values:
@@ -984,7 +815,6 @@ def _module_markers(tree: ast.Module) -> frozenset[str]:
             if name is not None:
                 found.add(name)
     return frozenset(found)
-
 
 def marker_sets_in(path: Path) -> tuple[TestMarkers, ...] | None:
     """Return each test's EFFECTIVE markers, or None when the file is unreadable.
@@ -1003,27 +833,21 @@ def marker_sets_in(path: Path) -> tuple[TestMarkers, ...] | None:
         deletion) is not the same finding as present-with-no-tests.
     """
     try:
-        tree = ast.parse(path.read_text(encoding=_UTF_8, errors="replace"))
+        tree = ast.parse(path.read_text(encoding=_UTF_8, errors='replace'))
     except (SyntaxError, ValueError, OSError):
+        _dp_mark('dev/ci/lane_reachability.py:1007:except')
         return None
-
     found: list[TestMarkers] = []
 
     def _walk(body: list[ast.stmt], inherited: frozenset[str]) -> None:
         for node in body:
-            own = (
-                frozenset(name for name in (_marker_name(d) for d in node.decorator_list) if name is not None)
-                if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef)
-                else frozenset()
-            )
-            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name.startswith("test"):
+            own = frozenset((name for name in (_marker_name(d) for d in node.decorator_list) if name is not None)) if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef) else frozenset()
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name.startswith('test'):
                 found.append(TestMarkers(test=node.name, markers=inherited | own))
             elif isinstance(node, ast.ClassDef):
                 _walk(node.body, inherited | own)
-
     _walk(tree.body, _module_markers(tree))
     return tuple(found)
-
 
 def _tracked_python_files(root: Path) -> tuple[Path, ...]:
     """Return every git-TRACKED ``.py`` path, repository-relative.
@@ -1034,23 +858,16 @@ def _tracked_python_files(root: Path) -> tuple[Path, ...]:
     a whole test package arrived while this was in use and the gate correctly
     stayed quiet.
     """
-    git = shutil.which("git")
+    git = shutil.which('git')
     if git is None:
-        message = "git is not on PATH, so tracked-file discovery cannot run"
+        message = 'git is not on PATH, so tracked-file discovery cannot run'
         raise RuntimeError(message)
-    completed = subprocess.run(  # noqa: S603 - resolved executable, fixed argv, no caller input
-        [git, "ls-files"],
-        cwd=root,
-        capture_output=True,
-        check=True,
-    )
-    return tuple(Path(entry) for entry in completed.stdout.decode(_UTF_8).split("\n") if entry.endswith(".py"))
-
+    completed = subprocess.run([git, 'ls-files'], cwd=root, capture_output=True, check=True)
+    return tuple((Path(entry) for entry in completed.stdout.decode(_UTF_8).split('\n') if entry.endswith('.py')))
 
 def tracked_test_files(root: Path) -> tuple[Path, ...]:
     """Return every git-TRACKED test module, repository-relative."""
-    return tuple(path for path in _tracked_python_files(root) if path.name.startswith("test_"))
-
+    return tuple((path for path in _tracked_python_files(root) if path.name.startswith('test_')))
 
 def _test_directories_of(paths: Iterable[Path]) -> tuple[str, ...]:
     """Return every directory in ``paths`` a test module could be collected from.
@@ -1065,15 +882,13 @@ def _test_directories_of(paths: Iterable[Path]) -> tuple[str, ...]:
       emptiest form of the defect: the first module written into it is
       collected by nobody, and the author learns that from a silent absence.
     """
-    directories = {path.parent.as_posix() for path in paths if path.name.startswith("test_")}
-    directories |= {path.parent.as_posix() for path in paths if path.parent.name == "tests"}
+    directories = {path.parent.as_posix() for path in paths if path.name.startswith('test_')}
+    directories |= {path.parent.as_posix() for path in paths if path.parent.name == 'tests'}
     return tuple(sorted(directories))
-
 
 def tracked_test_directories(root: Path) -> tuple[str, ...]:
     """Return every git-tracked directory a test module could be collected from."""
     return _test_directories_of(_tracked_python_files(root))
-
 
 def expression_selects(expression: str | None, markers: frozenset[str]) -> bool:
     """Return whether a pytest ``-m`` expression can select these markers.
@@ -1086,9 +901,9 @@ def expression_selects(expression: str | None, markers: frozenset[str]) -> bool:
     if expression is None or not expression.strip():
         return True
     try:
-        tree = ast.parse(expression, mode="eval")
+        tree = ast.parse(expression, mode='eval')
     except SyntaxError:
-        # An unparseable expression is not evidence of reachability.
+        _dp_mark('dev/ci/lane_reachability.py:1090:except')
         return False
 
     def _evaluate(node: ast.AST) -> bool:
@@ -1103,16 +918,12 @@ def expression_selects(expression: str | None, markers: frozenset[str]) -> bool:
             return node.id in markers
         if isinstance(node, ast.Constant):
             return bool(node.value)
-        # An unmodelled construct must not be read as selection.
         return False
-
     return _evaluate(tree)
-
 
 def discover_test_files(root: Path) -> tuple[Path, ...]:
     """Return every runnable test module under ``root``."""
-    return scan_directory(root, pattern="test_*.py", recursive=True, prune_directories=_PRUNED)
-
+    return scan_directory(root, pattern='test_*.py', recursive=True, prune_directories=_PRUNED)
 
 def discover_test_directories(root: Path) -> tuple[str, ...]:
     """Return every on-disk directory under ``root`` a test module could come from.
@@ -1122,17 +933,11 @@ def discover_test_directories(root: Path) -> tuple[str, ...]:
     drive a synthetic tree that is not a git repository, and a gate whose
     teeth can only be shown against the real tree has no teeth to show.
     """
-    files = scan_directory(root, pattern="*.py", recursive=True, prune_directories=_PRUNED)
-    relative = tuple(path.relative_to(root) if path.is_absolute() else path for path in files)
+    files = scan_directory(root, pattern='*.py', recursive=True, prune_directories=_PRUNED)
+    relative = tuple((path.relative_to(root) if path.is_absolute() else path for path in files))
     return _test_directories_of(relative)
 
-
-def analyse_reachability(
-    root: Path,
-    *,
-    lanes: Iterable[Lane] | None = None,
-    files: Iterable[Path] | None = None,
-) -> ReachabilityReport:
+def analyse_reachability(root: Path, *, lanes: Iterable[Lane] | None=None, files: Iterable[Path] | None=None) -> ReachabilityReport:
     """Return every test no declared lane can select, with its corpus size.
 
     Args:
@@ -1148,47 +953,26 @@ def analyse_reachability(
     """
     resolved = tuple(lanes) if lanes is not None else declared_lanes(root)
     candidates = tuple(files) if files is not None else tracked_test_files(root)
-
     unreachable: list[UnreachableTest] = []
     unnamed: list[str] = []
     skipped: list[str] = []
     analysed = 0
-
     for path in candidates:
         relative = (path.relative_to(root) if path.is_absolute() else path).as_posix()
         covering = [lane for lane in resolved if lane.covers(relative)]
-
-        # The path-level question, asked BEFORE the file is read so it still
-        # holds for the two inputs the per-test model is blind to: a module with
-        # no test functions, and a tracked file absent from disk. Both classes
-        # are empty today; neither is impossible.
         if not covering:
             unnamed.append(relative)
-
         tests = marker_sets_in(root / relative)
         if tests is None:
             skipped.append(relative)
             continue
         analysed += 1
         for entry in tests:
-            if not any(expression_selects(lane.marker_expression, entry.markers) for lane in covering):
+            if not any((expression_selects(lane.marker_expression, entry.markers) for lane in covering)):
                 unreachable.append(UnreachableTest(path=relative, test=entry.test, markers=entry.markers))
+    return ReachabilityReport(unreachable=tuple(unreachable), unnamed=tuple(unnamed), analysed=analysed, skipped=tuple(skipped))
 
-    return ReachabilityReport(
-        unreachable=tuple(unreachable),
-        unnamed=tuple(unnamed),
-        analysed=analysed,
-        skipped=tuple(skipped),
-    )
-
-
-def analyse_directory_coverage(
-    root: Path,
-    *,
-    lanes: Iterable[Lane] | None = None,
-    directories: Iterable[str] | None = None,
-    unswept: Mapping[str, str] | None = None,
-) -> DirectoryCoverageReport:
+def analyse_directory_coverage(root: Path, *, lanes: Iterable[Lane] | None=None, directories: Iterable[str] | None=None, unswept: Mapping[str, str] | None=None) -> DirectoryCoverageReport:
     """Return every test directory no declared lane's path scope sweeps.
 
     Both sides are derived, neither is restated. The lane scopes come from
@@ -1216,20 +1000,8 @@ def analyse_directory_coverage(
     declared = UNSWEPT_TEST_DIRECTORIES if unswept is None else unswept
 
     def swept(directory: str) -> bool:
-        return any(lane.covers_directory(directory) for lane in resolved_lanes)
-
-    uncovered = tuple(sorted(name for name in candidates if not swept(name) and name not in declared))
-
-    # A declaration earns its keep only while it still describes the tree. Once
-    # a lane sweeps the directory, or the directory is gone, the entry has
-    # stopped explaining anything and is only suppressing -- which is the state
-    # every allowlist reaches if nothing watches it.
+        return any((lane.covers_directory(directory) for lane in resolved_lanes))
+    uncovered = tuple(sorted((name for name in candidates if not swept(name) and name not in declared)))
     known = frozenset(candidates)
-    stale = tuple(sorted(name for name in declared if name not in known or swept(name)))
-
-    return DirectoryCoverageReport(
-        uncovered=uncovered,
-        analysed=len(candidates),
-        declared=tuple(sorted(declared)),
-        stale=stale,
-    )
+    stale = tuple(sorted((name for name in declared if name not in known or swept(name))))
+    return DirectoryCoverageReport(uncovered=uncovered, analysed=len(candidates), declared=tuple(sorted(declared)), stale=stale)

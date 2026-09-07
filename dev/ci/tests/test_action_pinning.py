@@ -16,54 +16,40 @@ Asserted over every workflow and every action, which is the same rule the forge
 applies. A tag is a moving reference: `@v4` today and `@v4` after a force-push
 are different code with identical spelling.
 """
-
 from __future__ import annotations
-
 import json
 import re
 from pathlib import Path
 from typing import Final
-
 import pytest
 import yaml
-
 from cadrumo.core.directory_scan import scan_directory
-
 from ..._paths import REPO_ROOT
 from ..workflow_run_text import executed_text
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_WORKFLOWS_DIR: Final = REPO_ROOT / ".github" / "workflows"
-_FULL_SHA: Final = re.compile(r"^[0-9a-f]{40}$")
-
+_WORKFLOWS_DIR: Final = REPO_ROOT / '.github' / 'workflows'
+_FULL_SHA: Final = re.compile('^[0-9a-f]{40}$')
 
 def _workflow_paths() -> list[Path]:
-    return sorted({*scan_directory(_WORKFLOWS_DIR, pattern="*.yml"), *scan_directory(_WORKFLOWS_DIR, pattern="*.yaml")})
-
+    return sorted({*scan_directory(_WORKFLOWS_DIR, pattern='*.yml'), *scan_directory(_WORKFLOWS_DIR, pattern='*.yaml')})
 
 def _action_uses(document: dict[str, object]) -> list[str]:
     """Every `uses:` value in the document, including composite job steps."""
     uses: list[str] = []
-    jobs = document.get("jobs")
+    jobs = document.get('jobs')
     if not isinstance(jobs, dict):
         return uses
     for job in jobs.values():
         if not isinstance(job, dict):
             continue
-        # A job may reuse a whole workflow rather than run steps.
-        reusable = job.get("uses")
+        reusable = job.get('uses')
         if isinstance(reusable, str):
             uses.append(reusable)
-        for step in job.get("steps") or []:
-            if isinstance(step, dict) and isinstance(step.get("uses"), str):
-                uses.append(step["uses"])
+        for step in job.get('steps') or []:
+            if isinstance(step, dict) and isinstance(step.get('uses'), str):
+                uses.append(step['uses'])
     return uses
-
-
-#: A local `uses:` reference the tree does not actually carry.
-_UNRESOLVED: Final = "(names no action or workflow in this repository)"
-
+_UNRESOLVED: Final = '(names no action or workflow in this repository)'
 
 def _local_reference_resolves(reference: str) -> bool:
     """A local ``uses:`` reference really names a path in this repository.
@@ -80,60 +66,37 @@ def _local_reference_resolves(reference: str) -> bool:
         return False
     if target.is_file():
         return True
-    return (target / "action.yml").is_file() or (target / "action.yaml").is_file()
-
+    return _dp_or('dev/ci/tests/test_action_pinning.py:83:or', lambda: (target / 'action.yml').is_file(), lambda: (target / 'action.yaml').is_file())
 
 def _unpinned(path: Path) -> list[str]:
-    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    document = yaml.safe_load(path.read_text(encoding='utf-8'))
     if not isinstance(document, dict):
         return []
     offenders: list[str] = []
     for reference in _action_uses(document):
-        # The exemption states a premise, so the premise is asserted beside it:
-        # a local action is exempt BECAUSE it is a path in this repository,
-        # already at this commit. A `./...` naming nothing in the tree is not
-        # that. It is a workflow the forge refuses before any step runs -- the
-        # same silent refusal an unpinned tag earns -- so skipping it on the
-        # strength of its prefix alone would report success over exactly the
-        # dead workflow this gate exists to find.
-        if reference.startswith(("./", "../")):
+        if reference.startswith(('./', '../')):
             if not _local_reference_resolves(reference):
-                offenders.append(f"{path.name}: {reference} {_UNRESOLVED}")
+                offenders.append(f'{path.name}: {reference} {_UNRESOLVED}')
             continue
-        # A registry image, not an action reference: its version lives in the
-        # image tag or digest, which the commit-SHA rule below does not describe.
-        if reference.startswith("docker://"):
+        if reference.startswith('docker://'):
             continue
-        _, separator, version = reference.partition("@")
+        _, separator, version = reference.partition('@')
         if not separator or not _FULL_SHA.match(version):
-            offenders.append(f"{path.name}: {reference}")
+            offenders.append(f'{path.name}: {reference}')
     return offenders
-
 
 def test_every_action_in_every_workflow_is_pinned_to_a_sha() -> None:
     """The forge refuses an unpinned action, so an unpinned one is a dead workflow."""
     workflows = _workflow_paths()
-    assert workflows, f"no workflows found to gate under {_WORKFLOWS_DIR}"
-
+    assert workflows, f'no workflows found to gate under {_WORKFLOWS_DIR}'
     offenders = [entry for path in workflows for entry in _unpinned(path)]
-
-    assert offenders == [], (
-        "these actions are referenced by a tag or branch rather than a full-length commit SHA, "
-        "and this repository's forge refuses a workflow that does so before any step runs:\n  " + "\n  ".join(offenders)
-    )
-
+    assert offenders == [], "these actions are referenced by a tag or branch rather than a full-length commit SHA, and this repository's forge refuses a workflow that does so before any step runs:\n  " + '\n  '.join(offenders)
 
 def test_the_gate_refuses_a_tag_reference(tmp_path: Path) -> None:
     """Teeth, against an isolated file rather than the tree it is protecting."""
-    workflow = tmp_path / "tagged.yml"
-    workflow.write_text(
-        "name: tagged\non: workflow_dispatch\njobs:\n"
-        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n",
-        encoding="utf-8",
-    )
-
-    assert _unpinned(workflow) == ["tagged.yml: actions/checkout@v4"]
-
+    workflow = tmp_path / 'tagged.yml'
+    workflow.write_text('name: tagged\non: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n', encoding='utf-8')
+    assert _unpinned(workflow) == ['tagged.yml: actions/checkout@v4']
 
 def test_the_gate_refuses_a_short_sha(tmp_path: Path) -> None:
     """An abbreviated SHA is still refused by the forge, so it is refused here.
@@ -141,15 +104,9 @@ def test_the_gate_refuses_a_short_sha(tmp_path: Path) -> None:
     Worth its own case: a short SHA looks pinned, and a check that only rejected
     a leading `v` would pass it.
     """
-    workflow = tmp_path / "short.yml"
-    workflow.write_text(
-        "name: short\non: workflow_dispatch\njobs:\n"
-        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@34e1148\n",
-        encoding="utf-8",
-    )
-
-    assert _unpinned(workflow) == ["short.yml: actions/checkout@34e1148"]
-
+    workflow = tmp_path / 'short.yml'
+    workflow.write_text('name: short\non: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@34e1148\n', encoding='utf-8')
+    assert _unpinned(workflow) == ['short.yml: actions/checkout@34e1148']
 
 def test_a_local_action_that_exists_needs_no_pin(tmp_path: Path) -> None:
     """A path inside this repository is already at the commit being run.
@@ -159,15 +116,9 @@ def test_a_local_action_that_exists_needs_no_pin(tmp_path: Path) -> None:
     not exist would assert the exemption over the state that falsifies it.
     """
     resident = _workflow_paths()[0].relative_to(REPO_ROOT).as_posix()
-    workflow = tmp_path / "local.yml"
-    workflow.write_text(
-        "name: local\non: workflow_dispatch\njobs:\n"
-        f"  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./{resident}\n",
-        encoding="utf-8",
-    )
-
+    workflow = tmp_path / 'local.yml'
+    workflow.write_text(f'name: local\non: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./{resident}\n', encoding='utf-8')
     assert _unpinned(workflow) == []
-
 
 def test_the_gate_refuses_a_local_reference_that_names_nothing(tmp_path: Path) -> None:
     """Teeth for the exemption's premise: unresolvable is not exempt.
@@ -176,32 +127,19 @@ def test_the_gate_refuses_a_local_reference_that_names_nothing(tmp_path: Path) -
     carries no local action at all, so a `./` reference resolving to nothing was
     both the only shape available to it and the one the premise excludes.
     """
-    workflow = tmp_path / "dangling.yml"
-    workflow.write_text(
-        "name: dangling\non: workflow_dispatch\njobs:\n"
-        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n",
-        encoding="utf-8",
-    )
-
-    assert _unpinned(workflow) == [f"dangling.yml: ./.github/actions/setup {_UNRESOLVED}"]
-
+    workflow = tmp_path / 'dangling.yml'
+    workflow.write_text('name: dangling\non: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ./.github/actions/setup\n', encoding='utf-8')
+    assert _unpinned(workflow) == [f'dangling.yml: ./.github/actions/setup {_UNRESOLVED}']
 
 def test_the_gate_refuses_a_local_reference_that_escapes_the_repository(tmp_path: Path) -> None:
     """A `../` climbing above the root is not "a path in this repository" either."""
-    workflow = tmp_path / "escaping.yml"
-    workflow.write_text(
-        "name: escaping\non: workflow_dispatch\njobs:\n"
-        "  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ../outside/action\n",
-        encoding="utf-8",
-    )
-
-    assert _unpinned(workflow) == [f"escaping.yml: ../outside/action {_UNRESOLVED}"]
-
+    workflow = tmp_path / 'escaping.yml'
+    workflow.write_text('name: escaping\non: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: ../outside/action\n', encoding='utf-8')
+    assert _unpinned(workflow) == [f'escaping.yml: ../outside/action {_UNRESOLVED}']
 
 def _upload_arguments(run: str) -> list[str]:
     """The file arguments an `uv publish` command line hands to the index."""
-    return [token for token in run.split() if token.startswith("dist")]
-
+    return [token for token in run.split() if token.startswith('dist')]
 
 def _publish_command(path: Path) -> str:
     """The `uv publish` command line a workflow EXECUTES, or a refusal if it has none.
@@ -211,14 +149,13 @@ def _publish_command(path: Path) -> str:
     arguments, the flags -- while the step uploads nothing, so a raw reading
     would let the checks below pass over an upload that cannot happen.
     """
-    document = yaml.safe_load(path.read_text(encoding="utf-8"))
-    for job in document["jobs"].values():
-        for step in job.get("steps") or []:
-            run = executed_text(step.get("run"))
-            if "uv publish" in run:
+    document = yaml.safe_load(path.read_text(encoding='utf-8'))
+    for job in document['jobs'].values():
+        for step in job.get('steps') or []:
+            run = executed_text(step.get('run'))
+            if 'uv publish' in run:
                 return run
-    raise AssertionError(f"{path.name} no longer runs `uv publish`")
-
+    raise AssertionError(f'{path.name} no longer runs `uv publish`')
 
 def test_the_publish_step_uploads_distributions_only() -> None:
     """A bare directory glob offers the index files it will refuse.
@@ -228,28 +165,16 @@ def test_the_publish_step_uploads_distributions_only() -> None:
     and the upload is not atomic, so offering them fails the step part-way
     through rather than before it starts.
     """
-    arguments = _upload_arguments(_publish_command(_WORKFLOWS_DIR / "publish.yml"))
-
-    assert arguments, "the publish step names no files to upload"
-    assert all(argument.endswith((".whl", ".tar.gz")) for argument in arguments), (
-        f"the publish step offers the index files that are not distributions: {arguments}"
-    )
-
+    arguments = _upload_arguments(_publish_command(_WORKFLOWS_DIR / 'publish.yml'))
+    assert arguments, 'the publish step names no files to upload'
+    assert all((argument.endswith(('.whl', '.tar.gz')) for argument in arguments)), f'the publish step offers the index files that are not distributions: {arguments}'
 
 def test_the_gate_refuses_a_bare_directory_glob() -> None:
     """Teeth: the shape this replaced is reported, not tolerated."""
-    arguments = _upload_arguments("uv publish --trusted-publishing always dist/*")
-
-    assert arguments == ["dist/*"]
-    assert not all(argument.endswith((".whl", ".tar.gz")) for argument in arguments)
-
-
-#: Below this the companion projects have moved out of the discovery root.
-#: The gate at `dev/release/readiness.py` names both companion pyprojects by
-#: literal path, so an empty walk here silently stops requiring the release
-#: tool to bump the very files that gate compares. Live: two companions.
+    arguments = _upload_arguments('uv publish --trusted-publishing always dist/*')
+    assert arguments == ['dist/*']
+    assert not all((argument.endswith(('.whl', '.tar.gz')) for argument in arguments))
 _MINIMUM_COMPANION_PROJECTS: Final = 2
-
 
 def test_release_please_bumps_every_version_surface_the_release_gate_compares() -> None:
     """The versioning tool and the readiness gate must agree on what a version is.
@@ -263,38 +188,14 @@ def test_release_please_bumps_every_version_surface_the_release_gate_compares() 
     is cut, and the refusal arrives afterwards from the product's own gate,
     against a version that already exists. So the two are compared here.
     """
-    config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
-    extra_files = set(config["packages"]["."].get("extra-files", []))
-
-    companions = sorted(
-        path.relative_to(REPO_ROOT).as_posix() for path in (REPO_ROOT / "packaging").glob("*/pyproject.toml")
-    )
-
-    assert len(companions) >= _MINIMUM_COMPANION_PROJECTS, (
-        f"only {len(companions)} companion project(s) were discovered under packaging/; below "
-        "this the requirement set collapses to the two literal surfaces and this gate stops "
-        "asking release-please to bump the companions at all"
-    )
-
-    required = {"src/cadrumo/__init__.py", "pyproject.toml", *companions}
-
-    assert required <= extra_files, (
-        f"release-please does not bump these version surfaces: {sorted(required - extra_files)}. "
-        "The release-readiness gate compares them, so a release would be cut and then refused."
-    )
-
-
-#: Surfaces the `python` release type rewrites from its own knowledge of the
-#: shape. A run confirmed it bumps `__version__` in a package initialiser with
-#: no annotation present, so requiring one there would fail against a file the
-#: tool already handles.
-_NATIVELY_UPDATED: Final = frozenset({"src/cadrumo/__init__.py"})
-
-
-#: Below this the extra-files key has moved or emptied. Live: four entries
-#: configured, three of them reaching the annotation check. A floor.
+    config = json.loads((REPO_ROOT / 'release-please-config.json').read_text(encoding='utf-8'))
+    extra_files = set(_dp_get('dev/ci/tests/test_action_pinning.py:267:get', config['packages']['.'], 'extra-files', []))
+    companions = sorted((path.relative_to(REPO_ROOT).as_posix() for path in (REPO_ROOT / 'packaging').glob('*/pyproject.toml')))
+    assert len(companions) >= _MINIMUM_COMPANION_PROJECTS, f'only {len(companions)} companion project(s) were discovered under packaging/; below this the requirement set collapses to the two literal surfaces and this gate stops asking release-please to bump the companions at all'
+    required = {'src/cadrumo/__init__.py', 'pyproject.toml', *companions}
+    assert required <= extra_files, f'release-please does not bump these version surfaces: {sorted(required - extra_files)}. The release-readiness gate compares them, so a release would be cut and then refused.'
+_NATIVELY_UPDATED: Final = frozenset({'src/cadrumo/__init__.py'})
 _MINIMUM_ANNOTATED_EXTRA_FILES: Final = 2
-
 
 def test_every_other_configured_extra_file_carries_the_annotation_that_moves_it() -> None:
     """A path in `extra-files` with no annotation is a surface silently left behind.
@@ -304,27 +205,12 @@ def test_every_other_configured_extra_file_carries_the_annotation_that_moves_it(
     without one is read, matched against nothing, and written back unchanged -
     which reports success and ships a stale version.
     """
-    config = json.loads((REPO_ROOT / "release-please-config.json").read_text(encoding="utf-8"))
-
-    # The corpus arrives through a `.get` default, so a renamed or emptied
-    # `extra-files` key yields no entries and every claim below holds. That is
-    # the same silent success this gate exists to prevent, one level up: the
-    # release tool would stop bumping these files and the gate would agree.
-    configured = [entry for entry in config["packages"]["."].get("extra-files", []) if isinstance(entry, str)]
+    config = json.loads((REPO_ROOT / 'release-please-config.json').read_text(encoding='utf-8'))
+    configured = [entry for entry in _dp_get('dev/ci/tests/test_action_pinning.py:313:get', config['packages']['.'], 'extra-files', []) if isinstance(entry, str)]
     checked = [entry for entry in configured if entry not in _NATIVELY_UPDATED]
-
-    assert len(checked) >= _MINIMUM_ANNOTATED_EXTRA_FILES, (
-        f"only {len(checked)} configured extra-file(s) reach the annotation check, from "
-        f"{len(configured)} configured; below this the key has moved or emptied and this "
-        "gate is inert rather than satisfied"
-    )
-
-    unmarked = [
-        entry for entry in checked if "x-release-please-version" not in (REPO_ROOT / entry).read_text(encoding="utf-8")
-    ]
-
-    assert unmarked == [], f"these files are configured for bumping but carry no version annotation: {unmarked}"
-
+    assert len(checked) >= _MINIMUM_ANNOTATED_EXTRA_FILES, f'only {len(checked)} configured extra-file(s) reach the annotation check, from {len(configured)} configured; below this the key has moved or emptied and this gate is inert rather than satisfied'
+    unmarked = [entry for entry in checked if 'x-release-please-version' not in (REPO_ROOT / entry).read_text(encoding='utf-8')]
+    assert unmarked == [], f'these files are configured for bumping but carry no version annotation: {unmarked}'
 
 def test_the_publish_command_reader_refuses_a_commented_out_upload(tmp_path: Path) -> None:
     """Teeth: a commented-out upload is not the upload this gate inspects.
@@ -333,20 +219,17 @@ def test_the_publish_command_reader_refuses_a_commented_out_upload(tmp_path: Pat
     command and the file arguments it gates; commented, it refuses -- while a
     raw reading of the very same block still returns every token.
     """
-    document = yaml.safe_load((_WORKFLOWS_DIR / "publish.yml").read_text(encoding="utf-8"))
-    intact = tmp_path / "intact.yml"
-    intact.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
-
+    document = yaml.safe_load((_WORKFLOWS_DIR / 'publish.yml').read_text(encoding='utf-8'))
+    intact = tmp_path / 'intact.yml'
+    intact.write_text(yaml.safe_dump(document, sort_keys=False), encoding='utf-8')
     assert _upload_arguments(_publish_command(intact))
-
     newline = chr(10)
-    for job in document["jobs"].values():
-        for step in job.get("steps") or []:
-            if "uv publish" in str(step.get("run", "")):
-                step["run"] = "# " + str(step["run"]).replace(newline, newline + "# ")
-    commented = tmp_path / "commented.yml"
-    commented.write_text(yaml.safe_dump(document, sort_keys=False), encoding="utf-8")
-
-    assert "uv publish" in commented.read_text(encoding="utf-8")
-    with pytest.raises(AssertionError, match="no longer runs"):
+    for job in document['jobs'].values():
+        for step in job.get('steps') or []:
+            if 'uv publish' in str(_dp_get('dev/ci/tests/test_action_pinning.py:345:get', step, 'run', '')):
+                step['run'] = '# ' + str(step['run']).replace(newline, newline + '# ')
+    commented = tmp_path / 'commented.yml'
+    commented.write_text(yaml.safe_dump(document, sort_keys=False), encoding='utf-8')
+    assert 'uv publish' in commented.read_text(encoding='utf-8')
+    with pytest.raises(AssertionError, match='no longer runs'):
         _publish_command(commented)
