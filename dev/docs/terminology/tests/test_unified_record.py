@@ -288,10 +288,12 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
     one path while the ladder placed it below casilla on the other.
 
     CONCEPT and PAGE are excluded because their class genuinely depends on
-    context the projection cannot see -- Handbook domain and target path. Both
-    exclusions are declared behaviour, not drift: the projection deliberately
-    floors a full-text hit. Every context-free kind must agree.
+    context the projection cannot see -- Handbook domain and target path.
+    Neither exclusion is taken on trust: each is proven below by deriving more
+    than one class across contexts, and every kind kept in the walk is proven
+    context-invariant, so the exclusion set cannot grow to absorb a kind.
     """
+    from ...terminology_handbook.enums import ConceptDomain
     from ..search_record import SearchRecordKind
     from ..unified_record import (
         _KIND_TO_DISPLAY_CLASS,
@@ -299,6 +301,46 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
     )
 
     context_dependent = {SearchRecordKind.CONCEPT, SearchRecordKind.PAGE}
+
+    # Every kind carries a projection row, the two excluded from the agreement
+    # walk included: the exclusion below is from the AGREEMENT check, not from
+    # the map, and nothing else in the tree pins the map against the enum, so
+    # without this a context-dependent kind could lose its row unnoticed.
+    assert set(_KIND_TO_DISPLAY_CLASS) == set(SearchRecordKind), (
+        "the per-kind projection map and the live kind enum disagree on membership: "
+        f"{sorted(k.value for k in set(SearchRecordKind) ^ set(_KIND_TO_DISPLAY_CLASS))}"
+    )
+
+    # The exclusion is EARNED here, not merely declared. A bare count floor
+    # measured the survivors against a constant fixed when there were five kinds
+    # and two exclusions, so a sixth kind added to the enum AND to
+    # ``context_dependent`` in one edit left the survivor count unchanged and
+    # this gate green while nothing anywhere covered the new kind. Instead every
+    # kind proves which side it belongs on: an excluded kind must actually
+    # derive more than one class across contexts, and an included kind must
+    # derive the same class under all of them -- which is also what makes the
+    # single-context agreement call below a representative sample of how that
+    # kind is classed rather than an arbitrary one.
+    contexts = (
+        (None, "guides/overview.html"),
+        (ConceptDomain.MODELO.value, "cli/app.html"),
+        (None, "api/cadrumo.core.html"),
+    )
+    for kind in SearchRecordKind:
+        classes = {_display_class_for(kind, domain, target) for domain, target in contexts}
+        if kind in context_dependent:
+            assert len(classes) > 1, (
+                f"{kind.value} is excluded from the agreement check as context-dependent, but it "
+                f"derives {next(iter(classes)).value} under every context tried; an exclusion that "
+                "costs nothing to add is how a kind leaves this gate's coverage unnoticed"
+            )
+        else:
+            assert len(classes) == 1, (
+                f"{kind.value} is compared at one context below, but it derives "
+                f"{sorted(c.value for c in classes)} across contexts; the single-context "
+                "agreement call is no longer representative of how this kind is classed"
+            )
+
     checked = 0
     # The traversal walks the KIND ENUM, not the projection map. Driven by the
     # map, this loop could only ever confirm the rows already written: a sixth
@@ -321,7 +363,14 @@ def test_per_kind_projection_agrees_with_the_derivation_authority() -> None:
             f"{kind.value} is derived as {derived.value} but the per-kind "
             f"projection stamps {projected.value}; the two ranking authorities have drifted"
         )
-    assert checked >= 3, "the agreement check covered almost nothing; a kind was dropped"
+    # Deliberately not a count floor. A constant equal to the authoring-time
+    # survivor count is satisfied entirely by the exclusions and cannot see them
+    # grow. Coverage of the population is carried by the earned-exclusion walk
+    # above, which visits every kind; this refuses only the degenerate case where
+    # the exclusion set has swallowed the enum and nothing survives to compare.
+    assert context_dependent < set(SearchRecordKind), (
+        "every live record kind is excluded as context-dependent; the agreement check compares nothing"
+    )
 
 
 def test_normalisation_preserves_tier_ordering_under_score() -> None:
