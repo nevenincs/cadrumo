@@ -1136,10 +1136,12 @@ evidence = "OptionalSourceUrl is a constrained alias whose own docstring explain
 
 [[symbol_cluster]]
 name = "sectoral retencion rate set no classifier consults"
-class = "should-be-live"
 area = "domain/transactions"
-symbols = ["sectoral_activity_retencion_rates"]
-evidence = "The art. 95.4/95.5/95.6.1 rate set, with any art. 95.1 figure subtracted so that a caller asking 'did this match ONLY sectoral rates?' cannot be weakened by a shared figure. That caller does not exist. A legal classification the registry can express and the product never performs; under the grounding rule the declared authority stays visible rather than being deleted."
+class = "should-be-live"
+symbols = [
+  "sectoral_activity_retencion_rates",
+]
+evidence = "The art. 95.4/95.5/95.6.1 rate set at src/cadrumo/domain/transactions/retencion_parameters.py, with any art. 95.1 figure subtracted so a caller asking whether something matched ONLY sectoral rates cannot be weakened by a shared figure. That caller does not exist: no classifier asks the question, so a retencion matching 2 percent or 1 percent is classified by whatever general rule applies rather than as a sectoral apartado. Under the grounding rule the declared authority stays visible rather than being deleted, and performing the classification is a filing-grade capability decision that stays open. The module is ninety percent live -- the professional and statutory sets and the supported-rate ceiling beside it all reach the withholding inference -- so a reader had no signal that this one function is the exception. Its docstring now says so. Corrected 2026-09-09."
 remedy_requires_decision = true
 
 [[symbol_cluster]]
@@ -1227,10 +1229,15 @@ remedy_requires_decision = false
 
 [[symbol_cluster]]
 name = "sectoral prorrata calculation with no caller"
-class = "should-be-live"
 area = "domain/iva"
-symbols = ["compute_sectoral_prorrata", "requires_sectoral_separation", "classify_input_deduction", "sum_deductible_amounts"]
-evidence = "The sectoral prorrata path: the predicate deciding whether sectors must be separated, the calculator that runs once they are, the input-deduction classifier and the deductible summation. Referenced only from its own module's docstrings and __all__. Re-tested against the live design and CONFIRMED rather than reversed: prorrata itself IS computed, and the module is majority-live -- compute_prorrata_definitiva_anual is reached twice, with compute_regularizacion_prorrata_anual, deductible_percentage_for, especial_mandatory_rule, is_especial_mandatory and validate_prorrata_reference each reached as well. What is unreached is specifically the differentiated-sectors regime. A taxpayer with differentiated sectors therefore gets no sectoral separation, and under the calculation-grounding rule the declared legal capability stays visible rather than being deleted for being uncalled."
+class = "should-be-live"
+symbols = [
+  "compute_sectoral_prorrata",
+  "requires_sectoral_separation",
+  "classify_input_deduction",
+  "sum_deductible_amounts",
+]
+evidence = "The sectoral prorrata path in src/cadrumo/domain/iva/prorrata.py: the predicate deciding whether sectors must be separated, the calculator that runs once they are, the input-deduction classifier and the deductible summation. Referenced only from that module's docstrings and __all__, and re-verified with alias-aware counting, which is what exposed a different sweep's false negatives. CONFIRMED rather than reversed: prorrata itself IS computed and the module is majority-live -- compute_prorrata_definitiva_anual, compute_regularizacion_prorrata_anual, deductible_percentage_for, especial_mandatory_rule, is_especial_mandatory and validate_prorrata_reference are each reached. What is unreached is specifically the differentiated-sectors regime, so a taxpayer whose activities do form distinct sectors deducts without the separation art. 9.1.c requires. Wiring it is a filing-grade capability decision and stays open. The silence did not have to wait on it: the module's art. 9.1.c paragraph now states that the sectoral regime is declared and not yet reached, because everything around it in that module IS reached and a reader had no way to tell the two apart. Corrected 2026-09-09."
 remedy_requires_decision = true
 
 [[symbol_cluster]]

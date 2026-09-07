@@ -1880,13 +1880,34 @@ def find_dev_path_reach_violations(
 #: module reference naming a REAL dev child fires -- ``dev.example.com``,
 #: ``devengada`` and another tree's ``dev`` directory stay silent.
 def _dev_tree_children() -> frozenset[str]:
-    """Return the dev tree's current top-level entries, or empty on read failure."""
+    """Return the dev tree's current top-level entries, refusing an unreadable tree.
+
+    Returning an empty set on failure would be silent rather than safe. Every
+    dotted token is decided by membership in this roster, so an empty roster
+    answers False for all of them, and the slash channel degrades the same way,
+    keeping only a bare ``dev/`` folder reference. The scan then reports clean
+    over a detector that can no longer match, with nothing in the output saying
+    so. Measured against this tree: with the roster live,
+    ``dev.quality.import_hygiene_scan`` and ``dev/quality/foo.py`` are both
+    recognised; with it empty, neither is, while the near-miss tokens the
+    detector must reject stay rejected. The loss is detection only, which is
+    the shape that reads as a pass.
+
+    Refusing matters more here than in a per-file handler because this is
+    resolved once at import, so a single transient failure would poison every
+    scan in the process rather than one file. The sibling lane-visibility
+    screen refuses a declared root that has stopped existing for the same
+    reason, and this follows it.
+    """
     try:
         return frozenset(
             entry.name for entry in (REPO_ROOT / DEV_TOOLING_ROOT).iterdir() if not entry.name.startswith(".")
         )
-    except OSError:
-        return frozenset()
+    except OSError as error:
+        raise FileNotFoundError(
+            "the dev tree could not be listed, so the prose scan would report clean over a "
+            f"detector whose every dotted match is decided by that listing: {REPO_ROOT / DEV_TOOLING_ROOT}"
+        ) from error
 
 
 _DEV_TREE_CHILDREN: Final[frozenset[str]] = _dev_tree_children()
