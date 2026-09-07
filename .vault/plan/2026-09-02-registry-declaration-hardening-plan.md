@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:7e2a8f0687ad18b9b798073bbe631c96083e83cb7fad49241c4b6e4f4ca4f9fa'
+body_hash: 'sha256:cfd743f252f65e3d22c96533f48a776f6336c34fda08cc7df2bea3137a14095e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1374,6 +1374,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1005` - Floor the cross-project privacy scan alongside its sibling, leaving the untracked scan unfloored with the reason stated; `dev/quality/tests/test_doc_privacy.py`.
 - [x] `W06.P13.S1006` - Floor the tautology sweep per root instead of guarding it on mere non-emptiness; `dev/tests/test_tautological_assertion_gate.py`.
 - [x] `W06.P13.S1007` - Refuse a missing parse root instead of filtering it out of the source-parse gate; `dev/tests/test_every_source_file_parses.py`.
+- [x] `W06.P13.S1008` - Announce the modules and data files the three governance-corpus scans skipped, splitting the deliberate binary skip from an unreadable file; `dev/quality/governance_corpus_scan.py`.
+- [x] `W06.P13.S1009` - Join the parse gate's deliberately independent prune list to the shared inventory's without reintroducing the import; `dev/tests/test_every_source_file_parses.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

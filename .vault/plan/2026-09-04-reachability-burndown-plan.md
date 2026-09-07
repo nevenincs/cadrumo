@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:43e88d2c8bbff85b958fc8a507bd6c72ab6eb2d0adcf9d10801409ffcda7e90f'
+body_hash: 'sha256:3e4a0cf8cefcada85b5496a75a1023783c50058d43d5bea52c6fbec3dbe4b44b'
 ---
 
 # `reachability-burndown` plan
@@ -198,6 +198,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S97` - Re-verify every open ledger claim with the alias-aware counting the previous step's bug exposed, finding none contradicted, then close the silence around the sectoral prorrata regime: the general and especial regimes of that substrate are computed by the live path and the differentiated-sectors one is not, so a taxpayer whose activities do form distinct sectors deducts without the separation art. 9.1.c requires. Wiring it stays a filing-grade capability decision; the module now says which of its regimes is reached, because everything around the sectoral path is.; `src/cadrumo/domain/iva/prorrata.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S98` - Rank the whole residue by how well its modules hide it, since a partially-live module argues against a reader noticing the one path that is not reached, and act on the highest-stakes entry: sixteen open findings sit in modules that are at least sixty percent live, led by a custody port facade at ninety-seven percent and the sectoral withholding rate set at ninety, whose professional and statutory neighbours all reach the inference while it alone is consulted by nothing, so a retencion matching two or one percent is classified by whatever general rule applies rather than as a sectoral apartado.; `src/cadrumo/domain/transactions/retencion_parameters.py,dev/audit/reachability_classification.toml`.
 - [x] `W05.P12.S99` - Take the second entry on the hiding-rank worklist and test whether it is wirable rather than only annotatable: the filed-history scoping signal and the period-selection rows are both consumed from constants, and neither is a one-line fix, since the classifier needs an availability report the discovery model consumes without retaining and the row projector needs pair and selection state the capture stage does not carry up. Record what the wiring would require and state in both docstrings that they are declared and not yet reached, the empty selection table and the least-informative hedge being what an operator sees meanwhile.; `src/cadrumo/application/live/filed_data_capture.py,dev/audit/reachability_classification.toml`.
+- [x] `W05.P12.S100` - Take the top of the hiding-rank list, a port accessor in a module ninety-seven percent live, and settle it with the sibling comparison: its neighbours carry four, three and two production consumers while it carries zero and nothing reaches the port method under it either, which reads as a displaced facade and is not, because the operation is performed by an adapter calling list_keys on the repository it owns. Nothing at the application layer lists namespaces, so this is a port waiting for a consumer rather than one something replaced, and the accessor now says so.; `src/cadrumo/application/user_profile/custody_ports.py,dev/audit/reachability_classification.toml`.
 
 ## Parallelization
 
