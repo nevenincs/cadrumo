@@ -317,6 +317,14 @@ check-secure-store-write-path:
 # less than the sibling it calls. Five were removed for dropping a refusal, a
 # coverage manifest, or a superseded_by pointer that the caller needed.
 # Verify no shipped function narrows a sibling's result with nothing calling it.
+# The review inventory has always been able to name the TUI interfaces no
+# surface renders; nothing ever failed on the number. Keyed by qualname, so a
+# swap cannot net to zero. Entries leave in the step that gives one a surface.
+# Verify the set of unrendered TUI interfaces only shrinks.
+[group('static-checks')]
+check-tui-render-coverage:
+    @uv run --no-sync python -m dev.quality.tui_render_coverage_ratchet
+
 [group('static-checks')]
 check-narrowing-delegators:
     @uv run --no-sync python -m dev.quality.narrowing_delegators
