@@ -63,12 +63,22 @@ def _workflow_files() -> list[Path]:
 
 
 def _script_invocation_offenders(workflows: list[Path], *, repo_root: Path) -> list[str]:
-    """Return workflow calls that execute a relative-importing file directly."""
+    """Return workflow calls that execute a relative-importing file directly.
+
+    A call naming a file that is not there is reported rather than skipped.
+    Skipping it made an absent target indistinguishable from a compliant one:
+    this check asserts an ABSENCE, so a tool moved out from under its five call
+    sites would empty the offender list and read as the gate passing, while
+    every one of those lanes died on `No such file or directory`. All four
+    call sites resolve today, so the guard never fires on a healthy tree and
+    exists only to hide that rename.
+    """
     offenders: list[str] = []
     for workflow in workflows:
         for match in _SCRIPT_CALL.finditer(workflow.read_text(encoding="utf-8")):
             target = repo_root / match.group(1)
             if not target.is_file():
+                offenders.append(f"{workflow.name} runs {match.group(1)}, which does not exist")
                 continue
             source = target.read_text(encoding="utf-8")
             if _SELF_PACKAGING_SHIM.search(source):

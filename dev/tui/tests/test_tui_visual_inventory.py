@@ -17,6 +17,7 @@ from ..._paths import REPO_ROOT, UTF_8
 from .. import _coverage, _diff, _inventory, _raster
 from .._artifacts import (
     FailedFrame,
+    FrameFailureKind,
     InterfaceRecord,
     Manifest,
     RenderedFrame,
@@ -372,7 +373,7 @@ def test_a_refused_or_skipped_frame_still_counts_as_accounted_for() -> None:
                 surface="home--ready",
                 viewport="medium",
                 theme="dark",
-                kind="REFUSED",
+                kind=FrameFailureKind.REFUSED,
                 detail="refused: synthetic",
             ),
         ),
@@ -619,7 +620,7 @@ def test_a_manifest_roundtrips_through_disk_with_every_field_populated(tmp_path:
                 surface="modelo-work-wizard",
                 viewport="small",
                 theme="dark",
-                kind="refused",
+                kind=FrameFailureKind.REFUSED,
                 attempts=3,
                 detail="refused: application.modelo.errors.profile_readiness_setup_incomplete",
             ),
@@ -755,7 +756,7 @@ def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
     refusal, and the import error a peer's half-finished edit produced in a
     shared worktree.
     """
-    from .._harness import FailureKind, classify
+    from .._harness import classify
 
     refusal = (
         "harness `open modelo-work-wizard --size 120x40 --theme dark` exited 1\n"
@@ -769,9 +770,9 @@ def test_a_harness_refusal_is_told_apart_from_a_harness_crash() -> None:
         "NameError: name 'InventorySelector' is not defined."
     )
 
-    assert classify(refusal) is FailureKind.REFUSED
-    assert classify(crash) is FailureKind.CRASHED
-    assert classify("") is FailureKind.CRASHED, "an unreadable failure must not be mistaken for a considered refusal"
+    assert classify(refusal) is FrameFailureKind.REFUSED
+    assert classify(crash) is FrameFailureKind.CRASHED
+    assert classify("") is FrameFailureKind.CRASHED, "an unreadable failure must not be mistaken for a considered refusal"
 
 
 def test_a_refusal_that_follows_a_traceback_still_reads_as_a_crash() -> None:
@@ -781,17 +782,17 @@ def test_a_refusal_that_follows_a_traceback_still_reads_as_a_crash() -> None:
     must not be downgraded into a deterministic refusal, because downgrading
     it would skip the whole surface on the strength of a transient crash.
     """
-    from .._harness import FailureKind, classify
+    from .._harness import classify
 
     output = "Traceback (most recent call last):\n  ...\nValueError: refused: something that looks like a refusal"
-    assert classify(output) is FailureKind.CRASHED
+    assert classify(output) is FrameFailureKind.CRASHED
 
 
 def test_a_harness_error_defaults_to_the_retryable_kind() -> None:
     """An unclassified failure must not silently condemn a whole surface."""
-    from .._harness import FailureKind, HarnessError
+    from .._harness import HarnessError
 
-    assert HarnessError("boom").kind is FailureKind.CRASHED
+    assert HarnessError("boom").kind is FrameFailureKind.CRASHED
 
 
 def test_the_refusal_reason_is_extracted_for_the_skip_note() -> None:
@@ -840,7 +841,7 @@ def test_a_blocked_surface_is_named_from_failures_and_skips_together() -> None:
                 surface="modelo-work-wizard",
                 viewport="small",
                 theme="dark",
-                kind="refused",
+                kind=FrameFailureKind.REFUSED,
                 detail="refused: readiness incomplete",
             ),
         ),
@@ -869,7 +870,7 @@ def test_the_index_reports_blocked_surfaces_and_unattempted_frames(tmp_path: Pat
                 surface="modelo-work-wizard",
                 viewport="small",
                 theme="dark",
-                kind="refused",
+                kind=FrameFailureKind.REFUSED,
                 attempts=1,
                 detail="refused: readiness incomplete",
             ),

@@ -18,13 +18,9 @@ whose first non-blank character is `#` is a comment; a `#` anywhere else may be
 a fragment identifier, a colour, or a quoted literal, and stripping from there
 would silently truncate real commands.
 """
-
 from __future__ import annotations
-
 from collections.abc import Iterable
-
-__all__ = ["executed_lines", "executed_text"]
-
+__all__ = ['executed_lines', 'executed_text']
 
 def executed_lines(script: object) -> tuple[str, ...]:
     """Return the stripped lines of ``script`` the shell would execute.
@@ -38,12 +34,11 @@ def executed_lines(script: object) -> tuple[str, ...]:
     has nothing to say about.
     """
     lines: list[str] = []
-    for raw_line in str(script or "").splitlines():
+    for raw_line in str(_dp_or('dev/ci/workflow_run_text.py:41:or', lambda: script, lambda: '')).splitlines():
         line = raw_line.strip()
-        if line and not line.startswith("#"):
+        if line and (not line.startswith('#')):
             lines.append(line)
     return tuple(lines)
-
 
 def executed_text(scripts: object | Iterable[object]) -> str:
     """Return one newline-joined surface of everything ``scripts`` executes.
@@ -53,5 +48,5 @@ def executed_text(scripts: object | Iterable[object]) -> str:
     step. A bare string is one script, never an iterable of characters.
     """
     if isinstance(scripts, str) or not isinstance(scripts, Iterable):
-        return "\n".join(executed_lines(scripts))
-    return "\n".join(line for script in scripts for line in executed_lines(script))
+        return '\n'.join(executed_lines(scripts))
+    return '\n'.join((line for script in scripts for line in executed_lines(script)))

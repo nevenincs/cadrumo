@@ -13,9 +13,7 @@ so this module centralises the two behaviours every acquisition script needs:
 
 The installed CLI oracle is reused rather than re-deriving tax truth.
 """
-
 from __future__ import annotations
-
 import hashlib
 import json
 import os
@@ -24,33 +22,18 @@ from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
-
 from cadrumo.core.directory_scan import scan_directory
-
 from .._paths import UTF_8
 from ._hashing import sha256_path
 from .cohort_manifest import LoadedReleaseCohort
 from .evidence import CommandTranscript
 from .python_cohort import PythonCohort
-
 if TYPE_CHECKING:
     from .installed_tax_oracle import InstalledTaxEvidence
-
 _UTF_8: Final[str] = UTF_8
-
-# The distributions the promoted Python cohort carries as installable wheels,
-# each keyed by the exact ``python-cohort.json`` digest name. A public
-# reacquisition proves this closed set, and only this set, byte-for-byte. The
-PYTHON_COHORT_WHEEL_NAMES: Final[tuple[str, ...]] = (
-    "cadrumo",
-    "cadrumo-data-manuals",
-    "cadrumo-data-official",
-)
-
-
-_REFUSAL_PREFIX: Final[str] = "public reacquisition unavailable"
-_MISMATCH_PREFIX: Final[str] = "public reacquisition digest mismatch"
-
+PYTHON_COHORT_WHEEL_NAMES: Final[tuple[str, ...]] = ('cadrumo', 'cadrumo-data-manuals', 'cadrumo-data-official')
+_REFUSAL_PREFIX: Final[str] = 'public reacquisition unavailable'
+_MISMATCH_PREFIX: Final[str] = 'public reacquisition digest mismatch'
 
 class AcquisitionError(SystemExit):
     """Instructive, fail-closed refusal raised by the reacquisition tooling.
@@ -58,7 +41,6 @@ class AcquisitionError(SystemExit):
     Subclasses :class:`SystemExit` so a script exits non-zero with the rendered
     message, while remaining catchable as a distinct type by callers and tests.
     """
-
 
 def expected_oracle_target_value() -> str:
     """Return the grounded cuota that the installed behaviour oracles must reproduce.
@@ -75,18 +57,9 @@ def expected_oracle_target_value() -> str:
     side effect for the sake of one string.
     """
     from .installed_tax_oracle import EXPECTED_VALUE
-
     return str(EXPECTED_VALUE)
 
-
-def refuse_unavailable(
-    *,
-    mechanism: str,
-    endpoint: str,
-    version: str,
-    reason: str,
-    next_step: str,
-) -> NoReturn:
+def refuse_unavailable(*, mechanism: str, endpoint: str, version: str, reason: str, next_step: str) -> NoReturn:
     """Refuse an acquisition whose public endpoint does not carry the release.
 
     Args:
@@ -99,41 +72,17 @@ def refuse_unavailable(
     Raises:
         AcquisitionError: Always; this function never returns.
     """
-    raise AcquisitionError(
-        f"{_REFUSAL_PREFIX}: {mechanism} endpoint {endpoint!r} does not yet serve "
-        f"cadrumo {version}: {reason}. Next step: {next_step}",
-    )
+    raise AcquisitionError(f'{_REFUSAL_PREFIX}: {mechanism} endpoint {endpoint!r} does not yet serve cadrumo {version}: {reason}. Next step: {next_step}')
 
-
-def refuse_digest_mismatch(
-    *,
-    mechanism: str,
-    endpoint: str,
-    name: str,
-    expected_sha256: str,
-    actual_sha256: str,
-) -> NoReturn:
+def refuse_digest_mismatch(*, mechanism: str, endpoint: str, name: str, expected_sha256: str, actual_sha256: str) -> NoReturn:
     """Refuse an acquired artifact whose bytes drift from the cohort manifest.
 
     Raises:
         AcquisitionError: Always; this function never returns.
     """
-    raise AcquisitionError(
-        f"{_MISMATCH_PREFIX}: {mechanism} endpoint {endpoint!r} served {name!r} with "
-        f"sha256 {actual_sha256} but the promoted cohort declares {expected_sha256}. "
-        "The public endpoint is serving different bytes than were tested; refusing.",
-    )
+    raise AcquisitionError(f'{_MISMATCH_PREFIX}: {mechanism} endpoint {endpoint!r} served {name!r} with sha256 {actual_sha256} but the promoted cohort declares {expected_sha256}. The public endpoint is serving different bytes than were tested; refusing.')
 
-
-def require_command_succeeded(
-    *,
-    returncode: int,
-    stderr: str,
-    mechanism: str,
-    endpoint: str,
-    version: str,
-    next_step: str,
-) -> None:
+def require_command_succeeded(*, returncode: int, stderr: str, mechanism: str, endpoint: str, version: str, next_step: str) -> None:
     """Refuse instructively when a public-acquisition command exited non-zero.
 
     A non-zero exit from ``pip download``, ``gh release download``, ``brew
@@ -153,29 +102,14 @@ def require_command_succeeded(
         AcquisitionError: If ``returncode`` is non-zero.
     """
     if returncode != 0:
-        detail = stderr.strip().splitlines()[-1] if stderr.strip() else "no diagnostic output"
-        refuse_unavailable(
-            mechanism=mechanism,
-            endpoint=endpoint,
-            version=version,
-            reason=f"the acquisition command exited {returncode}: {detail[:200]}",
-            next_step=next_step,
-        )
-
+        detail = stderr.strip().splitlines()[-1] if stderr.strip() else 'no diagnostic output'
+        refuse_unavailable(mechanism=mechanism, endpoint=endpoint, version=version, reason=f'the acquisition command exited {returncode}: {detail[:200]}', next_step=next_step)
 
 def sha256_bytes(data: bytes) -> str:
     """Return the hex SHA-256 digest of an in-memory byte string."""
     return hashlib.sha256(data).hexdigest()
 
-
-def verify_artifact_digest(
-    *,
-    mechanism: str,
-    endpoint: str,
-    name: str,
-    path: Path,
-    expected_sha256: str,
-) -> str:
+def verify_artifact_digest(*, mechanism: str, endpoint: str, name: str, path: Path, expected_sha256: str) -> str:
     """Re-hash one acquired artifact and refuse on any drift from the cohort.
 
     Args:
@@ -193,15 +127,8 @@ def verify_artifact_digest(
     """
     actual = sha256_path(path)
     if actual != expected_sha256:
-        refuse_digest_mismatch(
-            mechanism=mechanism,
-            endpoint=endpoint,
-            name=name,
-            expected_sha256=expected_sha256,
-            actual_sha256=actual,
-        )
+        refuse_digest_mismatch(mechanism=mechanism, endpoint=endpoint, name=name, expected_sha256=expected_sha256, actual_sha256=actual)
     return actual
-
 
 def _wheel_distribution_prefix(distribution: str, version: str) -> str:
     """Return the version-delimited wheel filename prefix for a distribution.
@@ -212,14 +139,7 @@ def _wheel_distribution_prefix(distribution: str, version: str) -> str:
     """
     return f"{distribution.replace('-', '_')}-{version}-"
 
-
-def match_downloaded_cohort_wheels(
-    download_dir: Path,
-    cohort: PythonCohort,
-    *,
-    mechanism: str,
-    endpoint: str,
-) -> dict[str, Path]:
+def match_downloaded_cohort_wheels(download_dir: Path, cohort: PythonCohort, *, mechanism: str, endpoint: str) -> dict[str, Path]:
     """Map each promoted cohort distribution to its one downloaded wheel.
 
     Args:
@@ -239,31 +159,15 @@ def match_downloaded_cohort_wheels(
     for distribution in PYTHON_COHORT_WHEEL_NAMES:
         distribution_version = cohort.version
         prefix = _wheel_distribution_prefix(distribution, distribution_version)
-        matches = [path for path in scan_directory(download_dir, pattern="*.whl") if path.name.startswith(prefix)]
+        matches = [path for path in scan_directory(download_dir, pattern='*.whl') if path.name.startswith(prefix)]
         if not matches:
-            refuse_unavailable(
-                mechanism=mechanism,
-                endpoint=endpoint,
-                version=distribution_version,
-                reason=f"no {distribution}=={distribution_version} wheel was served",
-                next_step=(f"publish {distribution}=={distribution_version} to {endpoint} and rerun this check"),
-            )
+            refuse_unavailable(mechanism=mechanism, endpoint=endpoint, version=distribution_version, reason=f'no {distribution}=={distribution_version} wheel was served', next_step=f'publish {distribution}=={distribution_version} to {endpoint} and rerun this check')
         if len(matches) != 1:
-            raise AcquisitionError(
-                f"expected one {distribution}=={distribution_version} wheel from {endpoint!r}; "
-                f"got {[path.name for path in matches]!r}",
-            )
+            raise AcquisitionError(f'expected one {distribution}=={distribution_version} wheel from {endpoint!r}; got {[path.name for path in matches]!r}')
         resolved[distribution] = matches[0]
     return resolved
 
-
-def verify_python_cohort_download(
-    download_dir: Path,
-    cohort: PythonCohort,
-    *,
-    mechanism: str,
-    endpoint: str,
-) -> dict[str, Path]:
+def verify_python_cohort_download(download_dir: Path, cohort: PythonCohort, *, mechanism: str, endpoint: str) -> dict[str, Path]:
     """Verify every downloaded cohort wheel byte-for-byte against the manifest.
 
     Args:
@@ -278,30 +182,12 @@ def verify_python_cohort_download(
     Raises:
         AcquisitionError: On a missing distribution or a digest mismatch.
     """
-    resolved = match_downloaded_cohort_wheels(
-        download_dir,
-        cohort,
-        mechanism=mechanism,
-        endpoint=endpoint,
-    )
+    resolved = match_downloaded_cohort_wheels(download_dir, cohort, mechanism=mechanism, endpoint=endpoint)
     for distribution, path in resolved.items():
-        verify_artifact_digest(
-            mechanism=mechanism,
-            endpoint=endpoint,
-            name=distribution,
-            path=path,
-            expected_sha256=cohort.sha256[distribution],
-        )
+        verify_artifact_digest(mechanism=mechanism, endpoint=endpoint, name=distribution, path=path, expected_sha256=cohort.sha256[distribution])
     return resolved
 
-
-def verify_release_download(
-    cohort: LoadedReleaseCohort,
-    download_dir: Path,
-    *,
-    mechanism: str,
-    endpoint: str,
-) -> dict[str, Path]:
+def verify_release_download(cohort: LoadedReleaseCohort, download_dir: Path, *, mechanism: str, endpoint: str) -> dict[str, Path]:
     """Verify every promoted release asset was served with matching bytes.
 
     Every artifact the cohort manifest declares must appear in ``download_dir``
@@ -324,39 +210,21 @@ def verify_release_download(
         filename = Path(record.path).name
         candidate = download_dir / filename
         if not candidate.is_file():
-            refuse_unavailable(
-                mechanism=mechanism,
-                endpoint=endpoint,
-                version=cohort.manifest.version,
-                reason=f"release asset {filename!r} ({record.name}) was not served",
-                next_step=(f"attach every cohort artifact to {endpoint} before verifying reacquisition"),
-            )
+            refuse_unavailable(mechanism=mechanism, endpoint=endpoint, version=cohort.manifest.version, reason=f'release asset {filename!r} ({record.name}) was not served', next_step=f'attach every cohort artifact to {endpoint} before verifying reacquisition')
         if candidate.stat().st_size != record.size:
-            raise AcquisitionError(
-                f"{_MISMATCH_PREFIX}: {mechanism} endpoint {endpoint!r} served {filename!r} "
-                f"with size {candidate.stat().st_size} but the cohort declares {record.size}",
-            )
-        verify_artifact_digest(
-            mechanism=mechanism,
-            endpoint=endpoint,
-            name=record.name,
-            path=candidate,
-            expected_sha256=record.sha256,
-        )
+            raise AcquisitionError(f'{_MISMATCH_PREFIX}: {mechanism} endpoint {endpoint!r} served {filename!r} with size {candidate.stat().st_size} but the cohort declares {record.size}')
+        verify_artifact_digest(mechanism=mechanism, endpoint=endpoint, name=record.name, path=candidate, expected_sha256=record.sha256)
         resolved[record.name] = candidate
     return resolved
 
-
 def venv_bin_dir(venv: Path) -> Path:
     """Return the platform-specific virtualenv executable directory."""
-    return venv / ("Scripts" if os.name == "nt" else "bin")
-
+    return venv / ('Scripts' if os.name == 'nt' else 'bin')
 
 def venv_executable(venv: Path, name: str) -> Path:
     """Return a console-script path inside a virtualenv, with the .exe suffix on Windows."""
-    suffix = ".exe" if os.name == "nt" else ""
-    return venv_bin_dir(venv) / f"{name}{suffix}"
-
+    suffix = '.exe' if os.name == 'nt' else ''
+    return venv_bin_dir(venv) / f'{name}{suffix}'
 
 def _initialize_server_name(stdout: str) -> str | None:
     """Return the server name from the MCP ``initialize`` response, if present."""
@@ -367,26 +235,18 @@ def _initialize_server_name(stdout: str) -> str | None:
         try:
             message = json.loads(stripped)
         except json.JSONDecodeError:
+            _dp_mark('dev/packaging/_acquire_common.py:369:except')
             continue
-        if isinstance(message, dict) and message.get("id") == 1:
-            result = message.get("result")
+        if isinstance(message, dict) and message.get('id') == 1:
+            result = message.get('result')
             if isinstance(result, dict):
-                server_info = result.get("serverInfo")
+                server_info = result.get('serverInfo')
                 if isinstance(server_info, dict):
-                    name = server_info.get("name")
+                    name = server_info.get('name')
                     return str(name) if name is not None else None
     return None
 
-
-def capture_owned_server_launch(
-    *,
-    server: Path,
-    server_args: Sequence[str] = (),
-    env: Mapping[str, str],
-    cwd: Path,
-    timeout_seconds: float = 60.0,
-    expected_server_name: str = "cadrumo",
-) -> CommandTranscript:
+def capture_owned_server_launch(*, server: Path, server_args: Sequence[str]=(), env: Mapping[str, str], cwd: Path, timeout_seconds: float=60.0, expected_server_name: str='cadrumo') -> CommandTranscript:
     """Spawn the client's MCP server as an owned subprocess and capture its launch.
 
     For a pure-client (MCP-only) distribution row, this is the single genuine
@@ -413,75 +273,24 @@ def capture_owned_server_launch(
         AcquisitionError: If the server fails to identify or does not exit cleanly.
     """
     argv = (str(server), *server_args)
-    handshake = "".join(
-        json.dumps(message) + "\n"
-        for message in (
-            {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2025-06-18",
-                    "capabilities": {},
-                    "clientInfo": {"name": "owned-launch-capture", "version": "0"},
-                },
-            },
-            {"jsonrpc": "2.0", "method": "notifications/initialized"},
-            {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
-        )
-    )
+    handshake = ''.join((json.dumps(message) + '\n' for message in ({'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {'protocolVersion': '2025-06-18', 'capabilities': {}, 'clientInfo': {'name': 'owned-launch-capture', 'version': '0'}}}, {'jsonrpc': '2.0', 'method': 'notifications/initialized'}, {'jsonrpc': '2.0', 'id': 2, 'method': 'tools/list'})))
     started_at = datetime.now(UTC)
-    process = subprocess.Popen(  # noqa: S603 - the executable is the client's own installed server
-        argv,
-        cwd=str(cwd),
-        env=dict(env),
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        encoding=_UTF_8,
-    )
+    process = subprocess.Popen(argv, cwd=str(cwd), env=dict(env), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding=_UTF_8)
     try:
         stdout, stderr = process.communicate(input=handshake, timeout=timeout_seconds)
     except subprocess.TimeoutExpired as exc:
         process.kill()
         process.communicate()
-        raise AcquisitionError(
-            f"installed MCP server did not complete the launch handshake within {timeout_seconds}s: {argv!r}",
-        ) from exc
+        raise AcquisitionError(f'installed MCP server did not complete the launch handshake within {timeout_seconds}s: {argv!r}') from exc
     completed_at = datetime.now(UTC)
-
     server_name = _initialize_server_name(stdout)
     if server_name != expected_server_name:
-        raise AcquisitionError(
-            f"installed MCP server launch did not identify as {expected_server_name!r} "
-            f"(got {server_name!r}); stderr: {stderr.strip()[:200]}",
-        )
+        raise AcquisitionError(f'installed MCP server launch did not identify as {expected_server_name!r} (got {server_name!r}); stderr: {stderr.strip()[:200]}')
     if process.returncode != 0:
-        raise AcquisitionError(
-            f"installed MCP server did not exit cleanly on stdin EOF (rc={process.returncode}); "
-            f"stderr: {stderr.strip()[:200]}",
-        )
-    return CommandTranscript.from_output(
-        argv=argv,
-        cwd=str(cwd),
-        started_at=started_at,
-        completed_at=completed_at,
-        exit_status=process.returncode,
-        stdout=stdout,
-        stderr=stderr,
-        relevant_output=(f"initialize serverInfo.name={server_name}",),
-    )
+        raise AcquisitionError(f'installed MCP server did not exit cleanly on stdin EOF (rc={process.returncode}); stderr: {stderr.strip()[:200]}')
+    return CommandTranscript.from_output(argv=argv, cwd=str(cwd), started_at=started_at, completed_at=completed_at, exit_status=process.returncode, stdout=stdout, stderr=stderr, relevant_output=(f'initialize serverInfo.name={server_name}',))
 
-
-def run_installed_cli_oracle(
-    *,
-    cli: Path,
-    storage_root: Path,
-    work_dir: Path,
-    cohort: PythonCohort,
-    timeout_seconds: float = 180.0,
-) -> InstalledTaxEvidence:
+def run_installed_cli_oracle(*, cli: Path, storage_root: Path, work_dir: Path, cohort: PythonCohort, timeout_seconds: float=180.0) -> InstalledTaxEvidence:
     """Repeat grounded tax work through the canonical installed CLI oracle.
 
     Reuses :func:`dev.packaging.installed_tax_oracle.run_installed_tax_oracle`
@@ -502,38 +311,9 @@ def run_installed_cli_oracle(
         AcquisitionError: If the oracle fails to reproduce the target value.
     """
     from .installed_tax_oracle import run_installed_tax_oracle
-
-    tax_evidence = run_installed_tax_oracle(
-        cli,
-        storage_root=storage_root,
-        work_dir=work_dir,
-        cohort_source_commit=cohort.source_commit,
-        cohort_manifest_sha256=sha256_path(cohort.manifest),
-        cohort_root_wheel_sha256=cohort.sha256["cadrumo"],
-        timeout_seconds=timeout_seconds,
-    )
+    tax_evidence = run_installed_tax_oracle(cli, storage_root=storage_root, work_dir=work_dir, cohort_source_commit=cohort.source_commit, cohort_manifest_sha256=sha256_path(cohort.manifest), cohort_root_wheel_sha256=cohort.sha256['cadrumo'], timeout_seconds=timeout_seconds)
     expected = expected_oracle_target_value()
     if tax_evidence.target_value != expected:
-        raise AcquisitionError(
-            f"installed CLI oracle target value drifted: expected {expected}, got {tax_evidence.target_value!r}",
-        )
+        raise AcquisitionError(f'installed CLI oracle target value drifted: expected {expected}, got {tax_evidence.target_value!r}')
     return tax_evidence
-
-
-__all__ = [
-    "PYTHON_COHORT_WHEEL_NAMES",
-    "AcquisitionError",
-    "capture_owned_server_launch",
-    "expected_oracle_target_value",
-    "match_downloaded_cohort_wheels",
-    "refuse_digest_mismatch",
-    "refuse_unavailable",
-    "require_command_succeeded",
-    "run_installed_cli_oracle",
-    "sha256_bytes",
-    "venv_bin_dir",
-    "venv_executable",
-    "verify_artifact_digest",
-    "verify_python_cohort_download",
-    "verify_release_download",
-]
+__all__ = ['PYTHON_COHORT_WHEEL_NAMES', 'AcquisitionError', 'capture_owned_server_launch', 'expected_oracle_target_value', 'match_downloaded_cohort_wheels', 'refuse_digest_mismatch', 'refuse_unavailable', 'require_command_succeeded', 'run_installed_cli_oracle', 'sha256_bytes', 'venv_bin_dir', 'venv_executable', 'verify_artifact_digest', 'verify_python_cohort_download', 'verify_release_download']

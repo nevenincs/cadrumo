@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..tui_capability import TuiCapability
 from .command_spec import (
     FLAG_VALUE,
     TEXT_VALUE,
@@ -23,7 +24,6 @@ from .command_spec import (
     TranslationKey,
     ValueContract,
 )
-from ..tui_capability import TuiCapability
 
 _OUTPUT_LANGUAGE = ValueContract(DeferredTarget("cadrumo.core.external_constants", "OutputLanguage"))
 _OUTPUT_FORMAT = ValueContract(DeferredTarget("cadrumo.core.output_rendering", "OutputFormat"))

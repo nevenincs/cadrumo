@@ -12,41 +12,31 @@ arguments that let it answer. Each of those is a way the guard could be present
 and still useless, so each has a case, and the last case removes the guard from
 a copy of the document to prove the gate would notice.
 """
-
 from __future__ import annotations
-
 from typing import Any, Final
-
 import pytest
 import yaml
-
 from ..._paths import REPO_ROOT
 from ...ci.workflow_run_text import executed_text
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_WORKFLOW: Final = REPO_ROOT / ".github" / "workflows" / "publish.yml"
-_AUTHORITY: Final = "dev.release.version_identity"
-_UPLOAD: Final = "uv publish"
-
+_WORKFLOW: Final = REPO_ROOT / '.github' / 'workflows' / 'publish.yml'
+_AUTHORITY: Final = 'dev.release.version_identity'
+_UPLOAD: Final = 'uv publish'
 
 def _document() -> dict[str, Any]:
     """Return the parsed publication workflow."""
-    return yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
-
+    return yaml.safe_load(_WORKFLOW.read_text(encoding='utf-8'))
 
 def _upload_job(document: dict[str, Any]) -> dict[str, Any]:
     """Return the one job whose run surface performs the index upload."""
-    jobs = document["jobs"]
+    jobs = document['jobs']
     uploading = [job for job in jobs.values() if _UPLOAD in _run_surface(job)]
-    assert len(uploading) == 1, f"expected exactly one uploading job, found {len(uploading)}"
+    assert len(uploading) == 1, f'expected exactly one uploading job, found {len(uploading)}'
     return uploading[0]
-
 
 def _run_surface(job: dict[str, Any]) -> str:
     """Return every run script in the job, joined."""
-    return "\n".join(str(step.get("run", "")) for step in job["steps"] if "run" in step)
-
+    return '\n'.join((str(_dp_get('dev/release/tests/test_publish_workflow.py:48:get', step, 'run', '')) for step in job['steps'] if 'run' in step))
 
 def _executed(job: dict[str, Any]) -> str:
     """Return the job's run scripts with comment lines removed.
@@ -57,16 +47,14 @@ def _executed(job: dict[str, Any]) -> str:
     decided by :func:`~dev.ci.workflow_run_text.executed_text` rather than by a
     private copy of the same rule.
     """
-    return executed_text(step.get("run") for step in job["steps"])
-
+    return executed_text((step.get('run') for step in job['steps']))
 
 def _step_index(job: dict[str, Any], needle: str) -> int:
     """Return the index of the first step whose run script contains ``needle``."""
-    for index, step in enumerate(job["steps"]):
-        if needle in str(step.get("run", "")):
+    for index, step in enumerate(job['steps']):
+        if needle in str(_dp_get('dev/release/tests/test_publish_workflow.py:66:get', step, 'run', '')):
             return index
-    raise AssertionError(f"no step in the uploading job runs {needle!r}")
-
+    raise AssertionError(f'no step in the uploading job runs {needle!r}')
 
 def test_the_identity_authority_runs_in_the_uploading_job() -> None:
     """The guard has to share a job with the upload it guards.
@@ -76,14 +64,12 @@ def test_the_identity_authority_runs_in_the_uploading_job() -> None:
     describe the bytes actually about to be sent.
     """
     job = _upload_job(_document())
-    assert _AUTHORITY in _executed(job), "the upload runs unguarded by the identity authority"
-
+    assert _AUTHORITY in _executed(job), 'the upload runs unguarded by the identity authority'
 
 def test_the_identity_authority_runs_before_the_upload() -> None:
     """Ordering is the whole guarantee: after the upload there is nothing to refuse."""
     job = _upload_job(_document())
     assert _step_index(job, _AUTHORITY) < _step_index(job, _UPLOAD)
-
 
 def test_the_upload_asks_the_publication_scope() -> None:
     """The seal scope refuses only a burned version, which is not enough here.
@@ -92,9 +78,8 @@ def test_the_upload_asks_the_publication_scope() -> None:
     the one place those rules are asked.
     """
     executed = _executed(_upload_job(_document()))
-    assert "--scope publish" in executed
-    assert "--scope seal" not in executed, "the seal scope asks no destination anything"
-
+    assert '--scope publish' in executed
+    assert '--scope seal' not in executed, 'the seal scope asks no destination anything'
 
 def test_the_upload_supplies_what_the_forge_check_needs() -> None:
     """Without both, the gate refuses this release for colliding with itself.
@@ -106,24 +91,21 @@ def test_the_upload_supplies_what_the_forge_check_needs() -> None:
     blocks every release.
     """
     executed = _executed(_upload_job(_document()))
-    assert "--repository" in executed
-    assert "--own-source-commit" in executed
-    assert "git rev-parse HEAD" in executed, "the exempted commit must be the one this job checked out"
-
+    assert '--repository' in executed
+    assert '--own-source-commit' in executed
+    assert 'git rev-parse HEAD' in executed, 'the exempted commit must be the one this job checked out'
 
 def test_the_guard_reaches_the_forge_with_a_credential() -> None:
     """A forge check without a token refuses, which would block every release."""
     job = _upload_job(_document())
-    guard = next(step for step in job["steps"] if _AUTHORITY in str(step.get("run", "")))
-    assert "GH_TOKEN" in guard.get("env", {})
-
+    guard = next((step for step in job['steps'] if _AUTHORITY in str(_dp_get('dev/release/tests/test_publish_workflow.py:117:get', step, 'run', ''))))
+    assert 'GH_TOKEN' in _dp_get('dev/release/tests/test_publish_workflow.py:118:get', guard, 'env', {})
 
 def test_the_job_checks_out_the_tag_it_publishes() -> None:
     """`git rev-parse HEAD` only names the release's commit if the tag is checked out."""
     job = _upload_job(_document())
-    checkout = next(step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/checkout@"))
-    assert checkout["with"]["ref"] == "${{ inputs.tag }}"
-
+    checkout = next((step for step in job['steps'] if str(_dp_get('dev/release/tests/test_publish_workflow.py:124:get', step, 'uses', '')).startswith('actions/checkout@')))
+    assert checkout['with']['ref'] == '${{ inputs.tag }}'
 
 def test_the_gate_notices_a_publication_path_that_lost_its_guard() -> None:
     """Detector teeth: this exact regression is what the gate exists to catch.
@@ -134,7 +116,7 @@ def test_the_gate_notices_a_publication_path_that_lost_its_guard() -> None:
     """
     document = _document()
     job = _upload_job(document)
-    job["steps"] = [step for step in job["steps"] if _AUTHORITY not in str(step.get("run", ""))]
+    job['steps'] = [step for step in job['steps'] if _AUTHORITY not in str(_dp_get('dev/release/tests/test_publish_workflow.py:137:get', step, 'run', ''))]
     assert _AUTHORITY not in _executed(job)
-    with pytest.raises(AssertionError, match="no step in the uploading job runs"):
+    with pytest.raises(AssertionError, match='no step in the uploading job runs'):
         _step_index(job, _AUTHORITY)

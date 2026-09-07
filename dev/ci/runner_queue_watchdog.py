@@ -100,9 +100,7 @@ fleet is broadly degraded would rebuild the exact silence this exists to remove,
 one level up. What must be protected instead is the check's precision, which is
 why it stays quiet for a lane that is merely busy and never reports its own wait.
 """
-
 from __future__ import annotations
-
 import http.client
 import json
 import os
@@ -112,19 +110,12 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, Final
-
 from .._paths import UTF_8
-
-_API_HOST: Final = "api.github.com"
-_API_VERSION: Final = "2022-11-28"
+_API_HOST: Final = 'api.github.com'
+_API_VERSION: Final = '2022-11-28'
 _UTF_8: Final[str] = UTF_8
-_TERMINAL_RUN_STATUS: Final = frozenset({"completed"})
-
-# How many in-progress runs to read when building repository-wide occupancy.
-# Occupancy only needs to answer "is SOME job running on this label set", so a
-# bounded page is sufficient and keeps the poll to a handful of API calls.
+_TERMINAL_RUN_STATUS: Final = frozenset({'completed'})
 _OCCUPANCY_RUN_LIMIT: Final = 20
-
 
 @dataclass(frozen=True, slots=True)
 class JobView:
@@ -133,7 +124,6 @@ class JobView:
     ``labels`` is the label set the job REQUESTED (``runs-on``), which the jobs
     endpoint reports even while the job is queued and has no runner assigned.
     """
-
     name: str
     status: str
     labels: tuple[str, ...]
@@ -150,17 +140,14 @@ class JobView:
         """
         return tuple(sorted(self.labels))
 
-
 @dataclass(frozen=True, slots=True)
 class Verdict:
     """One queued job's classification, carrying why it was reached."""
-
     job_name: str
     label_key: tuple[str, ...]
     waited_seconds: float
     unschedulable: bool
     reason: str
-
 
 def parse_jobs(payload: Any) -> tuple[JobView, ...]:
     """Project a ``/actions/runs/{id}/jobs`` payload into the facts used here.
@@ -172,18 +159,10 @@ def parse_jobs(payload: Any) -> tuple[JobView, ...]:
     of them is guaranteed on older payload shapes.
     """
     views: list[JobView] = []
-    for job in (payload or {}).get("jobs") or []:
-        stamp = job.get("created_at") or job.get("started_at")
-        views.append(
-            JobView(
-                name=str(job.get("name", "")),
-                status=str(job.get("status", "")),
-                labels=tuple(str(label) for label in job.get("labels") or ()),
-                queued_since_epoch=_epoch_of(stamp),
-            )
-        )
+    for job in (payload or {}).get('jobs') or []:
+        stamp = _dp_or('dev/ci/runner_queue_watchdog.py:176:or', lambda: job.get('created_at'), lambda: job.get('started_at'))
+        views.append(JobView(name=str(_dp_get('dev/ci/runner_queue_watchdog.py:179:get', job, 'name', '')), status=str(_dp_get('dev/ci/runner_queue_watchdog.py:180:get', job, 'status', '')), labels=tuple((str(label) for label in job.get('labels') or ())), queued_since_epoch=_epoch_of(stamp)))
     return tuple(views)
-
 
 def occupied_label_keys(jobs: Sequence[JobView]) -> frozenset[tuple[str, ...]]:
     """Label sets demonstrably being served right now.
@@ -192,17 +171,9 @@ def occupied_label_keys(jobs: Sequence[JobView]) -> frozenset[tuple[str, ...]]:
     it by construction, so anything else queued against that same set is
     waiting on capacity rather than on a runner that does not exist.
     """
-    return frozenset(job.label_key for job in jobs if job.status == "in_progress")
+    return frozenset((job.label_key for job in jobs if job.status == 'in_progress'))
 
-
-def classify(
-    jobs: Sequence[JobView],
-    *,
-    now_epoch: float,
-    threshold_seconds: float,
-    watchdog_job_name: str,
-    occupied: frozenset[tuple[str, ...]] | None = None,
-) -> tuple[Verdict, ...]:
+def classify(jobs: Sequence[JobView], *, now_epoch: float, threshold_seconds: float, watchdog_job_name: str, occupied: frozenset[tuple[str, ...]] | None=None) -> tuple[Verdict, ...]:
     """Classify every queued job that has waited past the threshold.
 
     The watchdog excludes ITSELF: it is a job in the same run, and a watchdog
@@ -212,34 +183,16 @@ def classify(
     occupancy = occupied_label_keys(jobs) if occupied is None else occupied
     verdicts: list[Verdict] = []
     for job in jobs:
-        if job.status != "queued" or job.name == watchdog_job_name:
+        if job.status != 'queued' or job.name == watchdog_job_name:
             continue
         waited = now_epoch - job.queued_since_epoch
         if waited <= threshold_seconds:
             continue
         serving = job.label_key in occupancy
-        verdicts.append(
-            Verdict(
-                job_name=job.name,
-                label_key=job.label_key,
-                waited_seconds=waited,
-                unschedulable=not serving,
-                reason=(
-                    "another job is running on this label set, so it is schedulable"
-                    if serving
-                    else "no job anywhere in this repository is running on this label set"
-                ),
-            )
-        )
+        verdicts.append(Verdict(job_name=job.name, label_key=job.label_key, waited_seconds=waited, unschedulable=not serving, reason='another job is running on this label set, so it is schedulable' if serving else 'no job anywhere in this repository is running on this label set'))
     return tuple(verdicts)
 
-
-def confirm_unschedulable(
-    verdicts: Sequence[Verdict],
-    previous: Mapping[str, int],
-    *,
-    required: int,
-) -> tuple[dict[str, int], tuple[Verdict, ...]]:
+def confirm_unschedulable(verdicts: Sequence[Verdict], previous: Mapping[str, int], *, required: int) -> tuple[dict[str, int], tuple[Verdict, ...]]:
     """Count how many CONSECUTIVE polls each verdict has held, and return the confirmed ones.
 
     Occupancy is a sample, and one empty sample is not proof. A label set falls
@@ -261,10 +214,9 @@ def confirm_unschedulable(
     Returns:
         The tally to carry into the next poll, and the confirmed verdicts.
     """
-    tally = {verdict.job_name: previous.get(verdict.job_name, 0) + 1 for verdict in verdicts if verdict.unschedulable}
-    confirmed = tuple(verdict for verdict in verdicts if tally.get(verdict.job_name, 0) >= required)
-    return tally, confirmed
-
+    tally = {verdict.job_name: _dp_get('dev/ci/runner_queue_watchdog.py:264:get', previous, verdict.job_name, 0) + 1 for verdict in verdicts if verdict.unschedulable}
+    confirmed = tuple((verdict for verdict in verdicts if _dp_get('dev/ci/runner_queue_watchdog.py:265:get', tally, verdict.job_name, 0) >= required))
+    return (tally, confirmed)
 
 def _epoch_of(stamp: object) -> float:
     """Parse a GitHub ISO-8601 ``Z`` timestamp to epoch seconds.
@@ -284,10 +236,9 @@ def _epoch_of(stamp: object) -> float:
     """
     if not isinstance(stamp, str) or not stamp:
         return 0.0
-    return datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
+    return datetime.fromisoformat(stamp.replace('Z', '+00:00')).timestamp()
 
-
-def _request(path: str, token: str, *, method: str = "GET") -> Any:
+def _request(path: str, token: str, *, method: str='GET') -> Any:
     """Call the REST API, returning parsed JSON (or ``None`` for empty bodies).
 
     A direct HTTPS connection rather than a URL opener, so the transport cannot
@@ -296,21 +247,11 @@ def _request(path: str, token: str, *, method: str = "GET") -> Any:
     """
     connection = http.client.HTTPSConnection(_API_HOST, timeout=30)
     try:
-        connection.request(
-            method,
-            path,
-            headers={
-                "Accept": "application/vnd.github+json",
-                "Authorization": f"Bearer {token}",
-                "X-GitHub-Api-Version": _API_VERSION,
-                "User-Agent": "cadrumo-runner-queue-watchdog",
-            },
-        )
+        connection.request(method, path, headers={'Accept': 'application/vnd.github+json', 'Authorization': f'Bearer {token}', 'X-GitHub-Api-Version': _API_VERSION, 'User-Agent': 'cadrumo-runner-queue-watchdog'})
         body = connection.getresponse().read().decode(_UTF_8)
     finally:
         connection.close()
     return json.loads(body) if body.strip() else None
-
 
 def _repository_occupancy(repository: str, token: str, own_run_id: str) -> frozenset[tuple[str, ...]]:
     """Label sets being served by any in-progress job across the repository.
@@ -322,43 +263,34 @@ def _repository_occupancy(repository: str, token: str, own_run_id: str) -> froze
     """
     keys: set[tuple[str, ...]] = set()
     try:
-        runs = _request(
-            f"/repos/{repository}/actions/runs?status=in_progress&per_page={_OCCUPANCY_RUN_LIMIT}",
-            token,
-        )
-        for run in (runs or {}).get("workflow_runs") or []:
-            run_id = str(run.get("id"))
+        runs = _request(f'/repos/{repository}/actions/runs?status=in_progress&per_page={_OCCUPANCY_RUN_LIMIT}', token)
+        for run in (runs or {}).get('workflow_runs') or []:
+            run_id = str(run.get('id'))
             if run_id == own_run_id:
                 continue
-            payload = _request(f"/repos/{repository}/actions/runs/{run_id}/jobs", token)
+            payload = _request(f'/repos/{repository}/actions/runs/{run_id}/jobs', token)
             keys.update(occupied_label_keys(parse_jobs(payload)))
-    except (OSError, http.client.HTTPException, ValueError, KeyError) as error:  # pragma: no cover - network
-        print(f"note: repository-wide occupancy unavailable ({error}); using this run only")
+    except (OSError, http.client.HTTPException, ValueError, KeyError) as error:
+        print(f'note: repository-wide occupancy unavailable ({error}); using this run only')
     return frozenset(keys)
-
 
 def _announce(verdicts: Sequence[Verdict], threshold_seconds: float) -> None:
     """Emit the operator-facing annotation and job summary for a firing."""
-    lines = ["## Unschedulable lane detected", ""]
+    lines = ['## Unschedulable lane detected', '']
     for verdict in verdicts:
-        labels = ", ".join(verdict.label_key)
+        labels = ', '.join(verdict.label_key)
         if verdict.unschedulable:
-            message = (
-                f"Job '{verdict.job_name}' has been queued {verdict.waited_seconds:.0f}s "
-                f"(threshold {threshold_seconds:.0f}s) requesting a runner labelled "
-                f"[{labels}], and {verdict.reason}."
-            )
-            print(f"::error title=Unschedulable lane::{message}")
-            lines.append(f"- **{verdict.job_name}** - `[{labels}]` - {verdict.reason}")
+            message = f"Job '{verdict.job_name}' has been queued {verdict.waited_seconds:.0f}s (threshold {threshold_seconds:.0f}s) requesting a runner labelled [{labels}], and {verdict.reason}."
+            print(f'::error title=Unschedulable lane::{message}')
+            lines.append(f'- **{verdict.job_name}** - `[{labels}]` - {verdict.reason}')
         else:
             print(f"note: skipping '{verdict.job_name}' [{labels}] - {verdict.reason}")
-    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+    summary_path = os.environ.get('GITHUB_STEP_SUMMARY')
     if summary_path:
-        with open(summary_path, "a", encoding=_UTF_8, newline="\n") as handle:
-            handle.write("\n".join(lines) + "\n")
+        with open(summary_path, 'a', encoding=_UTF_8, newline='\n') as handle:
+            handle.write('\n'.join(lines) + '\n')
 
-
-def main(argv: Sequence[str] | None = None) -> int:
+def main(argv: Sequence[str] | None=None) -> int:
     """Poll the run's jobs and fail when a lane cannot be served.
 
     Cancelling the run is what converts the hang into a terminal state, and it
@@ -372,44 +304,23 @@ def main(argv: Sequence[str] | None = None) -> int:
     inside a workflow yields ``failure`` without leaving the queue hung.
     """
     del argv
-    repository = os.environ["GITHUB_REPOSITORY"]
-    run_id = os.environ["GITHUB_RUN_ID"]
-    token = os.environ["GH_TOKEN"]
-    watchdog_job_name = os.environ.get("WATCHDOG_JOB_NAME", "")
-    threshold = float(os.environ.get("THRESHOLD_SECONDS", "300"))
-    poll = float(os.environ.get("POLL_SECONDS", "15"))
-    # The window must outlast the earliest possible firing, which is derived
-    # rather than guessed: a verdict needs `waited > THRESHOLD_SECONDS` (300)
-    # and must then hold across `UNSCHEDULABLE_CONFIRMATIONS` (2) consecutive
-    # polls of `POLL_SECONDS` (15), so nothing can fire before 330s. The
-    # verdict path above runs BEFORE this check, so the window only bounds how
-    # long a healthy run keeps watching.
-    #
-    # The workflows set 480, leaving ten polls of headroom past that floor.
-    # The old 900 was chosen when a watched job could be created after the
-    # window closed; `test_the_watchdog_is_created_no_later_than_the_lanes_it
-    # _watches` now forces the watchdog to share its watched jobs' `needs:`,
-    # so they are co-created and the long tail bought nothing -- while the
-    # watchdog held the single contended Linux runner for the difference.
-    window = float(os.environ.get("MAX_WATCH_SECONDS", "900"))
-    required = int(os.environ.get("UNSCHEDULABLE_CONFIRMATIONS", "2"))
-
+    repository = os.environ['GITHUB_REPOSITORY']
+    run_id = os.environ['GITHUB_RUN_ID']
+    token = os.environ['GH_TOKEN']
+    watchdog_job_name = _dp_get('dev/ci/runner_queue_watchdog.py:378:get', os.environ, 'WATCHDOG_JOB_NAME', '')
+    threshold = float(_dp_get('dev/ci/runner_queue_watchdog.py:379:get', os.environ, 'THRESHOLD_SECONDS', '300'))
+    poll = float(_dp_get('dev/ci/runner_queue_watchdog.py:380:get', os.environ, 'POLL_SECONDS', '15'))
+    window = float(_dp_get('dev/ci/runner_queue_watchdog.py:394:get', os.environ, 'MAX_WATCH_SECONDS', '900'))
+    required = int(_dp_get('dev/ci/runner_queue_watchdog.py:395:get', os.environ, 'UNSCHEDULABLE_CONFIRMATIONS', '2'))
     started = time.monotonic()
     confirmations: dict[str, int] = {}
     while True:
-        payload = _request(f"/repos/{repository}/actions/runs/{run_id}/jobs", token)
+        payload = _request(f'/repos/{repository}/actions/runs/{run_id}/jobs', token)
         jobs = parse_jobs(payload)
         occupied = occupied_label_keys(jobs) | _repository_occupancy(repository, token, run_id)
-        verdicts = classify(
-            jobs,
-            now_epoch=time.time(),
-            threshold_seconds=threshold,
-            watchdog_job_name=watchdog_job_name,
-            occupied=occupied,
-        )
-        queued = [job.name for job in jobs if job.status == "queued" and job.name != watchdog_job_name]
-        print(f"poll +{time.monotonic() - started:.0f}s | queued={len(queued)} | occupied={sorted(occupied)}")
-
+        verdicts = classify(jobs, now_epoch=time.time(), threshold_seconds=threshold, watchdog_job_name=watchdog_job_name, occupied=occupied)
+        queued = [job.name for job in jobs if job.status == 'queued' and job.name != watchdog_job_name]
+        print(f'poll +{time.monotonic() - started:.0f}s | queued={len(queued)} | occupied={sorted(occupied)}')
         confirmations, confirmed = confirm_unschedulable(verdicts, confirmations, required=required)
         if confirmed:
             _announce(verdicts, threshold)
@@ -418,31 +329,24 @@ def main(argv: Sequence[str] | None = None) -> int:
         for verdict in verdicts:
             if verdict.unschedulable:
                 seen = confirmations[verdict.job_name]
-                print(
-                    f"note: '{verdict.job_name}' looked unschedulable on {seen} of {required} "
-                    "consecutive polls; not cancelling yet"
-                )
+                print(f"note: '{verdict.job_name}' looked unschedulable on {seen} of {required} consecutive polls; not cancelling yet")
                 continue
             print(f"note: skipping '{verdict.job_name}' - {verdict.reason}")
-
-        run = _request(f"/repos/{repository}/actions/runs/{run_id}", token)
-        if str((run or {}).get("status")) in _TERMINAL_RUN_STATUS:
-            print("watched run reached a terminal status; nothing queued indefinitely")
+        run = _request(f'/repos/{repository}/actions/runs/{run_id}', token)
+        if str((run or {}).get('status')) in _TERMINAL_RUN_STATUS:
+            print('watched run reached a terminal status; nothing queued indefinitely')
             return 0
         if time.monotonic() - started > window:
-            print(f"watch window of {window:.0f}s elapsed with no unschedulable lane; standing down")
+            print(f'watch window of {window:.0f}s elapsed with no unschedulable lane; standing down')
             return 0
         time.sleep(poll)
-
 
 def _cancel(repository: str, run_id: str, token: str) -> None:
     """Stop the remaining queued jobs so the run terminates instead of hanging."""
     try:
-        _request(f"/repos/{repository}/actions/runs/{run_id}/cancel", token, method="POST")
-        print(f"cancelled run {run_id} so its unschedulable jobs stop occupying the queue")
-    except (OSError, http.client.HTTPException, ValueError) as error:  # pragma: no cover - network
-        print(f"warning: could not cancel run {run_id} ({error})")
-
-
-if __name__ == "__main__":  # pragma: no cover - entrypoint
+        _request(f'/repos/{repository}/actions/runs/{run_id}/cancel', token, method='POST')
+        print(f'cancelled run {run_id} so its unschedulable jobs stop occupying the queue')
+    except (OSError, http.client.HTTPException, ValueError) as error:
+        print(f'warning: could not cancel run {run_id} ({error})')
+if __name__ == '__main__':
     sys.exit(main())

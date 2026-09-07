@@ -2795,6 +2795,12 @@ cli:
       deduction_fact_kind_help: Az előzetesen felszámított áfa levonásának pontos
         forrása (például domestic_current). Kötelező ahhoz, hogy a felszámított adó
         levonásra kerüljön; a taxonómiát nem következtetjük ki.
+      derive_non_derivable: 'A(z) {category} kategóriához nincs egyszerű spanyol kulcs,
+        amelyet le lehetne vezetni: {note} Adja meg kézzel a --taxable-base, --iva-rate
+        és --iva-amount értékeket ehhez a kategóriához.'
+      derive_substrate_incomplete: 'A(z) {category} kategóriát levezethetőként
+        jelentették, de nem keletkezett áfaalap. Adja meg kézzel a --taxable-base,
+        --iva-rate és --iva-amount értékeket ehhez a kategóriához.'
       file_exclusive: --file nem kombinálható tranzakció-azonosítóval vagy --classification
         értékkel.
       file_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,

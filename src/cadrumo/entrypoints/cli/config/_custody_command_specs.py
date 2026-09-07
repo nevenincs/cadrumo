@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...tui_capability import TuiCapability
 from ..command_spec import (
     ArgumentSpec,
     CommandNodeKind,
@@ -21,7 +22,6 @@ from ..command_spec import (
     TranslationKey,
     ValueContract,
 )
-from ...tui_capability import TuiCapability
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import BOOTSTRAP_DESTRUCTIVE, BOOTSTRAP_WRITE, ENCRYPTED_DESTRUCTIVE, STATE_FREE
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 from ....core.transport_locus import TransportLocus, TransportRole, TransportShape
+from ...tui_capability import TuiCapability
 from ..command_spec import (
     FLAG_VALUE,
     PATH_VALUE,
@@ -25,7 +26,6 @@ from ..command_spec import (
     ParameterDefault,
     ValueContract,
 )
-from ...tui_capability import TuiCapability
 from ..command_spec import translation_key as _key
 from ._command_spec_schema import config_payload_schema as _schema
 from ._spec_policies import ENCRYPTED_DESTRUCTIVE, ENCRYPTED_READ, ENCRYPTED_WRITE, state_free_group_spec

@@ -25,51 +25,22 @@ Two ways to satisfy the rule, because both are legitimate:
 
 A family that does neither is the defect.
 """
-
 from __future__ import annotations
-
 import re
 from pathlib import Path
 from typing import Final
-
 import pytest
-
 from cadrumo.tests.collection_storage_root import SETTINGS_STEM, SWEPT_SCRATCH_STEMS
-
 from ..._paths import REPO_ROOT
 from ...quality.unread_inputs import report_unread
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-#: Prefixes the central sweep reclaims. The per-session stem carries the owning
-#: PID and is minted by the sweep's own module, so it is not a discovered
-#: subject; every other swept family is.
-_SWEPT: Final = (*SWEPT_SCRATCH_STEMS, SETTINGS_STEM, "cadrumo-pytest-")
-
-#: A ``mkdtemp`` naming a Cadrumo scratch family. Spans lines, because the call
-#: is routinely wrapped, and a single-line pattern would silently under-report
-#: exactly the sites most likely to be missed.
-_MKDTEMP: Final = re.compile(
-    r"""mkdtemp\(\s*(?:[^)]*?,\s*)?prefix\s*=\s*["'](cadrumo-[a-z0-9-]*)["']""",
-    re.DOTALL,
-)
-
-#: Evidence that a module disposes of what it mints. Deliberately coarse: this
-#: gate proves a finalizer was *registered*, not that it is correct, and says so
-#: rather than implying a guarantee it cannot make. The central sweep is the
-#: rule that does not depend on reading intent out of a call site.
-_FINALIZED: Final = re.compile(r"atexit\.register|addfinalizer|\brmtree\b")
-
-#: Trees that can mint a scratch directory. Excludes the vault, which is
-#: documentation, and caches, which are build output.
-_SOURCE_ROOTS: Final = ("src", "dev", "packaging")
-
+_SWEPT: Final = (*SWEPT_SCRATCH_STEMS, SETTINGS_STEM, 'cadrumo-pytest-')
+_MKDTEMP: Final = re.compile('mkdtemp\\(\\s*(?:[^)]*?,\\s*)?prefix\\s*=\\s*["\'](cadrumo-[a-z0-9-]*)["\']', re.DOTALL)
+_FINALIZED: Final = re.compile('atexit\\.register|addfinalizer|\\brmtree\\b')
+_SOURCE_ROOTS: Final = ('src', 'dev', 'packaging')
 
 def _python_sources() -> list[Path]:
-    return sorted(
-        path for root in _SOURCE_ROOTS for path in (REPO_ROOT / root).rglob("*.py") if "__pycache__" not in path.parts
-    )
-
+    return sorted((path for root in _SOURCE_ROOTS for path in (REPO_ROOT / root).rglob('*.py') if '__pycache__' not in path.parts))
 
 def _reportable(path: Path) -> str:
     """Name ``path`` for an operator, whether or not it sits in the repository.
@@ -84,8 +55,8 @@ def _reportable(path: Path) -> str:
     try:
         return path.relative_to(REPO_ROOT).as_posix()
     except ValueError:
+        _dp_mark('dev/ci/tests/test_scratch_prefixes_are_reclaimed.py:86:except')
         return path.as_posix()
-
 
 def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
     """Return every unreclaimed scratch family, and how many were examined.
@@ -99,14 +70,9 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
     examined = 0
     for path in paths:
         try:
-            source = path.read_text(encoding="utf-8")
+            source = path.read_text(encoding='utf-8')
         except (OSError, UnicodeDecodeError) as refusal:
-            # A source that will not read declares no scratch family, which is
-            # exactly what a compliant one looks like from here. The counter
-            # below guards vacuity but not partial loss: five families are
-            # examined across 6,999 sources, so one unreadable file carrying
-            # a family removes a fifth of the subject with nothing said.
-            unread.append(f"{path} ({type(refusal).__name__})")
+            unread.append(f'{path} ({type(refusal).__name__})')
             continue
         prefixes = set(_MKDTEMP.findall(source))
         if not prefixes:
@@ -116,25 +82,15 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
             examined += 1
             if prefix.startswith(_SWEPT) or finalized:
                 continue
-            offenders.append(f"{_reportable(path)}: {prefix!r}")
-    report_unread(
-        "scratch reclamation sweep",
-        "these sources were not read, so a scratch family declared in one was neither examined nor counted below",
-        unread,
-    )
-    return offenders, examined
-
+            offenders.append(f'{_reportable(path)}: {prefix!r}')
+    report_unread('scratch reclamation sweep', 'these sources were not read, so a scratch family declared in one was neither examined nor counted below', unread)
+    return (offenders, examined)
 
 def test_every_scratch_family_is_swept_or_finalized() -> None:
     """The failure this prevents is a volume filling, reported by nothing."""
     offenders, examined = _unreclaimed(_python_sources())
-
-    assert examined, "no mkdtemp scratch family was discovered; this gate is asserting nothing"
-    assert offenders == [], (
-        "these scratch families are neither swept centrally nor finalized at their call site, "
-        "so one directory accumulates per call forever:\n  " + "\n  ".join(offenders)
-    )
-
+    assert examined, 'no mkdtemp scratch family was discovered; this gate is asserting nothing'
+    assert offenders == [], 'these scratch families are neither swept centrally nor finalized at their call site, so one directory accumulates per call forever:\n  ' + '\n  '.join(offenders)
 
 def test_a_new_unreclaimed_family_is_reported(tmp_path: Path) -> None:
     """Teeth, against an isolated file rather than the tree being protected.
@@ -142,18 +98,12 @@ def test_a_new_unreclaimed_family_is_reported(tmp_path: Path) -> None:
     Written the way the defect actually appeared: a plain ``mkdtemp`` with a
     fresh prefix and no disposal anywhere in the module.
     """
-    leak = tmp_path / "leaks.py"
-    leak.write_text(
-        'import tempfile\nroot = tempfile.mkdtemp(prefix="cadrumo-brand-new-family-")\n',
-        encoding="utf-8",
-    )
-
+    leak = tmp_path / 'leaks.py'
+    leak.write_text('import tempfile\nroot = tempfile.mkdtemp(prefix="cadrumo-brand-new-family-")\n', encoding='utf-8')
     offenders, examined = _unreclaimed([leak])
-
     assert examined == 1
     assert len(offenders) == 1
-    assert "cadrumo-brand-new-family-" in offenders[0]
-
+    assert 'cadrumo-brand-new-family-' in offenders[0]
 
 def test_a_finalized_family_is_accepted(tmp_path: Path) -> None:
     """The rule has two satisfying halves, and the second must really pass.
@@ -162,19 +112,11 @@ def test_a_finalized_family_is_accepted(tmp_path: Path) -> None:
     central sweeping and nothing else, which would push call sites into the
     tuple that have already solved the problem locally.
     """
-    tidy = tmp_path / "tidy.py"
-    tidy.write_text(
-        "import atexit, shutil, tempfile\n"
-        'root = tempfile.mkdtemp(prefix="cadrumo-brand-new-family-")\n'
-        "atexit.register(shutil.rmtree, root, ignore_errors=True)\n",
-        encoding="utf-8",
-    )
-
+    tidy = tmp_path / 'tidy.py'
+    tidy.write_text('import atexit, shutil, tempfile\nroot = tempfile.mkdtemp(prefix="cadrumo-brand-new-family-")\natexit.register(shutil.rmtree, root, ignore_errors=True)\n', encoding='utf-8')
     offenders, examined = _unreclaimed([tidy])
-
     assert examined == 1
     assert offenders == []
-
 
 def test_the_pattern_reads_a_wrapped_call(tmp_path: Path) -> None:
     """A call split across lines is the shape most likely to be missed.
@@ -182,13 +124,8 @@ def test_the_pattern_reads_a_wrapped_call(tmp_path: Path) -> None:
     It is also the shape the real leaks took, so a single-line pattern would
     have under-reported precisely the sites this gate exists for.
     """
-    wrapped = tmp_path / "wrapped.py"
-    wrapped.write_text(
-        'import tempfile\nroot = tempfile.mkdtemp(\n    prefix="cadrumo-brand-new-family-",\n    dir=None,\n)\n',
-        encoding="utf-8",
-    )
-
+    wrapped = tmp_path / 'wrapped.py'
+    wrapped.write_text('import tempfile\nroot = tempfile.mkdtemp(\n    prefix="cadrumo-brand-new-family-",\n    dir=None,\n)\n', encoding='utf-8')
     offenders, examined = _unreclaimed([wrapped])
-
     assert examined == 1
     assert len(offenders) == 1

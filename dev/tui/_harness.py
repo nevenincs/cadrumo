@@ -18,11 +18,11 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
-from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
 from .._paths import REPO_ROOT, UTF_8
+from ._artifacts import FrameFailureKind
 from ._viewports import Viewport
 
 HARNESS_MODULE: Final[str] = "cadrumo.entrypoints.tui.devtools"
@@ -36,42 +36,16 @@ _TIMEOUT_SECONDS: Final[int] = 300
 Argon2id derivation on first build, which is slow by design."""
 
 
-class FailureKind(StrEnum):
-    """Why a harness command did not produce a frame.
-
-    The two are handled differently because they fail differently, and the
-    harness itself already distinguishes them in its output.
-    """
-
-    REFUSED = "refused"
-    """The harness caught the exception and reported it as a refusal.
-
-    An application-level guard said no -- an unmet profile-readiness rule, a
-    surface that cannot provision its fixture. These are raised while BUILDING
-    the app, before a single cell is laid out, so the terminal geometry and
-    the appearance cannot change the answer. Re-asking at another size is
-    guaranteed to get the same refusal, which is what makes skipping the rest
-    of that surface honest rather than a guess."""
-
-    CRASHED = "crashed"
-    """The harness process died and printed a raw traceback.
-
-    Nothing caught this, so it is not a considered refusal: an import error
-    from a half-finished edit in a shared worktree, a killed process, an
-    exhausted drive. Those are frequently transient, so this kind earns a
-    retry and never condemns the rest of the surface."""
-
-
 class HarnessError(RuntimeError):
     """The harness refused or failed, with its own diagnostics attached."""
 
-    def __init__(self, message: str, *, kind: FailureKind = FailureKind.CRASHED) -> None:
+    def __init__(self, message: str, *, kind: FrameFailureKind = FrameFailureKind.CRASHED) -> None:
         """Record the diagnostics and how the harness failed."""
         super().__init__(message)
         self.kind = kind
 
 
-def classify(output: str) -> FailureKind:
+def classify(output: str) -> FrameFailureKind:
     """Read the harness's own output to tell a refusal from a crash.
 
     The harness prints ``refused: <exception>`` from the one place it catches
@@ -82,10 +56,10 @@ def classify(output: str) -> FailureKind:
     for line in output.splitlines():
         stripped = line.strip()
         if stripped.startswith("refused:"):
-            return FailureKind.REFUSED
+            return FrameFailureKind.REFUSED
         if stripped.startswith("Traceback (most recent call last)"):
-            return FailureKind.CRASHED
-    return FailureKind.CRASHED
+            return FrameFailureKind.CRASHED
+    return FrameFailureKind.CRASHED
 
 
 @dataclass(frozen=True)
@@ -251,7 +225,7 @@ def capture(
 __all__ = [
     "HARNESS_MODULE",
     "Capture",
-    "FailureKind",
+    "FrameFailureKind",
     "HarnessError",
     "Surface",
     "capture",

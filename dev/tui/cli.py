@@ -25,6 +25,7 @@ from . import _coverage, _diff, _harness, _inventory, _raster, _viewports
 from ._artifacts import (
     DEFAULT_RUN_NAME,
     FailedFrame,
+    FrameFailureKind,
     InterfaceRecord,
     Manifest,
     ManifestVersionError,
@@ -203,7 +204,7 @@ def _attempt_frame(
     the retry count and change nothing.
     """
     detail = ""
-    kind = _harness.FailureKind.CRASHED.value
+    kind = FrameFailureKind.CRASHED
     made = 0
     for attempt in range(1, retries + 2):
         made = attempt
@@ -218,13 +219,11 @@ def _attempt_frame(
             )
             raster = _raster.rasterise(svg_path, png_path, cell_height=cell_height)
         except _harness.HarnessError as refusal:
-            detail, kind = str(refusal), refusal.kind.value
-            if refusal.kind is _harness.FailureKind.REFUSED:
+            detail, kind = str(refusal), refusal.kind
+            if refusal.kind is FrameFailureKind.REFUSED:
                 break
         except _raster.RasterError as unpaintable:
-            # The harness produced a frame; this tool could not repaint it.
-            # Never retried: the SVG on disk is identical next time.
-            detail, kind = str(unpaintable), "raster"
+            detail, kind = str(unpaintable), FrameFailureKind.RASTER
             break
         else:
             return captured, raster
@@ -373,7 +372,7 @@ def render_command(
                 if isinstance(outcome, FailedFrame):
                     _echo(f"    {outcome.kind} after {outcome.attempts} attempt(s)")
                     failures.append(outcome)
-                    if outcome.kind == _harness.FailureKind.REFUSED.value:
+                    if outcome.kind is FrameFailureKind.REFUSED:
                         refusal_reason = _first_refusal_line(outcome.detail)
                     continue
 

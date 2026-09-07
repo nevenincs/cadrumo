@@ -859,6 +859,13 @@ def load_committed_profile_custody_summary_witness(
     The capsule directory stays identity-anchored while both bounded records are
     read.  This path deliberately never opens the password envelope, sentinel,
     recovery material, label head, session state, or encrypted profile facts.
+
+    DECLARED, NOT YET REACHED. Nothing calls this. The write side of the same
+    package is live -- ``write_data_files`` and ``write_posix_data_files`` each
+    carry two production consumers -- so the product commits custody data and
+    never observes a summary witness back. The asymmetry is the point of saying
+    so here: a reader of a package this live has no signal that the observation
+    half is the unreached one.
     """
     marker_path = profile_custody_path(
         profile_id,
@@ -930,6 +937,14 @@ def replace_committed_profile_custody_data_file(
     root: Path | None = None,
 ) -> None:
     """CAS-replace one physical record only after recognizing its capsule.
+
+    DECLARED, NOT YET REACHED, and the sibling beside it is the evidence: the
+    envelope replace directly below has two production consumers, because a
+    passphrase rotation performs it. This one has none, so no product operation
+    replaces a committed custody DATA file, and a record that needed correcting
+    would have no guarded path to it -- the guard being exactly what this
+    function is, since it refuses unless the capsule is recognized and the
+    digest matches.
 
     This is deliberately not a generic filesystem write API.  The lifecycle
     passes the canonical current-record name, holds the profile transaction
