@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:cd7844b8aa31570033a7d73491153b56cda2834599f44811d6cc319d55e62c14'
+body_hash: 'sha256:5a7e988e1223afb9858ac152fa51a7930f9483faee2521abfbdbf157d11ac61c'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1379,6 +1379,8 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1010` - Refuse a redaction payload filename the corpus glob admits but the document-id pattern rejects, instead of dropping it from the reported population; `dev/audit/legal_excerpt_vintage_screen.py`.
 - [x] `W06.P13.S1011` - Announce the modules the facade import-site scan could not read, so a missing worklist entry is visible in the count it prints; `dev/quality/facade_retirement.py`.
 - [x] `W06.P13.S1012` - Remove the facade import-site docstring's count, which described a tree that still held forwarding initialisers; `dev/quality/facade_retirement.py`.
+- [x] `W06.P13.S1013` - Cap tolerated unreadable test files at a named absolute rather than a tenth of the corpus, and name them whatever the count; `dev/tests/test_lane_reachability.py`.
+- [x] `W06.P13.S1014` - Retract the identity-gate protocol's claim to be the real signature and record why omitting execution_policy is safe; `dev/agent_eval/_live_scoring.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

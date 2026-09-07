@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a9b0ba39b025efd7c8e80cf511ad430e876159aa2810823c68ca6d3b9c7f457'
+body_hash: 'sha256:18f0fd7ef6474a4bde4663ffea7a26ad539802e498a67653f676710ee56ada3c'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -279,7 +279,11 @@ proof type — by the accepted interface decision, and the corresponding quality
 deleted. Rebuilding it is an identified hazard.
 
 What survives, explicitly retained because it asserts implementation shape, is the modelo
-action denominator at `dev/quality/modelo_workspace_action_denominator.py`. It derives its
+action denominator at `dev/quality/modelo_workspace_action_denominator.py`, whose closed
+classification vocabulary and reviewed row table were split into the sibling modules
+`dev/quality/modelo_workspace_action_classification.py` and
+`dev/quality/modelo_workspace_action_classification_table.py` so that row growth and gate
+growth stop competing for one size ceiling. It derives its
 candidate set from production imports only, never a filesystem walk, and diffs the live
 candidate set against a closed hand-reviewed table. A new modelo command reds the gate
 immediately rather than inheriting a mechanical classification. Its dispositions are
@@ -290,7 +294,7 @@ review, 1 deferred.
 
 It is a scope enumerator, not an admission gate, and the distinction is load-bearing. Its
 drift check compares only the four fields named in `_SIGNATURE_FIELDS` at
-`dev/quality/modelo_workspace_action_denominator.py:1178` — command key, write route, side
+`dev/quality/modelo_workspace_action_denominator.py:156` — command key, write route, side
 effects, and action-catalogue membership. Neither the recorded disposition nor the interface
 capability is observed, so moving a row's disposition, enrolling its operation, or wiring a
 route changes no gate outcome. The closed taxonomy also offers no arm a delivered mutation can
@@ -302,7 +306,7 @@ against the spec's own declaration.
 Making it an admission gate requires observing interface capability and dispatchability
 alongside the mechanical fields, adding delivered arms, and failing when a recorded disposition
 contradicts the observed shape — applied to the intersection of the command graph and the
-dispatch table only, which is the boundary the module's own comment at `:1203` draws and
+dispatch table only, which is the boundary the module's own comment at `:192` draws and
 explains.
 
 Five enrolment registries exist and none is aware of the others: the modelo workspace

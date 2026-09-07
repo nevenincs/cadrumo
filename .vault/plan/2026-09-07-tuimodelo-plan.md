@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:b51d0dd0753e9d6a07eaa3e2537f378e7e98c8e5c6d50359a624446d104d336b'
+body_hash: 'sha256:adcf3a2a87995e2bd5692316d2b3b673c4e17e3bfc19b90a516554e61d6f7ffd'
 ---
 
 # `tuimodelo` plan
@@ -64,11 +64,11 @@ Resolve the five still-open rows an archived campaign left held and the rows who
 
 Extend the denominator so a delivered surface and its recorded classification must agree, and correct the specs that under-declare their write route.
 
-- [ ] `W01.P02.S13` - Share the interface capability declaration out of the command-line package so a full-screen surface can read a command's capability posture without importing the adapter; `src/cadrumo/entrypoints/cli/command_spec.py`.
-- [ ] `W01.P02.S14` - Relocate the capability model to a shared owner both adapters may consume, sequencing it before the denominator extension that reads it; `src/cadrumo/entrypoints/cli/command_spec.py`.
+- [x] `W01.P02.S13` - Share the interface capability declaration out of the command-line package so a full-screen surface can read a command's capability posture without importing the adapter; `src/cadrumo/entrypoints/cli/command_spec.py`.
+- [x] `W01.P02.S14` - Relocate the capability model to a shared owner both adapters may consume, sequencing it before the denominator extension that reads it; `src/cadrumo/entrypoints/cli/command_spec.py`.
 - [ ] `W01.P02.S170` - Create headroom on the denominator module before extending it, which sits 63 lines under a ceiling that three steps in this phase and six later steps must share; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P02.S04` - Extend the observed action signature with interface capability and dispatchability so the gate can see a wired surface; `dev/quality/modelo_workspace_action_denominator.py`.
-- [ ] `W01.P02.S05` - Add delivered dispositions for reads and for mutations to the closed taxonomy, which today offers no arm a delivered mutation can occupy; `dev/quality/modelo_workspace_action_denominator.py`.
+- [ ] `W01.P02.S05` - Add delivered dispositions for reads and for mutations to the closed taxonomy, which today offers no arm a delivered mutation can occupy; `dev/quality/modelo_workspace_action_classification.py`.
 - [ ] `W01.P02.S06` - Red the gate when a recorded disposition contradicts the observed shape, applying the rule to the command-graph and dispatch intersection only; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P02.S07` - Correct the two review-package specs that declare no write route while carrying local-state side effects and emitting events; `src/cadrumo/entrypoints/cli`.
 - [ ] `W01.P02.S172` - Confirm the fixed-point gate's time ceiling remains adequate for the corpus this campaign grows; `dev/tests`.
@@ -250,8 +250,8 @@ Deliver the decision the filing-lifecycle record makes, which no other phase sch
 - [ ] `W04.P32.S137` - Surface the work status, revision and revisions reads against the sealed-state display rule; `src/cadrumo/entrypoints/tui/modelo/view`.
 - [ ] `W04.P32.S138` - Surface the workflow run reads and the resume affordance, or record them command-line only with a reason; `src/cadrumo/entrypoints/tui/modelo/view`.
 - [ ] `W04.P32.S139` - Surface the work dependencies read against the cross-period blocker projection; `src/cadrumo/entrypoints/tui/modelo/view/overview.py`.
-- [ ] `W04.P32.S140` - Dispose of the maritime exemption preview and the taxation comparison explicitly rather than leaving them unadjudicated; `dev/quality/modelo_workspace_action_denominator.py`.
-- [ ] `W04.P32.S164` - Name the reconciliation listing and the local filing-record observation rows explicitly, which are covered today only by implication; `dev/quality/modelo_workspace_action_denominator.py`.
+- [ ] `W04.P32.S140` - Dispose of the maritime exemption preview and the taxation comparison explicitly rather than leaving them unadjudicated; `dev/quality/modelo_workspace_action_classification_table.py`.
+- [ ] `W04.P32.S164` - Name the reconciliation listing and the local filing-record observation rows explicitly, which are covered today only by implication; `dev/quality/modelo_workspace_action_classification_table.py`.
 
 ## Wave `W05` - editing and calculation inputs
 
@@ -391,15 +391,15 @@ Fold the census logbook and the registry-inspection reads into the surfaces that
 - [ ] `W09.P28.S120` - Fold the modelo listing into the work-unit picker; `src/cadrumo/entrypoints/tui/modelo/view/work_select.py`.
 - [ ] `W09.P28.S155` - Deliver the census alta, modificacion and baja writes with the alta-first and baja-terminal sequence guard, which is the family's defining behaviour; `src/cadrumo/entrypoints/tui/profile`.
 - [ ] `W09.P28.S156` - Fix the census certificate parser that refuses unconditionally, or declare the panel unavailable with that reason rather than shipping a surface that cannot be populated; `src/cadrumo/adapters/inbound/censo/parser.py`.
-- [ ] `W09.P28.S158` - Dispose of the work-unit listing row explicitly, which is a different row from the modelo listing and is named by no other step; `dev/quality/modelo_workspace_action_denominator.py`.
+- [ ] `W09.P28.S158` - Dispose of the work-unit listing row explicitly, which is a different row from the modelo listing and is named by no other step; `dev/quality/modelo_workspace_action_classification_table.py`.
 
 ### Phase `W09.P29` - recorded closures
 
 Record the command-line-only and deferred dispositions with their reopening conditions.
 
-- [ ] `W09.P29.S121` - Record the spreadsheet family and the support matrix as command-line only, with the reason on each row; `dev/quality/modelo_workspace_action_denominator.py`.
-- [ ] `W09.P29.S122` - Record projection and comparison as deferred pending a chartered planning surface; `dev/quality/modelo_workspace_action_denominator.py`.
-- [ ] `W09.P29.S123` - Record the audit family as deferred until the first production caller of the evidence-bundle service lands; `dev/quality/modelo_workspace_action_denominator.py`.
+- [ ] `W09.P29.S121` - Record the spreadsheet family and the support matrix as command-line only, with the reason on each row; `dev/quality/modelo_workspace_action_classification_table.py`.
+- [ ] `W09.P29.S122` - Record projection and comparison as deferred pending a chartered planning surface; `dev/quality/modelo_workspace_action_classification_table.py`.
+- [ ] `W09.P29.S123` - Record the audit family as deferred until the first production caller of the evidence-bundle service lands; `dev/quality/modelo_workspace_action_classification_table.py`.
 
 ## Wave `W10` - acceptance and independent review
 

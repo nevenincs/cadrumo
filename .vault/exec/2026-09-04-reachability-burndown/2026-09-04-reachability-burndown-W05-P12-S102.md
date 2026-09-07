@@ -5,16 +5,11 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f1cf01b54393d803c4feeb99e3f58017627a919449ed8aae1abf4a8e90e24f2'
+body_hash: 'sha256:f7251fcbaee354594f60a26f98c93e39fd19f4f3ef293f724535918b85c0d5e2'
 step_id: 'S102'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Establish that no deletable residue remains, every open decision now being should-be-live or staged rather than superseded, then sharpen the committed-custody entry with the sibling contrast that makes its consequence concrete: the CAS envelope replace directly below the unreached data-file replace carries two consumers because passphrase rotation performs it, same module and same design, so no product operation replaces a committed custody data file and a record needing correction has no guarded path to it.
 
