@@ -1491,6 +1491,7 @@ tui:
       open: Felülvizsgálat megnyitása
       title: Főkönyvi felülvizsgálat
     review_status:
+      excluded: Kizárva
       pending: Függőben
       reviewed: Felülvizsgálva
       skipped: Kihagyva

@@ -10,6 +10,7 @@ from textual.screen import Screen
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.models import (
+    LedgerReviewStatus,
     LedgerSourceImportResult,
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,
@@ -80,10 +81,17 @@ _AVAILABILITY_LOCALE_KEYS: Final = {
     LedgerWorkspaceAvailability.NEVER_CAPTURED: "tui.ledger.availability.never_captured",
     LedgerWorkspaceAvailability.UNAVAILABLE: "tui.ledger.availability.unavailable",
 }
+#: Derived from the enum rather than listed, so a status cannot be produced
+#: without a name.
+#:
+#: The hand-written version held three of the four members. Nothing pointed at
+#: the enum, so ``EXCLUDED`` -- which ``ledger_transaction_review_status``
+#: returns for a REVIEWED_EXCLUDED row -- had no entry, and
+#: :func:`review_status_label` raises on a miss. Both the entries table and the
+#: review table label every row, so classifying one row as excluded and opening
+#: either body took the workspace down.
 _REVIEW_STATUS_LOCALE_KEYS: Final = {
-    "pending": "tui.ledger.review_status.pending",
-    "reviewed": "tui.ledger.review_status.reviewed",
-    "skipped": "tui.ledger.review_status.skipped",
+    status.value: f"tui.ledger.review_status.{status.value}" for status in LedgerReviewStatus
 }
 _STATUS_LOCALE_KEYS: Final = {
     LedgerWorkspaceStatus.READY: "tui.ledger.status.ready",

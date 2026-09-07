@@ -15,6 +15,7 @@ diff, which a PNG digest never is.
 from __future__ import annotations
 
 import json
+import shutil
 from datetime import UTC, datetime
 from hashlib import sha256
 from pathlib import Path
@@ -53,6 +54,15 @@ MANIFEST_SCHEMA_VERSION: Final[int] = 2
 """Bumped whenever the manifest shape changes. Older runs are refused rather
 than upgraded -- see :func:`read_manifest`."""
 INDEX_NAME: Final[str] = "index.md"
+
+MAX_STALE_FILES_PER_PURGE: Final[int] = 24
+"""How many unclaimed files one purge may delete before it refuses.
+
+Twenty-four is one surface's full matrix: four viewports times two themes
+times the three files a frame writes. A surface that was renamed strands
+exactly that many, so the bound admits the ordinary case and refuses the
+one that is never ordinary -- a run whose matrix SHRANK, which strands the
+frames of every surface it no longer asks for."""
 
 
 class RenderedFrame(BaseModel):
@@ -268,17 +278,115 @@ def stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
     return tuple(found)
 
 
-def purge_stale_artifacts(directory: Path, manifest: Manifest) -> tuple[Path, ...]:
+def purge_stale_artifacts(
+    directory: Path,
+    manifest: Manifest,
+    *,
+    removal_allowance: int | None = None,
+) -> tuple[Path, ...]:
     """Delete the frames this run did not produce, and report what went.
 
     Deliberately narrow: only regular files under the three frame directories
     of THIS run, only those the manifest does not name. The manifest, index and
     log are never touched, and nothing outside the run directory is considered.
+
+    Narrow is not the same as bounded. Membership in the manifest answers
+    "did this run name that file", and the question that decides whether the
+    delete is safe is "does this run have a replacement for it" -- the same
+    property for a re-rendered frame, a different one for a frame this run was
+    never asked to render. The bound is what keeps the second case reviewable;
+    see :class:`StaleArtifactPurgeRefusedError`.
+
+    Args:
+        directory: The run directory to sweep.
+        manifest: The manifest this run is about to write.
+        removal_allowance: Files this purge may delete. Defaults to
+            :data:`MAX_STALE_FILES_PER_PURGE`. Pass a larger value to
+            authorise a deliberate bulk retirement.
+
+    Returns:
+        The paths that were actually unlinked, in sorted order.
+
+    Raises:
+        StaleArtifactPurgeRefusedError: The sweep found more unclaimed files
+            than *removal_allowance* permits. Nothing is removed.
     """
-    removed = stale_artifacts(directory, manifest)
-    for path in removed:
-        path.unlink()
-    return removed
+    allowance = MAX_STALE_FILES_PER_PURGE if removal_allowance is None else removal_allowance
+    doomed = stale_artifacts(directory, manifest)
+    if len(doomed) > allowance:
+        listed = ", ".join(path.name for path in doomed[:10])
+        raise StaleArtifactPurgeRefusedError(
+            f"the sweep would delete {len(doomed)} unclaimed file(s) from {directory}, over the declared bound "
+            f"of {allowance}. Nothing was removed. A sweep this size means the run rendered a SMALLER matrix "
+            "than the one already on disk, so what it would delete is the frames of surfaces it never asked "
+            "for, not residue it replaced; re-render the full matrix, or pass removal_allowance to authorise "
+            f"the retirement explicitly. First removals: {listed}"
+        )
+
+    removed: list[Path] = []
+    for path in doomed:
+        # Re-checked rather than trusted, as the sibling prunes under dev/docs
+        # do: the listing and the unlink are separate passes, and this one runs
+        # at the end of a render measured in tens of minutes. A frame that goes
+        # away in between is a benign race, and an unguarded unlink turns it
+        # into a FileNotFoundError that would have taken the whole run with it.
+        if path.exists():
+            path.unlink()
+            removed.append(path)
+    return tuple(removed)
+
+
+def snapshot_staging_directory(destination: Path) -> Path:
+    """Where a snapshot is assembled before it replaces ``destination``.
+
+    Under ``scratch/`` rather than beside the runs on purpose: a staged copy
+    carries a manifest, so parked inside ``runs/`` it would satisfy
+    :func:`known_runs` and a reviewer would find a half-built directory
+    listed as a review.
+
+    Derived from ``destination`` rather than read off :data:`SCRATCH_DIR`,
+    because the swap in :func:`commit_staged_run` is a rename and a rename
+    cannot cross a filesystem. A fixed constant put the staged copy on
+    whichever drive the repository sits on while the destination was
+    somewhere else entirely, and the swap failed with WinError 17.
+    """
+    return destination.parent.parent / SCRATCH_DIR.name / f"snapshot-{destination.name}"
+
+
+def stage_run_copy(source: Path, staging: Path) -> Path:
+    """Copy ``source`` into ``staging``, discarding any earlier attempt.
+
+    The removal here destroys only a PREVIOUS staging directory, which by
+    construction is the residue of a copy that did not finish and is
+    therefore never the only copy of anything.
+    """
+    if staging.exists():
+        shutil.rmtree(staging)
+    staging.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(source, staging)
+    return staging
+
+
+def commit_staged_run(staging: Path, destination: Path) -> Path:
+    """Swap a fully staged copy into ``destination``.
+
+    Split from :func:`stage_run_copy` so the irreversible removal of an
+    existing snapshot happens AFTER its replacement is complete on disk,
+    not before that replacement is begun. Removing first meant a copy that
+    failed part way -- a run is hundreds of files -- left the named
+    snapshot destroyed and replaced by a partial tree that still carried a
+    manifest, so :func:`known_runs` went on listing it as a review.
+
+    The window this leaves is two calls wide: a failure between the removal
+    and the rename leaves ``destination`` absent and the complete copy
+    parked at ``staging``. That state is recoverable by hand and, because
+    the source run is never touched, by running the snapshot again.
+    """
+    if destination.exists():
+        shutil.rmtree(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staging.replace(destination)
+    return destination
 
 
 def unaccounted_frames(
@@ -305,6 +413,24 @@ def unaccounted_frames(
 
 class ManifestVersionError(RuntimeError):
     """The manifest on disk was written by a different version of this tool."""
+
+
+class StaleArtifactPurgeRefusedError(RuntimeError):
+    """Raised when one purge would delete more unclaimed files than its bound.
+
+    The purge deletes what THIS run's manifest does not name, which is the
+    right question for a frame a re-render replaced and the wrong one for a
+    frame it never asked for. A run narrowed with ``--surface`` names a
+    fraction of the matrix, so every other surface's frames are unclaimed by
+    construction, and a directory that cost about twenty-five minutes to fill
+    empties down to the one surface that was re-rendered. Nothing warns: the
+    files are gitignored, so there is no diff and no git recovery.
+
+    Bounding it turns that into a reviewable claim. A prune over the bound is
+    reported by name and NOTHING is removed, so a run that meant to re-render
+    one surface keeps the rest and can say so explicitly through
+    ``removal_allowance`` when the retirement is deliberate.
+    """
 
 
 def read_manifest(directory: Path) -> Manifest:
@@ -397,6 +523,7 @@ __all__ = [
     "INDEX_NAME",
     "MANIFEST_NAME",
     "MANIFEST_SCHEMA_VERSION",
+    "MAX_STALE_FILES_PER_PURGE",
     "RENDER_LOG_NAME",
     "RUNS_DIR",
     "RUN_ROOT",
@@ -407,12 +534,16 @@ __all__ = [
     "ManifestVersionError",
     "RenderedFrame",
     "SkippedFrame",
+    "StaleArtifactPurgeRefusedError",
+    "commit_staged_run",
     "digest",
     "known_runs",
     "now",
     "purge_stale_artifacts",
     "read_manifest",
     "run_directory",
+    "snapshot_staging_directory",
+    "stage_run_copy",
     "stale_artifacts",
     "unaccounted_frames",
     "write_index",

@@ -30,13 +30,17 @@ from ._artifacts import (
     ManifestVersionError,
     RenderedFrame,
     SkippedFrame,
+    StaleArtifactPurgeRefusedError,
+    commit_staged_run,
     digest,
     known_runs,
     now,
     purge_stale_artifacts,
     read_manifest,
     run_directory,
+    snapshot_staging_directory,
     source_fingerprint,
+    stage_run_copy,
     unaccounted_frames,
     write_index,
     write_manifest,
@@ -431,9 +435,19 @@ def render_command(
             "different builds and no reviewer can tell which is which. Nothing was written. "
             "Re-run against a settled tree."
         )
-    discarded = purge_stale_artifacts(directory, manifest)
+    # Written BEFORE the sweep, not after. The sweep is the only destructive
+    # step in a command that takes about twenty-five minutes, and running it
+    # first meant any refusal or filesystem error inside it discarded the
+    # manifest and index of a render that had already succeeded.
     write_manifest(directory, manifest)
     write_index(directory, manifest)
+
+    discarded: tuple[Path, ...] = ()
+    purge_refusal: str | None = None
+    try:
+        discarded = purge_stale_artifacts(directory, manifest)
+    except StaleArtifactPurgeRefusedError as exc:
+        purge_refusal = str(exc)
 
     _echo("")
     _echo(f"wrote {len(frames)} frames to {directory}")
@@ -448,25 +462,39 @@ def render_command(
         _echo(f"blocked: {name} produced no frame — {reason}")
     if discarded:
         _echo(f"removed {len(discarded)} stale frames left by an earlier run")
+    if purge_refusal is not None:
+        _echo(f"stale frames kept: {purge_refusal}")
     if skipped:
         _echo(f"{len(skipped)} frames not attempted behind a refusing surface")
     if failures:
         _echo(f"{len(failures)} failed")
+    if failures or purge_refusal is not None:
         raise typer.Exit(code=1)
 
 
 @app.command("snapshot")
 def snapshot_command(
     name: Annotated[str, typer.Argument(help="Name to keep the current review under.")],
+    replace: Annotated[
+        bool,
+        typer.Option(
+            "--replace",
+            help="Discard an existing snapshot of this name. Destructive; refused by default.",
+        ),
+    ] = False,
 ) -> None:
     """Copy the canonical review aside so a later render can be diffed against it.
 
     The only sanctioned way to create a second run directory. Rendering itself
     always targets `runs/current`, so a named run can only ever be a
     deliberate snapshot of a review that actually happened.
-    """
-    import shutil
 
+    A name already taken is REFUSED. Runs are gitignored and a full matrix
+    costs about twenty-five minutes, so an existing snapshot is the only
+    copy of the review it holds; overwriting it on a bare name collision
+    would destroy the evidence this verb exists to keep. ``--replace`` is
+    how an operator says the older review is finished with.
+    """
     if name == DEFAULT_RUN_NAME:
         _echo(f"{name!r} is the canonical review; choose another name for a snapshot")
         raise typer.Exit(code=1)
@@ -477,9 +505,24 @@ def snapshot_command(
         raise typer.Exit(code=1)
 
     destination = run_directory(name)
-    if destination.exists():
-        shutil.rmtree(destination)
-    shutil.copytree(source, destination)
+    if destination.exists() and not replace:
+        held = sum(1 for path in destination.rglob("*") if path.is_file())
+        _echo(
+            f"snapshot {name!r} already exists at {destination} and holds {held} file(s). "
+            "Nothing was written. Choose another name, or pass --replace to discard it."
+        )
+        raise typer.Exit(code=1)
+    # Staged, then swapped. The copy is completed under `scratch/` first and
+    # only then replaces the destination, so the irreversible removal runs
+    # AFTER its replacement is durable rather than before it is begun. In
+    # place, a copy that failed part way through a run of hundreds of files
+    # left the named snapshot destroyed and half-rebuilt -- and still
+    # carrying a manifest, so `known_runs` listed the wreckage as a review.
+    staging = snapshot_staging_directory(destination)
+    stage_run_copy(source, staging)
+    # Re-checked rather than trusted: only the exact path the refusal was
+    # measured against is removed.
+    commit_staged_run(staging, destination)
     _echo(f"snapshot: {destination}")
 
 

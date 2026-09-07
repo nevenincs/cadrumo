@@ -69,21 +69,21 @@ from __future__ import annotations
 
 import functools
 import re
-import shlex
 import subprocess
 import sys
 from collections.abc import Sequence
-from typing import Final, NamedTuple
+from pathlib import Path
+from typing import Final
 
 import pytest
 
 from ..._paths import REPO_ROOT
 from ..campaign import campaign_pytest_argv
+from ._justfile_recipes import Recipe, packaging_pytest_recipes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT: Final = REPO_ROOT
-_JUSTFILE: Final = _REPO_ROOT / "justfile"
 _TARGET_DIRECTORY: Final = "dev/packaging/tests"
 #: Wall-clock bound for one nested collection. The heaviest here costs
 #: about 8.2s unloaded, so 300s carried roughly a thirty-sevenfold margin.
@@ -128,22 +128,9 @@ _INVOCATION_PREFIX: Final = (sys.executable, "-m", "pytest")
 #: Scheduler argument that pins a run to the controller process.
 _NO_WORKERS: Final = "-n0"
 
-_RECIPE_HEADER: Final = re.compile(r"^(?P<name>[a-z][\w-]*)\s*:(?![=])")
 _NODE_ID: Final = re.compile(r"^(?P<node_id>\S+\.py::\S.*)$")
 _COLLECTED: Final = re.compile(r"(?:^|\s)(?P<count>\d+)(?:/\d+)? tests? collected")
 _NO_TESTS_COLLECTED: Final = re.compile(r"(?:^|\s)no tests collected")
-
-
-class Recipe(NamedTuple):
-    """A justfile recipe's pytest invocation.
-
-    Attributes:
-        name: The recipe name as written in the justfile.
-        arguments: The pytest arguments, excluding the ``pytest`` token itself.
-    """
-
-    name: str
-    arguments: tuple[str, ...]
 
 
 def parse_node_ids(output: str) -> frozenset[str]:
@@ -193,29 +180,6 @@ def parse_collected_count(output: str) -> int:
 
     assert collected is not None, f"no pytest collection summary in output:\n{output}"
     return collected
-
-
-def packaging_pytest_recipes() -> tuple[Recipe, ...]:
-    """Discover every justfile recipe invoking pytest over this directory.
-
-    Returns:
-        One entry per matching recipe body line, in justfile order.
-    """
-    recipes: list[Recipe] = []
-    current = ""
-    for raw_line in _JUSTFILE.read_text(encoding="utf-8").splitlines():
-        header = _RECIPE_HEADER.match(raw_line)
-        if header is not None:
-            current = header.group("name")
-            continue
-        if not raw_line[:1].isspace() or _TARGET_DIRECTORY not in raw_line:
-            continue
-        tokens = shlex.split(raw_line.strip().lstrip("@"))
-        if "pytest" not in tokens:
-            continue
-        arguments = tuple(tokens[tokens.index("pytest") + 1 :])
-        recipes.append(Recipe(name=current, arguments=arguments))
-    return tuple(recipes)
 
 
 def parse_pass_arguments(argv: Sequence[str]) -> tuple[str, ...]:
@@ -510,6 +474,31 @@ def test_the_pass_argument_reader_keeps_selection_and_scheduler_tokens() -> None
         f"--ignore={_TARGET_DIRECTORY}/test_installed_oracles.py",
         _NO_WORKERS,
     )
+
+
+def test_a_commented_out_recipe_line_is_not_read_as_an_invocation(tmp_path: Path) -> None:
+    """Detector teeth for the recipe reader, against an isolated fixture.
+
+    The commented line is indented exactly like the live one, names the same
+    directory, and carries the same ``pytest`` token -- and ``shlex.split``
+    keeps its leading ``#`` as an ordinary token, so a reader that only
+    tokenised would report TWO recipes and measure policy against a lane that
+    runs nothing. Only the live line is an invocation.
+    """
+    justfile = tmp_path / "justfile"
+    justfile.write_text(
+        "ghost-live:\n"
+        f"    uv run pytest {_TARGET_DIRECTORY} -m unit -n0\n"
+        "\n"
+        "ghost-dead:\n"
+        f"    # uv run pytest {_TARGET_DIRECTORY} -m perf -n0\n",
+        encoding="utf-8",
+    )
+
+    discovered = packaging_pytest_recipes(justfile=justfile)
+
+    assert [recipe.name for recipe in discovered] == ["ghost-live"], discovered
+    assert discovered[0].arguments == (_TARGET_DIRECTORY, "-m", "unit", _NO_WORKERS)
 
 
 @pytest.mark.parametrize(

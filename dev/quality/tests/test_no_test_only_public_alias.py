@@ -38,19 +38,29 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _PACKAGE_ROOT: Final[Path] = REPO_ROOT / "src" / "cadrumo"
 
 
-def _module_texts() -> tuple[dict[Path, str], dict[Path, str]]:
-    """Return (production, test) module sources, read once."""
+def _module_texts() -> tuple[dict[Path, str], dict[Path, str], tuple[str, ...]]:
+    """Return (production, test) sources, and what this walk could not read.
+
+    One skip fails three ways, and only one of them is safe. A production
+    module lost as EVIDENCE lowers the production use count, so an alias
+    looks less used and the gate flags more -- a false alarm. But the same
+    module lost as SUBJECT takes its own aliases out of the scan entirely,
+    and a test module lost drops the test use count below the threshold the
+    offender condition requires, so a genuine test-only alias stops looking
+    like one. Two of the three directions are silent."""
     production: dict[Path, str] = {}
     tests: dict[Path, str] = {}
+    unread: list[str] = []
     for path in _PACKAGE_ROOT.rglob("*.py"):
         if "__pycache__" in path.parts:
             continue
         try:
             text = path.read_text(encoding="utf-8")
         except OSError:
+            unread.append(path.relative_to(_PACKAGE_ROOT).as_posix())
             continue
         (tests if "tests" in path.parts else production)[path] = text
-    return production, tests
+    return production, tests, tuple(unread)
 
 
 def _uses(name: str, corpus: dict[Path, str], skip: Path | None = None) -> int:
@@ -102,17 +112,22 @@ def find_test_only_aliases(production: dict[Path, str], tests: dict[Path, str]) 
 
 def test_the_scanned_population_is_not_empty() -> None:
     """An empty population would make the assertion below vacuous."""
-    production, _ = _module_texts()
+    production, _tests, _unread = _module_texts()
+
     assert len(production) > 500
 
 
 def test_no_public_alias_exists_only_for_a_test() -> None:
     """The direction the gate exists for."""
-    production, tests = _module_texts()
+    production, tests, unread = _module_texts()
     offenders = [f"{alias} = {origin} ({path})" for alias, origin, path in find_test_only_aliases(production, tests)]
     assert not offenders, (
         "these names are published only so a test can import them; point the test at "
         f"the private symbol production already calls and delete the alias: {offenders}"
+    )
+    assert not unread, (
+        "this gate could not read these modules, so an alias declared in one "
+        f"of them, or a test use that would have exposed one, is missing: {list(unread)}"
     )
 
 

@@ -27,6 +27,8 @@ from uuid import UUID
 
 import pytest
 
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
+
 from ....core.config import load_settings, override_settings
 from ....core.directory_scan import DirectoryEntryKind, scan_directory
 from ....core.redaction.rules import CLI_PROFILE_ID_PLACEHOLDER
@@ -157,6 +159,7 @@ def test_registered_profile_custody_survives_logout_and_reopens_on_login(tmp_pat
     assertions described an artefact of the retired creation path, not a
     property of custody.
     """
+    require_os_credential_store()
 
     _register_profile(
         tmp_path,
@@ -535,6 +538,7 @@ def test_self_authenticating_leaf_refuses_root_source_unread(tmp_path: Path) -> 
 
 @pytest.mark.os_keychain
 def test_valid_resumed_session_refuses_root_source_unread(tmp_path: Path) -> None:
+    require_os_credential_store()
     bucket_id = _register_profile(tmp_path, "custody")
     passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
     logged_in = _run_cadrumo(

@@ -56,7 +56,9 @@ def test_publish_refuses_a_canonical_tree_with_a_hard_linked_member(tmp_path: Pa
     os.link(root / "c00002.toml", tmp_path / "shadow.toml")
     before = _tree(root)
 
-    with pytest.raises(RegistryValidationError, match="canonical casilla tree contains a non-regular or hard-linked member"):
+    with pytest.raises(
+        RegistryValidationError, match="canonical casilla tree contains a non-regular or hard-linked member"
+    ):
         subject.publish_verified_casilla_tree(
             casillas_root=root,
             rendered={root / "c00001.toml": "new\n"},

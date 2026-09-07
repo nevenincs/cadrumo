@@ -50,6 +50,7 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from ..._paths import REPO_ROOT
+from .._distribution_names import normalise_distribution_name
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -87,12 +88,8 @@ def _declared_distributions() -> set[str]:
             for separator in ("[", "=", ">", "<", "!", "~", " "):
                 name = name.split(separator)[0]
             if name:
-                declared.add(_normalise(name))
+                declared.add(normalise_distribution_name(name))
     return declared
-
-
-def _normalise(name: str) -> str:
-    return name.strip().lower().replace("_", "-").replace(".", "-")
 
 
 def _top_level_imports(path: Path) -> Iterator[str]:
@@ -143,11 +140,11 @@ def test_every_third_party_import_in_the_inference_path_is_declared() -> None:
 
     undeclared: dict[str, list[str]] = {}
     for import_name, files in _third_party_imports_under(_INFERENCE_PACKAGE).items():
-        distributions = {_normalise(name) for name in import_to_distributions.get(import_name, [])}
+        distributions = {normalise_distribution_name(name) for name in import_to_distributions.get(import_name, [])}
         if not distributions:
             # Not installed in this environment, so the mapping cannot be
             # resolved and the import name is the best available key.
-            distributions = {_normalise(import_name)}
+            distributions = {normalise_distribution_name(import_name)}
         if not (distributions & declared):
             undeclared[import_name] = files
 

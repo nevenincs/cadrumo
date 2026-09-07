@@ -39,6 +39,34 @@ def _baseline(tmp_path: Path, **counts: int) -> Path:
     return path
 
 
+def test_a_module_the_walk_cannot_parse_is_announced(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A dropped module must not leave the count looking whole.
+
+    A module the walk cannot parse contributes neither its exports nor its
+    imports, so it can move a count in either direction, and the baseline
+    then records the result as though the tree had been read entire. The
+    skip itself is correct -- a walk over a tree a sibling process is
+    editing must survive a half-written file -- but it was silent, and this
+    ratchet's baseline had already drifted once with nothing reporting it.
+    """
+    root = _tree(tmp_path, lonely=_ALL)
+    (root / "broken.py").write_text("def oops(:\n", encoding="utf-8")
+
+    counts = count_unconsumed(root, _unused(root, "lonely:widget"))
+
+    assert counts == {"lonely.py": 1}, "the readable half of the walk still counted"
+    assert "broken.py" in capsys.readouterr().err
+
+
+def test_a_walk_that_read_everything_says_nothing(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """The other direction: a notice on every run would carry no information."""
+    root = _tree(tmp_path, lonely=_ALL)
+
+    count_unconsumed(root, _unused(root, "lonely:widget"))
+
+    assert capsys.readouterr().err == ""
+
+
 def test_a_published_name_nothing_imports_is_counted(tmp_path: Path) -> None:
     """The finding: a promise in ``__all__`` that no module collects."""
     root = _tree(tmp_path, lonely=_ALL)

@@ -371,6 +371,16 @@ transitively_dead = 9
 live_seams = 0
 rule = "a production module reaches a symbol only when it from-imports the name, the import source is the defining module, and the name appears in its body"
 
+[[symbol_cluster]]
+name = "corpus drift assertion no gate calls"
+area = "core/corpus_manifest"
+class = "staged-capability"
+symbols = [
+  "assert_corpus_clean",
+]
+evidence = "The operator-facing corpus-drift assertion at src/cadrumo/core/corpus_manifest/manifest.py, reached only by its own package test. Its docstring called it the assertion USED BY the CI gate; no gate calls it, and that false half is corrected 2026-09-09 to say it is the assertion a gate would call. Staged rather than orphaned: build_corpus_bundle and verify_corpus_manifest beside it are the live manifest surface, and this is the one-call form a drift gate would use over them. Whether to mount such a gate is an owner's call; the sentence no longer asserts one exists."
+remedy_requires_decision = true
+
 [[test_module]]
 name = "cadrumo.adapters.persistence.storage.sql.tests.test_secure_objects_schema_lineage"
 follows = "symbol"
@@ -1042,12 +1052,13 @@ evidence = "Its docstring calls it a convenience wrapper used by the cross-perio
 
 [[symbol_cluster]]
 name = "live filing token no mounted command family reads"
-class = "should-be-live"
-area = "application"
-resolved = false
+area = "application/operator_surface"
+class = "staged-capability"
+symbols = [
+  "FilingStatus",
+]
+evidence = "A one-member StrEnum at src/cadrumo/application/operator_surface/models.py. Its docstring called it the canonical live-read filing token USED by mounted live command families; no family reads it, and outside its own module the only true reference is the locale-contract test importing it alongside the other operator-surface models. The false half is corrected 2026-09-09: the docstring now says the token is declared and not yet read, because a sentence asserting a wiring the tree does not have is a claim a reader has no way to check and it outranked the code for as long as it stood. The remaining question -- route the live families through the token or withdraw it -- is an owner's call and stays open, but it no longer waits on a lie. Staged rather than orphaned: the vocabulary the token declares is the one a live family would report against, and its single member names the only status such a family could report today."
 remedy_requires_decision = true
-symbols = ["FilingStatus"]
-evidence = "A one-member StrEnum whose docstring calls it the canonical live-read filing token used by mounted live command families. No mounted family reads it: the only true reference outside its module is dev/locales/tests/test_contract.py, which imports it alongside the other operator-surface models to check the locale contract, and the remaining occurrence is a string fixture in an object-names test rather than a use. So a dev contract test exercises the token while the production surface it names ignores it, and the docstring asserts the opposite. The remedy is to route the live command families through the token or to withdraw it and correct the sentence; the enum carries a single member, so the choice is about whether the filing state belongs in this vocabulary at all."
 
 [[symbol_cluster]]
 name = "protocols satisfied structurally by a named implementer"
@@ -1255,11 +1266,17 @@ evidence = "Five projections turning a validated RegistrySnapshot into connectiv
 
 [[symbol_cluster]]
 name = "displaced CLI execution-policy declarations"
-class = "superseded"
 area = "entrypoints/cli/config"
-symbols = ["CALCULATION_WRITE", "PROFILE_WRITE", "GOOGLE_CALCULATION_WRITE", "GOOGLE_CALCULATION_HANDOFF", "GOOGLE_HANDOFF"]
-evidence = "Public execution-policy constants that no command spec imports. The live modelo command specs declare private equivalents inline, so the canonical home was displaced by copies. The declarations are EQUIVALENT, which took checking: the public CALCULATION_WRITE spells capabilities calculation, encrypted-facts and profile-custody while the private _CALCULATION_WRITE the specs use spells only the first two, but command_spec._IMPLIED_CAPABILITIES maps encrypted-facts onto profile-custody and every policy check runs against expanded_capabilities, so the shorter form expands to the longer one. The finding is therefore displacement alone -- five public constants nothing reads, beside private copies that say the same thing -- and not the under-declaration it first looked like."
-remedy_requires_decision = true
+class = "orphaned"
+resolved = true
+symbols = [
+  "CALCULATION_WRITE",
+  "PROFILE_WRITE",
+  "GOOGLE_CALCULATION_WRITE",
+  "GOOGLE_CALCULATION_HANDOFF",
+  "GOOGLE_HANDOFF",
+]
+evidence = "RESOLVED 2026-09-09 by deletion, and the entry's framing was wrong. It said the canonical home was displaced by private copies in the modelo command specs. src/cadrumo/entrypoints/cli/config/_spec_policies.py is a leading-underscore module, so it is private to the config package and was never a legitimate source for the modelo package under aeat-architecture-boundaries; the modelo specs declaring their own is the correct shape, not a displacement. What the five actually were is declarations the config package does not use: its other policies in that module carry between two and twenty-six in-package consumers each and these carried zero. Their only reader was a hand-listed inventory in src/cadrumo/entrypoints/cli/config/tests/test_spec_policies.py asserting that profile-bound policies declare custody authority, which still covers the seven that are used. Deleted with their __all__ entries and their inventory rows; the audit reports 404 exact findings where it reported 409."
 
 [[symbol_cluster]]
 name = "reserved-source-kind binding families"

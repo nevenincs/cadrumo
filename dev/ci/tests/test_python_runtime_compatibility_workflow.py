@@ -52,27 +52,27 @@ def _triggers(document: dict[str, Any]) -> dict[str, Any]:
     return triggers
 
 
-def _run_steps(job: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return the job's steps that carry a ``run`` script."""
-    return [step for step in job.get("steps", []) if isinstance(step, dict) and "run" in step]
-
-
 def _run_lines(job: dict[str, Any]) -> list[str]:
     """Return executable run lines, excluding comments and blank lines.
 
     The comment rule is :mod:`dev.ci.workflow_run_text`'s, not a local copy of
     it: a command named only in a comment is not a command the job runs.
     """
-    return [line for step in _run_steps(job) for line in executed_lines(step["run"])]
+    return [line for step in _steps_with_run(job) for line in executed_lines(step["run"])]
 
 
 def _run_surface(job: dict[str, Any]) -> str:
     """Return the executable surface of a job as one searchable string."""
-    return executed_text(step["run"] for step in _run_steps(job))
+    return executed_text(step["run"] for step in _steps_with_run(job))
 
 
 def _steps_with_run(job: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return run-bearing steps after asserting their expected YAML shape."""
+    """Return run-bearing steps after asserting their expected YAML shape.
+
+    One owner for this question. Every reader below - the executed-line
+    surface, the probe selector, the shape assertions - filters through here,
+    so a second private copy cannot drift from it.
+    """
     steps = job.get("steps")
     assert isinstance(steps, list)
     return [step for step in steps if isinstance(step, dict) and "run" in step]
@@ -83,7 +83,8 @@ def _probe_step(job: dict[str, Any], mode: str) -> dict[str, Any]:
     matches = [
         step
         for step in _steps_with_run(job)
-        if "dev.ci.python_runtime_compatibility" in str(step["run"]) and f"--mode {mode}" in str(step["run"])
+        if "dev.ci.python_runtime_compatibility" in executed_text(step["run"])
+        and f"--mode {mode}" in executed_text(step["run"])
     ]
     assert len(matches) == 1, f"expected one {mode} compatibility probe"
     return matches[0]
@@ -92,7 +93,7 @@ def _probe_step(job: dict[str, Any], mode: str) -> dict[str, Any]:
 def _assert_probe_contract(job: dict[str, Any], *, mode: str) -> None:
     """Assert one matrix job invokes the runner with an attributable row."""
     probe = _probe_step(job, mode)
-    surface = str(probe["run"])
+    surface = executed_text(probe["run"])
     assert "uv run --no-sync python -m dev.ci.python_runtime_compatibility" in surface
     assert f"--mode {mode}" in surface
     assert '--python "${{ matrix.python-version }}"' in surface

@@ -1014,6 +1014,78 @@ def test_snapshot_refuses_to_overwrite_the_canonical_review() -> None:
     assert refusal.value.exit_code == 1
 
 
+def _seed_run(runs_dir: Path, name: str, marker: str) -> Path:
+    """Write a minimal run directory whose one frame file names ``marker``."""
+    directory = runs_dir / name
+    (directory / "png").mkdir(parents=True, exist_ok=True)
+    (directory / "manifest.json").write_text(
+        '{"marker": "' + marker + '"}',
+        encoding=UTF_8,
+        newline=chr(10),
+    )
+    (directory / "png" / (marker + ".png")).write_bytes(marker.encode())
+    return directory
+
+
+def test_snapshot_refuses_a_name_already_taken(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A bare name collision must not consume the review it collides with.
+
+    ``snapshot`` exists to keep a review, and a kept run is the only copy of
+    it: the tree is gitignored, and re-deriving one costs a full render
+    matrix. The verb used to rmtree the destination unconditionally, so
+    reusing a name discarded the older review silently and exited 0.
+    """
+    import typer
+
+    from .. import _artifacts
+    from ..cli import snapshot_command
+
+    runs = tmp_path / "runs"
+    monkeypatch.setattr(_artifacts, "RUNS_DIR", runs)
+    kept = _seed_run(runs, "baseline", "irreplaceable")
+    _seed_run(runs, "current", "fresh")
+
+    with pytest.raises(typer.Exit) as refusal:
+        snapshot_command(name="baseline")
+    assert refusal.value.exit_code == 1
+    assert (kept / "png" / "irreplaceable.png").is_file(), "the refusal wrote through"
+    assert not (kept / "png" / "fresh.png").exists()
+
+
+def test_snapshot_replaces_only_when_told_to(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """``--replace`` is the explicit form, and a free name still just works."""
+    from .. import _artifacts
+    from ..cli import snapshot_command
+
+    runs = tmp_path / "runs"
+    monkeypatch.setattr(_artifacts, "RUNS_DIR", runs)
+    kept = _seed_run(runs, "baseline", "irreplaceable")
+    _seed_run(runs, "current", "fresh")
+
+    snapshot_command(name="baseline", replace=True)
+    assert (kept / "png" / "fresh.png").is_file()
+    assert not (kept / "png" / "irreplaceable.png").exists()
+
+    snapshot_command(name="untaken")
+    assert (runs / "untaken" / "png" / "fresh.png").is_file()
+
+
+def test_snapshot_overwrite_is_not_the_default() -> None:
+    """Re-derived from the live signature, so retiring the flag is announced.
+
+    The premise is that the destructive branch is reachable only by an
+    explicit request. If ``--replace`` is ever removed or flipped, this says
+    so rather than passing on a stale memory of the parameter list.
+    """
+    import inspect
+
+    from ..cli import snapshot_command
+
+    parameters = inspect.signature(snapshot_command).parameters
+    assert "replace" in parameters, "the explicit overwrite form is gone"
+    assert parameters["replace"].default is False
+
+
 def test_every_declared_background_band_is_actually_painted(tmp_path: Path) -> None:
     """No cell a band covers may fall through to the page colour.
 

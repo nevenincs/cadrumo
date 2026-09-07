@@ -251,10 +251,12 @@ def expected_casilla_for_category(category: SpendingCategory) -> CasillaId | Non
 def first_slice_target_casillas() -> frozenset[CasillaId]:
     """Return every casilla id this routing table references.
 
-    Used by the snapshot-time referential-integrity gate to confirm
-    that every target the table can route to is a real casilla on
-    the modelo-100 registry. A casilla id removed from the registry
-    without a corresponding update here is a snapshot-build error.
+    The confirmation this exists for -- that every target the table can route
+    to is a real casilla on the modelo-100 registry -- is performed by this
+    package's own routing test, not by the snapshot-time referential-integrity
+    gate the sentence here used to name. The distinction is the whole value of
+    the claim: a casilla id removed from the registry without a corresponding
+    update here is caught when that test runs, and not at snapshot build.
     """
     return frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values())
 

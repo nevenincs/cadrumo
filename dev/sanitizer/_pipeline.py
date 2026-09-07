@@ -260,6 +260,39 @@ def _digest_source(source: bytes | Path) -> tuple[str, int]:
     return digest, size
 
 
+def _carries_signature_field(fields: pikepdf.Object, seen: set[tuple[int, int]]) -> bool:
+    """True when any field in this subtree is a signature field.
+
+    The whole tree, not its top row. ``/Fields`` is the ROOT of the AcroForm
+    field tree, and a field may hold its terminal widgets under ``/Kids``; a
+    signature nested one level down is the same signature, and a sweep of the
+    top row alone reports a document with one as unsigned. ``/SigFlags``
+    normally covers that case, but it is a producer-written hint on the same
+    dictionary the nesting hides the field in, and neither is a reason to
+    trust the other.
+
+    ``seen`` carries the objgen of every indirect dictionary already visited:
+    a PDF field tree is an object graph, and a ``/Kids`` array that points back
+    at an ancestor is malformed but perfectly representable.
+    """
+    for index in range(len(fields)):
+        field = fields[index]
+        if not isinstance(field, pikepdf.Dictionary):
+            continue
+        objgen = field.objgen
+        if objgen != (0, 0):
+            if objgen in seen:
+                continue
+            seen.add(objgen)
+        ft = field.get("/FT")
+        if ft is not None and ft == pikepdf.Name.Sig:
+            return True
+        kids = field.get("/Kids")
+        if kids is not None and _carries_signature_field(kids, seen):
+            return True
+    return False
+
+
 def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
     """Raises :class:`SignaturePresentError` if ``pdf`` is signed.
 
@@ -276,11 +309,7 @@ def _refuse_if_signed(pdf: pikepdf.Pdf) -> None:
                 "the sanitiser refuses to modify signed documents.",
             )
         fields = acroform.get("/Fields")
-        if fields is not None:
-            for index in range(len(fields)):
-                field = fields[index]
-                ft = field.get("/FT")
-                if ft is not None and ft == pikepdf.Name.Sig:
-                    raise SignaturePresentError(
-                        "Source PDF contains a signature field; the sanitiser refuses to modify signed documents.",
-                    )
+        if fields is not None and _carries_signature_field(fields, set()):
+            raise SignaturePresentError(
+                "Source PDF contains a signature field; the sanitiser refuses to modify signed documents.",
+            )

@@ -1229,23 +1229,25 @@ def test_a_function_whose_every_return_is_a_key_is_followed_into_its_caller() ->
     """
     from .._ast_scanner import scan_source_text
 
-    source = chr(10).join((
-        "def refusal_key(reason):",
-        '    return "cli.config.errors.profile_session_absent" if reason else "cli.config.errors.profile_session_expired"',
-        "def route_for(reason):",
-        "    if reason:",
-        '        return "workbench.routes.home"',
-        "    return compute_route(reason)",
-        "def refuse(reason):",
-        "    key = refusal_key(reason)",
-        "    routed = route_for(reason)",
-        # Deliberately TRANSLATED, not merely navigated. Sending it somewhere
-        # inert would let flow confirmation reject it and leave the
-        # every-return rule untested -- the arm below has to fail for the
-        # reason it names.
-        "    banner(tr(routed))",
-        "    raise CliRefusedBoundaryError(translated_message=key)",
-    ))
+    source = chr(10).join(
+        (
+            "def refusal_key(reason):",
+            '    return "cli.config.errors.profile_session_absent" if reason else "cli.config.errors.profile_session_expired"',
+            "def route_for(reason):",
+            "    if reason:",
+            '        return "workbench.routes.home"',
+            "    return compute_route(reason)",
+            "def refuse(reason):",
+            "    key = refusal_key(reason)",
+            "    routed = route_for(reason)",
+            # Deliberately TRANSLATED, not merely navigated. Sending it somewhere
+            # inert would let flow confirmation reject it and leave the
+            # every-return rule untested -- the arm below has to fail for the
+            # reason it names.
+            "    banner(tr(routed))",
+            "    raise CliRefusedBoundaryError(translated_message=key)",
+        )
+    )
 
     keys = scan_source_text(source, filename="gate.py")
 

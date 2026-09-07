@@ -45,17 +45,26 @@ def _adjudicated() -> set[str]:
     return names
 
 
-def _shipped_sources() -> dict[Path, str]:
-    """Return every shipped non-test module source, read once."""
+def _shipped_sources() -> tuple[dict[Path, str], tuple[str, ...]]:
+    """Return every shipped source, and the modules this walk could not read.
+
+    The unread half is returned rather than dropped because this corpus is
+    the gate's SUBJECT as well as its evidence. As evidence a skip is safe:
+    a module absent from the corpus consumes nothing, so a claim elsewhere
+    looks less consumed and the gate flags more. As subject it is not: the
+    claims made INSIDE an unread module are never examined at all, and the
+    population floor cannot see that, being satisfied by whatever survived."""
     sources: dict[Path, str] = {}
+    unread: list[str] = []
     for path in _PACKAGE_ROOT.rglob("*.py"):
         if "__pycache__" in path.parts or "tests" in path.parts:
             continue
         try:
             sources[path] = path.read_text(encoding="utf-8")
         except OSError:
+            unread.append(path.relative_to(_PACKAGE_ROOT).as_posix())
             continue
-    return sources
+    return sources, tuple(unread)
 
 
 def claiming_symbols_without_consumers(sources: dict[Path, str]) -> list[tuple[str, str]]:
@@ -82,7 +91,9 @@ def claiming_symbols_without_consumers(sources: dict[Path, str]) -> list[tuple[s
 
 def test_the_scanned_population_is_not_empty() -> None:
     """An empty population would make the assertion below vacuous."""
-    assert len(_shipped_sources()) > 500
+    sources, _unread = _shipped_sources()
+
+    assert len(sources) > 500
 
 
 def test_the_gate_still_recognises_consumer_claims() -> None:
@@ -94,7 +105,8 @@ def test_the_gate_still_recognises_consumer_claims() -> None:
     nothing-was-looked-at.
     """
     seen = 0
-    for text in _shipped_sources().values():
+    sources, _unread = _shipped_sources()
+    for text in sources.values():
         try:
             tree = ast.parse(text)
         except SyntaxError:
@@ -114,15 +126,20 @@ def test_the_gate_still_recognises_consumer_claims() -> None:
 def test_no_unconsumed_symbol_claims_a_consumer() -> None:
     """The direction the gate exists for."""
     adjudicated = _adjudicated()
+    sources, unread = _shipped_sources()
     offenders = [
         f"{name} (claims {claim!r})"
-        for name, claim in claiming_symbols_without_consumers(_shipped_sources())
+        for name, claim in claiming_symbols_without_consumers(sources)
         if name not in adjudicated
     ]
     assert not offenders, (
         "these symbols assert a consumer in their own prose and production consumes "
         "them nowhere; wire them, correct the sentence, or record the false claim in "
         f"dev/audit/reachability_classification.toml: {offenders}"
+    )
+    assert not unread, (
+        "this gate could not read these shipped modules, so a consumer claim "
+        f"made inside one of them was never examined: {list(unread)}"
     )
 
 

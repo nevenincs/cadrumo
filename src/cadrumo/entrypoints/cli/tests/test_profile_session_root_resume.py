@@ -158,6 +158,7 @@ class TestSilentResume:
     """
 
     def test_valid_session_resumes_with_no_authentication(self, _isolated_root: Path) -> None:
+        require_os_credential_store()
         bucket_id = _create_profile()
         _login_and_require_persistence(_isolated_root, bucket_id)
 

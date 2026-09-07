@@ -40,7 +40,6 @@
 "cadrumo.adapters.persistence.profile.inventory" = 3
 "cadrumo.adapters.persistence.profile.prorrata_register" = 1
 "cadrumo.adapters.persistence.storage.bucket.directory_layout" = 1
-"cadrumo.adapters.persistence.storage.bucket.output_language_hint" = 2
 "cadrumo.adapters.persistence.storage.crypto.encrypted_columns" = 2
 "cadrumo.adapters.persistence.storage.custody.capsule" = 3
 "cadrumo.adapters.persistence.storage.custody.capsule_discovery" = 1
@@ -262,7 +261,6 @@
 "cadrumo.entrypoints.cli.command_api" = 2
 "cadrumo.entrypoints.cli.command_suggestions" = 3
 "cadrumo.entrypoints.cli.config._censo_transport" = 1
-"cadrumo.entrypoints.cli.config._spec_policies" = 5
 "cadrumo.entrypoints.cli.config.google" = 1
 "cadrumo.entrypoints.cli.config_payloads" = 1
 "cadrumo.entrypoints.cli.period_parsing" = 1

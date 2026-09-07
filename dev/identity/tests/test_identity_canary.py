@@ -607,6 +607,7 @@ def test_an_authored_ignored_file_is_still_enumerated() -> None:
         "every ignored file in this tree is now skipped before it is opened, so the ignored sweep covers nothing at all"
     )
 
+
 def test_a_planted_identity_in_a_properties_payload_is_found(specimen_repository: Path) -> None:
     """``.properties`` blocks like the ``.ini``/``.cfg`` it is the Java spelling of.
 
@@ -632,7 +633,7 @@ def test_a_planted_identity_in_a_locale_catalogue_is_reported(specimen_repositor
     signal of any kind before this suffix was admitted.
     """
     catalogue = specimen_repository / "messages.po"
-    catalogue.write_text(f"msgid \"nif\"\nmsgstr \"{_PLANTED_NIF}\"\n", encoding="utf-8")
+    catalogue.write_text(f'msgid "nif"\nmsgstr "{_PLANTED_NIF}"\n', encoding="utf-8")
     _git("add", "messages.po", cwd=specimen_repository)
 
     assert scan_tree(specimen_repository).findings == ()
