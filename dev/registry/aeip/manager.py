@@ -60,9 +60,11 @@ __all__ = [
     "ChainPlan",
     "ChainPlanEntry",
     "EvolutionPair",
+    "StaleAdjudication",
     "build_inventory",
     "chain_id_for",
     "derive_slug",
+    "detect_stale_adjudications",
     "extract_occurrences",
     "plan_chains",
     "render_evolution_record",
@@ -244,6 +246,98 @@ class AeipInventory:
     def event_by_slug(self, slug: str) -> AeipEvent | None:
         """The programme carrying this slug, when the family has one."""
         return next((event for event in self.events if event.slug == slug), None)
+
+
+@dataclass(frozen=True, slots=True)
+class StaleAdjudication:
+    """One adjudication entry the live corpus no longer grounds.
+
+    This is the mirror image of :class:`AeipAmbiguity`: an ambiguity is a live
+    case with no judgment, a stale adjudication is a judgment with no live
+    case. An exclusion whose occurrence was renumbered away, an alias whose
+    title AEAT no longer publishes, or a split/override/distinct-variants entry
+    naming a programme the corpus no longer yields all become permanent
+    silent no-ops -- nothing fails, the entry simply stops doing anything --
+    unless something reads the corpus against the ledger in this direction too.
+    """
+
+    kind: str
+    detail: str
+
+
+def detect_stale_adjudications(
+    inventory: AeipInventory,
+    adjudications: AdjudicationSet,
+) -> tuple[StaleAdjudication, ...]:
+    """Report adjudication entries the live corpus no longer supports.
+
+    ``inventory`` must be the inventory built WITH ``adjudications`` applied
+    (exclusions and aliases act during grouping), so that ``inventory.events``
+    reflects the same slug space the adjudications were judged against.
+    """
+    found: list[StaleAdjudication] = []
+    live_pairs = {(occurrence.revision_id, occurrence.casilla_id) for occurrence in inventory.occurrences}
+    live_titles = {occurrence.title for occurrence in inventory.occurrences if occurrence.title}
+    live_slugs = {event.slug for event in inventory.events}
+
+    for exclusion in adjudications.exclusions:
+        if (exclusion.revision, exclusion.casilla) not in live_pairs:
+            found.append(
+                StaleAdjudication(
+                    kind="exclusion",
+                    detail=f"{exclusion.revision}:{exclusion.casilla} names no occurrence in the live corpus",
+                ),
+            )
+
+    for alias in adjudications.aliases:
+        if not any(title in live_titles for title in alias.titles):
+            found.append(
+                StaleAdjudication(
+                    kind="alias",
+                    detail=f"slug {alias.slug!r} names no title the live corpus publishes: {alias.titles}",
+                ),
+            )
+
+    for override in adjudications.chain_ids:
+        if override.slug not in live_slugs:
+            found.append(
+                StaleAdjudication(
+                    kind="chain_id",
+                    detail=f"chain id override names slug {override.slug!r}, which is not a live programme",
+                ),
+            )
+
+    for split in adjudications.splits:
+        event = inventory.event_by_slug(split.slug)
+        if event is None:
+            found.append(
+                StaleAdjudication(
+                    kind="split",
+                    detail=f"split names slug {split.slug!r}, which is not a live programme",
+                ),
+            )
+        elif split.from_revision not in event.revisions:
+            found.append(
+                StaleAdjudication(
+                    kind="split",
+                    detail=(
+                        f"split for {split.slug!r} names revision {split.from_revision!r}, "
+                        f"which is not among {event.revisions}"
+                    ),
+                ),
+            )
+
+    for variants in adjudications.distinct_variants:
+        missing = tuple(slug for slug in variants.slugs if slug not in live_slugs)
+        if missing:
+            found.append(
+                StaleAdjudication(
+                    kind="distinct_variants",
+                    detail=f"distinct_variants names slug(s) no longer live: {missing}",
+                ),
+            )
+
+    return tuple(sorted(found, key=lambda entry: (entry.kind, entry.detail)))
 
 
 def _normalise(text: str) -> str:

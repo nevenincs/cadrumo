@@ -1,11 +1,11 @@
 """Strict Pydantic records for a parsed ``cli-sequence`` directive.
 
 A :class:`ParsedSequence` is the typed contract the rest of the engine builds
-on: the sandbox runner (``runner.py``) executes each :class:`SequenceFrame`'s
+on: the sandbox runner (``_runner.py``) executes each :class:`SequenceFrame`'s
 ``argv`` in order, threads :class:`CaptureBinding` values into later frames'
 ``{name}`` placeholders, evaluates each :class:`ExpectAssertion` against the
 live output, and the golden store / comparison layers persist and diff the
-result. The parser (``parser.py``) is the sole producer of these records; every
+result. The parser (``_parser.py``) is the sole producer of these records; every
 model is strict, frozen, and forbids extra fields
 (:data:`~cadrumo.core.models.STRICT_FROZEN_CONFIG`).
 

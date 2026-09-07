@@ -37,8 +37,20 @@ def test_remediation_never_recommends_the_wrong_browser_for_the_configured_chann
     assert "playwright install chromium" not in remediation
 
 
+@pytest.mark.external_tool
 def test_run_doctor_succeeds_for_a_real_provisioned_channel() -> None:
-    """A real launch-and-close of an actually-provisioned channel exits 0."""
+    """A real launch-and-close of an actually-provisioned channel exits 0.
+
+    Marked per function rather than per module: the browser binary is
+    installed by ``playwright install``, not by the dependency set, so this
+    is the marker's stated case -- heavy external tooling the dependency set
+    does not install -- and the default lane holds it out via
+    ``unit and not external_tool``. Without the marker it ran in that lane
+    and failed on any host that had not provisioned chromium, which is a red
+    that reports the host rather than the code. The three siblings stay in
+    the default lane: two never launch anything, and the bogus-channel case
+    fails its launch fast and asserts on that failure, so it needs no binary.
+    """
     exit_code = run_doctor(channel="chromium")
     assert exit_code == 0
 

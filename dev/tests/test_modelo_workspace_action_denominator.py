@@ -13,7 +13,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.entrypoints.tui_capability import TuiCapability
+from cadrumo.entrypoints.cli.command_spec import TuiCapability
 
 from ..quality.modelo_workspace_action_classification import (
     ModeloWorkspaceActionClassificationV1,

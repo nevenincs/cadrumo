@@ -25,6 +25,7 @@ from typing import Final
 from pydantic import BaseModel, ConfigDict, Field
 
 from .._paths import REPO_ROOT, UTF_8
+from ._inventory import InterfaceKind
 
 RUN_ROOT: Final[Path] = REPO_ROOT / ".tmp-tui-visual-inventory"
 """Where runs land. Gitignored: these are review artefacts, never durable."""
@@ -117,7 +118,7 @@ class InterfaceRecord(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     qualname: str
-    kind: str
+    kind: InterfaceKind
     locator: str
     rendered_by: tuple[str, ...] = ()
     note: str = ""
@@ -694,6 +695,7 @@ __all__ = [
     "SCRATCH_DIR",
     "FailedFrame",
     "FrameFailureKind",
+    "InterfaceKind",
     "InterfaceRecord",
     "Manifest",
     "ManifestVersionError",

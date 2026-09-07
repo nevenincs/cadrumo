@@ -31,6 +31,7 @@ from ...._paths import REPO_ROOT as _REPO_ROOT
 from ..adjudications import (
     AdjudicationError,
     AdjudicationSet,
+    ChainIdOverride,
     Exclusion,
     Split,
     TitleAlias,
@@ -45,6 +46,7 @@ from ..manager import (
     build_inventory,
     chain_id_for,
     derive_slug,
+    detect_stale_adjudications,
     extract_occurrences,
     plan_chains,
     render_evolution_record,
@@ -218,6 +220,112 @@ def test_shipped_adjudications_resolve_every_ambiguity(adjudicated) -> None:
     assert recorded, "expected recorded adjudications"
     for entry in recorded:
         assert len(entry.reason.strip()) > 40, f"adjudication reason is too thin to audit: {entry}"
+
+
+def test_shipped_adjudications_carry_no_stale_entries(adjudicated) -> None:
+    """No recorded judgment may outlive the occurrence, title, or programme it named.
+
+    This is the mirror of ``test_shipped_adjudications_resolve_every_ambiguity``:
+    that test proves every live case has a judgment, this one proves every
+    judgment still has a live case. A corpus edit that renumbers an excluded
+    casilla, drops an aliased title, or removes a split's programme must
+    surface here rather than leaving a silently inert row.
+    """
+    inventory, _, adjudications = adjudicated
+    stale = detect_stale_adjudications(inventory, adjudications)
+    assert stale == (), f"adjudication(s) naming a corpus the tree no longer carries: {stale}"
+
+
+def test_a_stale_exclusion_is_detected(inventory, corpus) -> None:
+    """Anti-tautology: an exclusion naming a vanished occurrence must be reported."""
+    occurrences, category_counts = corpus
+    stale_adjudications = AdjudicationSet(
+        exclusions=(Exclusion(revision="1900", casilla="99999", reason="synthetic: names nothing live"),),
+    )
+    stale_inventory = build_inventory(
+        occurrences, adjudications=stale_adjudications, category_row_counts=category_counts
+    )
+
+    stale = detect_stale_adjudications(stale_inventory, stale_adjudications)
+
+    assert [entry.kind for entry in stale] == ["exclusion"]
+    assert "1900:99999" in stale[0].detail
+
+
+def test_a_stale_alias_is_detected(inventory, corpus) -> None:
+    """Anti-tautology: an alias naming a title AEAT never published must be reported."""
+    occurrences, category_counts = corpus
+    stale_adjudications = AdjudicationSet(
+        aliases=(TitleAlias(slug="synthetic-slug", titles=("a title nobody published",), reason="synthetic"),),
+    )
+    stale_inventory = build_inventory(
+        occurrences, adjudications=stale_adjudications, category_row_counts=category_counts
+    )
+
+    stale = detect_stale_adjudications(stale_inventory, stale_adjudications)
+
+    assert [entry.kind for entry in stale] == ["alias"]
+
+
+def test_a_stale_chain_id_override_is_detected(inventory, corpus) -> None:
+    """Anti-tautology: a chain-id override naming a non-existent programme must be reported."""
+    occurrences, category_counts = corpus
+    stale_adjudications = AdjudicationSet(
+        chain_ids=(
+            ChainIdOverride(slug="totally-made-up-slug", chain_id="irpf-aeip-made-up-aplicado", reason="synthetic"),
+        ),
+    )
+    stale_inventory = build_inventory(
+        occurrences, adjudications=stale_adjudications, category_row_counts=category_counts
+    )
+
+    stale = detect_stale_adjudications(stale_inventory, stale_adjudications)
+
+    assert [entry.kind for entry in stale] == ["chain_id"]
+
+
+def test_a_stale_split_is_detected(inventory, corpus) -> None:
+    """Anti-tautology: a split naming a non-existent programme or revision must be reported."""
+    occurrences, category_counts = corpus
+    ghost_slug_adjudications = AdjudicationSet(
+        splits=(
+            Split(
+                slug="ghost-programme", from_revision="2023", chain_id="irpf-aeip-ghost-aplicado", reason="synthetic"
+            ),
+        ),
+    )
+    ghost_inventory = build_inventory(
+        occurrences, adjudications=ghost_slug_adjudications, category_row_counts=category_counts
+    )
+    ghost_stale = detect_stale_adjudications(ghost_inventory, ghost_slug_adjudications)
+    assert [entry.kind for entry in ghost_stale] == ["split"]
+
+    real_slug = inventory.events[0].slug
+    ghost_revision_adjudications = AdjudicationSet(
+        splits=(
+            Split(slug=real_slug, from_revision="1900", chain_id="irpf-aeip-ghost-2-aplicado", reason="synthetic"),
+        ),
+    )
+    ghost_revision_inventory = build_inventory(
+        occurrences, adjudications=ghost_revision_adjudications, category_row_counts=category_counts
+    )
+    ghost_revision_stale = detect_stale_adjudications(ghost_revision_inventory, ghost_revision_adjudications)
+    assert [entry.kind for entry in ghost_revision_stale] == ["split"]
+
+
+def test_a_stale_distinct_variants_entry_is_detected(inventory, corpus) -> None:
+    """Anti-tautology: distinct_variants naming an absent slug must be reported."""
+    occurrences, category_counts = corpus
+    stale_adjudications = AdjudicationSet(
+        distinct_variants=(VariantsDistinct(slugs=("ghost-a", "ghost-b"), reason="synthetic"),),
+    )
+    stale_inventory = build_inventory(
+        occurrences, adjudications=stale_adjudications, category_row_counts=category_counts
+    )
+
+    stale = detect_stale_adjudications(stale_inventory, stale_adjudications)
+
+    assert [entry.kind for entry in stale] == ["distinct_variants"]
 
 
 def test_oversize_title_on_a_single_revision_programme_is_not_blocked(inventory) -> None:

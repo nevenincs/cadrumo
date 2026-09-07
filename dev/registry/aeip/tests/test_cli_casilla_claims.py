@@ -134,7 +134,7 @@ def test_the_live_family_separates_the_two_counts() -> None:
     state. Anchoring ``pooled`` alone did not do that -- it is the unfiltered
     dict, and it stayed populated while both filtered sets could empty.
     """
-    inventory, _ = _load("100", None)
+    inventory, _, _ = _load("100", None)
 
     within_revision, pooled = casilla_claims(inventory)
     collisions = {key for key, slugs in within_revision.items() if len(slugs) > 1}

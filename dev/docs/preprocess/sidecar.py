@@ -9,8 +9,8 @@ Each preprocessed source file gains two committed siblings:
   provenance record (origin path, origin sha256, extractor id/version,
   source kind, status, attribution, pre-chunked units).
 
-The format-specific extractors -- one per
-:class:`~dev.docs.preprocess.schema.SourceDocumentKind` member -- build the
+The format-specific extractors (normatives HTML, Disenos de Registro
+workbooks, corpus PDFs, the unsupported-text tail) build the
 :class:`PreprocessOutput` and call :func:`write_sidecar`; this module owns
 only the serialisation and the round-trip, not the extraction. The text
 sidecar is the indexed surface; the json sidecar is provenance, named so

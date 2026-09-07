@@ -7,8 +7,6 @@ Parses a directive body of plain frame lines into a strict
 - ``@setup aeat ...`` -- an executed, visually collapsed setup frame.
 - ``@result aeat ...`` -- the mandatory terminal verification frame (exactly one,
   last).
-- ``@static aeat ...`` -- a frame shown but NOT executed, because something it
-  needs is unavailable here. Requires a ``@blocked`` line beneath it saying why.
 - ``@capture <name> <json-path>`` -- binds a value from the preceding frame's
   parsed envelope; later frames interpolate it as ``{name}``.
 - ``@expect <json-path> == <literal>`` -- a semantic assertion on the preceding

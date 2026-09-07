@@ -23,7 +23,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.entrypoints.tui_capability import TuiCapability
+from cadrumo.entrypoints.cli.command_spec import TuiCapability
 
 MODELO_IDENTITY_PREFIX: Final[str] = "modelo."
 _PLACEHOLDER_REASONS: Final[frozenset[str]] = frozenset({"", "n/a", "na", "unmeasured", "tbd", "todo"})

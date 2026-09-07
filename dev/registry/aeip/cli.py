@@ -8,11 +8,12 @@ from typing import Annotated
 import typer
 
 from ..._paths import REPO_ROOT
-from .adjudications import DEFAULT_ADJUDICATIONS_FILENAME, load_adjudications
+from .adjudications import DEFAULT_ADJUDICATIONS_FILENAME, AdjudicationSet, load_adjudications
 from .manager import (
     AeipInventory,
     ChainPlan,
     build_inventory,
+    detect_stale_adjudications,
     extract_occurrences,
     plan_chains,
     render_evolution_record,
@@ -33,7 +34,7 @@ def _modelos_root() -> Path:
     return _repo_root() / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 
 
-def _load(modelo_id: str, adjudications_path: Path | None) -> tuple[AeipInventory, ChainPlan]:
+def _load(modelo_id: str, adjudications_path: Path | None) -> tuple[AeipInventory, ChainPlan, AdjudicationSet]:
     path = adjudications_path or Path(__file__).resolve().parent / DEFAULT_ADJUDICATIONS_FILENAME
     adjudications = load_adjudications(path)
     occurrences, category_counts = extract_occurrences(_modelos_root(), modelo_id=modelo_id)
@@ -42,7 +43,7 @@ def _load(modelo_id: str, adjudications_path: Path | None) -> tuple[AeipInventor
         adjudications=adjudications,
         category_row_counts=category_counts,
     )
-    return inventory, plan_chains(inventory, adjudications=adjudications)
+    return inventory, plan_chains(inventory, adjudications=adjudications), adjudications
 
 
 _MODELO_OPTION = typer.Option("--modelo", help="AEAT modelo identifier carrying the anexo-A family.")
@@ -84,7 +85,7 @@ def inventory_command(
     adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
 ) -> None:
     """Report the event matrix: programmes, spans, and id-reuse collisions."""
-    inventory, _ = _load(modelo, adjudications)
+    inventory, _, _ = _load(modelo, adjudications)
     multi = [event for event in inventory.events if event.spans_multiple_revisions]
 
     typer.echo(f"Modelo {modelo} anexo-A AEIP family across revisions {', '.join(inventory.revisions)}")
@@ -113,15 +114,21 @@ def check_command(
     modelo: Annotated[str, _MODELO_OPTION] = "100",
     adjudications: Annotated[Path | None, _ADJUDICATIONS_OPTION] = None,
 ) -> None:
-    """Report every unadjudicated ambiguity; exit non-zero while any remain."""
-    _, plan = _load(modelo, adjudications)
-    if plan.complete:
+    """Report every unadjudicated ambiguity and every stale adjudication; exit non-zero while any remain."""
+    inventory, plan, adjudications_set = _load(modelo, adjudications)
+    stale = detect_stale_adjudications(inventory, adjudications_set)
+    if plan.complete and not stale:
         typer.echo(f"AEIP family fully adjudicated: {len(plan.entries)} chains planned.")
         return
-    typer.echo(f"{len(plan.ambiguities)} unadjudicated ambiguit(y/ies):")
-    for ambiguity in plan.ambiguities:
-        typer.echo(f"  [{ambiguity.kind}] {', '.join(ambiguity.slugs)}")
-        typer.echo(f"      {ambiguity.detail}")
+    if not plan.complete:
+        typer.echo(f"{len(plan.ambiguities)} unadjudicated ambiguit(y/ies):")
+        for ambiguity in plan.ambiguities:
+            typer.echo(f"  [{ambiguity.kind}] {', '.join(ambiguity.slugs)}")
+            typer.echo(f"      {ambiguity.detail}")
+    if stale:
+        typer.echo(f"{len(stale)} stale adjudication(s), naming a corpus the tree no longer carries:")
+        for entry in stale:
+            typer.echo(f"  [{entry.kind}] {entry.detail}")
     raise typer.Exit(code=1)
 
 
@@ -135,7 +142,7 @@ def plan_command(
     ] = False,
 ) -> None:
     """Plan the chain stamps and evolution records. Writes nothing."""
-    _, plan = _load(modelo, adjudications)
+    _, plan, _ = _load(modelo, adjudications)
     typer.echo(f"planned chains        : {len(plan.entries)}")
     typer.echo(f"occurrences to stamp  : {plan.stamp_count}")
     typer.echo(f"evolution records     : {plan.record_count}")

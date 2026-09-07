@@ -44,8 +44,20 @@ __all__ = [
     "classify_run",
 ]
 
-#: Every verdict this can assign, declared once so a caller can branch on the
-#: set without reading the strings out of this module.
+#: Every verdict :func:`classify_run` can assign to a :class:`RunIntegrity`,
+#: declared once so a caller can branch on the set without reading the strings
+#: out of this module. Its own gate asserts this tuple EQUALS the set the
+#: classifier reaches, so it cannot quietly gain a member no run produces.
+#:
+#: It is not the full vocabulary of the ``verdict=`` token this tool PRINTS.
+#: :func:`main` also emits ``verdict=unreadable`` for a log it could not open,
+#: and that one never reaches a :class:`RunIntegrity` because it is decided
+#: before one can be built. A caller parsing the output must handle it; a
+#: caller branching on this tuple alone would treat an unreadable run as a
+#: verdict it had never heard of, which is the one case worth not missing.
+#: Adding it here instead would be wrong twice over: it would break the
+#: reachability gate above, and it would claim the classifier assigns a
+#: verdict it cannot.
 VERDICTS: Final[tuple[str, ...]] = (
     "usable",
     "lost_workers",

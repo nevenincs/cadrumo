@@ -102,7 +102,9 @@ def _write_placeholder_cohort(root: Path) -> dict[str, str]:
                 "sha256": sha256,
                 "source_commit": "a" * 40,
                 "version": "1.0.0",
-                "command_spec_attestation": make_test_command_spec_attestation(root, names, source_commit="a" * 40),
+                "command_spec_attestation": make_test_command_spec_attestation(
+                    root, names, source_commit="a" * 40, artifacts_are_unreadable=True
+                ),
             },
         ),
         encoding="utf-8",
@@ -163,7 +165,9 @@ def test_load_python_cohort_rejects_digest_drift_before_metadata_parsing(
                 "sha256": sha256,
                 "source_commit": "a" * 40,
                 "version": "1.0.0",
-                "command_spec_attestation": make_test_command_spec_attestation(tmp_path, names, source_commit="a" * 40),
+                "command_spec_attestation": make_test_command_spec_attestation(
+                    tmp_path, names, source_commit="a" * 40, artifacts_are_unreadable=True
+                ),
             },
         ),
         encoding="utf-8",
@@ -463,3 +467,55 @@ def test_install_target_uses_a_supplied_digest_without_rehashing(tmp_path: Path)
 
     assert digest_install_target("cadrumo", artifact, digest=supplied).endswith(f"#sha256={supplied}")
     assert digest_install_target("cadrumo", artifact).endswith(f"#sha256={sha256_path(artifact)}")
+
+
+def _corrupt_root_artifacts(root: Path) -> dict[str, str]:
+    """Plant a truncated wheel and a garbage sdist, then name them as a cohort would."""
+    names = {"cadrumo": "cadrumo-1.0.0-py3-none-any.whl", "cadrumo-sdist": "cadrumo-1.0.0.tar.gz"}
+    wheel = root / names["cadrumo"]
+    with zipfile.ZipFile(wheel, "w") as archive:
+        archive.writestr("cadrumo-1.0.0.dist-info/METADATA", "Name: cadrumo\nVersion: 1.0.0\n")
+    intact = wheel.read_bytes()
+    wheel.write_bytes(intact[: len(intact) - 40])
+    (root / names["cadrumo-sdist"]).write_bytes(b"\x1f\x8b\x08\x00" + bytes(32))
+    add_test_source_archive(root, names, {})
+    return names
+
+
+def test_attestation_refuses_to_attest_an_unreadable_artifact(tmp_path: Path) -> None:
+    """A damaged archive cannot become a plausible member digest.
+
+    The envelope digest closes over ``artifact_members_sha256``, so a value
+    invented after a swallowed read error verifies exactly as well as a computed
+    one: every downstream envelope check passes over a member cohort nobody ever
+    read. Refusing at construction is what keeps an unreadable artifact and a
+    real one distinguishable.
+    """
+    names = _corrupt_root_artifacts(tmp_path)
+
+    with pytest.raises((OSError, tarfile.TarError, zipfile.BadZipFile)):
+        make_test_command_spec_attestation(tmp_path, names, source_commit="a" * 40)
+
+
+def test_attestation_refuses_a_placeholder_declaration_over_readable_artifacts(tmp_path: Path) -> None:
+    """The declaration cannot displace a projection that could have been computed.
+
+    Without this direction the opt-out would be a standing licence to skip the
+    member walk, and a fixture whose artifacts became readable again would keep
+    attesting the stand-in.
+    """
+    names = {"cadrumo": "cadrumo-1.0.0-py3-none-any.whl", "cadrumo-sdist": "cadrumo-1.0.0.tar.gz"}
+    with zipfile.ZipFile(tmp_path / names["cadrumo"], "w") as archive:
+        archive.writestr("cadrumo-1.0.0.dist-info/METADATA", "Name: cadrumo\nVersion: 1.0.0\n")
+    metadata = b"Name: cadrumo\nVersion: 1.0.0\n"
+    with tarfile.open(tmp_path / names["cadrumo-sdist"], "w:gz") as archive:
+        info = tarfile.TarInfo("cadrumo-1.0.0/PKG-INFO")
+        info.size = len(metadata)
+        archive.addfile(info, io.BytesIO(metadata))
+    add_test_source_archive(tmp_path, names, {})
+
+    with pytest.raises(AssertionError, match="projection succeeded"):
+        make_test_command_spec_attestation(tmp_path, names, source_commit="a" * 40, artifacts_are_unreadable=True)
+
+    computed = make_test_command_spec_attestation(tmp_path, names, source_commit="a" * 40)
+    assert computed["artifact_members_sha256"] != "0" * 64

@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Final
 
-from cadrumo.entrypoints.tui_capability import TuiCapability
+from cadrumo.entrypoints.cli.command_spec import TuiCapability
 
 from .modelo_workspace_action_classification import (
     ModeloWorkspaceActionClassificationV1,

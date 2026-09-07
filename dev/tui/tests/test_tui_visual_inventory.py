@@ -12,6 +12,7 @@ from pathlib import Path
 
 import pytest
 from PIL import Image
+from pydantic import ValidationError
 
 from ..._paths import REPO_ROOT, UTF_8
 from .. import _coverage, _diff, _inventory, _raster
@@ -31,6 +32,7 @@ from .._artifacts import (
 from .._artifacts import (
     digest as _artifacts_digest,
 )
+from .._inventory import InterfaceKind
 from .._viewports import DEFAULT_VIEWPORTS, VIEWPORTS, resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -175,6 +177,38 @@ def test_import_aliases_and_same_named_bases_cannot_escape_the_inventory(
     assert found["Shared"].module.endswith(".first")
     with pytest.raises(_coverage.CoverageError, match="unclassified interface"):
         _coverage.check(interfaces, (), classifications={}, rendered_table={})
+
+
+def test_a_manifest_naming_a_kind_of_interface_that_does_not_exist_is_refused() -> None:
+    """The inventory vocabulary against a manifest read back from disk.
+
+    ``kind`` was typed ``str`` with the two permitted words spelled only as
+    prose in the field docstring, so the reader accepted any string and
+    branched on none of it -- ``"modal"``, ``"Screen"`` and even the
+    ``"REFUSED"`` that belongs to the frame-failure vocabulary all validated
+    and rendered into the coverage table as themselves. Both directions are
+    asserted here: an out-of-domain word is refused, and every word the enum
+    does declare still survives the round trip.
+    """
+    for kind in InterfaceKind:
+        record = InterfaceRecord(qualname="pkg.Surface", kind=kind, locator="a.py:1")
+        assert record.kind is kind
+        assert InterfaceRecord.model_validate_json(record.model_dump_json()).kind is kind
+
+    for absent in ("modal", "Screen", "APP", "REFUSED", "widget", ""):
+        with pytest.raises(ValidationError):
+            InterfaceRecord(qualname="pkg.Surface", kind=absent, locator="a.py:1")
+
+
+def test_every_interface_the_real_tree_declares_carries_a_declared_kind() -> None:
+    """The producer against the vocabulary, over the live source tree.
+
+    The single site that assigns ``kind`` picks between two enum members, so
+    a third kind of surface appearing in the tree cannot be represented and
+    must be a visible failure rather than a quietly mislabelled row.
+    """
+    for interface in _inventory.scan():
+        assert interface.kind in frozenset(InterfaceKind), interface.qualname
 
 
 def test_the_inventory_excludes_test_trees_and_locates_real_source() -> None:

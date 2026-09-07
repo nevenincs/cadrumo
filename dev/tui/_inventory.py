@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import ast
 from dataclasses import dataclass
+from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
@@ -40,6 +41,23 @@ class _Declaration:
     resolved_bases: tuple[str, ...]
 
 
+class InterfaceKind(StrEnum):
+    """What kind of operator-facing surface an interface class is.
+
+    The one definition of the vocabulary. It was previously spelled as prose
+    in the field docstring below over a field typed ``str``, which accepted
+    every string and checked none -- the same hole the frame failure
+    vocabulary had, one record over, on a field the manifest reader also
+    revalidates from disk.
+    """
+
+    APP = "app"
+    """A full-screen application: a subclass of Textual's ``App``."""
+
+    SCREEN = "screen"
+    """A screen or modal: a subclass of ``Screen`` or ``ModalScreen``."""
+
+
 @dataclass(frozen=True)
 class Interface:
     """One TUI interface class, as the source tree declares it."""
@@ -48,8 +66,7 @@ class Interface:
     module: str
     path: Path
     line: int
-    kind: str
-    """``app`` for a full-screen application, ``screen`` for a screen or modal."""
+    kind: InterfaceKind
     bases: tuple[str, ...]
     subclassed_by: tuple[str, ...]
 
@@ -227,7 +244,7 @@ def scan(root: Path = TUI_ROOT) -> tuple[Interface, ...]:
             module=_module_name(declaration.path),
             path=declaration.path,
             line=declaration.line,
-            kind="app" if qualname in apps else "screen",
+            kind=InterfaceKind.APP if qualname in apps else InterfaceKind.SCREEN,
             bases=declaration.bases,
             subclassed_by=tuple(sorted(children.get(qualname, ()))),
         )
@@ -237,4 +254,4 @@ def scan(root: Path = TUI_ROOT) -> tuple[Interface, ...]:
     return tuple(sorted(interfaces, key=lambda item: item.qualname))
 
 
-__all__ = ["TUI_ROOT", "Interface", "scan"]
+__all__ = ["TUI_ROOT", "Interface", "InterfaceKind", "scan"]

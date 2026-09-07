@@ -1,7 +1,8 @@
 """Corpus extraction: the product's committed text payload and the dev-index hook.
 
 Defines the versioned :class:`PreprocessOutput` schema the project-side
-document preprocessors emit, and serves two consumers
+document preprocessors (BOE normatives HTML, Disenos de Registro workbooks,
+corpus PDFs, and Terminology Handbook concepts) emit, and serves two consumers
 from that one extraction truth:
 
 * **The committed sidecar payload** — ``*.extracted.md`` text plus
