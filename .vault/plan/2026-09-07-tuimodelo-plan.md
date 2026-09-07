@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:583a51cb6a9b5a1c7842b441d3d6354166d45f03da88af7601908c6b3de45e64'
+body_hash: 'sha256:be215dd05a086f4ae0dd574c05f4a7268e91471ead4a37b0b7ce2aacab20e5b5'
 ---
 
 # `tuimodelo` plan
@@ -89,8 +89,8 @@ Annotate absorbed rows with their new owner, publish the coverage baseline, and 
 - [x] `W01.P03.S141` - Reopen the edit capability projection under the surviving mechanism, replacing the retired condition it still cites, since every editor step routes through a seam nothing currently opens; `src/cadrumo/application/modelo/_edit_facade.py`.
 - [x] `W01.P03.S142` - Relocate the capability projection out of the private underscore module to a public defining module, because a frontend import of it is otherwise forbidden by the architecture boundary; `src/cadrumo/application/modelo`.
 - [x] `W01.P03.S128` - Open the sibling adapter-purity campaign for the residual violations, deriving the figure from the 159-row inventory rather than rounding it, and record that the ledger lane's prior owner is archived so the work is not orphaned twice; `.vault`.
-- [ ] `W01.P03.S166` - Shrink the unreachable-module ratchet by the capability module this phase's relocation frees, in the same commit as the relocation; `dev/quality/unreachable_module_ratchet.toml`.
-- [ ] `W01.P03.S168` - Repair the locale co-landing hook, which flat-globs the locales root while the catalogues are sharded per locale, so its key set is empty and both its invariants short-circuit; `dev/locales/_colanding.py`.
+- [x] `W01.P03.S166` - Shrink the unreachable-module ratchet by the capability module this phase's relocation frees, in the same commit as the relocation; `dev/quality/unreachable_module_ratchet.toml`.
+- [x] `W01.P03.S168` - Repair the locale co-landing hook, which flat-globs the locales root while the catalogues are sharded per locale, so its key set is empty and both its invariants short-circuit; `dev/locales/_colanding.py`.
 - [ ] `W01.P03.S169` - Wire the gates this plan closes on into the per-push lane, since the architecture check, the three ratchets, the denominator and the fixed-point authority are reachable only by manual dispatch today; `.github/workflows/ci.yml`.
 
 ## Wave `W02` - adapter to backend migration
