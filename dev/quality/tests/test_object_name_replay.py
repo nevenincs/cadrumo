@@ -625,7 +625,7 @@ def test_invalid_receipt_integrity_refuses_before_any_live_write(
 #: because production compares regenerated evidence in a single check.
 _DRIFT_REFUSAL = {
     "manifest": "receipt manifest digest differs from the supplied manifest",
-    "inventory": "reviewed manifest is not current",
+    "inventory": "supplied current inventory differs from the fresh replay scan",
     "component": "receipt component identity differs from the supplied component",
     "tool": "regenerated transformation or verification differs from the receipt",
     "generator": "regenerated transformation or verification differs from the receipt",
