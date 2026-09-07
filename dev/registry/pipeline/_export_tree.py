@@ -66,14 +66,14 @@ from ._render_profile import (
 )
 from ._semantic_map import SemanticMap
 from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
-from ._source_defects import (
-    SourceDefectDeclaration,
-    adjudicated_literal_for,
-    validate_source_defect_declarations,
-)
 from ._variable_envelope import (
     compile_auxiliary_envelope_header_definition,
     compile_filing_envelope_definition,
+)
+from .source_defects import (
+    SourceDefectDeclaration,
+    adjudicated_literal_for,
+    validate_source_defect_declarations,
 )
 
 __all__ = [

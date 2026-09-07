@@ -11,9 +11,9 @@ That is a strictly weaker question -- it can say two directories differ, but it
 cannot say the tree is a VALID registry authority -- and it let trees be written
 without the pre-cutover proof that the generator already owned.
 
-Each generated modelo is enrolled as a row in :data:`_GENERATED_TREES`, and a
-row whose published design contradicts itself carries an adjudication in
-:data:`_SOURCE_DEFECTS` keyed by the source file it describes.
+Each generated modelo is enrolled as a row in :data:`_GENERATED_TREES`. A row
+whose published design contradicts itself consumes the pipeline-owned
+adjudication keyed by the source file it describes.
 """
 
 from __future__ import annotations
@@ -49,10 +49,10 @@ from ..pipeline._render_profile import (
 )
 from ..pipeline._semantic_map_join import join_record_design_semantics
 from ..pipeline._semantic_map_loader import load_semantic_map
-from ..pipeline._source_defects import SourceDefectDeclaration
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from ..pipeline.render_check import parsed_tree_file
+from ..pipeline.source_defects import source_defects_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -147,46 +147,9 @@ _GENERATED_TREES: tuple[_GeneratedTree, ...] = (
     _GeneratedTree("303", "2025", "aeat-dr-303-2025", "2025", 2025, "4T"),
     _GeneratedTree("303", "2026-y-siguientes", "aeat-dr-303-2026", "2026", 2026, "4T"),
     # The 2022 annual IVA summary, whose eight numbered pages carry the only
-    # adjudicated source defect in the estate -- see `_SOURCE_DEFECTS` below.
+    # adjudicated source defect in the estate.
     _GeneratedTree("390", "2022", "aeat-dr-390-2022", "2022", 2022, "0A"),
 )
-
-
-#: Adjudicated contradictions in a published record design, keyed by the source
-#: ref of the file each one describes rather than by the tree row that reads it:
-#: a defect is a property of the document, so every row bound to the same design
-#: inherits the same reading. Each declaration is additionally pinned to that
-#: file's SHA-256 and refused by `validate_source_defect_declarations` if the
-#: parsed source does not carry it, so a reissued design retires its entry by
-#: going dormant rather than by being silently reapplied.
-_SOURCE_DEFECTS: dict[str, tuple[SourceDefectDeclaration, ...]] = {
-    "aeat-dr-390-2022": (
-        SourceDefectDeclaration(
-            source_ref="aeat-dr-390-2022",
-            source_sha256="7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe",
-            sheet="Pág. 7",
-            source_cell="A53",
-            published_content='Constante "</T3900700>"',
-            adjudicated_literal="</T39007000>",
-            evidence=(
-                "Cell A53 states two facts that cannot both hold: the close constant it prints is eleven "
-                "characters, and the slot the same cell declares for it is twelve bytes. Read straight out "
-                "of xl/sharedStrings.xml, bypassing project code, the workbook carries </T39001000> through "
-                "</T39006000> and </T39008000> at twelve characters each and </T3900700> at eleven, so the "
-                "short form is in the AEAT file and no parser is implicated. Three independent signals "
-                "converge on </T39007000>: the seven sibling pages all follow </T3900N000> for page N, that "
-                "value is the only one filling the twelve-byte slot A53 itself declares, and it is the value "
-                "the reviewed committed layout already carries. The published reading is unusable rather than "
-                "merely disfavoured, since an eleven-byte literal is refused by the slot-width guard that "
-                "follows this substitution regardless of how the byte comparison is settled."
-            ),
-        ),
-    ),
-}
-
-
-def _source_defects(tree: _GeneratedTree) -> tuple[SourceDefectDeclaration, ...]:
-    return _SOURCE_DEFECTS.get(tree.source_ref, ())
 
 
 def _isolated_authority(tree: _GeneratedTree, root: Path) -> Path:
@@ -474,7 +437,7 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     becomes reviewable this test fails and the pin has to be removed.
     """
     semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
-    source_defects = _source_defects(tree)
+    source_defects = source_defects_for(tree.source_ref)
     fresh_root = tmp_path / "fresh" / "export"
     render_complete_export_tree(
         fresh_root,

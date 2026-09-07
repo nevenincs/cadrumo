@@ -8,6 +8,7 @@ version placement reds these tests rather than silently blinding the guard.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -90,6 +91,37 @@ def test_homebrew_extraction_ignores_urls_that_are_not_release_assets() -> None:
     assert extract_pointer_version(formula, PointerFormat.HOMEBREW) == "0.2.1"
 
 
+def test_a_release_download_resource_url_is_not_read_as_the_pinned_version() -> None:
+    """Teeth for the exclusion the pattern's own comment claims.
+
+    The retired spelling is exercised here rather than described, because the
+    whole finding is that it excluded nothing it claimed to: its anchor was the
+    `/releases/download/v<version>/` segment alone, and the formula's own
+    `cadrumo_data_*` resources are release downloads. It must be seen reading a
+    resource's version before the replacement's refusal to do so means
+    anything. The right answer survived only because the generator emits the
+    product URL ahead of the resources, and nothing held that order.
+    """
+    resource_first = (
+        "class Cadrumo < Formula\n"
+        '  resource "cadrumo_data_official" do\n'
+        '    url "https://github.com/nevenincs/cadrumo/releases/download/v9.9.9/'
+        'cadrumo_data_official-9.9.9.tar.gz"\n'
+        "  end\n"
+        '  url "https://github.com/nevenincs/cadrumo/releases/download/v0.2.1/cadrumo-0.2.1.tar.gz"\n'
+        "end\n"
+    )
+    retired = re.compile(r"""url\s+["\'][^"\']*/releases/download/v(?P<version>[^/"\']+)/""")
+
+    retired_reading = retired.search(resource_first)
+
+    assert retired_reading is not None and retired_reading.group("version") == "9.9.9", (
+        "the retired rule is being credited with an exclusion it never made; this teeth test proves nothing"
+    )
+    assert extract_pointer_version(resource_first, PointerFormat.HOMEBREW) == "0.2.1"
+    assert extract_pointer_version(_homebrew_formula("0.2.1"), PointerFormat.HOMEBREW) == "0.2.1"
+
+
 @pytest.mark.parametrize(
     ("text", "pointer_format"),
     [
@@ -100,6 +132,12 @@ def test_homebrew_extraction_ignores_urls_that_are_not_release_assets() -> None:
         ('{"version": 3}', PointerFormat.SCOOP),
         ("class Cadrumo < Formula\nend\n", PointerFormat.HOMEBREW),
         ('class Cadrumo < Formula\n  url "https://example.invalid/x.tar.gz"\nend\n', PointerFormat.HOMEBREW),
+        (
+            'class Cadrumo < Formula\n  resource "cadrumo_data_official" do\n'
+            '    url "https://github.com/nevenincs/cadrumo/releases/download/v9.9.9/'
+            'cadrumo_data_official-9.9.9.tar.gz"\n  end\nend\n',
+            PointerFormat.HOMEBREW,
+        ),
     ],
 )
 def test_an_unreadable_pointer_refuses_rather_than_reading_as_absent(text: str, pointer_format: PointerFormat) -> None:

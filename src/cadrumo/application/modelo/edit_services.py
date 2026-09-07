@@ -716,7 +716,6 @@ __all__ = [
     "modelo_edit_result_schema_identity",
     "parse_modelo_edit_value",
     "preflight_modelo_edit",
-    "project_modelo_edit_mutation_capability",
     "reconfirm_modelo_edit_baseline",
     "validate_scalar_intent",
     "writable_scalar_entry",

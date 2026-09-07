@@ -27,6 +27,7 @@ both call sites.
 
 from __future__ import annotations
 
+import ast
 import re
 import warnings
 from pathlib import Path
@@ -172,7 +173,10 @@ def _threshold_drift(root: Path) -> tuple[list[str], int]:
     finds no consumer at all is indistinguishable from one where every consumer
     agrees, and the first of those is a gate asserting nothing.
     """
-    declaration = re.compile(rf"^({'|'.join(_PINNED_THRESHOLDS)})\s*(?::[^=]+)?=\s*(\S+)", re.MULTILINE)
+    declaration = re.compile(
+        rf"^({'|'.join(_PINNED_THRESHOLDS)})\s*(?::[^=]+)?=\s*(.+?)\s*(?:#.*)?$",
+        re.MULTILINE,
+    )
     drifted: list[str] = []
     checked = 0
     for source in sorted(root.rglob("*.py")):
@@ -184,8 +188,13 @@ def _threshold_drift(root: Path) -> tuple[list[str], int]:
         # stale copy of a threshold it defines.
         for name, declared in declaration.findall(source.read_text(encoding="utf-8")):
             checked += 1
-            expected = str(_PINNED_THRESHOLDS[name])
-            if declared.rstrip(",") != expected:
+            expected = _PINNED_THRESHOLDS[name]
+            try:
+                value = ast.literal_eval(declared.rstrip(","))
+            except (SyntaxError, ValueError):
+                drifted.append(f"{source.name}: {name} = {declared}, which is not a bare literal this gate can prove")
+                continue
+            if value != expected:
                 drifted.append(f"{source.name}: {name} = {declared}, this gate proves {expected}")
     return drifted, checked
 
@@ -339,3 +348,49 @@ def test_restoring_a_missing_advisory_clears_the_floor_rather_than_failing_it(tm
     assert declared >= _MINIMUM_CONSUMER_BACKED_THRESHOLDS, (
         "restoring the missing advisory must clear the floor, not fail it"
     )
+
+
+def test_a_threshold_relaxed_by_an_expression_is_not_read_as_agreement(tmp_path: Path) -> None:
+    """A right-hand side this gate cannot evaluate is drift, not a pass.
+
+    The value capture used to stop at the first whitespace, so a consumer that
+    widened its threshold with anything spaced -- ``3.0 if _SLOW else 300.0``,
+    ``4.0 * 100`` -- handed the scan the leading ``3.0`` and was read as
+    agreeing with the figure proved above. That is precisely the relaxation
+    this gate exists to catch, passing it a hundredfold. The capture now runs
+    to the end of the declaration and the result is parsed, so a right-hand
+    side that is not a bare literal is reported rather than partly read.
+    """
+    (tmp_path / "conditional.py").write_text(
+        f"_P95_WALL_ADVISORY_SECONDS = {_LEDGER_WALL_S} if _SLOW else {_LEDGER_WALL_S * 100}\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "arithmetic.py").write_text(
+        f"_P95_WEDGE_WALL_TO_CPU_RATIO = {_LEDGER_RATIO} * 100\n",
+        encoding="utf-8",
+    )
+
+    drifted, checked = _threshold_drift(tmp_path)
+
+    assert checked == 2
+    assert len(drifted) == 2, f"a spaced expression was read as the literal it starts with: {drifted}"
+
+
+def test_a_threshold_spelled_as_an_equal_number_is_not_reported_as_drift(tmp_path: Path) -> None:
+    """Agreement is numeric, not textual.
+
+    The counterpart to the case above, and the reason the comparison parses
+    rather than merely tightening the string match: ``7`` and ``7.0`` are the
+    same threshold, and reporting the first as drift would be a false alarm
+    the reader learns to wave through -- the decay this module already guards
+    against in the advisory itself.
+    """
+    (tmp_path / "consumer.py").write_text(
+        f"_COLD_START_WALL_ADVISORY_S = {int(_COLD_START_WALL_S)}\n",
+        encoding="utf-8",
+    )
+
+    drifted, checked = _threshold_drift(tmp_path)
+
+    assert checked == 1
+    assert not drifted, f"an equal value spelled as an int was reported as drift: {drifted}"

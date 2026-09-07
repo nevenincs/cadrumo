@@ -90,6 +90,7 @@ def _run_against_synthetic_interpreter(
         launcher.write_text(
             f'@echo off\r\n"{sys.executable}" "{script}"\r\n',
             encoding="utf-8",
+            newline="",
         )
     else:
         launcher.write_text(

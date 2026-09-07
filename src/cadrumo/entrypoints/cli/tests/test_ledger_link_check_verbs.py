@@ -37,7 +37,12 @@ def test_link_rejects_removed_evidence_id_grammar() -> None:
 
     result = _invoke(["app", "ledger", "link", "0" * 64, "--invoice-id", "inv-1", "--evidence-id", "ev-123"])
     assert result.exit_code != 0, result.output
-    assert "--evidence-id" in result.output or "No such option" in result.output
+    # Click's own unknown-option message, which the docstring names as the
+    # guard. The old disjunction also accepted "--evidence-id", but that is
+    # the token the operator TYPED and Click echoes it inside the very error
+    # being asserted -- so it could not tell a retired option from one that
+    # resolved and failed for some other reason. Click does not localise.
+    assert "No such option" in result.output
 
 
 def test_link_refuses_unknown_transaction_id() -> None:

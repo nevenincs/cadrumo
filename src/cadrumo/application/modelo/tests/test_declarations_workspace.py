@@ -10,6 +10,7 @@ import pytest
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.buckets.event import BucketEventType
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -26,6 +27,9 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ..declarations_workspace import (
+    DECLARATION_LIFECYCLE_EVENT_KINDS,
+    DECLARATION_LIFECYCLE_EXCLUDED_EVENTS,
+    DeclarationsLifecycleExclusion,
     DeclarationsLifecycleKind,
     DeclarationsSanitizedLifecycleFactV1,
     DeclarationsWorkspaceAvailability,
@@ -491,3 +495,112 @@ def test_defining_module_has_no_io_adapter_entrypoint_or_network_import() -> Non
     )
     calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
     assert calls.isdisjoint({"open", "print", "input"})
+
+
+class TestLifecycleVocabularyReconciliation:
+    """The store's event taxonomy and the frontend's lifecycle kind must reconcile by construction.
+
+    Three counts describe one lifecycle and they used not to reconcile by
+    inspection: the store declares the modelo event types, the frontend offers
+    lifecycle arms, and the set of events belonging to the declaration's own
+    filing lifecycle sits between them. Leaving that to inspection is what let
+    an arm exist with no supplier and an event exist with no arm, neither of
+    which raises anything. These are the gate.
+    """
+
+    def test_every_modelo_event_is_either_mapped_or_classified_as_excluded(self) -> None:
+        """No modelo event type may be silently absent from both declarations.
+
+        This is the teeth for a new event type: declaring one without deciding
+        whether it belongs to this lifecycle fails here, rather than being
+        quietly dropped by a surface that never hears about it.
+        """
+        taxonomy = {
+            event_type for event_type in BucketEventType if event_type.name.startswith("MODELO_")
+        }
+
+        assert set(DECLARATION_LIFECYCLE_EVENT_KINDS) | set(DECLARATION_LIFECYCLE_EXCLUDED_EVENTS) == taxonomy
+
+    def test_no_event_is_both_mapped_and_excluded(self) -> None:
+        """An event cannot be on the declaration's lifecycle and off it."""
+        assert set(DECLARATION_LIFECYCLE_EVENT_KINDS).isdisjoint(DECLARATION_LIFECYCLE_EXCLUDED_EVENTS)
+
+    def test_every_lifecycle_arm_has_a_supplier(self) -> None:
+        """An arm no event can emit is a promise the product cannot keep.
+
+        Two arms were previously unsuppliable: the kinds meaning created and
+        renamed have exactly one source event each, and the adapter-held filter
+        this vocabulary was reconciled against excluded both.
+        """
+        assert set(DECLARATION_LIFECYCLE_EVENT_KINDS.values()) == set(DeclarationsLifecycleKind)
+
+    def test_each_arm_has_exactly_one_supplier(self) -> None:
+        """Two events sharing an arm would make the surface unable to tell them apart."""
+        suppliers = list(DECLARATION_LIFECYCLE_EVENT_KINDS.values())
+
+        assert len(suppliers) == len(set(suppliers))
+
+    def test_a_verification_refusal_is_neither_dropped_nor_reported_as_a_pass(self) -> None:
+        """Refusal carries its own arm.
+
+        Dropping it collapses a refusal into an absence; folding it into the
+        verified arm reports a refused verification as a passed one. Both are
+        misreports of a filing-grade outcome, so the vocabulary carries the
+        distinction rather than each surface special-casing it.
+        """
+        refused = DECLARATION_LIFECYCLE_EVENT_KINDS[BucketEventType.MODELO_VERIFICATION_REFUSED]
+        passed = DECLARATION_LIFECYCLE_EVENT_KINDS[BucketEventType.MODELO_VERIFICATION_PASSED]
+
+        assert refused is DeclarationsLifecycleKind.VERIFICATION_REFUSED
+        assert passed is DeclarationsLifecycleKind.VERIFIED
+        assert refused is not passed
+
+    def test_the_audit_bundle_events_are_excluded_with_their_own_reason(self) -> None:
+        """Evidence-bundle activity must not be reported as declaration activity.
+
+        The audit events concern the evidence bundle rather than the
+        declaration, so mapping them onto this vocabulary's verified and
+        exported arms would misattribute them. They are excluded under a reason
+        that says so, rather than being absent.
+        """
+        assert DECLARATION_LIFECYCLE_EXCLUDED_EVENTS[BucketEventType.MODELO_AUDIT_VERIFIED] is (
+            DeclarationsLifecycleExclusion.EVIDENCE_BUNDLE_SUBJECT
+        )
+        assert DECLARATION_LIFECYCLE_EXCLUDED_EVENTS[BucketEventType.MODELO_AUDIT_EXPORTED] is (
+            DeclarationsLifecycleExclusion.EVIDENCE_BUNDLE_SUBJECT
+        )
+
+    def test_every_exclusion_reason_is_used(self) -> None:
+        """Anti-vacuity: a reason nothing carries is a vocabulary nobody applied."""
+        assert set(DECLARATION_LIFECYCLE_EXCLUDED_EVENTS.values()) == set(DeclarationsLifecycleExclusion)
+
+    def test_the_totality_rule_detects_an_unclassified_event(self) -> None:
+        """Teeth: the rule above must fail on a taxonomy nobody has classified.
+
+        A totality assertion that happens to hold proves nothing about what it
+        would do when the tree changes. This runs the same comparison against a
+        taxonomy carrying one member neither declaration accounts for, and
+        shows it refuses. Nothing production-side is patched: the defect is
+        built here and compared here.
+        """
+        classified = set(DECLARATION_LIFECYCLE_EVENT_KINDS) | set(DECLARATION_LIFECYCLE_EXCLUDED_EVENTS)
+        taxonomy_with_a_new_event = classified | {BucketEventType.CENSO_DECLARATION_ALTA}
+
+        assert classified != taxonomy_with_a_new_event
+
+    def test_the_supplier_rule_detects_an_arm_nothing_emits(self) -> None:
+        """Teeth: the supplier rule must fail when an arm loses its only event.
+
+        Built by dropping one pairing, which is exactly the shape the defect
+        took before this reconciliation: the created and renamed arms were
+        offered by the vocabulary while the filter feeding it excluded their
+        only source events.
+        """
+        without_created = {
+            event_type: kind
+            for event_type, kind in DECLARATION_LIFECYCLE_EVENT_KINDS.items()
+            if event_type is not BucketEventType.MODELO_WORK_UNIT_CREATED
+        }
+
+        assert set(without_created.values()) != set(DeclarationsLifecycleKind)
+        assert DeclarationsLifecycleKind.CREATED not in set(without_created.values())

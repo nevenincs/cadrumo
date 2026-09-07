@@ -243,13 +243,6 @@ def _import_targets(node: ast.stmt, *, owner: str) -> frozenset[str]:
     return frozenset({head} | {f"{head}.{alias.name}" for alias in node.names})
 
 
-def _module_name_for(path: Path) -> str:
-    """Return the fully qualified module name of a registry source file."""
-    relative = path.relative_to(REGISTRY_DIR).with_suffix("")
-    parts = [part for part in relative.parts if part != "__init__"]
-    return ".".join([REGISTRY_PACKAGE, *parts]) if parts else REGISTRY_PACKAGE
-
-
 def registry_package_modules() -> frozenset[str]:
     """Return every production module file in the registry package.
 

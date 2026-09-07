@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 import os
 import subprocess
@@ -105,6 +106,40 @@ def test_parser_defaults_to_rehearsal_and_lists_every_explicit_mode() -> None:
     with pytest.raises(SystemExit) as raised:
         parser.parse_args(["rename-now"])
     assert raised.value.code == 2
+
+
+def test_every_accepted_mode_has_a_dispatch_branch_and_every_branch_is_accepted() -> None:
+    """Join the argparse surface to the dispatch surface, which are independent.
+
+    The sibling above compares ``parse_args`` over ``_MODES`` against ``_MODES``.
+    Both sides descend from that one tuple -- argparse is handed it as
+    ``choices`` -- so deleting a mode shrinks the parser and the loop together
+    and the assertion still agrees. It proves each mode parses to itself, which
+    is worth having, but it cannot see the loss its own name claims to catch.
+
+    The dispatch branches are a genuinely separate enumeration: the literals
+    ``main`` compares ``args.mode`` against, read from the module's own source.
+    A mode accepted but never dispatched falls through to the "unsupported
+    mode" refusal; a branch for a mode argparse no longer accepts is
+    unreachable code nobody would notice. Only a join can see either.
+    """
+    module_source = Path(cli.__file__).read_bytes().decode("utf-8")
+    dispatched = {
+        node.comparators[0].value
+        for node in ast.walk(ast.parse(module_source))
+        if isinstance(node, ast.Compare)
+        and isinstance(node.left, ast.Attribute)
+        and node.left.attr == "mode"
+        and len(node.comparators) == 1
+        and isinstance(node.comparators[0], ast.Constant)
+        and isinstance(node.comparators[0].value, str)
+    }
+
+    assert dispatched, 'no `args.mode == "..."` comparison was found, so this join measured nothing'
+    assert dispatched == set(cli._MODES), (
+        "the modes argparse accepts and the modes `main` dispatches have diverged; "
+        f"accepted-only={sorted(set(cli._MODES) - dispatched)} dispatched-only={sorted(dispatched - set(cli._MODES))}"
+    )
 
 
 def test_default_mode_rehearses_and_cannot_replay(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

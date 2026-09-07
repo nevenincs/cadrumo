@@ -37,10 +37,31 @@ _PAGEFIND_YML = _REPO_ROOT / "docs" / "pagefind.yml"
 
 
 def _fixture_site(tmp_path: Path, *, pages: int = 3) -> Path:
-    """Copy a small real built-HTML subset + the pagefind.yml into tmp."""
+    """Copy a small real built-HTML subset + the pagefind.yml into tmp.
+
+    Refuses, naming the absent artefact, when the built HTML root is missing or
+    holds fewer than ``pages`` pages. The built site is an uncommitted build
+    output, so its absence is the ordinary state of a fresh checkout -- and
+    without this refusal the copy silently yields an empty site, Pagefind
+    indexes nothing, and the downstream ``page_count`` assertion reports
+    ``assert 0 == 3``, a diagnostic that blames the injection for a build
+    artefact that was never there. An instrument that cannot tell "the input is
+    absent" from "the input measured zero" is reporting over what it never
+    measured.
+    """
+    if not _BUILT_HTML.is_dir():
+        pytest.fail(
+            f"no built documentation HTML at {_BUILT_HTML}; this gate indexes the "
+            "shipped artefact, so it needs a real build to read. Run the docs build first.",
+        )
     site = tmp_path / "site"
     site.mkdir()
     html = scan_directory(_BUILT_HTML, pattern="*.html", recursive=True)[:pages]
+    if len(html) < pages:
+        pytest.fail(
+            f"built documentation HTML at {_BUILT_HTML} holds {len(html)} page(s); "
+            f"this gate needs {pages}. Run the docs build first.",
+        )
     for source in html:
         dest = site / source.relative_to(_BUILT_HTML)
         dest.parent.mkdir(parents=True, exist_ok=True)

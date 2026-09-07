@@ -55,7 +55,12 @@ def declared_constants(path: Path) -> list[str]:
 def referenced_names(root: Path, *, exclude: Path) -> set[str]:
     """Return every name shipped code mentions, counting both halves of an alias."""
     seen: set[str] = set()
-    for path in sorted(root.rglob("*.py")):
+    swept = sorted(root.rglob("*.py"))
+    assert swept, (
+        f"the sweep of {root} matched no module; a walk that reads nothing reports every "
+        "external constant as unreferenced with exactly the confidence of a real finding"
+    )
+    for path in swept:
         if "tests" in path.parts or "__pycache__" in path.parts or path.name.startswith("test_"):
             continue
         if path == exclude:

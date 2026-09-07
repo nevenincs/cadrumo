@@ -100,12 +100,14 @@ def _scan() -> tuple[list[str], dict[str, int]]:
                 # A peer mid-edit in a shared worktree; their syntax error is
                 # their gate's to report, not a finding of this one. The loss
                 # still lands here: an unparsed module contributes no offence
-                # and reads as compliant. The floor below is post-swallow, and
-                # weak by roughly seven to one: the walk reaches thousands of
-                # modules against a floor of 1,000, so most of the tree could
-                # vanish before it fires. The exact count is deliberately not
-                # restated -- the one recorded here had drifted from 6,906 to
-                # 6,993 unnoticed, and the ratio is what the argument needs.
+                # and reads as compliant. The floor below is post-swallow and
+                # PER ROOT, so a root that stops being walked is caught even
+                # while the surviving roots keep the total large enough to
+                # look healthy. Neither a count nor a ratio is restated here:
+                # the count once recorded had drifted from 6,906 to 6,993
+                # unnoticed, and the ratio that replaced it decayed in turn
+                # when the single floor became per-root. The floors exist to
+                # catch a root collapsing, not to track how large it is.
                 # An UNREADABLE module is the same loss by another route: the
                 # walk can list a path a peer removes before the read reaches
                 # it, so it joins this announcement rather than ending the scan.

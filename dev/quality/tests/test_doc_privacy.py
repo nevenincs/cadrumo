@@ -428,7 +428,15 @@ def test_the_untracked_scan_finds_a_planted_leak(tmp_path: Path) -> None:
 
 
 def test_the_untracked_scan_matches_shape_patterns_too(tmp_path: Path) -> None:
-    """Both halves of the ban - fixed tokens and shapes - reach untracked files."""
+    """The shapes half of the ban reaches untracked files.
+
+    Only the pattern family is driven here: this call passes an empty literal
+    tuple, so a green result says nothing about fixed tokens. The literal half
+    has its own case above, which passes the literals and an empty pattern
+    tuple. Each family is exercised against ``_scan_untracked`` separately so a
+    failure names which of the two stopped reaching untracked files -- and so
+    this docstring does not read as coverage the body never delivers.
+    """
     subprocess.run(
         ["git", "init", "-q"],  # noqa: S607 - git resolved from PATH like every dev gate
         cwd=tmp_path,

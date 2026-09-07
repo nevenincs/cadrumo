@@ -103,7 +103,7 @@ def test_no_audited_locale_requires_nothing_rather_than_dividing_by_zero() -> No
 def test_the_counts_refuse_to_be_negative() -> None:
     """Every count is a population, and a negative population is a bug upstream."""
     for field in ("labels_required_per_locale", "labels_translated", "complete_locales", "stale_keys"):
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="greater than or equal to 0"):
             _coverage(**{field: -1})
 
 

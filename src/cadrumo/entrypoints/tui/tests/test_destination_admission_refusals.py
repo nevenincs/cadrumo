@@ -199,3 +199,91 @@ def test_a_consistent_admissions_mapping_builds_the_catalogue() -> None:
     catalogue = build_destination_catalogue(admissions=_admissions(), factories=_factories())
 
     assert catalogue.resolve(_HOME.destination).admission.destination == _HOME.destination
+
+
+def _declarations_admission(state: WorkbenchDestinationAdmissionState) -> WorkbenchDestinationAdmission:
+    """Build the admission for the destination that carries the modelo surfaces."""
+    available = state is WorkbenchDestinationAdmissionState.AVAILABLE
+    return WorkbenchDestinationAdmission(
+        destination="workbench.declarations",
+        state=state,
+        reason_code=None if available else "workbench.declarations.unavailable",
+    )
+
+
+def _declarations_generation(*, readable: bool):
+    """Build the generation result for the modelo-bearing destination.
+
+    Only two states are constructible, because the result model already
+    refuses an available result carrying no value. That is why the launcher
+    needs a separate check at all: the admission and the generation result are
+    derived from different sources and can disagree even when each is
+    internally truthful.
+    """
+    from datetime import UTC, datetime
+
+    from ....application.workbench_generation import (
+        WorkbenchGenerationAvailability,
+        WorkbenchGenerationProjectionResultV1,
+    )
+
+    if readable:
+        return WorkbenchGenerationProjectionResultV1(
+            availability=WorkbenchGenerationAvailability.AVAILABLE,
+            observed_at=datetime.now(UTC),
+            projection={"declarations": "projection"},
+        )
+    return WorkbenchGenerationProjectionResultV1(
+        availability=WorkbenchGenerationAvailability.UNAVAILABLE,
+        refusal="workbench.declarations.unavailable",
+    )
+
+
+def test_a_modelo_destination_admitted_without_a_projection_is_refused() -> None:
+    """Admitting the modelo-bearing destination while its projection is absent must raise.
+
+    This is the direction that advertises a route whose factory would raise:
+    the catalogue offers the destination, the operator opens it, and there is
+    nothing behind it.
+    """
+    from ..launcher import _require_generation_admission
+
+    with pytest.raises(ValueError, match="Declarations admission and generation projection availability disagree"):
+        _require_generation_admission(
+            _declarations_generation(readable=False),
+            _declarations_admission(WorkbenchDestinationAdmissionState.AVAILABLE),
+            "Declarations",
+        )
+
+
+def test_a_readable_modelo_destination_refused_by_its_admission_is_refused() -> None:
+    """The opposite direction: a readable destination the catalogue hides must also raise.
+
+    Asserted separately because it fails the operator differently. Nothing
+    crashes; the surface is simply unreachable while its data is sitting
+    there, which is the silent half of the same disagreement.
+    """
+    from ..launcher import _require_generation_admission
+
+    with pytest.raises(ValueError, match="Declarations admission and generation projection availability disagree"):
+        _require_generation_admission(
+            _declarations_generation(readable=True),
+            _declarations_admission(WorkbenchDestinationAdmissionState.LOCKED),
+            "Declarations",
+        )
+
+
+def test_an_agreeing_modelo_destination_admission_is_accepted() -> None:
+    """Both agreeing pairs pass, so the refusals above are not vacuous."""
+    from ..launcher import _require_generation_admission
+
+    _require_generation_admission(
+        _declarations_generation(readable=True),
+        _declarations_admission(WorkbenchDestinationAdmissionState.AVAILABLE),
+        "Declarations",
+    )
+    _require_generation_admission(
+        _declarations_generation(readable=False),
+        _declarations_admission(WorkbenchDestinationAdmissionState.LOCKED),
+        "Declarations",
+    )

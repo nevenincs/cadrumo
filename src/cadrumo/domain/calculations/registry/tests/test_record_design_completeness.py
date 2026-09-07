@@ -330,7 +330,12 @@ def test_diseno_coverage_report_is_an_advisory_inventory_not_a_load_gate() -> No
 
 
 def test_modelo_registry_tests_use_public_record_design_dispatcher() -> None:
-    registry_tests = scan_directory(Path(__file__).parent, pattern="test_modelo_*_registry.py")
+    registry_tests = scan_directory(Path(__file__).parent, pattern="test_modelo_*_registry.py", require_root=True)
+
+    assert registry_tests, (
+        "no test_modelo_*_registry.py module matched; a walk that matches nothing reports no "
+        "private record-design import exactly as a suite using only the public dispatcher does"
+    )
 
     private_imports = [
         path.name for path in registry_tests if "._record_design import" in path.read_text(encoding="utf-8")

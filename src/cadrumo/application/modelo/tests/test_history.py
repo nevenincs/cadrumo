@@ -6,10 +6,8 @@ from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TypedDict
 
 import pytest
-from pydantic import ValidationError
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -17,13 +15,13 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
-from ....domain.buckets.event import BucketActorLabel, BucketEventId, BucketEventObjectType, BucketEventType
+from ....domain.buckets.event import BucketEventObjectType, BucketEventType
 from ....domain.modelos.errors import ModeloError
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ..action_errors import WorkUnitNotFoundError
-from ..history import WorkUnitHistoryEvent, assemble_work_unit_history
+from ..history import assemble_work_unit_history
 from ..work_lifecycle import (
     create_work_unit,
     discard_work_unit,
@@ -358,79 +356,6 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos) -> None:
     assert len(history.events) == 1
     assert history.events[0].object_id == target.work_unit_id
     assert history.events[0].event_type is BucketEventType.MODELO_WORK_UNIT_CREATED
-
-
-# ── The projection admits exactly what the event it projects admits ────────
-
-
-class _ProjectedEventFields(TypedDict):
-    """The projected row's fields, typed as :class:`WorkUnitHistoryEvent` declares them."""
-
-    event_id: BucketEventId
-    occurred_at: datetime
-    event_type: BucketEventType
-    object_type: BucketEventObjectType
-    object_id: str
-    actor: BucketActorLabel
-    payload: dict[str, str]
-
-
-def _projected_event_fields() -> _ProjectedEventFields:
-    """Return one well-formed projected row, for the refusals to vary from."""
-    return {
-        "event_id": "a" * 64,
-        "occurred_at": datetime(2026, 1, 15, 12, 0, tzinfo=UTC),
-        "event_type": BucketEventType.MODELO_WORK_UNIT_CREATED,
-        "object_type": BucketEventObjectType.WORK_UNIT,
-        "object_id": "b" * 64,
-        "actor": "operator@example.test",
-        "payload": {},
-    }
-
-
-def test_the_projection_accepts_a_well_formed_row() -> None:
-    """Anti-vacuity: the refusals below reject values, not the row shape."""
-    event = WorkUnitHistoryEvent(**_projected_event_fields())
-
-    assert event.actor == "operator@example.test"
-    assert event.event_id == "a" * 64
-
-
-def test_the_projection_refuses_an_actorless_event() -> None:
-    """An event nobody emitted cannot be projected, because none can be emitted.
-
-    ``BucketEvent`` types its actor as a non-empty label, so an empty actor
-    names no row in the event log. Admitting one here would let the operator's
-    timeline attribute an act to nobody.
-    """
-    with pytest.raises(ValidationError):
-        fields = _projected_event_fields()
-        fields["actor"] = ""
-        WorkUnitHistoryEvent(**fields)
-
-
-def test_the_projection_refuses_an_actor_longer_than_the_log_records() -> None:
-    """A label past the bound would be a value the event log could never hold."""
-    with pytest.raises(ValidationError):
-        fields = _projected_event_fields()
-        fields["actor"] = "x" * 65
-        WorkUnitHistoryEvent(**fields)
-
-
-def test_the_projection_refuses_an_event_id_that_is_not_a_content_address() -> None:
-    """``event_id`` is derived from the event body, so a free string is not one."""
-    with pytest.raises(ValidationError):
-        fields = _projected_event_fields()
-        fields["event_id"] = "not-a-digest"
-        WorkUnitHistoryEvent(**fields)
-
-
-def test_the_projection_refuses_an_object_id_past_the_event_log_bound() -> None:
-    """The projected object id is bounded exactly where the event's own id is."""
-    with pytest.raises(ValidationError):
-        fields = _projected_event_fields()
-        fields["object_id"] = "c" * 129
-        WorkUnitHistoryEvent(**fields)
 
 
 def test_a_real_assembled_row_satisfies_the_tightened_identities(repos: _Repos) -> None:

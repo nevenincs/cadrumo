@@ -109,7 +109,12 @@ def _legal_ref_literal_value(node: ast.AST) -> ast.AST | None:
 
 def _application_literal_legal_refs() -> frozenset[str]:
     refs: set[str] = set()
-    for path in scan_directory(_APPLICATION_ROOT, pattern="*.py", recursive=True):
+    modules = scan_directory(_APPLICATION_ROOT, pattern="*.py", recursive=True, require_root=True)
+    assert modules, (
+        f"the sweep of {_APPLICATION_ROOT} matched no module; "
+        "a walk that reads nothing finds no unresolvable legal_ref because it finds no legal_ref at all"
+    )
+    for path in modules:
         if "tests" in path.relative_to(_APPLICATION_ROOT).parts:
             continue
         tree = ast.parse(path.read_text(encoding="utf-8"))

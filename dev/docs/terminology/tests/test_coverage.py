@@ -18,6 +18,7 @@ authority directly and independent of the report's own counting.
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
@@ -281,3 +282,43 @@ def _derivable_surface(
     casilla = {to_search_record(record).id for record in casilla_records}
     legal = {legal_target_record_id(legal_id) for legal_id in legal_ids}
     return concept | casilla | legal
+
+
+def test_kind_coverage_refuses_a_contradictory_partition() -> None:
+    """The record itself refuses covered/uncovered/total triples that cannot co-exist.
+
+    Each field passes its own validator -- the counts are non-negative ints and
+    ``uncovered_ids`` is a string tuple -- so only the JOINT constraint separates a
+    measurement from a contradiction. Unenforced, a contradictory triple reaches the
+    operator as the self-refuting summary line ``concept 99/10 covered (990.00%); 1
+    uncovered`` and as a ``coverage_fraction`` above 1.0.
+    """
+    with pytest.raises(ValidationError, match="cannot exceed total"):
+        KindCoverage(kind=CoverageKind.CONCEPT, total=10, covered=99, uncovered_ids=("a",))
+
+    with pytest.raises(ValidationError, match="must partition total"):
+        KindCoverage(kind=CoverageKind.CONCEPT, total=10, covered=4, uncovered_ids=("a",))
+
+    with pytest.raises(ValidationError, match="must be unique"):
+        KindCoverage(kind=CoverageKind.CONCEPT, total=2, covered=0, uncovered_ids=("a", "a"))
+
+
+def test_kind_coverage_admits_every_consistent_triple() -> None:
+    """Anti-noise: a lawful measurement is admitted unchanged, empty surface included.
+
+    The empty-parameter control is the ``total == 0`` surface: nothing derivable, so
+    no covered ids and no backlog. It must stay admissible and keep its documented
+    fully-covered convention, or the gate would refuse a legitimate empty surface.
+    """
+    empty = KindCoverage(kind=CoverageKind.CLI, total=0, covered=0, uncovered_ids=())
+    assert empty.coverage_fraction == 1.0
+
+    fully_covered = KindCoverage(kind=CoverageKind.CASILLA, total=3, covered=3, uncovered_ids=())
+    assert fully_covered.coverage_fraction == 1.0
+
+    partial = KindCoverage(kind=CoverageKind.LEGAL, total=4, covered=1, uncovered_ids=("a", "b", "c"))
+    assert partial.covered + len(partial.uncovered_ids) == partial.total
+    assert partial.coverage_fraction == 0.25
+
+    nothing_covered = KindCoverage(kind=CoverageKind.CONCEPT, total=2, covered=0, uncovered_ids=("a", "b"))
+    assert nothing_covered.coverage_fraction == 0.0

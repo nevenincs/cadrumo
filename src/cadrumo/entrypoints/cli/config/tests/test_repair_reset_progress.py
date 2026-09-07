@@ -160,4 +160,8 @@ def test_retired_reset_state_verb_no_longer_resolves() -> None:
     result = invoke_cached_cli(["config", "repair", "reset-state", "--dry-run"])
 
     assert result.exit_code != 0
-    assert "No such command" in result.output or "reset-state" in result.output
+    # Click's own unresolved-command message, which the docstring names as
+    # the guard. "reset-state" is the token the operator typed and Click
+    # quotes it back inside that very error, so accepting either accepted a
+    # re-introduced verb that merely failed for some other reason.
+    assert "No such command" in result.output

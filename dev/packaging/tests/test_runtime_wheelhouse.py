@@ -7,6 +7,7 @@ import json
 import threading
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -313,3 +314,36 @@ def test_requests_are_grouped_by_digest_not_by_filename() -> None:
         ),
         (native.sha256, [str(Path("3.15") / native.filename)]),
     ]
+
+
+def test_a_duplicate_target_name_cannot_silently_shrink_the_platform_closure() -> None:
+    """Every supported target keeps its own floor, because the names are unique.
+
+    ``PLATFORM_FLOORS`` and the per-target row map are both keyed on
+    ``TargetPlatform.name``, so two targets sharing a name do not collide
+    loudly: the second silently overwrites the first, and the declared floor
+    of the target that vanished goes with it. The closure check that exists to
+    prove every target is present cannot see that either -- it compares
+    ``set(platforms)`` against a set comprehension over the same names, so both
+    sides collapse identically and agree that the closure is complete.
+
+    The realistic shape is adding an Intel-Mac target by copying the arm64 line
+    and changing the machine but not the name, which would rewind the macOS
+    floor to whatever the copy declared. Asserted here at the declaration
+    rather than at the three derived sites, because uniqueness is the one
+    property all three of them assume.
+    """
+    assert len(PLATFORM_FLOORS) == len(SUPPORTED_TARGETS), (
+        "two supported targets share a name, so one lost its declared floor: "
+        f"{sorted(target.name for target in SUPPORTED_TARGETS)!r}"
+    )
+
+    # The teeth, so the clean reading above is not vacuous: the same count over
+    # a tuple carrying the copy-paste collision must fail, and the set-shaped
+    # closure comparison must still agree -- which is why the count is the
+    # assertion and the set comparison is not.
+    collided = (*SUPPORTED_TARGETS, replace(SUPPORTED_TARGETS[-1], platform_machine="x86_64"))
+    collided_floors = {target.name: target.floor for target in collided}
+
+    assert len(collided_floors) != len(collided)
+    assert {target.name for target in collided} == set(collided_floors)

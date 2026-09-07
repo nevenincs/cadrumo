@@ -119,6 +119,73 @@ class SearchRecordProjection:
     cli_options: int
     cli_skipped_reason: str | None = None
 
+    def __post_init__(self) -> None:
+        """Refuse a projection whose census contradicts the records it carries.
+
+        ``records`` is the concatenation of the five projection runs and each
+        counter is that run's length, so the census accounts for the tuple
+        rather than making an independent claim about it. A drifting counter
+        goes on reporting a full complement of rows that never reached the
+        index, and every consumer - the injector, the Rung-2 manifest, the
+        terminology sweep's resolver - reads the census and the tuple as one
+        fact. :func:`_bounded_to_sample` already refuses the same drift on its
+        own path; the value object owes its consumers the same refusal.
+
+        Raises:
+            SearchInjectionError: When a counter is negative, or when the
+                counters do not account for exactly the records carried.
+        """
+        counters = (
+            ("concepts", self.concepts),
+            ("casillas", self.casillas),
+            ("legal_provisions", self.legal_provisions),
+            ("cli_commands", self.cli_commands),
+            ("cli_options", self.cli_options),
+        )
+        negative = [f"{name}={value}" for name, value in counters if value < 0]
+        if negative:
+            raise SearchInjectionError(
+                "search-record projection carries a negative counter: " + ", ".join(negative),
+            )
+        described = sum(value for _name, value in counters)
+        if described != len(self.records):
+            raise SearchInjectionError(
+                f"search-record projection counters describe {described} records while it carries {len(self.records)}",
+            )
+
+    def require_complete(self) -> None:
+        """Refuse a projection that is not the COMPLETE authoritative corpus.
+
+        Completeness is a different invariant from the census coherence
+        :meth:`__post_init__` enforces: a projection whose CLI walk was skipped
+        is perfectly coherent -- its counters honestly describe the narrowed
+        record set it carries -- and must still not be consumed as the corpus
+        its readers believe they are reading.
+
+        The invariant lives on the value object rather than in one consumer
+        because the object reaches several. The terminology sweep filters its
+        relevance targets to the ids this projection emitted, so a sweep over a
+        CLI-skipped projection does not fail: it drops every CLI target and
+        reports a clean result, which is exactly the silent narrowing
+        :func:`materialise_search_records` preserves the outcome to let a caller
+        refuse. A consumer that may legitimately hold an incomplete projection
+        because it SURFACES the shortfall rather than consuming it as complete
+        simply does not call this.
+
+        Raises:
+            SearchInjectionError: When the casilla projection is empty, or when
+                the CLI projection was skipped.
+        """
+        if self.casillas == 0:
+            raise SearchInjectionError(
+                "search-record projection is not the complete corpus because its casilla projection is empty",
+            )
+        if self.cli_skipped_reason is not None:
+            raise SearchInjectionError(
+                "search-record projection is not the complete corpus because its CLI projection "
+                f"was skipped: {self.cli_skipped_reason}",
+            )
+
 
 def load_relevance_weights(repo_root: Path) -> dict[str, float]:
     """Load the committed sweep's per-record relevance boost map, or empty.

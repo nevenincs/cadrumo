@@ -142,7 +142,7 @@ def test_scaffold_rejects_malformed_modelo_id(tmp_path: Path) -> None:
     """A modelo id that is not exactly three digits is refused, matching ModeloId's pattern."""
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     for bad_modelo_id in ("", "AB", "12", "1234", "abc"):
-        with pytest.raises(NewModeloError):
+        with pytest.raises(NewModeloError, match="modelo id must be exactly three digits"):
             manager.scaffold(bad_modelo_id, _THROWAWAY_REVISION_ID)
         assert not scan_directory(tmp_path), bad_modelo_id
 
@@ -151,7 +151,7 @@ def test_scaffold_rejects_malformed_revision_id(tmp_path: Path) -> None:
     """A revision id outside the registry ref pattern is refused before any write."""
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     for bad_revision_id in ("", "Bad Revision", "_leading-underscore", "trailing-"):
-        with pytest.raises(NewModeloError):
+        with pytest.raises(NewModeloError, match="revision id must be a lowercase kebab-style ref"):
             manager.scaffold(_THROWAWAY_MODELO_ID, bad_revision_id)
         assert not (tmp_path / _THROWAWAY_MODELO_ID).exists(), bad_revision_id
 
@@ -161,7 +161,7 @@ def test_scaffold_refuses_when_modelo_root_is_a_file(tmp_path: Path) -> None:
     manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
     (tmp_path / _THROWAWAY_MODELO_ID).write_text("not a directory", encoding="utf-8")
 
-    with pytest.raises(NewModeloError):
+    with pytest.raises(NewModeloError, match="exists and is not a directory"):
         manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID)
 
 

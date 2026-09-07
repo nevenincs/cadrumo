@@ -117,10 +117,14 @@ def test_no_registry_revision_still_declares_the_window_in_days() -> None:
     from ....core.resources.bundled_data import bundled_path
 
     registry = bundled_path("registry")
+    swept = sorted(registry.rglob("*.toml"))
+    assert swept, (
+        f"the sweep of {registry} matched no declaration; a walk that reads nothing cannot "
+        "find a revision that still declares the rehabilitation window in days"
+    )
+
     offenders = sorted(
-        str(path.relative_to(registry))
-        for path in registry.rglob("*.toml")
-        if "rehab-lookback-days" in path.read_text(encoding="utf-8")
+        str(path.relative_to(registry)) for path in swept if "rehab-lookback-days" in path.read_text(encoding="utf-8")
     )
 
     assert offenders == [], (

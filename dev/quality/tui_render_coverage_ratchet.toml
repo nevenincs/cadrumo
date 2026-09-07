@@ -1,0 +1,27 @@
+# Interfaces no registered devtools surface paints.
+#
+# Shrink-only: an entry leaves when the interface gains a surface, in the same
+# step that gives it one. Adding a name here is recording debt, never resolving
+# it -- the dispositions in dev/tui/_coverage.py say whether an entry is a gap to
+# close or a deliberately unregistered development candidate.
+
+[unrendered]
+interfaces = [
+  "cadrumo.entrypoints.tui.aeat_sync.screens.AeatSyncWorkspaceScreen",
+  "cadrumo.entrypoints.tui.components.dialogs.ChoiceEditScreen",
+  "cadrumo.entrypoints.tui.components.dialogs.ConfirmScreen",
+  "cadrumo.entrypoints.tui.components.dialogs.OneChoiceEditScreen",
+  "cadrumo.entrypoints.tui.components.dialogs.TextEditScreen",
+  "cadrumo.entrypoints.tui.components.dialogs._FieldEditScreen",
+  "cadrumo.entrypoints.tui.components.host.ScreenHostApp",
+  "cadrumo.entrypoints.tui.declarations.controller.DeclarationsWorkspaceScreen",
+  "cadrumo.entrypoints.tui.devtools.home_candidates.DueDrivenHomeCandidateScreen",
+  "cadrumo.entrypoints.tui.devtools.home_candidates.TaskLauncherHomeCandidateScreen",
+  "cadrumo.entrypoints.tui.devtools.home_candidates._ProjectionCandidateScreen",
+  "cadrumo.entrypoints.tui.ledger.controller.LedgerWorkspaceScreen",
+  "cadrumo.entrypoints.tui.ledger.workspace_presentation.LedgerConfirmationFlowScreen",
+  "cadrumo.entrypoints.tui.profile.overview.FieldEditScreen",
+  "cadrumo.entrypoints.tui.profile.sync_review.CensalFieldReviewScreen",
+  "cadrumo.entrypoints.tui.secret.passphrase.PassphraseScreen",
+  "cadrumo.entrypoints.tui.secret.registration.RecoveryWordsScreen",
+]

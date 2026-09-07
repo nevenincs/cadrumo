@@ -1152,3 +1152,36 @@ def test_rollback_failure_precedes_cleanup_failure_and_keeps_transaction_evidenc
 
     assert "cleanup failed" not in str(raised.value)
     assert transaction.is_dir()
+
+
+def test_verified_copy_cleanup_failure_never_rolls_back_a_passing_replay(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A temp-root removal failure must not turn green gates into a rollback.
+
+    Windows raises ``WinError 145`` from this removal whenever anything inside
+    the copy is still held, and the removal runs in a ``finally`` -- so before
+    the fix it replaced the replay's real result. A live apply whose six gates
+    had all passed was reported as failed and its writes were reverted, which
+    is the one outcome cleanup must never be able to cause.
+    """
+    repo, inventory, manifest, component, receipt = _case(tmp_path)
+    real_rmtree = replay_module.shutil.rmtree
+    refused: list[Path] = []
+
+    def _refuse_verified_copy_removal(path: Path, **kwargs: object) -> None:
+        if Path(path).name.startswith("cadrumo-object-name-post-apply-"):
+            refused.append(Path(path))
+            raise OSError(145, "The directory is not empty")
+        real_rmtree(path, **cast("Any", kwargs))
+
+    monkeypatch.setattr(replay_module.shutil, "rmtree", _refuse_verified_copy_removal)
+
+    result = replay_object_name_component(
+        manifest, inventory=inventory, component=component, receipt=receipt, repo_root=repo
+    )
+
+    assert refused, "the post-apply verified copy removal must actually have been exercised"
+    assert result.receipt_id == receipt.receipt_id
+    assert (repo / "src/example/contracts.py").read_bytes() == b"class Widget:\n    pass\n"
+    assert not replay_module.transaction_root_for(repo, receipt.receipt_id).exists()

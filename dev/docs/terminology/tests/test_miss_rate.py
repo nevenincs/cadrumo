@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import pytest
+from pydantic import ValidationError
 
 from .._miss_rate import (
     HeldOutCaseKind,
     HeldOutQueryCase,
     HeldOutQuerySet,
+    MissRateEvaluation,
+    MissRateRow,
     MissReason,
     evaluate_held_out_miss_rate,
     held_out_query_set_path,
@@ -285,3 +288,74 @@ def test_the_satisfiability_join_detects_an_unshippable_case_and_clears_a_shippa
         _synthetic_query_set(_synthetic_case("q", unemittable[0], shippable)),
         emittable,
     )
+
+
+def _row(*, hit: bool) -> MissRateRow:
+    return MissRateRow(
+        query="prorrata",
+        concept_id="prorrata",
+        hit=hit,
+        reason=MissReason.HIT if hit else MissReason.TARGET_MISMATCH,
+        target_count=1 if hit else 0,
+    )
+
+
+def _evaluation(**overrides: object) -> MissRateEvaluation:
+    fields: dict[str, object] = {
+        "case_count": 2,
+        "hit_count": 1,
+        "miss_count": 1,
+        "miss_rate": 0.5,
+        "compiled_query_count": 2,
+        "compiled_failed_query_count": 0,
+        "compiled_targeted_query_count": 2,
+        "rows": (_row(hit=True), _row(hit=False)),
+    }
+    fields.update(overrides)
+    return MissRateEvaluation(**fields)  # type: ignore[arg-type]
+
+
+def test_miss_rate_evaluation_refuses_a_contradictory_tally() -> None:
+    """The record refuses count/row tallies that each pass their own validator.
+
+    ``case_count`` is ``ge=1``, the tallies are ``ge=0`` and ``miss_rate`` is bounded
+    to ``0..1``, so every field below is individually lawful; only the joint
+    constraint distinguishes a measurement from a contradiction. Unenforced, the
+    published miss rate can disagree with the very rows it summarises.
+    """
+    with pytest.raises(ValidationError, match="must equal the number of measured rows"):
+        _evaluation(case_count=5)
+
+    with pytest.raises(ValidationError, match="must partition case_count"):
+        _evaluation(hit_count=0, miss_count=0, case_count=2, miss_rate=0.0)
+
+    with pytest.raises(ValidationError, match="rows recorded as a hit"):
+        _evaluation(hit_count=2, miss_count=0, miss_rate=0.0)
+
+    with pytest.raises(ValidationError, match="miss_count divided by case_count"):
+        _evaluation(miss_rate=0.0)
+
+
+def test_miss_rate_evaluation_admits_every_consistent_tally() -> None:
+    """Anti-noise: lawful tallies are admitted unchanged, at both rate extremes.
+
+    The empty-parameter control is the smallest admissible evaluation -- the single
+    row a ``min_length=1`` corpus permits -- at each extreme of ``miss_rate``. A gate
+    that refused either would refuse a legitimate all-hit or all-miss run.
+    """
+    assert _evaluation().miss_rate == 0.5
+
+    all_hit = _evaluation(case_count=1, hit_count=1, miss_count=0, miss_rate=0.0, rows=(_row(hit=True),))
+    assert all_hit.miss_rate == 0.0
+
+    all_miss = _evaluation(case_count=1, hit_count=0, miss_count=1, miss_rate=1.0, rows=(_row(hit=False),))
+    assert all_miss.miss_rate == 1.0
+
+    thirds = _evaluation(
+        case_count=3,
+        hit_count=2,
+        miss_count=1,
+        miss_rate=1 / 3,
+        rows=(_row(hit=True), _row(hit=True), _row(hit=False)),
+    )
+    assert thirds.miss_count == 1

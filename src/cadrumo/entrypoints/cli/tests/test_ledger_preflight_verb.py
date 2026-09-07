@@ -120,7 +120,10 @@ def test_status_period_readiness_issues_include_tax_diagnostic_fields() -> None:
     # ambient locale while naming no issue at all.
     readiness_issue_lines = [line for line in result.output.splitlines() if line.startswith("readiness_issue	")]
     assert readiness_issue_lines, result.output
-    assert "classification=BUSINESS" in result.output or "classification=business" in result.output
+    # The enum value as the domain spells it. Accepting a lowercase variant
+    # invited a renderer that case-folds a transport token, which is the one
+    # thing about this line that must not drift.
+    assert "classification=BUSINESS" in result.output
     assert "category_id=-" in result.output
     assert "taxable_base=-" in result.output
     assert "iva_rate=-" in result.output

@@ -381,6 +381,10 @@ def test_ledger_locale_copy_is_genuinely_distinct_across_supported_languages() -
 def test_ledger_tui_has_no_io_adapter_cli_calculation_or_mutation_imports() -> None:
     package = Path(__file__).parents[1]
     production = tuple(path for path in package.glob("*.py") if path.name != "__init__.py")
+    assert production, (
+        f"the sweep of {package} matched no production module; a walk that reads nothing "
+        "reports no forbidden adapter or calculation import because it reads no import at all"
+    )
     trees = tuple(ast.parse(path.read_text(encoding="utf-8")) for path in production)
     imports = {node.module or "" for tree in trees for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)} | {
         alias.name for tree in trees for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names

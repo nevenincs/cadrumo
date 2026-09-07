@@ -53,7 +53,7 @@ def test_workbook_runner_availability_accepts_only_declared_engines() -> None:
 
     assert libreoffice.engine == "libreoffice-headless"
     assert excel.engine == "excel-com"
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="engine"):
         WorkbookRunnerAvailability.model_validate(
             {
                 "status": "available",

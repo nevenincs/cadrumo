@@ -676,7 +676,13 @@ def test_live_package_is_inert_and_public_leaves_have_no_private_remnants() -> N
     live_root = root / "src" / "cadrumo" / "application" / "live"
 
     assert not tuple(path for path in live_root.glob("_*.py") if path.name != "__init__.py")
-    for source_path in (root / "src").rglob("*.py"):
+    source_tree = root / "src"
+    swept = tuple(source_tree.rglob("*.py"))
+    assert swept, (
+        f"the sweep of {source_tree} matched no module; a walk that reads nothing reports no "
+        "private remnant of the live package because it reads no module at all"
+    )
+    for source_path in swept:
         source = source_path.read_text(encoding="utf-8")
         assert "cadrumo.application.live._" not in source, source_path
         tree = ast.parse(source, filename=str(source_path))

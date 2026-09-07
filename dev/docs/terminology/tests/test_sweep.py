@@ -27,7 +27,11 @@ import pytest
 
 from cadrumo.core.external_constants import OutputLanguage
 
-from ...pagefind_inject import SearchRecordProjection, materialise_search_records
+from ...pagefind_inject import (
+    SearchInjectionError,
+    SearchRecordProjection,
+    materialise_search_records,
+)
 from .._query_aliases import (
     QUERY_ALIAS_AUTHORITY_SCHEMA_VERSION,
     QueryAliasAuthority,
@@ -497,3 +501,118 @@ def test_relevance_mapping_is_frozen() -> None:
     mapping = TermRelevanceMapping(query="x", concept_id="prorrata", language=OutputLanguage.ES)
     with pytest.raises(ValidationError):
         mapping.query = "mutated"  # type: ignore[misc]
+
+
+#: The distinguishing fragment of each completeness refusal reaching the sweep.
+_SWEEP_CASILLA_GAP_FRAGMENT = "casilla projection is empty"
+_SWEEP_CLI_GAP_FRAGMENT = "CLI projection was skipped"
+
+
+class _NoHitsClient:
+    """A retrieval client with nothing recorded: every query returns no hits.
+
+    Used only where the refusal must land BEFORE retrieval, so no fixture
+    replay is needed and none is implied.
+    """
+
+    def search(self, query: str, *, max_results: int) -> tuple[ChunkHit, ...]:
+        return ()
+
+
+def test_the_authoritative_projection_satisfies_the_completeness_boundary(
+    _authoritative_projection: SearchRecordProjection,
+) -> None:
+    """Anti-noise: the real bundled projection is admitted, not merely constructible."""
+    _authoritative_projection.require_complete()
+
+
+def test_run_sweep_refuses_a_projection_whose_casilla_arm_is_empty(
+    _authoritative_projection: SearchRecordProjection,
+    _authoritative_target_resolver: TargetResolver,
+) -> None:
+    """Teeth: the sweep may not compile a mapping from a narrowed corpus.
+
+    ``run_sweep`` names its argument "the complete authoritative Pagefind/Rung-2
+    record projection" and filters every relevance target to the ids that
+    projection emitted. Without a refusal it therefore cannot fail on an
+    incomplete one -- it drops the missing kind's targets and returns a
+    ``SweepResult`` that carries no field naming the shortfall, unlike the
+    degraded retrieval it does report through ``failed_query_count``.
+    """
+    narrowed = SearchRecordProjection(
+        records=(),
+        concepts=0,
+        casillas=0,
+        legal_provisions=0,
+        cli_commands=0,
+        cli_options=0,
+    )
+
+    with pytest.raises(SearchInjectionError) as excinfo:
+        run_sweep(
+            client=_NoHitsClient(),
+            concept_ids={"prorrata"},
+            search_record_projection=narrowed,
+            resolver=_authoritative_target_resolver,
+            reindex=False,
+        )
+
+    message = str(excinfo.value)
+    assert _SWEEP_CASILLA_GAP_FRAGMENT in message, message
+    assert _SWEEP_CLI_GAP_FRAGMENT not in message, f"the CLI arm covered for the casilla arm: {message}"
+
+
+def test_run_sweep_refuses_a_projection_whose_cli_walk_was_skipped(
+    _authoritative_projection: SearchRecordProjection,
+    _authoritative_target_resolver: TargetResolver,
+) -> None:
+    """Teeth, CLI arm: the exact shape production's own CLI-skip branch emits.
+
+    ``_materialise_records`` catches any failure of the live CLI walk, leaves
+    both CLI counters at zero, appends no CLI records, and records the reason;
+    ``materialise_search_records`` copies that verbatim into the public value
+    object. The result is census-coherent, so construction admits it, and every
+    CLI record is missing.
+    """
+    non_cli = tuple(record for record in _authoritative_projection.records if record.kind is not SearchRecordKind.CLI)
+    skipped = SearchRecordProjection(
+        records=non_cli,
+        concepts=_authoritative_projection.concepts,
+        casillas=_authoritative_projection.casillas,
+        legal_provisions=_authoritative_projection.legal_provisions,
+        cli_commands=0,
+        cli_options=0,
+        cli_skipped_reason="RuntimeError: the live CLI tree could not be walked",
+    )
+
+    with pytest.raises(SearchInjectionError) as excinfo:
+        run_sweep(
+            client=_NoHitsClient(),
+            concept_ids={"prorrata"},
+            search_record_projection=skipped,
+            resolver=_authoritative_target_resolver,
+            reindex=False,
+        )
+
+    message = str(excinfo.value)
+    assert _SWEEP_CLI_GAP_FRAGMENT in message, message
+    assert _SWEEP_CASILLA_GAP_FRAGMENT not in message, f"the casilla arm covered for the CLI arm: {message}"
+    assert "the live CLI tree could not be walked" in message, message
+
+
+def test_run_sweep_admits_the_complete_projection_it_refuses_narrowed(
+    _authoritative_projection: SearchRecordProjection,
+    _authoritative_target_resolver: TargetResolver,
+) -> None:
+    """Anti-noise for the sweep arm: the same call with a complete projection runs."""
+    result = run_sweep(
+        client=_NoHitsClient(),
+        concept_ids={"prorrata"},
+        search_record_projection=_authoritative_projection,
+        resolver=_authoritative_target_resolver,
+        reindex=False,
+    )
+
+    assert isinstance(result, SweepResult)
+    assert result.query_count > 0
+    assert result.concept_count == 1

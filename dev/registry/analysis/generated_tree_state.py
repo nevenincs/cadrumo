@@ -111,21 +111,33 @@ def classify_comparison(
 
 
 def tree_states(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]) -> tuple[GeneratedTreeState, ...]:
-    """Classify every revision that can render, committed or not."""
+    """Classify every revision that can render, committed or not.
+
+    A revision whose comparison itself fails is excluded rather than folded
+    into a state: substituting an empty diff for a raised ``ValueError``,
+    ``KeyError``, ``FileNotFoundError``, or ``OSError`` would report
+    ``reproducible`` -- the strongest possible claim -- for a tree this
+    function never actually re-rendered. Excluded revisions are counted and
+    named on stderr instead, the same discipline
+    :func:`~dev.registry.analysis.rule_grounding_coverage.screen_authority`
+    and its siblings already apply to their own inapplicable revisions.
+    """
     states: list[GeneratedTreeState] = []
+    inapplicable: list[tuple[str, str, str]] = []
+    attempted = 0
     for modelo_id in modelo_ids:
         for revision_id in authority.modelo(modelo_id).revisions:
             revision = str(revision_id)
+            attempted += 1
             export_root = bundled_path("registry", "aeat", "modelos", modelo_id, "revisions", revision, "export")
             committed = (export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file()
             try:
                 comparison = compare_revision_against_committed(authority, modelo=modelo_id, revision=revision)
-            except (ValueError, KeyError, FileNotFoundError, OSError):
-                if not committed:
-                    continue
-                comparison = None
-            differing = tuple(comparison.differing) if comparison is not None else ()
-            serialization_only = tuple(comparison.serialization_only) if comparison is not None else ()
+            except (ValueError, KeyError, FileNotFoundError, OSError) as error:
+                inapplicable.append((modelo_id, revision, str(error)))
+                continue
+            differing = tuple(comparison.differing)
+            serialization_only = tuple(comparison.serialization_only)
             state = classify_comparison(differing, committed=committed, serialization_only=serialization_only)
             states.append(
                 GeneratedTreeState(
@@ -142,6 +154,12 @@ def tree_states(authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ..
                     ),
                 )
             )
+    if inapplicable:
+        sys.stderr.write(
+            f"generated_tree_state: examined {attempted - len(inapplicable)} of {attempted} revision(s); "
+            f"{len(inapplicable)} could not be re-rendered for comparison and were excluded, so the "
+            "census below is not corpus-wide\n"
+        )
     return tuple(states)
 
 

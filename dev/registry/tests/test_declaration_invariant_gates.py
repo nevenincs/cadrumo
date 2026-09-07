@@ -1312,6 +1312,18 @@ def _mixed_line_endings(records: Iterable[object]) -> set[str]:
     return {str(getattr(record, "line_ending", None)) for record in records}
 
 
+def _declared_encodings(records: Iterable[object]) -> set[str]:
+    """Return the distinct encodings a modelo's records declare.
+
+    More than one is the defect: bytes written under one encoding and read
+    under another are silently wrong, with no single record at fault. An empty
+    set means no record was read. Shared with the proof below, for the same
+    reason ``_mixed_line_endings`` is: so the proof exercises this judgement
+    rather than a second copy of it.
+    """
+    return {str(getattr(record, "encoding", None)) for record in records}
+
+
 def test_no_export_declaration_carries_a_character_outside_ascii(
     authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
 ) -> None:
@@ -1351,12 +1363,14 @@ def test_a_modelo_never_declares_two_record_encodings(
     offenders: list[str] = []
     checked = 0
     for code in modelo_ids:
-        declared = set()
-        for revision in authority.modelo(code).revisions.values():
-            for layout in revision.export_layouts:
-                for record in layout.records:
-                    checked += 1
-                    declared.add(str(record.encoding))
+        records = [
+            record
+            for revision in authority.modelo(code).revisions.values()
+            for layout in revision.export_layouts
+            for record in layout.records
+        ]
+        checked += len(records)
+        declared = _declared_encodings(records)
         if len(declared) > 1:
             offenders.append(f"{code} declares {sorted(declared)}")
 
@@ -1423,6 +1437,16 @@ def test_the_export_declaration_gates_detect_their_defects(
 
     assert len(_mixed_line_endings(mixed)) == 2, "a layout carrying both endings must be reported"
     assert _mixed_line_endings(()) == set(), "a record-less layout declares no ending to disagree about"
+
+    assert len(_declared_encodings(layout.records)) == 1, "the fixture layout must agree with itself on encoding"
+
+    from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+
+    other_encoding = ExportEncoding.CP1252 if record.encoding is not ExportEncoding.CP1252 else ExportEncoding.ASCII
+    mixed_encodings = (*layout.records, record.model_copy(update={"encoding": other_encoding}))
+
+    assert len(_declared_encodings(mixed_encodings)) == 2, "a modelo declaring two encodings must be reported"
+    assert _declared_encodings(()) == set(), "no record read declares no encoding to disagree about"
 
 
 def test_no_two_revisions_of_a_modelo_claim_the_same_filing_year_and_period(

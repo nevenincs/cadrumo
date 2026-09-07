@@ -12,6 +12,7 @@ as a test failure before it can merge.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 
@@ -30,6 +31,25 @@ def _read_file(path: Path) -> str:
 def _has_output_language_import(src: str) -> bool:
     """Check if the file imports OutputLanguage."""
     return re.search(r"from\s+\.external_constants\s+import.*OutputLanguage|OutputLanguage", src) is not None
+
+
+def _field_annotation(src: str, field: str) -> str | None:
+    """Return the declared annotation of a class-level field, or None.
+
+    Read from the syntax tree rather than matched as text. The declaration
+    in ``config.py`` wraps across lines, so the exact single-line spelling
+    this gate used to look for never matched, leaving the whole check
+    resting on a bare type substring searched across the entire file. That
+    substring is unique today, so the gate did hold -- but by coincidence
+    rather than by construction: a second field, helper signature, or alias
+    mentioning the type would let a mis-typed field through unnoticed.
+    Binding the check to the named field's own annotation removes the
+    coincidence.
+    """
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and node.target.id == field:
+            return ast.unparse(node.annotation)
+    return None
 
 
 def _find_language_axis_fields(src: str) -> list[tuple[int, str]]:
@@ -54,8 +74,10 @@ def test_settings_layer_output_language_typed_or_exempt() -> None:
     src = _read_file(config_file)
 
     assert _has_output_language_import(src), f"{config_file} must import OutputLanguage from external_constants"
-    assert "cadrumo_output_language: Annotated[OutputLanguage | None" in src or "OutputLanguage | None" in src, (
-        f"{config_file} cadrumo_output_language field must be typed as OutputLanguage | None"
+    annotation = _field_annotation(src, "cadrumo_output_language")
+    assert annotation is not None, f"{config_file} declares no cadrumo_output_language field"
+    assert "OutputLanguage | None" in annotation, (
+        f"{config_file} cadrumo_output_language must be typed OutputLanguage | None, not {annotation!r}"
     )
 
 

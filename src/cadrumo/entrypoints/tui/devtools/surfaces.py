@@ -189,10 +189,61 @@ def _workbench_surfaces() -> tuple[Surface, ...]:
     )
 
 
+def _modelo_surfaces() -> tuple[Surface, ...]:
+    """Expose every declared Modelo fixture as a drivable review surface.
+
+    The same contract as :func:`_workbench_surfaces`, over the fixture registry
+    that owns the Modelo workspace, review and edit states. Both spec types
+    carry the identity, scenario, interface list and builder this needs, so
+    neither registry has to know the other exists.
+
+    ``needs_profile`` is ``False`` for the same reason it is there: a Modelo
+    fixture builds its repositories in memory and touches no encrypted store,
+    which is what lets the whole matrix render without provisioning one.
+    """
+    from .modelo_fixtures import MODELO_FIXTURES
+
+    return tuple(
+        Surface(
+            spec.fixture_id,
+            f"{spec.surface_id} in its {spec.scenario.value} state",
+            spec.build,
+            needs_profile=False,
+            interfaces=spec.interfaces,
+        )
+        for spec in MODELO_FIXTURES
+    )
+
+
+def _profile_surfaces() -> tuple[Surface, ...]:
+    """Expose every declared profile-journey fixture as a drivable surface.
+
+    The third registry on the same contract as :func:`_workbench_surfaces`.
+    ``needs_profile`` is ``False`` because the journey screen renders an
+    injected presentation projection and reads no profile of its own -- the
+    property that lets a blocked or unassessed state be shown without
+    manufacturing a real profile in that condition.
+    """
+    from .profile_fixtures import PROFILE_FIXTURES
+
+    return tuple(
+        Surface(
+            spec.fixture_id,
+            f"{spec.surface_id} in its {spec.scenario.value} state",
+            spec.build,
+            needs_profile=False,
+            interfaces=spec.interfaces,
+        )
+        for spec in PROFILE_FIXTURES
+    )
+
+
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
         *_workbench_surfaces(),
+        *_modelo_surfaces(),
+        *_profile_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",

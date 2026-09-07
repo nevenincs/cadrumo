@@ -42,10 +42,14 @@ _UTF_8: Final[str] = UTF_8
 
 #: The Homebrew formula carries no `version` stanza — the version lives in the
 #: release-asset URL it pins, which is the same string a user's `brew install`
-#: resolves. Anchored on the `/releases/download/v<version>/` segment so an
-#: unrelated URL elsewhere in the formula (a homepage, a resource) cannot match.
+#: resolves. The `/releases/download/v<version>/` segment alone does not select
+#: it: the formula's own `cadrumo_data_*` resources are release downloads too,
+#: so that anchor admits them, and the product URL was read only because the
+#: generator happens to emit it first. The product tarball filename --
+#: `cadrumo-<version>.tar.gz`, hyphenated where the data packages use an
+#: underscore -- is what actually distinguishes it, so the pattern requires it.
 _HOMEBREW_URL_VERSION: Final[re.Pattern[str]] = re.compile(
-    r"""url\s+["'][^"']*/releases/download/v(?P<version>[^/"']+)/""",
+    r"""url\s+["'][^"']*/releases/download/v(?P<version>[^/"']+)/cadrumo-[^/"']*["']""",
 )
 
 
@@ -84,7 +88,7 @@ def extract_pointer_version(text: str, pointer_format: PointerFormat) -> str:
 
     match = _HOMEBREW_URL_VERSION.search(text)
     if match is None:
-        raise ValueError("homebrew formula carries no '/releases/download/v<version>/' url")
+        raise ValueError("homebrew formula carries no '/releases/download/v<version>/cadrumo-*' url")
     return match.group("version")
 
 

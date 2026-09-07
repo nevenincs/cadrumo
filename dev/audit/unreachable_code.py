@@ -468,6 +468,27 @@ class UnreachableCodeResult:
     data_cleared: int = 0
     reason: str = ""
 
+    def __post_init__(self) -> None:
+        """Refuse a count of reachable modules larger than the shipped total.
+
+        ``reachable_modules`` is ``len(runtime_reach & audited_names)`` and
+        ``shipped_modules`` is ``len(audited_names)``, so the first is a subset
+        count of the second and cannot exceed it. Nothing enforced that: the
+        record is a plain frozen dataclass, and its three constructors take both
+        numbers as parameters, so a caller could hand over any pair. The headline
+        renders them together -- "99/10 shipped modules reachable at runtime" --
+        which is self-refuting on one line and misstates the coverage an operator
+        reads. Equality is NOT asserted: an allowlisted or frozen module can be
+        unreachable without producing a finding, so a clean scan may legitimately
+        report fewer reachable modules than shipped.
+        """
+        if self.reachable_modules > self.shipped_modules:
+            message = (
+                f"reachable_modules is {self.reachable_modules}, above the {self.shipped_modules} shipped "
+                "module(s) it is counted from; reachable modules are a subset of the audited total"
+            )
+            raise ValueError(message)
+
     @classmethod
     def clean(cls, *, roots: tuple[str, ...], shipped_modules: int, reachable_modules: int) -> UnreachableCodeResult:
         """A scan in which every shipped module and symbol is reachable."""

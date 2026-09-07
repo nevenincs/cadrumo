@@ -378,9 +378,11 @@ def _parse_module(revision: str, module: str) -> ast.Module:
     exactly the file nobody could analyse - and this is the census that finds
     code writing to the tree, where a missing module is a missing writer.
 
-    Measured at HEAD: 2117 production and 3722 test modules, none unparsable.
+    Measured at HEAD: every production and test module in the corpus parses.
     Refusing is therefore safe today and tells an operator immediately if that
-    ever stops being true, which a silent skip never would.
+    ever stops being true, which a silent skip never would. The corpus sizes
+    are deliberately not quoted here: they move with every commit, and a figure
+    that decays is worse than none because it still reads as measured.
     """
     try:
         return ast.parse(_git_show(revision, module))

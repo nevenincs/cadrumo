@@ -307,8 +307,9 @@ def test_module_exposes_no_filesystem_destination_writer_surface() -> None:
 
 
 def test_cli_rejects_retired_patch_switch() -> None:
-    with pytest.raises(SystemExit):
+    with pytest.raises(SystemExit) as error:
         subject.main(["--emit-patch"])
+    assert error.value.code == 2
 
 
 def test_target_description_mutation_is_refused() -> None:

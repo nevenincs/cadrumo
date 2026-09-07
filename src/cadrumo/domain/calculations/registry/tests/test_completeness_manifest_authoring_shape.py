@@ -16,7 +16,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _completeness_manifest_fragments(modelos_root: Path) -> tuple[tuple[Path, str, str], ...]:
     fragments: list[tuple[Path, str, str]] = []
-    for path in modelos_root.glob("*/revisions/**/*.toml"):
+    swept = tuple(modelos_root.glob("*/revisions/**/*.toml"))
+    assert swept, (
+        f"the sweep of {modelos_root} matched no declaration; a walk that reads nothing yields "
+        "no misplaced completeness manifest because it yields no manifest at all"
+    )
+    for path in swept:
         if b"completeness_manifest" not in path.read_bytes():
             continue
         with path.open("rb") as handle:

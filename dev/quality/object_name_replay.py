@@ -4,8 +4,11 @@ from __future__ import annotations
 
 import os
 import shutil
+import stat
 import sys
 import tempfile
+from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Final, cast
@@ -188,7 +191,34 @@ def _run_gates_in_verified_copy(
         return outcomes
     finally:
         if temporary_root.exists() and not is_link_like(temporary_root):
-            shutil.rmtree(temporary_root)
+            _discard_verified_copy(temporary_root)
+
+
+def _discard_verified_copy(temporary_root: Path) -> None:
+    """Remove a verified-copy root without letting cleanup decide the outcome.
+
+    The root lives in the system temporary area, holds nothing the caller still
+    needs, and its removal proves nothing about the replay. Windows raises
+    ``WinError 145`` here whenever anything inside the copy is still held or
+    carries a read-only bit, and a raise from the ``finally`` that removes it
+    replaces the real result: a gate replay that PASSED was reported as a
+    failure and the applied tree was rolled back. Cleanup is housekeeping, so
+    it retries past a read-only bit and then gives up quietly, leaving the
+    directory for the operator rather than failing verified work.
+    """
+
+    def _retry_after_clearing_readonly(
+        function: Callable[[str], object],
+        path: str,
+        error: BaseException,
+    ) -> None:
+        del error
+        with suppress(OSError):
+            os.chmod(path, stat.S_IWRITE)
+            function(path)
+
+    with suppress(OSError):
+        shutil.rmtree(temporary_root, onexc=_retry_after_clearing_readonly)
 
 
 def _stage_bytes(target: Path, payload: bytes, *, label: str) -> Path:
@@ -286,7 +316,7 @@ def _run_generators_in_verified_copy(
         return outcomes, payloads
     finally:
         if temporary_root.exists() and not is_link_like(temporary_root):
-            shutil.rmtree(temporary_root)
+            _discard_verified_copy(temporary_root)
 
 
 def transaction_root_for(root: Path, receipt_id: str) -> Path:
