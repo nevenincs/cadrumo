@@ -3,10 +3,17 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
-from ..sync_aeat_record_design_corpus import _HISTORICAL_EXCLUSIONS_PATH, _REQUIRED, check
+from ..sync_aeat_record_design_corpus import (
+    _HISTORICAL_EXCLUSIONS_PATH,
+    _REQUIRED,
+    _UNATTESTED_CORPUS_FILES,
+    check,
+    unattested_corpus_files,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -115,3 +122,72 @@ def test_modelo_353_historical_designs_are_required_not_excluded() -> None:
 
     assert {url: required[url] for url in expected} == expected
     assert exclusions.isdisjoint(expected)
+
+
+def _model_tree(root: Path, modelo: str, stored: tuple[str, ...]) -> Path:
+    """Build one attested model directory: payloads plus the manifest naming them."""
+    model_dir = root / f"modelo_{modelo}"
+    (model_dir / "files").mkdir(parents=True)
+    for relative in stored:
+        (model_dir / relative).write_bytes(b"payload")
+    (model_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "modelo": modelo,
+                "artefact_count": len(stored),
+                "artefacts": [{"stored_path": relative} for relative in stored],
+            }
+        ),
+        encoding="utf-8",
+    )
+    return model_dir
+
+
+def test_a_payload_no_manifest_names_is_reported_as_unattested(tmp_path: Path) -> None:
+    """The direction the manifest walk cannot see.
+
+    ``check`` confirms every declared artefact is on disk at the recorded size
+    and digest. Nothing confirmed the converse, and the manifest cannot express
+    'present but not attested': an artefact is a complete entry or it is absent.
+    So a pull that writes payload bytes and stops before rewriting the manifests,
+    or a partial revert of a bulk removal, leaves corpus content with no source
+    URL, licence, digest or retrieval date while every declared count still
+    reconciles and the gate reads green.
+
+    Built on a temporary tree, never the committed corpus.
+    """
+    root = tmp_path / "disenos_registro"
+    root.mkdir()
+    model_dir = _model_tree(root, "999", ("files/01-declared.pdf",))
+
+    assert unattested_corpus_files(root) == (), "a fully attested corpus must report nothing"
+
+    # Derivatives and project declarations sit beside payloads and are not
+    # artefacts; they must not be mistaken for unattested content.
+    (model_dir / "files" / "01-declared.pdf.extracted.md").write_text("text", encoding="utf-8")
+    (model_dir / "files" / "01-declared.pdf.extracted.json").write_text("{}", encoding="utf-8")
+    (model_dir / "files" / "01-declared.pdf.record-design-correction.json").write_text("{}", encoding="utf-8")
+    (model_dir / "declared-non-record-sheets.json").write_text("{}", encoding="utf-8")
+    assert unattested_corpus_files(root) == ()
+
+    # The defect: bytes restored, manifest entry not.
+    (model_dir / "files" / "02-restored.xlsx").write_bytes(b"evidence")
+    assert unattested_corpus_files(root) == ("modelo_999/files/02-restored.xlsx",)
+
+    # Attesting it closes the finding through the same predicate.
+    manifest_path = model_dir / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["artefacts"].append({"stored_path": "files/02-restored.xlsx"})
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    assert unattested_corpus_files(root) == ()
+
+
+def test_the_recorded_unattested_census_is_a_named_debt_not_a_blanket() -> None:
+    """The recorded set is one file, named, and it is not an ignore rule.
+
+    ``check`` compares the observed unattested set against this one for EQUALITY,
+    so a second unattested file fails and so does attesting this one while it is
+    still listed. A census that only grows silently would be the same silence it
+    was written to end.
+    """
+    assert _UNATTESTED_CORPUS_FILES == ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
