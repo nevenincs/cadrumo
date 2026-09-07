@@ -15,7 +15,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:c4c29afc26c8bcf8ab97de135e61e44e65ff25fc126c147621794a55304f06c6'
+body_hash: 'sha256:c7278e04d1f42944870999beb0416b708daf377c07f39ceefd26f4791833a5e7'
 ---
 
 # `tuimodelo` plan
@@ -69,9 +69,9 @@ Extend the denominator so a delivered surface and its recorded classification mu
 - [x] `W01.P02.S170` - Create headroom on the denominator module before extending it, which sits 63 lines under a ceiling that three steps in this phase and six later steps must share; `dev/quality/modelo_workspace_action_denominator.py`.
 - [x] `W01.P02.S04` - Extend the observed action signature with interface capability and dispatchability so the gate can see a wired surface; `dev/quality/modelo_workspace_action_denominator.py`.
 - [x] `W01.P02.S05` - Add delivered dispositions for reads and for mutations to the closed taxonomy, which today offers no arm a delivered mutation can occupy; `dev/quality/modelo_workspace_action_classification.py`.
-- [ ] `W01.P02.S06` - Red the gate when a recorded disposition contradicts the observed shape, applying the rule to the command-graph and dispatch intersection only; `dev/quality/modelo_workspace_action_denominator.py`.
+- [x] `W01.P02.S06` - Red the gate when a recorded disposition contradicts the observed shape, applying the rule to the command-graph and dispatch intersection only; `dev/quality/modelo_workspace_action_denominator.py`.
 - [ ] `W01.P02.S07` - Correct the two review-package specs that declare no write route while carrying local-state side effects and emitting events; `src/cadrumo/entrypoints/cli`.
-- [ ] `W01.P02.S172` - Confirm the fixed-point gate's time ceiling remains adequate for the corpus this campaign grows; `dev/tests`.
+- [x] `W01.P02.S172` - Confirm the fixed-point gate's time ceiling remains adequate for the corpus this campaign grows; `dev/tests`.
 
 ### Phase `W01.P03` - record campaign scope and outstanding decisions
 
