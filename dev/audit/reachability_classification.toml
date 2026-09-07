@@ -221,6 +221,25 @@ symbols = [
 evidence = "Deterministic-digest overrides whose only callers are src/cadrumo/application/filing/tests/test_approval_basis_integrity.py. Their own docstrings name the case they serve -- a test approving against a non-active or sentinel bucket with no prior observations -- so they are test ergonomics rather than product capability. Left where they are: unlike the calculate wrapper relocated earlier, these do not shadow a live entry point and cannot be reached by mistake in place of one, since compute_current_approval_basis and approve_draft take them only as explicit keyword overrides and self-load from the bucket otherwise."
 remedy_requires_decision = false
 
+[[symbol_cluster]]
+name = "lazy profile-key attribute and the alias beside it"
+class = "superseded"
+symbols = [
+  "__getattr__",
+  "get_profile_key",
+]
+evidence = "Removed 2026-09-07. keys.py carried a module-level __getattr__ resolving a PROFILE_KEYS attribute, declared only under TYPE_CHECKING and advertised in __all__ though no shipped module imported it. Its four importers were all tests, and the hook was actively harmful to them: from ... import PROFILE_KEYS fires the hook at the IMPORTER's import time, which is exactly the race the module's own profile_keys() docstring warns about, and two of the four bound it at module level. All four now call profile_keys(), which resolves at call time and is what production already used. get_profile_key went with it as a pure module-level alias of the canonical ProfileKey.from_key classmethod, with no caller but its own test. The package docstring claimed the lazy resolution was a deliberate ordering contract; the ordering contract is real and lives in the registration check, but the lazy attribute was not part of it."
+remedy_requires_decision = false
+
+[[symbol_cluster]]
+name = "required half of a symmetric profile-key view"
+class = "test-support"
+symbols = [
+  "required_profile_keys",
+]
+evidence = "Reached only by three test modules, and deliberately kept. It is the REQUIRED half of a symmetric pair whose OPTIONAL half, optional_profile_keys, is consumed in production by src/cadrumo/application/user_profile/keys_validation.py. Deleting one side of a symmetric filtered view leaves a registry that can report its optional keys and not its required ones, which is a worse surface than an unused function."
+remedy_requires_decision = false
+
 # ---------------------------------------------------------------------------
 # Orphaned test modules
 #
