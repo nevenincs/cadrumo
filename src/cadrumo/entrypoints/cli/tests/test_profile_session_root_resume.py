@@ -175,6 +175,7 @@ class TestSilentResume:
         assert '"rows"' in output or "rows" in output
 
     def test_resume_advances_the_idle_deadline(self, _isolated_root: Path) -> None:
+        require_os_credential_store()
         bucket_id = _create_profile()
         _login_and_require_persistence(_isolated_root, bucket_id)
         session = current_active_bucket_session()
