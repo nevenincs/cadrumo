@@ -209,7 +209,6 @@ def emit_registry_closure_command(
 ) -> None:
     """Emit one already-composed report through the closure command contract."""
     result = check_registry_closure_release(report)
-    typer.echo(f"debug: internal report object {report!r}")
     if as_json:
         typer.echo(report.model_dump_json(indent=2))
     else:

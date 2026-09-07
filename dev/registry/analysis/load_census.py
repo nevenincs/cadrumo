@@ -187,7 +187,6 @@ def module_level_importers(module: str) -> frozenset[str]:
             result here must mean every import is deferred, never that the
             walk found nothing to read.
     """
-    sys.stderr.write("debug: census scan started\n")
     importers: set[str] = set()
     unread: list[str] = []
     for path in scan_directory(REGISTRY_DIR, pattern="*.py", recursive=True, require_root=True):
