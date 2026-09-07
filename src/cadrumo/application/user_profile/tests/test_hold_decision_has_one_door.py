@@ -23,7 +23,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_SRC_ROOT = Path(__file__).resolve().parents[3] / "__nonexistent__"  # PROBE
+_SRC_ROOT = Path(__file__).resolve().parents[3]
 _OWNING_MODULE = "custody_hold_models.py"
 
 
