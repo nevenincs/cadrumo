@@ -13,6 +13,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.entrypoints.tui_capability import TuiCapability
+
 from ..quality.modelo_workspace_action_classification import (
     ModeloWorkspaceActionClassificationV1,
     ModeloWorkspaceActionDisposition,
@@ -74,6 +76,8 @@ def test_stale_classification_for_action_no_longer_live_reds() -> None:
         write_route="none",
         side_effects=("none",),
         has_action_catalogue_entry=False,
+        tui_capability=TuiCapability.NOT_IMPLEMENTED,
+        is_surface_dispatchable=False,
         owning_authority="test-fixture",
         reason="a fabricated stale row proving the stale-entry rejection path",
         evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
@@ -134,6 +138,8 @@ def test_placeholder_reason_is_refused_at_construction() -> None:
             write_route="none",
             side_effects=("none",),
             has_action_catalogue_entry=False,
+            tui_capability=TuiCapability.NOT_IMPLEMENTED,
+            is_surface_dispatchable=False,
             owning_authority="tui-architecture",
             reason="n/a",
             evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
@@ -150,6 +156,8 @@ def test_out_of_scope_identity_is_refused_at_construction() -> None:
             write_route="none",
             side_effects=("none",),
             has_action_catalogue_entry=False,
+            tui_capability=TuiCapability.NOT_IMPLEMENTED,
+            is_surface_dispatchable=False,
             owning_authority="test-fixture",
             reason="proving the out-of-scope refusal",
             evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
@@ -209,3 +217,35 @@ def test_a_dispatchable_command_graph_action_missing_from_the_table_is_refused()
     assert any("dispatchable from a surface" in error and subject in error for error in errors), (
         f"removing {subject!r} from the table did not raise the dispatch violation: {errors}"
     )
+
+
+def test_the_taxonomy_offers_an_arm_a_delivered_mutation_can_occupy() -> None:
+    """The delivered arms accept a wired row, which the pending-only taxonomy could not.
+
+    Before the delivered arms existed, an action whose surface had shipped had
+    nowhere in the closed taxonomy to say so and stayed recorded as pending.
+    This proves the arms are occupiable by a row carrying the observed shape of
+    a wired action -- available routing posture and surface dispatchability --
+    rather than merely present in the enumeration.
+    """
+    for disposition in (
+        ModeloWorkspaceActionDisposition.READ_DELIVERED,
+        ModeloWorkspaceActionDisposition.MUTATION_DELIVERED,
+    ):
+        row = ModeloWorkspaceActionClassificationV1(
+            action_identity="modelo.work.review",
+            disposition=disposition,
+            command_key="app_modelo_work_review",
+            write_route="none",
+            side_effects=("none",),
+            has_action_catalogue_entry=False,
+            tui_capability=TuiCapability.AVAILABLE,
+            is_surface_dispatchable=True,
+            owning_authority="test-fixture",
+            reason="proving the delivered arm accepts a wired row",
+            evidence_reference="dev/tests/test_modelo_workspace_action_denominator.py",
+            reopening_condition="never: this row exists only to prove the arm is occupiable",
+        )
+        assert row.disposition is disposition
+        assert row.tui_capability is TuiCapability.AVAILABLE
+        assert row.is_surface_dispatchable

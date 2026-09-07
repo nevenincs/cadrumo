@@ -1279,11 +1279,24 @@ remedy_requires_decision = true
 
 [[symbol_cluster]]
 name = "registry handoff path audit nothing runs"
-class = "should-be-live"
 area = "domain/calculations/registry"
-symbols = ["audit_registry_handoff_paths", "audit_registry_relation_handoff_applicability", "relation_is_consumed"]
-evidence = "An audit that classifies validated relation paths against the registry authority without inventing semantic repairs, its applicability sibling, and the predicate answering whether a formula or bound casilla consumes a relation. No production or dev caller runs any of them, so the classification the audit exists to produce is never produced and an unconsumed relation is never reported."
+class = "should-be-live"
+symbols = [
+  "audit_registry_handoff_paths",
+  "audit_registry_relation_handoff_applicability",
+]
+evidence = "An audit that classifies validated relation paths against the registry authority without inventing semantic repairs, and its applicability sibling, in src/cadrumo/domain/calculations/registry/handoffs.py. No production or dev caller runs either, so the classification the audit exists to produce is never produced and an unconsumed relation is never reported. Re-tested 2026-09-09 by sibling comparison, which also split this cluster: relation_consumption_index and relation_consumption_channels in the same module carry six production references each, so relation consumption IS computed live -- what is missing is the audit over it, not the ability to compute it. Running the audit somewhere is a capability decision and stays open."
 remedy_requires_decision = true
+
+[[symbol_cluster]]
+name = "relation consumption predicate the channels function displaced"
+area = "domain/calculations/registry"
+class = "superseded"
+resolved = true
+symbols = [
+  "relation_is_consumed",
+]
+evidence = "A one-line convenience over a live sibling: relation_is_consumed returned bool(relation_consumption_channels(relation, index)) and had no production caller, while relation_consumption_channels itself carries six -- relation_prefill, work_review and source_connectivity each need the CHANNELS rather than a boolean, which is why the predicate collected only tests. Deleted 2026-09-09 with its __all__ entry, and the two registry tests that used it now call the function it wrapped. It was carried inside the handoff-audit cluster and is a different class from the two audits beside it, which is worth recording: a cluster's class can hide a member that belongs elsewhere."
 
 [[symbol_cluster]]
 name = "marriage fact helpers displaced by the profile binding"

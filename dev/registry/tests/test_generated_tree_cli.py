@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import shutil
+import tomllib
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
@@ -102,6 +104,36 @@ def test_bootstrap_target_enrolls_only_the_pinned_modelo_200_2024_design() -> No
     assert target.layout_id == "generated-modelo-200-2024-fichero"
     assert target.line_ending == "crlf"
     assert target.source_ref == "aeat-dr-200-2024"
+
+
+def test_every_bootstrap_target_still_names_a_tree_awaiting_publication() -> None:
+    """A reviewed bootstrap authorization must not outlive the bootstrap it authorized.
+
+    ``_prepare`` in ``cli.py`` only ever consults this file while
+    ``target_export_root`` is absent; once a revision's tree is published,
+    ``_bootstrap_target`` can never match that row again. A row surviving its
+    own bootstrap is dead weight nothing else refuses, mirroring the sibling
+    disposition ledger's own stated policy in this package
+    (``generated_tree_dispositions.toml``: "a row whose tree has been repaired
+    fails too, so an explanation cannot outlive its cause"). This asserts the
+    same discipline for the bootstrap-target roster: prune a row once its tree
+    is committed, rather than leaving it to silently accumulate.
+    """
+    path = Path(__file__).resolve().parents[1] / "pipeline" / "generated_export_bootstrap_targets.toml"
+    payload = tomllib.loads(path.read_text("utf-8"))
+    targets = payload["targets"]
+    assert targets, "the bootstrap-target roster must not be silently emptied"
+
+    registry_root = bundled_path("registry", "aeat")
+    already_bootstrapped = [
+        (row["modelo"], row["revision"])
+        for row in targets
+        if (registry_root / "modelos" / row["modelo"] / "revisions" / row["revision"] / "export").is_dir()
+    ]
+    assert not already_bootstrapped, (
+        f"bootstrap target(s) name a tree already published, so the row can never fire again: "
+        f"{already_bootstrapped}; prune it once its tree is committed"
+    )
 
 
 def _publication_context_for_target(

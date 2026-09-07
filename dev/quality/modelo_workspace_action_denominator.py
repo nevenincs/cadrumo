@@ -101,6 +101,7 @@ def discover_live_modelo_action_signatures() -> dict[str, ModeloWorkspaceActionC
     field against the closed table's recorded signature.
     """
     catalogue_target_keys = frozenset(entry.target_command_key for entry in OPERATOR_ACTION_CATALOGUE.entries)
+    dispatchable = discover_dispatchable_modelo_action_identities()
     live: dict[str, ModeloWorkspaceActionClassificationV1] = {}
     for node in command_spec_nodes():
         spec = node.spec
@@ -116,6 +117,8 @@ def discover_live_modelo_action_signatures() -> dict[str, ModeloWorkspaceActionC
             write_route=spec.policy.write_route,
             side_effects=tuple(sorted(spec.policy.side_effects)),
             has_action_catalogue_entry=identity in catalogue_target_keys,
+            tui_capability=spec.tui_capability,
+            is_surface_dispatchable=identity in dispatchable,
             owning_authority="live-observation-placeholder",
             reason="live-observation-placeholder",
             evidence_reference="live-observation-placeholder",
@@ -153,7 +156,14 @@ def build_modelo_workspace_action_denominator() -> ModeloWorkspaceActionDenomina
     )
 
 
-_SIGNATURE_FIELDS: Final[tuple[str, ...]] = ("command_key", "write_route", "side_effects", "has_action_catalogue_entry")
+_SIGNATURE_FIELDS: Final[tuple[str, ...]] = (
+    "command_key",
+    "write_route",
+    "side_effects",
+    "has_action_catalogue_entry",
+    "tui_capability",
+    "is_surface_dispatchable",
+)
 
 
 def validate_modelo_workspace_action_denominator(

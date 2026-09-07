@@ -23,16 +23,32 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from cadrumo.entrypoints.tui_capability import TuiCapability
+
 MODELO_IDENTITY_PREFIX: Final[str] = "modelo."
 _PLACEHOLDER_REASONS: Final[frozenset[str]] = frozenset({"", "n/a", "na", "unmeasured", "tbd", "todo"})
 
 
 class ModeloWorkspaceActionDisposition(StrEnum):
-    """Closed classification outcome for one Modelo action candidate."""
+    """Closed classification outcome for one Modelo action candidate.
+
+    The pending arms and the delivered arms pair up, and the pairing is the
+    point: a read or a mutation is either still owed a surface or has one an
+    operator can reach today. Before the delivered arms existed the taxonomy
+    could express only the first half, so an action whose surface had shipped
+    stayed recorded as pending and nothing in the table could say otherwise.
+
+    Delivered means reachable and invocable by an operator, not merely built.
+    A screen that exists with no route to it, or an action a surface can name
+    but not dispatch, is still pending; that distinction is what the observed
+    routing posture and dispatchability fields exist to keep honest.
+    """
 
     C1_BOUNDED_REVIEW = "c1_bounded_review"
     C1_OR_C2_READ_PENDING = "c1_or_c2_read_pending"
+    READ_DELIVERED = "read_delivered"
     C4_MUTATION_PENDING = "c4_mutation_pending"
+    MUTATION_DELIVERED = "mutation_delivered"
     FLOW_OWNED = "flow_owned"
     DEFERRED = "deferred"
     NOT_VISUAL = "not_visual"
@@ -41,10 +57,16 @@ class ModeloWorkspaceActionDisposition(StrEnum):
 class ModeloWorkspaceActionClassificationV1(BaseModel):
     """One closed, hand-reviewed row: an action identity plus its disposition.
 
-    ``command_key``, ``write_route``, ``side_effects``, and
-    ``has_action_catalogue_entry`` are the recorded mechanical SIGNATURE this
+    ``command_key``, ``write_route``, ``side_effects``,
+    ``has_action_catalogue_entry``, ``tui_capability`` and
+    ``is_surface_dispatchable`` are the recorded mechanical SIGNATURE this
     row was classified against; the validator re-observes the live signature
     and reds on drift rather than silently re-classifying.
+
+    The last two are what let the gate see a WIRED surface. Without them,
+    declaring a command routable and making it dispatchable both changed the
+    product without changing any gate outcome, so a row could be classified
+    "pending" long after its surface shipped.
     """
 
     model_config = ConfigDict(strict=True, extra="forbid", frozen=True)
@@ -55,6 +77,8 @@ class ModeloWorkspaceActionClassificationV1(BaseModel):
     write_route: str = Field(min_length=1)
     side_effects: tuple[str, ...]
     has_action_catalogue_entry: bool
+    tui_capability: TuiCapability
+    is_surface_dispatchable: bool
     owning_authority: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     evidence_reference: str = Field(min_length=1)
@@ -77,6 +101,8 @@ def modelo_action_classification(
     write_route: str,
     side_effects: tuple[str, ...],
     has_action_catalogue_entry: bool,
+    tui_capability: TuiCapability,
+    is_surface_dispatchable: bool,
     owning_authority: str,
     reason: str,
     evidence_reference: str,
@@ -96,6 +122,8 @@ def modelo_action_classification(
         write_route=write_route,
         side_effects=side_effects,
         has_action_catalogue_entry=has_action_catalogue_entry,
+        tui_capability=tui_capability,
+        is_surface_dispatchable=is_surface_dispatchable,
         owning_authority=owning_authority,
         reason=reason,
         evidence_reference=evidence_reference,

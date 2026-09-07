@@ -189,7 +189,7 @@
 "cadrumo.domain.calculations.registry.external_grounding" = 1
 "cadrumo.domain.calculations.registry.fixed_width_codec" = 1
 "cadrumo.domain.calculations.registry.gasto193_bindings" = 2
-"cadrumo.domain.calculations.registry.handoffs" = 3
+"cadrumo.domain.calculations.registry.handoffs" = 2
 "cadrumo.domain.calculations.registry.ids" = 1
 "cadrumo.domain.calculations.registry.invoice_bindings" = 3
 "cadrumo.domain.calculations.registry.legal" = 1
