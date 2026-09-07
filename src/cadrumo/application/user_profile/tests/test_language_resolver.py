@@ -89,3 +89,58 @@ def test_environment_output_language_override_is_canonical(
 def test_clean_install_defaults_to_spanish(isolated_language_state: str) -> None:
     del isolated_language_state
     assert output_language() == "es"
+
+
+def test_a_language_fact_write_mirrors_the_bucket_hint(isolated_language_state: str) -> None:
+    """The preference must survive a lock, which only the non-secret hint can do.
+
+    ``resolve_active_profile_output_language`` falls back to the bucket hint
+    whenever no session is bound. Nothing wrote that hint, so the fallback
+    always found nothing and a chosen language silently reverted to the
+    settings default on every pre-login surface.
+    """
+    from ....core.bucket_pointer import resolve_active_bucket_id
+    from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH as _LANGUAGE_PATH
+    from ....domain.user_profile.values import UserProfileFact
+    from ..fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..language_resolver import resolve_profile_output_language_hint
+
+    _seed_profile_language("es", profile_id=isolated_language_state)
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None, "the seeded profile must bind an active bucket"
+
+    apply_profile_fact_changes(
+        profile_id=isolated_language_state,
+        changes=(UserProfileFact(path=_LANGUAGE_PATH, value="ca"),),
+        door=ProfileFactWriteDoor.MANAGER_FIELD,
+    )
+
+    assert resolve_profile_output_language_hint(bucket_id) == "ca"
+
+
+def test_clearing_the_language_fact_clears_the_hint(isolated_language_state: str) -> None:
+    """The control: the two must not disagree about an absence."""
+    from ....core.bucket_pointer import resolve_active_bucket_id
+    from ....core.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH as _LANGUAGE_PATH
+    from ....domain.user_profile.values import UserProfileFact
+    from ..fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..language_resolver import resolve_profile_output_language_hint
+
+    _seed_profile_language("es", profile_id=isolated_language_state)
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+
+    apply_profile_fact_changes(
+        profile_id=isolated_language_state,
+        changes=(UserProfileFact(path=_LANGUAGE_PATH, value="ca"),),
+        door=ProfileFactWriteDoor.MANAGER_FIELD,
+    )
+    assert resolve_profile_output_language_hint(bucket_id) == "ca"
+
+    apply_profile_fact_changes(
+        profile_id=isolated_language_state,
+        changes=(UserProfileFact(path=_LANGUAGE_PATH, value=None),),
+        door=ProfileFactWriteDoor.MANAGER_FIELD,
+    )
+
+    assert resolve_profile_output_language_hint(bucket_id) is None

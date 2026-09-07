@@ -1131,6 +1131,17 @@ class ProfileCustodyPort(Protocol):
         """Read one bucket's non-secret failure-rendering language hint."""
         ...
 
+    def write_output_language_hint(self, *, storage_root: Path, bucket_id: str, language: object) -> bool:
+        """Mirror the profile's language preference into the non-secret hint.
+
+        Returns ``False`` for an unsupported value, which never reaches disk.
+        """
+        ...
+
+    def clear_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> None:
+        """Remove the hint when the preference it mirrors is cleared."""
+        ...
+
     def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
         """Return active-bucket namespace inventory."""
         ...
@@ -1342,6 +1353,23 @@ def default_profile_bucket_storage() -> ProfileBucketStoragePort:
 def read_profile_output_language_hint(*, storage_root: Path, bucket_id: str) -> str | None:
     """Read one bucket's non-secret output-language hint through custody."""
     return profile_custody_port().read_output_language_hint(
+        storage_root=storage_root,
+        bucket_id=bucket_id,
+    )
+
+
+def write_profile_output_language_hint(*, storage_root: Path, bucket_id: str, language: object) -> bool:
+    """Write one bucket's non-secret output-language hint through custody."""
+    return profile_custody_port().write_output_language_hint(
+        storage_root=storage_root,
+        bucket_id=bucket_id,
+        language=language,
+    )
+
+
+def clear_profile_output_language_hint(*, storage_root: Path, bucket_id: str) -> None:
+    """Remove one bucket's non-secret output-language hint through custody."""
+    profile_custody_port().clear_output_language_hint(
         storage_root=storage_root,
         bucket_id=bucket_id,
     )
@@ -1653,6 +1681,7 @@ __all__ = [
     "canonical_snapshot_bytes",
     "canonical_snapshot_digest",
     "canonical_snapshot_payload",
+    "clear_profile_output_language_hint",
     "create_profile_custody_registration_material",
     "create_profile_recovery_enrollment_material",
     "default_profile_bucket_event_history_repository",
@@ -1678,4 +1707,5 @@ __all__ = [
     "replace_profile_custody_password_envelope",
     "unlock_profile_custody_password",
     "verify_profile_custody_dek_against_sentinel",
+    "write_profile_output_language_hint",
 ]
