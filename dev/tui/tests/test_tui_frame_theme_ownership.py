@@ -24,6 +24,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.config_support import TuiAppearance
 
+from ..._paths import REPO_ROOT, UTF_8
 from .._artifacts import (
     FailedFrame,
     FrameFailureKind,
@@ -32,15 +33,12 @@ from .._artifacts import (
     SkippedFrame,
     ThemeName,
 )
-from ..._paths import REPO_ROOT, UTF_8
 from .._viewports import VIEWPORTS, ViewportName
 from ..cli import THEMES, _resolve_themes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_HARNESS_SOURCE = (
-    REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui" / "devtools" / "__main__.py"
-)
+_HARNESS_SOURCE = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui" / "devtools" / "__main__.py"
 """The renderer this tool shells out to, read as TEXT.
 
 Never imported: the architecture decision bars this package from importing the
@@ -153,7 +151,7 @@ def test_a_manifest_read_back_from_disk_carries_the_theme_refusal() -> None:
 
 def test_the_command_line_offers_the_vocabulary_rather_than_a_second_list() -> None:
     """``THEMES`` is now derived, so it cannot name a word no record accepts."""
-    assert THEMES == tuple(ThemeName)
+    assert tuple(ThemeName) == THEMES
     assert _resolve_themes(None) == THEMES
     assert _resolve_themes(["light"]) == (ThemeName.LIGHT,)
 

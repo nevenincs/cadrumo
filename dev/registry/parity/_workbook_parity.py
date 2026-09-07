@@ -100,7 +100,6 @@ __all__ = [
     "WorkbookRunnerStatus",
     "WorkbookScanOptions",
     "WorkbookScanStatus",
-    "assert_formula_workbook_runner_ready",
     "assert_workbook_scan_clean",
     "compare_registry_to_workbook",
     "convert_binary_xls_with_libreoffice",
@@ -1063,7 +1062,6 @@ def verify_workbook_backend(
     per_file_timeout_seconds: float = 10.0,
     previous_report: WorkbookBackendVerificationReport | None = None,
     fail_on_scan_error: bool = True,
-    require_formula_runner: bool = False,
 ) -> WorkbookBackendVerificationReport:
     """Verify the workbook parity backend and return a :class:`WorkbookBackendVerificationReport`."""
     reports = inventory_workbook_coverage(
@@ -1089,8 +1087,6 @@ def verify_workbook_backend(
     )
     if fail_on_scan_error:
         assert_workbook_scan_clean(report)
-    if require_formula_runner:
-        assert_formula_workbook_runner_ready(report)
     return report
 
 
@@ -1101,25 +1097,6 @@ def assert_workbook_scan_clean(report: WorkbookBackendVerificationReport) -> Non
     if failed:
         details = "\n".join(f" - {item.path}: {item.error}" for item in failed)
         raise RegistryValidationError(f"workbook verification failed to scan {len(failed)} artefact(s):\n{details}")
-
-
-def assert_formula_workbook_runner_ready(report: WorkbookBackendVerificationReport) -> None:
-    """Sanity gate: confirm the verification report carries an available runner.
-
-    `detect_workbook_runner()` raises explicitly when no LibreOffice or Excel COM
-    runner can be located, so by the time a `WorkbookBackendVerificationReport`
-    exists its `runner.status` must already be `"available"`. This helper is
-    retained as a documentation surface and a defensive guard against future
-    schema drift; it never fails on a freshly produced report.
-    """
-    # `WorkbookRunnerStatus` is a single-value literal, so the only way this can
-    # fail is if a caller hand-builds a report with a hand-mutated runner; that
-    # is intentionally left as an explicit error path rather than silent.
-    if report.runner.status != "available":  # pragma: no cover — defensive
-        raise RegistryValidationError(
-            "formula-bearing official workbooks require a local recalculation runner; "
-            f"runner status is {report.runner.status!r}: {report.runner.detail}",
-        )
 
 
 def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[WorkbookModeloCoverage, ...]:

@@ -14,7 +14,11 @@ them that way does not scale: the sweep's prefix tuple is a list someone has to
 remember to extend, and a prefix added to a ``mkdtemp`` call and forgotten here
 leaks silently and indefinitely. So the subjects are DISCOVERED from the source
 rather than enumerated -- a new scratch family is covered the moment it is
-written, or this fails naming it.
+written, or this fails naming it. Discovered from the PARSED TREE, because the
+text pattern that did this before could only see a quoted prefix beginning
+``cadrumo-``: a family named outside that stem was neither judged nor counted,
+and a gate reports a population it never assembled exactly as it reports a
+clean one.
 
 Two ways to satisfy the rule, because both are legitimate:
 
@@ -28,6 +32,7 @@ A family that does neither is the defect.
 
 from __future__ import annotations
 
+import ast
 import re
 from pathlib import Path
 from typing import Final
@@ -46,13 +51,55 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 #: subject; every other swept family is.
 _SWEPT: Final = (*SWEPT_SCRATCH_STEMS, SETTINGS_STEM, "cadrumo-pytest-")
 
-#: A ``mkdtemp`` naming a Cadrumo scratch family. Spans lines, because the call
-#: is routinely wrapped, and a single-line pattern would silently under-report
-#: exactly the sites most likely to be missed.
-_MKDTEMP: Final = re.compile(
-    r"""mkdtemp\(\s*(?:[^)]*?,\s*)?prefix\s*=\s*["'](cadrumo-[a-z0-9-]*)["']""",
-    re.DOTALL,
-)
+
+def _mkdtemp_prefixes(source: str) -> tuple[list[str], int, int]:
+    """Return every ``mkdtemp`` prefix in ``source``, read from its parsed tree.
+
+    The pattern this replaces matched text, and both of its narrowings removed
+    subjects rather than adding findings. It required the prefix to be a QUOTED
+    LITERAL, so a prefix reaching the call through a parameter was invisible;
+    and it required that literal to begin ``cadrumo-``, so a family named
+    outside the stem was invisible too. ``serving-benchmark-`` was one: minted
+    once per benchmark run, reclaimed by nothing, and absent from this gate's
+    population, which therefore reported green over five call sites while the
+    tree held seven.
+
+    Returns:
+        The literal prefixes; the number of calls whose prefix is present but
+        not readable as a literal; and the number naming no prefix at all. The
+        last are not this gate's subject -- nothing keyed on a stem can reclaim
+        a directory that has none -- but they are counted rather than dropped,
+        so the omission is stated instead of shrinking the population in
+        silence.
+
+    Raises:
+        SyntaxError: If ``source`` does not parse. The caller reports that as an
+            unread input rather than failing, because a sibling process editing
+            this tree can be caught mid-write.
+    """
+    prefixes: list[str] = []
+    unreadable = 0
+    anonymous = 0
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node, ast.Call):
+            continue
+        function = node.func
+        name = function.attr if isinstance(function, ast.Attribute) else getattr(function, "id", None)
+        if name != "mkdtemp":
+            continue
+        # ``mkdtemp(suffix, prefix, dir)``: the second positional is the prefix,
+        # and reading only the keyword would rebuild the blind spot this
+        # function exists to remove, one argument over.
+        keyword = next((word.value for word in node.keywords if word.arg == "prefix"), None)
+        given = keyword if keyword is not None else (node.args[1] if len(node.args) > 1 else None)
+        if given is None:
+            anonymous += 1
+        elif isinstance(given, ast.Constant) and isinstance(given.value, str):
+            prefixes.append(given.value)
+        else:
+            unreadable += 1
+    return prefixes, unreadable, anonymous
+
 
 #: Evidence that a module disposes of what it mints. Deliberately coarse: this
 #: gate proves a finalizer was *registered*, not that it is correct, and says so
@@ -96,6 +143,7 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
     """
     offenders: list[str] = []
     unread: list[str] = []
+    unnamed: list[str] = []
     examined = 0
     for path in paths:
         try:
@@ -108,19 +156,39 @@ def _unreclaimed(paths: list[Path]) -> tuple[list[str], int]:
             # a family removes a fifth of the subject with nothing said.
             unread.append(f"{path} ({type(refusal).__name__})")
             continue
-        prefixes = set(_MKDTEMP.findall(source))
-        if not prefixes:
+        try:
+            prefixes, unreadable, anonymous = _mkdtemp_prefixes(source)
+        except SyntaxError as refusal:
+            unread.append(f"{path} (SyntaxError: {refusal.msg})")
+            continue
+        if anonymous:
+            unnamed.append(f"{_reportable(path)} ({anonymous})")
+        if not prefixes and not unreadable:
             continue
         finalized = bool(_FINALIZED.search(source))
-        for prefix in sorted(prefixes):
+        for prefix in sorted(set(prefixes)):
             examined += 1
             if prefix.startswith(_SWEPT) or finalized:
                 continue
             offenders.append(f"{_reportable(path)}: {prefix!r}")
+        examined += unreadable
+        if unreadable and not finalized:
+            # An unreadable prefix cannot be checked against the swept tuple, so
+            # a local finalizer is the only remaining way to satisfy the rule.
+            # Passing it over instead would be the original defect in miniature.
+            offenders.append(
+                f"{_reportable(path)}: {unreadable} mkdtemp prefix(es) this gate cannot read as a "
+                "literal, and the module registers no finalizer",
+            )
     report_unread(
         "scratch reclamation sweep",
         "these sources were not read, so a scratch family declared in one was neither examined nor counted below",
         unread,
+    )
+    report_unread(
+        "scratch family census",
+        "these mkdtemp calls name no prefix, so no stem-keyed sweep can reach them and this gate does not judge them",
+        unnamed,
     )
     return offenders, examined
 
@@ -153,6 +221,111 @@ def test_a_new_unreclaimed_family_is_reported(tmp_path: Path) -> None:
     assert examined == 1
     assert len(offenders) == 1
     assert "cadrumo-brand-new-family-" in offenders[0]
+
+
+def test_a_family_outside_the_cadrumo_stem_is_reported(tmp_path: Path) -> None:
+    """The exact shape the replaced text pattern could not see.
+
+    ``serving-benchmark-`` was written, minted once per run, reclaimed by
+    nothing, and reported by nothing: the pattern required the literal to begin
+    ``cadrumo-``, so the family never entered the population at all. A gate that
+    judges a smaller set reads identically to one judging a clean set, which is
+    why this case is asserted rather than assumed.
+    """
+    stray = tmp_path / "stray.py"
+    stray.write_text(
+        'import tempfile\nroot = tempfile.mkdtemp(prefix="serving-benchmark-")\n',
+        encoding="utf-8",
+    )
+
+    offenders, examined = _unreclaimed([stray])
+
+    assert examined == 1
+    assert len(offenders) == 1
+    assert "serving-benchmark-" in offenders[0]
+
+
+def test_a_prefix_that_is_not_a_literal_demands_a_finalizer(tmp_path: Path) -> None:
+    """A prefix arriving through a parameter cannot be checked against the tuple.
+
+    The replaced pattern passed such a call over in silence. Refusing it unless
+    the module disposes of what it mints is the only honest reading: the gate
+    cannot say the family is swept, so it must not imply that it is.
+    """
+    indirect = tmp_path / "indirect.py"
+    indirect.write_text(
+        "import tempfile\n\n\ndef mint(prefix: str) -> str:\n    return tempfile.mkdtemp(prefix=prefix)\n",
+        encoding="utf-8",
+    )
+
+    offenders, examined = _unreclaimed([indirect])
+
+    assert examined == 1
+    assert len(offenders) == 1
+    assert "cannot read as a literal" in offenders[0]
+
+
+def test_an_unreadable_prefix_with_a_finalizer_is_accepted(tmp_path: Path) -> None:
+    """The refusal above must be the rule's second half, not a blanket ban."""
+    indirect = tmp_path / "tidy_indirect.py"
+    indirect.write_text(
+        "import atexit\nimport shutil\nimport tempfile\n\n\n"
+        "def mint(prefix: str) -> str:\n"
+        "    root = tempfile.mkdtemp(prefix=prefix)\n"
+        "    atexit.register(shutil.rmtree, root, ignore_errors=True)\n"
+        "    return root\n",
+        encoding="utf-8",
+    )
+
+    offenders, examined = _unreclaimed([indirect])
+
+    assert examined == 1
+    assert offenders == []
+
+
+def test_a_positional_prefix_is_read(tmp_path: Path) -> None:
+    """``mkdtemp(suffix, prefix)`` names a family without a keyword.
+
+    Reading only the keyword would rebuild the same blind spot one argument
+    over, so the positional spelling is asserted rather than trusted.
+    """
+    positional = tmp_path / "positional.py"
+    positional.write_text(
+        'import tempfile\nroot = tempfile.mkdtemp("", "cadrumo-brand-new-family-")\n',
+        encoding="utf-8",
+    )
+
+    offenders, examined = _unreclaimed([positional])
+
+    assert examined == 1
+    assert len(offenders) == 1
+    assert "cadrumo-brand-new-family-" in offenders[0]
+
+
+def test_a_prefixless_call_is_counted_but_not_judged(tmp_path: Path) -> None:
+    """A directory with no stem cannot be swept by one, and is not this rule.
+
+    It is still announced rather than dropped, because a population that shrinks
+    without saying so is the failure this whole module is written against.
+    """
+    unnamed = tmp_path / "unnamed.py"
+    unnamed.write_text("import tempfile\nroot = tempfile.mkdtemp()\n", encoding="utf-8")
+
+    offenders, examined = _unreclaimed([unnamed])
+
+    assert offenders == []
+    assert examined == 0
+
+
+def test_an_unparsable_source_is_announced_not_swallowed(tmp_path: Path) -> None:
+    """A sibling process caught mid-write must not read as a compliant file."""
+    broken = tmp_path / "broken.py"
+    broken.write_text("def mint(:\n", encoding="utf-8")
+
+    offenders, examined = _unreclaimed([broken])
+
+    assert offenders == []
+    assert examined == 0
 
 
 def test_a_finalized_family_is_accepted(tmp_path: Path) -> None:

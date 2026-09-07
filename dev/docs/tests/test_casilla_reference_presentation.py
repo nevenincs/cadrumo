@@ -14,9 +14,16 @@ land on, so they carry two obligations the anchor-parity gate does not cover:
   the ``binding`` source taxonomy, and must reach the page - with the registry's
   own identifiers demoted, and legal refs linked rather than printed raw.
 
-Records and compiled facts are constructed here rather than projected, so each
-contract is driven by values this module supplies: the assertions then read the
-renderer's behaviour, never a catalogue's current contents.
+Every renderer variation a contract needs is a value this module supplies, as
+an explicit override: the assertions read the renderer's behaviour, never a
+catalogue's current contents. What the module does NOT supply is the grounding
+underneath -- the record's identity, shape and provenance are taken from the
+projection that builds these records for the real index, so a page is rendered
+from a casilla the registry could actually have produced. Restating that
+grounding by hand is what this fixture used to do, and it restated six of
+twelve fields wrongly: an IRPF pago-fraccionado box carrying an IVA-law
+article, a section and semantic role the registry does not use, a revision
+that does not exist, and a requiredness inverted from the declared one.
 """
 
 from __future__ import annotations
@@ -24,6 +31,7 @@ from __future__ import annotations
 import importlib
 import inspect
 import re
+from functools import cache
 from typing import Any
 
 import pytest
@@ -49,6 +57,7 @@ from ..casilla_reference import (
 )
 from ..legal_reference import legal_reference_target, load_legal_provisions
 from ..terminology._casilla_anchor import casilla_page_anchor
+from ..terminology.casilla_projection import project_modelo_casillas
 from ..terminology.search_record import CasillaSearchRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -71,26 +80,58 @@ _HELP = {
 }
 
 
+_REFERENCE_CASILLA = "03"
+"""The M130 box every default record below is grounded on.
+
+Named once, and resolved through the projection rather than described: the
+identity is the only thing this module chooses about the grounding.
+"""
+
+
+@cache
+def _projected_reference() -> CasillaSearchRecord:
+    """Modelo 130 casilla 03 exactly as the projection compiles it.
+
+    Called rather than copied. A record assembled from field literals is a
+    record the projection would never emit, and a page rendered from one
+    proves nothing about a page the site will ever serve.
+    """
+    for record in project_modelo_casillas(Modelo.M130):
+        if record.casilla_id == _REFERENCE_CASILLA:
+            return record
+    raise AssertionError(f"the registry no longer projects modelo 130 casilla {_REFERENCE_CASILLA}")
+
+
 def _record(**overrides: object) -> CasillaSearchRecord:
-    """One fully populated casilla record with every language authored."""
-    fields: dict[str, Any] = {
-        "descriptions": dict(_LABELS),
-        "modelo": Modelo.M130,
-        "casilla_id": "03",
-        "localized_help": dict(_HELP),
-        "data_type": "money",
-        "input_kind": InputKind.COMPUTED,
-        "required": True,
-        "formula_id": "modelo-130-rendimiento-neto",
-        "number": "03",
-        "section": ("actividades_economicas",),
-        "semantic_role": "irpf_rendimiento_neto",
-        "legal_refs": ("ley-37-1992:art-92",),
-        "source_refs": ("aeat-dr-130-2025",),
-        "source_revisions": ("2025",),
-    }
+    """The projected reference casilla, with every language authored onto it.
+
+    Only the localised strings are this module's own. They are the subject of
+    the language contracts below, and the real catalogue authors no per-language
+    marker string, so a leak between languages would be undetectable against it.
+    Everything else -- identity, shape, grounding, provenance -- comes from the
+    projection, and every renderer variation arrives as an explicit override.
+    """
+    fields: dict[str, Any] = _projected_reference().model_dump()
+    fields["descriptions"] = dict(_LABELS)
+    fields["localized_help"] = dict(_HELP)
     fields.update(overrides)
     return CasillaSearchRecord(**fields)  # type: ignore[arg-type]
+
+
+def test_the_default_record_is_one_the_projection_could_have_produced() -> None:
+    """The join the hand-written defaults never had.
+
+    Every field but the two localised maps must equal the projected record, so
+    a fixture cannot drift back into describing a casilla the registry does not
+    declare.
+    """
+    projected = _projected_reference()
+    built = _record()
+
+    restated = set(CasillaSearchRecord.model_fields) - {"descriptions", "localized_help"}
+    assert restated, "the record schema no longer has fields to join"
+    for field in sorted(restated):
+        assert getattr(built, field) == getattr(projected, field), field
 
 
 def _schema(
@@ -164,11 +205,18 @@ def test_unlabelled_entry_keeps_its_number_and_its_grounding() -> None:
     """An entry with no label in this language is not dropped from the page."""
     spanish_only = _record(descriptions={OutputLanguage.ES: _LABELS[OutputLanguage.ES]}, localized_help={})
     rst = _render((spanish_only,), OutputLanguage.HU)
-    assert '<span class="casilla-card__number">03</span>' in rst
+    assert f'<span class="casilla-card__number">{spanish_only.number}</span>' in rst
     # The citation renders as instrument plus provision so siblings can group,
-    # so assert both parts rather than the joined string.
-    assert "Ley 37/1992" in rst
-    assert "art. 92" in rst
+    # so assert both parts rather than the joined string. Read off the record's
+    # OWN grounding: naming an instrument here would restate what the registry
+    # declares, and the restatement this replaced named an IVA article on an
+    # IRPF pago-fraccionado box.
+    provisions = {provision.legal_id: provision for provision in load_legal_provisions(_REPO_ROOT)}
+    assert spanish_only.legal_refs, "the reference casilla must carry grounding to assert on"
+    for ref in spanish_only.legal_refs:
+        instrument, article = _legal_provision_display(ref, provisions[ref], OutputLanguage.HU)
+        assert instrument in rst
+        assert article in rst
 
 
 def test_default_language_is_the_shared_build_signal() -> None:
@@ -367,31 +415,39 @@ def test_modelo_page_survives_an_unresolved_overview() -> None:
 
 
 def test_legal_refs_link_into_the_generated_legal_reference() -> None:
-    """Each ref renders as a named link resolving to the legal generator's target."""
+    """Each ref renders as a named link resolving to the legal generator's target.
+
+    Every ref the record carries, not one named here: the ref this asserted on
+    was a literal that the record no longer had to contain, so the assertion
+    could have passed over a page that grounded nothing.
+    """
+    record = _record()
     result = render_casilla_reference(
         _REPO_ROOT,
-        records=(_record(),),
+        records=(record,),
         language=OutputLanguage.EN,
         schema=EMPTY_SCHEMA,
     )
     rst = result.pages[0].rst
 
     provisions = {provision.legal_id: provision for provision in load_legal_provisions(_REPO_ROOT)}
-    provision = provisions["ley-37-1992:art-92"]
-    site_target = legal_reference_target(
-        provision.document_id,
-        provision.legal_id,
-        article=provision.article,
-        section=provision.section,
-        corpus_ref=provision.corpus_ref,
-        permalink=provision.permalink,
-    )
-    expected = "../" + site_target.removeprefix("_generated/")
-    assert f'href="{expected}"' in rst
-    assert result.legal_links == 1
-    # The raw catalogue token survives as the link's title, never as the text.
-    assert 'title="ley-37-1992:art-92"' in rst
-    assert ">ley-37-1992:art-92<" not in rst
+    assert record.legal_refs, "the reference casilla must carry grounding to link"
+    for ref in record.legal_refs:
+        provision = provisions[ref]
+        site_target = legal_reference_target(
+            provision.document_id,
+            provision.legal_id,
+            article=provision.article,
+            section=provision.section,
+            corpus_ref=provision.corpus_ref,
+            permalink=provision.permalink,
+        )
+        expected = "../" + site_target.removeprefix("_generated/")
+        assert f'href="{expected}"' in rst
+        # The raw catalogue token survives as the link's title, never as the text.
+        assert f'title="{ref}"' in rst
+        assert f">{ref}<" not in rst
+    assert result.legal_links == len(record.legal_refs)
 
 
 def test_unresolvable_ref_still_renders_and_is_not_counted_as_a_link() -> None:

@@ -369,12 +369,19 @@ def _manifest(frames=(), failures=(), skipped=()) -> Manifest:
 
 
 def _rendered(surface: str, viewport: str, theme: str) -> RenderedFrame:
+    """A frame whose grid is the one the named viewport owns.
+
+    Resolved rather than written down. This helper used to state 120x40 --
+    the medium grid -- under whatever viewport its caller named, so a frame
+    it built was a record the renderer could never have produced.
+    """
+    shape = resolve(viewport)
     return RenderedFrame(
         surface=surface,
-        viewport=viewport,
-        columns=120,
-        rows=40,
-        orientation="landscape",
+        viewport=shape.name,
+        columns=shape.columns,
+        rows=shape.rows,
+        orientation=shape.orientation,
         theme=theme,
         png="png/a.png",
         svg="svg/a.svg",
@@ -504,13 +511,15 @@ def test_rasterising_a_document_that_is_not_a_terminal_refuses(tmp_path: Path) -
 
 
 def _frame(key: str, *, png_digest: str, text_digest: str) -> RenderedFrame:
+    """The frame a ``surface/viewport/theme`` key names, at its own grid."""
     surface, viewport, theme = key.split("/")
+    shape = resolve(viewport)
     return RenderedFrame(
         surface=surface,
-        viewport=viewport,
-        columns=80,
-        rows=24,
-        orientation="landscape",
+        viewport=shape.name,
+        columns=shape.columns,
+        rows=shape.rows,
+        orientation=shape.orientation,
         theme=theme,
         png=f"png/{surface}.png",
         svg=f"svg/{surface}.svg",

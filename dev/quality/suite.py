@@ -40,6 +40,12 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
     ("check-imports", ("lint-imports",)),
     ("check-relative-imports", (sys.executable, "-m", "dev.quality.relative_imports")),
+    # Aggregated deliberately: the recipe existed in the static-checks group
+    # with no row here, so `just check-all` never ran it while the gate table
+    # still looked complete. It is a fast pure-Python scan, unlike the six
+    # recipes _NOT_AGGREGATED holds out for being heavy, external, or the
+    # aggregator itself, so there is no reason for it to sit outside.
+    ("check-secure-store-write-path", (sys.executable, "-m", "dev.quality.secure_store_write_path")),
     (
         "check-dependencies",
         (

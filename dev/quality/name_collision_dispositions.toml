@@ -26,17 +26,6 @@
 
 schema_version = 1
 
-[validate_category_id]
-class = "duplicate_owed_collapse"
-sites = ["entrypoints/cli/_ledger_rules_cli.py", "entrypoints/cli/_ledger_support.py"]
-reason = """
-Both reject a category outside the closed spending taxonomy. The support module
-carries the reasoned version, naming the canonical enum and its one-to-one
-mapping onto the modelo registry bindings; the rules CLI copy re-derives the
-same refusal with a local import. The support definition is canonical and the
-copy should call it.
-"""
-
 [resolve_bucket_event_repository]
 class = "contract_conflict"
 sites = ["application/ledger/actions_common.py", "application/ledger/review_projection.py"]
