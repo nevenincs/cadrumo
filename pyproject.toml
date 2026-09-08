@@ -744,6 +744,7 @@ convention = "google"
 "dev/env/_install.py" = ["S603"]
 "dev/env/_venv.py" = ["S603", "S607"]
 "dev/env/_workstation.py" = ["S603", "S607"]
+"dev/test_runs/lanes.py" = ["S603", "S607"]
 # `password_env_var` is an env-var NAME, not a password; S106 false-positives
 # on cert-auth tests.
 "src/cadrumo/adapters/outbound/aeat/auth/tests/test_*.py" = ["S105", "S106"]
