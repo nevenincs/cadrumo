@@ -16,8 +16,12 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.outbound.google.calc_sheets_pull_records import RowSetCellEdit
+from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.binding_selector_utils import BindingRowSetSelector
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
+from ....domain.calculations.registry.withholding296_bindings import Withholding296Observation
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..row_set_assembly import (
     assemble_atribucion_observations,
@@ -27,6 +31,7 @@ from ..row_set_assembly import (
     assemble_observations_for_snapshot,
     assemble_refund_observations,
     assemble_related_party_observations,
+    assemble_withholding296_observations,
     assemble_withholding_observations,
 )
 
@@ -43,6 +48,26 @@ def _snapshot(modelo_id: str, *, filing_year: int, period: str):
         filing_year=filing_year,
         period=period,
     )
+
+
+def _withholding296_revision(*fields: str) -> ModeloRevision:
+    """Build a minimal typed row-set revision for the M296 assembler contract."""
+    bindings = tuple(
+        DataBindingDefinition.model_construct(
+            id=f"test-m296-{field}",
+            source=BindingSourceKind.WITHHOLDING296,
+            selector=BindingRowSetSelector(
+                fact="row_field",
+                row_field=field,
+                grouping="per_perceptor",
+            ),
+            aggregation=BindingAggregation(op=BindingAggregationOp.ROWS),
+            legal_refs=(),
+            source_refs=(),
+        )
+        for field in fields
+    )
+    return ModeloRevision.model_construct(id="test-m296", bindings=bindings)
 
 
 def test_assemble_withholding_groups_two_perceptors_into_two_observations() -> None:
@@ -379,6 +404,91 @@ def test_assemble_returns_empty_for_empty_cells() -> None:
     revision = _modelo("190", "2025-y-siguientes")
 
     assert assemble_withholding_observations((), revision, filing_year=2025) == ()
+
+
+def test_assemble_withholding296_preserves_identity_and_amount_facts() -> None:
+    fields = (
+        "perceptor_tax_id",
+        "perceptor_legal_name",
+        "representative_tax_id",
+        "naturaleza",
+        "clave",
+        "subclave",
+        "pago",
+        "accrual_year",
+        "base_retenciones",
+        "porcentaje_retencion",
+        "retencion_practicada",
+        "compensaciones",
+        "garantias",
+        "otros_importes",
+        "ingreso_a_cuenta_repercutido",
+        "codigo_pais",
+        "pais_residencia_fiscal",
+    )
+    revision = _withholding296_revision(*fields)
+    cells = tuple(
+        RowSetCellEdit(binding=f"test-m296-{field}", row_index=2, value=value)
+        for field, value in {
+            "perceptor_tax_id": "GB-TAX-1",
+            "perceptor_legal_name": "Foreign Payee",
+            "representative_tax_id": "12345678A",
+            "naturaleza": "E",
+            "clave": "12",
+            "subclave": "03",
+            "pago": Decimal("3"),
+            "accrual_year": Decimal("2024"),
+            "base_retenciones": Decimal("1000.25"),
+            "porcentaje_retencion": Decimal("19.5"),
+            "retencion_practicada": Decimal("195.05"),
+            "compensaciones": Decimal("10"),
+            "garantias": Decimal("20"),
+            "otros_importes": Decimal("30"),
+            "ingreso_a_cuenta_repercutido": Decimal("40"),
+            "codigo_pais": "GB",
+            "pais_residencia_fiscal": "GB",
+        }.items()
+    )
+
+    observations = assemble_withholding296_observations(cells, revision, filing_year=2025)
+
+    assert len(observations) == 1
+    observation = observations[0]
+    assert isinstance(observation, Withholding296Observation)
+    assert observation.source_id == "detalle:per_perceptor_296:row-2"
+    assert observation.perceptor_tax_id == "GB-TAX-1"
+    assert observation.perceptor_legal_name == "Foreign Payee"
+    assert observation.representative_tax_id == "12345678A"
+    assert observation.naturaleza == "E"
+    assert observation.clave == "12"
+    assert observation.subclave == "03"
+    assert observation.pago == 3
+    assert observation.accrual_year == 2024
+    assert observation.base_retenciones == Decimal("1000.25")
+    assert observation.porcentaje_retencion == Decimal("19.5")
+    assert observation.retencion_practicada == Decimal("195.05")
+    assert observation.compensaciones == Decimal("10")
+    assert observation.garantias == Decimal("20")
+    assert observation.otros_importes == Decimal("30")
+    assert observation.ingreso_a_cuenta_repercutido == Decimal("40")
+    assert observation.codigo_pais == "GB"
+    assert observation.pais_residencia_fiscal == "GB"
+    assert observation.transaction_date == date(2025, 12, 31)
+
+
+def test_assemble_withholding296_wraps_invalid_row_with_its_index() -> None:
+    revision = _withholding296_revision("perceptor_tax_id", "pago")
+    cells = (
+        RowSetCellEdit(binding="test-m296-perceptor_tax_id", row_index=4, value="GB-TAX-1"),
+        RowSetCellEdit(binding="test-m296-pago", row_index=4, value="not-a-number"),
+    )
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        assemble_withholding296_observations(cells, revision, filing_year=2025)
+
+    assert str(excinfo.value) == "application.calculations.row_set.errors.row_assembly_failed"
+    assert (excinfo.value.context or {})["row_index"] == 4
+    assert "invalid literal" in str((excinfo.value.context or {})["validation_error_detail"])
 
 
 def test_assemble_observations_for_grouping_dispatches_per_perceptor_clave() -> None:

@@ -14,7 +14,6 @@ from typing import Final
 
 import typer
 
-
 TUI_ROOT_MODULE: Final[str] = "cadrumo.entrypoints.tui"
 
 

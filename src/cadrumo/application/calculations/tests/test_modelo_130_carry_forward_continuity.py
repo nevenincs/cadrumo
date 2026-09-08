@@ -358,7 +358,8 @@ def test_q2_casilla_15_auto_resolves_from_prior_quarter_filing(repos: _Repos) ->
             _observation_from_revision(q1, period="1T"),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        stamped_revision_id=revision_id_for_observation(_observation_from_revision(q1, period="1T")))
+            stamped_revision_id=revision_id_for_observation(_observation_from_revision(q1, period="1T")),
+        )
     )
     _seed_prior_year_m100(
         obs_repo,
@@ -390,7 +391,8 @@ def test_q2_carry_forward_flows_into_casilla_15_value(repos: _Repos) -> None:
             _observation_from_revision(q1, period="1T"),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        stamped_revision_id=revision_id_for_observation(_observation_from_revision(q1, period="1T")))
+            stamped_revision_id=revision_id_for_observation(_observation_from_revision(q1, period="1T")),
+        )
     )
     _seed_prior_year_m100(
         obs_repo,
@@ -571,16 +573,19 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
-                modelo="130",
-                filing_year=2026,
-                period="1T",
-                casilla_values={
-                    _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_1T,
-                    _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_1T,
-                    _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
-                },
-            )))
+            stamped_revision_id=revision_id_for_observation(
+                registry_grounded_modelo_observation(
+                    modelo="130",
+                    filing_year=2026,
+                    period="1T",
+                    casilla_values={
+                        _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_1T,
+                        _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_1T,
+                        _M130_SALDO_NEGATIVO_CASILLA: Decimal("0"),
+                    },
+                )
+            ),
+        )
     )
     obs_repo.save(
         obs_repo.prepare_observation_envelope(
@@ -596,16 +601,19 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
-                modelo="130",
-                filing_year=2026,
-                period="2T",
-                casilla_values={
-                    _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_2T,
-                    _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_2T,
-                    _M130_SALDO_NEGATIVO_CASILLA: _PRIOR_2T_SALDO,
-                },
-            )))
+            stamped_revision_id=revision_id_for_observation(
+                registry_grounded_modelo_observation(
+                    modelo="130",
+                    filing_year=2026,
+                    period="2T",
+                    casilla_values={
+                        _M130_PAGO_FRACCIONADO_CASILLA: _PRIOR_07_2T,
+                        _M130_HOME_DEDUCTION_CASILLA: _PRIOR_16_2T,
+                        _M130_SALDO_NEGATIVO_CASILLA: _PRIOR_2T_SALDO,
+                    },
+                )
+            ),
+        )
     )
 
     snapshot_3t = bundled_authority().snapshot("130", filing_year=2026, period="3T")

@@ -72,6 +72,40 @@ def test_policy_is_immutable_and_preserves_explicit_safe_judgments() -> None:
 
 
 @pytest.mark.parametrize(
+    ("capabilities", "effects", "write_route", "destructive", "handoff", "live_write"),
+    [
+        ({"profile-custody"}, {"local-state"}, "profile-bound", False, False, False),
+        ({"encrypted-facts"}, {"local-state"}, "profile-bound", False, False, False),
+        ({"profile-custody"}, {"local-state"}, "none", True, False, False),
+        ({"filing"}, {"local-state"}, "none", False, True, False),
+        ({"browser"}, {"browser"}, "none", False, False, True),
+    ],
+)
+def test_policy_accepts_graph_derived_capability_implications(
+    capabilities: set[str],
+    effects: set[str],
+    write_route: str,
+    destructive: bool,
+    handoff: bool,
+    live_write: bool,
+) -> None:
+    policy = CommandExecutionPolicy(
+        classification=_classification(
+            capabilities=frozenset(capabilities),
+            side_effects=frozenset(effects),
+        ),
+        write_route=cast("CommandWriteRouteValue", write_route),
+        destructive=destructive,
+        handoff=handoff,
+        live_write=live_write,
+    )
+
+    assert policy.destructive is destructive
+    assert policy.handoff is handoff
+    assert policy.live_write is live_write
+
+
+@pytest.mark.parametrize(
     ("capabilities", "effects", "write_route", "destructive", "handoff", "live_write", "message"),
     [
         ({"state-free"}, {"none"}, "elsewhere", False, False, False, "unknown"),

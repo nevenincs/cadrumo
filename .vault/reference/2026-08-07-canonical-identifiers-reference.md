@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-08-13'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:d3966ccba645abd418620030d5c8407a7b504f7dc1c1fa237d75a8f95146e561'
+body_hash: 'sha256:ab898cb92f42fd7e0979ff5949b97f92ba95f5d485ce66a47a8e49af53977124'
 related:
   - "[[2026-08-07-justificante-identity-matching-adr]]"
 ---
@@ -1078,3 +1078,7 @@ is invisible here exactly as it was to the original census, and
 `clave_liquidacion` is the recorded proof that such names exist. Test files
 are excluded throughout, so a retype's test-side cost is not sized. The
 UNDETERMINED, NOT_AN_IDENTIFIER and FREE_TEXT buckets are out of scope.
+
+## Amendment (2026-09-08): registry snapshot report id is not a product identifier
+
+The census row proposing `RegistrySnapshotId` is withdrawn. Exact reachability established that the alias and its formatter had no product consumer: only a development workbook-parity report and registry test scenarios emitted the colon-joined display value. The shipped alias, formatter module, named-emitter census, and dedicated tests were removed. The development report and test fixture may render their local diagnostic string directly; neither establishes an application identity namespace or production canonicalization contract.

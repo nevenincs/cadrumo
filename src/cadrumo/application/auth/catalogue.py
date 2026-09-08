@@ -33,6 +33,8 @@ class AuthProviderListing(BaseModel):
     id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_-]*$")
     label: tr
     description: tr
+
+
 AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
     AuthProviderListing(
         id="certificate",

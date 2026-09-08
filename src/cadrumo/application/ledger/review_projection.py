@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from ...core.period import Period
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
@@ -82,43 +83,118 @@ def _filter_ledger_review_rows(
     catalogue: TransactionCatalogue,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
 ) -> tuple[Transaction, ...]:
-    if query.period is not None:
-        rows = tuple(
-            transaction
-            for transaction in rows
-            if query.period.contains(transaction.raw.value_date or transaction.raw.booked_date)
-        )
-    if query.status is not None:
-        rows = tuple(
-            transaction for transaction in rows if ledger_transaction_review_status(transaction) == query.status
-        )
-    if query.classification is not None:
-        rows = tuple(
-            transaction for transaction in rows if transaction.business_classification.value == query.classification
-        )
-    if query.direction is not None:
-        rows = tuple(transaction for transaction in rows if transaction.direction.value == query.direction)
-    if query.text is not None:
-        needle = query.text.casefold()
-        rows = tuple(
-            transaction
-            for transaction in rows
-            if needle in transaction.raw.description.casefold()
-            or needle in transaction.raw.display_counterparty.casefold()
-            or needle in (transaction.category_id or "").casefold()
-        )
-    if query.import_id is not None or query.issue is not None:
-        matching_ids = _transaction_ids_for_review_event_filters(
-            bucket_id=query.bucket_id,
-            import_id=query.import_id,
-            issue=query.issue,
-            bucket_event_repository=bucket_event_repository,
-        )
-        rows = tuple(transaction for transaction in rows if transaction.transaction_id in matching_ids)
-    if query.transaction_id is not None:
-        require_transaction(catalogue, query.transaction_id)
-        rows = tuple(transaction for transaction in rows if transaction.transaction_id == query.transaction_id)
-    return rows
+    rows = _filter_review_rows_by_period(rows, query.period)
+    rows = _filter_review_rows_by_status(rows, query.status)
+    rows = _filter_review_rows_by_classification(rows, query.classification)
+    rows = _filter_review_rows_by_direction(rows, query.direction)
+    rows = _filter_review_rows_by_text(rows, query.text)
+    rows = _filter_review_rows_by_event(
+        rows,
+        bucket_id=query.bucket_id,
+        import_id=query.import_id,
+        issue=query.issue,
+        bucket_event_repository=bucket_event_repository,
+    )
+    return _filter_review_rows_by_transaction_id(rows, query.transaction_id, catalogue)
+
+
+def _apply_review_row_filter(
+    rows: tuple[Transaction, ...],
+    predicate: Callable[[Transaction], bool],
+) -> tuple[Transaction, ...]:
+    """Apply one review predicate while retaining catalogue order."""
+    return tuple(transaction for transaction in rows if predicate(transaction))
+
+
+def _filter_review_rows_by_period(
+    rows: tuple[Transaction, ...],
+    period: Period | None,
+) -> tuple[Transaction, ...]:
+    if period is None:
+        return rows
+    return _apply_review_row_filter(
+        rows,
+        lambda transaction: period.contains(transaction.raw.value_date or transaction.raw.booked_date),
+    )
+
+
+def _filter_review_rows_by_status(
+    rows: tuple[Transaction, ...],
+    status: str | None,
+) -> tuple[Transaction, ...]:
+    if status is None:
+        return rows
+    return _apply_review_row_filter(rows, lambda transaction: ledger_transaction_review_status(transaction) == status)
+
+
+def _filter_review_rows_by_classification(
+    rows: tuple[Transaction, ...],
+    classification: str | None,
+) -> tuple[Transaction, ...]:
+    if classification is None:
+        return rows
+    return _apply_review_row_filter(
+        rows,
+        lambda transaction: transaction.business_classification.value == classification,
+    )
+
+
+def _filter_review_rows_by_direction(
+    rows: tuple[Transaction, ...],
+    direction: str | None,
+) -> tuple[Transaction, ...]:
+    if direction is None:
+        return rows
+    return _apply_review_row_filter(rows, lambda transaction: transaction.direction.value == direction)
+
+
+def _filter_review_rows_by_text(
+    rows: tuple[Transaction, ...],
+    text: str | None,
+) -> tuple[Transaction, ...]:
+    if text is None:
+        return rows
+    needle = text.casefold()
+    return _apply_review_row_filter(rows, lambda transaction: _review_row_contains_text(transaction, needle))
+
+
+def _review_row_contains_text(transaction: Transaction, needle: str) -> bool:
+    """Return whether *needle* occurs in searchable review-row fields."""
+    return (
+        needle in transaction.raw.description.casefold()
+        or needle in transaction.raw.display_counterparty.casefold()
+        or needle in (transaction.category_id or "").casefold()
+    )
+
+
+def _filter_review_rows_by_event(
+    rows: tuple[Transaction, ...],
+    *,
+    bucket_id: str,
+    import_id: str | None,
+    issue: str | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+) -> tuple[Transaction, ...]:
+    if import_id is None and issue is None:
+        return rows
+    matching_ids = _transaction_ids_for_review_event_filters(
+        bucket_id=bucket_id,
+        import_id=import_id,
+        issue=issue,
+        bucket_event_repository=bucket_event_repository,
+    )
+    return _apply_review_row_filter(rows, lambda transaction: transaction.transaction_id in matching_ids)
+
+
+def _filter_review_rows_by_transaction_id(
+    rows: tuple[Transaction, ...],
+    transaction_id: str | None,
+    catalogue: TransactionCatalogue,
+) -> tuple[Transaction, ...]:
+    if transaction_id is None:
+        return rows
+    require_transaction(catalogue, transaction_id)
+    return _apply_review_row_filter(rows, lambda transaction: transaction.transaction_id == transaction_id)
 
 
 _LEDGER_REVIEW_FILTER_FIELDS: tuple[tuple[str, str], ...] = (

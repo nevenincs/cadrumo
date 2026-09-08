@@ -10,8 +10,8 @@ Major entry points:
 
 * :func:`build_draft` constructs a validated
   :class:`ModeloDraft` from registry-backed inputs.
-* :func:`approve_draft`, :func:`unapprove_draft`, and
-  :func:`refresh_review_status` manage local review state and approval basis.
+* :func:`approve_draft` and :func:`refresh_review_status` manage local review
+  state and approval basis.
 * :func:`export_draft` writes a local fichero-BOE artefact, and
   :func:`verify_export` re-reads that file through the registry export parser.
 * :class:`ModeloHistoryRepository` persists encrypted lightweight

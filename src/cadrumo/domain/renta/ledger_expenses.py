@@ -11,7 +11,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -249,6 +250,17 @@ class RentaDeductibilityResult(_RentaStrictFrozenModel):
         if self.category_family is not family_for(self.category):
             raise RentaValidationError("category_family must match category")
         return self
+
+
+@dataclass(frozen=True, slots=True)
+class _RentaDeductibilityDecision:
+    """Unsigned amounts and status produced by one proportionality rule."""
+
+    status: RentaDeductibilityStatus
+    reason: str
+    deductible_amount: Decimal
+    applied_ratio: Decimal | None
+    statutory_cap_applied: Decimal | None
 
 
 class RentaDeductibleExpenseObservation(_RentaStrictFrozenModel):

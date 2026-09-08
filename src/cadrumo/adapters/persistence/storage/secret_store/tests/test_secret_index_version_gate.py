@@ -12,10 +12,6 @@ wrongly -- it would have been written back in whatever shape this build
 understood, destroying the newer file. That is why the gate belongs in the
 loader, ahead of both, rather than on the read verbs alone.
 
-The format is also enrolled in the persistence compatibility policy as a
-DURABLE format, so a future bump is governed by the same upgrade-chain rules
-as every other persisted format rather than by one module-local constant.
-
 The marker is required rather than defaulted, which is what lets the gate see
 an index file that simply omits it. Under a default such a file hydrated at
 the current version and satisfied the comparison, so the one document the gate
@@ -37,7 +33,6 @@ from pathlib import Path
 import pytest
 
 from ......core.classification.policies import SensitivityClass
-from ......core.compatibility_lifecycle import PERSISTED_FORMATS, PersistedFormatClass
 from ......core.external_constants import UTF_8_ENCODING
 from ...errors import EnvelopeVersionError, StorageValidationError
 from ..store import SECRET_INDEX_SCHEMA_VERSION, SecretRecord, SecretStore
@@ -199,14 +194,3 @@ def test_restoring_the_supported_version_restores_the_store(store: SecretStore) 
 
     _rewrite_index_version(path, SECRET_INDEX_SCHEMA_VERSION)
     assert store.get(_KEY).value == _VALUE
-
-
-def test_the_index_format_is_enrolled_as_durable() -> None:
-    """The format appears in the closed persisted-format inventory.
-
-    The version constant alone governs only this build. Enrollment is what
-    binds a future bump to the project's upgrade-chain rules, and DURABLE is
-    the honest class: no path exists to rebuild the digest-to-blob map, so
-    losing the index strands every secret it addressed.
-    """
-    assert PERSISTED_FORMATS["secret_index"] is PersistedFormatClass.DURABLE

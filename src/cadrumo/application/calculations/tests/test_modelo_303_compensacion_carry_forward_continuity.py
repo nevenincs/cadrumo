@@ -357,7 +357,8 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
         )
         statement = select(SecureObjectRow).where(
             SecureObjectRow.namespace == CalculationObservationRepository.namespace,
-            SecureObjectRow.object_key == observation_key(
+            SecureObjectRow.object_key
+            == observation_key(
                 _MODELO,
                 Period.from_year_and_code(_YEAR_2024, _EARLY_2024_PERIOD),
             ),
@@ -428,7 +429,10 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(_registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)))
+                stamped_revision_id=revision_id_for_observation(
+                    _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
+                ),
+            )
         )
 
         snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
@@ -469,7 +473,10 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(_registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)))
+                stamped_revision_id=revision_id_for_observation(
+                    _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
+                ),
+            )
         )
 
         # Year N+1 — 1T: the carry resolves from the local store (cross-renta

@@ -161,6 +161,49 @@ class CasillaAlias(RegistryModel):
         return self.get_label("es")
 
 
+def _validate_constraint_numeric_bounds(
+    sign: CasillaSignConstraint,
+    min_value: DecimalValue | None,
+    max_value: DecimalValue | None,
+) -> None:
+    """Validate the numeric bounds and sign contract for a constraint."""
+    if min_value is not None and max_value is not None and min_value > max_value:
+        raise RegistryValidationError(f"casilla constraints: min_value {min_value} > max_value {max_value}")
+    if sign == "non_negative" and max_value is not None and max_value < Decimal("0"):
+        raise RegistryValidationError(
+            "casilla constraints: sign='non_negative' is incompatible with negative max_value",
+        )
+    if sign == "non_positive" and min_value is not None and min_value > Decimal("0"):
+        raise RegistryValidationError(
+            "casilla constraints: sign='non_positive' is incompatible with positive min_value",
+        )
+
+
+def _validate_constraint_text_bounds(min_length: int | None, max_length: int | None) -> None:
+    """Validate the lower and upper bounds of a text constraint."""
+    if min_length is not None and max_length is not None and min_length > max_length:
+        raise RegistryValidationError(f"casilla constraints: min_length {min_length} > max_length {max_length}")
+
+
+def _validate_constraint_enum_values(enum: tuple[str, ...] | None) -> None:
+    """Validate that an optional constraint enum is populated and unique."""
+    if enum is not None and len(enum) == 0:
+        raise RegistryValidationError("casilla constraints: enum must declare at least one value")
+    if enum is not None and len(set(enum)) != len(enum):
+        raise RegistryValidationError("casilla constraints: enum values must be unique")
+
+
+def _validate_constraint_pattern(pattern: str | None) -> None:
+    """Validate an optional constraint regex without changing its error surface."""
+    if pattern is not None:
+        try:
+            re.compile(pattern)
+        except re.error as exc:
+            raise RegistryValidationError(
+                f"casilla constraints: pattern {pattern!r} is not a valid regex: {exc}",
+            ) from exc
+
+
 class CasillaConstraints(RegistryModel):
     """Declarative value constraints applied after a casilla is evaluated.
 
@@ -191,33 +234,10 @@ class CasillaConstraints(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_bounds(self) -> CasillaConstraints:
-        if self.min_value is not None and self.max_value is not None and self.min_value > self.max_value:
-            raise RegistryValidationError(
-                f"casilla constraints: min_value {self.min_value} > max_value {self.max_value}",
-            )
-        if self.sign == "non_negative" and self.max_value is not None and self.max_value < Decimal("0"):
-            raise RegistryValidationError(
-                "casilla constraints: sign='non_negative' is incompatible with negative max_value",
-            )
-        if self.sign == "non_positive" and self.min_value is not None and self.min_value > Decimal("0"):
-            raise RegistryValidationError(
-                "casilla constraints: sign='non_positive' is incompatible with positive min_value",
-            )
-        if self.min_length is not None and self.max_length is not None and self.min_length > self.max_length:
-            raise RegistryValidationError(
-                f"casilla constraints: min_length {self.min_length} > max_length {self.max_length}",
-            )
-        if self.enum is not None and len(self.enum) == 0:
-            raise RegistryValidationError("casilla constraints: enum must declare at least one value")
-        if self.enum is not None and len(set(self.enum)) != len(self.enum):
-            raise RegistryValidationError("casilla constraints: enum values must be unique")
-        if self.pattern is not None:
-            try:
-                re.compile(self.pattern)
-            except re.error as exc:
-                raise RegistryValidationError(
-                    f"casilla constraints: pattern {self.pattern!r} is not a valid regex: {exc}",
-                ) from exc
+        _validate_constraint_numeric_bounds(self.sign, self.min_value, self.max_value)
+        _validate_constraint_text_bounds(self.min_length, self.max_length)
+        _validate_constraint_enum_values(self.enum)
+        _validate_constraint_pattern(self.pattern)
         return self
 
     def violates(self, value: Decimal) -> str | None:
@@ -256,6 +276,70 @@ class CasillaConstraints(RegistryModel):
         if self.enum is not None and value not in self.enum:
             return f"value {value!r} not in enum {self.enum!r}"
         return None
+
+
+def _validate_computed_input_kind(
+    casilla_id: CasillaId,
+    input_kind: InputKind,
+    formula: FormulaId | None,
+    binding: BindingId | None,
+) -> None:
+    """Enforce the formula/binding requirements for computed casillas."""
+    if input_kind == InputKind.COMPUTED and formula is None:
+        raise RegistryValidationError(f"computed casilla {casilla_id!r} must declare formula")
+    if input_kind == InputKind.COMPUTED and binding is not None:
+        raise RegistryValidationError(f"computed casilla {casilla_id!r} must not declare binding")
+
+
+def _validate_binding_declarations(
+    casilla_id: CasillaId,
+    input_kind: InputKind,
+    binding: BindingId | None,
+    alternate_bindings: tuple[BindingId, ...],
+) -> None:
+    """Enforce that only bound casillas carry primary or alternate bindings."""
+    if input_kind != InputKind.BOUND and alternate_bindings:
+        raise RegistryValidationError(f"non-bound casilla {casilla_id!r} must not declare alternate_bindings")
+    if input_kind == InputKind.BOUND and binding is None:
+        raise RegistryValidationError(f"bound casilla {casilla_id!r} must declare binding")
+
+
+def _validate_binding_uniqueness(
+    casilla_id: CasillaId,
+    binding: BindingId | None,
+    alternate_bindings: tuple[BindingId, ...],
+) -> None:
+    """Reject a primary binding repeated in, or duplicates within, alternates."""
+    if binding is not None and binding in alternate_bindings:
+        raise RegistryValidationError(
+            f"casilla {casilla_id!r} alternate_bindings must not repeat primary binding {binding!r}",
+        )
+    if len(set(alternate_bindings)) != len(alternate_bindings):
+        raise RegistryValidationError(f"casilla {casilla_id!r} alternate_bindings must be unique")
+
+
+def _validate_bound_formula(
+    casilla_id: CasillaId,
+    input_kind: InputKind,
+    formula: FormulaId | None,
+) -> None:
+    """Reject formulas on casillas whose values come from a binding."""
+    if input_kind == InputKind.BOUND and formula is not None:
+        raise RegistryValidationError(f"bound casilla {casilla_id!r} must not declare formula")
+
+
+def _validate_projection_only(
+    casilla_id: CasillaId,
+    input_kind: InputKind,
+    formula: FormulaId | None,
+    binding: BindingId | None,
+    alternate_bindings: tuple[BindingId, ...],
+) -> None:
+    """Reject calculation inputs on projection-only casillas."""
+    if input_kind == InputKind.PROJECTION_ONLY and any((formula, binding, alternate_bindings)):
+        raise RegistryValidationError(
+            f"projection-only casilla {casilla_id!r} must not declare formula, binding, or alternate_bindings",
+        )
 
 
 class CasillaDefinition(RegistryModel):
@@ -364,33 +448,11 @@ class CasillaDefinition(RegistryModel):
         # catalogue has been selected. Constructing a schema from an arbitrary
         # test or operator-supplied root must not consult the bundled catalogue;
         # the structural validator still enforces every non-localized rule here.
-        if self.input_kind == InputKind.COMPUTED and self.formula is None:
-            raise RegistryValidationError(f"computed casilla {self.id!r} must declare formula")
-        if self.input_kind == InputKind.COMPUTED and self.binding is not None:
-            raise RegistryValidationError(f"computed casilla {self.id!r} must not declare binding")
-        if self.input_kind != InputKind.BOUND and self.alternate_bindings:
-            raise RegistryValidationError(f"non-bound casilla {self.id!r} must not declare alternate_bindings")
-        if self.input_kind == InputKind.BOUND and self.binding is None:
-            raise RegistryValidationError(f"bound casilla {self.id!r} must declare binding")
-        if self.binding is not None and self.binding in self.alternate_bindings:
-            raise RegistryValidationError(
-                f"casilla {self.id!r} alternate_bindings must not repeat primary binding {self.binding!r}",
-            )
-        if len(set(self.alternate_bindings)) != len(self.alternate_bindings):
-            raise RegistryValidationError(f"casilla {self.id!r} alternate_bindings must be unique")
-        if self.input_kind == InputKind.BOUND and self.formula is not None:
-            raise RegistryValidationError(f"bound casilla {self.id!r} must not declare formula")
-        if self.input_kind == InputKind.PROJECTION_ONLY and any(
-            value
-            for value in (
-                self.formula,
-                self.binding,
-                self.alternate_bindings,
-            )
-        ):
-            raise RegistryValidationError(
-                f"projection-only casilla {self.id!r} must not declare formula, binding, or alternate_bindings",
-            )
+        _validate_computed_input_kind(self.id, self.input_kind, self.formula, self.binding)
+        _validate_binding_declarations(self.id, self.input_kind, self.binding, self.alternate_bindings)
+        _validate_binding_uniqueness(self.id, self.binding, self.alternate_bindings)
+        _validate_bound_formula(self.id, self.input_kind, self.formula)
+        _validate_projection_only(self.id, self.input_kind, self.formula, self.binding, self.alternate_bindings)
         self._validate_export_exposure()
         self._validate_singleton_role_declaration()
         return self
@@ -489,6 +551,55 @@ class CalculationCompletenessCasilla(RegistryModel):
         return (self.casilla_id, self.segmento, self.number)
 
 
+def _validate_manifest_population(casillas: tuple[CalculationCompletenessCasilla, ...]) -> None:
+    """Require a calculation-completeness manifest to enumerate casillas."""
+    if not casillas:
+        raise RegistryValidationError("calculation-completeness manifest must enumerate at least one casilla")
+
+
+def _validate_manifest_casilla_ids(casillas: tuple[CalculationCompletenessCasilla, ...]) -> None:
+    """Reject duplicate canonical casilla ids in a completeness manifest."""
+    casilla_ids = [casilla.casilla_id for casilla in casillas]
+    duplicate_ids = sorted({casilla_id for casilla_id in casilla_ids if casilla_ids.count(casilla_id) > 1})
+    if duplicate_ids:
+        rendered_ids = ", ".join(repr(casilla_id) for casilla_id in duplicate_ids)
+        raise RegistryValidationError(
+            f"calculation-completeness manifest declares duplicate casilla ids: {rendered_ids}",
+        )
+
+
+def _validate_manifest_record_design_metadata(casillas: tuple[CalculationCompletenessCasilla, ...]) -> None:
+    """Reject duplicate reviewed segment/number metadata in a manifest."""
+    metadata_pairs = [casilla.record_design_metadata() for casilla in casillas]
+    duplicates = sorted({pair for pair in metadata_pairs if metadata_pairs.count(pair) > 1})
+    if duplicates:
+        rendered = ", ".join(
+            f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
+            for segmento, number in duplicates
+        )
+        raise RegistryValidationError(
+            f"calculation-completeness manifest declares duplicate casilla record-design metadata: {rendered}",
+        )
+
+
+def _validate_manifest_grounding(source_ref: SourceRefId, source_refs: SourceRefs) -> None:
+    """Require the manifest's derivation source to be among its evidence refs."""
+    if source_ref not in source_refs:
+        raise RegistryValidationError("calculation-completeness manifest source_ref must be included in source_refs")
+
+
+def _validate_manifest_extraction_state(manual_extraction: bool, reason: str | None) -> None:
+    """Keep manual-extraction attribution and its explanation in lockstep."""
+    if manual_extraction and reason is None:
+        raise RegistryValidationError(
+            "calculation-completeness manifest with manual_extraction must declare manual_extraction_reason",
+        )
+    if not manual_extraction and reason is not None:
+        raise RegistryValidationError(
+            "calculation-completeness manifest declares manual_extraction_reason without manual_extraction",
+        )
+
+
 class CalculationCompletenessManifest(RegistryModel):
     """The required calculation-closure casilla set for a modelo revision.
 
@@ -528,37 +639,11 @@ class CalculationCompletenessManifest(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_manifest(self) -> CalculationCompletenessManifest:
-        if not self.casillas:
-            raise RegistryValidationError("calculation-completeness manifest must enumerate at least one casilla")
-        casilla_ids = [casilla.casilla_id for casilla in self.casillas]
-        duplicate_ids = sorted({casilla_id for casilla_id in casilla_ids if casilla_ids.count(casilla_id) > 1})
-        if duplicate_ids:
-            rendered_ids = ", ".join(repr(casilla_id) for casilla_id in duplicate_ids)
-            raise RegistryValidationError(
-                f"calculation-completeness manifest declares duplicate casilla ids: {rendered_ids}",
-            )
-        metadata_pairs = [casilla.record_design_metadata() for casilla in self.casillas]
-        duplicates = sorted({pair for pair in metadata_pairs if metadata_pairs.count(pair) > 1})
-        if duplicates:
-            rendered = ", ".join(
-                f"{number!r}" if segmento is None else f"{number!r} within segmento {segmento!r}"
-                for segmento, number in duplicates
-            )
-            raise RegistryValidationError(
-                f"calculation-completeness manifest declares duplicate casilla record-design metadata: {rendered}",
-            )
-        if self.source_ref not in self.source_refs:
-            raise RegistryValidationError(
-                "calculation-completeness manifest source_ref must be included in source_refs",
-            )
-        if self.manual_extraction and self.manual_extraction_reason is None:
-            raise RegistryValidationError(
-                "calculation-completeness manifest with manual_extraction must declare manual_extraction_reason",
-            )
-        if not self.manual_extraction and self.manual_extraction_reason is not None:
-            raise RegistryValidationError(
-                "calculation-completeness manifest declares manual_extraction_reason without manual_extraction",
-            )
+        _validate_manifest_population(self.casillas)
+        _validate_manifest_casilla_ids(self.casillas)
+        _validate_manifest_record_design_metadata(self.casillas)
+        _validate_manifest_grounding(self.source_ref, self.source_refs)
+        _validate_manifest_extraction_state(self.manual_extraction, self.manual_extraction_reason)
         return self
 
     def casilla_ids(self) -> frozenset[CasillaId]:
@@ -568,6 +653,54 @@ class CalculationCompletenessManifest(RegistryModel):
     def manifest_keys(self) -> frozenset[tuple[str, str | None, str]]:
         """Return canonical ids paired with their reviewed record-design metadata."""
         return frozenset(casilla.manifest_key() for casilla in self.casillas)
+
+
+def _validate_selector_year_to(year_from: int | None, year_to: int | None) -> None:
+    """Require an open or bounded selector's upper year to have a lower bound."""
+    if year_to is not None and year_from is None:
+        raise RegistryValidationError("relation source revision selector year_to requires year_from")
+
+
+def _validate_selector_presence(
+    year: int | None,
+    year_from: int | None,
+    filing_year_delta: int | None,
+) -> None:
+    """Require a revision selector to name one supported selection shape."""
+    if year is None and year_from is None and filing_year_delta is None:
+        raise RegistryValidationError(
+            "relation source revision selector must declare year, year_from, or filing_year_delta",
+        )
+
+
+def _validate_selector_mode(
+    year: int | None,
+    year_from: int | None,
+    year_to: int | None,
+    filing_year_delta: int | None,
+) -> None:
+    """Reject mixing absolute year selectors and relative filing-year deltas."""
+    absolute_selector = year is not None or year_from is not None or year_to is not None
+    if absolute_selector and filing_year_delta is not None:
+        raise RegistryValidationError(
+            "relation source revision selector must use absolute year bounds or filing_year_delta, not both",
+        )
+
+
+def _validate_selector_year_bounds(
+    year: int | None,
+    year_from: int | None,
+    year_to: int | None,
+) -> None:
+    """Reject ambiguous or backwards absolute year bounds."""
+    if year is not None and (year_from is not None or year_to is not None):
+        raise RegistryValidationError(
+            "relation source revision selector must use year or year_from/year_to, not both",
+        )
+    if year_from is not None and year_to is not None and year_to < year_from:
+        raise RegistryValidationError(
+            "relation source revision selector year_to must be on or after year_from",
+        )
 
 
 class RelationRevisionSelector(RegistryModel):
@@ -584,26 +717,77 @@ class RelationRevisionSelector(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_shape(self) -> RelationRevisionSelector:
-        if self.year_to is not None and self.year_from is None:
-            raise RegistryValidationError("relation source revision selector year_to requires year_from")
-        if self.year is None and self.year_from is None and self.filing_year_delta is None:
-            raise RegistryValidationError(
-                "relation source revision selector must declare year, year_from, or filing_year_delta",
-            )
-        absolute_selector = self.year is not None or self.year_from is not None or self.year_to is not None
-        if absolute_selector and self.filing_year_delta is not None:
-            raise RegistryValidationError(
-                "relation source revision selector must use absolute year bounds or filing_year_delta, not both",
-            )
-        if self.year is not None and (self.year_from is not None or self.year_to is not None):
-            raise RegistryValidationError(
-                "relation source revision selector must use year or year_from/year_to, not both",
-            )
-        if self.year_from is not None and self.year_to is not None and self.year_to < self.year_from:
-            raise RegistryValidationError(
-                "relation source revision selector year_to must be on or after year_from",
-            )
+        _validate_selector_year_to(self.year_from, self.year_to)
+        _validate_selector_presence(self.year, self.year_from, self.filing_year_delta)
+        _validate_selector_mode(self.year, self.year_from, self.year_to, self.filing_year_delta)
+        _validate_selector_year_bounds(self.year, self.year_from, self.year_to)
         return self
+
+
+def _alignment_declares_shape(alignment: RelationPeriodAlignment) -> bool:
+    """Return whether an alignment contains at least one shape declaration."""
+    return any(
+        value is not None
+        for value in (
+            alignment.mode,
+            alignment.source_periods,
+            alignment.source_period_kind,
+            alignment.source_period,
+            alignment.target_period,
+            alignment.filing_year_delta,
+        )
+    )
+
+
+def _validate_named_alignment(alignment: RelationPeriodAlignment) -> None:
+    """Reject fields that cannot accompany a named alignment mode."""
+    if any(
+        value is not None
+        for value in (
+            alignment.source_periods,
+            alignment.source_period_kind,
+            alignment.source_period,
+            alignment.target_period,
+            alignment.filing_year_delta,
+        )
+    ):
+        raise RegistryValidationError("relation period alignment mode cannot be combined with period fields")
+
+
+def _validate_source_periods_alignment(alignment: RelationPeriodAlignment) -> None:
+    """Validate a relation aligned by a named source-period shape."""
+    if alignment.target_period is None:
+        raise RegistryValidationError("relation period alignment source_periods requires target_period")
+    if any(
+        value is not None
+        for value in (
+            alignment.source_period_kind,
+            alignment.source_period,
+            alignment.filing_year_delta,
+        )
+    ):
+        raise RegistryValidationError(
+            "relation period alignment source_periods cannot be combined with source_period_kind, "
+            "source_period, or filing_year_delta",
+        )
+
+
+def _validate_source_period_kind_alignment(alignment: RelationPeriodAlignment) -> None:
+    """Validate a relation aligned by its source period kind."""
+    if alignment.target_period is None:
+        raise RegistryValidationError("relation period alignment source_period_kind requires target_period")
+    if alignment.source_period is not None or alignment.filing_year_delta is not None:
+        raise RegistryValidationError(
+            "relation period alignment source_period_kind cannot be combined with source_period or filing_year_delta",
+        )
+
+
+def _validate_explicit_period_alignment(alignment: RelationPeriodAlignment) -> None:
+    """Validate a relation aligned by an explicit source period and offset."""
+    if alignment.target_period is None or alignment.filing_year_delta is None:
+        raise RegistryValidationError(
+            "relation period alignment source_period requires target_period and filing_year_delta",
+        )
 
 
 class RelationPeriodAlignment(RegistryModel):
@@ -622,58 +806,19 @@ class RelationPeriodAlignment(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_shape(self) -> RelationPeriodAlignment:
-        if not any(
-            value is not None
-            for value in (
-                self.mode,
-                self.source_periods,
-                self.source_period_kind,
-                self.source_period,
-                self.target_period,
-                self.filing_year_delta,
-            )
-        ):
+        if not _alignment_declares_shape(self):
             raise RegistryValidationError("relation period alignment must declare a current alignment shape")
         if self.mode is not None:
-            if any(
-                value is not None
-                for value in (
-                    self.source_periods,
-                    self.source_period_kind,
-                    self.source_period,
-                    self.target_period,
-                    self.filing_year_delta,
-                )
-            ):
-                raise RegistryValidationError("relation period alignment mode cannot be combined with period fields")
+            _validate_named_alignment(self)
             return self
         if self.source_periods is not None:
-            if self.target_period is None:
-                raise RegistryValidationError("relation period alignment source_periods requires target_period")
-            if (
-                self.source_period_kind is not None
-                or self.source_period is not None
-                or self.filing_year_delta is not None
-            ):
-                raise RegistryValidationError(
-                    "relation period alignment source_periods cannot be combined with source_period_kind, "
-                    "source_period, or filing_year_delta",
-                )
+            _validate_source_periods_alignment(self)
             return self
         if self.source_period_kind is not None:
-            if self.target_period is None:
-                raise RegistryValidationError("relation period alignment source_period_kind requires target_period")
-            if self.source_period is not None or self.filing_year_delta is not None:
-                raise RegistryValidationError(
-                    "relation period alignment source_period_kind cannot be combined with source_period "
-                    "or filing_year_delta",
-                )
+            _validate_source_period_kind_alignment(self)
             return self
         if self.source_period is not None:
-            if self.target_period is None or self.filing_year_delta is None:
-                raise RegistryValidationError(
-                    "relation period alignment source_period requires target_period and filing_year_delta",
-                )
+            _validate_explicit_period_alignment(self)
             return self
         raise RegistryValidationError("relation period alignment declares target/delta fields without source alignment")
 

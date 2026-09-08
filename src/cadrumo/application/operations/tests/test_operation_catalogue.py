@@ -94,9 +94,7 @@ def _tracked_sources() -> tuple[str, ...]:
     )
     paths = tuple(
         sorted(
-            path
-            for line in completed.stdout.splitlines()
-            if (path := line.strip()) and (_REPO_ROOT / path).is_file()
+            path for line in completed.stdout.splitlines() if (path := line.strip()) and (_REPO_ROOT / path).is_file()
         ),
     )
     if not paths:

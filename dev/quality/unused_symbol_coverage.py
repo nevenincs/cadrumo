@@ -39,8 +39,7 @@ class UnusedSymbolVerdict:
             f"{len(self.orphan_tests)} orphaned test module(s); expected zero",
         ]
         lines.extend(
-            f"  + {finding.module}:{finding.qualname} ({finding.path}:{finding.line})"
-            for finding in self.symbols
+            f"  + {finding.module}:{finding.qualname} ({finding.path}:{finding.line})" for finding in self.symbols
         )
         lines.extend(f"  + test:{finding.module} ({finding.path})" for finding in self.orphan_tests)
         return "\n".join(lines)

@@ -41,8 +41,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _PROFILE_ID = "0ac1e000-0000-4000-8000-0000000000f1"
 
-#: A profile label that is legal for ``ProfileName`` (which permits 128
-#: characters) and longer than ``BucketActorLabel`` permits. The default audit
+#: A profile label that is legal for the canonical ``ProfileLabel`` contract
+#: and longer than ``BucketActorLabel`` permits. The default audit
 #: actor is resolved FROM the profile label, so this is the shape that makes the
 #: application refuse its own record on a command line carrying no ``--by`` at
 #: all.
@@ -202,9 +202,9 @@ def test_calculate_reports_an_application_built_record_as_an_internal_defect(
     """A record the application built from its own state is not the operator's fault.
 
     The command line carries no ``--by``, so the audit actor is resolved from the
-    active profile label. ``ProfileName`` permits 128 characters while the bucket
-    event's actor permits 64, so a legal profile label makes the application
-    refuse its own record with nothing wrong in the invocation.
+    active profile label. The canonical profile-label contract permits this value
+    while the bucket event's actor permits only 64 characters, so the application
+    refuses its own record with nothing wrong in the invocation.
 
     Before the fix this reported ``REFUSED_CLI_VALIDATION_BOUNDARY`` — "check the
     command's arguments" — against an argument set that is entirely correct, with

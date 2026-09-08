@@ -732,17 +732,13 @@ def resolve_withholding_binding_values(
     return resolved
 
 
-def resolve_withholding_binding_row_values(
+def _withholding_row_binding_cohorts(
     revision: ModeloRevision,
-    observations: Iterable[WithholdingObservation],
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Resolve row-producer withholding bindings into per-row indexed values.
-
-    The :class:`ModeloRevision` contributes row-field withholding bindings,
-    which are grouped into deterministic per-row output slots.
-    """
-    available = tuple(observations)
-    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
+) -> dict[
+    tuple[WithholdingGrouping, tuple[str, ...]],
+    list[tuple[DataBindingDefinition, _WithholdingSelector]],
+]:
+    """Collect row-field bindings by their shared grouping and clave scope."""
     cohorts: dict[
         tuple[WithholdingGrouping, tuple[str, ...]],
         list[tuple[DataBindingDefinition, _WithholdingSelector]],
@@ -760,27 +756,52 @@ def resolve_withholding_binding_row_values(
             )
         cohort_key: tuple[WithholdingGrouping, tuple[str, ...]] = (grouping, tuple(sorted(selector.claves)))
         cohorts.setdefault(cohort_key, []).append((binding, selector))
-    for cohort_key, members in cohorts.items():
-        grouping = cohort_key[0]
-        _, sample_selector = members[0]
-        scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
-        required_fields = frozenset(selector.row_field for _, selector in members if selector.row_field is not None)
-        from ._withholding_rows import build_withholding_rows
+    return cohorts
 
-        rows = build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
-        for binding, selector in members:
-            row_field = selector.row_field
-            if row_field is None:
+
+def _resolve_withholding_row_cohort(
+    cohort_key: tuple[WithholdingGrouping, tuple[str, ...]],
+    members: list[tuple[DataBindingDefinition, _WithholdingSelector]],
+    available: tuple[WithholdingObservation, ...],
+    resolved: dict[tuple[BindingId, int], Decimal | str],
+) -> None:
+    """Build one scoped row set and project each member's selected field."""
+    grouping = cohort_key[0]
+    _, sample_selector = members[0]
+    scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
+    required_fields = frozenset(selector.row_field for _, selector in members if selector.row_field is not None)
+    from ._withholding_rows import build_withholding_rows
+
+    rows = build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
+    for binding, selector in members:
+        row_field = selector.row_field
+        if row_field is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
+            )
+        for row_index, row in enumerate(rows, start=1):
+            value = row.get(row_field)
+            if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for grouping {grouping!r}",
                 )
-            for row_index, row in enumerate(rows, start=1):
-                value = row.get(row_field)
-                if value is None:
-                    raise RegistryValidationError(
-                        f"binding {binding.id!r} row_field {row_field!r} not produced for grouping {grouping!r}",
-                    )
-                resolved[(binding.id, row_index)] = value
+            resolved[(binding.id, row_index)] = value
+
+
+def resolve_withholding_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[WithholdingObservation],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Resolve row-producer withholding bindings into per-row indexed values.
+
+    The :class:`ModeloRevision` contributes row-field withholding bindings,
+    which are grouped into deterministic per-row output slots.
+    """
+    available = tuple(observations)
+    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
+    cohorts = _withholding_row_binding_cohorts(revision)
+    for cohort_key, members in cohorts.items():
+        _resolve_withholding_row_cohort(cohort_key, members, available, resolved)
     return resolved
 
 

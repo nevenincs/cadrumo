@@ -174,16 +174,19 @@ def _calculate_and_verify(
                 ),
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-            stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
-                    modelo=Modelo.M720.value,
-                    filing_year=_YEAR_N,
-                    period=_PERIOD,
-                    casilla_values={
-                        _CUENTAS_VALORACION: _CUENTAS_N,
-                        _VALORES_VALORACION: _VALORES_N,
-                        _INMUEBLES_VALORACION: _INMUEBLES_N,
-                    },
-                )))
+                stamped_revision_id=revision_id_for_observation(
+                    registry_grounded_modelo_observation(
+                        modelo=Modelo.M720.value,
+                        filing_year=_YEAR_N,
+                        period=_PERIOD,
+                        casilla_values={
+                            _CUENTAS_VALORACION: _CUENTAS_N,
+                            _VALORES_VALORACION: _VALORES_N,
+                            _INMUEBLES_VALORACION: _INMUEBLES_N,
+                        },
+                    )
+                ),
+            )
         )
 
         snapshot = bundled_authority().snapshot(
@@ -289,7 +292,8 @@ def test_source_mesh_scopes_m720_prior_baselines_to_the_intended_work_unit_coord
                 prior_observation,
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
-            stamped_revision_id=revision_id_for_observation(prior_observation))
+                stamped_revision_id=revision_id_for_observation(prior_observation),
+            )
         )
         work_unit_repository = WorkUnitCatalogueRepository()
         work_unit_n1 = create_work_unit(

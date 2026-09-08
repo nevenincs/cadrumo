@@ -327,106 +327,162 @@ class OperationPublicProjectionV1(BaseModel):
 
     @model_validator(mode="after")
     def _validate_projection(self) -> OperationPublicProjectionV1:
-        for value in (self.started_at, self.execution_deadline_at, self.cleanup_deadline_at):
-            if value is not None:
-                validate_utc_aware(value)
-        validate_utc_aware(self.updated_at)
-        if self.definition_contract.definition_id != self.definition_id:
-            raise ValueError("public projection definition does not match its contract")
-        if self.close_policy is not self.definition_contract.close_policy:
-            raise ValueError("public projection close policy does not match its definition contract")
-        if self.cancellation is not self.definition_contract.cancellation:
-            raise ValueError("public projection cancellation does not match its definition contract")
-        if self.started_at is not None and self.started_at > self.updated_at:
-            raise ValueError("public operation start cannot follow its last update")
-        if (
-            self.started_at is not None
-            and self.execution_deadline_at is not None
-            and self.execution_deadline_at < self.started_at
-        ):
-            raise ValueError("public execution deadline cannot precede operation start")
-        if (
-            self.started_at is not None
-            and self.cleanup_deadline_at is not None
-            and self.cleanup_deadline_at < self.started_at
-        ):
-            raise ValueError("public cleanup deadline cannot precede operation start")
-        terminal = self.lifecycle is OperationLifecycle.TERMINAL
-        if terminal != (self.terminal_condition is not None):
-            raise ValueError("public terminal lifecycle requires exactly one terminal condition")
-        if terminal and not isinstance(self.pending_interaction, OperationNoPendingInteractionV1):
-            raise ValueError("public terminal projection cannot carry a pending interaction")
-        if terminal and self.cancellable_now:
-            raise ValueError("public terminal projection cannot remain cancellable")
-        pending = self.pending_interaction
-        if not isinstance(pending, OperationNoPendingInteractionV1):
-            if self.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION:
-                raise ValueError("public pending interaction requires waiting-for-interaction lifecycle")
-            if pending.revision != self.revision:
-                raise ValueError("public pending interaction does not match the current operation revision")
-            interaction_kind = (
-                OperationInteractionKind.REVIEW
-                if isinstance(pending, OperationReviewAvailableInteractionV1)
-                else pending.interaction_kind
-            )
-            if interaction_kind not in self.definition_contract.interaction_kinds:
-                raise ValueError("public pending interaction kind is not declared by the definition contract")
-        if isinstance(pending, OperationReviewAvailableInteractionV1):
-            contract = self.definition_contract
-            if pending.operation_id != self.operation_id:
-                raise ValueError("public REVIEW interaction does not match the current operation")
-            if pending.review_reference.definition_contract_digest != contract.definition_contract_digest:
-                raise ValueError("public REVIEW reference does not match the current definition contract")
-            if pending.review_reference.review_projection_schema != contract.review_projection_schema:
-                raise ValueError("public REVIEW reference does not match the registered projection schema")
-            if pending.response_schema != contract.interaction_response_schema:
-                raise ValueError("public REVIEW interaction does not match the registered response schema")
-        references = (self.result_ref, self.refusal_ref)
-        if all(value is not None for value in references):
-            raise ValueError("public projection cannot expose result and refusal references together")
-        if self.terminal_condition is OperationTerminalCondition.SUCCEEDED and self.result_ref is None:
-            raise ValueError("successful public projection requires a result reference")
-        if self.terminal_condition is OperationTerminalCondition.REFUSED and self.refusal_ref is None:
-            raise ValueError("refused public projection requires a refusal reference")
-        if self.terminal_condition is not OperationTerminalCondition.FAILED and self.failure_error_code is not None:
-            raise ValueError("public failure error code requires a failed terminal condition")
-        if self.failure_error_code is not None:
-            from ...core.errors.error_codes import get_registered_error_code_by_code
-
-            get_registered_error_code_by_code(self.failure_error_code)
-        if not terminal and (any(value is not None for value in references) or self.failure_error_code is not None):
-            raise ValueError("nonterminal public projection cannot expose settlement references")
-        if self.progress is not None:
-            if self.progress.event_sequence > self.anchor_cursor or self.progress.revision > self.revision:
-                raise ValueError("public progress cannot exceed its projection anchor")
-            if self.progress.phase_code != self.phase_code:
-                raise ValueError("public progress phase must match the current projection phase")
-        if self.cancellation is OperationCancellation.UNSUPPORTED and self.cancellable_now:
-            raise ValueError("unsupported cancellation cannot be currently available")
-        if self.cancellable_now and (self.cancellation_requested or self.cancellation_acknowledged):
-            raise ValueError("public cancellation cannot remain currently available after it is requested")
-        if self.cancellable_now and self.lifecycle is OperationLifecycle.SETTLING:
-            raise ValueError("public cancellation cannot be currently available while settlement is underway")
-        if self.cancellation is OperationCancellation.UNSUPPORTED and (
-            self.cancellation_requested or self.cancellation_acknowledged
-        ):
-            raise ValueError("unsupported cancellation cannot carry request or acknowledgement facts")
-        if self.cancellation_requested != (self.cleanup_deadline_at is not None):
-            raise ValueError("public cleanup deadline and cancellation request must be declared together")
-        if self.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED and not self.cancellation_requested:
-            raise ValueError("cancellation-requested lifecycle requires its declared request fact")
-        if self.cancellation_requested and self.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST:
-            raise ValueError("public cancellation request disagrees with the current lifecycle")
-        if self.cancellation_acknowledged and not self.cancellation_requested:
-            raise ValueError("cancellation acknowledgement requires a cancellation request")
-        if self.cancellation_acknowledged and self.lifecycle not in {
-            OperationLifecycle.SETTLING,
-            OperationLifecycle.TERMINAL,
-        }:
-            raise ValueError("cancellation acknowledgement requires settling or terminal lifecycle")
-        if self.terminal_condition is OperationTerminalCondition.CANCELLED and not self.cancellation_acknowledged:
-            raise ValueError("cancelled public operation requires cancellation acknowledgement")
+        _validate_projection_timestamps(self)
+        _validate_projection_contract(self)
+        _validate_projection_timeline(self)
+        _validate_projection_lifecycle(self)
+        _validate_projection_pending_interaction(self)
+        _validate_projection_review_interaction(self)
+        _validate_projection_settlement(self)
+        _validate_projection_progress(self)
+        _validate_projection_cancellation_availability(self)
+        _validate_projection_cancellation_facts(self)
         return self
+
+
+def _validate_projection_timestamps(projection: OperationPublicProjectionV1) -> None:
+    for value in (projection.started_at, projection.execution_deadline_at, projection.cleanup_deadline_at):
+        if value is not None:
+            validate_utc_aware(value)
+    validate_utc_aware(projection.updated_at)
+
+
+def _validate_projection_contract(projection: OperationPublicProjectionV1) -> None:
+    contract = projection.definition_contract
+    if contract.definition_id != projection.definition_id:
+        raise ValueError("public projection definition does not match its contract")
+    if projection.close_policy is not contract.close_policy:
+        raise ValueError("public projection close policy does not match its definition contract")
+    if projection.cancellation is not contract.cancellation:
+        raise ValueError("public projection cancellation does not match its definition contract")
+
+
+def _validate_projection_timeline(projection: OperationPublicProjectionV1) -> None:
+    if projection.started_at is not None and projection.started_at > projection.updated_at:
+        raise ValueError("public operation start cannot follow its last update")
+    if (
+        projection.started_at is not None
+        and projection.execution_deadline_at is not None
+        and projection.execution_deadline_at < projection.started_at
+    ):
+        raise ValueError("public execution deadline cannot precede operation start")
+    if (
+        projection.started_at is not None
+        and projection.cleanup_deadline_at is not None
+        and projection.cleanup_deadline_at < projection.started_at
+    ):
+        raise ValueError("public cleanup deadline cannot precede operation start")
+
+
+def _validate_projection_lifecycle(projection: OperationPublicProjectionV1) -> None:
+    terminal = projection.lifecycle is OperationLifecycle.TERMINAL
+    if terminal != (projection.terminal_condition is not None):
+        raise ValueError("public terminal lifecycle requires exactly one terminal condition")
+    if terminal and not isinstance(projection.pending_interaction, OperationNoPendingInteractionV1):
+        raise ValueError("public terminal projection cannot carry a pending interaction")
+    if terminal and projection.cancellable_now:
+        raise ValueError("public terminal projection cannot remain cancellable")
+
+
+def _validate_projection_pending_interaction(projection: OperationPublicProjectionV1) -> None:
+    pending = projection.pending_interaction
+    if isinstance(pending, OperationNoPendingInteractionV1):
+        return
+    if projection.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION:
+        raise ValueError("public pending interaction requires waiting-for-interaction lifecycle")
+    if pending.revision != projection.revision:
+        raise ValueError("public pending interaction does not match the current operation revision")
+    interaction_kind = (
+        OperationInteractionKind.REVIEW
+        if isinstance(pending, OperationReviewAvailableInteractionV1)
+        else pending.interaction_kind
+    )
+    if interaction_kind not in projection.definition_contract.interaction_kinds:
+        raise ValueError("public pending interaction kind is not declared by the definition contract")
+
+
+def _validate_projection_review_interaction(projection: OperationPublicProjectionV1) -> None:
+    pending = projection.pending_interaction
+    if not isinstance(pending, OperationReviewAvailableInteractionV1):
+        return
+    contract = projection.definition_contract
+    if pending.operation_id != projection.operation_id:
+        raise ValueError("public REVIEW interaction does not match the current operation")
+    if pending.review_reference.definition_contract_digest != contract.definition_contract_digest:
+        raise ValueError("public REVIEW reference does not match the current definition contract")
+    if pending.review_reference.review_projection_schema != contract.review_projection_schema:
+        raise ValueError("public REVIEW reference does not match the registered projection schema")
+    if pending.response_schema != contract.interaction_response_schema:
+        raise ValueError("public REVIEW interaction does not match the registered response schema")
+
+
+def _validate_projection_settlement(projection: OperationPublicProjectionV1) -> None:
+    references = (projection.result_ref, projection.refusal_ref)
+    if all(value is not None for value in references):
+        raise ValueError("public projection cannot expose result and refusal references together")
+    if projection.terminal_condition is OperationTerminalCondition.SUCCEEDED and projection.result_ref is None:
+        raise ValueError("successful public projection requires a result reference")
+    if projection.terminal_condition is OperationTerminalCondition.REFUSED and projection.refusal_ref is None:
+        raise ValueError("refused public projection requires a refusal reference")
+    if (
+        projection.terminal_condition is not OperationTerminalCondition.FAILED
+        and projection.failure_error_code is not None
+    ):
+        raise ValueError("public failure error code requires a failed terminal condition")
+    if projection.failure_error_code is not None:
+        from ...core.errors.error_codes import get_registered_error_code_by_code
+
+        get_registered_error_code_by_code(projection.failure_error_code)
+    if projection.lifecycle is not OperationLifecycle.TERMINAL and (
+        any(value is not None for value in references) or projection.failure_error_code is not None
+    ):
+        raise ValueError("nonterminal public projection cannot expose settlement references")
+
+
+def _validate_projection_progress(projection: OperationPublicProjectionV1) -> None:
+    if projection.progress is None:
+        return
+    if (
+        projection.progress.event_sequence > projection.anchor_cursor
+        or projection.progress.revision > projection.revision
+    ):
+        raise ValueError("public progress cannot exceed its projection anchor")
+    if projection.progress.phase_code != projection.phase_code:
+        raise ValueError("public progress phase must match the current projection phase")
+
+
+def _validate_projection_cancellation_availability(projection: OperationPublicProjectionV1) -> None:
+    if projection.cancellation is OperationCancellation.UNSUPPORTED and projection.cancellable_now:
+        raise ValueError("unsupported cancellation cannot be currently available")
+    if projection.cancellable_now and (projection.cancellation_requested or projection.cancellation_acknowledged):
+        raise ValueError("public cancellation cannot remain currently available after it is requested")
+    if projection.cancellable_now and projection.lifecycle is OperationLifecycle.SETTLING:
+        raise ValueError("public cancellation cannot be currently available while settlement is underway")
+
+
+def _validate_projection_cancellation_facts(projection: OperationPublicProjectionV1) -> None:
+    if projection.cancellation is OperationCancellation.UNSUPPORTED and (
+        projection.cancellation_requested or projection.cancellation_acknowledged
+    ):
+        raise ValueError("unsupported cancellation cannot carry request or acknowledgement facts")
+    if projection.cancellation_requested != (projection.cleanup_deadline_at is not None):
+        raise ValueError("public cleanup deadline and cancellation request must be declared together")
+    if projection.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED and not projection.cancellation_requested:
+        raise ValueError("cancellation-requested lifecycle requires its declared request fact")
+    if projection.cancellation_requested and projection.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST:
+        raise ValueError("public cancellation request disagrees with the current lifecycle")
+    if projection.cancellation_acknowledged and not projection.cancellation_requested:
+        raise ValueError("cancellation acknowledgement requires a cancellation request")
+    if projection.cancellation_acknowledged and projection.lifecycle not in {
+        OperationLifecycle.SETTLING,
+        OperationLifecycle.TERMINAL,
+    }:
+        raise ValueError("cancellation acknowledgement requires settling or terminal lifecycle")
+    if (
+        projection.terminal_condition is OperationTerminalCondition.CANCELLED
+        and not projection.cancellation_acknowledged
+    ):
+        raise ValueError("cancelled public operation requires cancellation acknowledgement")
 
 
 class _OperationPublicEventBase(BaseModel):

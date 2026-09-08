@@ -122,11 +122,15 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
 
 
 def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
-    registry_snapshot_ref = bundled_authority().snapshot(
-        "303",
-        filing_year=_FILING_PERIOD.filing_year,
-        period=_FILING_PERIOD.registry_token,
-    ).snapshot_ref
+    registry_snapshot_ref = (
+        bundled_authority()
+        .snapshot(
+            "303",
+            filing_year=_FILING_PERIOD.filing_year,
+            period=_FILING_PERIOD.registry_token,
+        )
+        .snapshot_ref
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, cast
 
 from ...core.aggregation import BindingSourceKind
 from ..aggregation import (
@@ -146,59 +146,142 @@ CALCULATION_ROUTE_RESOLVER_OWNERSHIP: tuple[CalculationRouteOwnership, ...] = (
 )
 
 
-def validate_calculation_route_resolver_ownership(
-    ownership: tuple[CalculationRouteOwnership, ...],
-) -> None:
-    """Refuse identity, stage, pseudo-owner, and source-disposition drift."""
-    canonical_stages = {resolver_type: stage for stage, resolver_type in _CANONICAL_RESOLVER_STAGES}
+def _canonical_stage_map() -> dict[type[ModeloSourceResolver], CalculationRouteResolverStage]:
+    """Return the canonical executable-resolver stage map after checking its shape."""
+    canonical_stages: dict[type[ModeloSourceResolver], CalculationRouteResolverStage] = {
+        resolver_type: cast(CalculationRouteResolverStage, stage) for stage, resolver_type in _CANONICAL_RESOLVER_STAGES
+    }
     if len(canonical_stages) != len(_CANONICAL_RESOLVER_STAGES):
         raise RuntimeError("canonical calculation route repeats a resolver type")
+    return canonical_stages
+
+
+def _require_unique_resolver_ids(ownership: tuple[CalculationRouteOwnership, ...]) -> None:
     resolver_ids = tuple(row.resolver_id for row in ownership)
     if len(set(resolver_ids)) != len(resolver_ids):
         raise RuntimeError("calculation route resolver ids must be unique")
-    source_owners: dict[BindingSourceKind, str] = {}
+
+
+def _require_complete_resolver_coverage(
+    ownership: tuple[CalculationRouteOwnership, ...],
+    canonical_stages: dict[type[ModeloSourceResolver], CalculationRouteResolverStage],
+) -> None:
     declared_resolver_types = {
         row.resolver_type for row in ownership if isinstance(row, CalculationRouteResolverOwnership)
     }
     if declared_resolver_types != set(canonical_stages):
         raise RuntimeError("calculation route must contain every canonical executable resolver exactly once")
-    if sum(isinstance(row, CalculationRouteManualOwnership) for row in ownership) != 1:
-        raise RuntimeError("calculation route must contain exactly one manual-input pseudo-owner")
-    if sum(isinstance(row, CalculationRouteDesignConstantOwnership) for row in ownership) != 1:
-        raise RuntimeError("calculation route must contain exactly one design-constant pseudo-owner")
+
+
+def _require_one_pseudo_owner(
+    ownership: tuple[CalculationRouteOwnership, ...],
+    owner_type: type[CalculationRouteManualOwnership] | type[CalculationRouteDesignConstantOwnership],
+    message: str,
+) -> None:
+    if sum(isinstance(row, owner_type) for row in ownership) != 1:
+        raise RuntimeError(message)
+
+
+def _validate_route_shape(
+    ownership: tuple[CalculationRouteOwnership, ...],
+) -> dict[type[ModeloSourceResolver], CalculationRouteResolverStage]:
+    """Validate route-wide uniqueness and complete owner coverage."""
+    canonical_stages = _canonical_stage_map()
+    _require_unique_resolver_ids(ownership)
+    _require_complete_resolver_coverage(ownership, canonical_stages)
+    _require_one_pseudo_owner(
+        ownership,
+        CalculationRouteManualOwnership,
+        "calculation route must contain exactly one manual-input pseudo-owner",
+    )
+    _require_one_pseudo_owner(
+        ownership,
+        CalculationRouteDesignConstantOwnership,
+        "calculation route must contain exactly one design-constant pseudo-owner",
+    )
+    return canonical_stages
+
+
+def _validate_manual_owner(row: CalculationRouteManualOwnership) -> None:
+    if row != _MANUAL_INPUT_OWNER:
+        raise RuntimeError("calculation route permits only the canonical manual-input pseudo-owner")
+
+
+def _validate_design_constant_owner(row: CalculationRouteDesignConstantOwnership) -> None:
+    # Pinned to the one canonical instance for the same reason the manual owner
+    # is: a pseudo-owner names no resolver class, so the drift checks below have
+    # nothing to compare against and equality with the declared row is the
+    # whole guard.
+    if row != _DESIGN_CONSTANT_OWNER:
+        raise RuntimeError("calculation route permits only the canonical design-constant pseudo-owner")
+
+
+def _validate_resolver_owner(
+    row: CalculationRouteResolverOwnership,
+    canonical_stages: dict[type[ModeloSourceResolver], CalculationRouteResolverStage],
+) -> None:
+    expected_stage = canonical_stages.get(row.resolver_type)
+    if expected_stage is None:
+        raise RuntimeError(f"calculation route contains an invented resolver: {row.resolver_type!r}")
+    identity_checks = (
+        (
+            row.stage,
+            expected_stage,
+            f"calculation route resolver {row.resolver_id!r} must use stage {expected_stage!r}",
+        ),
+        (
+            row.resolver_id,
+            row.resolver_type.resolver_id,
+            f"calculation route resolver id drifted: {row.resolver_type.__name__}",
+        ),
+        (
+            row.owned_sources,
+            row.resolver_type.owned_sources,
+            f"calculation route resolver sources drifted: {row.resolver_type.__name__}",
+        ),
+    )
+    for actual, expected, message in identity_checks:
+        if actual != expected:
+            raise RuntimeError(message)
+
+
+def _validate_owner(
+    row: CalculationRouteOwnership,
+    canonical_stages: dict[type[ModeloSourceResolver], CalculationRouteResolverStage],
+) -> None:
+    """Validate one executable or pseudo-owner against canonical authority."""
+    if isinstance(row, CalculationRouteManualOwnership):
+        _validate_manual_owner(row)
+        return
+    if isinstance(row, CalculationRouteDesignConstantOwnership):
+        _validate_design_constant_owner(row)
+        return
+    _validate_resolver_owner(row, canonical_stages)
+
+
+def _claim_owned_sources(row: CalculationRouteOwnership, source_owners: dict[BindingSourceKind, str]) -> None:
+    if not row.owned_sources:
+        raise RuntimeError(f"calculation route resolver {row.resolver_id!r} owns no source")
+    for source_kind in row.owned_sources:
+        prior = source_owners.get(source_kind)
+        if prior is not None:
+            raise RuntimeError(
+                f"calculation route source {source_kind.value!r} has duplicate owners: {prior!r}, {row.resolver_id!r}",
+            )
+        source_owners[source_kind] = row.resolver_id
+
+
+def validate_calculation_route_resolver_ownership(
+    ownership: tuple[CalculationRouteOwnership, ...],
+) -> None:
+    """Refuse identity, stage, pseudo-owner, and source-disposition drift."""
+    canonical_stages = _validate_route_shape(ownership)
+    source_owners: dict[BindingSourceKind, str] = {}
     for row in ownership:
-        if isinstance(row, CalculationRouteManualOwnership):
-            if row != _MANUAL_INPUT_OWNER:
-                raise RuntimeError("calculation route permits only the canonical manual-input pseudo-owner")
-        elif isinstance(row, CalculationRouteDesignConstantOwnership):
-            # Pinned to the one canonical instance for the same reason the
-            # manual owner is: a pseudo-owner names no resolver class, so the
-            # drift checks below have nothing to compare against and equality
-            # with the declared row is the whole guard.
-            if row != _DESIGN_CONSTANT_OWNER:
-                raise RuntimeError("calculation route permits only the canonical design-constant pseudo-owner")
-        else:
-            expected_stage = canonical_stages.get(row.resolver_type)
-            if expected_stage is None:
-                raise RuntimeError(f"calculation route contains an invented resolver: {row.resolver_type!r}")
-            if row.stage != expected_stage:
-                raise RuntimeError(
-                    f"calculation route resolver {row.resolver_id!r} must use stage {expected_stage!r}",
-                )
-            if row.resolver_id != row.resolver_type.resolver_id:
-                raise RuntimeError(f"calculation route resolver id drifted: {row.resolver_type.__name__}")
-            if row.owned_sources != row.resolver_type.owned_sources:
-                raise RuntimeError(f"calculation route resolver sources drifted: {row.resolver_type.__name__}")
-        if not row.owned_sources:
-            raise RuntimeError(f"calculation route resolver {row.resolver_id!r} owns no source")
-        for source_kind in row.owned_sources:
-            prior = source_owners.get(source_kind)
-            if prior is not None:
-                raise RuntimeError(
-                    f"calculation route source {source_kind.value!r} has duplicate owners: "
-                    f"{prior!r}, {row.resolver_id!r}",
-                )
-            source_owners[source_kind] = row.resolver_id
+        _validate_owner(row, canonical_stages)
+        _claim_owned_sources(row, source_owners)
+
+
 validate_calculation_route_resolver_ownership(CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
 
 CALCULATION_ROUTE_ENROLLED_SOURCES = frozenset(

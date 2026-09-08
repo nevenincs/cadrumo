@@ -407,7 +407,9 @@ def test_finalise_reconciliation_issues_exactly_one_atomic_persistence_call() ->
     atomic_calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "persist_with_event"
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Attribute)
+        and node.func.attr == "persist_with_event"
     ]
 
     assert len(atomic_calls) == 1, "the record and event must use ONE atomic persistence call, not two"

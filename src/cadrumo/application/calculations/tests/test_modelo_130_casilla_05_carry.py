@@ -91,17 +91,20 @@ def obs_repo(tmp_path: Path) -> Iterator[CalculationObservationRepository]:
                     },
                 ),
                 source_kind="app_filing",
-            stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
-                    modelo="100",
-                    filing_year=_FILING_YEAR - 1,
-                    period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                )))
+                stamped_revision_id=revision_id_for_observation(
+                    registry_grounded_modelo_observation(
+                        modelo="100",
+                        filing_year=_FILING_YEAR - 1,
+                        period="0A",
+                        casilla_values={
+                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                        },
+                    )
+                ),
+            )
         )
         yield repo
 
@@ -184,7 +187,10 @@ def test_4t_casilla_05_equals_accumulation_identity_with_negative_07_and_nonzero
             obs_repo.prepare_observation_envelope(
                 _prior_m130(period, casilla_07=casilla_07, casilla_16=casilla_16),
                 source_kind="app_filing",
-            stamped_revision_id=revision_id_for_observation(_prior_m130(period, casilla_07=casilla_07, casilla_16=casilla_16)))
+                stamped_revision_id=revision_id_for_observation(
+                    _prior_m130(period, casilla_07=casilla_07, casilla_16=casilla_16)
+                ),
+            )
         )
 
     resolved = _resolve_casilla_05(obs_repo, target_period="4T")
@@ -213,7 +219,10 @@ def test_3t_casilla_05_sums_only_quarters_before_target(
             obs_repo.prepare_observation_envelope(
                 _prior_m130(period, casilla_07=casilla_07, casilla_16=casilla_16),
                 source_kind="app_filing",
-            stamped_revision_id=revision_id_for_observation(_prior_m130(period, casilla_07=casilla_07, casilla_16=casilla_16)))
+                stamped_revision_id=revision_id_for_observation(
+                    _prior_m130(period, casilla_07=casilla_07, casilla_16=casilla_16)
+                ),
+            )
         )
 
     resolved = _resolve_casilla_05(obs_repo, target_period="3T")
@@ -252,7 +261,10 @@ def test_not_captured_minoracion_proceeds_treating_absent_16_as_zero(
         obs_repo.prepare_observation_envelope(
             _prior_m130("1T", casilla_07=Decimal("300"), casilla_16=None),
             source_kind="app_filing",
-        stamped_revision_id=revision_id_for_observation(_prior_m130("1T", casilla_07=Decimal("300"), casilla_16=None)))
+            stamped_revision_id=revision_id_for_observation(
+                _prior_m130("1T", casilla_07=Decimal("300"), casilla_16=None)
+            ),
+        )
     )
 
     resolved = _resolve_casilla_05(obs_repo, target_period="2T")

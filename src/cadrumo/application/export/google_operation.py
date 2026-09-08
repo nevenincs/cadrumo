@@ -80,9 +80,10 @@ _PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", va
 
 type GoogleSnapshotResolver = Callable[[ModeloId, Period], RegistrySnapshot]
 type GoogleExportPlanBuilder = Callable[..., SheetExportPlan]
+
+
 class GoogleSheetsExportCapabilityDisabledError(CadrumoError):
     """The active profile has not admitted Google workbook export."""
-
 
 
 class GoogleSheetsExportRootFolderRequiredError(CadrumoError):
@@ -99,7 +100,6 @@ class GoogleSheetsExportTokenMissingError(CadrumoError):
 
 class GoogleSheetsExportAuthDependencyError(CadrumoError):
     """The Google authentication dependency is unavailable."""
-
 
 
 class GoogleSheetsExportActiveProfileRequiredError(CadrumoError):

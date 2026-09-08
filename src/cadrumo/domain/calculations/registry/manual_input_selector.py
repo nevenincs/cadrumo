@@ -68,6 +68,57 @@ def is_layout_binding_selector(selector: Mapping[str, object]) -> bool:
     return MANUAL_INPUT_RECORD_SHAPE_KEYS.issubset(selector)
 
 
+def _has_record_shape(selector: ManualInputSelector) -> bool:
+    """Return whether any record-field coordinate was supplied."""
+    return any(getattr(selector, key) is not None for key in MANUAL_INPUT_RECORD_SHAPE_KEYS)
+
+
+def _validate_shape_presence(has_casilla: bool, has_record_shape: bool) -> None:
+    """Enforce that exactly one manual-input selector shape is present."""
+    if has_casilla and has_record_shape:
+        raise RegistryValidationError(
+            "manual_input selector must declare either the casilla shape or the record-field shape, not both",
+        )
+    if not has_casilla and not has_record_shape:
+        raise RegistryValidationError("manual_input selector must declare a casilla_id or a record-field shape")
+
+
+def _validate_record_shape(selector: ManualInputSelector) -> None:
+    """Require every coordinate of the record-field selector shape."""
+    missing = [key for key in MANUAL_INPUT_RECORD_SHAPE_KEYS if getattr(selector, key) is None]
+    if missing:
+        raise RegistryValidationError(
+            f"manual_input record-field selector is missing required keys: {sorted(missing)!r}",
+        )
+
+
+def _validate_boolean_casilla_shape(selector: ManualInputSelector, has_casilla: bool) -> None:
+    """Require explicit wire values for a boolean casilla selector."""
+    if (
+        has_casilla
+        and selector.data_type == "boolean"
+        and (selector.true_value is None or selector.false_value is None)
+    ):
+        raise RegistryValidationError(
+            "manual_input boolean-casilla_id selector must declare true_value and false_value",
+        )
+
+
+def _validate_signed_shape(selector: ManualInputSelector, has_casilla: bool) -> None:
+    """Restrict sign-marker metadata to money record-field selectors."""
+    if selector.signed is not None:
+        if has_casilla:
+            raise RegistryValidationError(
+                "manual_input casilla-shape selector cannot declare signed: the sign marker is a "
+                "byte of a fixed-width record slot, which the casilla shape does not name",
+            )
+        if selector.signed and selector.data_type != "money":
+            raise RegistryValidationError(
+                f"manual_input record-field selector can declare signed only for money data, "
+                f"not {selector.data_type!r}",
+            )
+
+
 class ManualInputSelector(BaseModel):
     """Strict validator for the selector mapping of a manual_input binding.
 
@@ -112,39 +163,13 @@ class ManualInputSelector(BaseModel):
 
     @model_validator(mode="after")
     def _validate_manual_input_shape(self) -> ManualInputSelector:
-        record_shape_keys = MANUAL_INPUT_RECORD_SHAPE_KEYS
         has_casilla = self.casilla_id is not None
-        has_record_shape = any(getattr(self, key) is not None for key in record_shape_keys)
-        if has_casilla and has_record_shape:
-            raise RegistryValidationError(
-                "manual_input selector must declare either the casilla shape or the record-field shape, not both",
-            )
-        if not has_casilla and not has_record_shape:
-            raise RegistryValidationError("manual_input selector must declare a casilla_id or a record-field shape")
+        has_record_shape = _has_record_shape(self)
+        _validate_shape_presence(has_casilla, has_record_shape)
         if has_record_shape:
-            missing = [key for key in record_shape_keys if getattr(self, key) is None]
-            if missing:
-                raise RegistryValidationError(
-                    f"manual_input record-field selector is missing required keys: {sorted(missing)!r}",
-                )
-        # Boolean casilla shape always pairs the data_type with explicit
-        # true_value / false_value strings so the on-wire encoding is
-        # deterministic.
-        if has_casilla and self.data_type == "boolean" and (self.true_value is None or self.false_value is None):
-            raise RegistryValidationError(
-                "manual_input boolean-casilla_id selector must declare true_value and false_value",
-            )
-        if self.signed is not None:
-            # The sign marker is a byte of the fixed-width slot, so it is only
-            # meaningful where the selector names one.
-            if has_casilla:
-                raise RegistryValidationError(
-                    "manual_input casilla-shape selector cannot declare signed: the sign marker is a "
-                    "byte of a fixed-width record slot, which the casilla shape does not name",
-                )
-            if self.signed and self.data_type != "money":
-                raise RegistryValidationError(
-                    f"manual_input record-field selector can declare signed only for money data, "
-                    f"not {self.data_type!r}",
-                )
+            _validate_record_shape(self)
+        # Keep these checks after shape completeness: their error order is part
+        # of the registry's diagnostic contract.
+        _validate_boolean_casilla_shape(self, has_casilla)
+        _validate_signed_shape(self, has_casilla)
         return self

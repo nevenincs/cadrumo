@@ -27,7 +27,6 @@ from ..period_selector_match import selector_period_matches_request
 from ..runtime_graph import expression_binding_refs
 from ..schema import ModeloRevision
 from ..schema_input_kind import InputKind
-from ..snapshot_coordinate import registry_snapshot_id_for
 
 ScenarioStatus = Literal["match", "mismatch"]
 
@@ -265,7 +264,7 @@ def run_registry_calculation_scenario(
     status: ScenarioStatus = "match" if all(comparison.status == "match" for comparison in comparisons) else "mismatch"
     return RegistryScenarioRunReport(
         scenario_id=scenario.id,
-        registry_snapshot_id=registry_snapshot_id_for(snapshot),
+        registry_snapshot_id=(f"{snapshot.modelo.id}:{snapshot.revision.id}:{snapshot.filing_year}:{snapshot.period}"),
         status=status,
         comparisons=comparisons,
         calculation=calculation,

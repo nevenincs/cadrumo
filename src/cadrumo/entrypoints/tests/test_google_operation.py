@@ -49,8 +49,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
     (
         ("REFUSED_GOOGLE_SHEETS_EXPORT_CAPABILITY_DISABLED", "cli.app.modelo.spreadsheet.push.capability_disabled"),
         ("REFUSED_GOOGLE_SHEETS_EXPORT_ROOT_FOLDER_REQUIRED", "cli.app.modelo.spreadsheet.push.root_folder_required"),
-        ("REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING", "adapters.outbound.storage._factory.errors.google_client_missing"),
-        ("REFUSED_GOOGLE_SHEETS_EXPORT_TOKEN_MISSING", "adapters.outbound.storage._factory.errors.google_token_missing"),
+        (
+            "REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING",
+            "adapters.outbound.storage._factory.errors.google_client_missing",
+        ),
+        (
+            "REFUSED_GOOGLE_SHEETS_EXPORT_TOKEN_MISSING",
+            "adapters.outbound.storage._factory.errors.google_token_missing",
+        ),
     ),
 )
 def test_cli_projects_registered_export_refusals_without_an_owner_allowlist(code: str, message_key: str) -> None:
@@ -151,9 +157,7 @@ def test_default_owner_builds_a_real_registry_plan_then_refuses_uncomposed_remot
         definition_id=terminal.identity.definition_id,
         subject_ref=terminal.identity.subject_ref,
     )
-    released = asyncio.run(
-        leases.inspect(scope_ref, terminal.identity.operation_id, observed_at=datetime.now(UTC))
-    )
+    released = asyncio.run(leases.inspect(scope_ref, terminal.identity.operation_id, observed_at=datetime.now(UTC)))
     assert released.current is None
     assert tuple(event.phase_code for event in replay.events if event.kind is OperationEventKind.PHASE) == (
         GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
@@ -239,7 +243,9 @@ def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_pa
         services, journal, leases = _services(profile.storage_root, definition=definition)
         monkeypatch.setattr(operation_composition, "compose_operation_dependencies", lambda: services)
         monkeypatch.setattr(cli_module, "resolve_active_profile", lambda: profile.bucket_id)
-        monkeypatch.setattr(google_operation, "resolve_active_capability", lambda _capability: SimpleNamespace(enabled=True))
+        monkeypatch.setattr(
+            google_operation, "resolve_active_capability", lambda _capability: SimpleNamespace(enabled=True)
+        )
         monkeypatch.setattr(supervisor_module, "new_operation_id", lambda: "b" * 64)
 
         outcome = []

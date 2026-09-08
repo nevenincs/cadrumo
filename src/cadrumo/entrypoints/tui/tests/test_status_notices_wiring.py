@@ -88,11 +88,13 @@ def test_one_official_observation_silences_the_notice(tmp_path) -> None:
                 RegistryModeloObservation(modelo=_MODELO, filing_year=_FILING_YEAR, period=_PERIOD),
                 source_kind="aeat_sede_justificante",
                 stamped_revision_id=str(
-                    bundled_authority().snapshot(
+                    bundled_authority()
+                    .snapshot(
                         _MODELO,
                         filing_year=_FILING_YEAR,
                         period=_PERIOD,
-                    ).revision.id
+                    )
+                    .revision.id
                 ),
             )
         )

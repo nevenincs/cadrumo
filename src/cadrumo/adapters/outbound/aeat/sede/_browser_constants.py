@@ -27,6 +27,7 @@ PLAYWRIGHT_WAIT_NETWORKIDLE: Final[Literal["networkidle"]] = "networkidle"
 #: inside retry loops where proceeding on timeout is the desired behaviour.
 PLAYWRIGHT_TIMEOUT_SHORT_MS: Final[int] = 2_000
 
+
 def default_viewport() -> ViewportSize:
     """Return the configured browser viewport size from settings."""
     settings = load_settings()

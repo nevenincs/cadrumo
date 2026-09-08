@@ -113,7 +113,7 @@ def test_an_undecryptable_profile_payload_refuses(tmp_path: Path) -> None:
                 classification=USER_PROFILE_VALUE_NAMESPACE.sensitivity,
                 schema_version=USER_PROFILE_VALUE_NAMESPACE.schema_version,
                 written_at=datetime.now(UTC),
-                payload=b'{}',
+                payload=b"{}",
             )
         session.close()
         database = _bucket_database(_BUCKET_ID)

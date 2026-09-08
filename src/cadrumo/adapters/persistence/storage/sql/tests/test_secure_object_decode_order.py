@@ -192,7 +192,6 @@ def test_both_read_surfaces_route_through_the_one_decode_core() -> None:
             "secure_object_payload_aad(",
             "verify_revision_self_consistency(",
             "ensure_schema_version_readable(",
-            "upgrade_secure_object_payload(",
         ):
             assert reimplemented not in source, f"{surface.__name__} reimplements {reimplemented} instead of delegating"
 

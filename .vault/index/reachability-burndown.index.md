@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:4aff551f4b910ca4801bd49652e32083fb850148cbdd3cd292d460510ba0035b'
+body_hash: 'sha256:76625b0153343f166c03ebf0fa9b3820bca61942a05ff8897c94ee3b321a5caa'
 related:
   - '[[2026-09-04-reachability-burndown-W01-P01-S01]]'
   - '[[2026-09-04-reachability-burndown-W01-P01-S02]]'
@@ -150,6 +150,20 @@ related:
   - '[[2026-09-04-reachability-burndown-W05-P12-S216]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S217]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S218]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S219]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S220]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S221]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S222]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S223]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S224]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S225]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S226]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S227]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S228]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S229]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S230]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S231]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S232]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S25]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S26]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S27]]'
@@ -263,6 +277,20 @@ related:
   - '[[2026-09-08-reachability-burndown-s216-abandoned-calculation-workflow-catalogue-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s217-nonmaterial-resolver-enrollment-census-withdrawal-audit]]'
   - '[[2026-09-08-reachability-burndown-s218-custody-retryability-census-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s219-custody-retryability-handler-routing-audit]]'
+  - '[[2026-09-08-reachability-burndown-s220-compatibility-lifecycle-metastate-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s221-secure-object-upgrader-registry-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s222-registry-snapshot-coordinate-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s223-profile-name-alias-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s224-overview-verb-roster-census-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s225-module-execution-root-and-bootstrap-test-seam-audit]]'
+  - '[[2026-09-08-reachability-burndown-s226-contabilidad-prototype-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s227-is-compensation-prototype-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s228-unapprove-draft-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit]]'
+  - '[[2026-09-08-reachability-burndown-s232-borrador-100-namespace-alias-withdrawal-audit]]'
 ---
 
 # `reachability-burndown` feature index
@@ -312,6 +340,20 @@ Auto-generated index of all documents tagged with `#reachability-burndown`.
 - `2026-09-08-reachability-burndown-s216-abandoned-calculation-workflow-catalogue-withdrawal-audit` - `reachability-burndown` audit: `S216 abandoned calculation workflow catalogue withdrawal review`
 - `2026-09-08-reachability-burndown-s217-nonmaterial-resolver-enrollment-census-withdrawal-audit` - `reachability-burndown` audit: `S217 nonmaterial resolver enrollment census withdrawal review`
 - `2026-09-08-reachability-burndown-s218-custody-retryability-census-withdrawal-audit` - `reachability-burndown` audit: `S218 custody retryability census withdrawal review`
+- `2026-09-08-reachability-burndown-s219-custody-retryability-handler-routing-audit` - `reachability-burndown` audit: `S219 custody retryability handler routing review`
+- `2026-09-08-reachability-burndown-s220-compatibility-lifecycle-metastate-withdrawal-audit` - `reachability-burndown` audit: `S220 compatibility lifecycle metastate withdrawal review`
+- `2026-09-08-reachability-burndown-s221-secure-object-upgrader-registry-withdrawal-audit` - `reachability-burndown` audit: `S221 secure object upgrader registry withdrawal review`
+- `2026-09-08-reachability-burndown-s222-registry-snapshot-coordinate-withdrawal-audit` - `reachability-burndown` audit: `S222 registry snapshot coordinate withdrawal review`
+- `2026-09-08-reachability-burndown-s223-profile-name-alias-withdrawal-audit` - `reachability-burndown` audit: `S223 profile name alias withdrawal review`
+- `2026-09-08-reachability-burndown-s224-overview-verb-roster-census-withdrawal-audit` - `reachability-burndown` audit: `S224 overview verb roster census withdrawal review`
+- `2026-09-08-reachability-burndown-s225-module-execution-root-and-bootstrap-test-seam-audit` - `reachability-burndown` audit: `S225 module execution root and bootstrap test seam review`
+- `2026-09-08-reachability-burndown-s226-contabilidad-prototype-withdrawal-audit` - `reachability-burndown` audit: `S226 contabilidad prototype withdrawal review`
+- `2026-09-08-reachability-burndown-s227-is-compensation-prototype-withdrawal-audit` - 2026-09-08-reachability-burndown-s227-is-compensation-prototype-withdrawal-audit
+- `2026-09-08-reachability-burndown-s228-unapprove-draft-withdrawal-audit` - 2026-09-08-reachability-burndown-s228-unapprove-draft-withdrawal-audit
+- `2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit` - 2026-09-08-reachability-burndown-s229-invoice-list-projection-withdrawal-audit
+- `2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit` - 2026-09-08-reachability-burndown-s230-llm-review-request-withdrawal-audit
+- `2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit` - 2026-09-08-reachability-burndown-s231-review-kind-reservation-metastate-withdrawal-audit
+- `2026-09-08-reachability-burndown-s232-borrador-100-namespace-alias-withdrawal-audit` - `reachability-burndown` audit: `S232 Borrador 100 namespace alias withdrawal review`
 
 ### exec
 
@@ -532,6 +574,20 @@ Auto-generated index of all documents tagged with `#reachability-burndown`.
 - `2026-09-04-reachability-burndown-W05-P12-S216` - Delete the test-only CALCULATION_ROUTE_ID alias, then follow the exposed reachability edge through the wholly unreachable core route enum and test-only operator-surface calculation-workflow catalogue; remove both abandoned modules, their synthetic/identity-census tests, and stale package documentation while retaining the live staged resolver ownership and real CLI calculation paths.
 - `2026-09-04-reachability-burndown-W05-P12-S217` - Delete the non-material reflective source-resolver enrollment test module instead of repairing its hand-maintained package census, qualified-name classifications, and pinned discovery counts; retain the production calculation-route validator for executable membership, unique resolver/source ownership and stage identity, with exact reachability as the dormant-resolver detector.
 - `2026-09-04-reachability-burndown-W05-P12-S218` - Delete the orphaned custody retryable-code declaration census and its hand-maintained owned-package fragments, retryable-code-to-prose map, and stale-entry checks; retain retryability decisions with their authoritative error registrations and the type/AST-derived handler-flattening gate with planted detector teeth.
+- `2026-09-04-reachability-burndown-W05-P12-S219` - Route concurrent custody-change subclasses ahead of record-integrity parents at the adapter and profile-repository boundaries, preserving retryable concurrency as port/transaction conflicts and translating permanent record corruption to the non-retryable transaction-corrupt owner; prove the type/AST-derived flattening gate returns clean.
+- `2026-09-04-reachability-burndown-W05-P12-S220` - Delete the test-only compatibility-lifecycle production module and its dormant pre-release/released regime, frozen-floor placeholders, persisted-format classification inventory, and synthetic policy tests; remove dependent enrollment assertions that merely census those declarations, preserve concrete schema-version refusal and real read/upgrade behavior at owning storage modules, and amend the accepted durability decisions and obsolete flip reference that prescribed the withdrawn metastate.
+- `2026-09-04-reachability-burndown-W05-P12-S221` - Delete the empty test-driven secure-object upgrader registry, its register/deregister and chain-projection APIs, the orphaned synthetic repository upgrade test, and synthetic chain tests; simplify the live row boundary to exact-current schema validation and direct decrypted-payload return while retaining future/older refusal ordering, current writes, inner-envelope version/classification checks, and real repository roundtrips.
+- `2026-09-04-reachability-burndown-W05-P12-S222` - Delete the development/test-only registry snapshot-coordinate production module, its unused RegistrySnapshotId alias and facade exports, and the orphaned helper/census test; construct the report-only four-coordinate string at the development parity and test-scenario owners without preserving a shipped canonicalization seam or named emitter inventory, and correct the stale identifier reference.
+- `2026-09-04-reachability-burndown-W05-P12-S223` - Delete the unused contradictory ProfileName production alias and its orphaned validator-only test; retain the live canonical ProfileLabel and profile schema-version owner, and correct test commentary to name the actual live profile-label contract without preserving the dead alias or its obsolete bound.
+- `2026-09-04-reachability-burndown-W05-P12-S224` - Delete the duplicate overview verb-roster census and its command_spec_nodes dependency from the explain integration suite, retaining the canonical CommandSpec exact-set gate and every real CLI explain behavior test so the orphan walker follows the live CLI runner support edge instead of mistaking a material suite for a test of one unused projection.
+- `2026-09-04-reachability-burndown-W05-P12-S225` - Make the reachability audit derive every shipped python -m surface from either __main__.py or an exact top-level __name__ == '__main__' guard, with negative controls for prose and nested comparisons; thereby recognize the accepted Windows inherited-HANDLE bootstrap as a product root and retain its security-critical subprocess matrix instead of classifying or deleting it as orphaned.
+- `2026-09-04-reachability-burndown-W05-P12-S226` - Withdraw the wholly unreachable contabilidad prototype package, its three dormant error registrations, and all four synthetic model suites; preserve the accepted Modelo 200 base-determination chain at the live registry/calculation owner, which neither names nor consumes these speculative PGC, correction, direction, or trial-balance representations.
+- `2026-09-04-reachability-burndown-W05-P12-S227` - Withdraw the wholly unreachable Impuesto sobre Sociedades compensation prototype, its two dormant error registrations, and its synthetic per-cohort model suite; preserve the accepted Modelo 200 BIN carry and total-continuity mechanisms at their live registry, binding, and verification owners, which neither name nor consume the redundant cohort representation.
+- `2026-09-04-reachability-burndown-W05-P12-S228` - Delete the zero-consumer unapprove_draft writer and the two documentation claims that publish it as a supported review transition; preserve approval invalidation and the accepted immutable-revision recovery rule, where recovery creates an explicit successor rather than clearing approval metadata in place.
+- `2026-09-04-reachability-burndown-W05-P12-S229` - Delete the unused slim InvoiceListRow projection, its two zero-consumer catalogue row builders, and the two self-tests that only preserve them; retain the canonical rich Invoice aggregate, the live ledger.invoice.list payload, and the production-used repository link-consistency query and its real storage-boundary test.
+- `2026-09-04-reachability-burndown-W05-P12-S230` - Delete the unused LlmReviewRequest envelope, its export and self-only constructor tests, and documentation claiming it is part of the live typed spine; retain the directly consumed invocation-origin and decision enums and the execute_reviewed_decision workflow that every CLI caller actually uses.
+- `2026-09-04-reachability-burndown-W05-P12-S231` - Delete the unreachable review-kind reservation metastate: remove the test-only reserved-token map and accessor, dedicated ReviewKindReservedError, central error registration, and self-only registry/operator probes; retain the live source-kind selector and its generic fail-closed unknown-token refusal.
+- `2026-09-04-reachability-burndown-W05-P12-S232` - Delete the test-only BORRADOR_100_SNAPSHOT_NAMESPACE string alias and export from the live Modelo 100 snapshot service; make the retained secure-storage boundary tests read the canonical LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE definition directly while preserving encrypted namespace, schema-version, and lifecycle behavior.
 
 ### plan
 

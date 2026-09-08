@@ -163,7 +163,7 @@ STORAGE_PATH_DEFINITIONS: Final[tuple[StoragePathDefinition, ...]] = (
         # used only before any profile bucket exists. Every profile-bound
         # write refuses this route (StorageRouteKind.ROOT_FALLBACK_DATABASE),
         # so no real taxpayer content ever lands here; it is a placeholder URL,
-        # classified REGENERABLE in PERSISTED_FORMATS accordingly.
+        # treated as disposable operational state accordingly.
         key="root_fallback_database",
         kind=StoragePathKind.FILE,
         grammar=f"<root>/{ROOT_FALLBACK_DATABASE_FILENAME}",

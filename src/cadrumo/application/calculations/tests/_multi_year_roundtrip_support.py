@@ -56,7 +56,8 @@ def assert_two_ejercicio_round_trip(
                     obs_n,
                     source_kind="app_filing",
                     captured_at=clock_n,
-                stamped_revision_id=revision_id_for_observation(obs_n))
+                    stamped_revision_id=revision_id_for_observation(obs_n),
+                )
             )
             loaded_n = _find_modelo_observation(
                 repository,
@@ -80,7 +81,8 @@ def assert_two_ejercicio_round_trip(
                     obs_n_plus_1,
                     source_kind="app_filing",
                     captured_at=clock_n_plus_1,
-                stamped_revision_id=revision_id_for_observation(obs_n_plus_1))
+                    stamped_revision_id=revision_id_for_observation(obs_n_plus_1),
+                )
             )
             loaded_n_plus_1 = _find_modelo_observation(
                 repository,

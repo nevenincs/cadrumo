@@ -90,6 +90,7 @@ def register_language_resolver() -> None:
     """
     register_profile_language_resolver(resolve_active_profile_output_language)
 
+
 def mirror_profile_output_language_hint(bucket_id: str, language: str | None) -> None:
     """Mirror a profile's language preference into its non-secret bucket hint.
 
@@ -123,4 +124,3 @@ def mirror_profile_output_language_hint(bucket_id: str, language: str | None) ->
         )
     except Exception:
         _logger.debug("could not mirror the output-language hint", exc_info=True)
-

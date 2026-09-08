@@ -2,10 +2,8 @@
 
 This module keeps the encrypted row decode path close to the SQL
 secure-object adapter without leaving the algorithm embedded in the
-repository class. It validates row classification and the schema-lineage
-ceiling before decrypting (a version above the consumer's current version is
-refused; an older version decrypts under its written version and is
-chain-upgraded to current), and refuses rows whose revision hashes no longer
+repository class. It validates row classification and exact schema identity
+before decrypting, and refuses rows whose revision hashes no longer
 match their stored metadata. Revision lineage is derived and stamped by the
 repository's write funnel inside the same statement that persists the
 ciphertext.
@@ -46,7 +44,6 @@ from ..errors import ClassificationError, DecryptionError, EnvelopeVersionError,
 from ..schema_lineage import (
     ensure_schema_version_readable,
     inner_envelope_classification_is_expected,
-    upgrade_secure_object_payload,
 )
 from ..secure_object_namespaces import SecureObjectNamespaceDefinition
 from . import orm as _orm
@@ -104,7 +101,7 @@ def decode_secure_object_row(
     2. the stored schema version is readable, and registered for the namespace
     3. revision lineage is self-consistent
     4. the AEAD opens
-    5. a below-current payload is chain-upgraded
+    5. the current-version plaintext is returned
 
     Step 3 runs before step 4 on purpose: a row whose stored lineage metadata
     already contradicts itself is refused without spending an AEAD open on it.
@@ -124,8 +121,7 @@ def decode_secure_object_row(
         classification_str: The classification exactly as stored. Parsed in
             step 1 and matched against ``expected_class``.
         schema_version: The payload schema version as stored. Checked for
-            readability and namespace registration in step 2, and drives the
-            chain upgrade in step 5.
+            exact readability and namespace registration in step 2.
         written_at: The row's stored write timestamp, carried onto the decoded
             record.
         payload_wire: The stored wire bytes -- the sealed envelope the AEAD
@@ -142,8 +138,7 @@ def decode_secure_object_row(
         expected_class: The :class:`SensitivityClass` this namespace declares;
             the stored row's own classification must match it exactly.
         max_supported_version: The highest schema version this reader can
-            handle. A row above it is refused rather than guessed at; a row
-            below it is chain-upgraded.
+            handle. A row on either side is refused rather than guessed at.
         namespace_definition: The namespace's registered definition, or
             ``None`` when the namespace is unregistered.
         enforce_registered_row_schema: The namespace-registration check
@@ -154,8 +149,8 @@ def decode_secure_object_row(
     Raises:
         ClassificationError: Unknown classification, or one that does not match
             the namespace's expected class.
-        EnvelopeVersionError: Schema version unreadable, unregistered for the
-            namespace, or an upgrade hop failure.
+        EnvelopeVersionError: Schema version unreadable or unregistered for the
+            namespace.
         SecureObjectUnreadableError: Revision lineage self-consistency failed,
             which includes a row carrying no revision metadata at all.
         DecryptionError: The AEAD did not open.
@@ -210,13 +205,6 @@ def decode_secure_object_row(
         payload_wire,
         associated_data=secure_object_payload_aad(namespace, object_key, schema_version),
     )
-    if schema_version < max_supported_version:
-        payload_plain = upgrade_secure_object_payload(
-            payload_plain,
-            namespace=namespace,
-            from_version=schema_version,
-            to_version=max_supported_version,
-        )
     return SecureObjectRecord(
         namespace=namespace,
         object_key=object_key,

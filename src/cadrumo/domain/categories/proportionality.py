@@ -454,6 +454,122 @@ class StatutoryCapAmount(_ProportionalityStrictFrozenModel):
         return self
 
 
+def _statutory_cap_mode_flags(rule: ProportionalityRule) -> tuple[bool, bool, bool, bool]:
+    """Return the daily, generic, variant, and scheduled cap-mode flags."""
+    has_daily_cap = rule.statutory_cap_eur_per_day is not None
+    has_scheduled_cap = bool(rule.statutory_cap_schedule)
+    has_variant_caps = bool(rule.statutory_cap_variants)
+    # A bare period is only a cap MODE of its own when nothing else claims it.
+    # A dated schedule and an annual variant set both legitimately declare the
+    # period the per-person amount applies over, and counting that as a second
+    # mode would refuse two shapes the law actually uses.
+    has_generic_cap = rule.statutory_cap_eur is not None or (
+        rule.statutory_cap_period is not None and not has_scheduled_cap and not has_variant_caps
+    )
+    return has_daily_cap, has_generic_cap, has_variant_caps, has_scheduled_cap
+
+
+def _require_one_statutory_cap_mode(
+    *,
+    has_daily_cap: bool,
+    has_generic_cap: bool,
+    has_variant_caps: bool,
+    has_scheduled_cap: bool,
+) -> None:
+    """Require a statutory-cap rule to declare at least one cap mode."""
+    if not any((has_daily_cap, has_generic_cap, has_variant_caps, has_scheduled_cap)):
+        raise CategoryValidationError("statutory_cap rules require a cap amount")
+
+
+def _reject_mixed_statutory_cap_modes(
+    *,
+    has_daily_cap: bool,
+    has_generic_cap: bool,
+    has_variant_caps: bool,
+    has_scheduled_cap: bool,
+) -> None:
+    """Reject a statutory-cap rule that declares more than one cap mode."""
+    mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps, has_scheduled_cap))
+    if mode_count > 1:
+        raise CategoryValidationError("statutory cap rules must use one cap mode")
+
+
+def _validate_scheduled_statutory_cap(rule: ProportionalityRule) -> None:
+    """Require a schedule period and refuse contradictory scheduled amounts."""
+    if rule.statutory_cap_period is None:
+        raise CategoryValidationError("statutory_cap_schedule requires statutory_cap_period")
+    _reject_contradictory_scheduled_caps(rule)
+
+
+def _reject_contradictory_scheduled_caps(rule: ProportionalityRule) -> None:
+    """Two different amounts covering one filing year is a contradiction.
+
+    Silently taking the first or the last would make the applied cap depend
+    on authoring order, which is the class of defect a dated schedule exists
+    to remove.
+    """
+    seen: dict[int, Decimal] = {}
+    for amount in rule.statutory_cap_schedule:
+        for year in amount.window.years():
+            if year in seen and seen[year] != amount.value:
+                raise CategoryValidationError(
+                    f"statutory_cap_schedule declares two different amounts for {year}: "
+                    f"{seen[year]} and {amount.value}",
+                )
+            seen[year] = amount.value
+
+
+def _validate_generic_statutory_cap(rule: ProportionalityRule) -> None:
+    """Require a generic statutory amount and its accounting period as a pair."""
+    if rule.statutory_cap_eur is None and rule.statutory_cap_period is not None:
+        raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")
+    if rule.statutory_cap_eur is not None and rule.statutory_cap_period is None:
+        raise CategoryValidationError("statutory_cap_eur requires statutory_cap_period")
+
+
+def _validate_statutory_cap_mode_shape(
+    rule: ProportionalityRule,
+    *,
+    has_variant_caps: bool,
+    has_scheduled_cap: bool,
+) -> None:
+    """Validate the fields specific to the selected statutory-cap mode."""
+    if has_scheduled_cap:
+        _validate_scheduled_statutory_cap(rule)
+    elif not has_variant_caps:
+        _validate_generic_statutory_cap(rule)
+
+
+def _reject_duplicate_statutory_cap_variant_ids(rule: ProportionalityRule) -> None:
+    """Reject duplicate identifiers inside a statutory-cap variant set."""
+    variant_ids = [variant.id for variant in rule.statutory_cap_variants]
+    if len(set(variant_ids)) != len(variant_ids):
+        raise CategoryValidationError("statutory cap variant ids must be unique")
+
+
+def _validate_statutory_cap_variant_units(rule: ProportionalityRule) -> None:
+    """Require all variants to use one unit and annual variants to name a period."""
+    if not rule.statutory_cap_variants:
+        return
+    units = {variant.is_per_day for variant in rule.statutory_cap_variants}
+    if len(units) > 1:
+        raise CategoryValidationError(
+            "statutory cap variants must agree on their unit; mixing a daily variant with "
+            "an annual one leaves the resolver to guess which the rule is capped in",
+        )
+    if not next(iter(units)) and rule.statutory_cap_period is None:
+        raise CategoryValidationError(
+            "annual statutory cap variants require statutory_cap_period, which is the "
+            "period the per-person amount applies over",
+        )
+
+
+def _validate_statutory_cap_variants(rule: ProportionalityRule) -> None:
+    """Validate identifiers and unit coherence for statutory-cap variants."""
+    _reject_duplicate_statutory_cap_variant_ids(rule)
+    _validate_statutory_cap_variant_units(rule)
+
+
 class ProportionalityRule(_ProportionalityStrictFrozenModel):
     """Deductibility and proportionality rule for one spending category.
 
@@ -541,66 +657,25 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
 
     def _validate_statutory_cap_invariants(self) -> None:
         """STATUTORY_CAP rules require exactly one cap mode and a coherent (eur, period) pair."""
-        has_daily_cap = self.statutory_cap_eur_per_day is not None
-        has_scheduled_cap = bool(self.statutory_cap_schedule)
-        has_variant_caps = bool(self.statutory_cap_variants)
-        # A bare period is only a cap MODE of its own when nothing else claims it.
-        # A dated schedule and an annual variant set both legitimately declare the
-        # period the per-person amount applies over, and counting that as a second
-        # mode would refuse two shapes the law actually uses.
-        has_generic_cap = self.statutory_cap_eur is not None or (
-            self.statutory_cap_period is not None and not has_scheduled_cap and not has_variant_caps
+        has_daily_cap, has_generic_cap, has_variant_caps, has_scheduled_cap = _statutory_cap_mode_flags(self)
+        _require_one_statutory_cap_mode(
+            has_daily_cap=has_daily_cap,
+            has_generic_cap=has_generic_cap,
+            has_variant_caps=has_variant_caps,
+            has_scheduled_cap=has_scheduled_cap,
         )
-        if not (has_daily_cap or has_generic_cap or has_variant_caps or has_scheduled_cap):
-            raise CategoryValidationError("statutory_cap rules require a cap amount")
-        mode_count = sum((has_daily_cap, has_generic_cap, has_variant_caps, has_scheduled_cap))
-        if mode_count > 1:
-            raise CategoryValidationError("statutory cap rules must use one cap mode")
-        if has_scheduled_cap:
-            if self.statutory_cap_period is None:
-                raise CategoryValidationError("statutory_cap_schedule requires statutory_cap_period")
-            self._reject_contradictory_scheduled_caps()
-        elif has_variant_caps:
-            # Annual variants already required the period above; a daily variant set
-            # needs none, and neither shape carries a flat statutory_cap_eur.
-            pass
-        else:
-            if self.statutory_cap_eur is None and self.statutory_cap_period is not None:
-                raise CategoryValidationError("statutory_cap_period requires statutory_cap_eur")
-            if self.statutory_cap_eur is not None and self.statutory_cap_period is None:
-                raise CategoryValidationError("statutory_cap_eur requires statutory_cap_period")
-        variant_ids = [variant.id for variant in self.statutory_cap_variants]
-        if len(set(variant_ids)) != len(variant_ids):
-            raise CategoryValidationError("statutory cap variant ids must be unique")
-        if self.statutory_cap_variants:
-            units = {variant.is_per_day for variant in self.statutory_cap_variants}
-            if len(units) > 1:
-                raise CategoryValidationError(
-                    "statutory cap variants must agree on their unit; mixing a daily variant with "
-                    "an annual one leaves the resolver to guess which the rule is capped in",
-                )
-            if not next(iter(units)) and self.statutory_cap_period is None:
-                raise CategoryValidationError(
-                    "annual statutory cap variants require statutory_cap_period, which is the "
-                    "period the per-person amount applies over",
-                )
-
-    def _reject_contradictory_scheduled_caps(self) -> None:
-        """Two different amounts covering one filing year is a contradiction.
-
-        Silently taking the first or the last would make the applied cap depend
-        on authoring order, which is the class of defect a dated schedule exists
-        to remove.
-        """
-        seen: dict[int, Decimal] = {}
-        for amount in self.statutory_cap_schedule:
-            for year in amount.window.years():
-                if year in seen and seen[year] != amount.value:
-                    raise CategoryValidationError(
-                        f"statutory_cap_schedule declares two different amounts for {year}: "
-                        f"{seen[year]} and {amount.value}",
-                    )
-                seen[year] = amount.value
+        _reject_mixed_statutory_cap_modes(
+            has_daily_cap=has_daily_cap,
+            has_generic_cap=has_generic_cap,
+            has_variant_caps=has_variant_caps,
+            has_scheduled_cap=has_scheduled_cap,
+        )
+        _validate_statutory_cap_mode_shape(
+            self,
+            has_variant_caps=has_variant_caps,
+            has_scheduled_cap=has_scheduled_cap,
+        )
+        _validate_statutory_cap_variants(self)
 
     def cap_amount_for_year(self, year: int) -> Decimal | None:
         """Return the statutory cap amount in force for ``year``.

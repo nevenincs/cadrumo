@@ -96,8 +96,7 @@ _SCREEN_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerInternalScreenFactoryV1]]
 }
 
 LEDGER_ROUTES: Final[tuple[LedgerRouteV1, ...]] = tuple(
-    LedgerRouteV1(destination, area, _SCREEN_BY_AREA[area])
-    for area, destination in LEDGER_DESTINATION_BY_AREA.items()
+    LedgerRouteV1(destination, area, _SCREEN_BY_AREA[area]) for area, destination in LEDGER_DESTINATION_BY_AREA.items()
 )
 _ROUTES_BY_ID: Final = {route.destination: route for route in LEDGER_ROUTES}
 

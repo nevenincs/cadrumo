@@ -593,6 +593,123 @@ def _validate_amendment_metadata(revision: CalculationRevision) -> None:
         )
 
 
+def _validate_secure_revision_context(
+    revision: CalculationRevision,
+    validation_context: Mapping[str, object] | None,
+) -> None:
+    if (
+        validation_context is not None
+        and validation_context.get("secure_calculation_revision") is True
+        and not {"row_source_identities", "row_casilla_values", "row_casilla_provenance"}.issubset(
+            revision.model_fields_set,
+        )
+    ):
+        raise ModeloValidationError("secure calculation revision is missing required row materialization fields")
+
+
+def _validate_source_provenance(revision: CalculationRevision) -> None:
+    primary_refs = tuple(
+        row.source_ref for row in revision.source_provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY
+    )
+    if len(primary_refs) != len(set(primary_refs)):
+        raise ModeloValidationError("source provenance primary reference is ambiguous")
+    primary_ref_set = frozenset(primary_refs)
+    if any(
+        row.parent_source_ref not in primary_ref_set
+        for row in revision.source_provenance
+        if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
+    ):
+        raise ModeloValidationError("source provenance contributor parent does not resolve to a primary")
+
+
+def _source_decimal_for_row_casilla(
+    revision: CalculationRevision,
+    provenance: DirectRowMaterializationProvenance,
+) -> Decimal | None:
+    source_value = revision.row_binding_values.get(provenance.source_binding_id, {}).get(
+        str(provenance.source_row_index),
+    )
+    try:
+        return Decimal(source_value) if source_value is not None else None
+    except Exception as exc:
+        raise ModeloValidationError("row casilla provenance source value is not decimal") from exc
+
+
+def _validate_row_casilla_coordinate(
+    revision: CalculationRevision,
+    key: RowCasillaKey,
+    provenance: DirectRowMaterializationProvenance,
+    source_coordinates: set[RowBindingKey],
+) -> None:
+    if key[1] != provenance.source_row_index:
+        raise ModeloValidationError("row casilla index must match its direct source row index")
+    source_key = (provenance.source_binding_id, provenance.source_row_index)
+    if source_key in source_coordinates:
+        raise ModeloValidationError("one source row cannot materialize more than one row casilla")
+    source_coordinates.add(source_key)
+    source_identity = revision.row_source_identities.get(source_key)
+    if source_identity is None:
+        raise ModeloValidationError("row casilla provenance source coordinate has no row source identity")
+    if source_identity != provenance.source_identity:
+        raise ModeloValidationError("row casilla provenance source identity does not match its source row")
+    source_decimal = _source_decimal_for_row_casilla(revision, provenance)
+    if source_decimal != revision.row_casilla_values[key]:
+        raise ModeloValidationError("row casilla value does not match its source row value")
+
+
+def _validate_row_materialization(revision: CalculationRevision) -> None:
+    row_value_keys = {
+        (binding_id, int(row_index)) for binding_id, rows in revision.row_binding_values.items() for row_index in rows
+    }
+    if not set(revision.row_source_identities).issubset(row_value_keys):
+        raise ModeloValidationError("row source identity coordinate has no row binding value")
+    if set(revision.row_casilla_values) != set(revision.row_casilla_provenance):
+        raise ModeloValidationError("row casilla values and provenance must have exactly matching coordinates")
+    source_coordinates: set[RowBindingKey] = set()
+    for key, provenance in revision.row_casilla_provenance.items():
+        _validate_row_casilla_coordinate(revision, key, provenance, source_coordinates)
+
+
+def _validate_lifecycle_order(revision: CalculationRevision) -> None:
+    if revision.updated_at < revision.created_at:
+        raise ModeloValidationError(
+            f"updated_at {revision.updated_at.isoformat()} precedes created_at {revision.created_at.isoformat()}",
+        )
+
+
+def _aggregate_context_from_validation_context(
+    validation_context: Mapping[str, object] | None,
+) -> object:
+    if validation_context is None:
+        return None
+    typed_context = TypeAdapter(dict[str, object]).validate_python(validation_context)
+    from .calculation_revision_aggregate import CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY
+
+    return typed_context.get(CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY)
+
+
+def _validate_rectificativa_aggregate_context(
+    revision: CalculationRevision,
+    validation_context: Mapping[str, object] | None,
+) -> None:
+    if (
+        revision.amendment_identity is None
+        or revision.amendment_identity.kind is not CalculationRevisionAmendmentKind.RECTIFICATIVA
+    ):
+        return
+    from .calculation_revision_aggregate import (
+        CalculationRevisionAggregateContext,
+        validate_calculation_revision_aggregate,
+    )
+
+    raw_context = _aggregate_context_from_validation_context(validation_context)
+    if not isinstance(raw_context, CalculationRevisionAggregateContext):
+        raise ModeloValidationError(
+            "rectificativa calculation revision requires context-bound aggregate validation",
+        )
+    validate_calculation_revision_aggregate(revision, context=raw_context)
+
+
 class CalculationRevision(BaseModel):
     """One calculation attempt attached to a work unit.
 
@@ -791,85 +908,18 @@ class CalculationRevision(BaseModel):
     @model_validator(mode="after")
     def _enforce_invariants(self, info: ValidationInfo) -> CalculationRevision:
         validation_context = _string_keyed_context(info.context)
-        if (
-            validation_context is not None
-            and validation_context.get("secure_calculation_revision") is True
-            and not {"row_source_identities", "row_casilla_values", "row_casilla_provenance"}.issubset(
-                self.model_fields_set
-            )
-        ):
-            raise ModeloValidationError("secure calculation revision is missing required row materialization fields")
-        primary_refs = tuple(
-            row.source_ref for row in self.source_provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY
-        )
-        if len(primary_refs) != len(set(primary_refs)):
-            raise ModeloValidationError("source provenance primary reference is ambiguous")
-        primary_ref_set = frozenset(primary_refs)
-        if any(
-            row.parent_source_ref not in primary_ref_set
-            for row in self.source_provenance
-            if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
-        ):
-            raise ModeloValidationError("source provenance contributor parent does not resolve to a primary")
+        _validate_secure_revision_context(self, validation_context)
+        _validate_source_provenance(self)
         derived = derive_calculation_revision_id_from_revision(self)
         _validate_revision_identity(self, derived)
         _validate_annual_summary_handoff_target(self)
         _validate_replay_channels(self)
-        row_value_keys = {
-            (binding_id, int(row_index)) for binding_id, rows in self.row_binding_values.items() for row_index in rows
-        }
-        if not set(self.row_source_identities).issubset(row_value_keys):
-            raise ModeloValidationError("row source identity coordinate has no row binding value")
-        if set(self.row_casilla_values) != set(self.row_casilla_provenance):
-            raise ModeloValidationError("row casilla values and provenance must have exactly matching coordinates")
-        source_coordinates: set[RowBindingKey] = set()
-        for key, provenance in self.row_casilla_provenance.items():
-            if key[1] != provenance.source_row_index:
-                raise ModeloValidationError("row casilla index must match its direct source row index")
-            source_key = (provenance.source_binding_id, provenance.source_row_index)
-            if source_key in source_coordinates:
-                raise ModeloValidationError("one source row cannot materialize more than one row casilla")
-            source_coordinates.add(source_key)
-            source_identity = self.row_source_identities.get(source_key)
-            if source_identity is None:
-                raise ModeloValidationError("row casilla provenance source coordinate has no row source identity")
-            if source_identity != provenance.source_identity:
-                raise ModeloValidationError("row casilla provenance source identity does not match its source row")
-            source_value = self.row_binding_values.get(provenance.source_binding_id, {}).get(
-                str(provenance.source_row_index)
-            )
-            try:
-                source_decimal = Decimal(source_value) if source_value is not None else None
-            except Exception as exc:
-                raise ModeloValidationError("row casilla provenance source value is not decimal") from exc
-            if source_decimal != self.row_casilla_values[key]:
-                raise ModeloValidationError("row casilla value does not match its source row value")
+        _validate_row_materialization(self)
         _validate_observation_projection(self)
-        if self.updated_at < self.created_at:
-            raise ModeloValidationError(
-                f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}",
-            )
+        _validate_lifecycle_order(self)
         _validate_state_metadata(self)
         _validate_amendment_metadata(self)
-        if (
-            self.amendment_identity is not None
-            and self.amendment_identity.kind is CalculationRevisionAmendmentKind.RECTIFICATIVA
-        ):
-            from .calculation_revision_aggregate import (
-                CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY,
-                CalculationRevisionAggregateContext,
-                validate_calculation_revision_aggregate,
-            )
-
-            raw_context: object = None
-            if isinstance(validation_context, Mapping):
-                typed_context = TypeAdapter(dict[str, object]).validate_python(validation_context)
-                raw_context = typed_context.get(CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY)
-            if not isinstance(raw_context, CalculationRevisionAggregateContext):
-                raise ModeloValidationError(
-                    "rectificativa calculation revision requires context-bound aggregate validation",
-                )
-            validate_calculation_revision_aggregate(self, context=raw_context)
+        _validate_rectificativa_aggregate_context(self, validation_context)
         return self
 
     @field_validator("source_transaction_ids", mode="before")

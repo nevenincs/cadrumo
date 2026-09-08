@@ -149,6 +149,8 @@ def _load_wordlist() -> tuple[str, ...]:
 
 
 _WORDLIST: Final[tuple[str, ...]] = _load_wordlist()
+
+
 def encode_mnemonic(entropy: Buffer) -> str:
     """Encode 32 bytes of entropy as a 24-word BIP-39 English mnemonic.
 

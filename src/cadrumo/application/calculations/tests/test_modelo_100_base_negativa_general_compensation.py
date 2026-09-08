@@ -128,12 +128,15 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
-                modelo=_MODELO,
-                filing_year=_FILING_YEAR - 1,
-                period=_PERIOD,
-                casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
-            )))
+            stamped_revision_id=revision_id_for_observation(
+                registry_grounded_modelo_observation(
+                    modelo=_MODELO,
+                    filing_year=_FILING_YEAR - 1,
+                    period=_PERIOD,
+                    casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
+                )
+            ),
+        )
     )
 
 

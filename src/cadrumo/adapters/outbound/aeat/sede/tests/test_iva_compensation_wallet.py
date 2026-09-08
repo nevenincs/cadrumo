@@ -766,9 +766,7 @@ def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
     URL. Centralisation is the property worth holding; the number was never
     part of it.
     """
-    assert (
-        f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
-    ) == WALLET_URL
+    assert (f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}") == WALLET_URL
     assert (
         f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.pre303.presentation_service_path}"
     ) == PRE303_PRESENTATION_SERVICE_URL

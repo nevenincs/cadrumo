@@ -424,6 +424,7 @@ MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1 = _declared_contract(
     projection_type=ModeloWorkspaceFieldManifestV1,
 )
 
+
 class ModeloWorkspaceRegistryPortV1:
     """Application-owned port realization delegating to the registry authority."""
 

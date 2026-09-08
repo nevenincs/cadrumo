@@ -524,4 +524,3 @@ def test_defining_module_has_no_io_adapter_entrypoint_or_network_import() -> Non
     )
     calls = {node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)}
     assert calls.isdisjoint({"open", "print", "input"})
-

@@ -77,33 +77,3 @@ def _safe_token_display(raw_token: str, *, flag: str) -> str:
     if key is None:
         return "<redacted>"
     return f"{key}=<redacted>"
-
-
-class ReviewKindReservedError(ReviewError):
-    """Raised when the CLI receives a reserved kind token.
-
-    Carries the blocking reason returned by
-    :func:`cadrumo.application.review.enums.reserved_kind_reason`.
-
-    Attributes:
-        token: The ``--kind`` value supplied by the user.
-            Stored as an internal diagnostic attribute, but omitted from rendered
-            messages and structured context because selector values are
-            operator input and may contain copied identifiers.
-        reason: Explanation naming the blocking upstream record type.
-    """
-
-    def __init__(self, token: str, reason: str) -> None:
-        """Construct the error with the offending token and its blocking reason.
-
-        Args:
-            token: The ``--kind`` value supplied by the user.
-            reason: Human-readable explanation naming the blocking
-                upstream record type.
-        """
-        super().__init__(
-            context={"reason": reason},
-            translated_message="review.operator.errors.reserved_kind",
-        )
-        self.token = token
-        self.reason = reason

@@ -11,8 +11,7 @@ application layer should not know or own.
 
 This module defines the typed spine that removes that default: a mandatory
 :class:`LlmReviewInvocationOrigin` (the operator intent), the
-:class:`LlmReviewDecision` terminals, and the :class:`LlmReviewRequest`
-envelope. The canonical CLI ``source_command`` spelling is *derived* from the
+:class:`LlmReviewDecision` terminals. The canonical CLI ``source_command`` spelling is *derived* from the
 origin (:attr:`LlmReviewInvocationOrigin.source_command`), never defaulted in an
 application function signature — so a caller must always name its origin and the
 audit label follows from it. ``classify --auto-split`` and ``split --llm`` share
@@ -31,7 +30,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core.config import Settings, load_settings
-from ...core.identity import BucketId, TransactionId
+from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -111,32 +110,6 @@ class LlmReviewDecision(StrEnum):
     REJECT = "reject"
     SPLIT = "split"
     NO_SPLIT = "no_split"
-
-
-class LlmReviewRequest(BaseModel):
-    """One typed ledger LLM review invocation.
-
-    Carries the mandatory :class:`LlmReviewInvocationOrigin` (there is no
-    default), the target transaction, the operator identity, and the decision
-    terminal. The durable ``source_command`` audit label is read from
-    ``invocation_origin.source_command`` when the workflow delegates to a ledger
-    persistence primitive, so provenance is always operator-named, never an
-    application-layer default.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    invocation_origin: LlmReviewInvocationOrigin
-    decision: LlmReviewDecision
-    bucket_id: BucketId
-    transaction_id: TransactionId
-    actor: str = Field(default="operator", min_length=1)
-    reason: str = ""
-
-    @property
-    def source_command(self) -> str:
-        """Derived audit label for the durable event, from the invocation origin."""
-        return self.invocation_origin.source_command
 
 
 class ReviewedInvoiceDraft(BaseModel):
@@ -342,7 +315,6 @@ def execute_reviewed_decision(
 __all__ = [
     "LlmReviewDecision",
     "LlmReviewInvocationOrigin",
-    "LlmReviewRequest",
     "LlmReviewResult",
     "ReviewedSuggestion",
     "execute_reviewed_decision",

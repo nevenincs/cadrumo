@@ -845,13 +845,17 @@ class OperationRegistry(BaseModel):
 
     def resolve_request_json(self, raw: str | bytes) -> OperationRequest[BaseModel]:
         """Hydrate one request through the concrete model registered for its definition."""
-        header = _OperationRequestResolutionHeader.model_validate_json(raw)
+        # The header selects the concrete model; that model below still validates
+        # the complete object, including every field ignored by this first pass.
+        header = _OperationRequestResolutionHeader.model_validate_json(raw, extra="ignore")
         request_type = self.lookup(header.definition_id).request_type
         return _specialize_request_model(request_type).model_validate_json(raw)
 
     def resolve_snapshot_json(self, raw: str | bytes) -> OperationSnapshot[BaseModel]:
         """Hydrate one snapshot through the concrete model registered for its definition."""
-        header = _OperationSnapshotResolutionHeader.model_validate_json(raw)
+        # The header selects the concrete model; that model below still validates
+        # the complete object, including every field ignored by this first pass.
+        header = _OperationSnapshotResolutionHeader.model_validate_json(raw, extra="ignore")
         request_type = self.lookup(header.identity.definition_id).request_type
         return _specialize_snapshot_model(request_type).model_validate_json(raw)
 
@@ -958,21 +962,42 @@ def _strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
 
 def _validate_closed_json_schema(schema: dict[str, object], *, path: str) -> None:
     """Refuse every untyped or open branch of one generated public schema."""
-    if schema.get("format") in _FORBIDDEN_OPERATION_SCHEMA_FORMATS or schema.get("writeOnly") is True:
-        raise ValueError(f"public operation schema {path} contains a secret-capable branch")
-    definitions = schema.get("$defs")
-    if isinstance(definitions, dict):
-        for definition_name, definition in cast(dict[str, object], definitions).items():
-            if not isinstance(definition, dict):
-                raise ValueError(f"public operation schema {path} has an invalid definition")
-            _validate_closed_json_schema(
-                cast(dict[str, object], definition),
-                path=f"{path}.$defs.{definition_name}",
-            )
+    _reject_secret_capable_schema_branch(schema, path=path)
+    _validate_schema_definitions(schema, path=path)
     if schema.get("patternProperties") is not None:
         raise ValueError(f"public operation schema {path} contains a pattern-properties payload bag")
     if "$ref" in schema or "enum" in schema or "const" in schema:
         return
+    if _validate_schema_combinator(schema, path=path):
+        return
+    schema_type = schema.get("type")
+    if not isinstance(schema_type, str):
+        raise ValueError(f"public operation schema {path} contains an untyped branch")
+    if schema_type == "object":
+        _validate_closed_object_schema(schema, path=path)
+    elif schema_type == "array":
+        _validate_closed_array_schema(schema, path=path)
+
+
+def _reject_secret_capable_schema_branch(schema: dict[str, object], *, path: str) -> None:
+    if schema.get("format") in _FORBIDDEN_OPERATION_SCHEMA_FORMATS or schema.get("writeOnly") is True:
+        raise ValueError(f"public operation schema {path} contains a secret-capable branch")
+
+
+def _validate_schema_definitions(schema: dict[str, object], *, path: str) -> None:
+    definitions = schema.get("$defs")
+    if not isinstance(definitions, dict):
+        return
+    for definition_name, definition in cast(dict[str, object], definitions).items():
+        if not isinstance(definition, dict):
+            raise ValueError(f"public operation schema {path} has an invalid definition")
+        _validate_closed_json_schema(
+            cast(dict[str, object], definition),
+            path=f"{path}.$defs.{definition_name}",
+        )
+
+
+def _validate_schema_combinator(schema: dict[str, object], *, path: str) -> bool:
     for combinator in ("anyOf", "oneOf", "allOf"):
         branches = schema.get(combinator)
         if branches is None:
@@ -986,47 +1011,58 @@ def _validate_closed_json_schema(schema: dict[str, object], *, path: str) -> Non
                 cast(dict[str, object], branch),
                 path=f"{path}.{combinator}[{index}]",
             )
+        return True
+    return False
+
+
+def _validate_closed_object_schema(schema: dict[str, object], *, path: str) -> None:
+    if schema.get("additionalProperties") is not False:
+        raise ValueError(f"public operation schema {path} contains an open object branch")
+    properties = schema.get("properties", {})
+    if not isinstance(properties, dict):
+        raise ValueError(f"public operation schema {path} has invalid properties")
+    for field_name, field_schema in cast(dict[str, object], properties).items():
+        if not isinstance(field_schema, dict):
+            raise ValueError(f"public operation schema {path}.{field_name} is invalid")
+        _validate_closed_json_schema(
+            cast(dict[str, object], field_schema),
+            path=f"{path}.{field_name}",
+        )
+
+
+def _validate_closed_array_schema(schema: dict[str, object], *, path: str) -> None:
+    prefix_items = schema.get("prefixItems")
+    if prefix_items is not None:
+        _validate_closed_tuple_schema(schema, prefix_items, path=path)
         return
-    schema_type = schema.get("type")
-    if not isinstance(schema_type, str):
-        raise ValueError(f"public operation schema {path} contains an untyped branch")
-    if schema_type == "object":
-        if schema.get("additionalProperties") is not False:
-            raise ValueError(f"public operation schema {path} contains an open object branch")
-        properties = schema.get("properties", {})
-        if not isinstance(properties, dict):
-            raise ValueError(f"public operation schema {path} has invalid properties")
-        for field_name, field_schema in cast(dict[str, object], properties).items():
-            if not isinstance(field_schema, dict):
-                raise ValueError(f"public operation schema {path}.{field_name} is invalid")
-            _validate_closed_json_schema(
-                cast(dict[str, object], field_schema),
-                path=f"{path}.{field_name}",
-            )
-    elif schema_type == "array":
-        prefix_items = schema.get("prefixItems")
-        if prefix_items is not None:
-            if not isinstance(prefix_items, list) or not prefix_items:
-                raise ValueError(f"public operation schema {path} has invalid fixed tuple items")
-            typed_prefix_items = cast(list[object], prefix_items)
-            item_count = len(typed_prefix_items)
-            if schema.get("minItems") != item_count or schema.get("maxItems") != item_count:
-                raise ValueError(f"public operation schema {path} contains an open fixed tuple")
-            trailing_items = schema.get("items")
-            if trailing_items is not None and trailing_items is not False:
-                raise ValueError(f"public operation schema {path} permits undeclared trailing tuple items")
-            for index, item in enumerate(typed_prefix_items):
-                if not isinstance(item, dict):
-                    raise ValueError(f"public operation schema {path} has an invalid fixed tuple item")
-                _validate_closed_json_schema(
-                    cast(dict[str, object], item),
-                    path=f"{path}.prefixItems[{index}]",
-                )
-            return
-        items = schema.get("items")
-        if not isinstance(items, dict):
-            raise ValueError(f"public operation schema {path} contains an untyped array")
-        _validate_closed_json_schema(cast(dict[str, object], items), path=f"{path}.items")
+    items = schema.get("items")
+    if not isinstance(items, dict):
+        raise ValueError(f"public operation schema {path} contains an untyped array")
+    _validate_closed_json_schema(cast(dict[str, object], items), path=f"{path}.items")
+
+
+def _validate_closed_tuple_schema(
+    schema: dict[str, object],
+    prefix_items: object,
+    *,
+    path: str,
+) -> None:
+    if not isinstance(prefix_items, list) or not prefix_items:
+        raise ValueError(f"public operation schema {path} has invalid fixed tuple items")
+    typed_prefix_items = cast(list[object], prefix_items)
+    item_count = len(typed_prefix_items)
+    if schema.get("minItems") != item_count or schema.get("maxItems") != item_count:
+        raise ValueError(f"public operation schema {path} contains an open fixed tuple")
+    trailing_items = schema.get("items")
+    if trailing_items is not None and trailing_items is not False:
+        raise ValueError(f"public operation schema {path} permits undeclared trailing tuple items")
+    for index, item in enumerate(typed_prefix_items):
+        if not isinstance(item, dict):
+            raise ValueError(f"public operation schema {path} has an invalid fixed tuple item")
+        _validate_closed_json_schema(
+            cast(dict[str, object], item),
+            path=f"{path}.prefixItems[{index}]",
+        )
 
 
 def _definition_contract_digest(contract: OperationPublicDefinitionContractV1) -> ContentDigest:

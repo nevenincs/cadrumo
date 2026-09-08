@@ -224,7 +224,10 @@ def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(tmp_path: Path) -> No
                 _131_observation(filing_year=_YEAR_N, period="1T", result=q1),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(_131_observation(filing_year=_YEAR_N, period="1T", result=q1)))
+                stamped_revision_id=revision_id_for_observation(
+                    _131_observation(filing_year=_YEAR_N, period="1T", result=q1)
+                ),
+            )
         )
         q2_snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N, period="2T")
         report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo)

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:d04cbceec6634ccf315c62de105c97edf59069c61ba08d285ef130c1cd71e6ba'
+body_hash: 'sha256:cc3ce959bccb9ecc8acde92433ab4cce7c05bde3831a87e6d399ca7217db4f81'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -101,6 +101,34 @@ A generated production aggregate of otherwise-live contracts is development meta
 A test is not valuable merely because it checks a detailed synthetic contract. When an exact finding's removal exposes the contract's defining module as wholly unreachable and every remaining consumer is its own test suite, follow that reachability edge before closing the Step. Delete the abandoned production model, its synthetic fixtures, identity/export censuses, and orphaned primitive together unless a real product boundary owns the behavior. Remeasure after the first edit: a newly unreachable module is evidence that the initial symbol was only the outermost layer of the same dead slice, not a reason to preserve the layer or repair its tests.
 
 A reflective test that scans a hand-maintained package list, converts live types into qualified-name strings, and compares them with an enrolled/classified name census is not a second safety authority when the production composition already validates typed membership and the exact reachability detector already reports dormant implementations. Delete the reflective gate rather than updating its module list, disposition map, or pinned counts. Keep production validation over the actual typed route and behavioral tests that execute representative resolvers; those fail on real composition defects without encoding development classifications or duplicate code identities.
+
+A dormant release-regime switch, future floor mapping, or persisted-format classification table is development lifecycle state when no production path consumes it and its only consumers are synthetic predicates or inventory tests. Delete that production metastate and its census tests together. Retain concrete storage protections at their owning modules: current writes stamp a version, future or malformed records refuse, and an upgrade-chain test is valuable only when it exercises hops the product actually registers rather than a branch made vacuously green by the dormant regime.
+
+An empty production dispatch registry does not become future-proofing because tests can register synthetic handlers into it. If no shipped composition registers a handler and current product data has no prior readable shape, remove the mutation API, chain evaluator, synthetic upgrade tests, and read-time transformation branch together. Keep exact-current validation before decryption and the real current-format roundtrip. Add an upgrader only with the real version transition and persisted old-shape evidence that requires it.
+
+A typed identity alias and canonical formatter are still development support when their only consumers are diagnostic tooling and test fixtures. Delete the shipped alias, facade export, formatter module, named-emitter census, and identity-specific tests together. Let each excluded consumer render its local diagnostic field from the typed domain coordinates it already holds; matching display strings across development and tests do not create a product identity boundary.
+
+A validator-only test can preserve a contradictory product vocabulary after the live boundary has moved. When an unused typed alias duplicates the canonical identity type with different constraints, delete the alias, its export, and the self-test together; retain behavioral tests through the canonical owner and correct prose that attributes live behavior to the dead contract. A detailed validator test is not material quality evidence when no product field consumes the validator.
+
+An orphan-test finding can expose one dead census inside an otherwise material behavioral suite. Split the test responsibilities before deleting the module: if a hand-maintained exact roster duplicates an owning typed authority and is the suite's only direct dead subject, delete that roster assertion and retain the end-to-end tests. Remeasure through the test-support hop; the suite is live only when its helper actually reaches the product entrypoint, not because an allowlist or test-path exception says so.
+
+A shipped module with an exact top-level `__name__ == "__main__"` guard is a product `python -m` surface even when its filename is not `__main__.py`; derive both forms as roots and reject prose or nested comparisons as evidence. When that correction exposes a helper used only to launch the surface from tests, move the launcher helper into test support rather than retaining a shipped test seam. Preserve end-to-end security tests when an accepted decision requires the process boundary they exercise.
+
+An error-code registration does not make the corresponding feature reachable; it only lets a hypothetical raised exception render consistently. When an entire domain package has no acquisition, application, calculation, or presentation consumer and no accepted decision names its representation, delete the package, synthetic model tests, and dormant error registrations together. Audit every test in the package, not only reported orphans: importing a shared live base exception can hide a wholly abandoned test from an all-subjects-dead detector.
+
+A production error registry is a rendering mechanism, not a feature owner. A registry row that names an otherwise unreachable exception cannot justify retaining the exception, its model, or self-tests; first locate the accepted decision and live acquisition, calculation, or presentation path. If that path implements the regulated behavior through a different representation, retain its end-to-end tests and delete the disconnected representation, synthetic suite, and dormant error rows together.
+
+A lifecycle writer is not material merely because its inverse operation sounds symmetrical. When the accepted state model makes finalized records immutable and recovery creates a successor, delete an unused in-place rollback writer and any public prose advertising it. Preserve and test the forward approval, stale-status, and successor mechanisms; do not add a rollback test whose only purpose would be to keep the contradictory transition alive.
+
+A deterministic application projection and its unit tests are not material when the live operator surface independently builds a richer projection from the canonical aggregate and no production caller reaches the narrower one. Delete the narrower DTO, builders, and tests as one slice, but preserve adjacent repository queries that have real application consumers. Run both configured marker lanes for the live operator suite so a selected-lane green cannot conceal lost behavior.
+
+A typed request DTO is duplicate vocabulary when no boundary accepts it and live callers already pass the same typed axes directly to the owning workflow. Delete the unused envelope, its export, prose, and constructor or immutability tests together; retain tests of the live enums' total mapping and the behavior of the actual terminal. A model's validation quality cannot make an unconsumed shape material.
+
+A selector’s named “reserved” tokens are production metastate when the live parser already fail-closes every unknown token through one generic, privacy-safe refusal. Remove the reserved-token map, its reason accessor, specialized exception, error registration, and self-only probes together; retain tests of the actual unknown-token refusal and a representative live refusal class for error-category coverage. A rejected label with no executable producer is not a product contract.
+
+A public string alias derived from a typed persistence definition is duplicate vocabulary when the live repository already receives that definition and no product caller observes the alias. Delete the alias and export, then have storage-boundary tests assert the typed owner’s namespace or schema field directly. Retain encrypted roundtrip and corruption tests: they prove the persistence contract, unlike a second spelling of its identity.
+
+An unused current-version literal does not enforce a persisted-format contract; it is a second, inert statement of the version. Keep version markers only where the owning serializer, typed namespace, or reader actually writes and refuses them. Delete an unconsumed constant and export outright, then run the real encrypted roundtrip and current-schema refusal suites rather than inventing a test for the discarded spelling.
 
 ## Authority boundaries
 

@@ -27,9 +27,7 @@ def check(
     known_interfaces = {interface.qualname for interface in interfaces}
     known_surfaces = set(surfaces)
     problems = [
-        f"coverage names unknown surface {surface!r}"
-        for surface in rendered_table
-        if surface not in known_surfaces
+        f"coverage names unknown surface {surface!r}" for surface in rendered_table if surface not in known_surfaces
     ]
     problems.extend(
         f"coverage maps {surface!r} to unknown interface {qualname!r}"
@@ -62,8 +60,7 @@ def unrendered(
     return tuple(
         interface
         for interface in interfaces
-        if not interface.is_base
-        and not rendered_by(interface.qualname, surfaces, rendered_table=rendered_table)
+        if not interface.is_base and not rendered_by(interface.qualname, surfaces, rendered_table=rendered_table)
     )
 
 

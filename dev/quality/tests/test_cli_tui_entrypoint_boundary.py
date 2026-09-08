@@ -53,11 +53,7 @@ def _violations(tree: ast.AST) -> tuple[str, ...]:
 
 def _cli_production_modules() -> tuple[Path, ...]:
     """Discover the entire CLI lane instead of maintaining a TUI module inventory."""
-    return tuple(
-        path
-        for path in _CLI_ROOT.rglob("*.py")
-        if "tests" not in path.parts and path != _ALLOWED_LAUNCHER
-    )
+    return tuple(path for path in _CLI_ROOT.rglob("*.py") if "tests" not in path.parts and path != _ALLOWED_LAUNCHER)
 
 
 def test_only_the_opaque_launcher_may_name_a_tui_crossing() -> None:

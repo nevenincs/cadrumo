@@ -126,12 +126,15 @@ def _seed_prior_year_saldo(*, source_year: int, saldo: Decimal, obs_repo: Calcul
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
-                modelo=_MODELO,
-                filing_year=source_year,
-                period=_PERIOD,
-                casilla_values={_GENERATED_SALDO: saldo},
-            )))
+            stamped_revision_id=revision_id_for_observation(
+                registry_grounded_modelo_observation(
+                    modelo=_MODELO,
+                    filing_year=source_year,
+                    period=_PERIOD,
+                    casilla_values={_GENERATED_SALDO: saldo},
+                )
+            ),
+        )
     )
 
 

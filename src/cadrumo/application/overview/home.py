@@ -214,47 +214,75 @@ class HomeProjectionV1(BaseModel):
 
     @model_validator(mode="after")
     def _prevent_unavailable_zones_from_claiming_empty_or_zero(self) -> Self:
-        pairs = (
-            (self.actions_state, self.actions, "actions"),
-            (self.declarations_state, self.declarations, "declarations"),
-            (self.agenda_state, self.agenda, "agenda"),
+        _reject_unavailable_zone_rows(
+            (
+                (self.actions_state, self.actions, "actions"),
+                (self.declarations_state, self.declarations, "declarations"),
+                (self.agenda_state, self.agenda, "agenda"),
+            )
         )
-        for state, rows, name in pairs:
-            if state.availability is not HomeAvailability.AVAILABLE and rows:
-                raise ValueError(f"a non-available {name} zone cannot carry rows")
-        if self.ledger_state.availability is HomeAvailability.AVAILABLE:
-            if self.ledger is None:
-                raise ValueError("an available Ledger zone requires readiness counts")
-        elif self.ledger is not None:
-            raise ValueError("a non-available Ledger zone cannot claim readiness counts")
-        if self.messages_state.availability is HomeAvailability.AVAILABLE:
-            if self.messages_requiring_attention is None:
-                raise ValueError("an available Messages zone requires an attention count")
-        elif self.messages_requiring_attention is not None:
-            raise ValueError("a non-available Messages zone cannot claim an attention count")
-        if len(self.actions) > 3:
-            raise ValueError("Home may preview at most three next actions")
-        ranks = tuple(item.rank for item in self.actions)
-        if ranks != tuple(range(len(self.actions))):
-            raise ValueError("Home next actions require unique contiguous ranks in display order")
-        if len(self.agenda) > 3:
-            raise ValueError("Home may preview at most three agenda entries")
-        agenda_addresses = tuple((item.modelo, item.filing_year, item.period.registry_token) for item in self.agenda)
-        if len(set(agenda_addresses)) != len(agenda_addresses):
-            raise ValueError("Home agenda entries require unique natural addresses")
-        due_dates = tuple(item.due_on for item in self.agenda)
-        if due_dates != tuple(sorted(due_dates)):
-            raise ValueError("Home agenda entries must be chronological")
-        evidence_unobserved = self.agenda_evidence_state.availability in {
-            HomeAvailability.LOCKED,
-            HomeAvailability.NEVER_CAPTURED,
-            HomeAvailability.UNAVAILABLE,
-        }
-        if evidence_unobserved and any(
-            item.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED for item in self.agenda
-        ):
-            raise ValueError("agenda entries cannot claim AEAT submission when AEAT evidence is not observable")
+        _validate_ledger_claim(self.ledger_state, self.ledger)
+        _validate_messages_claim(self.messages_state, self.messages_requiring_attention)
+        _validate_action_preview(self.actions)
+        _validate_agenda_preview(self.agenda)
+        _validate_agenda_evidence_claim(self.agenda_evidence_state, self.agenda)
         return self
+
+
+def _reject_unavailable_zone_rows(
+    zone_rows: tuple[tuple[HomeZoneState, tuple[object, ...], str], ...],
+) -> None:
+    for state, rows, name in zone_rows:
+        if state.availability is not HomeAvailability.AVAILABLE and rows:
+            raise ValueError(f"a non-available {name} zone cannot carry rows")
+
+
+def _validate_ledger_claim(state: HomeZoneState, ledger: HomeLedgerReadiness | None) -> None:
+    if state.availability is HomeAvailability.AVAILABLE and ledger is None:
+        raise ValueError("an available Ledger zone requires readiness counts")
+    if state.availability is not HomeAvailability.AVAILABLE and ledger is not None:
+        raise ValueError("a non-available Ledger zone cannot claim readiness counts")
+
+
+def _validate_messages_claim(state: HomeZoneState, count: NonNegativeInt | None) -> None:
+    if state.availability is HomeAvailability.AVAILABLE and count is None:
+        raise ValueError("an available Messages zone requires an attention count")
+    if state.availability is not HomeAvailability.AVAILABLE and count is not None:
+        raise ValueError("a non-available Messages zone cannot claim an attention count")
+
+
+def _validate_action_preview(actions: tuple[HomeNextAction, ...]) -> None:
+    if len(actions) > 3:
+        raise ValueError("Home may preview at most three next actions")
+    ranks = tuple(item.rank for item in actions)
+    if ranks != tuple(range(len(actions))):
+        raise ValueError("Home next actions require unique contiguous ranks in display order")
+
+
+def _validate_agenda_preview(agenda: tuple[HomeAgendaEntry, ...]) -> None:
+    if len(agenda) > 3:
+        raise ValueError("Home may preview at most three agenda entries")
+    addresses = tuple((item.modelo, item.filing_year, item.period.registry_token) for item in agenda)
+    if len(set(addresses)) != len(addresses):
+        raise ValueError("Home agenda entries require unique natural addresses")
+    due_dates = tuple(item.due_on for item in agenda)
+    if due_dates != tuple(sorted(due_dates)):
+        raise ValueError("Home agenda entries must be chronological")
+
+
+def _validate_agenda_evidence_claim(
+    evidence_state: HomeZoneState,
+    agenda: tuple[HomeAgendaEntry, ...],
+) -> None:
+    unobserved = evidence_state.availability in {
+        HomeAvailability.LOCKED,
+        HomeAvailability.NEVER_CAPTURED,
+        HomeAvailability.UNAVAILABLE,
+    }
+    if unobserved and any(
+        item.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED for item in agenda
+    ):
+        raise ValueError("agenda entries cannot claim AEAT submission when AEAT evidence is not observable")
 
 
 class HomeProjectionInput(BaseModel):

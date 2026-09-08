@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#released-data-durability'
 date: '2026-07-08'
-modified: '2026-07-10'
-body_hash: 'sha256:4931c69c317bf91fba2edfb3be5dd5029f45f5b93972771f9c2130ee1f542282'
+modified: '2026-09-08'
+body_hash: 'sha256:38ecd06a26bc28071a67b006fcc62f6908b6b094e3d639935f00f5b9f3e816c7'
 related:
   - "[[2026-07-08-released-data-durability-research]]"
 ---
@@ -142,3 +142,9 @@ casilla provenance and export parity.
   source recording that ceiling-plus-dispatch is the implemented meaning of its
   forward-compatibility carve-out; that edit follows the rule-editing discipline
   and is not part of this ADR's code change.
+
+## Amendment (2026-09-08): speculative upgrade dispatch is not preinstalled governance
+
+The companion compatibility-lifecycle regime and closed persisted-format inventory are withdrawn by the amended `2026-07-09-compatibility-lifecycle-adr`. This record no longer authorizes a dormant release switch, empty upgrade registry, completeness census, or synthetic old-shape tests in production.
+
+The durable decision is the fail-closed boundary: current writes carry an explicit version, and reads reject shapes this build cannot interpret. A per-hop upgrader and old-shape fixture are introduced only with a real schema transition whose prior bytes can exist and whose product reader consumes that path. Until then, exact-current validation is the correct pre-release contract; future compatibility is not represented by unused production APIs. This replaces the implementation and consequence passages that prescribe installing an empty dispatch or a vacuously green chain gate in advance.

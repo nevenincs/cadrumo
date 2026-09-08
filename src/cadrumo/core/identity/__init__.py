@@ -55,7 +55,6 @@ from ._namespace import (
     AeatCsv,
     AeatExpedienteId,
     AeatPresentationId,
-    RegistrySnapshotId,
 )
 from ._nif_iva import (
     NIF_IVA_FORMATS,
@@ -265,7 +264,6 @@ __all__ = [
     "PrefixedContentDigest",
     "ProfileId",
     "ProfileLabel",
-    "RegistrySnapshotId",
     "SnapshotId",
     "SubjectTaxId",
     "TaxIdIdentityToken",

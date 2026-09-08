@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#current-schema-only-purge'
 date: '2026-08-10'
-modified: '2026-08-15'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:cfba34b246f1e436853ea031c3daad46124fe78c7bf6e7fdab625514ffeb1a50'
+body_hash: 'sha256:da81d7fe33e644395ccaa0d279ed1b78e8f609b172a7f861086dea60626cd3c0'
 related:
   - "[[2026-07-09-compatibility-lifecycle-adr]]"
   - "[[2026-06-10-zero-legacy-purge-research]]"
@@ -364,3 +364,9 @@ stated rather than implied:** the wallet gate's swallow is not fixed by any gate
 built under `S30`, because cutting off new non-canonical envelopes does nothing
 about the ones a taxpayer's profile may already hold. `W03.P07.S31` owns that end
 and the two must close together or the story stays half told.
+
+## Amendment (2026-09-08): dormant lifecycle scaffolds are withdrawn
+
+The consequence that classifies empty upgrader registries, regime gates, durability-floor checks, and future release scaffolds as production surfaces to keep is withdrawn. S220 of the reachability burndown proved the regime and classification machinery was consumed only by synthetic and census tests, and removed it under the source/development boundary.
+
+This decision continues to require explicit current-version markers, early fail-closed validation, and no read tolerance for obsolete shapes. It does not authorize production declarations whose only purpose is to describe a future release state. If a real released-format transition occurs, its reader or migration and restorability evidence arrive with that transition through the owning storage boundary.

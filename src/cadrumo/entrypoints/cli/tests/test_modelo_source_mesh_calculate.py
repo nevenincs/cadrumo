@@ -737,9 +737,9 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=bundled_authority().snapshot(
-                "303", filing_year=2026, period="1T"
-            ).snapshot_ref,
+            target_registry_snapshot_ref=bundled_authority()
+            .snapshot("303", filing_year=2026, period="1T")
+            .snapshot_ref,
             source_registry_snapshot_refs=(
                 bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
             ),
@@ -902,9 +902,9 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=bundled_authority().snapshot(
-                "303", filing_year=2026, period="1T"
-            ).snapshot_ref,
+            target_registry_snapshot_ref=bundled_authority()
+            .snapshot("303", filing_year=2026, period="1T")
+            .snapshot_ref,
             source_registry_snapshot_refs=(
                 bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
             ),

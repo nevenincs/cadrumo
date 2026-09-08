@@ -24,8 +24,8 @@ from .custody_ports import (
 )
 from .custody_repository import ProfileCustodyTransactionRepository, profile_custody_transaction_lock
 from .custody_transactions import (
-    ProfileCustodyTransactionCorruptError,
     ProfileCustodyTransactionConflictError,
+    ProfileCustodyTransactionCorruptError,
     ProfileCustodyTransactionJournal,
     ProfileCustodyTransactionOperation,
 )

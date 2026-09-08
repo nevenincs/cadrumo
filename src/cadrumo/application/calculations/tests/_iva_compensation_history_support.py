@@ -40,11 +40,15 @@ _TAXPAYER_REF = "12345678Z"
 @cache
 def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
     """Return the law-selected canonical coordinate used by a test fixture."""
-    return bundled_authority().snapshot(
-        Modelo.M303.value,
-        filing_year=filing_year,
-        period=period,
-    ).snapshot_ref
+    return (
+        bundled_authority()
+        .snapshot(
+            Modelo.M303.value,
+            filing_year=filing_year,
+            period=period,
+        )
+        .snapshot_ref
+    )
 
 
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
@@ -166,11 +170,13 @@ def _filed_observation(modelo: str) -> FiledDeclaracionObservation:
                 captured_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
             ),
         ),
-        registry_snapshot_ref=bundled_authority().snapshot(
+        registry_snapshot_ref=bundled_authority()
+        .snapshot(
             modelo,
             filing_year=2024,
             period="4T",
-        ).snapshot_ref,
+        )
+        .snapshot_ref,
     )
 
 

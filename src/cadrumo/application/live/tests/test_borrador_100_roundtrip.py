@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
+from ....adapters.persistence.storage.secure_object_namespaces import LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.aeat_literal_fixtures import aeat_url, configured_template_path
@@ -238,14 +239,11 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         # Surgically delete ``superseded_by_snapshot_id`` from the
         # persisted JSON envelope payload, then attempt to load. The
         # column accessor handles encrypt/decrypt automatically.
-        from ..borrador_100 import (
-            BORRADOR_100_SNAPSHOT_NAMESPACE,
-            borrador_100_snapshot_object_key,
-        )
+        from ..borrador_100 import borrador_100_snapshot_object_key
 
         object_key = borrador_100_snapshot_object_key(bucket_id, original.snapshot_id)
         stmt = select(SecureObjectRow).where(
-            SecureObjectRow.namespace == BORRADOR_100_SNAPSHOT_NAMESPACE,
+            SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
             SecureObjectRow.object_key == object_key,
         )
 

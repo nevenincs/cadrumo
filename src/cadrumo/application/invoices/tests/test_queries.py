@@ -20,45 +20,12 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import link_invoice
 from ....tests.secure_sql import isolated_runtime_profile
-from ..catalogue_reads import list_invoice_rows, list_unmatched_invoice_rows, verify_invoice_repository_links
+from ..catalogue_reads import verify_invoice_repository_links
 from ..transaction_linking import link_invoice_transaction_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _BUCKET_ID = "22222222-2222-4222-8222-222222222222"
-
-
-def test_invoice_rows_filter_and_sort_by_backend_projection() -> None:
-    later = _invoice(invoice_number="INV-B", issued_at=date(2026, 4, 2))
-    earlier = _invoice(invoice_number="INV-A", issued_at=date(2026, 4, 1))
-    received = _invoice(invoice_number="INV-C", issued_at=date(2026, 4, 3), kind=InvoiceKind.RECEIVED)
-
-    rows = list_invoice_rows(
-        InvoiceCatalogue.from_invoices([later, received, earlier]),
-        kind=InvoiceKind.ISSUED,
-    )
-
-    assert tuple(row.invoice_id for row in rows) == (earlier.invoice_id, later.invoice_id)
-    assert all(row.kind is InvoiceKind.ISSUED for row in rows)
-    assert rows[0].payment_status == PaymentStatus.PAID.value
-
-
-def test_unmatched_rows_and_consistency_are_backend_queries() -> None:
-    linked_invoice = _invoice(invoice_number="INV-LINKED")
-    unlinked_invoice = _invoice(invoice_number="INV-OPEN")
-    transaction = _transaction()
-    linked = link_invoice_transaction_catalogues(
-        InvoiceCatalogue.from_invoices([linked_invoice, unlinked_invoice]),
-        TransactionCatalogue.from_transactions([transaction]),
-        invoice_id=linked_invoice.invoice_id,
-        transaction_id=transaction.transaction_id,
-    )
-
-    unmatched = list_unmatched_invoice_rows(linked.invoices)
-    inconsistencies = verify_link_consistency(linked.invoices, linked.transactions)
-
-    assert tuple(row.invoice_id for row in unmatched) == (unlinked_invoice.invoice_id,)
-    assert inconsistencies == ()
 
 
 def test_consistency_query_reports_one_sided_transaction_link() -> None:

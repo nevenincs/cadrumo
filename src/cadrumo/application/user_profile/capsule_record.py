@@ -40,9 +40,6 @@ if TYPE_CHECKING:
     from .custody_ports import ProfileCustodyEnvelopePort
 
 
-PROFILE_RECORD_SCHEMA_VERSION = 2
-"""Current record binding grammar, independent of the profile fact schema."""
-
 _RECORD_NAMESPACE = "cadrumo.application.user_profile.value"
 _RECORD_OBJECT_KEY_PREFIX = "user-profile:"
 _RECORD_WRITE_PROVENANCE_PREFIX = "cadrumo.profile-record.v2"
@@ -619,7 +616,6 @@ def _assert_event_binding(
 
 
 __all__ = [
-    "PROFILE_RECORD_SCHEMA_VERSION",
     "LoadedProfileRecord",
     "ProfileRecordCommandEvent",
     "ProfileRecordConflictError",

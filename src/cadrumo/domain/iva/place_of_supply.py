@@ -137,41 +137,51 @@ class IvaPlaceOfSupplyRule(BaseModel):
         need grounding and has not been given it yet.
         """
         if self.legal_basis_exempt:
-            if self.legal_references or self.establishing_reference:
-                raise IvaCatalogueError(
-                    f"place-of-supply rule {self.rule_id!r}: a legal-basis-exempt row cites no provision, "
-                    "because it codifies no tax treatment to ground",
-                )
-            if self.supply_nature is not None:
-                raise IvaCatalogueError(
-                    f"place-of-supply rule {self.rule_id!r}: a legal-basis-exempt row fixes no supply nature",
-                )
-            if self.valid_from is not None or self.valid_to is not None:
-                raise IvaCatalogueError(
-                    f"place-of-supply rule {self.rule_id!r}: a legal-basis-exempt row declares no validity "
-                    "window, because a row that grounds nothing is asserted over nothing",
-                )
-            return self
-        if self.valid_from is None or self.valid_to is None:
-            raise IvaCatalogueError(
-                f"place-of-supply rule {self.rule_id!r}: a grounded row must declare both validity bounds; "
-                "an absent bound would read as effective from the beginning of time or until further "
-                "notice, and neither is a claim anybody made",
-            )
-        # Constructing the window is the validation: an inverted span covers no
-        # year and would make the rule vanish from every filing year instead of
-        # failing where it was written.
-        _ = self.window
-        if not self.legal_references:
-            raise IvaCatalogueError(
-                f"place-of-supply rule {self.rule_id!r}: must cite the provision that establishes its placement",
-            )
-        if self.establishing_reference not in self.legal_references:
-            raise IvaCatalogueError(
-                f"place-of-supply rule {self.rule_id!r}: establishing_reference "
-                f"{self.establishing_reference!r} is not among its legal_references",
-            )
+            _validate_legal_basis_exempt_row(self)
+        else:
+            _validate_grounded_row(self)
         return self
+
+
+def _validate_legal_basis_exempt_row(rule: IvaPlaceOfSupplyRule) -> None:
+    """Require an exempt row to carry no grounding claim at all."""
+    if rule.legal_references or rule.establishing_reference:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: a legal-basis-exempt row cites no provision, "
+            "because it codifies no tax treatment to ground",
+        )
+    if rule.supply_nature is not None:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: a legal-basis-exempt row fixes no supply nature",
+        )
+    if rule.valid_from is not None or rule.valid_to is not None:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: a legal-basis-exempt row declares no validity "
+            "window, because a row that grounds nothing is asserted over nothing",
+        )
+
+
+def _validate_grounded_row(rule: IvaPlaceOfSupplyRule) -> None:
+    """Require a grounded row to carry a bounded, internally cited provision."""
+    if rule.valid_from is None or rule.valid_to is None:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: a grounded row must declare both validity bounds; "
+            "an absent bound would read as effective from the beginning of time or until further "
+            "notice, and neither is a claim anybody made",
+        )
+    # Constructing the window is the validation: an inverted span covers no
+    # year and would make the rule vanish from every filing year instead of
+    # failing where it was written.
+    _ = rule.window
+    if not rule.legal_references:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: must cite the provision that establishes its placement",
+        )
+    if rule.establishing_reference not in rule.legal_references:
+        raise IvaCatalogueError(
+            f"place-of-supply rule {rule.rule_id!r}: establishing_reference "
+            f"{rule.establishing_reference!r} is not among its legal_references",
+        )
 
 
 def load_place_of_supply_table(path: Path | None = None) -> Mapping[str, IvaPlaceOfSupplyRule]:
@@ -315,5 +325,3 @@ def place_of_supply_rule(rule_id: str, *, on: date) -> IvaPlaceOfSupplyRule:
             "every classification rule must cite the provision that establishes its placement",
         )
     return rule
-
-

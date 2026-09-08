@@ -18,7 +18,7 @@ from dataclasses import fields as dataclass_fields
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
@@ -1023,6 +1023,116 @@ class InventoryValuationResult(BaseModel):
     purchase_value: Decimal
 
 
+def _validate_anexo_d_quantised_values(result: InventoryAnexoDResult) -> None:
+    monetary_values = (
+        result.opening_value,
+        result.movement_derived_closing_value,
+        result.authoritative_closing_value,
+        *(value for value in (result.physical_observed_closing_value,) if value is not None),
+        result.complete_acquisition_total,
+        result.casilla_0177,
+        result.casilla_0181,
+        result.casilla_0182,
+    )
+    if any(value != _quantize(value) for value in monetary_values):
+        raise InventoryValidationError("inventory Anexo D values must be quantised to cents")
+
+
+def _validate_anexo_d_variation_split(result: InventoryAnexoDResult) -> None:
+    signed_variation = _quantize(result.authoritative_closing_value - result.opening_value)
+    expected_increase = max(signed_variation, MONEY_ZERO)
+    expected_decrease = max(-signed_variation, MONEY_ZERO)
+    if result.casilla_0177 != expected_increase or result.casilla_0182 != expected_decrease:
+        raise InventoryValidationError(
+            "inventory Anexo D outputs must be the mutually exclusive split of closing minus opening",
+        )
+
+
+def _validate_anexo_d_acquisition_values(result: InventoryAnexoDResult) -> None:
+    if result.casilla_0181 != result.complete_acquisition_total:
+        raise InventoryValidationError("casilla 0181 must equal complete inventory acquisition cost")
+    if result.complete_acquisition_total > MONEY_ZERO and not result.acquisition_fingerprints:
+        raise InventoryValidationError("nonzero acquisition cost requires acquisition fingerprints")
+    if len(set(result.acquisition_fingerprints)) != len(result.acquisition_fingerprints):
+        raise InventoryValidationError("acquisition fingerprints must be unique")
+
+
+def _validate_anexo_d_physical_state(result: InventoryAnexoDResult) -> bool:
+    physical_state = (
+        result.physical_observation_id,
+        result.physical_observation_fingerprint,
+        result.physical_observed_closing_value,
+    )
+    has_missing_value = any(value is None for value in physical_state)
+    has_present_value = any(value is not None for value in physical_state)
+    if has_missing_value and has_present_value:
+        raise InventoryValidationError("physical observation identity, fingerprint, and value must travel together")
+    has_physical = result.physical_observation_id is not None
+    physical_differs = has_physical and result.physical_observed_closing_value != result.movement_derived_closing_value
+    if physical_differs != (result.closing_conflict is not None):
+        raise InventoryValidationError("divergent physical closing requires its retained conflict diagnostic")
+    return has_physical
+
+
+def _validate_anexo_d_authority_selection(result: InventoryAnexoDResult, has_physical: bool) -> None:
+    if result.selected_authority is InventoryClosingAuthority.PHYSICAL_OBSERVATION:
+        if not has_physical:
+            raise InventoryValidationError("physical projection authority requires physical observation identity")
+        if result.closing_conflict is None:
+            if result.authoritative_closing_value != result.movement_derived_closing_value:
+                raise InventoryValidationError("physical authority without conflict must equal movement closing")
+        elif result.authoritative_closing_value != result.closing_conflict.physical_observed_value:
+            raise InventoryValidationError("physical authoritative closing must match retained observation")
+    elif result.authoritative_closing_value != result.movement_derived_closing_value:
+        raise InventoryValidationError("movement-derived authority must select movement-derived closing")
+
+
+def _validate_anexo_d_conflict(result: InventoryAnexoDResult, has_physical: bool) -> None:
+    conflict = result.closing_conflict
+    if conflict is None:
+        return
+    if not has_physical:
+        raise InventoryValidationError("closing conflict requires physical observation identity")
+    if (
+        conflict.actividad_id != result.actividad_id
+        or conflict.filing_year != result.filing_year
+        or conflict.movement_derived_value != result.movement_derived_closing_value
+        or conflict.physical_observed_value != result.physical_observed_closing_value
+        or conflict.physical_observation_fingerprint != result.physical_observation_fingerprint
+    ):
+        raise InventoryValidationError("closing conflict must exactly match projection provenance")
+
+
+def _validate_anexo_d_issues(result: InventoryAnexoDResult) -> None:
+    expected_issues = ("physical_closing_conflict",) if result.closing_conflict is not None else ()
+    if result.issues != expected_issues:
+        raise InventoryValidationError("inventory projection issues must exactly reflect retained conflicts")
+
+
+def _expected_anexo_d_source_values(result: InventoryAnexoDResult) -> Any:
+    from .valuation import derive_inventory_anexo_d_values
+
+    try:
+        return derive_inventory_anexo_d_values(result.source_ledger)
+    except InventoryLedgerError as exc:
+        raise InventoryValidationError("inventory projection retained source is invalid") from exc
+
+
+def _validate_anexo_d_source_values(result: InventoryAnexoDResult, expected_source_values: Any) -> None:
+    for field in dataclass_fields(expected_source_values):
+        field_name = field.name
+        expected_value = getattr(expected_source_values, field_name)
+        if getattr(result, field_name) != expected_value:
+            raise InventoryValidationError(
+                f"inventory projection field {field_name!r} does not match retained source authority",
+            )
+
+
+def _validate_anexo_d_projection_fingerprint(result: InventoryAnexoDResult) -> None:
+    if result.projection_fingerprint != result.expected_projection_fingerprint:
+        raise InventoryValidationError("inventory projection fingerprint does not match projection state")
+
+
 class InventoryAnexoDResult(BaseModel):
     """Complete source-owned 2025 inventory projection for one activity."""
 
@@ -1065,82 +1175,16 @@ class InventoryAnexoDResult(BaseModel):
     @model_validator(mode="after")
     def _variation_split_matches_audited_values(self) -> InventoryAnexoDResult:
         """Require an exact, mutually exclusive split of the audited basis."""
-        from .valuation import derive_inventory_anexo_d_values
-
-        monetary_values = (
-            self.opening_value,
-            self.movement_derived_closing_value,
-            self.authoritative_closing_value,
-            *(value for value in (self.physical_observed_closing_value,) if value is not None),
-            self.complete_acquisition_total,
-            self.casilla_0177,
-            self.casilla_0181,
-            self.casilla_0182,
-        )
-        if any(value != _quantize(value) for value in monetary_values):
-            raise InventoryValidationError("inventory Anexo D values must be quantised to cents")
-        signed_variation = _quantize(self.authoritative_closing_value - self.opening_value)
-        expected_increase = max(signed_variation, MONEY_ZERO)
-        expected_decrease = max(-signed_variation, MONEY_ZERO)
-        if self.casilla_0177 != expected_increase or self.casilla_0182 != expected_decrease:
-            raise InventoryValidationError(
-                "inventory Anexo D outputs must be the mutually exclusive split of closing minus opening",
-            )
-        if self.casilla_0181 != self.complete_acquisition_total:
-            raise InventoryValidationError("casilla 0181 must equal complete inventory acquisition cost")
-        if self.complete_acquisition_total > MONEY_ZERO and not self.acquisition_fingerprints:
-            raise InventoryValidationError("nonzero acquisition cost requires acquisition fingerprints")
-        if len(set(self.acquisition_fingerprints)) != len(self.acquisition_fingerprints):
-            raise InventoryValidationError("acquisition fingerprints must be unique")
-        physical_state = (
-            self.physical_observation_id,
-            self.physical_observation_fingerprint,
-            self.physical_observed_closing_value,
-        )
-        if any(value is None for value in physical_state) and any(value is not None for value in physical_state):
-            raise InventoryValidationError("physical observation identity, fingerprint, and value must travel together")
-        has_physical = self.physical_observation_id is not None
-        physical_differs = has_physical and self.physical_observed_closing_value != self.movement_derived_closing_value
-        if physical_differs != (self.closing_conflict is not None):
-            raise InventoryValidationError("divergent physical closing requires its retained conflict diagnostic")
-        if self.selected_authority is InventoryClosingAuthority.PHYSICAL_OBSERVATION:
-            if not has_physical:
-                raise InventoryValidationError("physical projection authority requires physical observation identity")
-            if self.closing_conflict is None:
-                if self.authoritative_closing_value != self.movement_derived_closing_value:
-                    raise InventoryValidationError("physical authority without conflict must equal movement closing")
-            elif self.authoritative_closing_value != self.closing_conflict.physical_observed_value:
-                raise InventoryValidationError("physical authoritative closing must match retained observation")
-        elif self.authoritative_closing_value != self.movement_derived_closing_value:
-            raise InventoryValidationError("movement-derived authority must select movement-derived closing")
-        if self.closing_conflict is not None:
-            conflict = self.closing_conflict
-            if not has_physical:
-                raise InventoryValidationError("closing conflict requires physical observation identity")
-            if (
-                conflict.actividad_id != self.actividad_id
-                or conflict.filing_year != self.filing_year
-                or conflict.movement_derived_value != self.movement_derived_closing_value
-                or conflict.physical_observed_value != self.physical_observed_closing_value
-                or conflict.physical_observation_fingerprint != self.physical_observation_fingerprint
-            ):
-                raise InventoryValidationError("closing conflict must exactly match projection provenance")
-        expected_issues = ("physical_closing_conflict",) if self.closing_conflict is not None else ()
-        if self.issues != expected_issues:
-            raise InventoryValidationError("inventory projection issues must exactly reflect retained conflicts")
-        try:
-            expected_source_values = derive_inventory_anexo_d_values(self.source_ledger)
-        except InventoryLedgerError as exc:
-            raise InventoryValidationError("inventory projection retained source is invalid") from exc
-        for field in dataclass_fields(expected_source_values):
-            field_name = field.name
-            expected_value = getattr(expected_source_values, field_name)
-            if getattr(self, field_name) != expected_value:
-                raise InventoryValidationError(
-                    f"inventory projection field {field_name!r} does not match retained source authority"
-                )
-        if self.projection_fingerprint != self.expected_projection_fingerprint:
-            raise InventoryValidationError("inventory projection fingerprint does not match projection state")
+        _validate_anexo_d_quantised_values(self)
+        _validate_anexo_d_variation_split(self)
+        _validate_anexo_d_acquisition_values(self)
+        has_physical = _validate_anexo_d_physical_state(self)
+        _validate_anexo_d_authority_selection(self, has_physical)
+        _validate_anexo_d_conflict(self, has_physical)
+        _validate_anexo_d_issues(self)
+        expected_source_values = _expected_anexo_d_source_values(self)
+        _validate_anexo_d_source_values(self, expected_source_values)
+        _validate_anexo_d_projection_fingerprint(self)
         return self
 
 

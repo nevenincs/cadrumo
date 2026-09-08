@@ -102,11 +102,44 @@ from cadrumo.tests._lost_test_hook import apply as _report_lost_tests  # noqa: E
 from cadrumo.tests._marker_hook import apply as _apply_marker_contract  # noqa: E402
 from cadrumo.tests._marker_hook import apply_banned_live_import_policy as _apply_banned_live_import_policy  # noqa: E402
 from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolve_auto_num_workers  # noqa: E402
+from dev.test_runs.logging import configure as _configure_run_logging  # noqa: E402
+from dev.test_runs.logging import finish as _finish_run_logging  # noqa: E402
+from dev.test_runs.logging import log_collection_report as _log_collection_report  # noqa: E402
+from dev.test_runs.logging import log_report as _log_run_report  # noqa: E402
+from dev.test_runs.logging import log_start as _log_run_start  # noqa: E402
 
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
 register_collection_storage_root_cleanup(collection_storage_root())
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_configure(config: pytest.Config) -> None:
+    """Create and announce this pytest invocation's durable run log."""
+    _configure_run_logging(config)
+
+
+def pytest_runtest_logstart(nodeid: str, location: tuple[str, int | None, str]) -> None:
+    """Record the test identity before execution begins."""
+    del location
+    _log_run_start(nodeid)
+
+
+def pytest_runtest_logreport(report: pytest.TestReport) -> None:
+    """Persist each test verdict and immediate failure detail."""
+    _log_run_report(report)
+
+
+def pytest_collectreport(report: pytest.CollectReport) -> None:
+    """Persist collection failures immediately."""
+    _log_collection_report(report)
+
+
+def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
+    """Finalize the unique run metadata without changing pytest's exit status."""
+    _finish_run_logging(session.config, exitstatus)
+
 
 
 @pytest.fixture(scope="session")

@@ -355,11 +355,14 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
                 source_metadata={"aeat_justificante_csv": metadata_csv},
                 source_headers=source_headers,
                 result_disposition=result_disposition,
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=2025,
-                    period="1T",
-                )))
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
+                        modelo="303",
+                        filing_year=2025,
+                        period="1T",
+                    )
+                ),
+            )
         )
         revision = _revision(
             work_unit,
@@ -397,11 +400,14 @@ def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(tmp_path
                 source_metadata={"aeat_justificante_csv": _EVIDENCE_REFERENCE},
                 source_headers=(_submitted_file_declaration_type("U"),),
                 result_disposition=_source_header_disposition(ResultDisposition.DOMICILIACION),
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=2025,
-                    period="1T",
-                )))
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
+                        modelo="303",
+                        filing_year=2025,
+                        period="1T",
+                    )
+                ),
+            )
         )
         revision = _revision(
             work_unit,

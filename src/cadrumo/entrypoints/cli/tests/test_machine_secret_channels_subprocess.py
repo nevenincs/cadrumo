@@ -14,7 +14,6 @@ import pytest
 
 from ....tests import SRC_CADRUMO
 from ....tests.subprocess_cli import subprocess_cli_env
-from .._windows_profile_secret_bootstrap import bootstrap_interpreter
 from ._machine_secret_channels_support import (
     _CERTIFICATE_SECRET,
     _HARNESS,
@@ -28,6 +27,7 @@ from ._machine_secret_channels_support import (
     _restore_material,
     _run,
     _settings,
+    bootstrap_interpreter,
     cleanup_keychain,
 )
 

@@ -70,6 +70,7 @@ _FLOW_DESCRIPTION_LOCALE_KEY = "cli.config.auth.apoderado.configure_help"
 _REPRESENTED_NIF_PROMPT_LOCALE_KEY = "cli.config.auth.apoderado.configure.represented_nif_help"
 _SCOPES_PROMPT_LOCALE_KEY = "cli.config.auth.apoderado.configure.scope_help"
 
+
 class ApoderadoFlowAnswers(BaseModel):
     """The typed answer shape the apoderado flow collects.
 

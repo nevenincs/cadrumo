@@ -147,10 +147,13 @@ def test_the_gate_catches_an_imported_target_alias(tmp_path: Path) -> None:
     test = tmp_path / "test_subject.py"
     test.write_text("from .subject import PUBLIC_URL\n", encoding="utf-8")
 
-    assert [(alias, origin) for alias, origin, _ in find_test_only_aliases(
-        {module: module.read_text(encoding="utf-8")},
-        {test: test.read_text(encoding="utf-8")},
-    )] == [("PUBLIC_URL", "WALLET_URL")]
+    assert [
+        (alias, origin)
+        for alias, origin, _ in find_test_only_aliases(
+            {module: module.read_text(encoding="utf-8")},
+            {test: test.read_text(encoding="utf-8")},
+        )
+    ] == [("PUBLIC_URL", "WALLET_URL")]
 
 
 def test_an_alias_production_still_uses_is_not_an_offender(tmp_path: Path) -> None:

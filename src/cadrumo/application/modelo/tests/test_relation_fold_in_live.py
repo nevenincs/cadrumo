@@ -191,12 +191,15 @@ def _seed_115_quarters(*, obs_repo: CalculationObservationRepository) -> dict[Ca
                 ),
                 source_kind="app_filing",
                 captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="115",
-                    filing_year=_YEAR,
-                    period=period,
-                    observations=result.observations,
-                )))
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
+                        modelo="115",
+                        filing_year=_YEAR,
+                        period=period,
+                        observations=result.observations,
+                    )
+                ),
+            )
         )
         for cid in totals:
             totals[cid] += result.values[cid]

@@ -239,15 +239,15 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
-                    RegistryModeloObservation(
+                RegistryModeloObservation(
                     modelo="115",
                     filing_year=_YEAR,
                     period=period,
                     observations=result.observations,
-                    ),
-                    source_kind="app_filing",
-                    stamped_revision_id=snap.revision.id,
-                    captured_at=_T0,
+                ),
+                source_kind="app_filing",
+                stamped_revision_id=snap.revision.id,
+                captured_at=_T0,
             )
         )
         for output_cid in totals:

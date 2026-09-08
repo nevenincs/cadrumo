@@ -27,6 +27,7 @@ import pytest
 
 from ....core.resources.bundled_data import bundled_path
 from ..classification import _CLASSIFICATION_RULES, _R99_FALLTHROUGH_ID
+from ..errors import IvaCatalogueError
 from ..place_of_supply import (
     IvaPlaceOfSupplyRule,
     load_place_of_supply_table,
@@ -63,6 +64,17 @@ _DOMESTIC_RULE_IDS = frozenset(
 
 def _rules() -> Mapping[str, IvaPlaceOfSupplyRule]:
     return load_place_of_supply_table()
+
+
+def _grounded_row_fields() -> dict[str, object]:
+    """Return a complete row shape for direct model-invariant tests."""
+    return {
+        "rule_id": "R_test",
+        "legal_references": ("ley-37-1992:art-68",),
+        "establishing_reference": "ley-37-1992:art-68",
+        "valid_from": date(2025, 1, 1),
+        "valid_to": date(2025, 12, 31),
+    }
 
 
 def _declared_rule_ids() -> frozenset[str]:
@@ -114,6 +126,76 @@ def test_the_establishing_provision_is_one_the_row_actually_reads() -> None:
     assert grounded, "every row is legal-basis exempt; this case would pass over an ungrounded table"
     for rule in grounded:
         assert rule.establishing_reference in rule.legal_references
+
+
+def test_row_validator_accepts_the_complete_grounded_and_exempt_shapes() -> None:
+    grounded = IvaPlaceOfSupplyRule.model_validate(_grounded_row_fields())
+    exempt = IvaPlaceOfSupplyRule(rule_id="R99_test", legal_basis_exempt=True)
+
+    assert grounded.window is not None
+    assert exempt.window is None
+
+
+@pytest.mark.parametrize(
+    ("overrides", "message"),
+    [
+        pytest.param(
+            {"legal_basis_exempt": True, "legal_references": ("ley-37-1992:art-68",)},
+            "cites no provision",
+            id="exempt-citations",
+        ),
+        pytest.param(
+            {
+                "legal_basis_exempt": True,
+                "legal_references": (),
+                "establishing_reference": "",
+                "supply_nature": SupplyNature.GOODS,
+            },
+            "fixes no supply nature",
+            id="exempt-supply-nature",
+        ),
+        pytest.param(
+            {
+                "legal_basis_exempt": True,
+                "legal_references": (),
+                "establishing_reference": "",
+                "valid_from": date(2025, 1, 1),
+                "valid_to": None,
+            },
+            "declares no validity window",
+            id="exempt-window",
+        ),
+        pytest.param(
+            {"valid_to": None},
+            "both validity bounds",
+            id="grounded-window-bound",
+        ),
+        pytest.param(
+            {"legal_references": (), "establishing_reference": ""},
+            "must cite the provision",
+            id="grounded-citations",
+        ),
+        pytest.param(
+            {"establishing_reference": "ley-37-1992:art-69"},
+            "not among its legal_references",
+            id="establishing-reference-membership",
+        ),
+    ],
+)
+def test_row_validator_rejects_incomplete_kind_shapes(overrides: dict[str, object], message: str) -> None:
+    fields = _grounded_row_fields()
+    fields.update(overrides)
+
+    with pytest.raises(IvaCatalogueError, match=message):
+        IvaPlaceOfSupplyRule.model_validate(fields)
+
+
+def test_grounded_row_validator_rejects_an_inverted_window() -> None:
+    fields = _grounded_row_fields()
+    fields.update(valid_from=date(2026, 1, 1), valid_to=date(2025, 12, 31))
+
+    with pytest.raises(ValueError, match="validity window ends before it starts"):
+        IvaPlaceOfSupplyRule.model_validate(fields)
 
 
 @pytest.mark.parametrize("rule_id", sorted(_DOMESTIC_RULE_IDS))

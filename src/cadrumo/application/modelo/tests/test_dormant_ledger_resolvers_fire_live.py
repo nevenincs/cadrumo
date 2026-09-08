@@ -190,22 +190,25 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo="100",
-                filing_year=_M130_PRIOR_YEAR,
-                period="0A",
-                observations=registry_grounded_observations(
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
                     modelo="100",
                     filing_year=_M130_PRIOR_YEAR,
                     period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
-            )))
+                    observations=registry_grounded_observations(
+                        modelo="100",
+                        filing_year=_M130_PRIOR_YEAR,
+                        period="0A",
+                        casilla_values={
+                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                        },
+                    ),
+                )
+            ),
+        )
     )
 
     # Non-vacuity: casilla 01 binds the income aggregation source under test, and
@@ -292,22 +295,25 @@ def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_cal
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo="100",
-                filing_year=_M130_PRIOR_YEAR,
-                period="0A",
-                observations=registry_grounded_observations(
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
                     modelo="100",
                     filing_year=_M130_PRIOR_YEAR,
                     period="0A",
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                    },
-                ),
-            )))
+                    observations=registry_grounded_observations(
+                        modelo="100",
+                        filing_year=_M130_PRIOR_YEAR,
+                        period="0A",
+                        casilla_values={
+                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                        },
+                    ),
+                )
+            ),
+        )
     )
 
     revision = _revision("130", _M130_REVISION)

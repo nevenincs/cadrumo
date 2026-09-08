@@ -113,6 +113,25 @@ class _RequirementPartition(NamedTuple):
     suppressed: tuple[CrossPeriodDependencyRequirement, ...]
 
 
+class _CleanStateRepositories(NamedTuple):
+    """Loaded repositories needed while evaluating one clean-state verdict."""
+
+    filing_catalogue: ModeloRecordCatalogue
+    calculation_catalogue: CalculationRevisionCatalogue
+    verification_catalogue: VerificationReportCatalogue
+    justificante_repository: JustificanteRepository
+
+
+class _CleanStateRequirementScope(NamedTuple):
+    """Registry requirements grouped by the clean-state disposition they receive."""
+
+    not_applicable: tuple[CrossPeriodDependencyEvidence, ...]
+    partition: _RequirementPartition
+    first_year_fractional: tuple[CrossPeriodDependencyRequirement, ...]
+    zero_value_previous_filing: tuple[CrossPeriodDependencyRequirement, ...]
+    m111_no_retenciones: tuple[CrossPeriodDependencyRequirement, ...]
+
+
 def partition_cross_period_requirements_by_activity_start(
     requirements: Iterable[CrossPeriodDependencyRequirement],
     *,
@@ -392,6 +411,213 @@ def _not_applicable_dependencies(
     )
 
 
+def _load_clean_state_repositories(
+    *,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    justificante_repository: JustificanteRepository | None,
+) -> _CleanStateRepositories:
+    """Load all persistence inputs once for a clean-state evaluation."""
+    return _CleanStateRepositories(
+        filing_catalogue=filing_repository.load(),
+        calculation_catalogue=calculation_repository.load(),
+        verification_catalogue=require_verification_report_coordinates_current(verification_repository.load()),
+        justificante_repository=justificante_repository or JustificanteRepository(),
+    )
+
+
+def _requirements_outside_non_filer_modelos(
+    requirements: tuple[CrossPeriodDependencyRequirement, ...],
+    non_filer_modelos: frozenset[str],
+) -> tuple[CrossPeriodDependencyRequirement, ...]:
+    return tuple(requirement for requirement in requirements if requirement.source_modelo not in non_filer_modelos)
+
+
+def _first_year_fractional_requirements(
+    requirements: Iterable[CrossPeriodDependencyRequirement],
+    *,
+    modelo_202_modality: Modelo202Modality | None,
+    activity_start_date: date | None,
+    target_filing_year: int,
+) -> tuple[CrossPeriodDependencyRequirement, ...]:
+    return tuple(
+        requirement
+        for requirement in requirements
+        if _qualifies_for_first_year_fractional_suppression(
+            requirement,
+            modelo_202_modality=modelo_202_modality,
+            activity_start_date=activity_start_date,
+            target_filing_year=target_filing_year,
+        )
+    )
+
+
+def _zero_value_previous_filing_requirements(
+    requirements: Iterable[CrossPeriodDependencyRequirement],
+    zero_value_previous_filing_binding_ids: frozenset[str] | None,
+) -> tuple[CrossPeriodDependencyRequirement, ...]:
+    return tuple(
+        requirement
+        for requirement in requirements
+        if _requirement_scoped_by_zero_value_previous_filing(
+            requirement,
+            zero_value_previous_filing_binding_ids,
+        )
+    )
+
+
+def _m111_no_retenciones_requirements(
+    requirements: Iterable[CrossPeriodDependencyRequirement],
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None,
+) -> tuple[CrossPeriodDependencyRequirement, ...]:
+    return tuple(
+        requirement
+        for requirement in requirements
+        if is_m111_no_retenciones_period(
+            source_modelo=requirement.source_modelo,
+            filing_year=requirement.filing_year,
+            period_token=requirement.period.registry_token,
+            attested_periods=m111_no_retenciones_periods or frozenset(),
+        )
+    )
+
+
+def _clean_state_requirement_scope(
+    snapshot: RegistrySnapshot,
+    *,
+    activity_start_date: date | None,
+    modelo_202_modality: Modelo202Modality | None,
+    taxpayer_files_economic_activity: bool | None,
+    not_applicable_source_modelos: frozenset[str] | None,
+    zero_value_previous_filing_binding_ids: frozenset[str] | None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None,
+) -> _CleanStateRequirementScope:
+    """Derive and disposition registry requirements before loading observations."""
+    all_requirements = cross_period_dependency_requirements(snapshot)
+    non_filer_modelos = _non_filer_modelos(
+        snapshot,
+        taxpayer_files_economic_activity=taxpayer_files_economic_activity,
+        not_applicable_source_modelos=not_applicable_source_modelos,
+    )
+    partition = partition_cross_period_requirements_by_activity_start(
+        _requirements_outside_non_filer_modelos(all_requirements, non_filer_modelos),
+        activity_start_date=activity_start_date,
+    )
+    return _CleanStateRequirementScope(
+        not_applicable=_not_applicable_dependencies(all_requirements, non_filer_modelos),
+        partition=partition,
+        first_year_fractional=_first_year_fractional_requirements(
+            partition.in_scope,
+            modelo_202_modality=modelo_202_modality,
+            activity_start_date=activity_start_date,
+            target_filing_year=snapshot.filing_year,
+        ),
+        zero_value_previous_filing=_zero_value_previous_filing_requirements(
+            partition.in_scope,
+            zero_value_previous_filing_binding_ids,
+        ),
+        m111_no_retenciones=_m111_no_retenciones_requirements(
+            partition.in_scope,
+            m111_no_retenciones_periods,
+        ),
+    )
+
+
+def _evaluate_in_scope_dependencies(
+    scope: _CleanStateRequirementScope,
+    *,
+    bucket_id: str,
+    observation_repository: CalculationObservationRepository,
+    repositories: _CleanStateRepositories,
+    taxpayer_tax_id: str | None,
+    expected_member_sets_by_key: Mapping[
+        tuple[str, int, str],
+        CrossPeriodExpectedMemberSet,
+    ],
+    target_filing_year: int,
+) -> tuple[CrossPeriodDependencyEvidence, ...]:
+    """Evaluate only requirements that were not explicitly scoped out."""
+    suppressed_keys = {
+        requirement.key
+        for requirement in (
+            *scope.first_year_fractional,
+            *scope.zero_value_previous_filing,
+            *scope.m111_no_retenciones,
+        )
+    }
+    dependencies: list[CrossPeriodDependencyEvidence] = []
+    for requirement in scope.partition.in_scope:
+        if requirement.key in suppressed_keys:
+            continue
+        evidence = _evaluate_requirement(
+            requirement,
+            bucket_id=bucket_id,
+            observation_repository=observation_repository,
+            filing_catalogue=repositories.filing_catalogue,
+            calculation_catalogue=repositories.calculation_catalogue,
+            verification_catalogue=repositories.verification_catalogue,
+            justificante_repository=repositories.justificante_repository,
+            taxpayer_tax_id=taxpayer_tax_id,
+            expected_member_set=expected_member_sets_by_key.get(
+                (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
+            ),
+        )
+        dependencies.append(_relax_same_year_local_chain(evidence, target_filing_year=target_filing_year))
+    return tuple(dependencies)
+
+
+def _pre_activity_dependencies(
+    partition: _RequirementPartition,
+    activity_start_date: date | None,
+) -> tuple[CrossPeriodDependencyEvidence, ...]:
+    if activity_start_date is None:
+        return ()
+    return tuple(
+        _suppressed_pre_activity_evidence(requirement, activity_start_date=activity_start_date)
+        for requirement in partition.suppressed
+    )
+
+
+def _first_year_fractional_dependencies(
+    requirements: tuple[CrossPeriodDependencyRequirement, ...],
+    activity_start_date: date | None,
+) -> tuple[CrossPeriodDependencyEvidence, ...]:
+    if activity_start_date is None:
+        return ()
+    return tuple(
+        _suppressed_first_year_fractional_evidence(requirement, activity_start_date=activity_start_date)
+        for requirement in requirements
+    )
+
+
+def _scoped_advisory_dependencies(
+    scope: _CleanStateRequirementScope,
+) -> tuple[CrossPeriodDependencyEvidence, ...]:
+    return (
+        *tuple(
+            _suppressed_zero_value_previous_filing_evidence(requirement)
+            for requirement in scope.zero_value_previous_filing
+        ),
+        *tuple(_suppressed_m111_no_retenciones_evidence(requirement) for requirement in scope.m111_no_retenciones),
+    )
+
+
+def _clean_state_dependencies(
+    scope: _CleanStateRequirementScope,
+    *,
+    in_scope: tuple[CrossPeriodDependencyEvidence, ...],
+    activity_start_date: date | None,
+) -> tuple[CrossPeriodDependencyEvidence, ...]:
+    return (
+        *in_scope,
+        *_pre_activity_dependencies(scope.partition, activity_start_date),
+        *scope.not_applicable,
+        *_first_year_fractional_dependencies(scope.first_year_fractional, activity_start_date),
+        *_scoped_advisory_dependencies(scope),
+    )
+
+
 def evaluate_cross_period_clean_state(
     snapshot: RegistrySnapshot,
     *,
@@ -459,111 +685,39 @@ def evaluate_cross_period_clean_state(
     subject to withholding/ingreso a cuenta were paid. It scopes out only those
     exact M111 periods; nonzero and unknown periods remain fully evaluated.
     """
-    filing_catalogue = filing_repository.load()
-    calculation_catalogue = calculation_repository.load()
-    verification_catalogue = require_verification_report_coordinates_current(verification_repository.load())
-    resolved_justificante_repository = justificante_repository or JustificanteRepository()
+    repositories = _load_clean_state_repositories(
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        verification_repository=verification_repository,
+        justificante_repository=justificante_repository,
+    )
     expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
-    non_filer_modelos = _non_filer_modelos(
+    scope = _clean_state_requirement_scope(
         snapshot,
+        activity_start_date=activity_start_date,
+        modelo_202_modality=modelo_202_modality,
         taxpayer_files_economic_activity=taxpayer_files_economic_activity,
         not_applicable_source_modelos=not_applicable_source_modelos,
-    )
-    all_requirements = cross_period_dependency_requirements(snapshot)
-    not_applicable_dependencies = _not_applicable_dependencies(all_requirements, non_filer_modelos)
-    partition = partition_cross_period_requirements_by_activity_start(
-        tuple(r for r in all_requirements if r.source_modelo not in non_filer_modelos),
-        activity_start_date=activity_start_date,
-    )
-    # Among the activity-start-in-scope requirements, scope out the first-year
-    # Modelo 202 modalidad-cuota obligations. Everything that does not qualify
-    # stays in scope and is evaluated normally (fail-closed).
-    first_year_fractional_requirements = tuple(
-        requirement
-        for requirement in partition.in_scope
-        if _qualifies_for_first_year_fractional_suppression(
-            requirement,
-            modelo_202_modality=modelo_202_modality,
-            activity_start_date=activity_start_date,
-            target_filing_year=snapshot.filing_year,
-        )
-    )
-    first_year_fractional_keys = {requirement.key for requirement in first_year_fractional_requirements}
-    zero_value_previous_filing_requirements = tuple(
-        requirement
-        for requirement in partition.in_scope
-        if _requirement_scoped_by_zero_value_previous_filing(
-            requirement,
-            zero_value_previous_filing_binding_ids,
-        )
-    )
-    zero_value_previous_filing_keys = {requirement.key for requirement in zero_value_previous_filing_requirements}
-    m111_no_retenciones_requirements = tuple(
-        requirement
-        for requirement in partition.in_scope
-        if is_m111_no_retenciones_period(
-            source_modelo=requirement.source_modelo,
-            filing_year=requirement.filing_year,
-            period_token=requirement.period.registry_token,
-            attested_periods=m111_no_retenciones_periods or frozenset(),
-        )
-    )
-    m111_no_retenciones_keys = {requirement.key for requirement in m111_no_retenciones_requirements}
-    in_scope_dependencies = tuple(
-        _evaluate_requirement(
-            requirement,
-            bucket_id=bucket_id,
-            observation_repository=observation_repository,
-            filing_catalogue=filing_catalogue,
-            calculation_catalogue=calculation_catalogue,
-            verification_catalogue=verification_catalogue,
-            justificante_repository=resolved_justificante_repository,
-            taxpayer_tax_id=taxpayer_tax_id,
-            expected_member_set=expected_member_sets_by_key.get(
-                (requirement.source_modelo, requirement.filing_year, requirement.period.registry_token),
-            ),
-        )
-        for requirement in partition.in_scope
-        if requirement.key not in first_year_fractional_keys
-        and requirement.key not in zero_value_previous_filing_keys
-        and requirement.key not in m111_no_retenciones_keys
-    )
-    in_scope_dependencies = tuple(
-        _relax_same_year_local_chain(evidence, target_filing_year=snapshot.filing_year)
-        for evidence in in_scope_dependencies
-    )
-    # ``activity_start_date`` is non-None whenever ``suppressed`` is non-empty.
-    suppressed_dependencies = tuple(
-        _suppressed_pre_activity_evidence(requirement, activity_start_date=activity_start_date)
-        for requirement in partition.suppressed
-        if activity_start_date is not None
-    )
-    # ``activity_start_date`` is non-None for every first-year fractional requirement
-    # (the qualification predicate requires a recorded date).
-    first_year_fractional_dependencies = tuple(
-        _suppressed_first_year_fractional_evidence(requirement, activity_start_date=activity_start_date)
-        for requirement in first_year_fractional_requirements
-        if activity_start_date is not None
-    )
-    zero_value_previous_filing_dependencies = tuple(
-        _suppressed_zero_value_previous_filing_evidence(requirement)
-        for requirement in zero_value_previous_filing_requirements
-    )
-    m111_no_retenciones_dependencies = tuple(
-        _suppressed_m111_no_retenciones_evidence(requirement) for requirement in m111_no_retenciones_requirements
+        zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids,
+        m111_no_retenciones_periods=m111_no_retenciones_periods,
     )
     return CrossPeriodCleanStateVerdict(
         bucket_id=bucket_id,
         target_modelo=str(snapshot.modelo.id),
         target_filing_year=snapshot.filing_year,
         target_period=Period.from_year_and_code(snapshot.filing_year, snapshot.period),
-        dependencies=(
-            *in_scope_dependencies,
-            *suppressed_dependencies,
-            *not_applicable_dependencies,
-            *first_year_fractional_dependencies,
-            *zero_value_previous_filing_dependencies,
-            *m111_no_retenciones_dependencies,
+        dependencies=_clean_state_dependencies(
+            scope,
+            in_scope=_evaluate_in_scope_dependencies(
+                scope,
+                bucket_id=bucket_id,
+                observation_repository=observation_repository,
+                repositories=repositories,
+                taxpayer_tax_id=taxpayer_tax_id,
+                expected_member_sets_by_key=expected_member_sets_by_key,
+                target_filing_year=snapshot.filing_year,
+            ),
+            activity_start_date=activity_start_date,
         ),
     )
 

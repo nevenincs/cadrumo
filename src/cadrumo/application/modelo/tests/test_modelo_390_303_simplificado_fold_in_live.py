@@ -539,7 +539,9 @@ def test_m390_encrypted_calculation_catalogue_refuses_a_corrupted_populated_hand
         mutate=mutate,
     )
 
-    with pytest.raises(CalculationRevisionPersistenceError, match=r"^calculation-revision catalogue payload is invalid$"):
+    with pytest.raises(
+        CalculationRevisionPersistenceError, match=r"^calculation-revision catalogue payload is invalid$"
+    ):
         calculations.load()
 
 

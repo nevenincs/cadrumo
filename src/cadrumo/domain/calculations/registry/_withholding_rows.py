@@ -150,6 +150,135 @@ def _is_clave_l29(clave: object, subclave: object) -> bool:
     return str(clave) == "L" and str(subclave) == _CLAVE_L29_SUBCLAVE
 
 
+def _validate_required_scoped_field(
+    *,
+    field: str,
+    value: Decimal | str | None,
+    required_fields: frozenset[str],
+    in_scope: bool,
+    perceptor_tax_id: str,
+    clave: str,
+    scope_description: str,
+    requirement_description: str,
+) -> None:
+    """Validate a design field that is required throughout one row scope.
+
+    The Modelo 190 design distinguishes a contradictory supplied value from a
+    missing value that the payer was required to record. Keeping those two
+    outcomes in one helper prevents each field's branch pair from drifting.
+    """
+    if field not in required_fields:
+        return
+    if value is not None and not in_scope:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry {field}, {scope_description}",
+        )
+    if in_scope and value is None:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+            f"{field} {requirement_description}: no observation carries it",
+        )
+
+
+def _reject_nonzero_outside_scope(
+    *,
+    field: str,
+    value: Decimal | str | None,
+    required_fields: frozenset[str],
+    in_scope: bool,
+    perceptor_tax_id: str,
+    clave: str,
+    scope_description: str,
+) -> None:
+    """Refuse a non-zero numeric fact outside the design's declared scope."""
+    if field not in required_fields or value in (None, Decimal("0")) or in_scope:
+        return
+    raise RegistryValidationError(
+        f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry {field}, {scope_description}",
+    )
+
+
+def _finalise_required_scoped_field(
+    finalised: dict[str, Decimal | str],
+    *,
+    field: str,
+    value: Decimal | str | None,
+    required_fields: frozenset[str],
+    in_scope: bool,
+    perceptor_tax_id: str,
+    clave: str,
+    scope_description: str,
+    requirement_description: str,
+    default: str,
+) -> None:
+    """Validate and serialise a field required whenever its design scope applies."""
+    _validate_required_scoped_field(
+        field=field,
+        value=value,
+        required_fields=required_fields,
+        in_scope=in_scope,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description=scope_description,
+        requirement_description=requirement_description,
+    )
+    if field in required_fields:
+        finalised[field] = str(value) if value is not None else default
+
+
+def _finalise_optional_scoped_field(
+    finalised: dict[str, Decimal | str],
+    *,
+    field: str,
+    value: Decimal | str | None,
+    required_fields: frozenset[str],
+    in_scope: bool,
+    perceptor_tax_id: str,
+    clave: str,
+    scope_description: str,
+    default: str,
+) -> None:
+    """Serialise a field when supplied, rejecting values outside its scope."""
+    if field not in required_fields:
+        return
+    if value is not None and not in_scope:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry {field}, {scope_description}",
+        )
+    finalised[field] = str(value) if value is not None else default
+
+
+def _validate_190_spouse_field(
+    *,
+    spouse: Decimal | str | None,
+    situacion_declared: bool,
+    titular_declared: bool,
+    spouse_context: bool,
+    required_fields: frozenset[str],
+    perceptor_tax_id: str,
+    clave: str,
+) -> None:
+    """Validate the conditional Modelo 190 spouse or titular identity."""
+    if "spouse_or_unit_titular_tax_id" not in required_fields:
+        return
+    if spouse is not None and not spouse_context and (situacion_declared or titular_declared):
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "spouse_or_unit_titular_tax_id, which design campo 17 declares only when "
+            "situacion familiar is 2 or clave L.29 has titular clave 2",
+        )
+    if spouse_context and spouse is None:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+            "spouse_or_unit_titular_tax_id (design campo 17): no observation carries it",
+        )
+    if spouse is not None and spouse == perceptor_tax_id:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r}: spouse_or_unit_titular_tax_id "
+            "equals the perceptor's own NIF, which the design campo 17 excludes",
+        )
+
+
 def _finalise_190_identity_fields(
     row: Mapping[str, Decimal | str],
     *,
@@ -161,105 +290,76 @@ def _finalise_190_identity_fields(
     datos_adicionales = _declares_datos_adicionales(clave, subclave)
     is_clave_a = clave == "A"
     is_clave_l29 = _is_clave_l29(clave, subclave)
-    birth_year = row.get("perceptor_birth_year")
-    situacion = row.get("perceptor_situacion_familiar")
-    disability = row.get("disability_clave")
-    spouse = row.get("spouse_or_unit_titular_tax_id")
-    contract = row.get("contract_relation_clave")
-    titular = row.get("unit_convivencia_titular_clave")
-    mobility = row.get("geographic_mobility_clave")
+    identity_fields = (
+        (
+            "perceptor_birth_year",
+            row.get("perceptor_birth_year"),
+            datos_adicionales,
+            "which design campo 15 declares only for claves A, B (subclaves 01, 03, 04, 99) and C",
+            "(design campo 15)",
+        ),
+        (
+            "perceptor_situacion_familiar",
+            row.get("perceptor_situacion_familiar"),
+            datos_adicionales,
+            "which design campo 16 declares only for claves A, B (subclaves 01, 03, 04, 99) and C",
+            "(design campo 16)",
+        ),
+        (
+            "disability_clave",
+            row.get("disability_clave"),
+            datos_adicionales,
+            "which design campo 18 declares only for claves A, B (subclaves 01, 03, 04, 99) and C",
+            "(design campo 18, clave 0 for no disability)",
+        ),
+        (
+            "contract_relation_clave",
+            row.get("contract_relation_clave"),
+            is_clave_a,
+            "which design campo 19 declares only for clave A",
+            "(design campo 19)",
+        ),
+        (
+            "unit_convivencia_titular_clave",
+            row.get("unit_convivencia_titular_clave"),
+            is_clave_l29,
+            "which design campo 20 declares only for clave L.29",
+            "(design campo 20)",
+        ),
+        (
+            "geographic_mobility_clave",
+            row.get("geographic_mobility_clave"),
+            is_clave_a,
+            "which design campo 21 declares only for clave A",
+            "(design campo 21)",
+        ),
+    )
+    for field, value, in_scope, scope_description, requirement_description in identity_fields:
+        _validate_required_scoped_field(
+            field=field,
+            value=value,
+            required_fields=required_fields,
+            in_scope=in_scope,
+            perceptor_tax_id=perceptor_tax_id,
+            clave=clave,
+            scope_description=scope_description,
+            requirement_description=requirement_description,
+        )
 
-    if "perceptor_birth_year" in required_fields:
-        if birth_year is not None and not datos_adicionales:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "perceptor_birth_year, which design campo 15 declares only for claves A, "
-                "B (subclaves 01, 03, 04, 99) and C",
-            )
-        if datos_adicionales and birth_year is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "perceptor_birth_year (design campo 15): no observation carries it",
-            )
-    if "perceptor_situacion_familiar" in required_fields:
-        if situacion is not None and not datos_adicionales:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "perceptor_situacion_familiar, which design campo 16 declares only for claves A, "
-                "B (subclaves 01, 03, 04, 99) and C",
-            )
-        if datos_adicionales and situacion is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "perceptor_situacion_familiar (design campo 16): no observation carries it",
-            )
-    if "disability_clave" in required_fields:
-        if disability is not None and not datos_adicionales:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "disability_clave, which design campo 18 declares only for claves A, "
-                "B (subclaves 01, 03, 04, 99) and C",
-            )
-        if datos_adicionales and disability is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "disability_clave (design campo 18, clave 0 for no disability): no observation carries it",
-            )
-    if "contract_relation_clave" in required_fields:
-        if contract is not None and not is_clave_a:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "contract_relation_clave, which design campo 19 declares only for clave A",
-            )
-        if is_clave_a and contract is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
-                "contract_relation_clave (design campo 19): no observation carries it",
-            )
-    if "unit_convivencia_titular_clave" in required_fields:
-        if titular is not None and not is_clave_l29:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "unit_convivencia_titular_clave, which design campo 20 declares only for clave L.29",
-            )
-        if is_clave_l29 and titular is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave L.29 require "
-                "unit_convivencia_titular_clave (design campo 20): no observation carries it",
-            )
-    if "geographic_mobility_clave" in required_fields:
-        if mobility is not None and not is_clave_a:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "geographic_mobility_clave, which design campo 21 declares only for clave A",
-            )
-        if is_clave_a and mobility is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
-                "geographic_mobility_clave (design campo 21): no observation carries it",
-            )
-    if "spouse_or_unit_titular_tax_id" in required_fields:
-        situacion_declared = "perceptor_situacion_familiar" in required_fields
-        titular_declared = "unit_convivencia_titular_clave" in required_fields
-        spouse_context = (
-            datos_adicionales and situacion_declared and situacion is not None and str(situacion) == "2"
-        ) or (is_clave_l29 and titular_declared and titular is not None and str(titular) == "2")
-        if spouse is not None and not spouse_context and (situacion_declared or titular_declared):
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "spouse_or_unit_titular_tax_id, which design campo 17 declares only when "
-                "situacion familiar is 2 or clave L.29 has titular clave 2",
-            )
-        if spouse_context and spouse is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "spouse_or_unit_titular_tax_id (design campo 17): no observation carries it",
-            )
-        if spouse is not None and spouse == perceptor_tax_id:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r}: spouse_or_unit_titular_tax_id "
-                "equals the perceptor's own NIF, which the design campo 17 excludes",
-            )
+    situacion_declared = "perceptor_situacion_familiar" in required_fields
+    titular_declared = "unit_convivencia_titular_clave" in required_fields
+    situacion = row.get("perceptor_situacion_familiar")
+    titular = row.get("unit_convivencia_titular_clave")
+    _validate_190_spouse_field(
+        spouse=row.get("spouse_or_unit_titular_tax_id"),
+        situacion_declared=situacion_declared,
+        titular_declared=titular_declared,
+        spouse_context=(datos_adicionales and situacion_declared and situacion is not None and str(situacion) == "2")
+        or (is_clave_l29 and titular_declared and titular is not None and str(titular) == "2"),
+        required_fields=required_fields,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+    )
 
 
 def _finalise_190_declaration_fields(
@@ -273,74 +373,211 @@ def _finalise_190_declaration_fields(
 ) -> None:
     datos_adicionales = _declares_datos_adicionales(clave, subclave)
 
-    if (
-        "reducciones_aplicables" in required_fields
-        and row.get("reducciones_aplicables") not in (None, Decimal("0"))
-        and not _declares_reducciones(clave, subclave)
-    ):
-        raise RegistryValidationError(
-            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-            "reducciones_aplicables, which design campo 22 declares only for claves A, "
-            "B (01, 03, 04, 99), C, E, F (01-06), G (01-06, 08), H and I",
-        )
-    if (
-        "gastos_deducibles" in required_fields
-        and row.get("gastos_deducibles") not in (None, Decimal("0"))
-        and not _declares_gastos(clave, subclave)
-    ):
-        raise RegistryValidationError(
-            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-            "gastos_deducibles, which design campo 23 declares only for claves A, "
-            "B (01, 03, 04, 99), C, E (01, 02) and exceptionally L.05, L.10, L.27",
-        )
-    if (
-        "pension_compensatoria" in required_fields
-        and row.get("pension_compensatoria") not in (None, Decimal("0"))
-        and not datos_adicionales
-    ):
-        raise RegistryValidationError(
-            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-            "pension_compensatoria, which design campo 24 declares only for claves A, "
-            "B (01, 03, 04, 99) and C",
-        )
-    if (
-        "anualidades_alimentos" in required_fields
-        and row.get("anualidades_alimentos") not in (None, Decimal("0"))
-        and not datos_adicionales
-    ):
-        raise RegistryValidationError(
-            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-            "anualidades_alimentos, which design campo 25 declares only for claves A, "
-            "B (01, 03, 04, 99) and C",
+    amount_fields = (
+        (
+            "reducciones_aplicables",
+            row.get("reducciones_aplicables"),
+            _declares_reducciones(clave, subclave),
+            "which design campo 22 declares only for claves A, B (01, 03, 04, 99), C, E, F "
+            "(01-06), G (01-06, 08), H and I",
+        ),
+        (
+            "gastos_deducibles",
+            row.get("gastos_deducibles"),
+            _declares_gastos(clave, subclave),
+            "which design campo 23 declares only for claves A, B (01, 03, 04, 99), C, E "
+            "(01, 02) and exceptionally L.05, L.10, L.27",
+        ),
+        (
+            "pension_compensatoria",
+            row.get("pension_compensatoria"),
+            datos_adicionales,
+            "which design campo 24 declares only for claves A, B (01, 03, 04, 99) and C",
+        ),
+        (
+            "anualidades_alimentos",
+            row.get("anualidades_alimentos"),
+            datos_adicionales,
+            "which design campo 25 declares only for claves A, B (01, 03, 04, 99) and C",
+        ),
+    )
+    for field, value, in_scope, scope_description in amount_fields:
+        _reject_nonzero_outside_scope(
+            field=field,
+            value=value,
+            required_fields=required_fields,
+            in_scope=in_scope,
+            perceptor_tax_id=perceptor_tax_id,
+            clave=clave,
+            scope_description=scope_description,
         )
     for count_field in _DATOS_ADICIONALES_COUNT_FIELDS:
-        if count_field not in required_fields:
-            continue
-        value = row.get(count_field)
-        if value is not None and int(value) != 0 and not datos_adicionales:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                f"a nonzero {count_field}, which the design's family-composition campos "
-                "declare only for claves A, B (01, 03, 04, 99) and C",
-            )
-    if "housing_loan_communication_clave" in required_fields:
-        housing = row.get("housing_loan_communication_clave")
-        if housing is not None and not datos_adicionales:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "housing_loan_communication_clave, which design campo 27 declares only for "
-                "claves A, B (01, 03, 04, 99) and C",
-            )
-        if datos_adicionales and housing is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "housing_loan_communication_clave (design campo 27, clave 0 for never "
-                "applied): no observation carries it",
-            )
-        finalised["housing_loan_communication_clave"] = str(housing) if housing is not None else " "
+        _reject_nonzero_outside_scope(
+            field=count_field,
+            value=row.get(count_field),
+            required_fields=required_fields,
+            in_scope=datos_adicionales,
+            perceptor_tax_id=perceptor_tax_id,
+            clave=clave,
+            scope_description=(
+                "which the design's family-composition campos declare only for claves A, B (01, 03, 04, 99) and C"
+            ),
+        )
+    _finalise_required_scoped_field(
+        finalised,
+        field="housing_loan_communication_clave",
+        value=row.get("housing_loan_communication_clave"),
+        required_fields=required_fields,
+        in_scope=datos_adicionales,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description=("which design campo 27 declares only for claves A, B (01, 03, 04, 99) and C"),
+        requirement_description=("(design campo 27, clave 0 for never applied)"),
+        default=" ",
+    )
     for count_field in _DATOS_ADICIONALES_COUNT_FIELDS:
         value = row.get(count_field)
         finalised[count_field] = str(value) if value is not None else "0"
+
+
+def _validate_190_foral_scope(
+    *,
+    foral_parts: tuple[Decimal, ...],
+    clave: str,
+    perceptor_tax_id: str,
+) -> None:
+    """Reject foral amounts on rows outside Modelo 190 clave E."""
+    if any(part != 0 for part in foral_parts) and clave != "E":
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "foral retentions, which design campo 35 declares exclusively for clave E",
+        )
+
+
+def _validate_190_foral_total(
+    *,
+    foral_total: Decimal,
+    clave_e_total: Decimal,
+    clave: str,
+    perceptor_tax_id: str,
+) -> None:
+    """Require the clave-E foral split to reconcile with row totals."""
+    if clave != "E":
+        return
+    if foral_total == 0 and clave_e_total != 0:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave E require "
+            "foral retentions (design campo 35): the payer must record where the "
+            "retenciones and ingresos a cuenta were ingresados",
+        )
+    if foral_total != clave_e_total:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave E carry foral "
+            f"retentions summing to {foral_total}, which design campo 35 requires to equal "
+            f"the row's retenciones practicadas plus ingresos a cuenta ({clave_e_total})",
+        )
+
+
+def _validate_190_foral_fields(
+    row: Mapping[str, Decimal | str],
+    *,
+    required_fields: frozenset[str],
+    clave: str,
+    perceptor_tax_id: str,
+) -> None:
+    """Validate the Modelo 190 clave-E split across the five foral slots."""
+    if "foral_retention_estatal" not in required_fields:
+        return
+    foral_parts = tuple(
+        _numeric_slot(row, field)
+        for field in (
+            "foral_retention_estatal",
+            "foral_retention_navarra",
+            "foral_retention_araba",
+            "foral_retention_gipuzkoa",
+            "foral_retention_bizkaia",
+        )
+    )
+    foral_total = sum(foral_parts, Decimal("0"))
+    retencion_practicada = _numeric_slot(row, "retencion_practicada")
+    ingreso_a_cuenta = _numeric_slot(row, "ingreso_a_cuenta")
+    clave_e_total = retencion_practicada + ingreso_a_cuenta
+    _validate_190_foral_scope(
+        foral_parts=foral_parts,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+    )
+    _validate_190_foral_total(
+        foral_total=foral_total,
+        clave_e_total=clave_e_total,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+    )
+
+
+def _validate_190_emerging_stock_clave(
+    *,
+    stock: Decimal | str | None,
+    clave: str,
+    perceptor_tax_id: str,
+) -> None:
+    """Reject a stock flag on a non-A Modelo 190 row."""
+    if stock is not None and clave != "A":
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "emerging_stock_excess_clave, which design campo 36 declares only for clave A",
+        )
+
+
+def _validate_190_emerging_stock_content(
+    *,
+    stock: Decimal | str | None,
+    especie_content: bool,
+    clave: str,
+    perceptor_tax_id: str,
+) -> None:
+    """Reject a stock flag that contradicts the row's in-kind content."""
+    if stock is not None and not especie_content:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "emerging_stock_excess_clave without any in-kind percepcion, which design "
+            "campo 36 declares only when the especie block has content",
+        )
+    if stock is None and clave == "A" and especie_content:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "in-kind percepciones but no emerging_stock_excess_clave, which design "
+            "campo 36 requires then (clave 0 for the rest of the in-kind retributions)",
+        )
+
+
+def _finalise_190_emerging_stock(
+    row: Mapping[str, Decimal | str],
+    *,
+    required_fields: frozenset[str],
+    clave: str,
+    perceptor_tax_id: str,
+    finalised: dict[str, Decimal | str],
+) -> None:
+    """Validate and serialise the clave-A in-kind stock flag."""
+    if "emerging_stock_excess_clave" not in required_fields:
+        return
+    stock = row.get("emerging_stock_excess_clave")
+    especie_content = (
+        row["percibido_especie"] != 0 or row["ingreso_a_cuenta"] != 0 or row["ingreso_a_cuenta_repercutido"] != 0
+    )
+    _validate_190_emerging_stock_clave(
+        stock=stock,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+    )
+    _validate_190_emerging_stock_content(
+        stock=stock,
+        especie_content=especie_content,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+    )
+    finalised["emerging_stock_excess_clave"] = str(stock) if stock is not None else " "
 
 
 def _finalise_190_special_fields(
@@ -352,8 +589,6 @@ def _finalise_190_special_fields(
     perceptor_tax_id: str,
     finalised: dict[str, Decimal | str],
 ) -> None:
-    is_clave_l29 = _is_clave_l29(clave, subclave)
-
     # The design's incapacidad-laboral blocks hold the incap PART of each
     # magnitude, and the base campos explicitly exclude it ("No se incluiran en
     # este campo..."). The observation therefore carries the SPLIT: the base
@@ -361,105 +596,219 @@ def _finalise_190_special_fields(
     # meaning), and the incap facts carry the part the design files at 255-321.
     # The totals helpers (percibido_total / retencion_total) add the two parts
     # back together, so the resumen-anual magnitudes stay the row's full total.
-    incap_dineraria = _declares_incapacidad_dineraria(clave, subclave)
-    incap_cash = _numeric_slot(row, "incapacity_cash_perception")
-    incap_kind_value = row["incapacity_kind_value"]
-    incap_kind_ingreso = row["incapacity_kind_ingreso_a_cuenta"]
-    if "incapacity_cash_perception" in required_fields and incap_cash != 0 and not incap_dineraria:
+    incapacity_fields = (
+        (
+            "incapacity_cash_perception",
+            _numeric_slot(row, "incapacity_cash_perception"),
+            _declares_incapacidad_dineraria(clave, subclave),
+            "which design campo 32 declares only for claves A and B.01",
+        ),
+        (
+            "incapacity_kind_value",
+            row["incapacity_kind_value"],
+            clave == "A",
+            "which design campo 33 declares only for clave A",
+        ),
+        (
+            "incapacity_kind_ingreso_a_cuenta",
+            row["incapacity_kind_ingreso_a_cuenta"],
+            clave == "A",
+            "which design campo 33 declares only for clave A",
+        ),
+    )
+    for field, value, in_scope, scope_description in incapacity_fields:
+        _reject_nonzero_outside_scope(
+            field=field,
+            value=value,
+            required_fields=required_fields,
+            in_scope=in_scope,
+            perceptor_tax_id=perceptor_tax_id,
+            clave=clave,
+            scope_description=scope_description,
+        )
+
+    _finalise_required_scoped_field(
+        finalised,
+        field="complemento_infancia_clave",
+        value=row.get("complemento_infancia_clave"),
+        required_fields=required_fields,
+        in_scope=_is_clave_l29(clave, subclave),
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design campo 34 declares only for clave L.29",
+        requirement_description="(design campo 34)",
+        default=" ",
+    )
+    _validate_190_foral_fields(
+        row,
+        required_fields=required_fields,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+    )
+    _finalise_190_emerging_stock(
+        row,
+        required_fields=required_fields,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+        finalised=finalised,
+    )
+    _finalise_optional_scoped_field(
+        finalised,
+        field="startup_fund_rendimientos_clave",
+        value=row.get("startup_fund_rendimientos_clave"),
+        required_fields=required_fields,
+        in_scope=clave == "A",
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design campo 37 declares only for clave A",
+        default=" ",
+    )
+
+
+def _require_and_stringify_field(
+    row: Mapping[str, Decimal | str],
+    finalised: dict[str, Decimal | str],
+    *,
+    field: str,
+    required_fields: frozenset[str],
+    perceptor_tax_id: str,
+    clave: str,
+    requirement_description: str,
+) -> None:
+    """Require an always-recorded field and project it to record text."""
+    if field not in required_fields:
+        return
+    value = row.get(field)
+    if value is None:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+            f"{field} {requirement_description}",
+        )
+    finalised[field] = str(value)
+
+
+def _validate_193_scoped_value(
+    *,
+    field: str,
+    value: Decimal | str | None,
+    in_scope: bool,
+    require_when_in_scope: bool,
+    require_even_for_naturaleza_s: bool,
+    naturaleza_s: bool,
+    perceptor_tax_id: str,
+    clave: str,
+    scope_description: str,
+    requirement_description: str,
+) -> None:
+    """Validate the scope and requiredness of one Modelo 193 field."""
+    if value is not None and not in_scope:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry {field}, {scope_description}",
+        )
+    if value is None and require_when_in_scope and in_scope and (require_even_for_naturaleza_s or not naturaleza_s):
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+            f"{field} {requirement_description}: no observation carries it",
+        )
+
+
+def _scoped_field_output(
+    value: Decimal | str | None,
+    *,
+    naturaleza_s: bool,
+    naturaleza_s_default: str | None,
+    default: str,
+) -> Decimal | str:
+    """Select the design content after scope validation and the S cascade."""
+    if naturaleza_s and naturaleza_s_default is not None:
+        return naturaleza_s_default
+    if value is not None:
+        return value
+    return default
+
+
+def _finalise_193_scoped_field(
+    row: Mapping[str, Decimal | str],
+    finalised: dict[str, Decimal | str],
+    *,
+    field: str,
+    required_fields: frozenset[str],
+    in_scope: bool,
+    require_when_in_scope: bool,
+    naturaleza_s: bool,
+    require_even_for_naturaleza_s: bool = False,
+    naturaleza_s_default: str | None,
+    default: str,
+    stringify: bool,
+    perceptor_tax_id: str,
+    clave: str,
+    scope_description: str,
+    requirement_description: str,
+) -> None:
+    """Validate, cascade, and serialise one Modelo 193 scoped field."""
+    if field not in required_fields:
+        return
+    value = row.get(field)
+    _validate_193_scoped_value(
+        field=field,
+        value=value,
+        in_scope=in_scope,
+        require_when_in_scope=require_when_in_scope,
+        require_even_for_naturaleza_s=require_even_for_naturaleza_s,
+        naturaleza_s=naturaleza_s,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description=scope_description,
+        requirement_description=requirement_description,
+    )
+    output = _scoped_field_output(
+        value,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=naturaleza_s_default,
+        default=default,
+    )
+    finalised[field] = str(output) if stringify else output
+
+
+def _finalise_193_emisor_field(
+    row: Mapping[str, Decimal | str],
+    finalised: dict[str, Decimal | str],
+    *,
+    required_fields: frozenset[str],
+    clave_abd: bool,
+    naturaleza_s: bool,
+    clave: str,
+    perceptor_tax_id: str,
+) -> None:
+    """Apply the Modelo 193 issuer-code rules, including clave-code coupling."""
+    field = "codigo_emisor"
+    if field not in required_fields:
+        return
+    emisor = row.get(field)
+    _validate_193_scoped_value(
+        field=field,
+        value=emisor,
+        in_scope=clave_abd,
+        require_when_in_scope=False,
+        require_even_for_naturaleza_s=False,
+        naturaleza_s=naturaleza_s,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design positions 80-91 declare only for claves A, B and D",
+        requirement_description="",
+    )
+    if emisor is not None and row.get("clave_codigo") == 2:
         raise RegistryValidationError(
             f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-            "incapacity_cash_perception, which design campo 32 declares only for claves A and B.01",
+            "codigo_emisor with clave_codigo 2, which design positions 80-91 declare empty then",
         )
-    if "incapacity_kind_value" in required_fields and incap_kind_value != 0 and clave != "A":
+    if emisor is None and clave_abd and not naturaleza_s and row.get("clave_codigo") in (1, 3, 4):
         raise RegistryValidationError(
-            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-            "incapacity_kind_value, which design campo 33 declares only for clave A",
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
+            "codigo_emisor (design positions 80-91, the issuer's NIF for clave codigo 1/4, "
+            "ZXX country code for 3): no observation carries it",
         )
-    if "incapacity_kind_ingreso_a_cuenta" in required_fields and incap_kind_ingreso != 0 and clave != "A":
-        raise RegistryValidationError(
-            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-            "incapacity_kind_ingreso_a_cuenta, which design campo 33 declares only for clave A",
-        )
-
-    if "complemento_infancia_clave" in required_fields:
-        complemento = row.get("complemento_infancia_clave")
-        if complemento is not None and not is_clave_l29:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "complemento_infancia_clave, which design campo 34 declares only for clave L.29",
-            )
-        if is_clave_l29 and complemento is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave L.29 require "
-                "complemento_infancia_clave (design campo 34): no observation carries it",
-            )
-        finalised["complemento_infancia_clave"] = str(complemento) if complemento is not None else " "
-
-    if "foral_retention_estatal" in required_fields:
-        foral_parts = tuple(
-            _numeric_slot(row, field)
-            for field in (
-                "foral_retention_estatal",
-                "foral_retention_navarra",
-                "foral_retention_araba",
-                "foral_retention_gipuzkoa",
-                "foral_retention_bizkaia",
-            )
-        )
-        foral_total = sum(foral_parts, Decimal("0"))
-        retencion_practicada = _numeric_slot(row, "retencion_practicada")
-        ingreso_a_cuenta = _numeric_slot(row, "ingreso_a_cuenta")
-        clave_e_total = retencion_practicada + ingreso_a_cuenta
-        if any(part != 0 for part in foral_parts) and clave != "E":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "foral retentions, which design campo 35 declares exclusively for clave E",
-            )
-        if clave == "E" and foral_total == 0 and clave_e_total != 0:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave E require "
-                "foral retentions (design campo 35): the payer must record where the "
-                "retenciones and ingresos a cuenta were ingresados",
-            )
-        if clave == "E" and foral_total != clave_e_total:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave E carry foral "
-                f"retentions summing to {foral_total}, which design campo 35 requires to equal "
-                f"the row's retenciones practicadas plus ingresos a cuenta ({clave_e_total})",
-            )
-
-    if "emerging_stock_excess_clave" in required_fields:
-        stock = row.get("emerging_stock_excess_clave")
-        especie_content = (
-            row["percibido_especie"] != 0 or row["ingreso_a_cuenta"] != 0 or row["ingreso_a_cuenta_repercutido"] != 0
-        )
-        if stock is not None and clave != "A":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "emerging_stock_excess_clave, which design campo 36 declares only for clave A",
-            )
-        if stock is not None and not especie_content:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "emerging_stock_excess_clave without any in-kind percepcion, which design "
-                "campo 36 declares only when the especie block has content",
-            )
-        if stock is None and clave == "A" and especie_content:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "in-kind percepciones but no emerging_stock_excess_clave, which design "
-                "campo 36 requires then (clave 0 for the rest of the in-kind retributions)",
-            )
-        finalised["emerging_stock_excess_clave"] = str(stock) if stock is not None else " "
-
-    if "startup_fund_rendimientos_clave" in required_fields:
-        startup = row.get("startup_fund_rendimientos_clave")
-        if startup is not None and clave != "A":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "startup_fund_rendimientos_clave, which design campo 37 declares only for clave A",
-            )
-        finalised["startup_fund_rendimientos_clave"] = str(startup) if startup is not None else " "
+    finalised[field] = " " * 12 if naturaleza_s else emisor if emisor is not None else " " * 12
 
 
 def _finalise_193_primary_fields(
@@ -478,106 +827,257 @@ def _finalise_193_primary_fields(
     # The design's claves A/B/D block, and the naturaleza-del-declarante 'S'
     # cascade that overrides it: under 'S' the A/B/D identification block
     # writes the design's own no-content and a present fact contradicts it.
-    clave_abd = clave in IDENTIFICATION_BLOCK_CLAVES
-    naturaleza_s = row.get("naturaleza_declarante") == "S"
-    if "naturaleza" in required_fields:
-        naturaleza193 = row.get("naturaleza")
-        if naturaleza193 is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "naturaleza (design position 93): the per-clave subclave is always recorded",
-            )
-        finalised["naturaleza"] = str(naturaleza193)
-    if "tipo_percepcion" in required_fields:
-        tipo_percepcion = row.get("tipo_percepcion")
-        if tipo_percepcion is None:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "tipo_percepcion (design position 122): 1 dinerarias / 2 en especie is always recorded",
-            )
-        finalised["tipo_percepcion"] = str(tipo_percepcion)
-    if "perceptor_mediador_flag" in required_fields:
-        mediador = row.get("perceptor_mediador_flag")
-        if mediador is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "perceptor_mediador_flag, which design position 76 declares only for claves A, B and D",
-            )
-        finalised["perceptor_mediador_flag"] = " " if naturaleza_s else mediador if mediador is not None else " "
-    if "clave_codigo" in required_fields:
-        clave_codigo = row.get("clave_codigo")
-        if clave_codigo is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "clave_codigo, which design position 79 declares only for claves A, B and D",
-            )
-        if clave_codigo is None and clave_abd and not naturaleza_s:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "clave_codigo (design position 79, clave 4 the general case): no observation carries it",
-            )
-        finalised["clave_codigo"] = "0" if naturaleza_s else str(clave_codigo) if clave_codigo is not None else "0"
-    if "codigo_emisor" in required_fields:
-        emisor = row.get("codigo_emisor")
-        if emisor is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "codigo_emisor, which design positions 80-91 declare only for claves A, B and D",
-            )
-        if emisor is not None and row.get("clave_codigo") == 2:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "codigo_emisor with clave_codigo 2, which design positions 80-91 declare empty then",
-            )
-        if emisor is None and clave_abd and not naturaleza_s and row.get("clave_codigo") in (1, 3, 4):
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "codigo_emisor (design positions 80-91, the issuer's NIF for clave codigo 1/4, "
-                "ZXX country code for 3): no observation carries it",
-            )
-        finalised["codigo_emisor"] = " " * 12 if naturaleza_s else emisor if emisor is not None else " " * 12
-    if "pago" in required_fields:
-        pago193 = row.get("pago")
-        if pago193 is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "pago, which design position 95 declares only for claves A, B and D",
-            )
-        if pago193 is None and clave_abd and not naturaleza_s:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "pago (design position 95): no observation carries it",
-            )
-        finalised["pago"] = "0" if naturaleza_s else str(pago193) if pago193 is not None else "0"
-    if "tipo_codigo" in required_fields:
-        tipo_codigo = row.get("tipo_codigo")
-        if tipo_codigo is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "tipo_codigo, which design position 96 declares only for claves A, B and D",
-            )
-        if tipo_codigo is None and clave_abd and not naturaleza_s:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "tipo_codigo (design position 96): no observation carries it",
-            )
-        finalised["tipo_codigo"] = " " if naturaleza_s else tipo_codigo if tipo_codigo is not None else " "
-    if "codigo_cuenta" in required_fields:
-        cuenta = row.get("codigo_cuenta")
-        if cuenta is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "codigo_cuenta, which design positions 97-116 declare only for claves A, B and D",
-            )
-        finalised["codigo_cuenta"] = " " * 20 if naturaleza_s else cuenta if cuenta is not None else " " * 20
-    if "pendiente_flag" in required_fields:
-        pendiente = row.get("pendiente_flag")
-        if pendiente is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "pendiente_flag, which design position 117 declares only for claves A, B and D",
-            )
-        finalised["pendiente_flag"] = pendiente if pendiente is not None else " "
+    _require_and_stringify_field(
+        row,
+        finalised,
+        field="naturaleza",
+        required_fields=required_fields,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        requirement_description="(design position 93): the per-clave subclave is always recorded",
+    )
+    _require_and_stringify_field(
+        row,
+        finalised,
+        field="tipo_percepcion",
+        required_fields=required_fields,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        requirement_description="(design position 122): 1 dinerarias / 2 en especie is always recorded",
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="perceptor_mediador_flag",
+        required_fields=required_fields,
+        in_scope=clave_abd,
+        require_when_in_scope=False,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=" ",
+        default=" ",
+        stringify=False,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design position 76 declares only for claves A, B and D",
+        requirement_description="",
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="clave_codigo",
+        required_fields=required_fields,
+        in_scope=clave_abd,
+        require_when_in_scope=True,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default="0",
+        default="0",
+        stringify=True,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design position 79 declares only for claves A, B and D",
+        requirement_description="(design position 79, clave 4 the general case)",
+    )
+    _finalise_193_emisor_field(
+        row,
+        finalised,
+        required_fields=required_fields,
+        clave_abd=clave_abd,
+        naturaleza_s=naturaleza_s,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="pago",
+        required_fields=required_fields,
+        in_scope=clave_abd,
+        require_when_in_scope=True,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default="0",
+        default="0",
+        stringify=True,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design position 95 declares only for claves A, B and D",
+        requirement_description="(design position 95)",
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="tipo_codigo",
+        required_fields=required_fields,
+        in_scope=clave_abd,
+        require_when_in_scope=True,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=" ",
+        default=" ",
+        stringify=False,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design position 96 declares only for claves A, B and D",
+        requirement_description="(design position 96)",
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="codigo_cuenta",
+        required_fields=required_fields,
+        in_scope=clave_abd,
+        require_when_in_scope=False,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=" " * 20,
+        default=" " * 20,
+        stringify=False,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design positions 97-116 declare only for claves A, B and D",
+        requirement_description="",
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="pendiente_flag",
+        required_fields=required_fields,
+        in_scope=clave_abd,
+        require_when_in_scope=False,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=None,
+        default=" ",
+        stringify=False,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design position 117 declares only for claves A, B and D",
+        requirement_description="",
+    )
+
+
+def _validate_193_restricted_amount(
+    *,
+    field: str,
+    value: Decimal | str,
+    required_fields: frozenset[str],
+    in_scope: bool,
+    naturaleza_s: bool,
+    perceptor_tax_id: str,
+    clave: str,
+    scope_description: str,
+    cascade_description: str,
+) -> None:
+    """Validate one Modelo 193 amount's scope and naturaleza-S cascade."""
+    if field not in required_fields or value == 0:
+        return
+    if not in_scope:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry {field}, {scope_description}",
+        )
+    if naturaleza_s:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry {field} {cascade_description}",
+        )
+
+
+def _validate_193_isin_field(
+    *,
+    row: Mapping[str, Decimal | str],
+    isin: Decimal | str | None,
+    clave_abd: bool,
+    naturaleza_s: bool,
+    clave: str,
+    perceptor_tax_id: str,
+) -> None:
+    """Validate the Modelo 193 ISIN coupling before projecting its content."""
+    clave_codigo = row.get("clave_codigo")
+    if isin is not None and clave_codigo not in (2, 4):
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            "isin_code while clave_codigo is not 2 or 4, which design positions 193-204 "
+            "declare as the ISIN's own scope",
+        )
+    if (
+        isin is None
+        and clave_abd
+        and not naturaleza_s
+        and clave_codigo in (2, 4)
+        and clave == "A"
+        and row.get("clave_mercado") == "A"
+    ):
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
+            "isin_code (design positions 193-204: obligatory when clave mercado is A): "
+            "no observation carries it",
+        )
+
+
+def _finalise_193_isin_field(
+    row: Mapping[str, Decimal | str],
+    finalised: dict[str, Decimal | str],
+    *,
+    required_fields: frozenset[str],
+    clave_abd: bool,
+    naturaleza_s: bool,
+    clave: str,
+    perceptor_tax_id: str,
+) -> None:
+    """Validate the Modelo 193 ISIN coupling and project its no-content."""
+    field = "isin_code"
+    if field not in required_fields:
+        return
+    isin = row.get(field)
+    _validate_193_isin_field(
+        row=row,
+        isin=isin,
+        clave_abd=clave_abd,
+        naturaleza_s=naturaleza_s,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+    )
+    finalised[field] = " " * 12 if naturaleza_s else isin if isin is not None else " " * 12
+
+
+def _finalise_193_loan_date(
+    row: Mapping[str, Decimal | str],
+    finalised: dict[str, Decimal | str],
+    *,
+    field: str,
+    required_fields: frozenset[str],
+    naturaleza_s: bool,
+    clave: str,
+    perceptor_tax_id: str,
+    positions: str,
+) -> None:
+    """Validate and serialise one loan date, including its tipo-codigo scope."""
+    if field not in required_fields:
+        return
+    value = row.get(field)
+    if value is not None and row.get("tipo_codigo") != "P":
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+            f"{field} while tipo_codigo is not 'P', which design positions {positions} "
+            "declare exclusively for prestamo de valores",
+        )
+    finalised[field] = "0" * 8 if naturaleza_s else value if value is not None else "0" * 8
+
+
+def _finalise_193_sequence_number(
+    row: Mapping[str, Decimal | str],
+    finalised: dict[str, Decimal | str],
+    *,
+    required_fields: frozenset[str],
+    row_number: int,
+    perceptor_tax_id: str,
+) -> None:
+    """Validate a supplied Modelo 193 order and write the derived sequence."""
+    if "numero_orden" not in required_fields:
+        return
+    supplied_order = row.get("numero_orden")
+    if supplied_order is not None and int(supplied_order) != row_number:
+        raise RegistryValidationError(
+            f"withholding rows for perceptor {perceptor_tax_id!r} carry numero_orden "
+            f"{supplied_order!r}, which disagrees with the design's sequential record "
+            f"number {row_number}",
+        )
+    finalised["numero_orden"] = str(row_number)
 
 
 def _finalise_193_instrument_fields(
@@ -592,133 +1092,141 @@ def _finalise_193_instrument_fields(
 ) -> None:
     clave_abd = clave in IDENTIFICATION_BLOCK_CLAVES
     naturaleza_s = row.get("naturaleza_declarante") == "S"
-
-    if "penalizaciones" in required_fields:
-        penal = row["penalizaciones"]
-        if penal != 0 and clave not in {"B", "D"}:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "penalizaciones, which design positions 182-192 declare only for claves B and D",
-            )
-        if penal != 0 and naturaleza_s:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "penalizaciones while naturaleza del declarante is 'S', which the design's "
-                "cascade declares a ceros",
-            )
-    if "isin_code" in required_fields:
-        isin = row.get("isin_code")
-        if isin is not None and row.get("clave_codigo") not in (2, 4):
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "isin_code while clave_codigo is not 2 or 4, which design positions 193-204 "
-                "declare as the ISIN's own scope",
-            )
-        if (
-            isin is None
-            and clave_abd
-            and not naturaleza_s
-            and row.get("clave_codigo") in (2, 4)
-            and clave == "A"
-            and row.get("clave_mercado") == "A"
-        ):
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave A require "
-                "isin_code (design positions 193-204: obligatory when clave mercado is A): "
-                "no observation carries it",
-            )
-        finalised["isin_code"] = " " * 12 if naturaleza_s else isin if isin is not None else " " * 12
-    if "naturaleza_declarante" in required_fields:
-        naturaleza_d = row.get("naturaleza_declarante")
-        finalised["naturaleza_declarante"] = naturaleza_d if naturaleza_d is not None else " "
-    if "fecha_inicio_prestamo" in required_fields:
-        fecha_inicio = row.get("fecha_inicio_prestamo")
-        if fecha_inicio is not None and row.get("tipo_codigo") != "P":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "fecha_inicio_prestamo while tipo_codigo is not 'P', which design positions "
-                "209-216 declare exclusively for prestamo de valores",
-            )
-        finalised["fecha_inicio_prestamo"] = (
-            "0" * 8 if naturaleza_s else fecha_inicio if fecha_inicio is not None else "0" * 8
+    for field, value, in_scope, scope_description, cascade_description in (
+        (
+            "penalizaciones",
+            row["penalizaciones"],
+            clave in {"B", "D"},
+            "which design positions 182-192 declare only for claves B and D",
+            "while naturaleza del declarante is 'S', which the design's cascade declares a ceros",
+        ),
+        (
+            "compensaciones",
+            row["compensaciones"],
+            row.get("tipo_codigo") == "P",
+            "which design positions 225-236 declare exclusively for prestamo de valores",
+            "while naturaleza del declarante is 'S', which the design's cascade declares a ceros",
+        ),
+        (
+            "garantias",
+            row["garantias"],
+            row.get("tipo_codigo") == "P",
+            "which design positions 237-248 declare exclusively for prestamo de valores",
+            "while naturaleza del declarante is 'S', which the design's cascade declares a ceros",
+        ),
+    ):
+        _validate_193_restricted_amount(
+            field=field,
+            value=value,
+            required_fields=required_fields,
+            in_scope=in_scope,
+            naturaleza_s=naturaleza_s,
+            perceptor_tax_id=perceptor_tax_id,
+            clave=clave,
+            scope_description=scope_description,
+            cascade_description=cascade_description,
         )
-    if "fecha_vencimiento_prestamo" in required_fields:
-        fecha_vencimiento = row.get("fecha_vencimiento_prestamo")
-        if fecha_vencimiento is not None and row.get("tipo_codigo") != "P":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "fecha_vencimiento_prestamo while tipo_codigo is not 'P', which design positions "
-                "217-224 declare exclusively for prestamo de valores",
-            )
-        finalised["fecha_vencimiento_prestamo"] = (
-            "0" * 8 if naturaleza_s else fecha_vencimiento if fecha_vencimiento is not None else "0" * 8
-        )
-    if "compensaciones" in required_fields:
-        compensa = row["compensaciones"]
-        if compensa != 0 and row.get("tipo_codigo") != "P":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "compensaciones while tipo_codigo is not 'P', which design positions 225-236 "
-                "declare exclusively for prestamo de valores",
-            )
-        if compensa != 0 and naturaleza_s:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "compensaciones while naturaleza del declarante is 'S', which the design's "
-                "cascade declares a ceros",
-            )
-    if "garantias" in required_fields:
-        garant = row["garantias"]
-        if garant != 0 and row.get("tipo_codigo") != "P":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "garantias while tipo_codigo is not 'P', which design positions 237-248 "
-                "declare exclusively for prestamo de valores",
-            )
-        if garant != 0 and naturaleza_s:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "garantias while naturaleza del declarante is 'S', which the design's "
-                "cascade declares a ceros",
-            )
-    if "nif_pagador_anterior" in required_fields:
-        pagador_anterior = row.get("nif_pagador_anterior")
-        if pagador_anterior is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "nif_pagador_anterior, which design positions 322-330 declare only for claves A, B and D",
-            )
-        finalised["nif_pagador_anterior"] = pagador_anterior if pagador_anterior is not None else " " * 9
-    if "fecha_devengo" in required_fields:
-        devengo193 = row.get("fecha_devengo")
-        if devengo193 is not None and clave != "A":
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "fecha_devengo, which design positions 331-338 declare only for clave A",
-            )
-        finalised["fecha_devengo"] = devengo193 if devengo193 is not None else "0" * 8
-    if "clave_mercado" in required_fields:
-        mercado = row.get("clave_mercado")
-        if mercado is not None and not clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                "clave_mercado, which design position 339 declares only for claves A, B and D",
-            )
-        if mercado is None and clave_abd:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} require "
-                "clave_mercado (design position 339): no observation carries it",
-            )
-        finalised["clave_mercado"] = mercado if mercado is not None else " "
-    if "numero_orden" in required_fields:
-        supplied_order = row.get("numero_orden")
-        if supplied_order is not None and int(supplied_order) != row_number:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} carry numero_orden "
-                f"{supplied_order!r}, which disagrees with the design's sequential record "
-                f"number {row_number}",
-            )
-        finalised["numero_orden"] = str(row_number)
+    _finalise_193_isin_field(
+        row,
+        finalised,
+        required_fields=required_fields,
+        clave_abd=clave_abd,
+        naturaleza_s=naturaleza_s,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="naturaleza_declarante",
+        required_fields=required_fields,
+        in_scope=True,
+        require_when_in_scope=False,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=None,
+        default=" ",
+        stringify=False,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="",
+        requirement_description="",
+    )
+    _finalise_193_loan_date(
+        row,
+        finalised,
+        field="fecha_inicio_prestamo",
+        required_fields=required_fields,
+        naturaleza_s=naturaleza_s,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+        positions="209-216",
+    )
+    _finalise_193_loan_date(
+        row,
+        finalised,
+        field="fecha_vencimiento_prestamo",
+        required_fields=required_fields,
+        naturaleza_s=naturaleza_s,
+        clave=clave,
+        perceptor_tax_id=perceptor_tax_id,
+        positions="217-224",
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="nif_pagador_anterior",
+        required_fields=required_fields,
+        in_scope=clave_abd,
+        require_when_in_scope=False,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=None,
+        default=" " * 9,
+        stringify=False,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design positions 322-330 declare only for claves A, B and D",
+        requirement_description="",
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="fecha_devengo",
+        required_fields=required_fields,
+        in_scope=clave == "A",
+        require_when_in_scope=False,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=None,
+        default="0" * 8,
+        stringify=False,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design positions 331-338 declare only for clave A",
+        requirement_description="",
+    )
+    _finalise_193_scoped_field(
+        row,
+        finalised,
+        field="clave_mercado",
+        required_fields=required_fields,
+        in_scope=clave_abd,
+        require_when_in_scope=True,
+        require_even_for_naturaleza_s=True,
+        naturaleza_s=naturaleza_s,
+        naturaleza_s_default=None,
+        default=" ",
+        stringify=False,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+        scope_description="which design position 339 declares only for claves A, B and D",
+        requirement_description="(design position 339)",
+    )
+    _finalise_193_sequence_number(
+        row,
+        finalised,
+        required_fields=required_fields,
+        row_number=row_number,
+        perceptor_tax_id=perceptor_tax_id,
+    )
 
 
 def _finalise_row_defaults(

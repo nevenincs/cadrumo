@@ -457,23 +457,26 @@ def _seed_prior_year_m100(secure_objects: SecureObjectRepository) -> None:
             ),
             source_kind="app_filing",
             captured_at=_FILE_AT,
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo="100",
-                filing_year=_PRIOR_YEAR,
-                period=_M100_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
                     modelo="100",
                     filing_year=_PRIOR_YEAR,
                     period=_M100_ANNUAL_PERIOD,
-                    casilla_values={
-                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                        _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
-                    },
-                ),
-            )))
+                    observations=registry_grounded_observations(
+                        modelo="100",
+                        filing_year=_PRIOR_YEAR,
+                        period=_M100_ANNUAL_PERIOD,
+                        casilla_values={
+                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                            _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0"),
+                        },
+                    ),
+                )
+            ),
+        )
     )
 
 

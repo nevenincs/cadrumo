@@ -89,7 +89,11 @@ def test_relation_prefill_source_resolver_matches_local_store_prefill(tmp_path: 
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         for observation in _modelo_115_observations():
-            repository.save(repository.prepare_observation_envelope(observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)))
+            repository.save(
+                repository.prepare_observation_envelope(
+                    observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)
+                )
+            )
 
         snapshot = _snapshot("180", 2026, "0A")
         prefill = resolve_relations_from_local_store(snapshot, repository=repository)
@@ -189,7 +193,11 @@ def test_resolve_relations_produced_values_carry_provenance_string_when_resolved
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         for observation in _modelo_115_observations():
-            repository.save(repository.prepare_observation_envelope(observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)))
+            repository.save(
+                repository.prepare_observation_envelope(
+                    observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)
+                )
+            )
 
         snapshot = _snapshot("180", 2026, "0A")
         result = resolve_relations_from_local_store(snapshot, repository=repository)
@@ -559,7 +567,11 @@ def test_mid_year_start_folds_available_quarters_not_all_or_nothing(tmp_path: Pa
         for observation in _modelo_130_pagos_observations(
             {"2T": q2_payment, "3T": Decimal("0"), "4T": Decimal("0")},
         ):
-            repository.save(repository.prepare_observation_envelope(observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)))
+            repository.save(
+                repository.prepare_observation_envelope(
+                    observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)
+                )
+            )
         snapshot = _snapshot("100", 2024, "0A")
         prefill = resolve_relations_from_local_store(
             snapshot,
@@ -578,7 +590,11 @@ def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> 
         # pre-activity period. The fold must stay unresolved (blank for the operator
         # to confirm), never silently summed over the hole.
         for observation in _modelo_130_pagos_observations({"2T": Decimal("640"), "4T": Decimal("800")}):
-            repository.save(repository.prepare_observation_envelope(observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)))
+            repository.save(
+                repository.prepare_observation_envelope(
+                    observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(observation)
+                )
+            )
         snapshot = _snapshot("100", 2024, "0A")
         prefill = resolve_relations_from_local_store(
             snapshot,

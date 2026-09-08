@@ -209,17 +209,20 @@ def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo="100",
-                filing_year=2024,
-                period=_ANNUAL_PERIOD,
-                observations=registry_grounded_observations(
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
                     modelo="100",
                     filing_year=2024,
                     period=_ANNUAL_PERIOD,
-                    casilla_values={_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
-                ),
-            )))
+                    observations=registry_grounded_observations(
+                        modelo="100",
+                        filing_year=2024,
+                        period=_ANNUAL_PERIOD,
+                        casilla_values={_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
+                    ),
+                )
+            ),
+        )
     )
 
 

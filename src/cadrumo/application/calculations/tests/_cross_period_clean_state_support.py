@@ -588,11 +588,13 @@ def _seed_source_filing_record_without_import_flow(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
-        registry_snapshot_ref=bundled_authority().snapshot(
+        registry_snapshot_ref=bundled_authority()
+        .snapshot(
             str(work_unit.modelo),
             filing_year=work_unit.filing_year,
             period=work_unit.period.registry_token,
-        ).snapshot_ref,
+        )
+        .snapshot_ref,
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=casilla_values,
         observations=registry_grounded_observations(

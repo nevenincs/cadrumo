@@ -233,17 +233,20 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
-                modelo="100",
-                filing_year=filing_year,
-                period="0A",
-                casilla_values={
-                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
-                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
-                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
-                },
-            )))
+            stamped_revision_id=revision_id_for_observation(
+                registry_grounded_modelo_observation(
+                    modelo="100",
+                    filing_year=filing_year,
+                    period="0A",
+                    casilla_values={
+                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                    },
+                )
+            ),
+        )
     )
 
 

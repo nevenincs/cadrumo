@@ -270,20 +270,23 @@ def _seed_zero_m202_pagos() -> None:
                 ),
                 source_kind=APP_FILING_SOURCE_KIND,
                 captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
                         modelo=_M202,
                         filing_year=_FILING_YEAR,
                         period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: Decimal("0"),
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
-                )))
+                        observations=registry_grounded_observations(
+                            modelo=_M202,
+                            filing_year=_FILING_YEAR,
+                            period=period,
+                            casilla_values={
+                                _M202_PAGO_OUTPUT: Decimal("0"),
+                                _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                            },
+                        ),
+                    )
+                ),
+            )
         )
 
 

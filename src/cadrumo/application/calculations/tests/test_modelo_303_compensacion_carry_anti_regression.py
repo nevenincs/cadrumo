@@ -184,7 +184,10 @@ def _run_carry_chain(
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(_registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)))
+                stamped_revision_id=revision_id_for_observation(
+                    _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)
+                ),
+            )
         )
 
         snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")

@@ -1,7 +1,6 @@
 """Draft approval persistence and stale-detection helpers.
 
-Provides the :func:`approve_draft` / :func:`unapprove_draft` /
-:func:`refresh_review_status` lifecycle on top of
+Provides the :func:`approve_draft` / :func:`refresh_review_status` lifecycle on top of
 :class:`domain.filing.ModeloDraft` and
 :class:`domain.submission.ModeloDraftStatus`, plus the deterministic
 :class:`domain.filing.ModeloApprovalBasis` fingerprint pipeline that lets
@@ -415,38 +414,6 @@ def approve_draft(
         draft.period,
         normalized_approver,
     )
-    return updated
-
-
-def unapprove_draft(
-    draft: ModeloDraft,
-    *,
-    unapproved_at: datetime | None = None,
-) -> ModeloDraft:
-    """Remove approval metadata and restore the machine validation status.
-
-    Args:
-        draft: The draft to revert.
-        unapproved_at: Optional timestamp; defaults to
-            the canonical clock helper.
-
-    Returns:
-        A new :class:`ModeloDraft` with approval metadata cleared and
-        ``status`` set to the validation status derived from
-        :attr:`ModeloDraft.findings`.
-    """
-    timestamp = unapproved_at or now()
-    updated = draft.model_copy(
-        update={
-            "status": derive_validation_status(draft.findings),
-            "approved_at": None,
-            "approved_by": None,
-            "approval_basis": None,
-            "review_checksum": None,
-            "updated_at": timestamp,
-        },
-    )
-    _logger.info("draft unapproved draft_id=%s modelo=%s period=%s", draft.draft_id, draft.modelo, draft.period)
     return updated
 
 

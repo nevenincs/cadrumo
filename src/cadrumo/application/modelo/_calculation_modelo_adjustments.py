@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
 from decimal import Decimal
 
 from ...core.aggregation import BindingSourceKind
@@ -214,18 +214,57 @@ class _M131ActivityInputs:
     resultado: Decimal | None = None
 
 
-def _m131_objective_estimation_data_base_inputs(
+@dataclass(slots=True)
+class _M131ProjectionInputs:
+    """Grouped M131 fixed-record inputs before casilla projection.
+
+    The two groups are intentionally kept separate.  Page-1 activity rows
+    take precedence for casilla 01, while DPA module rendimientos are only a
+    fallback when no page-1 rendimiento is present.  Keeping that distinction
+    in a typed intermediate object prevents the collection loop from also
+    deciding liquidation precedence.
+    """
+
+    page1_rows: dict[str, _M131ActivityInputs] = field(default_factory=dict)
+    dpa_rendimientos: list[Decimal] = field(default_factory=list)
+
+
+_M131_ACTIVITY_FIELD_ATTRIBUTES: Mapping[str, str] = {
+    "rendimiento-neto": "rendimiento",
+    "porcentaje": "porcentaje",
+    "resultado": "resultado",
+}
+
+
+def _m131_page1_activity_field(field_name: str) -> tuple[str, str] | None:
+    match = _M131_PAGE1_ACTIVITY_FIELD_RE.match(field_name)
+    if match is None:
+        return None
+    return match.group("index"), match.group("kind")
+
+
+def _m131_update_page1_activity(
+    inputs: _M131ProjectionInputs,
     *,
-    work_unit: WorkUnit,
+    field_name: str,
+    value: Decimal,
+) -> None:
+    parsed_field = _m131_page1_activity_field(field_name)
+    if parsed_field is None:
+        return
+    index, kind = parsed_field
+    current = inputs.page1_rows.get(index, _M131ActivityInputs())
+    attribute = _M131_ACTIVITY_FIELD_ATTRIBUTES[kind]
+    inputs.page1_rows[index] = replace(current, **{attribute: value})
+
+
+def _m131_collect_projection_inputs(
+    *,
     revision: ModeloRevision,
     binding_values: Mapping[BindingId, Decimal],
-) -> dict[CasillaId, Decimal]:
-    """Project M131 page-1/DPA datos-base fixed-record bindings into liquidation inputs."""
-    if str(work_unit.modelo) != Modelo.M131.value:
-        return {}
-
-    page1_rows: dict[str, _M131ActivityInputs] = {}
-    dpa_rendimientos: list[Decimal] = []
+) -> _M131ProjectionInputs:
+    """Collect validated M131 record-field bindings into their input groups."""
+    inputs = _M131ProjectionInputs()
     for binding in revision.bindings:
         if binding.source is not BindingSourceKind.MANUAL_INPUT or binding.id not in binding_values:
             continue
@@ -242,52 +281,57 @@ def _m131_objective_estimation_data_base_inputs(
         field = manual_selector.field
         value = binding_values[binding.id]
         if record == "page_1":
-            match = _M131_PAGE1_ACTIVITY_FIELD_RE.match(field)
-            if match is None:
-                continue
-            index = match.group("index")
-            current = page1_rows.get(index, _M131ActivityInputs())
-            match match.group("kind"):
-                case "rendimiento-neto":
-                    page1_rows[index] = _M131ActivityInputs(
-                        rendimiento=value,
-                        porcentaje=current.porcentaje,
-                        resultado=current.resultado,
-                    )
-                case "porcentaje":
-                    page1_rows[index] = _M131ActivityInputs(
-                        rendimiento=current.rendimiento,
-                        porcentaje=value,
-                        resultado=current.resultado,
-                    )
-                case "resultado":
-                    page1_rows[index] = _M131ActivityInputs(
-                        rendimiento=current.rendimiento,
-                        porcentaje=current.porcentaje,
-                        resultado=value,
-                    )
-                case _:
-                    pass
+            _m131_update_page1_activity(inputs, field_name=field, value=value)
             continue
         if record == "DPA" and _M131_DPA_MODULE_RENDIMIENTO_RE.match(field) is not None:
-            dpa_rendimientos.append(value)
+            inputs.dpa_rendimientos.append(value)
+
+    return inputs
+
+
+def _m131_activity_result(row: _M131ActivityInputs) -> Decimal | None:
+    if row.resultado is not None:
+        return row.resultado
+    if row.rendimiento is None or row.porcentaje is None:
+        return None
+    return round_to_cents(row.rendimiento * row.porcentaje / Decimal("100"))
+
+
+def _m131_page1_results(rows: Mapping[str, _M131ActivityInputs]) -> tuple[Decimal, ...]:
+    results: list[Decimal] = []
+    for row in rows.values():
+        result = _m131_activity_result(row)
+        if result is not None:
+            results.append(result)
+    return tuple(results)
+
+
+def _m131_project_data_base_inputs(inputs: _M131ProjectionInputs) -> dict[CasillaId, Decimal]:
+    page1_rendimientos = tuple(row.rendimiento for row in inputs.page1_rows.values() if row.rendimiento is not None)
 
     projected: dict[CasillaId, Decimal] = {}
-    page1_rendimientos = [row.rendimiento for row in page1_rows.values() if row.rendimiento is not None]
     if page1_rendimientos:
         projected[_M131_DATA_BASE_RENDIMIENTO_CASILLA] = sum(page1_rendimientos, Decimal("0"))
-    elif dpa_rendimientos:
-        projected[_M131_DATA_BASE_RENDIMIENTO_CASILLA] = sum(dpa_rendimientos, Decimal("0"))
+    elif inputs.dpa_rendimientos:
+        projected[_M131_DATA_BASE_RENDIMIENTO_CASILLA] = sum(inputs.dpa_rendimientos, Decimal("0"))
 
-    page1_results: list[Decimal] = []
-    for row in page1_rows.values():
-        if row.resultado is not None:
-            page1_results.append(row.resultado)
-        elif row.rendimiento is not None and row.porcentaje is not None:
-            page1_results.append(round_to_cents(row.rendimiento * row.porcentaje / Decimal("100")))
+    page1_results = _m131_page1_results(inputs.page1_rows)
     if page1_results:
         projected[_M131_DATA_BASE_PAGO_PREVIO_CASILLA] = sum(page1_results, Decimal("0"))
     return projected
+
+
+def _m131_objective_estimation_data_base_inputs(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    binding_values: Mapping[BindingId, Decimal],
+) -> dict[CasillaId, Decimal]:
+    """Project M131 page-1/DPA datos-base fixed-record bindings into liquidation inputs."""
+    if str(work_unit.modelo) != Modelo.M131.value:
+        return {}
+    inputs = _m131_collect_projection_inputs(revision=revision, binding_values=binding_values)
+    return _m131_project_data_base_inputs(inputs)
 
 
 def _m349_row_field_template_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:

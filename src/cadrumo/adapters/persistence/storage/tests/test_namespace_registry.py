@@ -233,6 +233,7 @@ def test_profile_ledger_namespaces_are_registered() -> None:
     assert inventory.schema_version == 1
     assert inventory.require_default_object_key() == "default"
 
+
 def test_profile_ledger_namespace_registration_coverage_is_present() -> None:
     registered_keys = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
 

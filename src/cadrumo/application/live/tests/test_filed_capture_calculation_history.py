@@ -1543,17 +1543,20 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CAPTURED_AT,
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=2026,
-                    period="1T",
-                    observations=registry_grounded_observations(
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
                         modelo="303",
                         filing_year=2026,
                         period="1T",
-                        casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
-                    ),
-                )))
+                        observations=registry_grounded_observations(
+                            modelo="303",
+                            filing_year=2026,
+                            period="1T",
+                            casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
+                        ),
+                    )
+                ),
+            )
         )
 
         target_snapshot = _registry_snapshot("303", 2026, "2T")

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#compatibility-lifecycle'
 date: '2026-07-09'
-modified: '2026-07-10'
-body_hash: 'sha256:bafea829e45f1be5cfcd046832cad8fa0ffbbb7afe8f2e77297c03ca34f2d37f'
+modified: '2026-09-08'
+body_hash: 'sha256:b11726a5744267e9eaebfb26940d81fe306c4560d28f17501394b33c69ab017b'
 related:
   - "[[2026-07-09-compatibility-lifecycle-research]]"
   - '[[2026-09-02-compatibility-lifecycle-ci-policy-rehome-research]]'
@@ -124,3 +124,11 @@ and the `no-legacy-compatibility` carve-outs (see the research doc).
   correctly forbids fabricating before a real post-checkpoint bump exists; the
   calendar date of the flip is the operator's release call, bounded by the tripwire
   to no later than the 1.0 cut.
+
+## Amendment (2026-09-08): lifecycle metastate is not a production mechanism
+
+The chosen dormant regime switch is withdrawn. The implementation demonstrated that `COMPATIBILITY_REGIME`, `RELEASED_FORMAT_FLOORS`, the persisted-format classification inventory, and their policy predicates had no product consumer; synthetic tests and inventory gates were their entire reason to ship. Under the source/development boundary recorded by `2026-09-04-reachability-burndown-reference`, those declarations are development lifecycle state, not forward-compatible product behavior.
+
+The durable part of this decision is narrower. Persisted boundaries keep explicit current-version stamps and refuse malformed, missing, future, or otherwise unreadable versions at the owner that parses them. Concrete upgrade machinery earns production residence only when a released prior shape and a live reader require it. A release checkpoint is an explicit release decision recorded in the architecture and release process at that time; it is not represented ahead of time by a production enum, a frozen-floor placeholder, a closed classification map, or vacuously green tests.
+
+This amendment withdraws the chosen option, the core-policy implementation, the synthetic released-branch proofs, the central enrollment gate, and every consequence that treats those dormant artifacts as installed governance. It retains the requirement that released taxpayer data must remain readable and that any real schema transition be accompanied by its owning reader or migration and a production-path restorability proof.

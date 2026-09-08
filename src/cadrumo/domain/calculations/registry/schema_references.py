@@ -155,6 +155,40 @@ class RegistrySnapshotRef(RegistryModel):
     period: RegistryPeriodCode
 
 
+def _validate_period_selector_year_choice(years: tuple[int, ...], year_from: int | None) -> None:
+    """Validate the mutually exclusive year-selection forms."""
+    if years and year_from is not None:
+        raise RegistryValidationError("period_selector must use either years or year_from/year_to")
+    if not years and year_from is None:
+        raise RegistryValidationError("period_selector must declare years or year_from")
+
+
+def _validate_period_selector_year_uniqueness(years: tuple[int, ...]) -> None:
+    """Reject repeated explicit filing years."""
+    if len(set(years)) != len(years):
+        raise RegistryValidationError("period_selector years must be unique")
+
+
+def _validate_period_selector_year_bounds(year_from: int | None, year_to: int | None) -> None:
+    """Validate the optional inclusive range endpoints."""
+    if year_to is not None and year_from is None:
+        raise RegistryValidationError("period_selector year_to requires year_from")
+    if year_from is not None and year_to is not None and year_to < year_from:
+        raise RegistryValidationError("period_selector year_to must be on or after year_from")
+
+
+def _validate_period_selector_years(
+    *,
+    years: tuple[int, ...],
+    year_from: int | None,
+    year_to: int | None,
+) -> None:
+    """Validate year selection in the model's established failure order."""
+    _validate_period_selector_year_choice(years, year_from)
+    _validate_period_selector_year_uniqueness(years)
+    _validate_period_selector_year_bounds(year_from, year_to)
+
+
 class PeriodSelector(RegistryModel):
     """Select filing years and periods using explicit years or an inclusive range."""
 
@@ -172,16 +206,7 @@ class PeriodSelector(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_year_selector(self) -> PeriodSelector:
-        if self.years and self.year_from is not None:
-            raise RegistryValidationError("period_selector must use either years or year_from/year_to")
-        if not self.years and self.year_from is None:
-            raise RegistryValidationError("period_selector must declare years or year_from")
-        if len(set(self.years)) != len(self.years):
-            raise RegistryValidationError("period_selector years must be unique")
-        if self.year_to is not None and self.year_from is None:
-            raise RegistryValidationError("period_selector year_to requires year_from")
-        if self.year_from is not None and self.year_to is not None and self.year_to < self.year_from:
-            raise RegistryValidationError("period_selector year_to must be on or after year_from")
+        _validate_period_selector_years(years=self.years, year_from=self.year_from, year_to=self.year_to)
         return self
 
     def includes_year(self, year: int) -> bool:
@@ -349,6 +374,101 @@ def source_window_applies_across(
     return not (applies_from is not None and span_to is not None and applies_from > span_to)
 
 
+def _validate_source_window(*, applies_from: date | None, applies_to: date | None) -> None:
+    """Validate the source's inclusive date window."""
+    if applies_to is not None and applies_from is not None and applies_to < applies_from:
+        raise RegistryValidationError("source reference applies_to must be on or after applies_from")
+
+
+def _validate_source_dictionary_grammar(
+    *,
+    kind: RegistrySourceKind,
+    dictionary_casilla_id_grammar: DictionaryCasillaIdGrammar,
+) -> None:
+    """Keep the extended casilla grammar exclusive to dictionary evidence."""
+    if kind is not RegistrySourceKind.DICTIONARY and dictionary_casilla_id_grammar != "numeric":
+        raise RegistryValidationError(
+            "dictionary_casilla_id_grammar other than 'numeric' is only valid for kind='dictionary'",
+        )
+
+
+def _validate_source_period_selector(
+    *,
+    source_id: SourceRefId,
+    period_selector: PeriodSelector | None,
+    applies_from: date | None,
+    applies_to: date | None,
+) -> None:
+    """Ensure declared selector years cover both bounded source years."""
+    if period_selector is None or applies_from is None:
+        return
+    if not period_selector.includes_year(applies_from.year):
+        raise RegistryValidationError(
+            f"source reference {source_id!r} declares period_selector that does not cover "
+            f"applies_from's year {applies_from.year}",
+        )
+    if applies_to is not None and not period_selector.includes_year(applies_to.year):
+        raise RegistryValidationError(
+            f"source reference {source_id!r} declares period_selector that does not cover "
+            f"applies_to's year {applies_to.year}",
+        )
+
+
+def _validate_source_corpus_path(corpus_path: str) -> None:
+    """Require repository-relative POSIX corpus paths."""
+    if "\\" in corpus_path or corpus_path.startswith(("/", ".")):
+        raise RegistryValidationError("source reference corpus_path must be repository-relative POSIX style")
+
+
+def _validate_source_kind_path_and_epoch(
+    *,
+    source_id: SourceRefId,
+    kind: RegistrySourceKind,
+    corpus_path: str,
+    record_design_epoch: str | None,
+) -> None:
+    """Validate kind-specific corpus extension and epoch ownership."""
+    if kind is RegistrySourceKind.RECORD_DESIGN:
+        allowed_record_design_suffixes = (
+            PDF_EXTENSION,
+            XLS_EXTENSION,
+            XLSX_EXTENSION,
+            XLSM_EXTENSION,
+        )
+        suffix = corpus_path.rsplit(".", 1)
+        extension = "." + suffix[1].lower() if len(suffix) == 2 else ""
+        if extension not in allowed_record_design_suffixes:
+            raise RegistryValidationError(
+                f"source reference {source_id!r} declares kind='record_design' but corpus_path "
+                f"{corpus_path!r} has unsupported extension {extension!r}; the record-design "
+                f"extractor accepts only .pdf / .xls / .xlsx / .xlsm — reclassify the source "
+                f"(e.g. kind='form_spec' for an AEAT/BOE landing page HTML) or ingest the real "
+                f"Diseño workbook",
+            )
+    elif record_design_epoch is not None:
+        raise RegistryValidationError("record_design_epoch is only valid for kind='record_design'")
+
+
+def _validate_record_design_epoch(source_id: SourceRefId, record_design_epoch: str | None) -> None:
+    """Validate the optional epoch after its record-design ownership is known."""
+    if record_design_epoch is None:
+        return
+    if not record_design_epoch.strip():
+        raise RegistryValidationError("record_design_epoch must contain non-whitespace text")
+    if not _RECORD_DESIGN_EPOCH.fullmatch(record_design_epoch):
+        raise RegistryValidationError(
+            f"source reference {source_id!r} declares record_design_epoch "
+            f"{record_design_epoch!r}, which is not a design EPOCH. An epoch names the "
+            "filing period a design governs -- a four-digit ejercicio, optionally with a "
+            "lower-case sub-year label where AEAT re-laid the form out mid-ejercicio "
+            "('2024-early', '2024-late'). It is NOT the document's version: "
+            "'aeat-dr-111-2019-v18' is epoch '2019', because v18 is which revision of the "
+            "PDF AEAT published and says nothing about which filings it governs. Two "
+            "designs differing only by version are the same epoch and must not both claim "
+            "one; two designs governing different periods are different epochs",
+        )
+
+
 class SourceReference(RegistryModel):
     """Official-source evidence row with bundled-corpus integrity metadata."""
 
@@ -436,58 +556,25 @@ class SourceReference(RegistryModel):
 
     @model_validator(mode="after")
     def _validate_source_reference(self) -> SourceReference:
-        if self.applies_to is not None and self.applies_from is not None and self.applies_to < self.applies_from:
-            raise RegistryValidationError("source reference applies_to must be on or after applies_from")
-        if self.kind is not RegistrySourceKind.DICTIONARY and self.dictionary_casilla_id_grammar != "numeric":
-            raise RegistryValidationError(
-                "dictionary_casilla_id_grammar other than 'numeric' is only valid for kind='dictionary'",
-            )
-        if self.period_selector is not None and self.applies_from is not None:
-            if not self.period_selector.includes_year(self.applies_from.year):
-                raise RegistryValidationError(
-                    f"source reference {self.id!r} declares period_selector that does not cover "
-                    f"applies_from's year {self.applies_from.year}",
-                )
-            if self.applies_to is not None and not self.period_selector.includes_year(self.applies_to.year):
-                raise RegistryValidationError(
-                    f"source reference {self.id!r} declares period_selector that does not cover "
-                    f"applies_to's year {self.applies_to.year}",
-                )
-        if "\\" in self.corpus_path or self.corpus_path.startswith(("/", ".")):
-            raise RegistryValidationError("source reference corpus_path must be repository-relative POSIX style")
-        if self.kind is RegistrySourceKind.RECORD_DESIGN:
-            allowed_record_design_suffixes = (
-                PDF_EXTENSION,
-                XLS_EXTENSION,
-                XLSX_EXTENSION,
-                XLSM_EXTENSION,
-            )
-            suffix = self.corpus_path.rsplit(".", 1)
-            extension = "." + suffix[1].lower() if len(suffix) == 2 else ""
-            if extension not in allowed_record_design_suffixes:
-                raise RegistryValidationError(
-                    f"source reference {self.id!r} declares kind='record_design' but corpus_path "
-                    f"{self.corpus_path!r} has unsupported extension {extension!r}; the record-design "
-                    f"extractor accepts only .pdf / .xls / .xlsx / .xlsm — reclassify the source "
-                    f"(e.g. kind='form_spec' for an AEAT/BOE landing page HTML) or ingest the real "
-                    f"Diseño workbook",
-                )
-        elif self.record_design_epoch is not None:
-            raise RegistryValidationError("record_design_epoch is only valid for kind='record_design'")
-        if self.record_design_epoch is not None and not self.record_design_epoch.strip():
-            raise RegistryValidationError("record_design_epoch must contain non-whitespace text")
-        if self.record_design_epoch is not None and not _RECORD_DESIGN_EPOCH.fullmatch(self.record_design_epoch):
-            raise RegistryValidationError(
-                f"source reference {self.id!r} declares record_design_epoch "
-                f"{self.record_design_epoch!r}, which is not a design EPOCH. An epoch names the "
-                "filing period a design governs -- a four-digit ejercicio, optionally with a "
-                "lower-case sub-year label where AEAT re-laid the form out mid-ejercicio "
-                "('2024-early', '2024-late'). It is NOT the document's version: "
-                "'aeat-dr-111-2019-v18' is epoch '2019', because v18 is which revision of the "
-                "PDF AEAT published and says nothing about which filings it governs. Two "
-                "designs differing only by version are the same epoch and must not both claim "
-                "one; two designs governing different periods are different epochs",
-            )
+        _validate_source_window(applies_from=self.applies_from, applies_to=self.applies_to)
+        _validate_source_dictionary_grammar(
+            kind=self.kind,
+            dictionary_casilla_id_grammar=self.dictionary_casilla_id_grammar,
+        )
+        _validate_source_period_selector(
+            source_id=self.id,
+            period_selector=self.period_selector,
+            applies_from=self.applies_from,
+            applies_to=self.applies_to,
+        )
+        _validate_source_corpus_path(self.corpus_path)
+        _validate_source_kind_path_and_epoch(
+            source_id=self.id,
+            kind=self.kind,
+            corpus_path=self.corpus_path,
+            record_design_epoch=self.record_design_epoch,
+        )
+        _validate_record_design_epoch(self.id, self.record_design_epoch)
         return self
 
     @property

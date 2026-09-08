@@ -180,6 +180,8 @@ _MODELO_SCHEME_CATALOGUE: dict[str, frozenset[RetencionScheme]] = {
     Modelo.M190.value: _MODELO_111_SCHEMES,
     Modelo.M193.value: _MODELO_123_SCHEMES,
 }
+
+
 def _aggregate_for_modelo(
     observations: tuple[RetencionObservation, ...],
     *,

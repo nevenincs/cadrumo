@@ -77,6 +77,7 @@ DESCENDANT_DOOR_FLOW_ID = "descendiente-door"
 _FLOW_TITLE_LOCALE_KEY = "wizard.setup.descendientes.title"
 _FLOW_DESCRIPTION_LOCALE_KEY = "cli.config.profile.descendiente.help"
 
+
 class DescendantDoorAnswers(BaseModel):
     """The door's declared ``answers_model``: the group carries every answer.
 

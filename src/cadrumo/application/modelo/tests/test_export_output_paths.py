@@ -414,11 +414,14 @@ def test_prior_domiciliation_export_and_filing_events_keep_the_safe_baseline_u_p
                 provenance_kind="source_header",
                 provenance_locator=source_header_locator,
             ),
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo="303",
-                filing_year=work_unit.filing_year,
-                period=work_unit.period.registry_token,
-            )))
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                )
+            ),
+        )
     )
     _amended = verified.model_copy(
         update={

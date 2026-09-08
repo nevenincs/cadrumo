@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import re
 
 from .record_design_pdf_rows import (
@@ -60,27 +61,21 @@ def _row_identities_by_record(lines: tuple[str, ...]) -> list[frozenset[tuple[st
     declaring position 1 begins a record, because a fixed-width record is
     contiguous from its first byte.
     """
-    boundaries: list[int] = []
-    identities: list[set[tuple[str, int]]] = []
-    current: set[tuple[str, int]] = set()
+    identities: list[set[tuple[str, int]]] = [set()]
+    line_records: list[int] = []
+    record_index = 0
     for number, line in enumerate(lines, start=1):
         parsed = parse_pdf_row(line, number)
+        current = identities[record_index]
         if parsed is not None and parsed.offset == 1 and current:
-            identities.append(current)
-            boundaries.append(number - 1)
+            record_index += 1
             current = set()
+            identities.append(current)
+        line_records.append(record_index)
         if parsed is not None and parsed.ordinal is not None:
             current.add((parsed.ordinal, parsed.offset))
-    identities.append(current)
-
     frozen = [frozenset(entry) for entry in identities]
-    per_line: list[frozenset[tuple[str, int]]] = []
-    segment = 0
-    for index in range(len(lines)):
-        while segment < len(boundaries) and index >= boundaries[segment]:
-            segment += 1
-        per_line.append(frozen[segment])
-    return per_line
+    return [frozen[record] for record in line_records]
 
 
 def undouble_struck_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
@@ -118,6 +113,96 @@ def undouble_struck_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         )
         repaired.append(candidate if candidate != line and parse_pdf_row(candidate, number) is not None else line)
     return tuple(repaired)
+
+
+def _unparsed_pair(left: str, right: str, row_number: int) -> bool:
+    """Whether neither half of a candidate split row parses on its own."""
+    return parse_pdf_row(left, row_number) is None and parse_pdf_row(right, row_number + 1) is None
+
+
+def _rejoin_forward_column_pair(
+    line: str,
+    following: str,
+    row_number: int,
+    claimed: frozenset[tuple[str, int]],
+) -> str | None:
+    """Join a coordinate head followed by a length/naturaleza tail."""
+    head = _REVERSED_ROW_HEAD_RE.match(line)
+    tail = REVERSED_ROW_TAIL_RE.match(following)
+    if head is None or tail is None or not _unparsed_pair(line, following, row_number):
+        return None
+    identity = (head.group("ordinal"), int(head.group("offset")))
+    if identity in claimed:
+        return None
+    casilla = (head.group("tail") or "").strip()
+    description = tail.group("description").rstrip()
+    return (
+        f"{head.group('ordinal')} {head.group('offset')} "
+        f"{tail.group('length')} {tail.group('type')} "
+        f"{description}{' ' + casilla if casilla else ''}"
+    )
+
+
+def _rejoin_bled_column_pair(
+    line: str,
+    following: str,
+    row_number: int,
+    previous: PdfRow | None,
+    claimed: frozenset[tuple[str, int]],
+) -> str | None:
+    """Join a length/naturaleza tail with a continuity-checked bled head."""
+    tail = REVERSED_ROW_TAIL_RE.match(line)
+    head = _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(following)
+    if tail is None or head is None or _REVERSED_ROW_HEAD_RE.match(following) is not None:
+        return None
+    if not _unparsed_pair(line, following, row_number):
+        return None
+    ordinal = head.group("ordinal")
+    offset = int(head.group("offset"))
+    if not _continues(previous, ordinal, offset) or (ordinal, offset) in claimed:
+        return None
+    return (
+        f"{ordinal} {offset} {tail.group('length')} {tail.group('type')} "
+        f"{tail.group('description').rstrip()} {head.group('trailing').strip()}"
+    )
+
+
+def _rejoin_tail_column_pair(
+    line: str,
+    following: str,
+    row_number: int,
+    claimed: frozenset[tuple[str, int]],
+) -> str | None:
+    """Join a length/naturaleza tail followed by a bare coordinate head."""
+    tail = REVERSED_ROW_TAIL_RE.match(line)
+    head = _REVERSED_ROW_HEAD_RE.match(following)
+    if tail is None or head is None or not _unparsed_pair(line, following, row_number):
+        return None
+    identity = (head.group("ordinal"), int(head.group("offset")))
+    if identity in claimed:
+        return None
+    casilla = (head.group("tail") or "").strip()
+    description = tail.group("description").rstrip()
+    return (
+        f"{head.group('ordinal')} {head.group('offset')} "
+        f"{tail.group('length')} {tail.group('type')} "
+        f"{description}{' ' + casilla if casilla else ''}"
+    )
+
+
+def _reversed_column_pair_candidate(
+    line: str,
+    following: str,
+    row_number: int,
+    previous: PdfRow | None,
+    claimed: frozenset[tuple[str, int]],
+) -> str | None:
+    """Return the first supported split-row join, preserving branch order."""
+    return (
+        _rejoin_forward_column_pair(line, following, row_number, claimed)
+        or _rejoin_bled_column_pair(line, following, row_number, previous, claimed)
+        or _rejoin_tail_column_pair(line, following, row_number, claimed)
+    )
 
 
 def rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
@@ -158,66 +243,15 @@ def rejoin_reversed_column_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
         if parsed_here is not None:
             previous_row = parsed_here
         if index + 1 < len(lines):
-            # The two halves arrive in either order. Swapped -- length, type and
-            # description first -- is how modelo 200's 2010 editions emit some
-            # rows; in natural order the row simply breaks after its position,
-            # leaving ``7 28`` above ``17 Num Deducc...``. Both are one row split
-            # over two lines, and neither half is a row alone, so the same
-            # evidence and the same duplicate guard apply to each.
-            forward_head = _REVERSED_ROW_HEAD_RE.match(line)
-            forward_tail = REVERSED_ROW_TAIL_RE.match(lines[index + 1])
-            if (
-                forward_head is not None
-                and forward_tail is not None
-                and parse_pdf_row(line, index + 1) is None
-                and parse_pdf_row(lines[index + 1], index + 2) is None
-                and (forward_head.group("ordinal"), int(forward_head.group("offset"))) not in claimed[index]
-            ):
-                casilla = (forward_head.group("tail") or "").strip()
-                description = forward_tail.group("description").rstrip()
-                joined.append(
-                    f"{forward_head.group('ordinal')} {forward_head.group('offset')} "
-                    f"{forward_tail.group('length')} {forward_tail.group('type')} "
-                    f"{description}{' ' + casilla if casilla else ''}",
-                )
-                index += 2
-                continue
-            # The head may carry description text bled onto its line. That
-            # pattern alone matches prose, so it is admitted only when the
-            # ordinal and position resume exactly where the last read row ended.
-            tail = REVERSED_ROW_TAIL_RE.match(line)
-            bled = _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(lines[index + 1])
-            if (
-                tail is not None
-                and bled is not None
-                and _REVERSED_ROW_HEAD_RE.match(lines[index + 1]) is None
-                and parse_pdf_row(line, index + 1) is None
-                and parse_pdf_row(lines[index + 1], index + 2) is None
-                and _continues(previous_row, bled.group("ordinal"), int(bled.group("offset")))
-                and (bled.group("ordinal"), int(bled.group("offset"))) not in claimed[index]
-            ):
-                joined.append(
-                    f"{bled.group('ordinal')} {bled.group('offset')} "
-                    f"{tail.group('length')} {tail.group('type')} "
-                    f"{tail.group('description').rstrip()} {bled.group('trailing').strip()}",
-                )
-                index += 2
-                continue
-            head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1])
-            if (
-                tail is not None
-                and head is not None
-                and parse_pdf_row(line, index + 1) is None
-                and parse_pdf_row(lines[index + 1], index + 2) is None
-                and (head.group("ordinal"), int(head.group("offset"))) not in claimed[index]
-            ):
-                casilla = (head.group("tail") or "").strip()
-                description = tail.group("description").rstrip()
-                joined.append(
-                    f"{head.group('ordinal')} {head.group('offset')} "
-                    f"{tail.group('length')} {tail.group('type')} "
-                    f"{description}{' ' + casilla if casilla else ''}",
-                )
+            candidate = _reversed_column_pair_candidate(
+                line,
+                lines[index + 1],
+                index + 1,
+                previous_row,
+                claimed[index],
+            )
+            if candidate is not None:
+                joined.append(candidate)
                 index += 2
                 continue
         joined.append(line)
@@ -275,6 +309,55 @@ _ORPHAN_MEASURE_RE = re.compile(
 _ANY_CASILLA_TAG_RE = re.compile(r"\[\d+\]")
 
 
+def _previous_parsed_row(parsed: tuple[PdfRow | None, ...], before: int) -> PdfRow | None:
+    """Find the nearest parsed row before a source-line index."""
+    return next((row for row in reversed(parsed[:before]) if row is not None), None)
+
+
+def _coordinate_stutter_donor(
+    lines: tuple[str, ...],
+    parsed: tuple[PdfRow | None, ...],
+    donor_index: int,
+    anchor: PdfRow | None,
+) -> tuple[str, str, str] | None:
+    """Return the donor's length, naturaleza, and description when usable."""
+    donor = parsed[donor_index]
+    if donor is None:
+        measure = _ORPHAN_MEASURE_RE.match(lines[donor_index])
+        if measure is None:
+            return None
+        return measure.group("length"), measure.group("naturaleza"), measure.group("description")
+    if _continues(anchor, donor.ordinal or "", donor.offset):
+        return None
+    return str(donor.length), donor.type_code, donor.description
+
+
+def _coordinate_stutter_candidate(
+    lines: tuple[str, ...],
+    parsed: tuple[PdfRow | None, ...],
+    index: int,
+    rebuilt: dict[int, str],
+    dropped: set[int],
+) -> tuple[int, str] | None:
+    """Build a coordinate-stutter row only when both halves are evidenced."""
+    stutter = _COORDINATE_STUTTER_RE.match(lines[index])
+    if stutter is None or not _ANY_CASILLA_TAG_RE.search(lines[index]):
+        return None
+    donor_index = index - 1
+    if donor_index in dropped or donor_index in rebuilt:
+        return None
+    anchor = _previous_parsed_row(parsed, donor_index)
+    donor = _coordinate_stutter_donor(lines, parsed, donor_index, anchor)
+    if donor is None:
+        return None
+    ordinal = stutter.group("ordinal")
+    offset = int(stutter.group("offset"))
+    if not _continues(anchor, ordinal, offset):
+        return None
+    length, naturaleza, description = donor
+    return donor_index, f"{ordinal} {offset} {length} {naturaleza} {description} {stutter.group('rest')}"
+
+
 def recover_coordinate_stutter_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Rebuild a row whose coordinate column was damaged, from the stutter restating it.
 
@@ -296,43 +379,16 @@ def recover_coordinate_stutter_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     """
     parsed = tuple(parse_pdf_row(line, index + 1) for index, line in enumerate(lines))
 
-    def _anchor(before: int) -> PdfRow | None:
-        for index in range(before - 1, -1, -1):
-            if parsed[index] is not None:
-                return parsed[index]
-        return None
-
     rebuilt: dict[int, str] = {}
     dropped: set[int] = set()
-    for index, line in enumerate(lines):
+    for index, _line in enumerate(lines):
         if parsed[index] is not None or index == 0:
             continue
-        stutter = _COORDINATE_STUTTER_RE.match(line)
-        if stutter is None or not _ANY_CASILLA_TAG_RE.search(line):
+        candidate = _coordinate_stutter_candidate(lines, parsed, index, rebuilt, dropped)
+        if candidate is None:
             continue
-        donor_index = index - 1
-        if donor_index in dropped or donor_index in rebuilt:
-            continue
-        anchor = _anchor(donor_index)
-        donor_row = parsed[donor_index]
-        if donor_row is None:
-            measure = _ORPHAN_MEASURE_RE.match(lines[donor_index])
-            if measure is None:
-                continue
-            length = measure.group("length")
-            naturaleza = measure.group("naturaleza")
-            description = measure.group("description")
-        else:
-            if _continues(anchor, donor_row.ordinal or "", donor_row.offset):
-                continue  # the neighbour is a healthy row, not a damaged half
-            length = str(donor_row.length)
-            naturaleza = donor_row.type_code
-            description = donor_row.description
-        ordinal = stutter.group("ordinal")
-        offset = int(stutter.group("offset"))
-        if not _continues(anchor, ordinal, offset):
-            continue
-        rebuilt[donor_index] = f"{ordinal} {offset} {length} {naturaleza} {description} {stutter.group('rest')}"
+        donor_index, repaired = candidate
+        rebuilt[donor_index] = repaired
         dropped.add(index)
 
     if not rebuilt:
@@ -363,6 +419,110 @@ _BARE_COORDINATE_LOOKBEHIND = 12
 _NATURALEZA_HEAD_RE = re.compile(
     r"^\s*(?P<naturaleza>An|Num|N|A)\s+(?P<rest>\D\S*.*)$",
 )
+
+
+def _bare_coordinate_naturaleza_half(
+    lines: tuple[str, ...],
+    parsed: tuple[PdfRow | None, ...],
+    index: int,
+) -> tuple[re.Match[str], int] | None:
+    """Locate the naturaleza half, below first and then above a bare triple."""
+    head_index = index + 1
+    head = _NATURALEZA_HEAD_RE.match(lines[head_index])
+    if head is not None:
+        return head, head_index
+    for candidate in range(index - 1, max(-1, index - 1 - _BARE_COORDINATE_LOOKBEHIND), -1):
+        if parsed[candidate] is not None:
+            break
+        found = _NATURALEZA_HEAD_RE.match(lines[candidate])
+        if found is not None:
+            return found, candidate
+    return None
+
+
+def _bare_coordinate_successor(
+    parsed: tuple[PdfRow | None, ...],
+    index: int,
+    line_count: int,
+) -> tuple[int, PdfRow] | None:
+    """Find the first parsed row after a bare triple within the bounded window."""
+    for candidate in range(index + 2, min(index + 2 + _BARE_COORDINATE_LOOKAHEAD, line_count)):
+        successor = parsed[candidate]
+        if successor is not None:
+            return candidate, successor
+    return None
+
+
+def _bare_coordinate_triple(
+    lines: tuple[str, ...],
+    parsed: tuple[PdfRow | None, ...],
+    index: int,
+) -> re.Match[str] | None:
+    """Return a bare triple only when the following line is not a row."""
+    triple = _BARE_COORDINATE_TRIPLE_RE.match(lines[index])
+    if triple is None:
+        return None
+    if parsed[index + 1] is not None:
+        return None
+    return triple
+
+
+def _bare_coordinate_continues(triple: re.Match[str], successor: PdfRow) -> bool:
+    """Whether a successor agrees with both coordinates stated by a triple."""
+    ordinal = triple.group("ordinal")
+    offset = int(triple.group("offset"))
+    length = int(triple.group("length"))
+    return successor.ordinal == str(int(ordinal) + 1) and successor.offset == offset + length
+
+
+def _bare_coordinate_middle(
+    lines: tuple[str, ...],
+    start: int,
+    successor_index: int,
+    triple_index: int,
+    head_index: int,
+) -> str:
+    """Fold wrapped content between the two halves into the rebuilt row."""
+    return " ".join(
+        lines[position].strip()
+        for position in range(start, successor_index)
+        if position not in {triple_index, head_index}
+    )
+
+
+def _bare_coordinate_candidate(
+    lines: tuple[str, ...],
+    parsed: tuple[PdfRow | None, ...],
+    index: int,
+) -> tuple[int, str, tuple[int, ...]] | None:
+    """Build a bare-coordinate row when its successor over-determines it."""
+    triple = _bare_coordinate_triple(lines, parsed, index)
+    if triple is None:
+        return None
+    half = _bare_coordinate_naturaleza_half(lines, parsed, index)
+    if half is None:
+        return None
+    head, head_index = half
+    successor_data = _bare_coordinate_successor(parsed, index, len(lines))
+    if successor_data is None:
+        return None
+    successor_index, successor = successor_data
+    if not _bare_coordinate_continues(triple, successor):
+        return None
+    ordinal = triple.group("ordinal")
+    offset = int(triple.group("offset"))
+    length = int(triple.group("length"))
+    start = min(index, head_index)
+    middle = _bare_coordinate_middle(
+        lines,
+        start,
+        successor_index,
+        index,
+        head_index,
+    )
+    replacement = f"{ordinal} {offset} {length} {head.group('naturaleza')} {head.group('rest')} {middle}".rstrip()
+    consumed = tuple(position for position in range(start, successor_index) if position != start)
+    return start, replacement, consumed
 
 
 def rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
@@ -400,53 +560,15 @@ def rejoin_bare_coordinate_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
 
     rebuilt: dict[int, str] = {}
     consumed: set[int] = set()
-    for index, line in enumerate(lines):
+    for index, _line in enumerate(lines):
         if parsed[index] is not None or index + 1 >= len(lines):
             continue
-        triple = _BARE_COORDINATE_TRIPLE_RE.match(line)
-        if triple is None or parsed[index + 1] is not None:
+        candidate = _bare_coordinate_candidate(lines, parsed, index)
+        if candidate is None:
             continue
-        head = _NATURALEZA_HEAD_RE.match(lines[index + 1])
-        head_index = index + 1
-        if head is None:
-            # The naturaleza half may sit ABOVE the triple instead, separated by
-            # the wrapped Contenido cell and a page break's running furniture.
-            # Modelo 200's 2010 and 2011 designs print it that way; the 2010
-            # update prints it below. Same row, mirrored.
-            for candidate in range(index - 1, max(-1, index - 1 - _BARE_COORDINATE_LOOKBEHIND), -1):
-                if parsed[candidate] is not None:
-                    break
-                found = _NATURALEZA_HEAD_RE.match(lines[candidate])
-                if found is not None:
-                    head, head_index = found, candidate
-                    break
-        if head is None:
-            continue
-        ordinal = triple.group("ordinal")
-        offset = int(triple.group("offset"))
-        length = int(triple.group("length"))
-
-        successor_index = None
-        successor = None
-        for candidate in range(index + 2, min(index + 2 + _BARE_COORDINATE_LOOKAHEAD, len(lines))):
-            parsed_candidate = parsed[candidate]
-            if parsed_candidate is not None:
-                successor_index = candidate
-                successor = parsed_candidate
-                break
-        if successor_index is None or successor is None:
-            continue
-        if successor.ordinal != str(int(ordinal) + 1) or successor.offset != offset + length:
-            continue
-
-        start = min(index, head_index)
-        middle = " ".join(
-            lines[position].strip() for position in range(start, successor_index) if position not in {index, head_index}
-        )
-        rebuilt[start] = (
-            f"{ordinal} {offset} {length} {head.group('naturaleza')} {head.group('rest')} {middle}".rstrip()
-        )
-        consumed.update(position for position in range(start, successor_index) if position != start)
+        start, replacement, positions = candidate
+        rebuilt[start] = replacement
+        consumed.update(positions)
 
     if not rebuilt:
         return lines
@@ -588,6 +710,34 @@ _STRANDED_COORDINATE_PAIR_RE = re.compile(
 )
 
 
+def _truncated_offset_candidate(
+    lines: tuple[str, ...],
+    parsed: Sequence[PdfRow | None],
+    index: int,
+) -> str | None:
+    """Build a corrected row when its stranded pair proves the offset."""
+    pair = _STRANDED_COORDINATE_PAIR_RE.match(lines[index])
+    if pair is None:
+        return None
+    damaged = parsed[index - 1]
+    if damaged is None or damaged.ordinal is None or damaged.ordinal != pair.group("ordinal"):
+        return None
+    anchor = _previous_parsed_row(parsed, index - 1)
+    if anchor is None:
+        return None
+    stated = int(pair.group("offset"))
+    resumes = anchor.offset + anchor.length
+    if stated != resumes or damaged.offset == resumes:
+        return None
+    rebuilt = re.sub(
+        rf"^(\s*{re.escape(damaged.ordinal)})\s+{damaged.offset}\s",
+        rf"\g<1> {stated} ",
+        lines[index - 1],
+        count=1,
+    )
+    return rebuilt if parse_pdf_row(rebuilt, index) is not None else None
+
+
 def repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Restore a row whose position lost a digit, from the pair restating it below.
 
@@ -620,31 +770,8 @@ def repair_truncated_offset_rows(lines: tuple[str, ...]) -> tuple[str, ...]:
     repaired: dict[int, str] = {}
     dropped: set[int] = set()
     for index in range(1, len(lines)):
-        pair = _STRANDED_COORDINATE_PAIR_RE.match(lines[index])
-        if pair is None:
-            continue
-        damaged = parsed[index - 1]
-        damaged_ordinal = damaged.ordinal if damaged is not None else None
-        if damaged is None or damaged_ordinal is None or damaged_ordinal != pair.group("ordinal"):
-            continue
-        anchor = None
-        for candidate in range(index - 2, -1, -1):
-            if parsed[candidate] is not None:
-                anchor = parsed[candidate]
-                break
-        if anchor is None:
-            continue
-        stated = int(pair.group("offset"))
-        resumes = anchor.offset + anchor.length
-        if stated != resumes or damaged.offset == resumes:
-            continue
-        rebuilt = re.sub(
-            rf"^(\s*{re.escape(damaged_ordinal)})\s+{damaged.offset}\s",
-            rf"\g<1> {stated} ",
-            lines[index - 1],
-            count=1,
-        )
-        if parse_pdf_row(rebuilt, index) is None:
+        rebuilt = _truncated_offset_candidate(lines, parsed, index)
+        if rebuilt is None:
             continue
         repaired[index - 1] = rebuilt
         parsed[index - 1] = parse_pdf_row(rebuilt, index)

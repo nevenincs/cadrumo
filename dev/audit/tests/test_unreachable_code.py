@@ -283,11 +283,30 @@ def test_a_module_execution_entrypoint_is_a_walk_root(result: UnreachableCodeRes
 
 
 def test_repository_discovers_its_module_execution_roots() -> None:
-    """The real tree's ``__main__.py`` files are found without being restated."""
+    """The real tree's package and guarded module surfaces are derived."""
     spec = ShippedTreeSpec.from_repository(REPO_ROOT)
 
     assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots
-    assert all(root.endswith(".__main__") for root in spec.module_roots)
+    assert "cadrumo.entrypoints.cli._windows_profile_secret_bootstrap" in spec.module_roots
+
+
+def test_module_execution_surface_requires_a_file_role_or_top_level_exact_guard(tmp_path: Path) -> None:
+    """Prose and nested comparisons cannot promote an ordinary module to a root."""
+    from ..unreachable_code import is_module_execution_surface
+
+    package_main = tmp_path / "__main__.py"
+    guarded = tmp_path / "guarded.py"
+    nested = tmp_path / "nested.py"
+    prose = tmp_path / "prose.py"
+    package_main.write_text("", encoding="utf-8")
+    guarded.write_text('if __name__ == "__main__":\n    run()\n', encoding="utf-8")
+    nested.write_text('def inspect():\n    return __name__ == "__main__"\n', encoding="utf-8")
+    prose.write_text('NOTE = "if __name__ == \\"__main__\\""\n', encoding="utf-8")
+
+    assert is_module_execution_surface(package_main)
+    assert is_module_execution_surface(guarded)
+    assert not is_module_execution_surface(nested)
+    assert not is_module_execution_surface(prose)
 
 
 def test_wholly_unreachable_package_collapses_to_one_labelled_folder(result: UnreachableCodeResult) -> None:

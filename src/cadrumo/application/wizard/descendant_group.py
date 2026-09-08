@@ -258,6 +258,7 @@ _ENTRY_RELACION_MISMATCH_LOCALE_KEY = "wizard.setup.descendientes.entry-event.re
 # they came through.
 _RENTAS_NOT_A_VALID_AMOUNT_LOCALE_KEY = "application.wizard.errors.descendant_rentas_not_a_valid_amount"
 
+
 def _validate_descendant_nif(page: FlowPage, canonical: str) -> ValidationVerdict:
     """Validate a descendant NIF through the canonical identity authority.
 

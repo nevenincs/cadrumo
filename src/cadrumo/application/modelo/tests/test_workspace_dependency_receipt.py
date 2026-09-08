@@ -111,9 +111,7 @@ def test_exactly_one_authority_defines_each_canonical_workspace_entry_point() ->
 def test_native_owner_surface_inventory_covers_every_declared_contributor_kind() -> None:
     """Type-directed discovery proves every live contributor kind has one contract."""
     contracts = tuple(
-        value
-        for value in vars(workspace_producers).values()
-        if isinstance(value, ModeloWorkspaceProducerContractV1)
+        value for value in vars(workspace_producers).values() if isinstance(value, ModeloWorkspaceProducerContractV1)
     )
     kinds = {contract.contributor_kind for contract in contracts}
     assert kinds == set(ModeloWorkspaceContributorKindV1)

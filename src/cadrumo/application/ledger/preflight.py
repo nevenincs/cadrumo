@@ -409,83 +409,84 @@ _ANOMALY_IVA_REASONS: dict[IvaCategory, tuple[LedgerPreflightIssueReason, str]] 
 }
 
 
-def _issues_for_transaction(
+def _preflight_issue(
     transaction: Transaction,
-    *,
-    censo_ratio_mismatch_detail: str | None = None,
-    missing_home_office_afectacion_detail: str | None = None,
-) -> tuple[LedgerPreflightIssue, ...]:
+    reason: LedgerPreflightIssueReason,
+    detail: str,
+) -> LedgerPreflightIssue:
+    return LedgerPreflightIssue(
+        transaction_id=transaction.transaction_id,
+        reason=reason,
+        detail=detail,
+    )
+
+
+def _missing_business_classification_issue(transaction: Transaction) -> LedgerPreflightIssue | None:
+    if is_classified(transaction.business_classification):
+        return None
+    return _preflight_issue(
+        transaction,
+        LedgerPreflightIssueReason.MISSING_BUSINESS_CLASSIFICATION,
+        (f"business classification {transaction.business_classification.value!r} is not ready for modelo calculation"),
+    )
+
+
+def _non_declarable_iva_issue(transaction: Transaction) -> LedgerPreflightIssue | None:
+    iva_category = transaction.iva_category
+    if iva_category is not None:
+        anomaly = _ANOMALY_IVA_REASONS.get(iva_category)
+        if anomaly is not None:
+            reason, detail = anomaly
+            return _preflight_issue(transaction, reason, detail)
+    if iva_category is IvaCategory.RECARGO_EQUIVALENCIA:
+        return _preflight_issue(
+            transaction,
+            LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
+            _recargo_equivalencia_preflight_detail(transaction),
+        )
+    return None
+
+
+def _currency_preflight_issues(transaction: Transaction) -> tuple[LedgerPreflightIssue, ...]:
+    if transaction.raw.currency == DEFAULT_CURRENCY:
+        return ()
+    if transaction.value_in_eur is None:
+        return (
+            _preflight_issue(
+                transaction,
+                LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY,
+                f"transaction currency {transaction.raw.currency!r} is not supported for modelo aggregation",
+            ),
+        )
+    return (
+        _preflight_issue(
+            transaction,
+            LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE,
+            (
+                f"transaction currency {transaction.raw.currency!r} has value_in_eur but taxable_base and "
+                "iva_amount remain native-currency facts; supply explicit EUR tax substrate or exclude the "
+                "row before modelo calculation"
+            ),
+        ),
+    )
+
+
+def _ordinary_preflight_issues(transaction: Transaction) -> tuple[LedgerPreflightIssue, ...]:
     issues: list[LedgerPreflightIssue] = []
-    common = {"transaction_id": transaction.transaction_id}
-    if transaction.direction not in {
-        TransactionDirection.INCOMING,
-        TransactionDirection.OUTGOING,
-    }:
-        return ()
-    if not is_classified(transaction.business_classification):
-        return (
-            LedgerPreflightIssue(
-                **common,
-                reason=LedgerPreflightIssueReason.MISSING_BUSINESS_CLASSIFICATION,
-                detail=(
-                    f"business classification {transaction.business_classification.value!r} "
-                    "is not ready for modelo calculation"
-                ),
-            ),
-        )
-    if transaction.business_classification is BusinessClassification.PERSONAL:
-        return ()
-    iva_cat = transaction.iva_category
-    anomaly = _ANOMALY_IVA_REASONS.get(iva_cat) if iva_cat is not None else None
-    if anomaly is not None:
-        reason, detail = anomaly
-        return (LedgerPreflightIssue(**common, reason=reason, detail=detail),)
-    if iva_cat is IvaCategory.RECARGO_EQUIVALENCIA:
-        return (
-            LedgerPreflightIssue(
-                **common,
-                reason=LedgerPreflightIssueReason.ANOMALY_NON_DECLARABLE_RECARGO_EQUIVALENCIA,
-                detail=_recargo_equivalencia_preflight_detail(transaction),
-            ),
-        )
-    # A foreign row is only unsupported when no EUR conversion was applied at
-    # import; converted rows still need explicit EUR-denominated tax substrate.
-    if transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is None:
-        issues.append(
-            LedgerPreflightIssue(
-                **common,
-                reason=LedgerPreflightIssueReason.UNSUPPORTED_CURRENCY,
-                detail=f"transaction currency {transaction.raw.currency!r} is not supported for modelo aggregation",
-            ),
-        )
-        return tuple(issues)
-    if transaction.raw.currency != DEFAULT_CURRENCY and transaction.value_in_eur is not None:
-        issues.append(
-            LedgerPreflightIssue(
-                **common,
-                reason=LedgerPreflightIssueReason.MISSING_EUR_TAX_SUBSTRATE,
-                detail=(
-                    f"transaction currency {transaction.raw.currency!r} has value_in_eur but taxable_base and "
-                    "iva_amount remain native-currency facts; supply explicit EUR tax substrate or exclude the "
-                    "row before modelo calculation"
-                ),
-            ),
-        )
-        return tuple(issues)
     if _transaction_needs_expense_category(transaction) and transaction.category_id is None:
         issues.append(
-            LedgerPreflightIssue(
-                **common,
-                reason=LedgerPreflightIssueReason.MISSING_CATEGORY,
-                detail="deductible-expense ledger transaction has no category_id",
+            _preflight_issue(
+                transaction,
+                LedgerPreflightIssueReason.MISSING_CATEGORY,
+                "deductible-expense ledger transaction has no category_id",
             ),
         )
     if transaction.business_classification is BusinessClassification.MIXED and transaction.usage_ratio_id is None:
         issues.append(
-            LedgerPreflightIssue(
-                **common,
-                reason=LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
-                detail=(
+            _preflight_issue(
+                transaction,
+                LedgerPreflightIssueReason.MISSING_PROPORTIONALITY_REFERENCE,
+                (
                     "mixed ledger transaction has no usage_ratio_id; use an existing configured "
                     "eligible category id from 'aeat app ledger ratios list' or 'aeat app ledger "
                     "ratios eligible', create one with 'aeat app ledger ratios set <category-id> "
@@ -493,54 +494,108 @@ def _issues_for_transaction(
                 ),
             ),
         )
+    return tuple(issues)
+
+
+def _home_office_preflight_issues(
+    transaction: Transaction,
+    *,
+    censo_ratio_mismatch_detail: str | None,
+    missing_home_office_afectacion_detail: str | None,
+) -> tuple[LedgerPreflightIssue, ...]:
+    if not _transaction_takes_home_office_ratio(transaction):
+        return ()
+    issues: list[LedgerPreflightIssue] = []
     # Same screen as the catalogue-level gate above: the detail is computed
     # from the category the aggregation keys on, so it must attach on the same
     # test or it would be raised for the period and land on no row.
-    if censo_ratio_mismatch_detail is not None and _transaction_takes_home_office_ratio(transaction):
+    if censo_ratio_mismatch_detail is not None:
         issues.append(
-            LedgerPreflightIssue(
-                **common,
-                reason=LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH,
-                detail=(
+            _preflight_issue(
+                transaction,
+                LedgerPreflightIssueReason.CENSO_RATIO_MISMATCH,
+                (
                     f"{censo_ratio_mismatch_detail}; update your censo vivienda_office data with "
                     "'aeat config profile edit', or unset the HOME_OFFICE ratio before using it in modelo "
                     "calculations"
                 ),
             ),
         )
-    if missing_home_office_afectacion_detail is not None and _transaction_takes_home_office_ratio(transaction):
+    if missing_home_office_afectacion_detail is not None:
         issues.append(
-            LedgerPreflightIssue(
-                **common,
-                reason=LedgerPreflightIssueReason.MISSING_HOME_OFFICE_AFECTACION,
-                detail=missing_home_office_afectacion_detail,
+            _preflight_issue(
+                transaction,
+                LedgerPreflightIssueReason.MISSING_HOME_OFFICE_AFECTACION,
+                missing_home_office_afectacion_detail,
             ),
         )
+    return tuple(issues)
+
+
+def _iva_preflight_issues(transaction: Transaction) -> tuple[LedgerPreflightIssue, ...]:
     # Trabajo (nómina) incoming rows are IVA-exempt by definition: an
-    # employer-paid wage/salary carries no taxable_base / iva_rate /
-    # iva_amount because the IRPF retenciones flow consumes the row,
-    # not the IVA aggregation. Skip the IVA-fact preflight on these
-    # rows so a payroll-receipt entry does not surface as three false-
-    # positive missing_iva_* findings every period.
+    # employer-paid wage/salary carries no taxable_base / iva_rate / iva_amount
+    # because the IRPF retenciones flow consumes the row, not the IVA
+    # aggregation. Skip the IVA-fact preflight on these rows so a payroll-
+    # receipt entry does not surface as three false-positive missing_iva_*
+    # findings every period.
     if _transaction_is_trabajo_income(transaction):
-        return tuple(issues)
-    for reason in iva_ledger_missing_fact_reasons(transaction):
-        issues.append(
-            LedgerPreflightIssue(
-                **common,
-                reason=_preflight_reason_for_iva_issue(reason),
-                detail=_preflight_detail_for_iva_issue(reason),
-            ),
+        return ()
+    issues = [
+        _preflight_issue(
+            transaction,
+            _preflight_reason_for_iva_issue(reason),
+            _preflight_detail_for_iva_issue(reason),
         )
+        for reason in iva_ledger_missing_fact_reasons(transaction)
+    ]
     d5_issue = validate_iva_ledger_counterparty_category(transaction)
     if d5_issue is not None:
         issues.append(
-            LedgerPreflightIssue(
-                **common,
-                reason=_preflight_reason_for_iva_issue(d5_issue.reason),
-                detail=d5_issue.detail,
+            _preflight_issue(
+                transaction,
+                _preflight_reason_for_iva_issue(d5_issue.reason),
+                d5_issue.detail,
             ),
         )
+    return tuple(issues)
+
+
+def _issues_for_transaction(
+    transaction: Transaction,
+    *,
+    censo_ratio_mismatch_detail: str | None = None,
+    missing_home_office_afectacion_detail: str | None = None,
+) -> tuple[LedgerPreflightIssue, ...]:
+    if transaction.direction not in {
+        TransactionDirection.INCOMING,
+        TransactionDirection.OUTGOING,
+    }:
+        return ()
+
+    classification_issue = _missing_business_classification_issue(transaction)
+    if classification_issue is not None:
+        return (classification_issue,)
+    if transaction.business_classification is BusinessClassification.PERSONAL:
+        return ()
+
+    anomaly_issue = _non_declarable_iva_issue(transaction)
+    if anomaly_issue is not None:
+        return (anomaly_issue,)
+
+    currency_issues = _currency_preflight_issues(transaction)
+    if currency_issues:
+        return currency_issues
+
+    issues = list(_ordinary_preflight_issues(transaction))
+    issues.extend(
+        _home_office_preflight_issues(
+            transaction,
+            censo_ratio_mismatch_detail=censo_ratio_mismatch_detail,
+            missing_home_office_afectacion_detail=missing_home_office_afectacion_detail,
+        ),
+    )
+    issues.extend(_iva_preflight_issues(transaction))
     return tuple(issues)
 
 

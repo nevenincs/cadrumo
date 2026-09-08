@@ -194,106 +194,132 @@ def resolve_withholding296_binding_values(
     return resolved
 
 
+_WITHHOLDING296_IDENTITY_FIELDS = (
+    "representative_tax_id",
+    "persona_juridica_flag",
+    "codigo_bic",
+    "fecha_devengo",
+    "perceptor_mediador_flag",
+    "codigo",
+    "codigo_emisor",
+    "pago",
+    "tipo_codigo",
+    "codigo_cuenta",
+    "pendiente_flag",
+    "accrual_year",
+    "fecha_inicio_prestamo",
+    "fecha_vencimiento_prestamo",
+    "direccion_perceptor",
+    "nif_pagador_anterior",
+    "procedimiento_especial_flag",
+    "clave_mercado",
+    "codigo_lei",
+    "nif_pais_residencia",
+    "fecha_nacimiento",
+    "ciudad_nacimiento",
+    "codigo_pais",
+    "pais_residencia_fiscal",
+)
+_WITHHOLDING296_AMOUNT_FIELDS = (
+    "base_retenciones",
+    "porcentaje_retencion",
+    "retencion_practicada",
+    "compensaciones",
+    "garantias",
+    "otros_importes",
+    "ingreso_a_cuenta_repercutido",
+)
+_WITHHOLDING296_BLANK_DEFAULTS: Mapping[str, str] = {
+    "representative_tax_id": " " * 9,
+    "nif_pagador_anterior": " " * 9,
+    "codigo_cuenta": " " * 20,
+    "codigo_emisor": " " * 12,
+    "codigo_lei": " " * 20,
+    "nif_pais_residencia": " " * 20,
+    "direccion_perceptor": " " * 162,
+    "accrual_year": "0000",
+    "fecha_inicio_prestamo": "0" * 8,
+    "fecha_vencimiento_prestamo": "0" * 8,
+    "fecha_devengo": "0" * 8,
+    "fecha_nacimiento": "0" * 8,
+}
+
+
+def _withholding296_row_key(
+    observation: Withholding296Observation,
+) -> tuple[str, str, str, str]:
+    """Return the stable Modelo 296 grouping identity for an observation."""
+    return (
+        observation.codigo_pais or "",
+        observation.perceptor_tax_id,
+        observation.clave,
+        observation.subclave,
+    )
+
+
+def _withholding296_identity_values(
+    observation: Withholding296Observation,
+) -> dict[str, Decimal | str]:
+    """Build the non-amount values carried by a grouped Modelo 296 row."""
+    identity: dict[str, Decimal | str] = {
+        "perceptor_tax_id": observation.perceptor_tax_id,
+        "perceptor_legal_name": observation.perceptor_legal_name,
+        "naturaleza": observation.naturaleza,
+        "clave": observation.clave,
+        "subclave": observation.subclave,
+        "base_retenciones": Decimal("0"),
+        "porcentaje_retencion": Decimal("0"),
+        "retencion_practicada": Decimal("0"),
+        "compensaciones": Decimal("0"),
+        "garantias": Decimal("0"),
+        "otros_importes": Decimal("0"),
+        "ingreso_a_cuenta_repercutido": Decimal("0"),
+    }
+    for field in _WITHHOLDING296_IDENTITY_FIELDS:
+        value = getattr(observation, field)
+        if value is not None:
+            identity[field] = value
+    return identity
+
+
+def _merge_withholding296_amounts(
+    bucket: dict[str, Decimal | str],
+    observation: Withholding296Observation,
+    key: tuple[str, str, str, str],
+) -> None:
+    """Add one observation's numeric facts to an existing grouped row."""
+    for field in _WITHHOLDING296_AMOUNT_FIELDS:
+        previous = bucket[field]
+        if not isinstance(previous, Decimal):
+            raise RegistryValidationError(
+                f"withholding296 row accumulator for {key!r} holds a non-numeric running {field}",
+            )
+        bucket[field] = previous + getattr(observation, field)
+
+
+def _complete_withholding296_row(
+    index: int,
+    bucket: Mapping[str, Decimal | str],
+) -> dict[str, Decimal | str]:
+    """Add the row ordinal and design-required blank values to one row."""
+    row = dict(bucket)
+    row["registro_orden"] = str(index)
+    for field, default in _WITHHOLDING296_BLANK_DEFAULTS.items():
+        row.setdefault(field, default)
+    return row
+
+
 def _build_withholding296_rows(
     observations: tuple[Withholding296Observation, ...],
 ) -> tuple[Mapping[str, Decimal | str], ...]:
     accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
     for observation in observations:
-        key = (
-            observation.codigo_pais or "",
-            observation.perceptor_tax_id,
-            observation.clave,
-            observation.subclave,
-        )
-        identity: dict[str, Decimal | str] = {
-            "perceptor_tax_id": observation.perceptor_tax_id,
-            "perceptor_legal_name": observation.perceptor_legal_name,
-            "naturaleza": observation.naturaleza,
-            "clave": observation.clave,
-            "subclave": observation.subclave,
-            "base_retenciones": Decimal("0"),
-            "porcentaje_retencion": Decimal("0"),
-            "retencion_practicada": Decimal("0"),
-            "compensaciones": Decimal("0"),
-            "garantias": Decimal("0"),
-            "otros_importes": Decimal("0"),
-            "ingreso_a_cuenta_repercutido": Decimal("0"),
-        }
-        for field in (
-            "representative_tax_id",
-            "persona_juridica_flag",
-            "codigo_bic",
-            "fecha_devengo",
-            "perceptor_mediador_flag",
-            "codigo",
-            "codigo_emisor",
-            "pago",
-            "tipo_codigo",
-            "codigo_cuenta",
-            "pendiente_flag",
-            "accrual_year",
-            "fecha_inicio_prestamo",
-            "fecha_vencimiento_prestamo",
-            "direccion_perceptor",
-            "nif_pagador_anterior",
-            "procedimiento_especial_flag",
-            "clave_mercado",
-            "codigo_lei",
-            "nif_pais_residencia",
-            "fecha_nacimiento",
-            "ciudad_nacimiento",
-            "codigo_pais",
-            "pais_residencia_fiscal",
-        ):
-            value = getattr(observation, field)
-            if value is not None:
-                identity[field] = value
-        bucket = accum.setdefault(key, identity)
-        for amount_field in (
-            "base_retenciones",
-            "porcentaje_retencion",
-            "retencion_practicada",
-            "compensaciones",
-            "garantias",
-            "otros_importes",
-            "ingreso_a_cuenta_repercutido",
-        ):
-            previous = bucket[amount_field]
-            if not isinstance(previous, Decimal):
-                raise RegistryValidationError(
-                    f"withholding296 row accumulator for {key!r} holds a non-numeric running {amount_field}",
-                )
-            bucket[amount_field] = previous + getattr(observation, amount_field)
-    rows: list[dict[str, Decimal | str]] = []
-    for index, key in enumerate(sorted(accum.keys()), start=1):
-        row = dict(accum[key])
-        row["registro_orden"] = str(index)
-        if "representative_tax_id" not in row:
-            row["representative_tax_id"] = " " * 9
-        if "nif_pagador_anterior" not in row:
-            row["nif_pagador_anterior"] = " " * 9
-        if "codigo_cuenta" not in row:
-            row["codigo_cuenta"] = " " * 20
-        if "codigo_emisor" not in row:
-            row["codigo_emisor"] = " " * 12
-        if "codigo_lei" not in row:
-            row["codigo_lei"] = " " * 20
-        if "nif_pais_residencia" not in row:
-            row["nif_pais_residencia"] = " " * 20
-        if "direccion_perceptor" not in row:
-            row["direccion_perceptor"] = " " * 162
-        if "accrual_year" not in row:
-            row["accrual_year"] = "0000"
-        if "fecha_inicio_prestamo" not in row:
-            row["fecha_inicio_prestamo"] = "0" * 8
-        if "fecha_vencimiento_prestamo" not in row:
-            row["fecha_vencimiento_prestamo"] = "0" * 8
-        if "fecha_devengo" not in row:
-            row["fecha_devengo"] = "0" * 8
-        if "fecha_nacimiento" not in row:
-            row["fecha_nacimiento"] = "0" * 8
-        rows.append(row)
-    return tuple(rows)
+        key = _withholding296_row_key(observation)
+        bucket = accum.setdefault(key, _withholding296_identity_values(observation))
+        _merge_withholding296_amounts(bucket, observation, key)
+    return tuple(
+        _complete_withholding296_row(index, accum[key]) for index, key in enumerate(sorted(accum.keys()), start=1)
+    )
 
 
 def resolve_withholding296_binding_row_values(

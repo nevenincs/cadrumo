@@ -158,6 +158,8 @@ _ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "operator.overview.explain": "tui.search.action.explain_overview",
     "operator.modelo.filing_record.list": "tui.search.action.list_filing_records",
 }
+
+
 def _render_locale(key: str, locale: str | None, **values: object) -> str:
     """Render one palette label, optionally under a test-selected locale."""
     if locale is None:
