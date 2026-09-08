@@ -1024,100 +1024,9 @@ full_test_lanes := "test-harness check-registry test-unit test-integration-paral
 
 [doc('Run every test population sequentially; stream output, continue independent lanes after failures, and report per-lane timings.')]
 [group('testing')]
-[unix]
 test-all:
-    #!/usr/bin/env bash
-    set -uo pipefail
-    run_day=$(date -u +%Y-%m-%d)
-    run_marker="$(date -u +%Y%m%dT%H%M%S.%NZ)-test-all-$$-$RANDOM"
-    run_root="$(pwd)/.logs/test-runs/$run_day/$run_marker"
-    mkdir -p "$run_root/artifacts" "$run_root/cache" "$run_root/scratch"
-    log="$run_root/run.log"
-    exec > >(tee -a "$log") 2>&1
-    echo "test-all run log: $log"
-    export CADRUMO_TEST_ALL_RUN_ROOT="$run_root"
-    lanes=( {{full_test_lanes}} )
-    names=()
-    statuses=()
-    durations=()
-    overall=0
-    for lane in "${lanes[@]}"; do
-        echo
-        echo "▶ $lane"
-        started=$(date +%s)
-        just "$lane"
-        status=$?
-        elapsed=$(( $(date +%s) - started ))
-        names+=("$lane")
-        statuses+=("$status")
-        durations+=("$elapsed")
-        if [[ "$status" -eq 0 ]]; then
-            echo "✔ $lane (${elapsed}s)"
-        else
-            echo "✘ $lane (exit $status, ${elapsed}s)" >&2
-            overall=1
-        fi
-    done
-    echo
-    echo "Test lane summary"
-    for index in "${!names[@]}"; do
-        printf '  %-34s exit=%-3s %ss\n' "${names[$index]}" "${statuses[$index]}" "${durations[$index]}"
-    done
-    exit "$overall"
+    uv run --no-sync python -m dev.test_runs lanes {{full_test_lanes}}
 
-[doc('Run every test population sequentially; stream output, continue independent lanes after failures, and report per-lane timings.')]
-[group('testing')]
-[windows]
-test-all:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $runDay = [DateTime]::UtcNow.ToString('yyyy-MM-dd')
-    $runMarker = '{0}-test-all-{1}-{2}' -f [DateTime]::UtcNow.ToString('yyyyMMddTHHmmss.fffffffZ'), $PID, ([Guid]::NewGuid().ToString('N').Substring(0, 8))
-    $runRoot = Join-Path (Join-Path (Join-Path (Get-Location) '.logs/test-runs') $runDay) $runMarker
-    foreach ($child in @('artifacts', 'cache', 'scratch')) {
-        New-Item -ItemType Directory -Force -Path (Join-Path $runRoot $child) | Out-Null
-    }
-    $log = Join-Path $runRoot 'run.log'
-    Start-Transcript -LiteralPath $log -NoClobber | Out-Null
-    Write-Host "test-all run log: $log"
-    $env:CADRUMO_TEST_ALL_RUN_ROOT = $runRoot
-    $lanes = '{{full_test_lanes}}'.Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)
-    $results = @()
-    $overall = 0
-    foreach ($lane in $lanes) {
-        Write-Host ''
-        Write-Host "▶ $lane"
-        $timer = [System.Diagnostics.Stopwatch]::StartNew()
-        & just $lane
-        $status = $LASTEXITCODE
-        $timer.Stop()
-        $seconds = [Math]::Round($timer.Elapsed.TotalSeconds, 1)
-        $results += [PSCustomObject]@{ Lane = $lane; Status = $status; Seconds = $seconds }
-        if ($status -eq 0) {
-            Write-Host "✔ $lane ($($seconds)s)"
-        }
-        else {
-            Write-Error "✘ $lane (exit $status, $($seconds)s)" -ErrorAction Continue
-            $overall = 1
-        }
-    }
-    Write-Host ''
-    Write-Host 'Test lane summary'
-    foreach ($result in $results) {
-        Write-Host ("  {0,-34} exit={1,-3} {2}s" -f $result.Lane, $result.Status, $result.Seconds)
-    }
-    Stop-Transcript | Out-Null
-    exit $overall
-
-# Run only the PARALLEL integration lane, holding the serial tests out.
-#
-# Exists so CI can carry a separate verdict per pass. The two are not equally
-# trustworthy: this pass is deterministic, while the serial pass includes
-# wall-clock budgets that flake on a machine CI shares with the dev box and the
-# agent fleet (measured: P95 4.098s against a 3.0s budget, samples mostly
-# 1.1-1.5s with load-driven outliers). Wiring one CI step to both means the
-# deterministic half can never go blocking without the load-sensitive half
-# dragging the release-verdict lane down with it.
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('testing')]
 test-integration-parallel:
@@ -1211,6 +1120,31 @@ test-coverage:
 [group('audits')]
 audit-types:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-types -- uv run --no-sync python -m dev.quality.types --full
+
+# Gate on published vulnerability advisories against the pinned dependency
+# tree. This repository had NO dependency vulnerability audit of any kind -- no
+# uv audit, no pip-audit, no osv-scanner -- while shipping binaries; every
+# audit-* recipe below is a code-quality dimension.
+#
+# This is the ONE audit that GATES: a published advisory against a pinned
+# version is a verdict, not a lead, so it is deliberately NOT part of
+# `audit-all`, which is advisory and always exits 0. It is not built on
+# `uv audit` either -- that preview tool exits 0 even when it prints
+# advisories, which is exactly how three sibling repositories ended up with a
+# gate that could not fail. The runner reads the committed lockfiles itself,
+# queries OSV, and derives the verdict from the finding set.
+#
+# Exits 1 on an unaccepted advisory or an expired suppression, 7 if the audit
+# could not complete (a gate that cannot run is never a pass). Accepted
+# advisories live in dependency-audit-allowlist.toml, each with a reason and an
+# expiry date; binaries no lockfile pins are declared in
+# dependency-audit-binaries.toml. `--json` emits the machine report; nothing is
+# written to disk unless VAULTSPEC_CI_REPORTS names a directory, so the
+# zero-Actions-artifact posture is preserved.
+[doc('Gate on published vulnerability advisories against every pinned dependency; the one audit that fails the build.')]
+[group('audits')]
+audit-dependencies *ARGS:
+    @uv run --no-sync python -m dev.audit.dependency_audit {{ARGS}}
 
 # Run complexity audits for production code.
 [group('audits')]
