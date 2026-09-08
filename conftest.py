@@ -110,6 +110,12 @@ from cadrumo.tests._worker_count_hook import resolve_auto_num_workers as _resolv
 if TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
+# Loaded as a plugin, not inlined here: this module's own `pytest_configure` is
+# `trylast`, and the JUnit option has to be set before the junitxml plugin reads
+# it. Unset `VAULTSPEC_CI_REPORTS` - every local run - and it does nothing,
+# which is what keeps this repository's zero-artifact posture intact.
+pytest_plugins = ("dev.ci_reports",)
+
 register_collection_storage_root_cleanup(collection_storage_root())
 
 
