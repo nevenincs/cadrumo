@@ -71,8 +71,12 @@ from ._variable_envelope import (
     compile_filing_envelope_definition,
 )
 from .source_defects import (
+    NoteGovernedAmountDeclaration,
     SourceDefectDeclaration,
     adjudicated_literal_for,
+    note_governed_amount_scale_for,
+    note_governed_amounts_for,
+    validate_note_governed_amount_declarations,
     validate_source_defect_declarations,
 )
 
@@ -416,6 +420,11 @@ def render_complete_export_tree(
     """
     _validate_transport_profile(joined, transport_profile)
     validate_source_defect_declarations(source_defects, joined.source)
+    # Resolved from the parser-read source rather than accepted from the caller,
+    # so every render path -- generator, drift check, test -- reads one
+    # adjudication set for one pinned design and cannot disagree about it.
+    note_governed_amounts = note_governed_amounts_for(joined.source.source_ref)
+    validate_note_governed_amount_declarations(note_governed_amounts, joined.source)
     if joined.variable_envelopes and joined.variable_envelope_contract is None:
         identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
         raise RegistryValidationError(
@@ -429,7 +438,11 @@ def render_complete_export_tree(
         )
     validate_render_profile(render_profile, joined, render_profile_source_evidence)
     records, derivations = _render_records(
-        joined.records, transport_profile, render_profile, source_defects=source_defects
+        joined.records,
+        transport_profile,
+        render_profile,
+        source_defects=source_defects,
+        note_governed_amounts=note_governed_amounts,
     )
     _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
     filing_envelope = (
@@ -576,6 +589,7 @@ def _render_records(
     render_profile: RenderProfile,
     *,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
     records: list[ExportRecordDefinition] = []
     derivations: list[ExportFieldDerivation] = []
@@ -594,6 +608,7 @@ def _render_records(
                 render_profile,
                 export_record_id=record_id,
                 source_defects=source_defects,
+                note_governed_amounts=note_governed_amounts,
             )
             for field in joined_record.fields
         )
@@ -698,6 +713,7 @@ def _normalise_field(
     *,
     export_record_id: str,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
@@ -766,7 +782,11 @@ def _normalise_field(
                 render_profile,
                 export_record_id=export_record_id,
             )
-        return _numeric_derivation(joined_field, export_record_id=export_record_id)
+        return _numeric_derivation(
+            joined_field,
+            export_record_id=export_record_id,
+            note_governed_amounts=note_governed_amounts,
+        )
     if _has_absent_naturaleza(parser_field):
         # AEAT printed the naturaleza cell EMPTY, so the parser stamped the
         # absent-naturaleza marker rather than guessing a type. There is nothing
@@ -951,6 +971,7 @@ def _numeric_derivation(
     joined_field: JoinedRecordDesignField,
     *,
     export_record_id: str,
+    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     content = parser_field.content
@@ -968,8 +989,33 @@ def _numeric_derivation(
     # clause is not a wrapper and must still reach the ambiguity refusal.
     if normalised_content.startswith("[") and normalised_content.endswith("]"):
         normalised_content = normalised_content[1:-1].strip()
+    pointer_content = normalised_content
     normalised_content, note_references = _split_official_note_references(normalised_content)
     if not normalised_content and note_references:
+        # A cell holding nothing but a pointer states no representation. Where
+        # the note it names has been read and adjudicated for this exact design
+        # and sheet, the run's own stated representation applies; everywhere else
+        # the historical unscaled reading stands rather than being silently
+        # re-scaled by a rule nobody reviewed for that document.
+        adjudicated_scale = note_governed_amount_scale_for(
+            note_governed_amounts,
+            sheet=parser_field.sheet,
+            published_content=pointer_content,
+        )
+        if adjudicated_scale is not None:
+            whole_digits, decimal_digits = adjudicated_scale
+            _require_numeric_extent(joined_field, expected_length=whole_digits + decimal_digits)
+            return _schema_field(
+                joined_field,
+                data_type="decimal",
+                required=_is_required(parser_field.validation),
+                padding=ExportPadding.LEFT_ZERO,
+                justification=ExportJustification.RIGHT,
+                signed=False,
+                export_record_id=export_record_id,
+                decimals=decimal_digits,
+                derivation_code="numeric-note-governed-amount-v1",
+            )
         return _schema_field(
             joined_field,
             data_type="integer",

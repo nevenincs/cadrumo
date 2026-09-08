@@ -44,9 +44,13 @@ if TYPE_CHECKING:
     from ._record_design_ir import RecordDesignIntermediateSource
 
 __all__ = [
+    "NoteGovernedAmountDeclaration",
     "SourceDefectDeclaration",
     "adjudicated_literal_for",
+    "note_governed_amount_scale_for",
+    "note_governed_amounts_for",
     "source_defects_for",
+    "validate_note_governed_amount_declarations",
     "validate_source_defect_declarations",
 ]
 
@@ -184,4 +188,139 @@ def adjudicated_literal_for(
         if declaration.published_content != published_content:
             return None
         return declaration.adjudicated_literal
+    return None
+
+
+class NoteGovernedAmountDeclaration(BaseModel):
+    """One amount run whose ``Contenido`` cells carry only a footnote pointer.
+
+    A workbook design normally spells an amount slot's representation in its
+    ``Contenido`` cell -- ``15 enteros 2 decimales`` -- and the numeric
+    derivation reads it there. A cell holding nothing but ``Nota N`` states no
+    representation at all, and reading it as an unscaled integer is an
+    invention: it silently decides that the emitted digits are euros in a run
+    whose every other member emits cents, which is a filing wrong by two orders
+    of magnitude on a monetary casilla.
+
+    A declaration here records the adjudication of one such run against the
+    note the pointer names. It is pinned the same way a
+    :class:`SourceDefectDeclaration` is -- to one file by digest and to one
+    sheet by name, carrying the exact published pointer and the exact note text
+    that was read -- and it is self-limiting for the same reasons:
+
+    * The SHA-256 makes a reissued design drop out of the table, so the
+      generator refuses to the unstated reading again rather than carrying a
+      stale adjudication into a document nobody re-read.
+    * The declared representation is fed back through the SAME slot-width check
+      every content-derived representation passes, so a declaration cannot widen,
+      narrow, or re-scale a slot the design's own geometry contradicts.
+    * The scope is the sheet that PRINTS the note, because a note label
+      identifies a note only together with its sheet; the same ``Nota 2`` on
+      another sheet is another note and is not covered.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=False)
+
+    source_ref: str = Field(min_length=1)
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    sheet: str = Field(min_length=1)
+    published_content: str = Field(min_length=1)
+    """The pointer exactly as the ``Contenido`` cells of this run publish it."""
+    note_cell: str = Field(min_length=1)
+    """Where on this sheet the design defines the note the pointer names."""
+    note_statement: str = Field(min_length=1)
+    """The note's text as read from that cell, so a later reviewer re-reads it."""
+    integer_digits: int = Field(gt=0)
+    decimal_digits: int = Field(gt=0)
+    """Positive: a run adjudicated to carry no decimals states that in its cells."""
+    evidence: str = Field(min_length=1)
+    """How the reading was established, in terms a later reviewer can re-check."""
+
+
+_NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
+    "aeat-dr-390-2025": tuple(
+        NoteGovernedAmountDeclaration(
+            source_ref="aeat-dr-390-2025",
+            source_sha256="6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252",
+            sheet=sheet,
+            published_content="Nota 2",
+            note_cell=note_cell,
+            note_statement="Nota 2: estas casillas deben estar rellenas a 0",
+            integer_digits=15,
+            decimal_digits=2,
+            evidence=(
+                "The 2025 design replaced the Contenido clause of the expired temporary-rate slots -- the "
+                "0%, 2%, 5% and 7,5% rows and the 0%, 0,26%, 0,62% and 1% recargo rows -- with the pointer "
+                "'Nota 2', where the 2024 design of the same modelo spelled '15 enteros 2 decimales' in every "
+                "one of them. The note the pointer names says 'estas casillas deben estar rellenas a 0': it "
+                "withholds the VALUE for a rate that no longer applies and says nothing about how digits are "
+                "written. The representation therefore stands unchanged from the surrounding run, which the "
+                "same sheet still states outright on every 17-position amount whose rate survives into 2025 "
+                "(4%, 10% and 21% bases and cuotas), and which the 2024 design states on these very rows. "
+                "Reading the pointer as an unscaled integer instead would emit euros into a cents field."
+            ),
+        )
+        for sheet, note_cell in (
+            ("Pág. 2", "A119"),
+            ("Pág. 2 bis", "A44"),
+            ("Pág. 3", "A120"),
+            ("Pág. 4", "A62"),
+        )
+    ),
+}
+
+
+def note_governed_amounts_for(source_ref: str) -> tuple[NoteGovernedAmountDeclaration, ...]:
+    """Return the complete note-governed amount set declared for one official source."""
+    return _NOTE_GOVERNED_AMOUNTS_BY_REF.get(source_ref, ())
+
+
+def validate_note_governed_amount_declarations(
+    declarations: tuple[NoteGovernedAmountDeclaration, ...],
+    source: RecordDesignIntermediateSource,
+) -> None:
+    """Refuse a declaration set that is not pinned to the design being rendered.
+
+    The SHA-256 is checked against the PARSER-READ source, exactly as
+    :func:`validate_source_defect_declarations` checks it, so a declaration
+    cannot be admitted by a caller that merely asserts the digest it wants.
+    """
+    seen: set[tuple[str, str, str]] = set()
+    for declaration in declarations:
+        key = (declaration.source_ref, declaration.sheet, declaration.published_content)
+        if key in seen:
+            raise RegistryValidationError(
+                f"duplicate note-governed amount declaration for {declaration.source_ref!r} "
+                f"sheet {declaration.sheet!r} content {declaration.published_content!r}",
+            )
+        seen.add(key)
+        if declaration.source_ref != source.source_ref:
+            raise RegistryValidationError(
+                f"note-governed amount declaration source {declaration.source_ref!r} does not match parser "
+                f"intermediate source {source.source_ref!r}",
+            )
+        if declaration.source_sha256 != source.source_sha256:
+            raise RegistryValidationError(
+                f"note-governed amount declaration for {declaration.source_ref!r} is not pinned to the parser "
+                "intermediate SHA-256",
+            )
+
+
+def note_governed_amount_scale_for(
+    declarations: tuple[NoteGovernedAmountDeclaration, ...],
+    *,
+    sheet: str,
+    published_content: str,
+) -> tuple[int, int] | None:
+    """Return the adjudicated whole/decimal digit pair, or ``None`` to derive normally.
+
+    ``published_content`` is the cell's whitespace-normalised content, which is
+    what the numeric derivation reads. Anything the declaration does not name
+    exactly leaves the caller's own derivation standing, which is the behaviour
+    a reader should be able to assume when no declaration applies.
+    """
+    for declaration in declarations:
+        if declaration.sheet != sheet or declaration.published_content != published_content:
+            continue
+        return declaration.integer_digits, declaration.decimal_digits
     return None
