@@ -4,10 +4,7 @@
 
 from __future__ import annotations
 
-from ._app_ledger_command_spec_policies import (
-    _POLICY_2,
-    _POLICY_5,
-)
+from ._app_ledger_command_spec_policies import _POLICY_5
 from .command_spec import (
     ArgumentSpec,
     CommandNodeKind,
@@ -42,68 +39,6 @@ LEDGER_EVIDENCE_FOLLOWUP_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceConsentListResult"),
             identity="ledger.evidence.consent.list",
-        ),
-    ),
-    CommandSpec(
-        key="app_ledger_evidence_consent_rederive",
-        parent_key="app_ledger_evidence_consent",
-        token="rederive",
-        kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.app.ledger.evidence.consent.rederive_help"),
-        short_help_key=None,
-        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
-        parameters=(
-            ArgumentSpec(
-                name="evidence_reference",
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.evidence.consent.evidence_reference_help"),
-                metavar=None,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
-                name="content_address",
-                declarations=("--content-address",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.evidence.consent.content_address_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
-                name="transcriber",
-                declarations=("--transcriber",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.evidence.consent.transcriber_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-        ),
-        policy=_POLICY_2,
-        handler=LazyBinding.available(
-            DeferredTarget("cadrumo.entrypoints.cli._ledger_evidence_consent_cli", "consent_rederive")
-        ),
-        result_schema=ResultSchemaSpec(
-            SchemaState.TARGET,
-            target=DeferredTarget("cadrumo.entrypoints.cli.ledger_business_payloads", "EvidenceConsentRederiveResult"),
-            identity="ledger.evidence.consent.rederive",
         ),
     ),
     CommandSpec(
