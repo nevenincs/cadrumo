@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import pathlib
 import re
 import shlex
 from pathlib import Path
@@ -97,7 +98,11 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
 
     static = document["jobs"]["cadrumo-static"]
     static_commands = "\n".join(str(step.get("run", "")) for step in static["steps"])
-    assert "uv run --no-sync aeat app registry verify" in static_commands
+    # `just check-registry`, not `uv run --no-sync aeat app registry verify`.
+    # The recipe has carried that exact command all along; the workflow named
+    # the CLI beside it, so the two could drift and only the workflow's copy
+    # was the one CI actually ran.
+    assert "just check-registry" in static_commands
     assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" in static_commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
     # The dev-tree workflow/tooling conformance gates run per-push here, via the
@@ -118,7 +123,24 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # Routed through the `test-unit` recipe (same one `just test-unit` runs
     # locally) so the marker expression and the durations/worker overrides
     # have one declaration site; the recipe's substance is pinned below.
-    assert "CADRUMO_PYTEST_WORKERS=8 just test-unit 50" in unit_commands
+    #
+    # The worker count rides the step's `env:` block, NOT a `VAR=x just ...`
+    # prefix. That prefix is POSIX shell syntax and a parse error under both
+    # cmd.exe and PowerShell, so every step written that way was one this
+    # repository's own Windows legs could not have run. `env:` is where
+    # GitHub Actions sets a variable on any runner, and the recipe already
+    # reads it through `env_var_or_default`.
+    assert "just test-unit 50" in unit_commands
+    unit_step = next(step for step in unit["steps"] if "just test-unit 50" in str(step.get("run", "")))
+    assert unit_step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8", (
+        "the worker override must ride `env:`; a `VAR=x just ...` prefix "
+        "cannot execute on the Windows legs this repository schedules onto"
+    )
+    assert not any(
+        "CADRUMO_PYTEST_WORKERS=" in str(step.get("run", ""))
+        for step in document["jobs"].values()
+        for step in step["steps"]
+    ), "no step may reintroduce the POSIX env prefix in its `run:` text"
 
 
 def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() -> None:
@@ -139,9 +161,54 @@ def test_workflow_lint_is_a_standalone_blocking_verdict_over_every_workflow() ->
     assert job["timeout-minutes"] <= 15
 
     executed = executed_text(step.get("run") for step in job["steps"])
-    assert ".github/workflows/*.yml" in executed, "the linter must read every workflow, not a chosen few"
-    verification = executed.index("sha256sum --check --strict")
-    assert verification < executed.index("-no-color"), "the archive is executed before its digest is checked"
+    assert "just check-workflow" in executed, (
+        "the workflow lint is dispatched by recipe; a gate re-listed in YAML "
+        "cannot be proven to match the gate a developer can run"
+    )
+
+    # The three properties this job used to assert INLINE - every workflow is
+    # read, the archive is pinned by content, and the digest is checked before
+    # the binary is executed - did not stop being required when the download
+    # moved into `dev/actionlint.py`. They moved with it, so they are asserted
+    # at their new home rather than deleted along with the shell that carried
+    # them. This repository previously kept its own copy of that download,
+    # already at a different version from vaultspec-dashboard's copy of the
+    # same thirty lines.
+    from dev import actionlint
+
+    assert actionlint.VERSION, "actionlint must be pinned to a version"
+    assert actionlint.ARCHIVES, "actionlint must pin at least one platform"
+    for (system, machine), (suffix, digest) in actionlint.ARCHIVES.items():
+        assert len(digest) == 64, (
+            f"the {system}/{machine} archive must be pinned by content as well "
+            "as by version, so a retagged release fails the gate rather than "
+            "quietly changing what lints these workflows"
+        )
+        assert system in suffix, f"the {system}/{machine} entry names {suffix!r}"
+
+    # Ordering, read from the ONE function that downloads: anchoring on the
+    # whole module would find `_extract_member` at its definition, above the
+    # call site, and compare two things that are not in sequence at all.
+    source = pathlib.Path(actionlint.__file__).read_text(encoding="utf-8")
+    acquire = source[source.index("def ensure()") :]
+    assert acquire.index("_verify(archive, expected)") < acquire.index("_extract_member(archive"), (
+        "the archive is unpacked before its digest is checked"
+    )
+    # The CALL, not the word: the module explains in a comment why it does not
+    # use `extractall`, and a substring test over the source would read that
+    # explanation as the defect it describes.
+    calls = {
+        node.func.attr
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+    }
+    assert "extractall" not in calls, (
+        "an archive names its own paths and the digest says nothing about "
+        "whether they are safe to write to; one member, by basename"
+    )
+    assert "-no-color" in source and "actionlint" in source, (
+        "the provisioner must still be the thing that runs actionlint"
+    )
 
 
 def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously() -> None:
@@ -417,7 +484,12 @@ def test_ci_per_push_integration_conformance_step_is_exact_and_blocking() -> Non
     )
 
     assert step is not None, "the per-push integration conformance step is missing"
-    assert step["run"] == "CADRUMO_PYTEST_WORKERS=8 just test-per-push-integration-gates"
+    # One delegation and nothing else on the line. The worker override rides
+    # `env:`, because `VAR=x just ...` is POSIX shell syntax that cmd.exe and
+    # PowerShell both refuse - this repository schedules Windows legs, so a
+    # step written that way is one they could not have run.
+    assert step["run"] == "just test-per-push-integration-gates"
+    assert step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8"
     assert "continue-on-error" not in step
 
 
@@ -460,8 +532,16 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
     # Same `test-unit` recipe ci.yml routes through, with the full lane's own
     # durations value; the recipe's substance is pinned in
     # test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates.
-    assert "CADRUMO_PYTEST_WORKERS=8 just test-unit 100" in commands
-    assert "uv run --no-sync aeat app registry verify" in commands
+    # The worker override rides `env:` for the same reason it does per-push.
+    assert "just test-unit 100" in commands
+    assert "CADRUMO_PYTEST_WORKERS=" not in commands, (
+        "a POSIX `VAR=x just ...` prefix cannot execute on a Windows leg; the "
+        "override belongs in the step's `env:` block"
+    )
+    full_steps = document["jobs"]["cadrumo-full-conformance"]["steps"]
+    unit_step = next(step for step in full_steps if "just test-unit 100" in str(step.get("run", "")))
+    assert unit_step.get("env", {}).get("CADRUMO_PYTEST_WORKERS") == "8"
+    assert "just check-registry" in commands
     assert _prohibited_aeat_product_forms(_FULL_WORKFLOW.read_text(encoding="utf-8")) == ()
 
 
@@ -557,11 +637,26 @@ def test_ci_workflow_product_surface_has_no_former_identity() -> None:
         for line in str(step.get("run", "")).splitlines()
         if line.strip()
     )
+    # The registry verification is DELEGATED now, so the workflow carries no
+    # `app registry` command at all - it says `just check-registry`. The claim
+    # this guard makes has not changed and neither has its subject: `aeat` may
+    # appear as the human CLI and never as a product identity. Both halves are
+    # asserted, at the two places the command now lives, because "the workflow
+    # no longer names it" would pass just as well if the recipe had stopped
+    # verifying anything.
     registry_commands = {command for command in commands if " app registry " in command}
+    assert registry_commands == set(), (
+        "the workflow must reach the registry verification through "
+        f"`just check-registry`, not name the CLI: {sorted(registry_commands)}"
+    )
+    assert "just check-registry" in commands
 
-    assert registry_commands == {
-        "uv run --no-sync aeat app registry verify",
-    }
+    recipe_commands = resolved_recipe_commands(_REPOSITORY_ROOT, "check-registry")
+    assert any(" app registry verify" in command for command in recipe_commands), (
+        "`just check-registry` must still be the registry verification; the "
+        f"workflow now has no copy of its own to fall back on: {recipe_commands}"
+    )
+    assert _prohibited_aeat_product_forms("\n".join(recipe_commands)) == ()
     assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" in commands
     assert not any(re.match(r"^(?:uv run(?: --no-sync)? )?cadrumo(?:\s|$)", command) for command in commands)
 
