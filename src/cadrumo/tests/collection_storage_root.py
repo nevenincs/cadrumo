@@ -1,12 +1,14 @@
 """Shared collection-time process-private storage-root derivation.
 
 Both the repo-root ``conftest.py`` and ``src/cadrumo/conftest.py`` must point
-``CADRUMO_LOCAL_STORAGE_ROOT`` at a process-private temp directory BEFORE any
+``CADRUMO_LOCAL_STORAGE_ROOT`` at a process-private scratch directory BEFORE any
 Cadrumo import resolves ``Settings`` — otherwise collection-time imports (CLI
 and i18n modules transitively pulled in while pytest gathers tests) would
 resolve the real platform state root, which may hold retired former-product
 state and trip the cold-start guard. Both conftests derived the same
-``<gettempdir()>/cadrumo-pytest-<pid>`` path independently; this module is the
+``<gettempdir()>/cadrumo-pytest-<pid>`` path independently. Repository pytest
+runs bind ``gettempdir()`` to their run-local ``.logs/.../scratch`` directory;
+standalone consumers retain the platform temp fallback. This module is the
 single source for that derivation, plus a best-effort cleanup so the
 per-invocation directories stop accumulating in the OS temp directory forever.
 
@@ -447,7 +449,8 @@ def reap_abandoned_numbered_dirs(root: Path, *, now: float | None = None) -> tup
 def collection_storage_root() -> Path:
     """Return this process's private collection-time storage root.
 
-    ``<gettempdir()>/cadrumo-pytest-<pid>`` — process-private by construction
+    ``<gettempdir()>/cadrumo-pytest-<pid>`` — run-local under repository pytest
+    and process-private by construction
     (keyed on the current PID), so concurrent pytest invocations, including
     parallel agents sharing this worktree, never collide.
     """

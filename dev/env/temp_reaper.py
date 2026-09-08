@@ -1,4 +1,4 @@
-"""Operator-invoked reaper for the two temp families that fill the system volume.
+"""Operator-invoked reaper for temporary agent and test-run storage.
 
 On 2026-08-07 ``C:`` reached 2.9 MB free of 931 GB and broke the agent fleet:
 spurious ``OSError: could not create numbered dir``, collection timeouts, and a
@@ -47,6 +47,9 @@ from typing import TextIO
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.tests import pytest_numbered_dir_root, reap_abandoned_numbered_dirs
+
+from .._paths import REPO_ROOT
+from ..test_runs.reaper import assess_run_directories, reclaim_run_directories
 
 CLAUDE_TEMP_STEM = "claude"
 """Claude Code's root under the OS temp directory.
@@ -401,6 +404,16 @@ def main(argv: list[str] | None = None) -> int:
         "  (this family is also reaped at every pytest session start)",
         file=sys.stdout,
     )
+
+    run_root = REPO_ROOT / ".logs" / "test-runs"
+    run_verdicts = assess_run_directories(run_root)
+    print(f"\nRepository test runs under {run_root}", file=sys.stdout)
+    for verdict in run_verdicts:
+        print(f"  {'REAP ' if verdict.reclaimable else 'SPARE'} {verdict.directory.name}  {verdict.reason}")
+    if arguments.apply:
+        print(f"  removed {reclaim_run_directories(run_verdicts)} run directories", file=sys.stdout)
+    else:
+        print("  nothing was deleted; pass --apply to act on the REAP lines above", file=sys.stdout)
 
     session_root = claude_session_root()
     print(f"\nClaude Code session scratchpads under {session_root}", file=sys.stdout)

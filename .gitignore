@@ -19,8 +19,10 @@ lib64/
 parts/
 sdist/
 var/
-.logs/*
-!.logs/README.md
+# Local log output and dot-prefixed ad-hoc log variants are ephemeral.
+.logs/
+.log-*
+.log^*
 wheels/
 share/python-wheels/
 *.egg-info/
@@ -221,9 +223,9 @@ cython_debug/
 .ty_cache/
 .pyrefly_cache/
 
-# `just audit-all` (dev.audit.advisory) persisted run output: the full,
-# uncapped dashboard result (summary.json, summary.md) plus the raw semgrep
-# JSON payload. Regenerated every run; never committed.
+# Legacy advisory output from runs predating the `.logs/audit-runs/`
+# migration. No current producer writes here; retain the ignore so an old
+# workstation run cannot be staged accidentally.
 dev/audit/.runs/
 
 # PyPI configuration file

@@ -76,6 +76,7 @@ from ..quality.import_hygiene_scan import (
     find_multi_sourced_symbols,
     walk_module_imports,
 )
+from ..test_runs.paths import allocate_run_directory
 from .complexity import scan_complexity
 from .duplication import DuplicationOutcome, run_duplication_scan
 
@@ -306,23 +307,39 @@ _STATUS_GLYPH: Final[dict[Status, str]] = {
 }
 
 
-def _print_text_report(report: HealthReport, full: bool) -> None:
-    """Print the human-readable dashboard."""
-    print(f"code-health report: overall {_STATUS_GLYPH[report.overall]}")
-    print()
+def render_text_report(report: HealthReport, full: bool) -> str:
+    """Render the human-readable dashboard for console and persisted evidence."""
+    lines = [f"code-health report: overall {_STATUS_GLYPH[report.overall]}", ""]
     for dimension in report.dimensions:
-        print(f"[{_STATUS_GLYPH[dimension.status]:>5}] {dimension.name}: {dimension.headline}")
+        lines.append(f"[{_STATUS_GLYPH[dimension.status]:>5}] {dimension.name}: {dimension.headline}")
         if dimension.details:
             shown = dimension.details if full else dimension.details[:10]
             for line in shown:
-                print(f"         {line}")
+                lines.append(f"         {line}")
             if len(dimension.details) > len(shown):
-                print(f"         ... {len(dimension.details) - len(shown)} more")
-    print()
+                lines.append(f"         ... {len(dimension.details) - len(shown)} more")
+    lines.append("")
     if report.overall is Status.RED:
-        print("code-health report: FAIL - one or more dimensions RED.")
+        lines.append("code-health report: FAIL - one or more dimensions RED.")
     else:
-        print("code-health report: PASS (AMBER dimensions are advisory debt, not a gate).")
+        lines.append("code-health report: PASS (AMBER dimensions are advisory debt, not a gate).")
+    return "\n".join(lines)
+
+
+def persist_report(repository: Path, report: HealthReport, command: tuple[str, ...]) -> Path:
+    """Persist one uniquely identified report and its producing command."""
+    run_dir = allocate_run_directory(repository, family="audit-runs", label="audit-health-report")
+    run_dir.mkdir(parents=True)
+    payload = {"command": list(command), "report": report.to_json()}
+    (run_dir / "report.json").write_text(
+        json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding=_UTF_8, newline="\n"
+    )
+    (run_dir / "report.md").write_text(
+        f"command: {' '.join(command)}\n\n{render_text_report(report, full=True)}\n",
+        encoding=_UTF_8,
+        newline="\n",
+    )
+    return run_dir
 
 
 def main() -> int:
@@ -338,7 +355,11 @@ def main() -> int:
     if args.json:
         print(json.dumps(report.to_json(), indent=2, ensure_ascii=False))
     else:
-        _print_text_report(report, args.full)
+        print(render_text_report(report, args.full))
+
+    run_dir = persist_report(repo_root, report, tuple(sys.argv))
+    if not args.json:
+        print(f"full report persisted to {run_dir}")
 
     return 1 if report.overall is Status.RED else 0
 

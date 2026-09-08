@@ -32,7 +32,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: deliberately does not run: they re-run gates the suite already covers, or
 #: need a local-only service.
 _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
-    {"check-pre-commit", "check-all", "check-rag", "check-semantic", "check-security", "check-corpus-text"}
+    {
+        "check-pre-commit",
+        "check-all",
+        "check-rag",
+        "check-semantic",
+        "check-security",
+        "check-corpus-text",
+        "check-registry",
+    }
 )
 
 
@@ -56,9 +64,10 @@ def _recipe_commands() -> dict[str, list[str]]:
     """Return each static-check recipe's command tokens, keyed by recipe name."""
     lines = (REPO_ROOT / "justfile").read_text(encoding="utf-8").splitlines()
     commands: dict[str, list[str]] = {}
+    static_checks = _justfile_static_checks()
     for index, line in enumerate(lines):
         match = re.match(r"^([a-z][a-z0-9-]*):", line)
-        if not match:
+        if not match or match.group(1) not in static_checks:
             continue
         body: list[str] = []
         for candidate in lines[index + 1 :]:

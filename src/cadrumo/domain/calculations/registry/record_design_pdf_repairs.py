@@ -800,6 +800,29 @@ _STRANDED_CASILLA_TAG_RE = re.compile(r"^\s*\[\d+\]\s*$")
 _TRAILING_CASILLA_TAG_RE = re.compile(r"\[\d+\]\s*$")
 
 
+def _field_shaped_pdf_line(line: str, row_number: int) -> bool:
+    """Whether a line can carry a casilla tag as a field or split-row half."""
+    return (
+        parse_pdf_row(line, row_number) is not None
+        or REVERSED_ROW_TAIL_RE.match(line) is not None
+        or _REVERSED_ROW_HEAD_RE.match(line) is not None
+    )
+
+
+def _can_reattach_casilla_tag(previous: str, row_number: int) -> bool:
+    """Guard a stranded tag from headings, prose, and already-closed rows."""
+    if not previous.strip() or _TRAILING_CASILLA_TAG_RE.search(previous) is not None:
+        return False
+    cleaned = clean_pdf_line(previous)
+    if (
+        pdf_page_name(cleaned) is not None
+        or pdf_record_heading_name(cleaned) is not None
+        or pdf_candidate_record_name(cleaned) is not None
+    ):
+        return False
+    return _field_shaped_pdf_line(previous, row_number)
+
+
 def reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Fold a casilla reference emitted alone back onto the row it terminates.
 
@@ -831,19 +854,7 @@ def reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
     for line in lines:
         if folded and _STRANDED_CASILLA_TAG_RE.match(line):
             previous = folded[-1]
-            cleaned = clean_pdf_line(previous)
-            if (
-                previous.strip()
-                and not _TRAILING_CASILLA_TAG_RE.search(previous)
-                and pdf_page_name(cleaned) is None
-                and pdf_record_heading_name(cleaned) is None
-                and pdf_candidate_record_name(cleaned) is None
-                and (
-                    parse_pdf_row(previous, len(folded)) is not None
-                    or REVERSED_ROW_TAIL_RE.match(previous) is not None
-                    or _REVERSED_ROW_HEAD_RE.match(previous) is not None
-                )
-            ):
+            if _can_reattach_casilla_tag(previous, len(folded)):
                 folded[-1] = f"{previous.rstrip()} {line.strip()}"
                 continue
         folded.append(line)
@@ -864,6 +875,27 @@ _DOUBLED_COORDINATE_ROW_RE = re.compile(
     r"^\s*(?P<ordinal>\d+)\s+(?P<offset>\d+)\s+(?P<length>\d+)\s+"
     r"(?P=offset)\s+(?P=length)\s+(?P<naturaleza>An|Num|Tit|N|A)(?P<rest>\S.*)$",
 )
+
+
+def _tail_fragment_candidate(
+    line: str,
+    following: str,
+    previous: PdfRow | None,
+) -> tuple[str, str] | None:
+    """Split a leading fragment when the following tail continues ``previous``."""
+    if previous is None or previous.ordinal is None or not previous.ordinal.isdigit():
+        return None
+    if REVERSED_ROW_TAIL_RE.match(line) is not None:
+        return None
+    head = _REVERSED_ROW_HEAD_RE.match(following) or _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(following)
+    if head is None or not _continues(previous, head.group("ordinal"), int(head.group("offset"))):
+        return None
+    tokens = line.split()
+    for cut in range(1, len(tokens)):
+        suffix = " ".join(tokens[cut:])
+        if REVERSED_ROW_TAIL_RE.match(suffix) is not None:
+            return " ".join(tokens[:cut]), suffix
+    return None
 
 
 def split_tail_from_leading_fragment(lines: tuple[str, ...]) -> tuple[str, ...]:
@@ -902,28 +934,17 @@ def split_tail_from_leading_fragment(lines: tuple[str, ...]) -> tuple[str, ...]:
             previous = parsed
             split.append(line)
             continue
-        recovered = False
-        if (
-            previous is not None
-            and previous.ordinal is not None
-            and previous.ordinal.isdigit()
-            and index + 1 < len(lines)
-            and REVERSED_ROW_TAIL_RE.match(line) is None
-        ):
-            head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1]) or _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(
-                lines[index + 1],
-            )
-            if head is not None and _continues(previous, head.group("ordinal"), int(head.group("offset"))):
-                tokens = line.split()
-                for cut in range(1, len(tokens)):
-                    suffix = " ".join(tokens[cut:])
-                    if REVERSED_ROW_TAIL_RE.match(suffix) is not None:
-                        split.append(" ".join(tokens[:cut]))
-                        split.append(suffix)
-                        recovered = True
-                        break
-        if not recovered:
+        candidate = (
+            _tail_fragment_candidate(line, lines[index + 1], previous)
+            if index + 1 < len(lines)
+            else None
+        )
+        if candidate is None:
             split.append(line)
+            continue
+        fragment, tail = candidate
+        split.append(fragment)
+        split.append(tail)
     return tuple(split)
 
 
