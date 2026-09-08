@@ -9,7 +9,6 @@ import pytest
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from .._retenciones import (
-    RETENCIONES_MODELO_SCHEME_CATALOGUE,
     RetencionesAggregation,
     RetencionObservation,
     RetencionScheme,
@@ -214,7 +213,7 @@ class TestAggregate111:
             filter_observations_for_modelo(
                 (),
                 modelo="347",
-                catalogue=RETENCIONES_MODELO_SCHEME_CATALOGUE,
+                catalogue={"111": frozenset()},
                 attribute_fn=lambda obs: obs.scheme,
                 aggregator_label="retenciones aggregator",
             )

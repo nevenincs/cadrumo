@@ -16,7 +16,6 @@ Submodules
    cadrumo.application.live.borrador_100
    cadrumo.application.live.capture_mode
    cadrumo.application.live.censo
-   cadrumo.application.live.deudas
    cadrumo.application.live.errors
    cadrumo.application.live.expedientes
    cadrumo.application.live.filed_capture_finalizer

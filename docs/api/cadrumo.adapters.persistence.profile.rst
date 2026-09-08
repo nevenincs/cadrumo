@@ -17,7 +17,6 @@ Submodules
    cadrumo.adapters.persistence.profile._revision_guarded_singleton_mutation
    cadrumo.adapters.persistence.profile._secure_enveloped_document
    cadrumo.adapters.persistence.profile._secure_model_document
-   cadrumo.adapters.persistence.profile.assets
    cadrumo.adapters.persistence.profile.bienes_inversion
    cadrumo.adapters.persistence.profile.buckets
    cadrumo.adapters.persistence.profile.confirmation_records

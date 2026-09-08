@@ -38,7 +38,6 @@ Submodules
    cadrumo.domain.calculations.registry._source_evidence_fingerprint
    cadrumo.domain.calculations.registry._source_file_text
    cadrumo.domain.calculations.registry._supplementary_orden
-   cadrumo.domain.calculations.registry._supported_filing_years
    cadrumo.domain.calculations.registry._toml_helpers
    cadrumo.domain.calculations.registry._validate
    cadrumo.domain.calculations.registry._validate_applicability_section
@@ -64,7 +63,6 @@ Submodules
    cadrumo.domain.calculations.registry._validate_orden_aplicabilidad
    cadrumo.domain.calculations.registry._validate_parameter_temporal
    cadrumo.domain.calculations.registry._validate_previous_filing_sources
-   cadrumo.domain.calculations.registry._validate_previous_filing_year_coverage
    cadrumo.domain.calculations.registry._validate_producer_inventory
    cadrumo.domain.calculations.registry._validate_projection_endpoints
    cadrumo.domain.calculations.registry._validate_record_design_epochs

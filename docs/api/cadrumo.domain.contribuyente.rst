@@ -13,7 +13,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   cadrumo.domain.contribuyente.assets
    cadrumo.domain.contribuyente.inventory
 
 Submodules

@@ -21,6 +21,4 @@ Submodules
    cadrumo.application.registry.errors
    cadrumo.application.registry.filed_state
    cadrumo.application.registry.filing_export_coverage
-   cadrumo.application.registry.source_connectivity
-   cadrumo.application.registry.source_connectivity_coverage
    cadrumo.application.registry.tree

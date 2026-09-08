@@ -26,6 +26,7 @@ Submodules
    cadrumo.application.filing._record_field_renderer
    cadrumo.application.filing.draft_construction
    cadrumo.application.filing.draft_review
+   cadrumo.application.filing.draft_revision_gate
    cadrumo.application.filing.errors
    cadrumo.application.filing.export
    cadrumo.application.filing.export_envelope

@@ -10,7 +10,6 @@ from ....core.aggregation import BindingSourceKind
 from ....core.external_constants import M347_THRESHOLD_EUR
 from ....core.period import Period
 from .._counterpart import (
-    COUNTERPART_MODELO_KIND_CATALOGUE,
     CounterpartAggregation,
     CounterpartObservation,
     CounterpartSourceKind,
@@ -195,7 +194,7 @@ class TestInvariants:
             filter_observations_for_modelo(
                 (),
                 modelo="720",
-                catalogue=COUNTERPART_MODELO_KIND_CATALOGUE,
+                catalogue={"347": frozenset()},
                 attribute_fn=lambda obs: obs.operation_kind,
                 aggregator_label="counterpart aggregator",
             )

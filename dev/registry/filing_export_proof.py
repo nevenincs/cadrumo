@@ -68,6 +68,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.static_inspection import (
     GeneratedArtifactInspection,
     RegistryRevisionInspection,
@@ -367,6 +368,12 @@ def build_pinned_conformance_evidence(
         coordinate=FilingExportProofCoordinate(
             modelo=document.coordinate.modelo,
             revision=document.coordinate.revision,
+            snapshot_ref=RegistrySnapshotRef(
+                modelo=document.coordinate.modelo,
+                revision_id=document.coordinate.revision,
+                modelo_year=document.filing_year,
+                period=document.period_code,
+            ),
             layout_ids=document.coordinate.layout_ids,
         ),
         filing_year=document.filing_year,

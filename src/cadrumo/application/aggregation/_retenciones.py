@@ -16,9 +16,7 @@ family.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from decimal import Decimal
-from types import MappingProxyType
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
 
@@ -182,11 +180,6 @@ _MODELO_SCHEME_CATALOGUE: dict[str, frozenset[RetencionScheme]] = {
     Modelo.M190.value: _MODELO_111_SCHEMES,
     Modelo.M193.value: _MODELO_123_SCHEMES,
 }
-RETENCIONES_MODELO_SCHEME_CATALOGUE: Mapping[str, frozenset[RetencionScheme]] = MappingProxyType(
-    _MODELO_SCHEME_CATALOGUE,
-)
-
-
 def _aggregate_for_modelo(
     observations: tuple[RetencionObservation, ...],
     *,
@@ -437,7 +430,6 @@ def compute_retenciones_totals_parity(
 
 
 __all__ = [
-    "RETENCIONES_MODELO_SCHEME_CATALOGUE",
     "RetencionObservation",
     "RetencionPerceptorRollup",
     "RetencionScheme",
