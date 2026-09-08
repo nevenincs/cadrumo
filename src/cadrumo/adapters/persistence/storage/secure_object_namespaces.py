@@ -1014,16 +1014,6 @@ FILING_DRAFTS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
-FILING_EXPORT_REPLAY_PROOFS_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="filing_export_replay_proofs",
-    namespace="cadrumo.application.filing.export_replay_proofs",
-    owner="cadrumo.application.filing",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{receipt_id}",
-    scope=StorageNamespaceScope.PROFILE_LOCAL,
-    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
-)
 INVOICE_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="invoice_catalogue",
     namespace="cadrumo.domain.invoices",
@@ -1140,7 +1130,6 @@ DOMAIN_NAMESPACE_DEFINITIONS = (
     SUBMISSION_RECORDS_NAMESPACE,
     JUSTIFICANTE_METADATA_NAMESPACE,
     FILING_DRAFTS_NAMESPACE,
-    FILING_EXPORT_REPLAY_PROOFS_NAMESPACE,
     INVOICE_CATALOGUE_NAMESPACE,
     TRANSACTION_CATALOGUE_NAMESPACE,
     USAGE_RATIO_PROFILE_NAMESPACE,
