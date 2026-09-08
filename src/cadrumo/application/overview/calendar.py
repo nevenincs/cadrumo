@@ -37,7 +37,6 @@ from collections.abc import Mapping
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...core.external_constants import IVA_REGIME_MODELOS
 from ...core.i18n import tr as _tr
 from ...core.identity import same_tax_identifier
 from ...core.logging import get_logger as _get_logger
@@ -138,6 +137,7 @@ from .coverage import build_obligation_coverage
 from .next_actions import declare_next_action as _declare_next_action
 
 if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.sede.notifications import RemoteNotification
     from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ...domain.justificante import Justificante
     from ...domain.modelos.filing_record import ModeloRecord
@@ -146,7 +146,6 @@ if TYPE_CHECKING:
     from ..live.notifications import PersistedNotificationsSnapshot
 
 _log = _get_logger(__name__)
-_IVA_REGIME_MODELOS = IVA_REGIME_MODELOS
 _DEFAULT_LOCAL_WORK_UNIT_DUE_SOON_DAYS = 14
 _LOCAL_WORK_UNIT_APPLIES_BECAUSE = (
     "Local modelo work unit created by the operator; registry deadline window unavailable or not surfaced."
@@ -448,33 +447,44 @@ def calendar_events_from_notification_snapshots(
                 allow_missing_row_identity=snapshot_identity is not None,
             ):
                 continue
-            event_date = row.fecha_notificacion or row.fecha_emision
-            if not calendar_range.covers(event_date):
-                continue
-            read_state = "read" if row.leida is True else "unread" if row.leida is False else None
-            status = read_state or row.tipo
-            summary = row.concepto.strip() or row.tipo
-            post_filing_kind = _classify_post_filing_event_kind(concepto=row.concepto, tipo=row.tipo)
-            estado_servicio = _resolve_notificacion_estado_servicio(
-                fecha_notificacion=row.fecha_notificacion,
-                leida=row.leida,
-                as_of=as_of,
-            )
-            events.append(
-                _OverviewCalendarEvent(
-                    event_type=_OverviewCalendarEventType.MESSAGE,
-                    post_filing_kind=post_filing_kind,
-                    notificacion_estado_servicio=estado_servicio,
-                    event_date=event_date,
-                    source="aeat_sede_notifications",
-                    summary=summary,
-                    reference_id=row.certificado_id,
-                    snapshot_id=snapshot.snapshot_id,
-                    status=status,
-                    source_url=str(row.source_url),
-                ),
-            )
+            event = _calendar_event_from_notification(snapshot, row, calendar_range=calendar_range, as_of=as_of)
+            if event is not None:
+                events.append(event)
     return _dedupe_calendar_events(events)
+
+
+def _calendar_event_from_notification(
+    snapshot: PersistedNotificationsSnapshot,
+    row: RemoteNotification,
+    *,
+    calendar_range: _OverviewCalendarRange,
+    as_of: date,
+) -> _OverviewCalendarEvent | None:
+    """Assemble one in-range notification row into its message observation."""
+    event_date = row.fecha_notificacion or row.fecha_emision
+    if not calendar_range.covers(event_date):
+        return None
+    read_state = "read" if row.leida is True else "unread" if row.leida is False else None
+    status = read_state or row.tipo
+    summary = row.concepto.strip() or row.tipo
+    post_filing_kind = _classify_post_filing_event_kind(concepto=row.concepto, tipo=row.tipo)
+    estado_servicio = _resolve_notificacion_estado_servicio(
+        fecha_notificacion=row.fecha_notificacion,
+        leida=row.leida,
+        as_of=as_of,
+    )
+    return _OverviewCalendarEvent(
+        event_type=_OverviewCalendarEventType.MESSAGE,
+        post_filing_kind=post_filing_kind,
+        notificacion_estado_servicio=estado_servicio,
+        event_date=event_date,
+        source="aeat_sede_notifications",
+        summary=summary,
+        reference_id=row.certificado_id,
+        snapshot_id=snapshot.snapshot_id,
+        status=status,
+        source_url=str(row.source_url),
+    )
 
 
 def calendar_events_from_justificante_capture_snapshots(
