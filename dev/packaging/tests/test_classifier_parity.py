@@ -32,14 +32,25 @@ def _cohort_pyprojects(root: Path) -> dict[str, Path]:
 
 
 _PYPROJECTS = _cohort_pyprojects(_REPO_ROOT)
-assert len(_PYPROJECTS) >= _MINIMUM_COHORT_PYPROJECTS, (
-    f"the cohort classifier roster derived only {sorted(_PYPROJECTS)} from {_REPO_ROOT}"
-)
 
 _DEV_STATUS_PREFIX = "Development Status ::"
 _PYTHON_CLASSIFIER_PREFIX = "Programming Language :: Python :: "
 _PYTHON_MINOR_RE = re.compile(r"^3\.\d+$")
 _INVENTORY_PATH = _REPO_ROOT / "dev" / "ci" / "python-runtime-matrix.json"
+
+
+def test_cohort_roster_is_not_degenerate() -> None:
+    """The roster must find the cohort, or every parity test below proves nothing.
+
+    This floor used to be a module-level assert, which ran during collection and
+    reported as an import error rather than a failing test. It is the same
+    guarantee, stated where a reader looks for guarantees: a glob that matches
+    nothing would let the classifier comparisons pass by comparing an empty set
+    against itself.
+    """
+    assert len(_PYPROJECTS) >= _MINIMUM_COHORT_PYPROJECTS, (
+        f"the cohort classifier roster derived only {sorted(_PYPROJECTS)} from {_REPO_ROOT}"
+    )
 
 
 def _extract_dev_status(pyproject_path: Path) -> str:
