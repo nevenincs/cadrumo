@@ -54,8 +54,7 @@ def _text_layer_transcriber_revision() -> str:
 
     Read from the installed distribution rather than restated as a constant. A
     hand-maintained revision is a stamp that can lie the moment the dependency
-    moves, and the dependency moving is precisely what changes the output; read
-    this way, an upgrade re-keys the transcription cache on its own.
+    moves, and the dependency moving is precisely what changes the output.
     """
     return version("pdfplumber")
 

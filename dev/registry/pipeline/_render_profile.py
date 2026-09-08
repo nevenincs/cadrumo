@@ -36,6 +36,12 @@ from cadrumo.domain.calculations.registry.record_design_pdf_rows import ABSENT_N
 from ._pydantic_error_detail import validation_error_detail
 from ._record_design_ir import RecordDesignIntermediateField
 from ._semantic_map_join import JoinedRecordDesign
+from .source_defects import (
+    NoteStatedApplicabilityDeclaration,
+    note_stated_applicability_for,
+    note_states_only_applicability,
+    validate_note_stated_applicability_declarations,
+)
 
 __all__ = [
     "RENDER_PROFILE_SCHEMA_VERSION",
@@ -560,7 +566,17 @@ def validate_render_profile(
         source_ref=joined.source.source_ref,
         source_sha256=joined.source.source_sha256,
     )
-    eligibility = project_render_profile_eligibility(joined_field.parser_field for joined_field in joined.fields)
+    # Resolved from the parser-read source rather than accepted from the caller,
+    # for the same reason ``render_complete_export_tree`` resolves the
+    # note-governed amounts there: every consumer of this validation -- the
+    # generator, the drift check, a test -- must read ONE declaration set for one
+    # pinned design and cannot disagree about which cells have been read.
+    applicability_notes = note_stated_applicability_for(joined.source.source_ref)
+    validate_note_stated_applicability_declarations(applicability_notes, joined.source)
+    eligibility = project_render_profile_eligibility(
+        (joined_field.parser_field for joined_field in joined.fields),
+        applicability_notes=applicability_notes,
+    )
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
 
 
@@ -783,7 +799,11 @@ def _is_filing_instruction_only(content: str) -> bool:
     return content.strip().rstrip(".").casefold() in _FILING_INSTRUCTION_ONLY_CONTENTS
 
 
-def _states_no_wire_fact(field: RecordDesignIntermediateField) -> bool:
+def _states_no_wire_fact(
+    field: RecordDesignIntermediateField,
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+) -> bool:
     """Whether the design left this field's wire fact unstated at its anchor.
 
     A WORKBOOK field has a Contenido cell, so a non-blank one is the design
@@ -802,16 +822,43 @@ def _states_no_wire_fact(field: RecordDesignIntermediateField) -> bool:
     Where the prose DOES state a fact the reviewed rule must agree with it, which
     keeps the official design's veto intact; that agreement is checked where the
     rule's own evidence is validated, not here.
+
+    ``applicability_notes`` is the third case, and it is the narrowest: a cell
+    whose whole content is a pointer to a note SOMEBODY HAS READ and recorded as
+    stating applicability rather than representation. AEAT's own vocabulary makes
+    that cell equivalent to a blank one -- ``Contenido`` holds "aclaraciones
+    relativas al formato del campo" and a ``Nota`` holds "aclaraciones al
+    contenido", so a note about which periods a slot applies to states no format
+    -- and the field goes where a blank cell goes. Read as a wire fact instead it
+    is unparseable, and the numeric derivation falls through to an unscaled
+    integer nobody reviewed.
+
+    The gate is the DECLARATION and not the shape of the text, deliberately. A
+    pointer-shaped cell whose note nobody has opened may still state the wire
+    fact outright; admitting all of them on shape would make roughly 183 fields
+    newly eligible at once, each owing a reviewed rule that does not exist, and
+    would silently swallow the runs an adjudicated
+    :class:`~dev.registry.pipeline.source_defects.NoteGovernedAmountDeclaration`
+    already covers. So an unread pointer keeps the reading it has today and stays
+    visible as outstanding work.
     """
     if field.source_cell is None:
         return True
     if field.content is None or not field.content.strip():
         return True
-    return _is_filing_instruction_only(field.content)
+    if _is_filing_instruction_only(field.content):
+        return True
+    return note_states_only_applicability(
+        applicability_notes,
+        sheet=field.sheet,
+        published_content=" ".join(field.content.split()),
+    )
 
 
 def project_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> RenderProfileEligibility:
     """Partition fixed joined fields eligible for reviewed absent-wire authority.
 
@@ -819,12 +866,17 @@ def project_render_profile_eligibility(
     a wire fact the official design left unstated, and a reserved run has no
     wire fact beyond being filler, so admitting one would force an author to
     model numeric meaning onto a slot that carries none.
+
+    ``applicability_notes`` reaches :func:`_states_no_wire_fact` unchanged.  It
+    is threaded rather than resolved here so that this projection stays a pure
+    function of the fields it is given, and so that eligibility and the
+    renderer's own routing ask ONE predicate with ONE input set.
     """
     eligible = tuple(
         field
         for field in fixed_fields
         if (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
-        and _states_no_wire_fact(field)
+        and _states_no_wire_fact(field, applicability_notes=applicability_notes)
         and not _is_source_reserved_field(field)
     )
     return RenderProfileEligibility(

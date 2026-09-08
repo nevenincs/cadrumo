@@ -13,7 +13,6 @@ import pytest
 from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
 from ....adapters.outbound.aeat.sede.iva_compensation_wallet import parse_iva_compensation_wallet_html
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
-from ....adapters.persistence.storage.master_key.active_session import has_active_bucket_session
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -24,14 +23,11 @@ from ....domain.iva_compensation.reconciliation import (
     IvaCompensationDecisionReason,
     IvaCompensationReconciliationDecision,
 )
-from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import (
     dev_test_database_password,
-    isolated_profile_storage_root,
     isolated_runtime_profile,
     read_db_at_rest_bytes,
 )
-from ....tests.user_profile import register_minimal_profile
 from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ...calculations.observations_repository import (
     CalculationObservationRepository,
@@ -39,7 +35,7 @@ from ...calculations.observations_repository import (
     iva_wallet_decision_key,
 )
 from ..iva_remote_state import (
-    load_iva_remote_state,
+    list_iva_compensation_history,
     persist_and_reconcile_iva_compensation_wallet,
 )
 
@@ -247,8 +243,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
             ),
         )
 
-        remote_state = load_iva_remote_state(as_of_year=2026)
-        report = remote_state.history
+        report = list_iva_compensation_history(as_of_year=2026)
 
     assert report.row_count == 2
     assert report.carry_forward_lot_count == 2
@@ -367,8 +362,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             _TAXPAYER_REF,
             Period.from_year_and_code(2026, "1T"),
         )
-        remote_state = load_iva_remote_state(as_of_year=2026)
-        report = remote_state.history
+        report = list_iva_compensation_history(as_of_year=2026)
 
         assert reloaded_wallet == wallet
         assert reloaded_history is not None
@@ -377,57 +371,14 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
         assert reloaded_history.available_end_amount == Decimal("100.00")
         assert reloaded_decision is not None
         assert reloaded_decision.selected_amount == reloaded_history.available_end_amount
-        assert remote_state.wallet_observation_count == 1
-        assert remote_state.wallet_observations[0].taxpayer_ref.startswith("sha256:")
-        assert remote_state.wallet_observations[0].total_pending == str(reloaded_wallet.total_pending)
         assert report.row_count == 1
         assert report.authority_decision_count == 1
         assert report.authority_decisions[0].taxpayer_ref.startswith("sha256:")
-        assert _TAXPAYER_REF not in remote_state.model_dump_json()
-        assert "202530300000004Z" not in remote_state.model_dump_json()
-        assert "303:2025:4T" not in remote_state.model_dump_json()
         assert _TAXPAYER_REF not in report.model_dump_json()
 
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
         assert _TAXPAYER_REF.encode("ascii") not in database_bytes
         assert b"202530300000004Z" not in database_bytes
-
-
-def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_bootstrap(tmp_path: Path) -> None:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        with open_test_profile_session(_SESSION_BUCKET_ID):
-            # Seeded through a detached WorkflowState, never a repository
-            # read: the capsule publishes by an atomic no-replace rename
-            # onto ``buckets/<profile-id>``, which a workflow-state
-            # repository construction would otherwise materialise first
-            # and collide with.
-            register_minimal_profile(profile_id=_SESSION_BUCKET_ID)
-            IvaCompensationHistoryRepository().save_period(
-                IvaCompensationPeriodState(
-                    provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
-                    taxpayer_nif=_TAXPAYER_REF,
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "4T"),
-                    registry_snapshot_ref=_snapshot_ref(2025, "4T"),
-                    expediente_id="202530300000004Z",
-                    status="ALTA",
-                    presented_at=_CAPTURED_AT,
-                    generated_amount=Decimal("20.00"),
-                    available_end_amount=Decimal("20.00"),
-                    source_observation_key="303:2025:4T:EXP-2025-4T",
-                ),
-            )
-
-        assert has_active_bucket_session() is False
-
-        remote_state = load_iva_remote_state(as_of_year=2026)
-
-    assert remote_state.history.row_count == 1
-    assert remote_state.history.carry_forward_lot_count == 1
-    assert remote_state.history.rows[0].year == 2025
-    assert remote_state.history.rows[0].period == Period.from_year_and_code(2025, "4T")
-    assert _TAXPAYER_REF not in remote_state.model_dump_json()
-    assert "202530300000004Z" not in remote_state.model_dump_json()
 
 
 def _store_prior_compensation(*, amount: Decimal) -> None:

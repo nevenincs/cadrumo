@@ -6,8 +6,7 @@ rather than processing, so it routes through the core's encrypted bucket-scoped
 repository and never through the inference subpackage, which holds no storage
 handle by contract.
 
-Its pre-confirm, operator-correctable lifecycle changes when a draft may be
-discarded; it does not change its sensitivity. A leaked draft would disclose
+Its pre-confirm, operator-correctable lifecycle does not change its sensitivity. A leaked draft would disclose
 exactly what the confirmed invoice would, so it is stored at the same
 ``FINANCIAL`` classification rather than a softer one.
 
@@ -43,7 +42,6 @@ __all__ = [
     "ExtractionDraftRepositoryProtocol",
     "StoredExtractionDraft",
     "bind_extraction_draft_repository_factory",
-    "discard_extraction_draft",
     "extraction_draft_object_key",
     "load_extraction_drafts",
     "read_extraction_draft",
@@ -198,22 +196,3 @@ def write_extraction_draft(
     return updated
 
 
-def discard_extraction_draft(
-    *,
-    bucket_id: str,
-    evidence_reference: str,
-    settings: Settings,
-) -> ExtractionDraftDocument:
-    """Drop a pending draft once it has been confirmed or abandoned.
-
-    A draft outlives its usefulness the moment the invoice is minted, and a
-    confirmed document that still shows a pending review invites a second
-    confirm of the same evidence.
-    """
-    document = load_extraction_drafts(bucket_id, settings)
-    updated = ExtractionDraftDocument(
-        bucket_id=bucket_id,
-        drafts=tuple(row for row in document.drafts if row.evidence_reference != evidence_reference),
-    )
-    _repository(bucket_id, settings).save(updated)
-    return updated

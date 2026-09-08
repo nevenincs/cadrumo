@@ -77,7 +77,7 @@ from .completeness import (
 from .projections import EffectiveFact, record_to_effective_facts
 
 if TYPE_CHECKING:
-    from ...domain.user_profile.schema import ProfileSectionDefinition
+    from ...domain.user_profile.schema import ProfileFieldDefinition, ProfileSectionDefinition
 
 _PRESENTATION_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
@@ -283,6 +283,27 @@ def _repeatable_section_rows(
     taxpayer with no attribution entities is not incomplete for lacking
     one, the same rule :mod:`overview` applies.
     """
+    indices = _repeatable_section_indices(section, effective)
+    rows: list[ProfileFieldPresentationV1] = []
+    for index in indices:
+        for field in section.fields:
+            path = f"{section.key}.{index}.{field.key}"
+            classification, applicability_assessed = _repeatable_field_classification(
+                section,
+                field,
+                index=index,
+                path=path,
+                effective=effective,
+            )
+            rows.append(_row(path, classification, applicability_assessed, effective))
+    return rows
+
+
+def _repeatable_section_indices(
+    section: ProfileSectionDefinition,
+    effective: dict[str, EffectiveFact],
+) -> tuple[str, ...]:
+    """Return row indices in the first-seen order of effective fact paths."""
     prefix = f"{section.key}."
     indices: dict[str, None] = {}
     for existing_path in effective:
@@ -291,28 +312,46 @@ def _repeatable_section_rows(
         index = existing_path[len(prefix) :].split(".", 1)[0]
         if index.isdigit():
             indices.setdefault(index, None)
+    return tuple(indices)
 
-    rows: list[ProfileFieldPresentationV1] = []
-    for index in indices:
-        clave_path = f"{section.key}.{index}.{PARTICIPE_CLAVE_FIELD}"
-        clave_answered = _path_answered(effective, clave_path)
-        clave_value = effective[clave_path].value if clave_answered else None
-        for field in section.fields:
-            path = f"{section.key}.{index}.{field.key}"
-            present = _path_answered(effective, path)
-            if section.key == ATRIBUCION_SOCIOS_SECTION and field.key == SOCIO_COUNTRY_FIELD and not field.required:
-                if not clave_answered:
-                    classification, applicability_assessed = ProfileFieldClassification.NEEDS_APPLICABILITY, False
-                elif clave_value == PARTICIPE_CLAVE_BEARING_COUNTRY:
-                    classification, applicability_assessed = _required_classification(present), True
-                else:
-                    classification, applicability_assessed = ProfileFieldClassification.NOT_APPLICABLE, True
-            elif field.required:
-                classification, applicability_assessed = _required_classification(present), True
-            else:
-                classification, applicability_assessed = ProfileFieldClassification.OPTIONAL, True
-            rows.append(_row(path, classification, applicability_assessed, effective))
-    return rows
+
+def _repeatable_field_classification(
+    section: ProfileSectionDefinition,
+    field: ProfileFieldDefinition,
+    *,
+    index: str,
+    path: str,
+    effective: dict[str, EffectiveFact],
+) -> tuple[ProfileFieldClassification, bool]:
+    """Classify one declared repeatable-row field from effective profile facts."""
+    if _is_socio_country_field(section, field):
+        return _repeatable_socio_country_classification(section, index=index, path=path, effective=effective)
+    if field.required:
+        return _required_classification(_path_answered(effective, path)), True
+    return ProfileFieldClassification.OPTIONAL, True
+
+
+def _is_socio_country_field(section: ProfileSectionDefinition, field: ProfileFieldDefinition) -> bool:
+    """Return whether the field carries the attribution row's conditional country rule."""
+    return section.key == ATRIBUCION_SOCIOS_SECTION and field.key == SOCIO_COUNTRY_FIELD and not field.required
+
+
+def _repeatable_socio_country_classification(
+    section: ProfileSectionDefinition,
+    *,
+    index: str,
+    path: str,
+    effective: dict[str, EffectiveFact],
+) -> tuple[ProfileFieldClassification, bool]:
+    """Classify an attribution country field from its row's ``participe_clave``."""
+    clave_path = f"{section.key}.{index}.{PARTICIPE_CLAVE_FIELD}"
+    clave_answered = _path_answered(effective, clave_path)
+    if not clave_answered:
+        return ProfileFieldClassification.NEEDS_APPLICABILITY, False
+    clave_value = effective[clave_path].value
+    if clave_value == PARTICIPE_CLAVE_BEARING_COUNTRY:
+        return _required_classification(_path_answered(effective, path)), True
+    return ProfileFieldClassification.NOT_APPLICABLE, True
 
 
 def _row(

@@ -309,6 +309,24 @@ def registry_schema_version(*, modelo: str, revision_id: RevisionId) -> str:
     return f"registry:{modelo}:{revision_id}"
 
 
+def _require_unique_casilla_coordinates(values: tuple[ModeloValue, ...]) -> None:
+    """Refuse a draft whose values claim one casilla more than once."""
+    casilla_ids = [value.casilla_id for value in values]
+    duplicate_casillas = sorted({key for key in casilla_ids if casilla_ids.count(key) > 1})
+    if duplicate_casillas:
+        listed = ", ".join(repr(key) for key in duplicate_casillas)
+        raise FilingValidationError(f"draft values claim a casilla more than once: {listed}")
+
+
+def _require_unique_binding_coordinates(binding_values: tuple[ModeloBindingValue, ...]) -> None:
+    """Refuse repeated ``(binding_id, row_index)`` coordinates in a draft."""
+    binding_keys = [(value.binding_id, value.row_index) for value in binding_values]
+    duplicate_bindings = sorted({key for key in binding_keys if binding_keys.count(key) > 1})
+    if duplicate_bindings:
+        listed = ", ".join(f"{binding_id!r} row {row_index!r}" for binding_id, row_index in duplicate_bindings)
+        raise FilingValidationError(f"draft binding_values claim a coordinate more than once: {listed}")
+
+
 class ModeloDraft(BaseModel):
     """A typed, validated draft of one filing.
 
@@ -440,17 +458,8 @@ class ModeloDraft(BaseModel):
         legitimately carries the same ``binding_id`` many times; only a repeated
         pair is a duplicate.
         """
-        casilla_ids = [value.casilla_id for value in self.values]
-        duplicate_casillas = sorted({key for key in casilla_ids if casilla_ids.count(key) > 1})
-        if duplicate_casillas:
-            listed = ", ".join(repr(key) for key in duplicate_casillas)
-            raise FilingValidationError(f"draft values claim a casilla more than once: {listed}")
-
-        binding_keys = [(value.binding_id, value.row_index) for value in self.binding_values]
-        duplicate_bindings = sorted({key for key in binding_keys if binding_keys.count(key) > 1})
-        if duplicate_bindings:
-            listed = ", ".join(f"{binding_id!r} row {row_index!r}" for binding_id, row_index in duplicate_bindings)
-            raise FilingValidationError(f"draft binding_values claim a coordinate more than once: {listed}")
+        _require_unique_casilla_coordinates(self.values)
+        _require_unique_binding_coordinates(self.binding_values)
 
 
 def compute_modelo_draft_id(

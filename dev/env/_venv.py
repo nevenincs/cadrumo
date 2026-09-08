@@ -1,21 +1,4 @@
-"""Virtualenv provisioning and the guard that protects a live one.
-
-Two behaviours live here, both previously expressed as paired
-``[windows]``/``[unix]`` recipe bodies in the justfile:
-
-``ensure``
-    Create ``.venv`` only when it is not already there. The two shell bodies
-    disagreed on how to detect that - one probed ``.venv/Scripts/python.exe``,
-    the other ``.venv/bin/python`` - which is the same question asked two ways.
-
-``guard``
-    Refuse to mutate a virtualenv that live processes are using, holding a
-    named, venv-scoped lock for the duration. On Windows this is load bearing
-    rather than defensive: ``uv pip install`` fails outright when a resident
-    process - an MCP server, an editor, another agent's session - holds one of
-    the console-script ``.exe`` shims open, and the failure names a locked file
-    rather than the session responsible for it.
-"""
+"""Guard the project environment while ``uv sync`` converges it."""
 
 from __future__ import annotations
 
@@ -35,43 +18,6 @@ if TYPE_CHECKING:
 
 #: The virtualenv this repository provisions and installs into.
 VENV = REPO_ROOT / ".venv"
-
-
-def interpreter(venv: Path = VENV) -> Path:
-    """Return the path to a virtualenv's interpreter on this platform.
-
-    Args:
-        venv: The virtualenv root.
-
-    Returns:
-        The interpreter path, which differs only in the layout directory
-        name - ``Scripts`` on Windows, ``bin`` everywhere else.
-    """
-    if sys.platform == "win32":
-        return venv / "Scripts" / "python.exe"
-    return venv / "bin" / "python"
-
-
-def exists(venv: Path = VENV) -> bool:
-    """Return whether ``venv`` already carries a usable interpreter."""
-    return interpreter(venv).is_file()
-
-
-def ensure(venv: Path = VENV) -> int:
-    """Create the virtualenv when it is absent, and report either way.
-
-    Args:
-        venv: The virtualenv root.
-
-    Returns:
-        0 when the environment exists or was created, otherwise ``uv venv``'s
-        exit code.
-    """
-    if exists(venv):
-        print("Python environment already exists - leaving it in place.", flush=True)
-        return 0
-    print("$ uv venv", flush=True)
-    return subprocess.run(["uv", "venv"], check=False).returncode
 
 
 def _lock_name(venv: Path) -> str:

@@ -30,9 +30,8 @@ it produces it slowly.
 So `init` stops at the first failing phase. What it does NOT do is stop
 REPORTING: the phases that did not run are recorded as ``skipped`` with the
 upstream failure named, so the report is always complete and a reader can see
-what was and was not attempted. Within a phase the same reasoning applies at
-finer grain - ``uv sync`` cannot succeed before ``uv venv`` - and steps stop at
-the first failure too. Advisory steps are exempt in both directions: they are
+what was and was not attempted. Within a phase, steps stop at the first failure
+too. Advisory steps are exempt in both directions: they are
 diagnosis, they never gate, and a phase continues past one that failed.
 
 The consequence a caller should rely on: a non-zero `init` names ONE cause.

@@ -48,13 +48,11 @@ from ..filed_observation_persistence import (
     enroll_filed_justificante_evidence,
     latest_declarations_by_period,
     persist_filed_calculation_observation,
-    persist_filed_justificante_metadata,
     persist_iva_compensation_history_observations_strict,
     select_latest_filed_observations_in_history_order,
 )
 from ..iva_remote_state import (
     list_iva_compensation_history,
-    load_iva_remote_state,
 )
 from ._filed_capture_history_support import (
     _CAPTURED_AT,
@@ -397,11 +395,11 @@ def test_direct_filed_observation_persist_refuses_non_alta_status(tmp_path: Path
 
 
 def test_filed_observation_capture_enrolls_matching_justificante_metadata(tmp_path: Path) -> None:
-    with _secure_backend(tmp_path):
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_130_justificante_observation(store)
 
-        csvs = persist_filed_justificante_metadata(observation, store=store).justificante_csvs
+        csvs = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id).justificante_csvs
 
         assert csvs == ("ABCD1234EFGH5678",)
         loaded = JustificanteRepository().load("ABCD1234EFGH5678")
@@ -435,11 +433,11 @@ def test_a_committed_modelo_303_receipt_is_enrolled_from_the_register_path(tmp_p
         "show the divergence being tolerated"
     )
 
-    with _secure_backend(tmp_path):
+    with _profile_backend(tmp_path, tax_id="00000000T") as bucket_id:
         store = FiledDeclaracionObservationStore(tmp_path / "filed-declarations")
         observation = _stored_303_justificante_observation(store, expediente_id=expediente_id)
 
-        csvs = persist_filed_justificante_metadata(observation, store=store).justificante_csvs
+        csvs = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id).justificante_csvs
 
         assert csvs == (_MODELO_303_FIXTURE_CSV,)
         loaded = JustificanteRepository().load(_MODELO_303_FIXTURE_CSV)
@@ -467,8 +465,9 @@ _REFUSED_JUSTIFICANTE_METADATA_CASES = (
 def test_filed_observation_capture_refuses_invalid_justificante_metadata(
     tmp_path: Path,
 ) -> None:
-    with _secure_backend(tmp_path):
-        for case_id, authenticated_identity, captured_csv in _REFUSED_JUSTIFICANTE_METADATA_CASES:
+    for case_id, authenticated_identity, captured_csv in _REFUSED_JUSTIFICANTE_METADATA_CASES:
+        case_root = tmp_path / case_id
+        with _profile_backend(case_root, tax_id=authenticated_identity) as bucket_id:
             store = FiledDeclaracionObservationStore(tmp_path / f"filed-declarations-{case_id}")
             observation = _stored_130_justificante_observation(
                 store,
@@ -476,7 +475,7 @@ def test_filed_observation_capture_refuses_invalid_justificante_metadata(
                 captured_csv=captured_csv,
             )
 
-            csvs = persist_filed_justificante_metadata(observation, store=store).justificante_csvs
+            csvs = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id).justificante_csvs
 
             assert csvs == (), case_id
             assert JustificanteRepository().load(_MODELO_130_FIXTURE_CSV) is None, case_id
@@ -980,7 +979,6 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
 
         keys = persist_iva_compensation_history_observations_strict(observations)
         history = list_iva_compensation_history(as_of_year=2026)
-        remote_state = load_iva_remote_state(as_of_year=2026)
 
         rows_by_period = {(row.year, row.period): row for row in history.rows}
         lots_by_period = {(lot.source_filing_year, lot.source_period): lot for lot in history.carry_forward_lots}
@@ -1003,8 +1001,6 @@ def test_multiyear_303_submitted_file_parser_promotes_sanitized_iva_history(tmp_
         assert Decimal(lots_by_period[(2025, period_2025_4t)].remaining_amount) == Decimal("50.00")
         assert Decimal(lots_by_period[(2026, period_2026_1t)].remaining_amount) == Decimal("50.00")
         assert Decimal(history.unallocated_applied_amount) == Decimal("0")
-        assert remote_state.history.row_count == history.row_count
-        assert remote_state.history.carry_forward_lot_count == history.carry_forward_lot_count
 
 
 def test_history_selection_is_invariant_to_the_order_duplicated_periods_arrive_in() -> None:

@@ -675,6 +675,46 @@ def unrouted_ledger_iva_quantities(
     )
 
 
+def _base_iva_selectors(revision: ModeloRevision) -> tuple[_IvaLedgerSelector, ...]:
+    """Return the revision's ``base_amount_sum`` IVA selectors in source order."""
+    selectors = [
+        iva_ledger_selector(binding)
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
+    ]
+    return tuple(selector for selector in selectors if selector.fact == "base_amount_sum")
+
+
+def _iva_reachability_probe_for_category(
+    category: IvaCategory,
+    selector: _IvaLedgerSelector,
+) -> _IvaReachabilityProbeObservation | None:
+    """Build a probe from a selector when it declares ``category``."""
+    if category not in selector.categories:
+        return None
+    return _IvaReachabilityProbeObservation(
+        category=category,
+        rate_kind=selector.rate_kinds[0],
+        flow_direction=selector.flow_direction,
+        cash_accounting_treatment=selector.cash_accounting_treatments[0],
+        observation_role=selector.observation_roles[0],
+        exemption_article=selector.exemption_articles[0] if selector.exemption_articles else None,
+        applied_rate=selector.applied_rates[0] if selector.applied_rates else None,
+    )
+
+
+def _iva_category_is_reachable(
+    category: IvaCategory,
+    matchers: Sequence[tuple[_IvaLedgerSelector, Callable[[IvaSelectorAxesProtocol], bool]]],
+) -> bool:
+    """Return whether a real IVA matcher can accept a declared category probe."""
+    for selector, matcher in matchers:
+        probe = _iva_reachability_probe_for_category(category, selector)
+        if probe is not None and matcher(probe):
+            return True
+    return False
+
+
 def structurally_unroutable_iva_base_categories(
     revision: ModeloRevision,
     *,
@@ -750,37 +790,13 @@ def structurally_unroutable_iva_base_categories(
         ``base_amount_sum`` binding on ``revision`` could ever match an
         observation of that category, in enum declaration order.
     """
-    base_selectors = [
-        iva_ledger_selector(binding)
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
-    ]
-    base_selectors = [selector for selector in base_selectors if selector.fact == "base_amount_sum"]
-    matchers = [(selector, _iva_build_matcher(selector)) for selector in base_selectors]
-
-    unroutable: list[IvaCategory] = []
-    for category in IvaCategory:
-        if category in out_of_scope:
-            continue
-        reachable = False
-        for selector, matcher in matchers:
-            if category not in selector.categories:
-                continue
-            probe = _IvaReachabilityProbeObservation(
-                category=category,
-                rate_kind=selector.rate_kinds[0],
-                flow_direction=selector.flow_direction,
-                cash_accounting_treatment=selector.cash_accounting_treatments[0],
-                observation_role=selector.observation_roles[0],
-                exemption_article=selector.exemption_articles[0] if selector.exemption_articles else None,
-                applied_rate=selector.applied_rates[0] if selector.applied_rates else None,
-            )
-            if matcher(probe):
-                reachable = True
-                break
-        if not reachable:
-            unroutable.append(category)
-    return tuple(unroutable)
+    base_selectors = _base_iva_selectors(revision)
+    matchers = tuple((selector, _iva_build_matcher(selector)) for selector in base_selectors)
+    return tuple(
+        category
+        for category in IvaCategory
+        if category not in out_of_scope and not _iva_category_is_reachable(category, matchers)
+    )
 
 
 # Ledger Renta estimación directa gastos aggregation source bindings.

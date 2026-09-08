@@ -44,9 +44,6 @@ from ..iva_remote_state import (
     capture_iva_compensation_history,
     capture_iva_compensation_wallet,
     capture_iva_remote_state,
-    list_iva_remote_state_acquisition_manifests,
-    load_iva_remote_state,
-    load_iva_remote_state_acquisition_manifest,
     persist_iva_remote_state_acquisition_report,
 )
 from ..remote_state_models import (
@@ -531,29 +528,13 @@ def test_combined_acquisition_manifest_persists_redacted_surface_outcomes(tmp_pa
         )
 
         manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
-        reloaded = load_iva_remote_state_acquisition_manifest(manifest.acquisition_id)
-        listed = list_iva_remote_state_acquisition_manifests()
-        remote_state = load_iva_remote_state(as_of_year=2026)
+        repository = IvaRemoteStateAcquisitionManifestRepository()
+        reloaded = repository.load(manifest.acquisition_id)
+        listed = tuple(sorted(repository.iter_records(), key=lambda item: item.captured_at, reverse=True))
         manifest_json = manifest.model_dump_json()
 
         assert reloaded == manifest
         assert listed == (manifest,)
-        assert remote_state.acquisition_manifest_count == 1
-        acquisition_row = remote_state.acquisition_manifests[0]
-        assert acquisition_row.acquisition_ref.startswith("sha256:")
-        assert acquisition_row.target_year == manifest.target_year
-        assert acquisition_row.target_period == manifest.target_period
-        assert acquisition_row.auth_status == "failed"
-        assert acquisition_row.auth_outcome_mode == "unknown"
-        assert acquisition_row.auth_failure_mode == "unknown"
-        assert acquisition_row.auth_failure_type == "MissingAuthResult"
-        assert acquisition_row.auth_diagnostic_ref is None
-        assert acquisition_row.filed_history_succeeded is True
-        assert acquisition_row.wallet_succeeded is False
-        assert any(
-            "outcome=aeat_403" in surface and "failure_mode=aeat_403" in surface for surface in acquisition_row.surfaces
-        )
-        assert manifest.acquisition_id not in remote_state.model_dump_json()
         assert manifest.acquisition_id.startswith("live-iva-acquisition:2026:2T:20260527T120000000000Z:")
         assert len(manifest.acquisition_id.rsplit(":", 1)[-1]) == 64
         assert manifest.filed_history_succeeded is True
@@ -597,13 +578,10 @@ def test_acquisition_manifest_persists_redacted_auth_diagnostic_ref(tmp_path: Pa
         )
 
         manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
-        remote_state = load_iva_remote_state(as_of_year=2026)
 
     assert manifest.auth.diagnostic_ref is not None
     assert manifest.auth.diagnostic_ref.startswith("sha256:")
-    assert remote_state.acquisition_manifests[0].auth_diagnostic_ref == manifest.auth.diagnostic_ref
     assert diagnostic_id not in manifest.model_dump_json()
-    assert diagnostic_id not in remote_state.model_dump_json()
 
 
 def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another_id(tmp_path: Path) -> None:
@@ -630,7 +608,7 @@ def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another
             repository=repository,
         )
 
-        assert load_iva_remote_state_acquisition_manifest(manifest.acquisition_id, repository=repository) == manifest
+        assert repository.load(manifest.acquisition_id) == manifest
 
         foreign_acquisition_id = f"{manifest.acquisition_id}:rekeyed"
         _, envelope = repository._identified_envelope(manifest)
@@ -644,7 +622,7 @@ def test_acquisition_manifest_refuses_an_encrypted_payload_rekeyed_under_another
         )
 
         with pytest.raises(SecureObjectRowIdentityError) as refusal:
-            load_iva_remote_state_acquisition_manifest(foreign_acquisition_id, repository=repository)
+            repository.load(foreign_acquisition_id)
 
     assert refusal.value.expected_identifier == foreign_acquisition_id
 
@@ -681,9 +659,7 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
             wallet_error=wallet_error,
         )
         manifest = persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
-        remote_state = load_iva_remote_state(as_of_year=2026)
-
-        rendered = f"{report.model_dump_json()} {manifest.model_dump_json()} {remote_state.model_dump_json()}"
+        rendered = f"{report.model_dump_json()} {manifest.model_dump_json()}"
         database_bytes = read_db_at_rest_bytes(profile.paths.database_file)
 
     for raw in (
@@ -756,11 +732,6 @@ def test_combined_acquisition_manifest_requires_ready_active_profile_runtime(tmp
 
         with pytest.raises(StorageValidationError):
             persist_iva_remote_state_acquisition_report(report, captured_at=_CAPTURED_AT)
-
-
-def test_remote_state_reload_refuses_without_active_profile(tmp_path: Path) -> None:
-    with isolated_sessionless_storage_root(tmp_path=tmp_path), pytest.raises(StorageValidationError):
-        load_iva_remote_state(as_of_year=2026)
 
 
 def test_remote_state_capture_refuses_without_active_profile(tmp_path: Path) -> None:

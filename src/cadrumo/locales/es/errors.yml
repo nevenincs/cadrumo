@@ -452,7 +452,6 @@ errors:
       Comprueba tu conexión a internet y vuelve a intentarlo.
     fail_outbound_storage_unavailable: El servicio de almacenamiento está temporalmente
       no disponible. Espera unos minutos y vuelve a intentarlo.
-    fail_repair_decision_not_found: No se encontró la decisión de reparación solicitada.
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sancion_arithmetic: Los importes impresos en el documento de sanción no cuadran
       entre sí.
@@ -584,7 +583,6 @@ errors:
       con la proyección actual.
     integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
       el identificador indicado.
-    integrity_repair_integrity: La comprobación de integridad de reparación ha fallado.
     integrity_storage_blob: El hash SHA-256 de un objeto almacenado no coincide con
       el de su manifiesto.
     integrity_storage_bucket_validation: Un parámetro del depósito o campo del manifiesto

@@ -84,6 +84,7 @@ def run(command: tuple[str, ...], *, repository: Path, family: str, label: str) 
         encoding=_UTF_8,
         newline="\n",
     )
+    print(f"{label} run log: {log_path} (exit={exit_status}, metadata={run_dir / 'run.json'})", flush=True)
     return exit_status
 
 

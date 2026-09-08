@@ -16,7 +16,6 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.filing.errors import FilingExportValidationError
 from ..export import export_draft
 from ..export_proof import (
-    FilingExportConformanceRequest,
     FilingExportConformanceVectorEvidence,
     FilingExportGeneratedOutput,
     FilingExportOfficialProbe,
@@ -27,7 +26,6 @@ from ..export_proof import (
     FilingExportProofRefusalReason,
     FilingExportPublicProvenance,
     FilingExportSecureReplayReceipt,
-    FilingExportSecureReplayRequest,
 )
 from ..export_verification import DeclaracionExportResult, FilingExportConsumedResult, FilingExportValidatedPayload
 from ._export_support import (
@@ -127,44 +125,6 @@ def test_canonical_writer_refuses_zero_or_two_payload_destinations(tmp_path) -> 
     assert not (tmp_path / "must-not-exist.txt").exists()
 
 
-def test_secure_request_cannot_carry_caller_supplied_secret_inputs() -> None:
-    request = FilingExportSecureReplayRequest(
-        coordinate=_coordinate(),
-        source_authority_id="calculation-revision-source",
-        custody_authority_id="secure-object-custody",
-    )
-
-    assert "draft" not in type(request).model_fields
-    assert "producer_snapshot" not in type(request).model_fields
-    assert "source_pinned_probe_expectations" not in type(request).model_fields
-    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        FilingExportSecureReplayRequest.model_validate(
-            {**request.model_dump(), "draft": _approved_modelo_111_registry_draft()},
-        )
-    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        FilingExportSecureReplayRequest.model_validate(
-            {**request.model_dump(), "source_pinned_probe_expectations": ()},
-        )
-
-
-def test_conformance_request_cannot_carry_caller_supplied_filing_inputs() -> None:
-    request = FilingExportConformanceRequest(coordinate=_coordinate())
-
-    assert "draft" not in type(request).model_fields
-    assert "producer_snapshot" not in type(request).model_fields
-    with pytest.raises(ValidationError, match="Extra inputs are not permitted"):
-        FilingExportConformanceRequest.model_validate(
-            {**request.model_dump(), "draft": _approved_modelo_111_registry_draft()},
-        )
-    assert not {
-        "draft",
-        "producer_snapshot",
-        "dictionary_values",
-        "prior_domiciliation_election",
-        "product_software_identity",
-    }.intersection(FilingExportConformanceVectorEvidence.model_fields)
-
-
 def test_layoutless_coordinate_can_report_refusal_but_not_conformance_success() -> None:
     """A total-corpus refusal may name a layoutless revision, never a vector."""
     coordinate = FilingExportProofCoordinate(
@@ -177,9 +137,7 @@ def test_layoutless_coordinate_can_report_refusal_but_not_conformance_success() 
             period="1T",
         ),
     )
-    request = FilingExportConformanceRequest(coordinate=coordinate)
-
-    assert request.coordinate.layout_ids == ()
+    assert coordinate.layout_ids == ()
     with pytest.raises(ValidationError, match="requires one selected filing layout"):
         FilingExportConformanceVectorEvidence(
             authority_id="test.conformance",

@@ -136,35 +136,6 @@ class TestProvenanceStamp:
         assert transcription.source_content_sha256 == invoice_evidence.content_sha256
 
 
-class TestSanctionedDurableRoute:
-    """The cache pair round-trips the transcription without loosening it."""
-
-    def test_cache_entry_restores_an_equal_transcription(self, transcription: DocumentTranscription) -> None:
-        restored = transcription.to_cache_entry().to_transcription()
-
-        assert restored.text == transcription.text
-        assert restored.page_count == transcription.page_count
-        assert restored.source_content_sha256 == transcription.source_content_sha256
-        assert restored.transcriber == transcription.transcriber
-
-    def test_cached_printed_forms_still_match_the_source_literal(
-        self,
-        transcription: DocumentTranscription,
-    ) -> None:
-        restored = transcription.to_cache_entry().to_transcription()
-
-        assert _PRINTED_TOTAL in restored.text
-
-    def test_restored_transcription_still_refuses_serialization(
-        self,
-        transcription: DocumentTranscription,
-    ) -> None:
-        restored = transcription.to_cache_entry().to_transcription()
-
-        with pytest.raises(NotImplementedError):
-            restored.model_dump()
-
-
 class TestRefusals:
     """Evidence with no text layer refuses, and the intact case proves the route."""
 

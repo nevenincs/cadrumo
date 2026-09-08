@@ -329,7 +329,6 @@ class CloudDerivedArtefactPayload(OutputSchema):
     provenance_stamp: str
     transport: str | None = None
     drafted_at: str
-    rederivable_on_host: bool | None = None
 
 
 class EvidenceConsentListResult(OutputSchema):
@@ -345,22 +344,6 @@ class EvidenceConsentListResult(OutputSchema):
     transmitted_bytes_are_unrecallable: bool
     consented_dispatches: list[ConsentedDispatchPayload]
     cloud_derived_artefacts: list[CloudDerivedArtefactPayload]
-
-
-class EvidenceConsentRederiveResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger evidence consent rederive``.
-
-    Both stamps are carried because the operation's whole meaning is their
-    difference, and because the superseded stamp is not deleted anywhere: this
-    records a new derivation rather than a relabelling of the old one.
-    """
-
-    bucket_id: BucketId
-    evidence_reference: str
-    previous_provenance_stamp: str
-    provenance_stamp: str
-    transcription_reused: bool
-    transmitted_bytes_are_unrecallable: bool
 
 
 class EvidenceDraftLinePayload(OutputSchema):

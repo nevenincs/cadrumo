@@ -42,11 +42,6 @@ from .....application.live.borrador_100 import (
 )
 from .....application.live.snapshot_base import SnapshotLifecycleState
 from .....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
-from .....application.repair_integrity import (
-    RepairRemediationDecision,
-    RepairRemediationDecisionRepository,
-    repair_remediation_decision_id,
-)
 from .....application.workflow.persistence import WorkflowRunRepository, WorkflowStateRepository
 from .....application.workflow.run_models import WorkflowResult, WorkflowStage, WorkflowStep
 from .....application.workflow.state_models import DeclaracionPointer, WorkflowState
@@ -185,7 +180,6 @@ __all__ = [
     "RecipientFingerprintRegistryRepository",
     "RecipientReplayGuardRepository",
     "RegistryModeloObservation",
-    "RepairRemediationDecisionRepository",
     "SpendingCategory",
     "StorageValidationError",
     "SubmissionRepository",
@@ -751,36 +745,6 @@ def _borrador_snapshot(bucket_id: str) -> Borrador100Snapshot:
         source_url=source_url,
         state=SnapshotLifecycleState.ACTIVE,
         binding_values=binding_values,
-    )
-
-
-def _repair_decision(label: str) -> RepairRemediationDecision:
-    decided_at = datetime(2026, 5, 26, 9, 0, tzinfo=UTC)
-    target_namespace = "cadrumo-test.runtime.attached"
-    reason = f"runtime attached repair decision {label}"
-    likely_origin = "runtime family gate"
-    decision_id = repair_remediation_decision_id(
-        target_namespace=target_namespace,
-        target_object_key_digest=None,
-        outcome="preserve",
-        decided_at=decided_at,
-        decided_by="operator",
-        reason=reason,
-        likely_origin=likely_origin,
-        replacement_evidence_requirements=(),
-        verified_replacement_evidence_refs=(),
-    )
-    return RepairRemediationDecision(
-        decision_id=decision_id,
-        target_namespace=target_namespace,
-        target_object_key_digest=None,
-        outcome="preserve",
-        decided_at=decided_at,
-        decided_by="operator",
-        reason=reason,
-        likely_origin=likely_origin,
-        replacement_evidence_requirements=(),
-        verified_replacement_evidence_refs=(),
     )
 
 

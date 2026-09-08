@@ -169,14 +169,6 @@ class _FiledJustificanteParse:
 
 
 @dataclass(frozen=True)
-class FiledJustificanteMetadataResult:
-    """Justificante metadata persisted from one filed observation."""
-
-    justificante_csvs: tuple[str, ...] = ()
-    notices: tuple[Notice, ...] = ()
-
-
-@dataclass(frozen=True)
 class FiledJustificanteEnrollmentResult:
     """Justificante metadata and current filing records enrolled from filed history."""
 
@@ -289,42 +281,6 @@ def select_latest_filed_observations_in_history_order(
                 _filed_observation_history_period_sort_key(item[0][0], item[0][2]),
             ),
         )
-    )
-
-
-def persist_filed_justificante_metadata(
-    observation: FiledDeclaracionObservation,
-    *,
-    store: FiledDeclaracionObservationStore,
-    repository: JustificanteRepository | None = None,
-) -> FiledJustificanteMetadataResult:
-    """Persist parsed justificante metadata from a filed-declaration observation.
-
-    The observation store owns encrypted artefact bytes. This function reads
-    those bytes into memory, verifies the artefact manifest, parses the PDF
-    without creating a plaintext temp file, and saves only justificantes whose
-    csv agrees with the csv their bytes were fetched under and that match the
-    observation's modelo, ejercicio, typed period, and authenticated taxpayer
-    identity.
-    """
-    if not _is_active_filed_observation(observation):
-        return FiledJustificanteMetadataResult()
-    repo = repository or JustificanteRepository()
-    saved_csvs: list[str] = []
-    notices: list[Notice] = []
-    for artefact in observation.artefacts:
-        if artefact.kind != "justificante_pdf" or artefact.storage_ref is None:
-            continue
-        parsed = _parse_matching_filed_justificante(observation, artefact, store)
-        if parsed.justificante is None:
-            if parsed.reason is not None:
-                notices.append(_unreached_justificante_notice(observation, parsed.reason))
-            continue
-        repo.save(parsed.justificante)
-        saved_csvs.append(parsed.justificante.csv)
-    return FiledJustificanteMetadataResult(
-        justificante_csvs=tuple(dict.fromkeys(saved_csvs)),
-        notices=tuple(notices),
     )
 
 
@@ -808,12 +764,10 @@ justificante_csvs_for_observation = _justificante_csvs_for_observation
 __all__ = [
     "FILED_JUSTIFICANTE_UNREACHED_NOTICE_CODE",
     "FiledJustificanteEnrollmentResult",
-    "FiledJustificanteMetadataResult",
     "FiledJustificanteUnreachedReason",
     "enroll_filed_justificante_evidence",
     "latest_declarations_by_period",
     "persist_filed_calculation_observation",
-    "persist_filed_justificante_metadata",
     "persist_iva_compensation_history_observations_strict",
     "select_latest_filed_observations_in_history_order",
 ]

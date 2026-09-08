@@ -69,31 +69,6 @@ def test_profile_label_ambiguous_error_enrolled() -> None:
 
 
 # ---------------------------------------------------------------------------
-# contract — RepairIntegrityError and RepairDecisionNotFoundError
-# ---------------------------------------------------------------------------
-
-
-def test_repair_integrity_error_enrolled() -> None:
-    from ..repair_integrity import RepairIntegrityError
-
-    envelope = _assert_enrolled(RepairIntegrityError, "decision_id mismatch")
-    assert envelope.code == "INTEGRITY_REPAIR_INTEGRITY"
-
-
-def test_repair_decision_not_found_error_enrolled() -> None:
-    from ..repair_integrity import RepairDecisionNotFoundError
-
-    envelope = _assert_enrolled(RepairDecisionNotFoundError, "repair-remediation decision 'abc' does not exist")
-    assert envelope.code == "FAIL_REPAIR_DECISION_NOT_FOUND"
-
-
-def test_repair_decision_not_found_is_subtype_of_repair_integrity() -> None:
-    from ..repair_integrity import RepairDecisionNotFoundError, RepairIntegrityError
-
-    assert issubclass(RepairDecisionNotFoundError, RepairIntegrityError)
-
-
-# ---------------------------------------------------------------------------
 # contract — SnapshotNotFoundError (now CadrumoError + KeyError)
 # ---------------------------------------------------------------------------
 

@@ -1033,9 +1033,6 @@ application:
         %{filing_year} %{period}, but a refund is only available in the year's last
         filing period. Carry the credit forward (compensar), or make the election
         in the last period.
-      review_only_workspace_no_authority: This review-only workspace carries no filing
-        authority; it may be read and verified but must never be treated as evidence
-        that calculation revision %{calculation_revision_id} has been or will be filed.
       review_package_generic: An error occurred while building the review package.
       review_package_integrity: 'Review package %{package_path} failed checksum verification:
         %{detail}.'
@@ -1210,17 +1207,6 @@ application:
         for {manual_key}.
       no_revision_for_diff_year: 'No registry revision of {modelo} covers filing year
         {filing_year}. Declared revisions: {available_revisions}.'
-  repair_integrity:
-    errors:
-      conflicting_list_filters: 'Repair list filters are mutually exclusive: {filters}.
-        Pass one filter or neither.'
-      decision_id_mismatch_list: Repair decision id does not match its re-derived
-        content id; refusing to list the decision entry.
-      decision_id_mismatch_load: Repair decision payload id does not match the requested
-        or re-derived content id; refusing to load the decision.
-      decision_id_mismatch_save: Repair decision id does not match its re-derived
-        content id; refusing to save the decision.
-      decision_not_found: Repair decision {decision_id} does not exist.
   storage:
     calc_sheets:
       engine:

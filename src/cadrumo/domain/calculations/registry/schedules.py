@@ -26,6 +26,11 @@ __all__ = [
 _IVA_REGIME_PATH: Final[str] = "iva.regime"
 _IRPF_ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
 _TAXPAYER_ENTITY_TYPE_PATH: Final[str] = "taxpayer.entity_type"
+_PROFILE_ATTRIBUTE_FACTS: Final[dict[str, tuple[str, bool]]] = {
+    _IVA_REGIME_PATH: ("iva_regime", True),
+    _IRPF_ESTIMATION_REGIME_PATH: ("irpf_estimation_regime", True),
+    _TAXPAYER_ENTITY_TYPE_PATH: ("entity_type", False),
+}
 _PROFILE_FACT_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
     dict[str, object],
     config=ConfigDict(strict=True),
@@ -98,43 +103,57 @@ def profile_condition_matches(
     raise RegistryValidationError(f"profile condition uses unsupported op {str(condition.op)!r}")
 
 
-def _resolve_profile_fact(profile_facts: object, field: str) -> object:
+def _resolve_direct_profile_fact(profile_facts: object, field: str) -> tuple[bool, object]:
+    """Resolve a predicate from a validated top-level mapping when present."""
     top_level_facts = _profile_fact_mapping(profile_facts)
-    if top_level_facts is not None and field in top_level_facts:
-        return top_level_facts[field]
-    # Schema predicate path "iva.regime" maps to the TaxpayerProfile.iva_regime
-    # attribute.  The dotted path form is what the TOML registry declares; the
-    # attribute name is what the Python dataclass exposes without nesting.
-    if field == _IVA_REGIME_PATH and hasattr(profile_facts, "iva_regime"):
-        _attr = "iva_regime"
-        observed: object = getattr(profile_facts, _attr)
-        value: object = getattr(observed, "value", observed)
-        return value
-    if field == _IRPF_ESTIMATION_REGIME_PATH and hasattr(profile_facts, "irpf_estimation_regime"):
-        _attr = "irpf_estimation_regime"
-        observed = getattr(profile_facts, _attr)
-        value = getattr(observed, "value", observed)
-        return value
-    # Schema predicate path "taxpayer.entity_type" maps to
-    # TaxpayerProfile.entity_type.  The "taxpayer." prefix is the namespace used
-    # in the registry TOML; the attribute is a flat field on the profile object.
-    if field == _TAXPAYER_ENTITY_TYPE_PATH and hasattr(profile_facts, "entity_type"):
-        _attr = "entity_type"
-        return getattr(profile_facts, _attr)
+    if top_level_facts is None or field not in top_level_facts:
+        return False, None
+    return True, top_level_facts[field]
+
+
+def _resolve_profile_attribute_fact(profile_facts: object, field: str) -> tuple[bool, object]:
+    """Resolve registry dotted paths exposed as flat profile attributes."""
+    attribute_specification = _PROFILE_ATTRIBUTE_FACTS.get(field)
+    if attribute_specification is None:
+        return False, None
+    attribute_name, unwrap_enum = attribute_specification
+    if not hasattr(profile_facts, attribute_name):
+        return False, None
+    observed: object = getattr(profile_facts, attribute_name)
+    return True, getattr(observed, "value", observed) if unwrap_enum else observed
+
+
+def _resolve_profile_fact_part(current: object, part: str, field: str) -> object:
+    """Resolve one mapping or attribute segment, retaining the canonical refusal."""
+    current_mapping = _profile_fact_mapping(current)
+    if current_mapping is not None:
+        if part not in current_mapping:
+            raise RegistryValidationError(f"profile facts missing {field!r}")
+        return current_mapping[part]
+    if not hasattr(current, part):
+        raise RegistryValidationError(f"profile facts missing {field!r}")
+    return getattr(current, part)
+
+
+def _resolve_profile_fact_path(profile_facts: object, field: str) -> object:
+    """Resolve a dotted profile path after known flat forms have been tried."""
     current: object = profile_facts
     for part in field.split("."):
         if current is None:
             return None
-        current_mapping = _profile_fact_mapping(current)
-        if current_mapping is not None:
-            if part not in current_mapping:
-                raise RegistryValidationError(f"profile facts missing {field!r}")
-            current = current_mapping[part]
-            continue
-        if not hasattr(current, part):
-            raise RegistryValidationError(f"profile facts missing {field!r}")
-        current = getattr(current, part)
+        current = _resolve_profile_fact_part(current, part, field)
     return current
+
+
+def _resolve_profile_fact(profile_facts: object, field: str) -> object:
+    """Resolve one declared schedule predicate against mapping or profile facts."""
+    found, observed = _resolve_direct_profile_fact(profile_facts, field)
+    if found:
+        return observed
+    found, observed = _resolve_profile_attribute_fact(profile_facts, field)
+    if found:
+        return observed
+    return _resolve_profile_fact_path(profile_facts, field)
 
 
 def _profile_fact_mapping(value: object) -> Mapping[str, object] | None:

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from decimal import Decimal
 from enum import StrEnum
 from typing import Literal
@@ -150,38 +150,23 @@ def compare_calculation_to_filed_observation(
     Returns:
         A :class:`RegistryFiledStateComparison` summarising all casilla-level drift.
     """
-    if calculation.modelo != observation.modelo:
-        raise RegistryValidationError(
-            f"cannot compare calculation modelo {calculation.modelo!r} "
-            f"with filed observation modelo {observation.modelo!r}",
-        )
-    target_casilla_ids = tuple(sorted(set(required_casilla_ids)))
-    if not target_casilla_ids:
-        raise RegistryValidationError("filed-state comparison requires at least one casilla")
+    _validate_comparison_modelo(calculation, observation)
+    target_casilla_ids = _required_comparison_casilla_ids(required_casilla_ids)
 
     local_values = calculation.values
     filed_values = observation.casilla_values
     observations_by_id = {obs.casilla_id: obs for obs in calculation.observations}
-    missing_local = tuple(casilla_id for casilla_id in target_casilla_ids if casilla_id not in local_values)
-    missing_filed = tuple(casilla_id for casilla_id in target_casilla_ids if casilla_id not in filed_values)
-    comparable = tuple(
-        casilla_id for casilla_id in target_casilla_ids if casilla_id in local_values and casilla_id in filed_values
+    missing_local = _missing_casilla_ids(target_casilla_ids, local_values)
+    missing_filed = _missing_casilla_ids(target_casilla_ids, filed_values)
+    comparable = _comparable_casilla_ids(target_casilla_ids, local_values, filed_values)
+    drifts = _comparison_drifts(
+        comparable,
+        local_values=local_values,
+        filed_values=filed_values,
+        observations_by_id=observations_by_id,
+        tolerance=tolerance,
     )
-    drifts = tuple(
-        _drift_from_observation(
-            casilla_id=casilla_id,
-            local_observation=observations_by_id.get(casilla_id),
-            local_value=local_values[casilla_id],
-            filed_value=filed_values[casilla_id],
-        )
-        for casilla_id in comparable
-        if abs(local_values[casilla_id] - filed_values[casilla_id]) > tolerance
-    )
-    status: RegistryFiledStateStatusValue = (
-        RegistryFiledStateStatus.SATISFIED
-        if not missing_local and not missing_filed and not drifts
-        else RegistryFiledStateStatus.FAILED
-    )
+    status: RegistryFiledStateStatusValue = _comparison_status(missing_local, missing_filed, drifts)
     return RegistryFiledStateComparison(
         modelo=calculation.modelo,
         revision=calculation.revision,
@@ -193,4 +178,79 @@ def compare_calculation_to_filed_observation(
         missing_local_casilla_ids=missing_local,
         missing_filed_casilla_ids=missing_filed,
         drifts=drifts,
+    )
+
+
+def _validate_comparison_modelo(
+    calculation: RegistryCalculationResult,
+    observation: RegistryModeloObservation,
+) -> None:
+    """Require both sides of a filed-state comparison to name one modelo."""
+    if calculation.modelo != observation.modelo:
+        raise RegistryValidationError(
+            f"cannot compare calculation modelo {calculation.modelo!r} "
+            f"with filed observation modelo {observation.modelo!r}",
+        )
+
+
+def _required_comparison_casilla_ids(required_casilla_ids: Iterable[CasillaId]) -> tuple[CasillaId, ...]:
+    """Canonicalise and require the non-empty filed-state comparison scope."""
+    target_casilla_ids = tuple(sorted(set(required_casilla_ids)))
+    if not target_casilla_ids:
+        raise RegistryValidationError("filed-state comparison requires at least one casilla")
+    return target_casilla_ids
+
+
+def _missing_casilla_ids(
+    target_casilla_ids: tuple[CasillaId, ...],
+    values: Mapping[CasillaId, Decimal],
+) -> tuple[CasillaId, ...]:
+    """Return required ids absent from one side, retaining canonical order."""
+    return tuple(casilla_id for casilla_id in target_casilla_ids if casilla_id not in values)
+
+
+def _comparable_casilla_ids(
+    target_casilla_ids: tuple[CasillaId, ...],
+    local_values: Mapping[CasillaId, Decimal],
+    filed_values: Mapping[CasillaId, Decimal],
+) -> tuple[CasillaId, ...]:
+    """Return ids present in both sides, retaining canonical target order."""
+    return tuple(
+        casilla_id for casilla_id in target_casilla_ids if casilla_id in local_values and casilla_id in filed_values
+    )
+
+
+def _comparison_drifts(
+    comparable: tuple[CasillaId, ...],
+    *,
+    local_values: Mapping[CasillaId, Decimal],
+    filed_values: Mapping[CasillaId, Decimal],
+    observations_by_id: dict[CasillaId, CasillaObservation],
+    tolerance: Decimal,
+) -> tuple[RegistryFiledStateDrift, ...]:
+    """Materialise provenance-bearing drifts in comparable-id order."""
+    drifts = tuple(
+        _drift_from_observation(
+            casilla_id=casilla_id,
+            local_observation=observations_by_id.get(casilla_id),
+            local_value=local_values[casilla_id],
+            filed_value=filed_values[casilla_id],
+        )
+        for casilla_id in comparable
+        if abs(local_values[casilla_id] - filed_values[casilla_id]) > tolerance
+    )
+
+    return drifts
+
+
+def _comparison_status(
+    missing_local: tuple[CasillaId, ...],
+    missing_filed: tuple[CasillaId, ...],
+    drifts: tuple[RegistryFiledStateDrift, ...],
+) -> RegistryFiledStateStatusValue:
+    """Return failure whenever any required-side or value drift is present."""
+    return (
+        RegistryFiledStateStatus.SATISFIED
+        if not missing_local and not missing_filed and not drifts
+        else RegistryFiledStateStatus.FAILED
     )

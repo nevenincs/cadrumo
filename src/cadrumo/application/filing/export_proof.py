@@ -113,14 +113,6 @@ class FilingExportDictionaryValue(BaseModel):
     value: _DictionaryScalar
 
 
-class FilingExportConformanceRequest(BaseModel):
-    """Public request carrying no filing values or producer identity."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    coordinate: FilingExportProofCoordinate
-
-
 class FilingExportConformanceVectorEvidence(BaseModel):
     """Authority-resolved public mechanism-vector identity and provenance."""
 
@@ -188,16 +180,6 @@ class FilingExportConformanceReceipt(BaseModel):
         if self.checked_official_offsets != len(self.provenance.probes):
             raise ValueError("checked official-offset count must equal the distinct declared probes")
         return self
-
-
-class FilingExportSecureReplayRequest(BaseModel):
-    """Secret-free request; callers cannot inject a draft or producer snapshot."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    coordinate: FilingExportProofCoordinate
-    source_authority_id: _Token
-    custody_authority_id: _Token
 
 
 class FilingExportSourcePinnedProbeExpectation(BaseModel):
@@ -430,7 +412,6 @@ def _require_unique_dictionary_fields(values: tuple[FilingExportDictionaryValue,
 __all__ = [
     "FilingExportConformanceReceipt",
     "FilingExportConformanceRenderInputs",
-    "FilingExportConformanceRequest",
     "FilingExportConformanceVectorEvidence",
     "FilingExportDictionaryValue",
     "FilingExportGeneratedOutput",
@@ -446,6 +427,5 @@ __all__ = [
     "FilingExportSecureCustodyRecord",
     "FilingExportSecureReplayEvidence",
     "FilingExportSecureReplayReceipt",
-    "FilingExportSecureReplayRequest",
     "FilingExportSourcePinnedProbeExpectation",
 ]

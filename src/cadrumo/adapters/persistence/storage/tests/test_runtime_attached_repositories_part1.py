@@ -46,7 +46,6 @@ from ._runtime_attached_repositories_support import (
     RecipientFingerprintRegistryRepository,
     RecipientReplayGuardRepository,
     RegistryModeloObservation,
-    RepairRemediationDecisionRepository,
     SpendingCategory,
     StorageValidationError,
     SubmissionRepository,
@@ -75,7 +74,6 @@ from ._runtime_attached_repositories_support import (
     _llm_request,
     _llm_response,
     _modelo_draft,
-    _repair_decision,
     _save_auth_diagnostic,
     _save_diagnostic_probe_row,
     _sede_artefact,
@@ -158,7 +156,6 @@ _RUNTIME_DEFAULT_REFUSAL_CASES: tuple[tuple[str, Callable[[], object]], ...] = (
     ("iva_compensation_history", lambda: IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).list_periods()),
     ("usage_ratios", lambda: load_usage_ratios(bucket_id=_BUCKET_A_ID)),
     ("borrador_100_snapshot", lambda: Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).list_snapshots()),
-    ("repair_decisions", lambda: RepairRemediationDecisionRepository().list_decisions()),
     ("profile_inventory", lambda: InventoryLedgerRepository().load()),
 )
 
@@ -508,28 +505,23 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
 def test_runtime_default_surfaces_isolate_active_profile_writes(tmp_path: Path) -> None:
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).save(_borrador_snapshot(_BUCKET_A_ID))
-        RepairRemediationDecisionRepository().save_decision(_repair_decision(_BUCKET_A_ID))
         _save_auth_diagnostic(_BUCKET_A_ID)
         _save_diagnostic_probe_row(_BUCKET_A_ID)
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
         assert Borrador100SnapshotRepository(bucket_id=_BUCKET_B_ID).list_snapshots() == ()
-        assert RepairRemediationDecisionRepository().list_decisions() == ()
         assert list_auth_diagnostics().row_count == 0
         assert preview_quarantine_unreadable_secure_objects().namespaces == ()
         Borrador100SnapshotRepository(bucket_id=_BUCKET_B_ID).save(_borrador_snapshot(_BUCKET_B_ID))
-        RepairRemediationDecisionRepository().save_decision(_repair_decision(_BUCKET_B_ID))
         _save_auth_diagnostic(_BUCKET_B_ID)
         _save_diagnostic_probe_row(_BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         snapshots = Borrador100SnapshotRepository(bucket_id=_BUCKET_A_ID).list_snapshots()
-        decisions = RepairRemediationDecisionRepository().list_decisions()
         auth_report = list_auth_diagnostics()
         diagnostic_report = preview_quarantine_unreadable_secure_objects()
 
     assert tuple(snapshot.snapshot_id for snapshot in snapshots) == (_borrador_snapshot(_BUCKET_A_ID).snapshot_id,)
-    assert tuple(decision.reason for decision in decisions) == (f"runtime attached repair decision {_BUCKET_A_ID}",)
     assert auth_report.row_count == 1
     assert tuple(row.diagnostic_id for row in auth_report.rows) == (f"diagnostic-{_BUCKET_A_ID}",)
     assert LLM_USAGE_NAMESPACE.namespace in tuple(item.namespace for item in diagnostic_report.namespaces)

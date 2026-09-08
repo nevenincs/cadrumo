@@ -288,8 +288,8 @@ def _own_name_representation_action_allowed(
     return _wallet_read_url_allowed(f"{action.scheme}://{action.netloc}{WALLET_PATH}", method="GET")
 
 
-def assert_own_name_representation_form_html(html: str, *, landing_url: str, expected_path: str) -> None:
-    soup = parse_html(html)
+def _own_name_representation_form(soup: BeautifulSoup, *, html: str, landing_url: str) -> Tag:
+    """Return the configured own-name submit form, refusing a changed page shape."""
     submit = soup.select_one(PRE303.representation_submit_selector)
     if submit is None:
         raise SedeNavigationError(
@@ -304,6 +304,17 @@ def assert_own_name_representation_form_html(html: str, *, landing_url: str, exp
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
             context=_representation_gate_context(html, landing_url=landing_url),
         )
+    return form
+
+
+def _assert_own_name_form_action(
+    form: Tag,
+    *,
+    html: str,
+    landing_url: str,
+    expected_path: str,
+) -> None:
+    """Require the representation form to stay on its registered boundary."""
     method = str(form.get("method", "GET")).strip().upper() or "GET"
     action = urljoin(landing_url or _PRE303_PRESENTATION_URL, str(form.get("action", "")))
     parsed_action = urlsplit(action)
@@ -322,6 +333,20 @@ def assert_own_name_representation_form_html(html: str, *, landing_url: str, exp
                 "form_action_path": parsed_action.path,
             },
         )
+
+
+def _represented_taxpayer_fields(soup: BeautifulSoup) -> tuple[str, ...]:
+    """Return non-empty represented-taxpayer text fields in document order."""
+    return tuple(
+        str(node.get("name") or node.get("id") or "")
+        for node in soup.find_all("input")
+        if str(node.get("name") or node.get("id") or "").casefold() in {"nif", "nombre"}
+        and str(node.get("value") or "").strip()
+    )
+
+
+def _assert_own_name_controls(soup: BeautifulSoup, *, html: str, landing_url: str) -> None:
+    """Require both selectors and prove the gate carries no represented taxpayer."""
     own_name = soup.select_one(PRE303.representation_own_name_selector)
     representative = soup.select_one(PRE303.representation_representative_selector)
     if own_name is None or representative is None:
@@ -336,12 +361,7 @@ def assert_own_name_representation_form_html(html: str, *, landing_url: str, exp
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context=_representation_gate_context(html, landing_url=landing_url),
         )
-    represented_fields = tuple(
-        str(node.get("name") or node.get("id") or "")
-        for node in soup.find_all("input")
-        if str(node.get("name") or node.get("id") or "").casefold() in {"nif", "nombre"}
-        and str(node.get("value") or "").strip()
-    )
+    represented_fields = _represented_taxpayer_fields(soup)
     if represented_fields:
         raise SedeNavigationError(
             "AEAT representation gate carries represented-taxpayer text fields; refusing to continue",
@@ -351,6 +371,19 @@ def assert_own_name_representation_form_html(html: str, *, landing_url: str, exp
                 "represented_fields": represented_fields,
             },
         )
+
+
+def assert_own_name_representation_form_html(html: str, *, landing_url: str, expected_path: str) -> None:
+    """Validate the captured representation form before own-name continuation."""
+    soup = parse_html(html)
+    form = _own_name_representation_form(soup, html=html, landing_url=landing_url)
+    _assert_own_name_form_action(
+        form,
+        html=html,
+        landing_url=landing_url,
+        expected_path=expected_path,
+    )
+    _assert_own_name_controls(soup, html=html, landing_url=landing_url)
 
 
 def _representation_gate_context(html: str, *, landing_url: str) -> dict[str, object]:

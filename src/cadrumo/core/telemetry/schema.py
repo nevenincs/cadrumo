@@ -180,6 +180,58 @@ allowlist regardless of what a producer attempts to pass.
 """
 
 
+def _allowlisted_metric_values(
+    *,
+    command: str,
+    metric_kind: str,
+    values: Mapping[str, int],
+    declarations: Mapping[str, CounterSpec | TimingSpec],
+) -> dict[str, int]:
+    """Validate and retain the remotely allowlisted values for one metric kind."""
+    allowed: dict[str, int] = {}
+    for key, value in values.items():
+        spec = declarations.get(key)
+        if spec is None:
+            raise TelemetrySchemaError(
+                f"telemetry {metric_kind} key {key!r} is not registered in the MetricSchema for command {command!r}",
+            )
+        if spec.remote_allowed:
+            allowed[key] = value
+    return allowed
+
+
+def _validated_metric_values(
+    *,
+    command: str,
+    counters: Mapping[str, int] | None,
+    timings_ms: Mapping[str, int] | None,
+    registry: Mapping[str, MetricSchema],
+) -> tuple[dict[str, int], dict[str, int]]:
+    """Return validated remote counters and timings for one command."""
+    schema = registry.get(command)
+    if schema is None:
+        if counters or timings_ms:
+            raise TelemetrySchemaError(
+                f"telemetry command {command!r} has no registered MetricSchema; "
+                "register it in TELEMETRY_METRIC_REGISTRY before emitting counters/timings",
+            )
+        return {}, {}
+    return (
+        _allowlisted_metric_values(
+            command=command,
+            metric_kind="counter",
+            values=counters or {},
+            declarations=schema.counters,
+        ),
+        _allowlisted_metric_values(
+            command=command,
+            metric_kind="timing",
+            values=timings_ms or {},
+            declarations=schema.timings_ms,
+        ),
+    )
+
+
 def build_telemetry_payload(
     *,
     workspace_hash: str,
@@ -223,34 +275,12 @@ def build_telemetry_payload(
             key is not declared in the command's :class:`MetricSchema` at all.
     """
     active_registry = registry if registry is not None else TELEMETRY_METRIC_REGISTRY
-    schema = active_registry.get(command)
-    if schema is None:
-        if counters or timings_ms:
-            raise TelemetrySchemaError(
-                f"telemetry command {command!r} has no registered MetricSchema; "
-                "register it in TELEMETRY_METRIC_REGISTRY before emitting counters/timings",
-            )
-        allowed_counters: dict[str, int] = {}
-        allowed_timings: dict[str, int] = {}
-    else:
-        allowed_counters = {}
-        for key, value in (counters or {}).items():
-            spec = schema.counters.get(key)
-            if spec is None:
-                raise TelemetrySchemaError(
-                    f"telemetry counter key {key!r} is not registered in the MetricSchema for command {command!r}",
-                )
-            if spec.remote_allowed:
-                allowed_counters[key] = value
-        allowed_timings = {}
-        for key, value in (timings_ms or {}).items():
-            timing_spec = schema.timings_ms.get(key)
-            if timing_spec is None:
-                raise TelemetrySchemaError(
-                    f"telemetry timing key {key!r} is not registered in the MetricSchema for command {command!r}",
-                )
-            if timing_spec.remote_allowed:
-                allowed_timings[key] = value
+    allowed_counters, allowed_timings = _validated_metric_values(
+        command=command,
+        counters=counters,
+        timings_ms=timings_ms,
+        registry=active_registry,
+    )
     return TelemetryEventPayload(
         workspace_hash=workspace_hash,
         command=command,

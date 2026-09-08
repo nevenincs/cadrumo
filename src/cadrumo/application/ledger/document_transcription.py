@@ -25,11 +25,6 @@ process memory ONLY and carries the same serialization tripwires as
 :class:`~cadrumo.application.ledger.evidence_input.EvidenceInput` -- ``model_dump``,
 ``model_dump_json``, iteration and pickling all raise, so a stray persistence
 call fails loudly rather than writing taxpayer financial data out in the clear.
-The one sanctioned durable route is :meth:`DocumentTranscription.to_cache_entry`,
-whose result persists only through the core's encrypted bucket-scoped repository
-(see :mod:`cadrumo.application.ledger.extracted_document_cache`). That route is
-a named method rather than a serializer flag precisely so it is greppable: every
-place a transcription becomes durable names it.
 """
 
 from __future__ import annotations
@@ -41,21 +36,18 @@ from pydantic import BaseModel, Field, model_serializer, model_validator
 from ...core.field_origin import FieldOrigin
 from ...core.identity import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import now
-from ...core.time.utc import UtcInstant
 
 __all__ = [
     "ACQUISITION_ORIGINS",
     "DocumentTranscription",
     "TranscriberIdentity",
-    "TranscriptionCacheEntry",
 ]
 
 
 _REFUSAL_MESSAGE = (
     "DocumentTranscription must never be serialized, iterated, or persisted directly; it holds a "
-    "document's FINANCIAL contents in memory only. Persist it through to_cache_entry() and the "
-    "encrypted transcription cache (sensitive-financial-data-secure-storage-only)."
+    "document's FINANCIAL contents in memory only "
+    "(sensitive-financial-data-secure-storage-only)."
 )
 
 ACQUISITION_ORIGINS = frozenset({FieldOrigin.TEXT_LAYER, FieldOrigin.VISION})
@@ -83,10 +75,8 @@ class TranscriberIdentity(BaseModel):
     machine, and that claim is the one a consent withdrawal rests on.
 
     The revision is load-bearing rather than decorative. A transcription
-    produced by one model under one prompt revision is NOT interchangeable with
-    one produced by the same model under another -- so the revision is part of
-    the cache key, and a re-read under a new revision is a new fact rather than
-    a replacement of the old one.
+    produced by one model under one prompt revision is not interchangeable with
+    one produced by the same model under another.
 
     Attributes:
         origin: Which acquisition path read the document -- ``TEXT_LAYER`` for
@@ -129,28 +119,10 @@ class TranscriberIdentity(BaseModel):
             )
         return self
 
-    @property
-    def cache_key(self) -> str:
-        """Return the stable transcriber half of the transcription cache key.
-
-        Folds every axis that makes two transcriptions non-interchangeable, so
-        a vision re-read and a text-layer read of the same bytes occupy separate
-        cache entries rather than overwriting one another.
-
-        The transport is one of those axes, and it was already folded in before
-        it had its own field -- it rode inside ``name``. Keeping it here is
-        therefore preservation rather than a new decision, and the reason it
-        earns the place is that serving the same model off-host is a different
-        trust context, not merely a different route.
-        """
-        return f"{self.origin.value}:{self.transport}-{self.name}@{self.revision}"
-
-
 class DocumentTranscription(BaseModel):
     """A document's faithful reading-order text plus the provenance to cite it.
 
-    In-memory only; see the module docstring for the custody contract and the
-    single sanctioned durable route.
+    In-memory only; see the module docstring for the custody contract.
 
     Attributes:
         text: The document's reading-order text with printed forms preserved
@@ -171,45 +143,13 @@ class DocumentTranscription(BaseModel):
     source_content_sha256: ContentDigest
     transcriber: TranscriberIdentity
 
-    @property
-    def cache_key(self) -> tuple[str, str]:
-        """Return the full cache key: source content address plus transcriber.
-
-        Deliberately not the evidence id and not a path. The same bytes reached
-        through two evidence records are one document, and a path is not
-        identity at all -- so the bytes address the entry and the transcriber
-        distinguishes the readings of it.
-        """
-        return (self.source_content_sha256, self.transcriber.cache_key)
-
-    def to_cache_entry(self, *, cached_at: UtcInstant | None = None) -> TranscriptionCacheEntry:
-        """Return the persistable mirror of this transcription.
-
-        The ONE sanctioned route out of memory. The returned entry is an
-        ordinary strict model that serializes normally, because it is written
-        exclusively through the core's encrypted repository; this record keeps
-        its tripwires so that every other route still fails loudly.
-
-        Args:
-            cached_at: When the entry was written. Defaults to now.
-        """
-        return TranscriptionCacheEntry(
-            text=self.text,
-            page_count=self.page_count,
-            source_content_sha256=self.source_content_sha256,
-            transcriber=self.transcriber,
-            cached_at=cached_at if cached_at is not None else now(),
-        )
-
     @model_serializer
     def _refuse_model_serialization(self) -> dict[str, object]:
         """Refuse pydantic serialization on every route, including nested dumps.
 
         Registered as the model serializer so a parent model that embeds a
         transcription and calls ``model_dump`` also raises here rather than
-        serializing the text through the field schema. This is what makes the
-        cache entry's separate existence load-bearing: a document holding a
-        transcription cannot be persisted by accident, only by conversion.
+        serializing the text through the field schema.
         """
         raise NotImplementedError(_REFUSAL_MESSAGE)
 
@@ -232,49 +172,3 @@ class DocumentTranscription(BaseModel):
     def __reduce_ex__(self, protocol: SupportsIndex) -> Never:
         """Refuse pickling -- it would embed the transcribed text."""
         raise NotImplementedError(_REFUSAL_MESSAGE)
-
-
-class TranscriptionCacheEntry(BaseModel):
-    """One cached transcription, as it is written to encrypted storage.
-
-    The persistable mirror of :class:`DocumentTranscription`. It carries the same
-    facts plus the write time, and it serializes normally -- deliberately, because
-    its only writer is the encrypted bucket-scoped repository. The pair is what
-    keeps "no transcription lands in the clear" a structural property: the
-    in-memory record cannot serialize at all, and the shape that can is only ever
-    handed to the encrypted substrate.
-
-    Attributes:
-        text: The transcribed text, printed forms preserved. FINANCIAL.
-        page_count: Pages read.
-        source_content_sha256: Content address of the source bytes.
-        transcriber: Which reader produced the text, at which revision.
-        cached_at: When the entry was written.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    text: str = Field(min_length=1, repr=False)
-    page_count: int = Field(ge=1)
-    source_content_sha256: ContentDigest
-    transcriber: TranscriberIdentity
-    cached_at: UtcInstant
-
-    @property
-    def cache_key(self) -> tuple[str, str]:
-        """Return the entry's key: source content address plus transcriber."""
-        return (self.source_content_sha256, self.transcriber.cache_key)
-
-    def to_transcription(self) -> DocumentTranscription:
-        """Return the in-memory transcription this entry mirrors.
-
-        The read half of the sanctioned route. A loaded entry becomes a
-        tripwired record again immediately, so a cache hit and a fresh read are
-        indistinguishable to every consumer -- including in what they refuse.
-        """
-        return DocumentTranscription(
-            text=self.text,
-            page_count=self.page_count,
-            source_content_sha256=self.source_content_sha256,
-            transcriber=self.transcriber,
-        )

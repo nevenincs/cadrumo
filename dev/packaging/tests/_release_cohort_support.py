@@ -5,9 +5,7 @@ Underscore-prefixed so it is never collected as a test module. Lives under
 concept's owning module; ``dev/release/tests`` already imports production
 cohort/evidence code across that same package boundary
 (``dev/release/tests/test_distribution_readiness.py``), so a cross-package
-test-helper import here follows an established precedent (see also
-``src/cadrumo/tests/test_regulatory_cap_term_dominance.py`` importing
-``..domain.tests._regulatory_cap_witnesses``).
+test-helper import here follows that established package-boundary precedent.
 
 Consolidates four near-identical release-cohort builders (three in
 ``dev/packaging/tests`` -- test_evidence.py, test_distribution_evidence_emit.py,

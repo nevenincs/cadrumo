@@ -310,6 +310,31 @@ def _scrub_items(values: Iterable[object], key: str | None) -> Iterator[object]:
     return (_scrub_value(item, key=key) for item in values)
 
 
+def _scrub_binary_value(value: bytes | bytearray) -> bytes | bytearray | str:
+    """Keep short diagnostic bytes and replace larger document payloads."""
+    return _PAYLOAD_REDACTION_MARKER if len(value) > _MAX_LOGGED_BYTES else value
+
+
+def _scrub_mapping_value(value: Mapping[object, object]) -> dict[object, object]:
+    """Rebuild a mapping while scrubbing each value with its key hint."""
+    return {item_key: _scrub_value(item_value, key=str(item_key)) for item_key, item_value in value.items()}
+
+
+def _scrub_tuple_value(value: tuple[object, ...], key: str | None) -> tuple[object, ...]:
+    """Rebuild a tuple from recursively scrubbed logging values."""
+    return tuple(_scrub_items(value, key))
+
+
+def _scrub_list_value(value: list[object], key: str | None) -> list[object]:
+    """Rebuild a list from recursively scrubbed logging values."""
+    return list(_scrub_items(value, key))
+
+
+def _scrub_set_value(value: set[object], key: str | None) -> set[object]:
+    """Rebuild a set from recursively scrubbed logging values."""
+    return set(_scrub_items(value, key))
+
+
 # ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL:
 # The implementation overload returns Any to subsume all concrete overload
 # return types per mypy overload rules.
@@ -318,15 +343,15 @@ def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN
     if isinstance(value, str):
         return _scrub_text(value, key=key)
     if isinstance(value, bytes | bytearray):
-        return _PAYLOAD_REDACTION_MARKER if len(value) > _MAX_LOGGED_BYTES else value
+        return _scrub_binary_value(value)
     if is_object_mapping(value):
-        return {item_key: _scrub_value(item_value, key=str(item_key)) for item_key, item_value in value.items()}
+        return _scrub_mapping_value(value)
     if is_object_tuple(value):
-        return tuple(_scrub_items(value, key))
+        return _scrub_tuple_value(value, key)
     if is_object_list(value):
-        return list(_scrub_items(value, key))
+        return _scrub_list_value(value, key)
     if is_object_set(value):
-        return set(_scrub_items(value, key))
+        return _scrub_set_value(value, key)
     if _looks_sensitive_key(key):
         return _redacted_value(key, str(value))
     return _scrub_opaque_object(value)
@@ -369,6 +394,52 @@ def _scrub_positional_args(message: str, args: tuple[object, ...]) -> tuple[obje
     )
 
 
+def _scrub_record_message_and_args(record: logging.LogRecord) -> None:
+    """Scrub a record's message and all supported argument shapes."""
+    raw_msg: object = record.msg
+    scrubbed_msg = _scrub_text(raw_msg) if isinstance(raw_msg, str) else _scrub_value(raw_msg)
+    record.msg = scrubbed_msg
+    _scrub_record_args(record, scrubbed_msg)
+
+
+def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
+    """Scrub record arguments, retaining placeholder-aware positional arity."""
+    if is_object_list_or_tuple(record.args) and isinstance(message, str):
+        scrubbed_args = _scrub_positional_args(message, tuple(record.args))
+        # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
+        # | Mapping[str, object] | None``; ``list`` is not in the
+        # union even though logging accepts it at runtime.
+        # Normalising to a tuple sidesteps the union mismatch
+        # without changing the runtime contract.
+        record.args = tuple(scrubbed_args)
+        return
+    if isinstance(record.args, Mapping):
+        record.args = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
+        return
+    if isinstance(record.args, tuple | list):
+        # Residual tuple/list args reach only when ``record.msg`` is not a
+        # str (the positional branch above requires a str format). Preserve
+        # the original ``_scrub_value`` element-wise scrubbing so no args
+        # path skips redaction.
+        record.args = tuple(_scrub_value(item) for item in record.args)
+
+
+def _scrub_record_exception(record: logging.LogRecord) -> None:
+    """Scrub formatted exception text while retaining the exception tuple."""
+    if record.exc_info is not None:
+        record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))
+    elif record.exc_text:
+        record.exc_text = _scrub_text(record.exc_text)
+
+
+def _scrub_record_extras(record: logging.LogRecord) -> None:
+    """Scrub non-standard record attributes in place."""
+    for key, value in tuple(record.__dict__.items()):
+        if key in _STANDARD_LOG_RECORD_FIELDS or key in {"msg", "args", "exc_info", "exc_text"}:
+            continue
+        record.__dict__[key] = _scrub_value(value, key=key)
+
+
 class SecretScrubbingFilter(logging.Filter):
     """Redact sensitive fields from log records before formatting.
 
@@ -391,42 +462,9 @@ class SecretScrubbingFilter(logging.Filter):
         Returns:
             Always ``True`` — every record is allowed through after scrubbing.
         """
-        # `LogRecord.msg` is `Any`, which selects no `_scrub_value` overload and
-        # returns `Any` in turn. Binding it as `object` first picks the
-        # `(object) -> object` overload, so the scrubbed message stays typed; it
-        # is also bound once rather than re-read, since the attribute is
-        # reassigned immediately below.
-        raw_msg: object = record.msg
-        scrubbed_msg = _scrub_text(raw_msg) if isinstance(raw_msg, str) else _scrub_value(raw_msg)
-        record.msg = scrubbed_msg
-
-        if is_object_list_or_tuple(record.args) and isinstance(scrubbed_msg, str):
-            scrubbed_args = _scrub_positional_args(scrubbed_msg, tuple(record.args))
-            # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
-            # | Mapping[str, object] | None``; ``list`` is not in the
-            # union even though logging accepts it at runtime.
-            # Normalising to a tuple sidesteps the union mismatch
-            # without changing the runtime contract.
-            record.args = tuple(scrubbed_args)
-        elif isinstance(record.args, Mapping):
-            scrubbed_mapping = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
-            record.args = scrubbed_mapping
-        elif isinstance(record.args, tuple | list):
-            # Residual tuple/list args reached only when ``record.msg`` is not a
-            # str (the positional branch above requires a str format). Preserve
-            # the original ``_scrub_value`` element-wise scrubbing so no args
-            # path skips redaction.
-            record.args = tuple(_scrub_value(item) for item in record.args)
-
-        if record.exc_info is not None:
-            record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))
-        elif record.exc_text:
-            record.exc_text = _scrub_text(record.exc_text)
-
-        for key, value in tuple(record.__dict__.items()):
-            if key in _STANDARD_LOG_RECORD_FIELDS or key in {"msg", "args", "exc_info", "exc_text"}:
-                continue
-            record.__dict__[key] = _scrub_value(value, key=key)
+        _scrub_record_message_and_args(record)
+        _scrub_record_exception(record)
+        _scrub_record_extras(record)
         return True
 
 

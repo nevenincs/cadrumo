@@ -311,20 +311,35 @@ def _parse_dictionary_casilla_id(value: str, *, allow_letter_id: bool = False) -
 
 
 def _find_xml_path(root: Element[str], absolute_path: str) -> tuple[Element[str], ...]:
-    parts = tuple(part for part in absolute_path.strip("/").split("/") if part)
+    parts = _xml_path_parts(absolute_path)
     if not parts:
         return ()
     current: tuple[Element[str], ...] = (root,)
     for index, part in enumerate(parts):
-        if index == 0 and len(current) == 1 and _local_name(current[0].tag) == part:
-            continue
-        next_elements: list[Element[str]] = []
-        for element in current:
-            next_elements.extend(child for child in element if _local_name(child.tag) == part)
-        current = tuple(next_elements)
+        current = _advance_xml_path(current, part, is_root_segment=index == 0)
         if not current:
             return ()
     return current
+
+
+def _xml_path_parts(absolute_path: str) -> tuple[str, ...]:
+    """Return non-empty local-name segments from an absolute XML path."""
+    return tuple(part for part in absolute_path.strip("/").split("/") if part)
+
+
+def _advance_xml_path(
+    current: tuple[Element[str], ...],
+    part: str,
+    *,
+    is_root_segment: bool,
+) -> tuple[Element[str], ...]:
+    """Advance one XML path segment, retaining the root-name shortcut."""
+    if is_root_segment and len(current) == 1 and _local_name(current[0].tag) == part:
+        return current
+    next_elements: list[Element[str]] = []
+    for element in current:
+        next_elements.extend(child for child in element if _local_name(child.tag) == part)
+    return tuple(next_elements)
 
 
 def _local_name(tag: str) -> str:
@@ -392,14 +407,36 @@ def _read_record(
 def _matches_record_start(record: ExportRecordDefinition | None, payload: bytes, cursor: int) -> bool:
     if record is None:
         return False
+    record_text = _record_candidate_text(record, payload, cursor)
+    if record_text is None:
+        return False
+    literals_match, matched_literal = _record_literals_match(record, record_text)
+    if not literals_match:
+        return False
+    if record.discriminator is None:
+        return matched_literal
+    return _record_discriminator_matches(record, record_text)
+
+
+def _record_candidate_text(
+    record: ExportRecordDefinition,
+    payload: bytes,
+    cursor: int,
+) -> str | None:
+    """Decode the candidate record window, returning ``None`` for a non-match."""
     record_length = _record_length(record.fields)
     record_bytes = payload[cursor : cursor + record_length]
     if len(record_bytes) != record_length:
-        return False
+        return None
     try:
         record_text = record_bytes.decode(record.encoding)
     except UnicodeDecodeError:
-        return False
+        return None
+    return record_text
+
+
+def _record_literals_match(record: ExportRecordDefinition, record_text: str) -> tuple[bool, bool]:
+    """Match every literal field and report success plus whether one was present."""
     matched_literal = False
     for field in record.fields:
         if field.kind != CasillaFieldKind.LITERAL or field.offset is None or field.length is None:
@@ -409,22 +446,28 @@ def _matches_record_start(record: ExportRecordDefinition | None, payload: bytes,
         try:
             parsed_literal = _parse_field_value(field, raw)
         except RegistryValidationError:
-            return False
+            return False, matched_literal
         if parsed_literal != field.literal:
-            return False
-    if record.discriminator is not None:
-        slice_start = record.discriminator.offset - 1
-        slice_end = slice_start + record.discriminator.length
-        discriminator_bytes = record_text[slice_start:slice_end]
-        if len(discriminator_bytes) != record.discriminator.length:
-            return False
-        is_blank = all(char == " " for char in discriminator_bytes)
-        if record.discriminator.requires == "blank" and not is_blank:
-            return False
-        # A discriminator is itself a record-identifying signal even when no
-        # literal prefix is present.
-        return not (record.discriminator.requires == "non_blank" and is_blank)
-    return matched_literal
+            return False, matched_literal
+    return True, matched_literal
+
+
+def _record_discriminator_matches(record: ExportRecordDefinition, record_text: str) -> bool:
+    """Match the optional record discriminator after literal fields pass."""
+    discriminator = record.discriminator
+    if discriminator is None:
+        return False
+    slice_start = discriminator.offset - 1
+    slice_end = slice_start + discriminator.length
+    discriminator_bytes = record_text[slice_start:slice_end]
+    if len(discriminator_bytes) != discriminator.length:
+        return False
+    is_blank = all(char == " " for char in discriminator_bytes)
+    if discriminator.requires == "blank" and not is_blank:
+        return False
+    # A discriminator is itself a record-identifying signal even when no
+    # literal prefix is present.
+    return not (discriminator.requires == "non_blank" and is_blank)
 
 
 def _record_length(fields: tuple[ExportFieldDefinition, ...]) -> int:

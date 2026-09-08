@@ -1077,10 +1077,6 @@ application:
         visszatérítés (devolver) lett kiválasztva, de visszatérítés csak az év utolsó
         bevallási időszakában kérhető. Vigye át a jóváírást (compensar), vagy válassza
         a visszatérítést az utolsó időszakban.
-      review_only_workspace_no_authority: Ez a csak áttekintésre szolgáló munkaterület
-        nem rendelkezik bevallási felhatalmazással; elolvasható és ellenőrizhető,
-        de soha nem tekinthető bizonyítéknak arra, hogy a(z) %{calculation_revision_id}
-        számítási revíziót benyújtották vagy be fogják nyújtani.
       review_package_generic: Hiba történt az áttekintő csomag összeállítása közben.
       review_package_integrity: 'A(z) %{package_path} áttekintő csomag nem felelt
         meg az integritás-ellenőrzésnek: %{detail}.'
@@ -1268,17 +1264,6 @@ application:
         ehhez: {manual_key}.'
       no_revision_for_diff_year: 'A(z) {modelo} nyilvántartás egyetlen revíziója sem
         fedi le a(z) {filing_year} adóévet. Deklarált revíziók: {available_revisions}.'
-  repair_integrity:
-    errors:
-      conflicting_list_filters: 'A javítási lista szűrői kizárják egymást: {filters}.
-        Egy szűrőt adj meg, vagy egyet sem.'
-      decision_id_mismatch_list: A javítási döntés azonosítója nem egyezik az újraszámított
-        tartalmi azonosítóval; a listaelem elutasítva.
-      decision_id_mismatch_load: A javítási döntés hasznos terhének azonosítója nem
-        egyezik a kért vagy újraszámított tartalmi azonosítóval; a betöltés elutasítva.
-      decision_id_mismatch_save: A javítási döntés azonosítója nem egyezik az újraszámított
-        tartalmi azonosítóval; a mentés elutasítva.
-      decision_not_found: A(z) {decision_id} javítási döntés nem létezik.
   storage:
     calc_sheets:
       engine:

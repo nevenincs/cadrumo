@@ -130,19 +130,11 @@ cli:
         consent:
           bytes_unrecallable: 'Withdrawing consent stops future transmission. It cannot
             recall bytes already sent: this product has no way to retrieve or delete
-            them from the provider. Re-deriving locally removes the cloud read from
-            your current records, but not from the provider''s.'
-          content_address_help: SHA-256 content address of the document's stored bytes.
-          evidence_reference_help: Evidence or attachment id of the artefact to re-derive.
-          group_help: Review what was sent to an off-host model, and bring artefacts
-            back on-host.
+            them from the provider.'
+          group_help: Review what was sent to an off-host model.
           list_help: List every off-host dispatch and the artefacts derived from one.
           no_history: 'No evidence bytes have left this host: this profile has no
             recorded off-host dispatch.'
-          rederive_help: Re-read one artefact on this host from its cached transcription.
-          rederived: Re-derived {reference} on this host. It previously carried {previous};
-            it now carries {current}. The earlier reading is superseded, not erased.
-          transcriber_help: Cache key of the transcription to reuse.
         evidence_id_help: Evidence id (exact match)
         extract_acknowledge_off_host_help: Acknowledge, for this one read, that the
           document leaves this machine.

@@ -96,6 +96,31 @@ _DECIMAL_STRING_RE = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?$")
 _DATE_STRING_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
+def _coerce_profile_fact_date(value: str) -> date | str:
+    """Restore an ISO date string when it names a real calendar date."""
+    if not _DATE_STRING_RE.fullmatch(value):
+        return value
+    try:
+        return parse_iso8601_date(value) or value
+    except ValueError:
+        return value
+
+
+def _coerce_profile_fact_bool(value: str) -> bool | None:
+    """Restore only the two boolean tokens emitted by JSON model dumps."""
+    if value not in ("true", "false"):
+        return None
+    parsed = parse_bool(value)
+    return parsed if isinstance(parsed, bool) else None
+
+
+def _coerce_profile_fact_decimal(value: str) -> Decimal | None:
+    """Restore a canonical Decimal string without consuming identifiers."""
+    if not _DECIMAL_STRING_RE.fullmatch(value):
+        return None
+    return try_parse_canonical_decimal(value)
+
+
 def _coerce_profile_fact_value(value: object) -> object:
     """Restore Decimal / date types lost when ``UserProfileFactValue`` was JSON-encoded.
 
@@ -108,11 +133,11 @@ def _coerce_profile_fact_value(value: object) -> object:
     against the canonical Decimal and ISO date shapes and promotes them
     back to the original Python type before the union resolves.
     """
-    if isinstance(value, str) and _DATE_STRING_RE.fullmatch(value):
-        try:
-            return parse_iso8601_date(value) or value
-        except ValueError:
-            return value
+    if not isinstance(value, str):
+        return value
+    date_candidate = _coerce_profile_fact_date(value)
+    if isinstance(date_candidate, date):
+        return date_candidate
     # JSON has no boolean primitive distinct from integer — pydantic encodes
     # ``True``/``False`` as the canonical lowercase tokens ``"true"``/``"false"``
     # when ``model_dump(mode="json")`` serialises a ``bool``-typed fact. Promote
@@ -121,10 +146,9 @@ def _coerce_profile_fact_value(value: object) -> object:
     # Only promote the two JSON-serialized boolean tokens produced by
     # model_dump(mode="json"). Broader token sets (e.g. "0"/"1") must
     # not be promoted to bool here because "0" is also a valid Decimal fact.
-    if isinstance(value, str) and value in ("true", "false"):
-        _bool_candidate = parse_bool(value)
-        if isinstance(_bool_candidate, bool):
-            return _bool_candidate
+    bool_candidate = _coerce_profile_fact_bool(value)
+    if bool_candidate is not None:
+        return bool_candidate
     # Routed through the canonical strict grammar rather than a bare
     # ``Decimal()``. The local regex admitted the Spanish thousands shape, so
     # an operator's ``8.000`` was promoted to eight euros -- silently, three
@@ -137,10 +161,9 @@ def _coerce_profile_fact_value(value: object) -> object:
     # the loud direction: the write door's numeric check then refuses it as not
     # a number, so the operator is told, instead of a wrong figure being stored
     # as a right-looking one.
-    if isinstance(value, str) and _DECIMAL_STRING_RE.fullmatch(value):
-        parsed = try_parse_canonical_decimal(value)
-        if parsed is not None:
-            return parsed
+    decimal_candidate = _coerce_profile_fact_decimal(value)
+    if decimal_candidate is not None:
+        return decimal_candidate
     return value
 
 

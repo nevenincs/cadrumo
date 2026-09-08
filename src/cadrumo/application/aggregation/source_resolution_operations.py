@@ -164,6 +164,66 @@ class _SourceResolutionMergeState:
         self._absorb_relation_values(resolution)
         self._absorb_bound_inputs(resolution)
 
+    def absorb_by_precedence(self, resolution: CalculationSourceResolution) -> None:
+        """Overlay one tier, retaining the later tier's value for each key."""
+        self._absorb_precedence_metadata(resolution)
+        self._absorb_precedence_values(resolution)
+        self._absorb_precedence_row_bindings(resolution)
+        self._absorb_precedence_row_casillas(resolution)
+        self._absorb_precedence_relations(resolution)
+        self.bound_inputs_by_casilla_id.update(resolution.bound_inputs_by_casilla_id)
+
+    def _absorb_precedence_metadata(self, resolution: CalculationSourceResolution) -> None:
+        self.owned_sources.update(resolution.owned_sources)
+        self.diagnostics.extend(resolution.diagnostics)
+        self.provenance.extend(resolution.provenance)
+        self.detail_rows.extend(resolution.detail_rows)
+        self.source_transaction_ids.update(resolution.source_transaction_ids)
+        self.unresolved_relation_ids.update(resolution.unresolved_relation_ids)
+        self.unresolved_binding_ids.update(resolution.unresolved_binding_ids)
+        if resolution.borrador_provenance is not None:
+            self.borrador_provenance = resolution.borrador_provenance
+        handoff = resolution.m303_regimen_simplificado_annual_summary_handoff
+        if handoff is None:
+            return
+        if self.m303_regimen_simplificado_annual_summary_handoff is not None:
+            raise AggregationValidationError(
+                t("aggregation.source_mesh.errors.annual_summary_handoff_duplicate"),
+                context={
+                    "first_resolver": self.m303_regimen_simplificado_annual_summary_handoff.source_work_unit_id,
+                    "second_resolver": resolution.resolver_id,
+                },
+            )
+        self.m303_regimen_simplificado_annual_summary_handoff = handoff
+
+    def _absorb_precedence_values(self, resolution: CalculationSourceResolution) -> None:
+        self.binding_values.update(resolution.binding_values)
+        self.enum_binding_values.update(resolution.enum_binding_values)
+        self.date_binding_values.update(resolution.date_binding_values)
+
+    def _absorb_precedence_row_bindings(self, resolution: CalculationSourceResolution) -> None:
+        for row_binding_key in resolution.row_binding_values:
+            if row_binding_key in self.row_binding_values and (
+                row_binding_key in self.row_source_identities or row_binding_key in resolution.row_source_identities
+            ):
+                _claim_row_binding(self.row_binding_owners, row_binding_key, resolution.resolver_id)
+            self.row_binding_owners[row_binding_key] = resolution.resolver_id
+        self.row_binding_values.update(resolution.row_binding_values)
+        self.row_source_identities.update(resolution.row_source_identities)
+        self.unresolved_binding_ids.difference_update(
+            binding_id for binding_id, _row_index in resolution.row_binding_values
+        )
+
+    def _absorb_precedence_row_casillas(self, resolution: CalculationSourceResolution) -> None:
+        for row_casilla_key in resolution.row_casilla_values:
+            _claim_row_casilla(self.row_casilla_owners, row_casilla_key, resolution.resolver_id)
+        self.row_casilla_values.update(resolution.row_casilla_values)
+        self.row_casilla_provenance.update(resolution.row_casilla_provenance)
+
+    def _absorb_precedence_relations(self, resolution: CalculationSourceResolution) -> None:
+        self.relation_values.update(resolution.relation_values)
+        self.unresolved_relation_ids.difference_update(resolution.relation_values)
+
     def _absorb_binding_values(self, resolution: CalculationSourceResolution) -> None:
         for binding_id, value in resolution.binding_values.items():
             _claim_binding(self.binding_owners, binding_id, resolution.resolver_id)
@@ -259,99 +319,10 @@ def merge_source_resolutions_by_precedence(
     resolver_id: CompositeSourceResolverId = CompositeSourceResolverId.PRECEDENCE_MESH,
 ) -> CalculationSourceResolution:
     """Overlay tiers into one source resolution, with later tiers winning values."""
-    binding_values: dict[BindingId, Decimal] = {}
-    enum_binding_values: dict[BindingId, str] = {}
-    date_binding_values: dict[BindingId, date] = {}
-    row_binding_values: dict[RowBindingKey, str | Decimal | int | bool] = {}
-    row_source_identities: dict[RowBindingKey, RowSourceIdentity] = {}
-    row_casilla_values: dict[RowCasillaKey, Decimal] = {}
-    row_casilla_provenance: dict[RowCasillaKey, DirectRowMaterializationProvenance] = {}
-    row_casilla_owners: dict[RowCasillaKey, str] = {}
-    row_binding_owners: dict[RowBindingKey, str] = {}
-    relation_values: dict[RelationId, Decimal] = {}
-    unresolved_relation_ids: set[RelationId] = set()
-    unresolved_binding_ids: set[BindingId] = set()
-    bound_inputs_by_casilla_id: dict[CasillaId, Decimal] = {}
-    detail_rows: list[ModeloDetailRow] = []
-    source_transaction_ids: set[str] = set()
-    diagnostics: list[CalculationSourceDiagnostic] = []
-    provenance: list[CalculationSourceProvenance] = []
-    owned_sources: set[BindingSourceKind] = set()
-    borrador_provenance: BorradorSourceProvenance | None = None
-    m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
-
+    state = _SourceResolutionMergeState()
     for tier in tiers:
-        owned_sources.update(tier.owned_sources)
-        diagnostics.extend(tier.diagnostics)
-        provenance.extend(tier.provenance)
-        detail_rows.extend(tier.detail_rows)
-        source_transaction_ids.update(tier.source_transaction_ids)
-        unresolved_relation_ids.update(tier.unresolved_relation_ids)
-        unresolved_binding_ids.update(tier.unresolved_binding_ids)
-        if tier.borrador_provenance is not None:
-            borrador_provenance = tier.borrador_provenance
-        if tier.m303_regimen_simplificado_annual_summary_handoff is not None:
-            if m303_regimen_simplificado_annual_summary_handoff is not None:
-                raise AggregationValidationError(
-                    t("aggregation.source_mesh.errors.annual_summary_handoff_duplicate"),
-                    context={
-                        "first_resolver": m303_regimen_simplificado_annual_summary_handoff.source_work_unit_id,
-                        "second_resolver": tier.resolver_id,
-                    },
-                )
-            m303_regimen_simplificado_annual_summary_handoff = tier.m303_regimen_simplificado_annual_summary_handoff
-        binding_values.update(tier.binding_values)
-        enum_binding_values.update(tier.enum_binding_values)
-        date_binding_values.update(tier.date_binding_values)
-        for row_binding_key in tier.row_binding_values:
-            if row_binding_key in row_binding_values and (
-                row_binding_key in row_source_identities or row_binding_key in tier.row_source_identities
-            ):
-                _claim_row_binding(row_binding_owners, row_binding_key, tier.resolver_id)
-            row_binding_owners[row_binding_key] = tier.resolver_id
-        row_binding_values.update(tier.row_binding_values)
-        row_source_identities.update(tier.row_source_identities)
-        for binding_id, _row_index in tier.row_binding_values:
-            unresolved_binding_ids.discard(binding_id)
-        for row_casilla_key in tier.row_casilla_values:
-            _claim_row_casilla(row_casilla_owners, row_casilla_key, tier.resolver_id)
-        row_casilla_values.update(tier.row_casilla_values)
-        row_casilla_provenance.update(tier.row_casilla_provenance)
-        bound_inputs_by_casilla_id.update(tier.bound_inputs_by_casilla_id)
-        for relation_id, value in tier.relation_values.items():
-            relation_values[relation_id] = value
-            unresolved_relation_ids.discard(relation_id)
-
-    return CalculationSourceResolution(
-        resolver_id=resolver_id,
-        owned_sources=tuple(sorted(owned_sources)),
-        binding_values=binding_values,
-        enum_binding_values=enum_binding_values,
-        date_binding_values=date_binding_values,
-        row_binding_values=row_binding_values,
-        row_source_identities=row_source_identities,
-        row_casilla_values=row_casilla_values,
-        row_casilla_provenance=row_casilla_provenance,
-        relation_values=relation_values,
-        unresolved_relation_ids=tuple(sorted(unresolved_relation_ids.difference(relation_values))),
-        unresolved_binding_ids=tuple(
-            sorted(
-                unresolved_binding_ids.difference(
-                    binding_values,
-                    enum_binding_values,
-                    date_binding_values,
-                    {binding_id for binding_id, _row_index in row_binding_values},
-                ),
-            ),
-        ),
-        bound_inputs_by_casilla_id=bound_inputs_by_casilla_id,
-        detail_rows=tuple(detail_rows),
-        source_transaction_ids=tuple(sorted(source_transaction_ids)),
-        borrador_provenance=borrador_provenance,
-        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
-        diagnostics=tuple(diagnostics),
-        provenance=tuple(provenance),
-    )
+        state.absorb_by_precedence(tier)
+    return state.to_resolution(resolver_id)
 
 
 def collect_unhandled_source_diagnostics(

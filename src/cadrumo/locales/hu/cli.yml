@@ -135,23 +135,12 @@ cli:
         consent:
           bytes_unrecallable: 'A hozzájárulás visszavonása megállítja a további küldést.
             A már elküldött bájtokat nem hívja vissza: ez a program nem tudja azokat
-            a szolgáltatótól visszaszerezni vagy törölni. A helyi újraszármaztatás
-            a jelenlegi nyilvántartásából eltávolítja a gépen kívüli olvasást, a szolgáltatóéból
-            nem.'
-          content_address_help: A dokumentum tárolt bájtjainak SHA-256 tartalomcíme.
-          evidence_reference_help: Az újraszármaztatandó bizonylat vagy melléklet
-            azonosítója.
-          group_help: Tekintse át, mi került gépen kívüli modellhez, és állítsa vissza
-            az eredményeket helyben.
+            a szolgáltatótól visszaszerezni vagy törölni.'
+          group_help: Tekintse át, mi került gépen kívüli modellhez.
           list_help: Sorolja fel az összes gépen kívüli küldést és az azokból származó
             eredményeket.
           no_history: 'Egyetlen bizonyítékbájt sem hagyta el ezt a gépet: ehhez a
             profilhoz nincs rögzített gépen kívüli továbbítás.'
-          rederive_help: Olvassa be újra az egyik eredményt ezen a gépen a tárolt
-            átiratból.
-          rederived: A(z) {reference} újraszármaztatva ezen a gépen. Korábban {previous}
-            volt; most {current}. A korábbi olvasás felülírásra került, de nem törlődött.
-          transcriber_help: Az újrafelhasználandó átirat gyorsítótárkulcsa.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         extract_acknowledge_off_host_help: Megerősítés arról, hogy a dokumentum ennél
           az egy beolvasásnál elhagyja a gépet.

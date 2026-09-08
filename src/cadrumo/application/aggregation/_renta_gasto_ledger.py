@@ -301,36 +301,16 @@ def _classify_gasto_transaction(
     if proportion is None:
         return None
 
-    if is_non_eur_without_conversion(transaction):
-        return RentaGastoLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
-            detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta gastos",
-        )
+    gate_issue = _gasto_gate_issue(
+        transaction,
+        transaction_id=transaction_id,
+        cumulative_start=cumulative_start,
+        cumulative_end=cumulative_end,
+    )
+    if gate_issue is not None:
+        return gate_issue
 
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
-    if not (cumulative_start <= filing_date <= cumulative_end):
-        return RentaGastoLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            detail=f"filing date {filing_date} is outside the cumulative gasto window",
-        )
-
-    # A deductible gasto must declare its IVA-exclusive base imponible: the gross
-    # transfer carries IVA soportado that is recovered through Modelo 303 and is
-    # not a Renta gasto. Without a taxable_base we cannot fold it IVA-exclusively,
-    # so surface it (the operator tags it via classify) rather than gross-folding
-    # and silently OVER-declaring gastos (which would under-state the pago
-    # fraccionado). Preflight already requires taxable_base, so this is a backstop.
-    if transaction.taxable_base is None:
-        return RentaGastoLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
-            detail=(
-                "OUTGOING business expense carries no taxable_base (IVA-exclusive base imponible); "
-                "classify it with --taxable-base so its deductible gasto is aggregated into casilla 02"
-            ),
-        )
 
     # taxable_base is non-None here (the MISSING_TAXABLE_BASE guard above returned
     # for the None case). IVA soportado recovered through Modelo 303 is not a
@@ -367,6 +347,47 @@ def _classify_gasto_transaction(
         deductible_amount=deductible_amount,
         filing_date=filing_date,
     )
+
+
+def _gasto_gate_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+    cumulative_start: date,
+    cumulative_end: date,
+) -> RentaGastoLedgerAggregationIssue | None:
+    """Return the first downstream issue for an eligible gasto transaction."""
+    if is_non_eur_without_conversion(transaction):
+        return RentaGastoLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+            detail=f"transaction currency {transaction.raw.currency!r} is not supported for Renta gastos",
+        )
+
+    filing_date = transaction.raw.value_date or transaction.raw.booked_date
+    if not (cumulative_start <= filing_date <= cumulative_end):
+        return RentaGastoLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+            detail=f"filing date {filing_date} is outside the cumulative gasto window",
+        )
+
+    # A deductible gasto must declare its IVA-exclusive base imponible: the gross
+    # transfer carries IVA soportado that is recovered through Modelo 303 and is
+    # not a Renta gasto. Without a taxable_base we cannot fold it IVA-exclusively,
+    # so surface it (the operator tags it via classify) rather than gross-folding
+    # and silently OVER-declaring gastos (which would under-state the pago
+    # fraccionado). Preflight already requires taxable_base, so this is a backstop.
+    if transaction.taxable_base is None:
+        return RentaGastoLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
+            detail=(
+                "OUTGOING business expense carries no taxable_base (IVA-exclusive base imponible); "
+                "classify it with --taxable-base so its deductible gasto is aggregated into casilla 02"
+            ),
+        )
+    return None
 
 
 def _gasto_business_proportion(transaction: Transaction) -> Decimal | None:

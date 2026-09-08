@@ -391,6 +391,68 @@ class RegularizacionTransmisionResult(BaseModel):
     capped: bool
 
 
+def _validate_transmision_inputs(
+    *,
+    cuota_soportada: Decimal,
+    prorrata_inicial_pct: Decimal,
+    anos_restantes: int,
+    cuota_devengada_entrega: Decimal | None,
+) -> None:
+    """Validate the statutory inputs before calculating an art-110 result."""
+    if cuota_soportada <= Decimal("0"):
+        raise BienInversionValidationError("cuota_soportada must be strictly positive")
+    if prorrata_inicial_pct < Decimal("0") or prorrata_inicial_pct > HUNDRED:
+        raise BienInversionValidationError("prorrata_inicial_pct must be between 0 and 100")
+    if anos_restantes <= 0:
+        raise BienInversionValidationError("anos_restantes must be strictly positive")
+    if cuota_devengada_entrega is not None and cuota_devengada_entrega < Decimal("0"):
+        raise BienInversionValidationError("cuota_devengada_entrega must not be negative")
+
+
+def _transmision_uncapped_amount(
+    *,
+    cuota_soportada: Decimal,
+    prorrata_inicial_pct: Decimal,
+    anos_restantes: int,
+    kind: BienInversionKind,
+    regime: BienInversionDisposalRegime,
+    parameters: BienesInversionRegularizacionParameters,
+) -> tuple[Decimal, Decimal]:
+    """Return the art-109 divisor and art-110 amount before regla-1ª capping."""
+    prorrata_imputada_pct = HUNDRED if regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA else Decimal("0")
+    divisor = _divisor(kind, parameters)
+    deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
+    deduccion_imputada = cuota_soportada * prorrata_imputada_pct / HUNDRED
+    importe_sin_limite = _quantize((deduccion_efectuada - deduccion_imputada) * anos_restantes / divisor)
+    return divisor, importe_sin_limite
+
+
+def _apply_transmision_cap(
+    *,
+    regime: BienInversionDisposalRegime,
+    cuota_devengada_entrega: Decimal | None,
+    importe_sin_limite: Decimal,
+) -> tuple[Decimal, bool]:
+    """Apply the regla-1ª disposal cap only to a negative additional deduction."""
+    if (
+        regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA
+        and cuota_devengada_entrega is not None
+        and importe_sin_limite < Decimal("0")
+        and -importe_sin_limite > cuota_devengada_entrega
+    ):
+        return -cuota_devengada_entrega, True
+    return importe_sin_limite, False
+
+
+def _regularizacion_direction(importe: Decimal) -> RegularizacionDireccion:
+    """Classify the signed regularización amount for its operator-facing result."""
+    if importe > Decimal("0"):
+        return RegularizacionDireccion.INGRESO
+    if importe < Decimal("0"):
+        return RegularizacionDireccion.DEDUCCION
+    return RegularizacionDireccion.NINGUNA
+
+
 def compute_regularizacion_transmision(
     *,
     cuota_soportada: Decimal,
@@ -459,20 +521,20 @@ def compute_regularizacion_transmision(
             percentage, a non-positive ``anos_restantes``, or a negative
             ``cuota_devengada_entrega``.
     """
-    if cuota_soportada <= Decimal("0"):
-        raise BienInversionValidationError("cuota_soportada must be strictly positive")
-    if prorrata_inicial_pct < Decimal("0") or prorrata_inicial_pct > HUNDRED:
-        raise BienInversionValidationError("prorrata_inicial_pct must be between 0 and 100")
-    if anos_restantes <= 0:
-        raise BienInversionValidationError("anos_restantes must be strictly positive")
-    if cuota_devengada_entrega is not None and cuota_devengada_entrega < Decimal("0"):
-        raise BienInversionValidationError("cuota_devengada_entrega must not be negative")
-
-    prorrata_imputada_pct = HUNDRED if regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA else Decimal("0")
-    divisor = _divisor(kind, parameters)
-    deduccion_efectuada = cuota_soportada * prorrata_inicial_pct / HUNDRED
-    deduccion_imputada = cuota_soportada * prorrata_imputada_pct / HUNDRED
-    importe_sin_limite = _quantize((deduccion_efectuada - deduccion_imputada) * anos_restantes / divisor)
+    _validate_transmision_inputs(
+        cuota_soportada=cuota_soportada,
+        prorrata_inicial_pct=prorrata_inicial_pct,
+        anos_restantes=anos_restantes,
+        cuota_devengada_entrega=cuota_devengada_entrega,
+    )
+    divisor, importe_sin_limite = _transmision_uncapped_amount(
+        cuota_soportada=cuota_soportada,
+        prorrata_inicial_pct=prorrata_inicial_pct,
+        anos_restantes=anos_restantes,
+        kind=kind,
+        regime=regime,
+        parameters=parameters,
+    )
 
     # Regla 1.ª (sujeta y no exenta) imputes 100% usage, so `importe_sin_limite`
     # is typically negative (deducción complementaria — additional deduction
@@ -481,23 +543,12 @@ def compute_regularizacion_transmision(
     # que resulte ... y el importe de la cuota devengada por la entrega del bien").
     # The cap therefore bounds the MAGNITUDE of a negative (DEDUCCION) result;
     # regla 2.ª and a non-negative regla-1.ª result are never capped.
-    importe = importe_sin_limite
-    capped = False
-    if (
-        regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA
-        and cuota_devengada_entrega is not None
-        and importe_sin_limite < Decimal("0")
-        and -importe_sin_limite > cuota_devengada_entrega
-    ):
-        importe = -cuota_devengada_entrega
-        capped = True
-
-    if importe > Decimal("0"):
-        direccion = RegularizacionDireccion.INGRESO
-    elif importe < Decimal("0"):
-        direccion = RegularizacionDireccion.DEDUCCION
-    else:
-        direccion = RegularizacionDireccion.NINGUNA
+    importe, capped = _apply_transmision_cap(
+        regime=regime,
+        cuota_devengada_entrega=cuota_devengada_entrega,
+        importe_sin_limite=importe_sin_limite,
+    )
+    direccion = _regularizacion_direction(importe)
 
     return RegularizacionTransmisionResult(
         regime=regime,

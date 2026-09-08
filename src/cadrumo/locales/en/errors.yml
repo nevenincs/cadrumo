@@ -410,8 +410,6 @@ errors:
       your internet connection and try again.
     fail_outbound_storage_unavailable: The storage service is temporarily unavailable.
       Wait a few minutes and try again.
-    fail_repair_decision_not_found: The requested repair-remediation decision does
-      not exist.
     fail_review_source_load: The source file is present but could not be parsed.
     fail_sancion_arithmetic: The printed amounts on the sanción document do not reconcile
       with each other.
@@ -533,8 +531,6 @@ errors:
       the current projection.
     integrity_profile_snapshot_not_found: No profile snapshot exists with the identifier
       provided.
-    integrity_repair_integrity: A repair-integrity invariant or decision contract
-      was violated.
     integrity_storage_blob: A stored object's SHA-256 hash disagrees with its manifest.
     integrity_storage_bucket_validation: A bucket parameter or manifest field failed
       validation.

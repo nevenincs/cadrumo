@@ -43,7 +43,6 @@ from ..engine import (
     page_status,
     reset_page,
     restart_flow,
-    set_instance_count,
     start_flow,
     visible_sequence,
 )
@@ -314,32 +313,6 @@ def test_shrinking_count_marks_orphaned_instance_answers_stale() -> None:
     assert state.instance_counts["grp"] == 1
     assert "grp#1.g_a" in state.stale
     assert "grp#0.g_a" not in state.stale
-
-
-def test_set_instance_count_grows_and_shrinks_from_review() -> None:
-    definition = _repeat_definition()
-    state = start_flow(definition, mode=FlowMode.CREATE)
-    state = answer(definition, state, "p_count", "1")
-
-    grown = set_instance_count(definition, state, "grp", 3)
-    assert grown.instance_counts["grp"] == 3
-    assert _visible_keys(definition, grown) == ["p_count", "grp#0.g_a", "grp#1.g_a", "grp#2.g_a"]
-
-    grown = answer(definition, grown, "grp#0.g_a", "a")
-    grown = answer(definition, grown, "grp#1.g_a", "b")
-    grown = answer(definition, grown, "grp#2.g_a", "c")
-
-    shrunk = set_instance_count(definition, grown, "grp", 1)
-    assert shrunk.instance_counts["grp"] == 1
-    assert {"grp#1.g_a", "grp#2.g_a"} <= shrunk.stale
-    assert "grp#0.g_a" not in shrunk.stale
-
-
-def test_set_instance_count_refuses_unknown_group() -> None:
-    definition = _repeat_definition()
-    state = start_flow(definition, mode=FlowMode.CREATE)
-    with pytest.raises(FlowNavigationError):
-        set_instance_count(definition, state, "no_such_group", 2)
 
 
 # ── Compare-select deferral ──────────────────────────────────────────────────

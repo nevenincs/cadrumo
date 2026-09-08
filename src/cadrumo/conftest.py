@@ -156,7 +156,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from .adapters.outbound.aeat.auth.session_store import build_session_store
     from .adapters.persistence.profile.buckets import build_bucket_event_history_repository
     from .adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
-    from .adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
     from .adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
     from .adapters.persistence.profile.justificante import JustificanteRepository
     from .adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
@@ -176,7 +175,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.auth.providers import bind_auth_provider_selector
     from .application.bucket_event_repository import bind_bucket_event_history_repository_factory
     from .application.ledger.confirmation_record import bind_confirmation_record_repository_factory
-    from .application.ledger.extracted_document_cache import bind_extracted_document_cache_repository_factory
     from .application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
     from .application.ledger.participation_read import bind_transaction_participation_index_repository_factory
     from .application.ledger.rule_repository import bind_ledger_classification_rule_repository_factory
@@ -200,7 +198,6 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_bucket_event_history_repository_factory(build_bucket_event_history_repository),
         bind_confirmation_record_repository_factory(ConfirmationRecordRepository),
         bind_extraction_draft_repository_factory(ExtractionDraftRepository),
-        bind_extracted_document_cache_repository_factory(ExtractedDocumentCacheRepository),
         bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository),
         bind_ledger_classification_rule_repository_factory(LedgerClassificationRuleRepository),
         bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),

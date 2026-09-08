@@ -278,12 +278,7 @@ def _classify_impatriado_income_transaction(
     """
     transaction_id = transaction.transaction_id
 
-    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
-        # Operator reviewed and deliberately excluded this row from filing.
-        return None
-    if transaction.direction is not TransactionDirection.INCOMING:
-        # Only INCOMING income folds into the impatriado base. OUTGOING and
-        # internal-transfer rows are out of scope for the base.
+    if not _impatriado_transaction_is_in_scope(transaction):
         return None
     if is_non_eur_without_conversion(transaction):
         return ImpatriadoIncomeLedgerAggregationIssue(
@@ -292,49 +287,13 @@ def _classify_impatriado_income_transaction(
             detail=f"transaction currency {transaction.raw.currency!r} is not supported for impatriado income",
         )
 
-    # art. 93.2 source-scope gate (art. 25.1.f TRLIRNR segregation). The
-    # impatriado base admits ONLY Spanish-source income. A None jurisdiction is
-    # an unresolved provenance, NOT a resident-general ES default: it fails loud
-    # as a segregation issue (no-silent-under-declaration).
-    declared_jurisdiction = transaction.source_jurisdiction
-    if declared_jurisdiction is None:
-        return ImpatriadoIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED,
-            detail=(
-                "source_jurisdiction is unresolved (None) on an impatriado income row; "
-                "art. 93.2 LIRPF admits only Spanish-source income into the base liquidable "
-                "general and an unresolved jurisdiction is never coerced to ES"
-            ),
-            rejected_source_jurisdiction=None,
-        )
-    normalized_jurisdiction = declared_jurisdiction.strip().upper()
-    if normalized_jurisdiction != _SPANISH_SOURCE_JURISDICTION:
-        return ImpatriadoIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED,
-            detail=(
-                f"source_jurisdiction {normalized_jurisdiction!r} is foreign-source; "
-                "art. 93.2 LIRPF / art. 25.1.f TRLIRNR segregate it out of the impatriado "
-                "base liquidable general (taxed by IRNR scope rules, not the art. 8 worldwide base)"
-            ),
-            rejected_source_jurisdiction=normalized_jurisdiction,
-        )
+    source_issue = _impatriado_source_issue(transaction, transaction_id=transaction_id)
+    if source_issue is not None:
+        return source_issue
 
     proportion = _impatriado_income_proportion(transaction)
     if proportion is None:
-        reason = (
-            ImpatriadoIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-            if transaction.business_classification is BusinessClassification.PERSONAL
-            else ImpatriadoIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
-        )
-        return ImpatriadoIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=reason,
-            detail=(
-                f"business classification {transaction.business_classification.value!r} cannot feed the impatriado base"
-            ),
-        )
+        return _impatriado_business_issue(transaction, transaction_id=transaction_id)
     # Use the EUR projection after rejecting unconverted non-EUR rows above, so a
     # converted foreign-currency receipt contributes its EUR equivalent while a
     # domestic row retains its raw amount (mirrors the expense pipeline's
@@ -368,6 +327,72 @@ def _classify_impatriado_income_transaction(
         taxable_base_amount=taxable_base_amount,
         filing_date=filing_date,
         source_jurisdiction=_SPANISH_SOURCE_JURISDICTION,
+    )
+
+
+def _impatriado_transaction_is_in_scope(transaction: Transaction) -> bool:
+    """Return whether the row is owned by the impatriado income pipeline."""
+    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        # Operator reviewed and deliberately excluded this row from filing.
+        return False
+    # Only INCOMING income folds into the impatriado base. OUTGOING and
+    # internal-transfer rows are out of scope for the base.
+    return transaction.direction is TransactionDirection.INCOMING
+
+
+def _impatriado_source_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+) -> ImpatriadoIncomeLedgerAggregationIssue | None:
+    """Return the art. 93.2 source-jurisdiction segregation issue, if any."""
+    # The impatriado base admits ONLY Spanish-source income. A None jurisdiction
+    # is unresolved provenance, not a resident-general ES default, so it fails
+    # loud as a segregation issue (no-silent-under-declaration).
+    declared_jurisdiction = transaction.source_jurisdiction
+    if declared_jurisdiction is None:
+        return ImpatriadoIncomeLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED,
+            detail=(
+                "source_jurisdiction is unresolved (None) on an impatriado income row; "
+                "art. 93.2 LIRPF admits only Spanish-source income into the base liquidable "
+                "general and an unresolved jurisdiction is never coerced to ES"
+            ),
+            rejected_source_jurisdiction=None,
+        )
+    normalized_jurisdiction = declared_jurisdiction.strip().upper()
+    if normalized_jurisdiction == _SPANISH_SOURCE_JURISDICTION:
+        return None
+    return ImpatriadoIncomeLedgerAggregationIssue(
+        transaction_id=transaction_id,
+        reason=ImpatriadoIncomeLedgerAggregationIssueReason.BECKHAM_FOREIGN_SOURCE_SEGREGATED,
+        detail=(
+            f"source_jurisdiction {normalized_jurisdiction!r} is foreign-source; "
+            "art. 93.2 LIRPF / art. 25.1.f TRLIRNR segregate it out of the impatriado "
+            "base liquidable general (taxed by IRNR scope rules, not the art. 8 worldwide base)"
+        ),
+        rejected_source_jurisdiction=normalized_jurisdiction,
+    )
+
+
+def _impatriado_business_issue(
+    transaction: Transaction,
+    *,
+    transaction_id: str,
+) -> ImpatriadoIncomeLedgerAggregationIssue:
+    """Return the typed issue for an income row without business attribution."""
+    reason = (
+        ImpatriadoIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
+        if transaction.business_classification is BusinessClassification.PERSONAL
+        else ImpatriadoIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    )
+    return ImpatriadoIncomeLedgerAggregationIssue(
+        transaction_id=transaction_id,
+        reason=reason,
+        detail=(
+            f"business classification {transaction.business_classification.value!r} cannot feed the impatriado base"
+        ),
     )
 
 

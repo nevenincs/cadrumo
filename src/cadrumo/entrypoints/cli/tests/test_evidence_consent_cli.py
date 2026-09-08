@@ -1,12 +1,8 @@
-"""The off-host consent verbs, driven through the REAL command tree.
+"""The off-host consent listing, driven through the real command tree.
 
 This module exists because its subject had none, and that absence hid two live
 operator-facing crashes until a lane building on top of the surface happened to
-probe a real instance. Both verbs read ``_state().settings``; ``WorkflowState``
-has no such attribute, so ``consent list`` and ``consent rederive`` raised
-``AttributeError`` for every operator who ran them. Separately, the on-host
-re-derivation reader called a semantic-stage signature that had changed under
-it, while being annotated loosely enough that the type checker saw nothing.
+probe a real instance.
 
 **Every case here invokes the real Click tree and reads the real envelope**, and
 that is the whole design constraint rather than a stylistic preference. A test
@@ -15,10 +11,8 @@ against both defects: the first lived precisely in the gap between constructed
 state and the state the command tree actually produces, and the second behind an
 ``object`` annotation that a direct call would have satisfied.
 
-The runtime profile is real -- real key provider, real SQLite engine -- because
-both verbs open a bucket. No model runs: the one case that needs a reader points
-the local transport at a loopback endpoint, so a real HTTP round-trip happens
-with no inference.
+The runtime profile is real -- real key provider and real SQLite engine --
+because the verb opens a bucket.
 """
 
 from __future__ import annotations
@@ -32,8 +26,7 @@ from ....tests.consent_profile_fixture import consent_profile
 
 __all__ = ["consent_profile"]
 
-from ....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
-from ....application.ledger.extracted_document_cache import write_cached_transcription
+from ....application.ledger.document_transcription import TranscriberIdentity
 from ....application.ledger.extraction_draft_store import write_extraction_draft
 from ....application.ledger.invoice_draft_records import InvoiceDraft
 from ....core.field_origin import FieldOrigin
@@ -86,20 +79,6 @@ def _seed_consented_dispatch(profile: TestRuntimeProfile, *, address: str = _DIG
     )
 
 
-def _seed_transcription(profile: TestRuntimeProfile) -> None:
-    """Cache the transcription a re-derivation reads instead of the document."""
-    write_cached_transcription(
-        bucket_id=profile.bucket_id,
-        transcription=DocumentTranscription(
-            text="Factura Acme SL\nBase imponible 2.420,00",
-            page_count=1,
-            source_content_sha256=_DIGEST,
-            transcriber=_TEXT_LAYER,
-        ),
-        settings=profile.settings,
-    )
-
-
 def _envelope(args: list[str]) -> tuple[int, dict[str, Any]]:
     """Invoke the real tree with JSON output and return the exit code and envelope.
 
@@ -138,50 +117,6 @@ def test_consent_list_runs_at_all_on_a_profile_with_no_history(profile: TestRunt
     assert envelope, "the survey must emit an envelope rather than crashing before it"
     assert envelope["result"]["consented_dispatches"] == []
     assert envelope["result"]["cloud_derived_artefacts"] == []
-
-
-def test_consent_rederive_reaches_its_own_refusal_rather_than_crashing(profile: TestRuntimeProfile) -> None:
-    """The same regression on the second verb, via its instructive refusal.
-
-    ``rederive`` read the same missing attribute, so it crashed before it could
-    refuse. Naming an artefact that does not exist proves the handler ran far
-    enough to consult the store and answer -- an ``AttributeError`` would surface
-    as an unhandled failure, not as this refusal.
-    """
-    _ = profile
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "evidence",
-            "consent",
-            "rederive",
-            "no-such-artefact",
-            "--content-address",
-            _DIGEST,
-            "--transcriber",
-            "text_layer:pdfplumber-text-layer@0.11.4",
-        ],
-    )
-
-    # The REFUSAL's own words, not merely a non-zero exit. A crash also exits
-    # non-zero, so an exit-code assertion cannot tell "refused instructively"
-    # from "died before it could" -- which is exactly the pair this module
-    # exists to separate.
-    assert result.exit_code != 0, "re-deriving an unknown artefact must refuse"
-    envelope = json.loads(next(line for line in result.output.splitlines() if line.startswith("{")))
-    error = envelope["error"]
-    assert error["code"] != "REFUSED_CLI_BOUNDARY"
-    action = error["action"]
-    assert action["failed_condition_id"] == "ledger.consent_rederivation.artefact_available"
-    assert action["evidence"][0]["values"] == {"artefact_available": False}
-    assert action["action"] is None
-    assert action["no_recovery_outcome"] == "operator_decision"
-
-
-# ── The survey reports what is there, not only that it is empty ──────────────
 
 
 def test_the_survey_reports_a_cloud_derived_artefact_when_one_exists(profile: TestRuntimeProfile) -> None:
@@ -368,42 +303,3 @@ def test_the_no_history_notice_is_absent_once_there_is_history(profile: TestRunt
     assert "evidence_consent_no_history" not in codes
 
 
-# ── Re-derivation refuses honestly ───────────────────────────────────────────
-
-
-def test_re_derivation_refuses_when_no_cached_transcription_exists(profile: TestRuntimeProfile) -> None:
-    """The document is never re-read; absent a cached transcription the verb refuses.
-
-    Seeded WITH the artefact and WITHOUT the transcription, so the refusal is
-    about the missing transcription rather than the missing artefact -- the
-    previous case already covers the latter, and a fixture missing both would
-    not distinguish them.
-    """
-    _seed_cloud_artefact(profile)
-
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "evidence",
-            "consent",
-            "rederive",
-            _REFERENCE,
-            "--content-address",
-            _DIGEST,
-            "--transcriber",
-            "text_layer:pdfplumber-text-layer@0.11.4",
-        ],
-    )
-
-    assert result.exit_code != 0
-    envelope = json.loads(next(line for line in result.output.splitlines() if line.startswith("{")))
-    error = envelope["error"]
-    assert error["code"] != "REFUSED_CLI_BOUNDARY"
-    action = error["action"]
-    assert action["failed_condition_id"] == "ledger.consent_rederivation.transcription_available"
-    assert action["evidence"][0]["values"] == {"transcription_available": False}
-    assert action["action"] is None
-    assert action["no_recovery_outcome"] == "operator_decision"

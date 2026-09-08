@@ -455,7 +455,6 @@ errors:
       Comprova la connexió a internet i torna-ho a provar.
     fail_outbound_storage_unavailable: El servei d'emmagatzematge no està disponible
       temporalment. Espera uns minuts i torna-ho a provar.
-    fail_repair_decision_not_found: No s'ha trobat la decisió de reparació sol.licitada.
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
     fail_sancion_arithmetic: Els imports impresos al document de sanció no quadren
       entre ells.
@@ -590,7 +589,6 @@ errors:
       no coincideix amb la projecció actual.
     integrity_profile_snapshot_not_found: No existeix cap instantània de perfil amb
       l'identificador indicat.
-    integrity_repair_integrity: La comprovació d'integritat de reparació ha fallat.
     integrity_storage_blob: El resum SHA-256 d'un objecte emmagatzemat no coincideix
       amb el del seu manifest.
     integrity_storage_bucket_validation: Un paràmetre del dipòsit o camp del manifest

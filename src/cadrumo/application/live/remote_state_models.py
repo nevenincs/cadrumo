@@ -8,8 +8,6 @@ after live capture has persisted the underlying observations.
 See Also:
     :class:`cadrumo.application.live.IvaRemoteStateAcquisitionReport`
         Combined read-only IVA remote-state acquisition result.
-    :class:`cadrumo.application.live.IvaRemoteStateStoredEvidenceReport`
-        Stored-evidence view that can be loaded without live AEAT contact.
 """
 
 from __future__ import annotations
@@ -283,55 +281,6 @@ class IvaCompensationHistoryReport(BaseModel):
     authority_decisions: tuple[IvaWalletAuthorityDecisionRow, ...] = ()
 
 
-class StoredIvaWalletObservationRow(BaseModel):
-    """One redacted stored wallet observation summary reloaded from secure storage."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    taxpayer_ref: str
-    target_year: int
-    target_period: Period
-    row_count: int
-    total_pending: str
-    captured_at: datetime
-    raw_sha256: str | None
-
-
-class StoredIvaRemoteStateAcquisitionRow(BaseModel):
-    """One redacted stored live IVA acquisition manifest summary."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    acquisition_ref: str
-    captured_at: datetime
-    auth_status: str
-    auth_outcome_mode: str
-    auth_failure_mode: str | None = None
-    auth_failure_type: str | None = None
-    auth_diagnostic_ref: LiveIvaDiagnosticRef | None = None
-    auth_provider_kind: str | None = None
-    auth_reused_persisted_session: bool | None = None
-    year_from: int
-    year_to: int
-    target_year: int
-    target_period: Period
-    filed_history_succeeded: bool
-    wallet_succeeded: bool
-    surfaces: tuple[str, ...]
-
-
-class IvaRemoteStateStoredEvidenceReport(BaseModel):
-    """Stored remote IVA evidence available without a live AEAT read."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    history: IvaCompensationHistoryReport
-    wallet_observation_count: int
-    wallet_observations: tuple[StoredIvaWalletObservationRow, ...]
-    acquisition_manifest_count: int = 0
-    acquisition_manifests: tuple[StoredIvaRemoteStateAcquisitionRow, ...] = ()
-
-
 class IvaCompensationHistoryCaptureReport(BaseModel):
     """Read-only multi-year Modelo 303 IVA compensation history capture report."""
 
@@ -481,7 +430,6 @@ __all__ = [
     "IvaRemoteStateAcquisitionManifest",
     "IvaRemoteStateAcquisitionReport",
     "IvaRemoteStateAcquisitionSurfaceManifest",
-    "IvaRemoteStateStoredEvidenceReport",
     "IvaWalletAuthorityDecisionRow",
     "IvaWalletCaptureReport",
     "LiveIvaAuthOutcome",
@@ -489,6 +437,4 @@ __all__ = [
     "LiveIvaReadStatus",
     "LiveIvaReadSurface",
     "SourceFiledDataCaptureReport",
-    "StoredIvaRemoteStateAcquisitionRow",
-    "StoredIvaWalletObservationRow",
 ]

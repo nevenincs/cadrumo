@@ -30,6 +30,13 @@ source_cell = "A129"
 ordinal = "124"
 record_identity = "35301"
 
+[[width_17_rules.anchors]]
+sheet = "35301"
+source_row = 132
+source_cell = "A132"
+ordinal = "127"
+record_identity = "35301"
+
 [width_17_rules.evidence]
 authority_kind = "official_source"
 source_sheet = "35301"

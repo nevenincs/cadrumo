@@ -528,26 +528,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.repair_integrity.RepairIntegrityError",
-        ErrorCode(
-            code="INTEGRITY_REPAIR_INTEGRITY",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_repair_integrity",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.repair_integrity.RepairDecisionNotFoundError",
-        ErrorCode(
-            code="FAIL_REPAIR_DECISION_NOT_FOUND",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_repair_decision_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.workflow.errors.ProfileLabelAmbiguousError",
         ErrorCode(
             code="REFUSED_PROFILE_LABEL_AMBIGUOUS",

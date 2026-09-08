@@ -1131,10 +1131,6 @@ application:
         %{period}, pero la devolución solo está disponible en el último periodo de
         declaración del año. Arrastra el crédito (compensar) o elige la devolución
         en el último periodo.
-      review_only_workspace_no_authority: Este espacio de trabajo de solo revisión
-        no tiene autoridad de presentación; puede leerse y verificarse, pero nunca
-        debe tratarse como prueba de que la revisión de cálculo %{calculation_revision_id}
-        ha sido o será presentada.
       review_package_generic: Se produjo un error al generar el paquete de revisión.
       review_package_integrity: 'El paquete de revisión %{package_path} no superó
         la verificación de la suma de comprobación: %{detail}.'
@@ -1324,17 +1320,6 @@ application:
         extraida para {manual_key}.
       no_revision_for_diff_year: 'Ninguna revisión del registro de {modelo} cubre
         el ejercicio {filing_year}. Revisiones declaradas: {available_revisions}.'
-  repair_integrity:
-    errors:
-      conflicting_list_filters: 'Los filtros de lista de reparación son mutuamente
-        excluyentes: {filters}. Usa un filtro o ninguno.'
-      decision_id_mismatch_list: El id de la decisión de reparación no coincide con
-        el id recalculado desde su contenido; se rechaza la entrada de la lista.
-      decision_id_mismatch_load: El id del contenido de la decisión de reparación
-        no coincide con el solicitado o recalculado; se rechaza la carga.
-      decision_id_mismatch_save: El id de la decisión de reparación no coincide con
-        el id recalculado desde su contenido; se rechaza el guardado.
-      decision_not_found: La decisión de reparación {decision_id} no existe.
   storage:
     calc_sheets:
       engine:
