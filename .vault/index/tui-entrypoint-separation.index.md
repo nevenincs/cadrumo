@@ -6,9 +6,10 @@ tags:
 date: '2026-09-08'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:efdadfabf83f1b0cbe36587a3c520d9be7558a7ae27ff04ff8e2081746e9ad9f'
+body_hash: 'sha256:ab4b9dd22987d352127eec93d26d437f3a69359fc967c223f4e519bf0081a387'
 related:
   - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
+  - '[[2026-09-08-tui-entrypoint-separation-plan]]'
 ---
 
 # `tui-entrypoint-separation` feature index
@@ -16,6 +17,10 @@ related:
 Auto-generated index of all documents tagged with `#tui-entrypoint-separation`.
 
 ## Documents
+
+### plan
+
+- `2026-09-08-tui-entrypoint-separation-plan` - `tui-entrypoint-separation` plan
 
 ### research
 

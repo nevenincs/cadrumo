@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:2e0230aaf787d4ca4e859bbb95c6bf66174c316ad8c84ac90d6a830c231d2a70'
+body_hash: 'sha256:d7586faee0edb1e58507c28cb11006274beabafd785ba901780a27dbbf61a1d4'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -77,6 +77,8 @@ A live one-way representation does not justify a reverse codec merely to prove i
 A runtime-checkable protocol with one concrete implementation is not an application port when no production consumer accepts or returns the protocol type. If only an `isinstance` self-test and export census use it, delete the duplicate interface and name the sole live owner directly in annotations and documentation. Retain a protocol only where substitutability is exercised by a composition boundary, not to mirror methods already declared by one class.
 
 A production `*_ALLOWED_COLUMNS` aggregate used only by a cross-cutting coverage test is a development census even when every member is accurate. Derive the test population from the live row schema (`model_fields`) or the runtime parser authority, and keep only subsets the product itself consumes for required-field refusal or dispatch. Detector proof must move when the executable schema moves without requiring a mirrored constant edit.
+
+Do not export a read-only proxy of a private runtime catalogue merely so tests can call a generic helper with production identities. Keep the live catalogue private to its aggregator and prove generic refusal behavior with a minimal synthetic mapping. The synthetic mapping tests the mechanism; the aggregator’s behavioral suite tests the real catalogue, without creating a second public name or a test-facing production seam.
 
 ## Authority boundaries
 
