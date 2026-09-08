@@ -5,7 +5,7 @@ tags:
 date: '2026-09-02'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f67da201a17ecca63a1a352b12b290cc8273aaf40b6bc3350762bad8ea73576'
+body_hash: 'sha256:98e7395ce2603a91592eb4bad116e65af70f2dcc86fd604c4b7a6d75fb1d7275'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -509,36 +509,7 @@ is not a cross-package API for an entrypoint.
 
 ### `adapters/persistence/profile/filing_export_replay.py`
 
-**What it is.** The custody half of the secure replay attestation: re-emit an
-approved revision's draft through the canonical writer, verify the bytes
-against source-pinned probe expectations at declared offsets, then seal a
-receipt in the encrypted store recording the coordinate, both authority ids,
-the payload digest, the byte extent and a bounded validity window.
-
-**How complete.** 122 lines against 128 test lines. Disciplined against the
-sensitive-data rule: the record persists only through the secure repository on
-its own namespace, and the public receipt carries no values, path, digest or
-extent. Every conjunct is a literal true, so a partially satisfied proof cannot
-be constructed.
-
-**Why not connected.** OVERSIGHT, and it is one of two missing halves. The port
-it satisfies is fully declared and so is its counterpart source authority, but
-no production implementation of the composing proof authority exists anywhere;
-every parameter that takes one is optional and never passed a real one.
-
-**What it adds.** This is the gate separating "the exporter produced bytes"
-from "the bytes this taxpayer will file are provably the ones the approved
-calculation produced". The coverage report will not mark a filing-export limb
-satisfied without it and refuses with a condition naming exactly this receipt.
-So no modelo can currently reach a satisfied filing-export coverage limb
-through the secure replay channel; the registry's own coverage report is
-permanently short by one leg. The probe check catches a canonical writer whose
-bytes drift from the source expectation at a declared offset, which is the
-difference between a valid fixed-width record and a silently misaligned one.
-
-**Wiring needed.** More than this file. The custody half is finished; the
-source authority half does not exist and must be implemented, then composed
-with this repository and passed into the coverage and closure paths.
+This disconnected custody adapter was withdrawn during the reachability burndown. No product or development composition supplied it to the proof executor; its only consumer was a synthetic adapter suite that directly exercised its own storage roundtrip. The adapter, its ownerless secure-object namespace, and those tests were therefore an abandoned partial implementation rather than a finished half awaiting wiring. Filing-export proof execution remains development-owned, and secure replay custody must be introduced only with a live source authority and composition boundary.
 
 ## Deferred by decision, or waiting on the other half
 
