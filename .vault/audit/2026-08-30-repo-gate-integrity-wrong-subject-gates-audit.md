@@ -3,10 +3,11 @@ tags:
   - '#audit'
   - '#repo-gate-integrity'
 date: '2026-08-30'
-modified: '2026-09-02'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:08e1592a66d5cf3659bdb5125746cf518100ebbeaf873e4a56a9e8e4b04a1217'
-related: []
+body_hash: 'sha256:1d84e16ce5350b0724cb8ebded735296f3b3e3185f00f740d76d15f1f3b57410'
+related:
+  - '[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]'
 ---
 
 # `repo-gate-integrity` audit: `gates that report clean about the wrong subject`
@@ -3607,6 +3608,16 @@ point; that is not a decidable property, and no extension of this scan reaches i
 A green here says no assertion is trivially true. It does not say any assertion is
 meaningful, and reading it as the family's general answer would reproduce the exact
 error the family exists to record.
+
+**2026-09-07 correction.** The family-wide boundary above was refuted by
+measurement: subsuming disjunctions, self-echoing invocation tokens, and
+locale-bound absence assertions are decidable by static analysis. The bounded
+follow-up refuted corpus-only never-emitted literals because runtime
+composition makes that class indistinguishable from valid guards. The
+historical finding remains intact, while
+`2026-09-07-quality-gate-zero-closure-blind-green-gates-adr` records the
+corrected boundary and preserves corpus-only producer absence and genuinely
+semantic irrelevance as the undecidable remainders.
 
 ## Recommendations
 

@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#registry-declaration-hardening'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:0eb87a549160221991c79a1af31eef0f1955ca446ef9a56450c87f5eb1c4eadf'
+body_hash: 'sha256:6003050418bed198e81ea6209c392e4f861e73a46722f01f199d9acaa5a87ee9'
 related:
-  - "[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]"
-  - "[[2026-09-02-registry-declaration-hardening-declaration-kinds-adr]]"
-  - "[[2026-09-02-registry-declaration-hardening-plan]]"
+  - '[[2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit]]'
+  - '[[2026-09-02-registry-declaration-hardening-declaration-kinds-adr]]'
+  - '[[2026-09-02-registry-declaration-hardening-plan]]'
+  - '[[2026-09-07-registry-revision-stamp-coverage-reference]]'
 ---
 
 # `registry-declaration-hardening` adr: `A modelo declares the identifier grammars it permits and what each one means` | (**status:** `proposed`)
@@ -32,6 +33,16 @@ Page-qualified is not a grammar at all but a compound, a page or block reference
 colon to a tail that is itself one of the other shapes, so classifying it has to recurse into the
 tail. A rule that checked only the head would accept any tail whatever and hide an unrecognised
 identifier behind a valid prefix.
+
+That harm was observed concretely in Modelo 349. The authoritative calculation path obtains
+per-row field templates from
+`revision.export_layouts[].records[].row_field_casilla_ids`, but at discovery time
+the persisted `CalculationRevision` omitted the registry coordinate that supplied
+them. A bare read-side consumer consequently reconstructed membership with
+`startswith(("op.", "rect."))`. A grammar-compliant identifier change can therefore
+expose a row template as an ordinary value, while an unrelated identifier can be
+hidden behind a recognised prefix. The measured carrier and call-site evidence is
+recorded in the registry-revision-stamp-coverage reference.
 
 A restated identifier sits beside the identifier: a number field duplicates the numeric id, and
 an alias field is used by no casilla at all.
@@ -58,6 +69,12 @@ Cross-revision continuity was expected to be the pressing risk here and is not. 
 the corpus, 1294 chains span 6090 casillas and not one crosses a grammar, and no evolution record
 names a chain no casilla carries. The two decisions are therefore independent and this one does
 not gate continuity work.
+
+Declaring identifier grammar will prevent undeclared shapes, but it does not make
+an identifier prefix a semantic-membership contract and cannot recover which
+registry revision produced a persisted value. Stamp-and-reconfirm coverage is a
+separate extension of the accepted period-revision decision; this ADR supplies the
+grammar boundary, not a substitute read-side authority.
 
 ## Considered options
 

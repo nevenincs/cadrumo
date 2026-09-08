@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:29fe9dbf8572b7c3b2bfe021e28bc963c5dcdc94cee1a9d89551a918646be09c'
+body_hash: 'sha256:9a4aefc0d205ed33d901b40b8957cc10156016ad5fe40273145d939ee9937821'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-plan]]"
 ---
@@ -220,3 +220,17 @@ passed, and the three gate modules contain no mock or monkeypatch use. The
 positive controls, per-root anti-vacuity floors, real-tree sweeps, precision
 repairs, and bounded mutation evidence now satisfy S112. All three high findings
 in this audit are closed; no high or critical finding remains.
+
+## 2026-09-08 exact S112 subsumption mutation closure
+
+### subsumption-current-mutation-proof | low | closed with individually disposed survivors
+
+The reviewed detector and gate match SHA-256 `5D74756B3E02C282C0E4E71787F0834202B3E120BE418B7D386194718FB605E8` and `CA675F02EA16B9A9917BFD3FD3A79536102EEF179C77E008C15510CC90A11B31`. An independent current-tree run passed all 14 gate tests in 7.09 seconds; Ruff lint, Ruff formatting, and `ty` also passed over the pair. This independently confirms the positive strict-substring verdict, stable-reference precision controls, real-tree sweep, anti-vacuity floors, direct UTF-8 filesystem adapter, and path and line attribution at the reviewed identities.
+
+The accepted bounded mutmut 3.7.0 run used the exact detector and gate identities above and configuration snapshot SHA-256 `EECF07EF6C2F204655E89AB0329C6363BCCD5E1B0F73090CBF0D26E7A6317ECF`. It selected 75 mutants, killed 69, and terminated with six survivors in 212.92 seconds, with zero error, suspicious, timeout, no-test, skipped, or typecheck outcomes. Each survivor is semantically inert: `UTF-8` is the same registered codec as `utf-8`; passing `None` for `ast.dump(include_attributes=...)` is falsey and has the same result as `False`; omitting that argument uses the same `False` default; choosing the second structurally equal haystack produces the same stable-name subject; and the two `ast.parse` filename changes affect only syntax-error metadata outside this detector's parseable-source verdict. The formerly actionable `path=None` and ambient-default-decoding mutants are killed by the current filesystem boundary control. No aggregate mutation score is used.
+
+The live whole `pyproject.toml` subsequently advanced to SHA-256 `F58C68B2DCDD35A83509DB62EE0233A042D0541F1CBC4267311C4F04C9BBAD23`. Its current `[tool.mutmut]` block still names `dev/quality/subsuming_disjunctions.py`, copies both real scan roots, and selects `dev/quality/tests/test_subsuming_disjunctions.py`; therefore this is recorded as post-run whole-file identity drift, not as a transfer of the run to a different detector or gate. S112's subsumption mutation requirement is closed at the exact source and gate identities. No high or critical S112 finding remains.
+
+### 2026-09-08 evidence-identity correction
+
+The preceding identity qualification is superseded. SHA-256 `EECF07EF6C2F204655E89AB0329C6363BCCD5E1B0F73090CBF0D26E7A6317ECF` identifies the named behavior fixture `dev/quality/tests/fixtures/subsuming_disjunction_cases.toml`, not `pyproject.toml`. The supplied and current `pyproject.toml` SHA-256 is `F58C68B2DCDD35A83509DB62EE0233A042D0541F1CBC4267311C4F04C9BBAD23`; there was no mutation-configuration drift in this S112 receipt. The exact detector, gate, fixture, and configuration identities therefore agree, and the S112 closure disposition remains unchanged.

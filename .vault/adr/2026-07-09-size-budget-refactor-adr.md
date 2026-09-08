@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#size-budget-refactor'
 date: '2026-07-09'
-modified: '2026-07-17'
-body_hash: 'sha256:22ebdea75a3e89ee9f078472c70d91588c87b10719a96f26dfcec4780ab39db5'
+modified: '2026-09-07'
+body_hash: 'sha256:7fe6db153ba467f8e26ee2325371d1e3827e062fcca482ebddfd197d62c7f8ff'
 related:
   - '[[2026-07-10-size-budget-refactor-research]]'
 ---
@@ -106,3 +106,7 @@ partial state rather than a false "campaign complete" claim. The deferred
 6 remain a known, tracked gap until the prorrata and mcp campaigns land
 their own extractions; `test_codebase_size_budgets.py` continues to fail
 loudly on them in the interim, which is the correct and intended signal.
+
+## Amendment (2026-09-07): retire line-count baselines
+
+The size-budget mechanism is retired. Per-path and per-callable ceilings, generated snapshots, slack bands, default limits, and accept-growth regeneration encode the tree's temporary development state rather than a semantic product invariant. They cannot decide whether a module has one responsibility or whether a split preserves architecture, and they create exactly the baseline/threshold escape hatch the live-signal cadence forbids. Cohesion defects must be detected and resolved through structural authorities specific to the defect; temporary refactor sequencing belongs in Vaultspec Plans and Step Records. The shipped `cadrumo.tests` package must not host this development audit.

@@ -3,15 +3,16 @@ tags:
   - '#adr'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:6fb7cca5944296a35a45f56db30fb3f141d36722d286e1f0bce15716eb13ae15'
+body_hash: 'sha256:737b94c8d1be9f485c41db2179b796aee5877327a0d54c9761f82506a03d0c0c'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-07-tuimodelo-filing-lifecycle-adr]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
   - "[[2026-09-07-tuimodelo-satellite-families-adr]]"
+  - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
 ---
 
 # `tuimodelo` adr: `adapter to backend migration boundary` | (**status:** `accepted`)
@@ -84,8 +85,8 @@ judgement call made twice and the wave has no closure condition anyone can evalu
   cluster may claim that it does. Of the 159 identified violations only 19 sit in the lanes this
   campaign chartered as its own, so the residual at the migration wave's close is 140 less the
   named cross-lane rows taken here. The figure is derived, never rounded, and the two groups that
-  sit outside the 159 entirely — the shared capability declaration and the frontend's own
-  duplicated composition — are additional work rather than a deduction from it.
+  sit outside the 159 entirely â€” the shared capability declaration and the frontend's own
+  duplicated composition â€” are additional work rather than a deduction from it.
 - The residual must be chartered as a named campaign at the start of this one, not recorded at the
   end. Deferring the charter to a final step repeats, at campaign scale, the orphaning this
   campaign's first wave exists to repair at row scale.
@@ -129,7 +130,7 @@ rows, the shared capability declaration, the frontend-side duplication, and the 
 cross-lane correctness rows. Everything else is residual, and the residual is what the count in
 the chartering step must equal after the crossings above are subtracted, not a round number.
 
-The residual — the ledger, configuration and live lanes — is chartered as a sibling campaign at
+The residual â€” the ledger, configuration and live lanes â€” is chartered as a sibling campaign at
 the start of this one, with the note that the ledger portion was orphaned by an archived
 predecessor and is therefore unowned rather than merely deferred.
 
@@ -210,3 +211,12 @@ inherit that limitation visibly, which is the correct outcome and not a workarou
 Binding the frontend to the same boundary enlarges this wave and touches a composition root
 another campaign also edits, so it needs the single-writer coordination the plan already requires
 for that file.
+
+## Amendment 2026-09-08: remove the shared command capability premise
+
+The shared interface-capability declaration is no longer a migration group. CLI and TUI
+entrypoints have independent reachability, so neither adapter consumes the other's command routing
+posture. The deferred relocation described by `W01.P02.S13` and `W01.P02.S14` is retired rather
+than reopened. The adapter boundary continues to prohibit either entrypoint from importing the
+other; the only permitted CLI-to-TUI interaction is the opaque `aeat app tui` root launch.
+

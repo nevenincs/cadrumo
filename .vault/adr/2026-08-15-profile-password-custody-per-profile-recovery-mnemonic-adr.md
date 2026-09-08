@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#profile-password-custody'
 date: '2026-08-15'
-modified: '2026-08-15'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:8f0503ff7ec25f3899f9178836afb8178edbab2d35e7fa477576071879a6b34b'
+body_hash: 'sha256:88c5c5e0155a395e6aa602a745d67150b09415bdc4ce03f4c9e32375e5b68345'
 related:
   - "[[2026-08-13-profile-password-custody-plan]]"
   - '[[2026-08-15-profile-password-custody-deletion-without-consumer-sweep-detectability-audit]]'
@@ -198,3 +198,36 @@ and deleting in anticipation of it would foreclose the choice.
   clean change: the codec, the wordlist, the packaging include, the wipeable-
   material tests covering the codec, and the corrected docstring. This record
   should then be superseded rather than quietly ignored.
+
+## Amendment (2026-09-08): recovery phrases remain opaque after encoding
+
+The earlier zero-consumer finding no longer describes the mnemonic facility as
+a whole. Production custody now mints a `RecoveryKey`, derives its canonical
+mnemonic through `encode_mnemonic`, and consumes that mnemonic as the opaque
+recovery secret. Only `decode_mnemonic` and its reverse word-index authority
+remain self-test-only. This implementation evidence is recorded in
+`2026-09-04-reachability-burndown-reference`.
+
+The public surface is therefore narrowed from exactly four names to exactly
+three: `RecoveryKey`, `generate_recovery_key`, and `encode_mnemonic`.
+`decode_mnemonic` and the reverse word-to-index table are removed. Tests may
+verify canonical generation and encoding from controlled entropy, but may not
+retain a production reverse decoder solely to round-trip the encoder.
+
+Recovery import continues to accept the canonical mnemonic through the secret
+channel required by
+`2026-08-13-recovery-mnemonic-presentation-successor-adr`. Import treats the
+phrase as an opaque KDF and proof input; it does not reconstruct, expose, or
+validate underlying entropy through a general decoding API. The canonical
+wordlist, checksum-bearing encoder, wipeable key container, key generation,
+one-time presentation, explicit possession verification, zeroisation, and
+opaque recovery semantics remain unchanged.
+
+This amendment replaces every broader statement in this record that preserves
+“the codec” or “both codec halves,” including the zero-consumer statements in
+**Problem Statement** and **Considerations**, the preserve-the-whole-codec
+option in **Considered options**, the four-name public-surface ruling in
+**Implementation**, the blanket deletion refusal in **Rationale**, and the
+whole-codec survival or future-deletion statements in **Consequences**.
+Those passages continue to govern the encoder, wordlist, generated key and
+presentation path only; they no longer authorize a reverse decoder.

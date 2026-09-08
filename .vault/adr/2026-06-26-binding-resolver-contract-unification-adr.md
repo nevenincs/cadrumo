@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-08-15'
-body_hash: 'sha256:1efc539e5edbe2a14c3595482d67d926d21a7af7ae285cc113dcbe9693364559'
+modified: '2026-09-07'
+body_hash: 'sha256:c1356330f9bf42cf2613252056d5c036a4fc369c40cc62f955606eac2596602e'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
@@ -196,6 +196,10 @@ boundary.
 Out of scope (later phases): the relation-vs-previous_filing value-layer fold-in dedup
 and the one compensación-carry mechanism (phase 2.3); the naming homonyms and CLI verb
 fork (phase 2.4); the `MultiYearResolver` orphan deletion (a phase-2.3/code-removal item).
+
+## Amendment (2026-09-07): delete the disposition registry
+
+The single disposition registry decided here proved to be a hand-maintained development ledger embedded in production. It is retired without compatibility aliases. Executable calculation-route ownership now derives the routable source set directly from resolver `owned_sources` plus intrinsic manual/design channels. A declared registry binding absent from that set is a live defect and must be refused; it cannot be converted into an advisory by a deferred or reserved label. Parity gates compare current registry declarations with current executable owners and print the exact gap set. Temporary sequencing belongs only in Vaultspec Plans and Step Records.
 
 ## Codification candidates
 

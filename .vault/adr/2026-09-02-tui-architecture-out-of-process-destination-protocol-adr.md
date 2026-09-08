@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:89985e9cc24effff727f10131a9e626b3fda61c15b8a221d5a8ea0cd31143c79'
+body_hash: 'sha256:03853d224dcbda7ef33caa3541ad9a09a5854c0fe0e8366582f2d6a19f559932'
 related:
   - "[[2026-08-11-tui-architecture-adr]]"
   - "[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]"
@@ -13,6 +13,7 @@ related:
   - "[[2026-09-02-cli-distribution-consolidation-adr]]"
   - '[[2026-09-02-gate-integrity-adjudication-research]]'
   - '[[2026-08-30-ci-lane-deconflation-cli-imports-tui-adr-d11-breach-audit]]'
+  - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
 ---
 
 # `tui-architecture` adr: `the out-of-process protocol that opens a full-screen destination` | (**status:** `accepted`)
@@ -183,3 +184,12 @@ The pattern generalises: a third command needing a full-screen destination adds 
 token to the closed set and a session to the dispatch table, and gets the same
 argument surface, the same outcome vocabulary, and the same fail-closed parsing
 without touching either entrypoint's knowledge of the other.
+
+## Amendment 2026-09-08: CLI destination crossing retired
+
+The CLI-to-TUI destination protocol is retired. A CLI command may not request, construct,
+interpret, or resume from a full-screen destination outcome. The only remaining CLI crossing is
+the opaque `aeat app tui` root launch, which requires neither destination tokens nor an outcome
+file and returns only the child's exit status. Remove the shared destination protocol if no
+non-CLI peer still requires it; destination navigation otherwise stays internal to the TUI.
+

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#prorrata-sectores-diferenciados'
 date: '2026-07-07'
-modified: '2026-08-15'
-body_hash: 'sha256:0bb3cb7bf5d4ab98873b2f3e52536e7cf889189ceeb8bbac839639c0f3130b00'
+modified: '2026-09-07'
+body_hash: 'sha256:96ae2251be952aa14a7613225b9abbd8ea20422343e597e5d4f4646a63f68bd4'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -203,3 +203,11 @@ report):
   read-mostly. **SHARED (additive) with `prorrata-art105-cinco-interrupted`.**
 - `src/cadrumo/core/external_constants.py` — `PRORRATA_SECTORAL_SEPARATION_SPREAD_PP`
   already exists; read-only, no write.
+
+## Amendment 2026-09-08: retire the displaced sectoral-compute substrate
+
+The Problem Statement, Constraints, and Implementation footprint above describe `ProrrataSector`, `requires_sectoral_separation`, and `compute_sectoral_prorrata` as stable, consumed parent primitives on which this decision builds. That implementation-state claim is obsolete and is corrected here. Those symbols form a parallel, pre-partitioned-totals representation under `domain.iva`; exact production reachability shows no production consumer outside their self-tests. They are not part of the accepted sectores-diferenciados architecture and are deleted under `no-legacy-compatibility` rather than retained as a dormant compatibility surface.
+
+The accepted decision itself is unchanged. The sole sector-partition authority remains the operator-declared `SectorDefinition` collection on the prorrata register. Sector-keyed register entries and the `prorrata_sector_id` carried by transactions and aggregation observations feed the one live calculation path: `IvaLedgerSectorApportionment` resolution and `_apply_sector_apportionment`, exercised through the `declare-sector` CLI and end-to-end sector verification. This landed path, not the displaced `domain.iva` cluster, satisfies D1–D3 and the one-aggregation-path constraint.
+
+Accordingly, “parent stability” applies only to the sector-keyed cross-period register and its operator-declared partition contract. It does not freeze unused helper types, constants, or computations merely because earlier prose anticipated consuming them. The `domain.iva._prorrata` and `core.external_constants` footprint bullets are withdrawn; removing that cluster narrows the implementation to the already-landed canonical register, observation, and aggregation route without weakening the fail-closed operator-declared boundary.

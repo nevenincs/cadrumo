@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-08-28'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:6e831bf5d2cdb762220535c4087a83a488c53e1a785276afe9829219366a3558'
+body_hash: 'sha256:1e69547477118a0b9fb009871c62f79fe049df8b022861239d6a25776406b9bc'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -14,6 +14,7 @@ related:
   - "[[2026-06-04-modelo-addressing-ux-adr]]"
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
+  - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
 ---
 
 # `tui-modelo-workspace-interface` adr: `Modelo workspace interface and staged editor amendment` | (**status:** `accepted`)
@@ -131,7 +132,7 @@ export authorities. The boundary and evidence are grounded in
 
 ## Implementation
 
-### D0 — Authority and composition
+### D0 Ã¢â‚¬â€� Authority and composition
 
 The Modelo interface is one feature beneath the accepted root application. It
 publishes a closed `ModeloDestination` catalogue, route factories, immutable
@@ -154,7 +155,7 @@ accepted interface ADR. A conflict is resolved toward the accepted parent for
 root/common concerns and toward this record only for the feature-specific
 workspace/editor concerns named here. Neither record supersedes the other.
 
-### D1 — Route and destination catalogue
+### D1 Ã¢â‚¬â€� Route and destination catalogue
 
 The closed initial catalogue is:
 
@@ -212,7 +213,7 @@ Modelo catalogue. Invoking a Modelo action opens the operation-owned surface
 with an origin reference; terminal settlement returns through the root router to
 the mapped Modelo destination and initiates the refresh protocol in D6.
 
-### D2 — TUI-local view models
+### D2 Ã¢â‚¬â€� TUI-local view models
 
 The feature exposes frozen, callback-free view-model families for:
 
@@ -234,13 +235,13 @@ informational values without reinterpreting registry data types. An unsupported
 projected kind produces an explicit renderer-refusal view and fails projection
 coverage; it never falls back to a generic editable text box.
 
-Semantic field, section, row, and causal addresses—not display labels,
-translated text, list offsets, or widget instance IDs—anchor routing, focus,
+Semantic field, section, row, and causal addressesÃ¢â‚¬â€�not display labels,
+translated text, list offsets, or widget instance IDsÃ¢â‚¬â€�anchor routing, focus,
 dirty state, validation, and test assertions. Widget expansion, selection,
 scroll, active lexeme, and focus remain TUI-local ephemeral state and never feed
 back into the application projection.
 
-### D3 — Read consistency, scale, and bounded traversal
+### D3 Ã¢â‚¬â€� Read consistency, scale, and bounded traversal
 
 One workspace load establishes an immutable `ModeloWorkspaceReadSession` with
 the visible and exact resolved address, selected registry revision, workspace
@@ -265,7 +266,7 @@ presentation supplied by the producer. A producer may deliver a bounded
 complete workspace in one response, but neither the interface nor its
 acceptance tests assume eager construction of every widget or causal node.
 
-### D4 — Edit-session transaction
+### D4 Ã¢â‚¬â€� Edit-session transaction
 
 Entering edit mode sends the current read coordinates through
 `ModeloEditAdmissionRequestV1`. A successful response supplies the separate
@@ -327,7 +328,7 @@ local draft; after handoff, the public operation projection and the application
 edit result receipt are the sole recovery truths. C3 cannot open until the
 accepted operation parent owns the handoff and its live-tree receipt is green.
 
-### D5 — Repeated-row semantics
+### D5 Ã¢â‚¬â€� Repeated-row semantics
 
 An existing row uses the application-issued stable semantic row address. A new
 row receives an opaque TUI-local `DraftRowId` that remains stable across local
@@ -349,7 +350,7 @@ edit contract, not the TUI, maps this order to canonical row coordinates and
 validates row limits, uniqueness, source identity, and cross-row rules.
 Positional widget indexes are never row identity.
 
-### D6 — Validation, conflict, settlement, and refresh
+### D6 Ã¢â‚¬â€� Validation, conflict, settlement, and refresh
 
 Validation has three owned layers:
 
@@ -394,7 +395,7 @@ session and requires a fresh read before any further action. Refresh failure
 retains the terminal operation result and offers a canonical retry; it never
 presents the old view as settled truth.
 
-### D7 — Capability, refusal, and action presentation
+### D7 Ã¢â‚¬â€� Capability, refusal, and action presentation
 
 Each destination renders all of its applicable capability slots from the
 application projection. The closed dispositions are `AVAILABLE`,
@@ -473,7 +474,7 @@ result destination is mapped, the denominator row is green, and the action's
 applicable D8 receipt has passed. An unavailable prerequisite renders a typed
 refusal; it never removes the candidate from the fixed point.
 
-### D8 — Localization, accessibility, responsiveness, and sensitive display
+### D8 Ã¢â‚¬â€� Localization, accessibility, responsiveness, and sensitive display
 
 Resolved locale changes labels, help, formatting, and canonical messages only.
 It does not change addresses, values, revision selection, capability, baseline,
@@ -516,7 +517,7 @@ cohort exit receipt is green on current HEAD. A typed `NOT_APPLICABLE` proof is
 permitted only under the receipt rules in D10; an omitted matrix cell is never a
 pass.
 
-### D9 — Version and compatibility behavior
+### D9 Ã¢â‚¬â€� Version and compatibility behavior
 
 The TUI declares every compatibility coordinate it actually consumes rather
 than one generic operation version. C3 editor admission consumes the exact
@@ -555,19 +556,19 @@ dispatch maps, tests, and consumers in one change. No aliases, deprecated
 destination IDs, dual projection adapters, permissive extra fields, or fallback
 generic widgets remain after migration.
 
-### D10 — Acceptance receipts and staged cohorts
+### D10 Ã¢â‚¬â€� Acceptance receipts and staged cohorts
 
 The implementation plan must preserve this receipt chain; later cohorts may not
 substitute mocks, prose, or a proposed record for an unmet predecessor:
 
 | Cohort | Required entrance receipts | Canonical exit artifact, schema, and validator | Required proof |
 |---|---|---|---|
-| C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
-| C1 — bounded review | this companion ADR accepted with exact stem, accepting commit, and body hash; accepted Casilla review; accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
-| C2 — complex read workspace | C1 exit plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`; `ModeloWorkspaceC2DependencyReceiptV1`; `validate_modelo_workspace_c2_dependency_receipt` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md`; `ModeloWorkspaceC2ExitReceiptV1`; `validate_modelo_workspace_c2_exit_receipt` | C1-route atomic replacement; destination/factory census; projection coverage; baseline facets; refusal states; large schema/row/provenance matrix; production composition |
-| C3 — staged editor | C0 and C2 exits; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`; `ModeloEditContractC3DependencyReceiptV1`; `validate_modelo_edit_contract_c3_dependency_receipt`; and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`; `TuiOperationFinancialOperandDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md`; `ModeloWorkspaceC3ExitReceiptV1`; `validate_modelo_workspace_c3_exit_receipt` | exact compatibility tuple; edit/row state machine; parse and validation focus; review-only submit; stale refusal; atomic-result refresh; locale switch; operation handoff consumption; sensitive non-retention |
-| C4 — lifecycle actions | C3 exit, green generated action denominator, and each owning domain capability and operation definition | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md`; `ModeloWorkspaceC4ExitReceiptV1`; `validate_modelo_workspace_c4_exit_receipt` | zero unclassified action candidates; exact interaction and terminal refresh; rename, discard, verify, file, export, and amend proofs independently; amendment-wizard disposition |
-| C5 — visual closure | C4 exit and every C1-C4 destination/action classified | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md`; `ModeloWorkspaceC5ExitReceiptV1`; `validate_modelo_workspace_c5_exit_receipt` | aggregate four-locale, three-geometry, two-theme, keyboard, non-colour, large-schema/row, refusal/conflict, route/action anti-vacuity, no-transitional-TUI, and installed root-app proof |
+| C0 Ã¢â‚¬â€� operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
+| C1 Ã¢â‚¬â€� bounded review | this companion ADR accepted with exact stem, accepting commit, and body hash; accepted Casilla review; accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
+| C2 Ã¢â‚¬â€� complex read workspace | C1 exit plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`; `ModeloWorkspaceC2DependencyReceiptV1`; `validate_modelo_workspace_c2_dependency_receipt` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md`; `ModeloWorkspaceC2ExitReceiptV1`; `validate_modelo_workspace_c2_exit_receipt` | C1-route atomic replacement; destination/factory census; projection coverage; baseline facets; refusal states; large schema/row/provenance matrix; production composition |
+| C3 Ã¢â‚¬â€� staged editor | C0 and C2 exits; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`; `ModeloEditContractC3DependencyReceiptV1`; `validate_modelo_edit_contract_c3_dependency_receipt`; and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`; `TuiOperationFinancialOperandDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md`; `ModeloWorkspaceC3ExitReceiptV1`; `validate_modelo_workspace_c3_exit_receipt` | exact compatibility tuple; edit/row state machine; parse and validation focus; review-only submit; stale refusal; atomic-result refresh; locale switch; operation handoff consumption; sensitive non-retention |
+| C4 Ã¢â‚¬â€� lifecycle actions | C3 exit, green generated action denominator, and each owning domain capability and operation definition | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md`; `ModeloWorkspaceC4ExitReceiptV1`; `validate_modelo_workspace_c4_exit_receipt` | zero unclassified action candidates; exact interaction and terminal refresh; rename, discard, verify, file, export, and amend proofs independently; amendment-wizard disposition |
+| C5 Ã¢â‚¬â€� visual closure | C4 exit and every C1-C4 destination/action classified | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md`; `ModeloWorkspaceC5ExitReceiptV1`; `validate_modelo_workspace_c5_exit_receipt` | aggregate four-locale, three-geometry, two-theme, keyboard, non-colour, large-schema/row, refusal/conflict, route/action anti-vacuity, no-transitional-TUI, and installed root-app proof |
 
 `ModeloWorkspaceC1ExitReceiptV1` has a closed mandatory governing prefix: exact
 stem `2026-08-24-tui-modelo-workspace-interface-adr`, status `accepted`, its
@@ -737,3 +738,33 @@ execution record. No `.vault/` path, document stem, Step id, or campaign
 identifier may appear under `src/`. A cohort's readiness is evidenced by its
 execution record plus a green conformance suite, never by a code-resident
 proof of governance state.
+
+## Amendment 2026-09-07: action metastate denominator retired
+
+**What this corrects.** D7, D10, the cohort tables, and the 2026-08-28 amendment retained a generated or hand-reviewed Modelo action denominator whose rows classified every command as delivered, pending, flow-owned, deferred, or not visual. The shipped implementation was a checked-in table keyed by production action identity and carrying plan ownership, reasons, evidence references, and reopening conditions. Those are development lifecycle facts, not executable product contracts. Testing the table against the live command graph made the bookkeeping internally consistent without proving that an operator could perform the action.
+
+**The decision.** The Modelo action classification model, table, denominator validator, and their dedicated gate are retired outright. No replacement list, generated mirror, disposition enum, frozen count, status field, or exception catalogue is permitted. The live command graph remains authoritative for CLI existence and policy; the operation/action catalogue remains authoritative for application actions; the TUI dispatch and destination registries remain authoritative for executable visual routes. Each authority is tested at its own boundary, and cross-boundary tests exercise a real routed or dispatched action. `TuiCapability` remains a runtime command contract because it controls observable `--tui` behavior; it is never copied into a development-status table.
+
+**Effect on earlier clauses.** Every requirement in this record or a descendant decision for a green action denominator, a classified candidate, a disposition such as `FLOW_OWNED`, `DEFERRED`, or `NOT_VISUAL`, an owner/reason/evidence/reopening row, or a denominator digest is withdrawn. C4 and C5 acceptance instead require the named action's real registration, admission, interaction, effect, refresh, and supported-matrix tests. An action not yet delivered is absent from executable TUI routing and remains plan work; production and quality code do not encode that absence as an in-flight state.
+
+**Consequence.** Temporary sequencing and ownership live only in the authorizing plan and Step Records. Adding a command cannot inherit a development classification, and adding a TUI action cannot claim delivery through a row: it must enter the executable registry and pass its owning behavior tests. Descendant ADR language that cites the retired denominator is read as superseded by this amendment and must be removed when those records are next substantively edited.
+
+## Amendment 2026-09-08: Modelo surface admission is TUI-local
+
+The 2026-09-07 amendment's statement that `TuiCapability` remains a runtime command contract is
+withdrawn. A command graph is a CLI authority; it cannot be an availability registry for Modelo
+screens or actions.
+
+Modelo TUI destinations, action admission, navigation, and dispatch are owned exclusively by TUI
+route/action registries and their behavior tests. They consume application/domain contracts, not
+CLI command nodes, `TuiCapability`, CLI action denominators, or CLI routing results. Modelo CLI
+work commands remain independent scripted surfaces and never launch a destination, branch on
+frontend selection, or consume a picker/session outcome. The TUI root exposes Modelo work through
+its own navigation.
+
+Command-capability enumeration, command-graph intersections, and capability-denominator
+requirements are removed from Modelo admission proofs. A delivered Modelo screen is proven by its
+TUI registration, admissibility, interaction/effect/refresh behavior, and supported-matrix
+coverage; work not registered is absent from TUI routing and remains plan work. No production or
+development table mirrors CLI command reachability as TUI state.
+

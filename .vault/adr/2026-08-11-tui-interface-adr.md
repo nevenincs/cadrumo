@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-08-25'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:4bd35ab1aaa4416f6e2827fc929740ea95261b6ead8cd059a1d9447ece10c418'
+body_hash: 'sha256:0d18a89d7707d3e05bd5da315bf4200c85f6b549699e80f69a5942a2bb381f77'
 related:
   - "[[2026-08-11-tui-interface-research]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -16,6 +16,7 @@ related:
   - '[[2026-08-10-casilla-schema-read-model-adr]]'
   - '[[2026-08-10-casilla-schema-plan]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
+  - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
 ---
 # `tui-interface` adr: `Canonical modular Textual application surface` | (**status:** `accepted`)
 
@@ -208,12 +209,12 @@ denominator, accessibility matrix, and the following admission chain:
 
 | Cohort | Admission evidence consumed by this parent |
 |---|---|
-| C0 â€” operation foundation | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md` as `TuiOperationObservationDependencyReceiptV1` |
-| C1 â€” bounded review | accepted companion identity plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md` as `ModeloWorkspaceC1ExitReceiptV1` |
-| C2 â€” complex read workspace | C1 plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as `ModeloWorkspaceC2DependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md` as `ModeloWorkspaceC2ExitReceiptV1` |
-| C3 â€” staged editor | C0 and C2 plus `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md` as `ModeloEditContractC3DependencyReceiptV1` and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md` as `TuiOperationFinancialOperandDependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md` as `ModeloWorkspaceC3ExitReceiptV1` |
-| C4 â€” lifecycle actions | C3, the green generated action denominator, each owning domain/operation capability, and `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md` as `ModeloWorkspaceC4ExitReceiptV1` |
-| C5 â€” visual closure | C4 plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md` as `ModeloWorkspaceC5ExitReceiptV1` |
+| C0 Ã¢â‚¬â€� operation foundation | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md` as `TuiOperationObservationDependencyReceiptV1` |
+| C1 Ã¢â‚¬â€� bounded review | accepted companion identity plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md` as `ModeloWorkspaceC1ExitReceiptV1` |
+| C2 Ã¢â‚¬â€� complex read workspace | C1 plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as `ModeloWorkspaceC2DependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md` as `ModeloWorkspaceC2ExitReceiptV1` |
+| C3 Ã¢â‚¬â€� staged editor | C0 and C2 plus `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md` as `ModeloEditContractC3DependencyReceiptV1` and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md` as `TuiOperationFinancialOperandDependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md` as `ModeloWorkspaceC3ExitReceiptV1` |
+| C4 Ã¢â‚¬â€� lifecycle actions | C3, the green generated action denominator, each owning domain/operation capability, and `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md` as `ModeloWorkspaceC4ExitReceiptV1` |
+| C5 Ã¢â‚¬â€� visual closure | C4 plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md` as `ModeloWorkspaceC5ExitReceiptV1` |
 
 The companion's named validators, predecessor digests, current-HEAD action
 denominator, compatibility coordinates, and per-cohort visual proofs are part
@@ -603,3 +604,43 @@ the authoritative later workspace/editor decision.
   in for a missing cohort receipt or block an independently admissible surface.
 - Cross-ADR conformance prevents conflicting roots, components, launch contracts,
   runtime construction, or operation trees.
+
+## Amendment 2026-09-07: development harness leaves the shipped package
+
+The earlier placement of pilot, replay, screenshot, surface-registry, and fixture
+tooling under `cadrumo.entrypoints.tui.devtools` is withdrawn. Those modules are
+development infrastructure, not an installed interface, and move to `dev/tui/harness`.
+The product package contains only installed TUI behaviour.
+
+The permitted dependency is one-way: development harness code may import the shipped
+TUI and its application contracts to construct and drive real surfaces; no module under
+`src/` may import, discover, register, cite, or otherwise depend on `dev/`. Clauses
+in D0, the path ownership table, the target tree, verification language, or consequences
+that name `entrypoints/tui/devtools` as an INTERFACE-owned product location, or forbid
+this bounded development-to-product import, are superseded by this amendment. The rule
+against CLI, MCP, backend, or shared product utilities importing TUI remains unchanged.
+
+## Amendment 2026-09-08: CLI and full-screen entrypoints have independent reachability
+
+The root-owned `aeat --tui [COMMAND_PATH]` request and `TuiCapability` put full-screen
+reachability, an implementation inventory, and refusal policy in the command-line graph.
+They make one entrypoint describe another and require every CLI command to carry an
+in-flight TUI state. That is not a shared application contract.
+
+`--tui`, `TuiCapability`, `CommandSpec.tui_capability`, the global request state and policy,
+and every CLI branch that selects a full-screen destination are retired without replacement.
+The CLI graph is authoritative only for scripted commands. The TUI owns root navigation,
+routes, action admission, and unsupported states from application/domain contracts and its own
+executable registrations, never from CLI declarations or a mirror of CLI reachability. A CLI
+command neither opens a TUI destination nor receives a TUI selection or outcome for continuation.
+
+The sole product launch bridge is `aeat app tui`. It starts only the TUI root as an opaque child
+process and propagates its exit status. It takes no command path or destination, does not inspect
+TUI routes or capability, and has no line-mode fallback or machine envelope. Terminal suitability
+and full-screen presentation/refusal behavior belong to the TUI process. This is a launch seam,
+not CLI-to-TUI routing.
+
+Every earlier clause requiring root-owned frontend selection, `aeat --tui [COMMAND_PATH]`,
+per-command available/not-implemented posture, or `TUI_NOT_IMPLEMENTED` is superseded. The
+independent full-screen package and its inbound-only dependency boundary remain unchanged.
+

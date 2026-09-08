@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd9595b28f0c263e544c294f8b105026fb45aff37933ad10a3e8e236b6933c15'
+body_hash: 'sha256:fe1eb6e76c7e75f6846935adf26a487318421220d966dd54acdb132a7c1558e9'
 step_id: 'S115'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-plan]]"
@@ -43,9 +43,7 @@ An independent repository-node probe also exposed a defect in the first runtime 
 
 ## Mutation proof
 
-The exact-byte bounded run selected 475 mutants. Its first complete result was 437 killed and 38 surviving. Read-only triage classified 14 survivors as behavioral and 24 as equivalent or inert. Focused controls killed all 14 behavioral survivors; the final evidence is 451 behavioral kills and 24 classified inert survivors, with zero behavioral survivor left open.
-
-The inert set consists of case-equivalent UTF-8 codec spelling, AST invariants that make dictionary key/value zip lengths equal, falsey `None` versus `False` defaults consumed only by truth tests, return values unreachable for valid joined-string AST shapes, filtered non-absence polarity labels, diagnostic-only `SyntaxError.filename` changes, and equivalent missing-state defaults. No aggregate percentage is used as a substitute for those dispositions.
+A fresh full run against the exact current detector, gate, and fixture hashes selected 475 mutants, killed 452, and left 23 survivors in 597.38 seconds. Every survivor was reviewed individually. All are semantically inert: falsey `None`/`False` defaults consumed only through truth tests; non-absence polarity labels filtered identically; equal-length parsed AST dictionary sequences under alternate strictness; a valid joined-string AST branch; fixed-point sentinel equivalents; the case-equivalent `UTF-8` codec spelling; or parser-filename-only diagnostics. No behavior-changing survivor remains, no aggregate percentage is used as a pass condition, and the external `/tmp` scratch was removed.
 
 ## Boundary
 

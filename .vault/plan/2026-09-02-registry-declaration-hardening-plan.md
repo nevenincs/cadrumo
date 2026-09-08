@@ -11,7 +11,7 @@ related:
   - '[[2026-08-27-registry-temporal-coverage-design-authority-declaration-adr]]'
 modified: '2026-09-07'
 body_schema: body-v2
-body_hash: 'sha256:446d010d2cdd8c4d46db39a0d12c09e9c134a7acb0b9dd0491bee8a322ae969f'
+body_hash: 'sha256:22f0546c4f97fd6f6220890d941e4b5ac70c0992d8bb3a77d01ec003e847d38e'
 ---
 
 <!-- RETIRED: S73, S188, S470 -->
@@ -1406,6 +1406,10 @@ plan should give that its own Phase from the start; this one records where it ac
 - [x] `W06.P13.S1037` - Join the declustering CLI's argparse surface to its dispatch surface, replacing a completeness claim whose two sides both descended from the same mode tuple and cancelled under the loss it named; `dev/quality/tests/test_object_name_declustering.py`.
 - [x] `W06.P13.S1038` - Floor the anchor corpus against its one independent figure, since the colocation partition compares two numbers from a single report and a shrunken corpus moved both together past a toothless greater-than-zero guard; `dev/ingest_harness/tests/test_corpus_anchors.py`.
 - [x] `W06.P13.S1039` - Correct a doc-privacy test docstring claiming both halves of the ban when the call passes an empty literal tuple and exercises only the pattern family, which a sibling case complements; `dev/quality/tests/test_doc_privacy.py`.
+- [x] `W06.P13.S1040` - Guard the parse gate's grammar floor on every interpreter by joining it to the published requires-python, since its only existing case skips below 3.14 and no lane runs the unit suite there; `dev/tests/test_every_source_file_parses.py`.
+- [x] `W06.P13.S1041` - Join the path-factory and segment-join vocabularies duplicated verbatim across the governance and import-hygiene scanners, which no test referenced, so a name added to one and not the other can no longer leave one scanner quietly blind; `dev/tests/test_import_hygiene_scan.py`.
+- [x] `W06.P13.S1042` - Join the rehearsal's sys.modules eviction roots to the packages the object-name graph builds, as a subset rather than an equality, reading both declarations from source so a sibling's monkeypatch cannot decide the verdict; `dev/quality/tests/test_object_name_rehearsal.py`.
+- [x] `W06.P13.S1043` - Join the lifecycle-contradiction scenario's mutating roster to the product's declared lifecycle order as a subset, with a live read-only check, so a stage added to the product cannot leave the scenario silently unwatched; `dev/agent_eval/tests/test_lifecycle_contradiction_golden.py`.
 
 ### Phase `W06.P14` - declaration contract migration
 

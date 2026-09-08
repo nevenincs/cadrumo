@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-liabilities-sanciones'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-09-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:de6b242d4eeef7c3b37b58649395aef6d01c78995a16fd4831d7568696f8b62a'
+body_hash: 'sha256:378ea10af2fb2bb8dca11457dddeb1f47b1ff2a91b070830986529719f89a07b'
 related:
   - '[[2026-08-07-aeat-liabilities-sanciones-research]]'
 ---
@@ -326,3 +326,40 @@ live, a divergence-reconciliation ADR (rejected option 2) becomes buildable
 against real data — its comparison authority has something to compare
 against, and its advisory-only gate has a genuine display surface to attach
 to.
+
+## Amendment (2026-09-07): acquisition must precede the persisted read surface
+
+This amendment replaces the earlier rulings under **Domain type**, **Snapshot
+service**, **Read-landing guard**, **Adapter parse function**, **CLI surface**,
+and any conflicting consequence that allowed `list`, `view` or `latest` to
+ship before `pull`.
+
+A persisted read surface is not independently shippable when production has no
+owning path that can populate it. Schema, storage, service and commands over a
+writerless repository form an unreachable partial feature; synthetic fixtures
+prove component behaviour but do not establish a production capability.
+Development classifications, backlog entries, exclusions or held states may
+not make that partial feature acceptable.
+
+The writerless deudas surface is therefore removed now: `app live deudas
+list`, `view` and `latest`, their command and locale declarations,
+`DeudasService`, its persisted snapshot and capture types, its namespace, and
+deudas-specific storage wiring. Deudas domain types may remain only where an
+independent live production consumer establishes their ownership; otherwise
+they are removed with the surface. No empty landing guard, dormant command
+family, fixture-only persistence service, backlog suppression or other staged
+production artefact is retained.
+
+The capability may return only as one end-to-end, specimen-grounded slice:
+the observed AEAT debts-consulta specimen establishes navigation and parsing;
+a fail-closed read-landing guard bounds that acquisition; `app live deudas
+pull` is enrolled in the profile-bound write policy and persists through the
+secure repository; and `latest`, `list` and `view` read the resulting snapshots.
+Command declarations, locale keys, operator documentation and focused tests
+co-land with that slice. Until those owning production paths exist, the
+application exposes no deudas read or persistence surface.
+
+This narrows the chosen option without changing its safety boundary:
+liabilities remain read-only information and never a calculation input, while
+payment, acknowledgement, aplazamiento requests and every other AEAT mutation
+remain prohibited.

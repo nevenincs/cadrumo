@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1a75f61d266f17d73e6d3054d23e973807f4f726efccf7215cf15e25403a55c'
+body_hash: 'sha256:153c936daecfa4b62c69d0014c3933d7034cba8052ec7b75691e393efccd3a4b'
 step_id: 'S112'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-plan]]"
@@ -26,26 +26,24 @@ related:
 ## Changes
 
 - Added a real-tree sweep, a representative positive control, and a per-root anti-vacuity floor for each of the three detector gates.
-- Kept the controls on real parsing, filesystem, locale, and binding behavior; the gate tests contain no mocks or monkeypatches.
+- Kept source specimens in named non-collected fixtures; the gates exercise real parsing and filesystem behavior without mocks or monkeypatches.
 - Tightened subsuming-disjunction matching to stable name haystacks and structural AST equality.
 - Bound self-echo findings to the nearest preceding same-scope invocation assignment and treated later writes, destructuring, loop/context/exception targets, definitions, and imports as binding barriers.
-- Added negative controls for effectful and attribute haystacks, nested scopes, same-line ordering, overwritten results, and every supported binding-barrier form.
+- Added negative controls for effectful and attribute haystacks, nested scopes, same-line ordering, overwritten results, and supported binding-barrier forms.
 
-## Verification
+## Current subsumption verification
 
-- `uv run pytest dev/quality/tests/test_tautological_assertion_gate.py dev/quality/tests/test_subsuming_disjunctions.py dev/quality/tests/test_self_echoing_tokens.py -q` -> `79 passed in 18.46s`.
-- `uv run ruff check dev/quality/tautological_assertion_scan.py dev/quality/subsuming_disjunctions.py dev/quality/self_echoing_tokens.py dev/quality/tests/test_tautological_assertion_gate.py dev/quality/tests/test_subsuming_disjunctions.py dev/quality/tests/test_self_echoing_tokens.py` -> pass.
-- `uv run ruff format --check ...` over the same six files -> `6 files already formatted`.
-- `uv run ty check ...` over the same six files -> pass.
-- `rg -n "monkeypatch|unittest\\.mock|\\bmock\\b"` over the three gate tests -> no matches.
+- Exact identities: detector `5D74756B3E02C282C0E4E71787F0834202B3E120BE418B7D386194718FB605E8`, gate `CA675F02EA16B9A9917BFD3FD3A79536102EEF179C77E008C15510CC90A11B31`, and fixture `EECF07EF6C2F204655E89AB0329C6363BCCD5E1B0F73090CBF0D26E7A6317ECF`.
+- The focused baseline passed all 14 tests in 5.92 seconds.
+- Pinned mutmut 3.7.0 selected 75 mutants and killed 69 in 212.92 seconds, with no error, suspicious, timeout, no-test, skipped, or typecheck outcomes.
+- Six survivors were inspected individually and are semantically inert: the equivalent `UTF-8` codec alias; `ast.dump(include_attributes=False)` changed to `None`; omission of that default-false keyword; selection of the second structurally equal haystack; and two changes confined to `ast.parse` exception filename metadata.
+- The previously actionable path-attribution and ambient-decoding mutations are killed by the current same-process filesystem control.
+- No mutation score was calculated or used.
 
-## Mutation proof
+## Other detector mutation proof
 
-- Ran bounded native mutmut from retained isolate `/home/hello/cadrumo-s112-native-0bfb79a380244bd4904b600a45a925ab`, with the parent environment and exact source/test/fixture bytes.
-- Tautological-assertion detector: 76 of 77 mutants killed; the sole survivor changes codec spelling from `utf-8` to `UTF-8`, which is behaviorally equivalent.
-- Subsuming-disjunction detector: 69 of 75 mutants killed; all six survivors are equivalent or verdict-inert (codec spelling, `SyntaxError.filename` metadata, omitted/default-false keyword forms, and selection between structurally equal haystacks).
-- Self-echo detector: 139 of 143 mutants killed on the final exact snapshot. The four survivors are equivalent or verdict-inert: two affect only `ast.parse` filename metadata, one changes `continue` to `break` after descending token-length sorting once all remaining tokens are also short, and one changes `<` to `<=` where a single AST node cannot be both the assignment and the later assertion.
-- All behavioral survivors were killed. In particular, the final real-syntax controls killed the prior starred-unpack, context-manager, exception-target, dotted-import, and aliased-import binding mutations.
+- Tautological-assertion detector: 77 selected, 76 killed, and one individually disposed equivalent codec-alias survivor.
+- Self-echo evidence is recorded only for an exact current detector/gate identity; superseded runs are not transferred across source changes.
 
 ## Review
 

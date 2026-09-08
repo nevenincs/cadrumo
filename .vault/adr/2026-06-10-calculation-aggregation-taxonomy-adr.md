@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-10'
-modified: '2026-08-13'
-body_hash: 'sha256:ad9e52c3bbf7af8be32edfa1dc99b723bd5749774589d42a9da0f3f834751105'
+modified: '2026-09-07'
+body_hash: 'sha256:47ef3798c3b02ad2f5af0a6b89595165a47a89c7d1035799cdde80be265c7308'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-research]]"
 ---
@@ -323,6 +323,10 @@ and no-parallel-write-path rules.
   operator calculate path consume the SAME resolver, eliminating the two-surface
   drift risk the research flagged; future cross-modelo reconciliation modelos get
   one obvious authoring pattern.
+
+## Amendment (2026-09-07): unresolved sources are refusals, not lifecycle states
+
+The earlier allowance for a resolver-less binding to be labelled deferred and surfaced as a non-blocking advisory is withdrawn. `src/` may not encode development progress as enrolled, deferred, reserved, implemented, ignored, or equivalent source dispositions. A registry binding either has an executable owner on the production calculation route, is intrinsically supplied by its declared production channel such as manual input or a design constant, or calculation refuses it as unrouted. The live resolver ownership declarations are the only routability authority; no parallel set may make a missing resolver acceptable. Existing resolver semantics and the canonical mechanism table remain binding.
 
 ## Codification candidates
 

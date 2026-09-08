@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:1844bee0149bd63c2268f1d34aaf7d99df4a690b000b67d4df8216a250b0a089'
+body_hash: 'sha256:6bcc8b353a25a06343cdf4dfbcbd974ff577e6a178698b18c9bc80d1e4bc1d58'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
   - "[[2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr]]"
@@ -70,26 +70,26 @@ This sits inside the adjudicated family (an assertion whose claim is weaker than
 but in a form none of the four detectors reaches, because the weakening is the *choice of
 instrument*, not the shape of the expression.
 
-### declared-census-fails-both-drift-directions | high | A declaration with no drift tests, contradicting the sanctioned pattern
+### declared-census-fails-both-drift-directions | high | Existing drift gates exposed a stale declaration census
 
-`src/cadrumo/tests/test_deferred_cross_layer_imports.py:173` carries `_DECLARED`, a
+`src/cadrumo/tests/test_deferred_cross_layer_imports.py:173` carried `_DECLARED`, a
 hand-maintained census of function-local cross-layer imports. Measured against the live tree
-it holds **26 stale rows** whose edges no longer exist (`application/bucket_maintenance/
-service.py` alone accounts for 7) and **8 undeclared live edges**. Proven pre-existing: the
-two failures reproduce identically against the original `.importlinter`.
+it held **26 stale rows** whose edges no longer existed (`application/bucket_maintenance/
+service.py` alone accounted for 7) and **8 undeclared live edges**. Proven pre-existing: the
+two failures reproduced identically against the original `.importlinter`.
 
-The accepted decision sanctions exactly one declaration pattern -- "a hand-authored,
-site-specific claim whose docstring states why this particular site is correct, checked by a
-conformance gate against AST-discovered reality, in both drift directions -- a stale
-declaration and an undeclared site both fail" -- and names `PINNED_TAXONOMY_LITERALS` with its
-two drift tests as the template. `_DECLARED` has neither drift test, which is why both
-populations accumulated unnoticed.
+The first interpretation of this finding was wrong: the module has carried both
+`test_no_undeclared_deferred_cross_layer_import` and `test_no_stale_declaration` since
+2026-08-10. Those tests did not miss the drift; they were the mechanisms reporting both
+populations. The defect was the unreconciled declaration state and its generic aggregate
+name, not absent drift enforcement.
 
-The decision also settles the disposition question that was open before it was read: this is
-not a choice between tidying the rows and deleting the table. A declaration either gains both
-drift tests, or it is an exemption list and is forbidden. The table's own message already
-states the per-row rule -- a deferral breaking a genuine import cycle is declared
-`UNADJUDICATED`; one existing only to quiet a layer contract is removed from the code.
+The accepted decision still governs the repair: a declaration is checked against
+AST-discovered reality in both directions and a reviewed site states its reason. The 26 stale
+rows are removed. The eight live additions are classified from their actual architecture,
+and `_DECLARED` is retired in favour of the checked
+`PINNED_DEFERRED_CROSS_LAYER_IMPORTS` declaration rather than leaving a parallel legacy
+aggregate.
 
 ### commit-time-remedy-was-already-adjudicated | none | Recorded to prevent re-proposal
 

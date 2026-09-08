@@ -3,157 +3,58 @@ tags:
   - '#adr'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-09-05'
+modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:7b39d0eb105c75d5874de428c88912aeb5f86d12646b277d3bb64a3723f9aef5'
+body_hash: 'sha256:e5fc4db9602ccfc657f58ae7747e3e76b90962fadb7ce8be8e146310ff2a9631'
 related:
   - "[[2026-09-04-reachability-burndown-reference]]"
 ---
-
-# `reachability-burndown` adr: `Reachability closure through classified resolution` | (**status:** `proposed`)
+# `reachability-burndown` adr: `Reachability closure through owning mechanisms` | (**status:** `accepted`)
 
 ## Problem Statement
 
-The shipped package carries 43 modules and 1408 symbols that no declared console script
-reaches, plus 21 orphaned test modules. The standing ratchet exits 0 against this tree
-because it adjudicates modules only, defers a frozen prefix, and carries fourteen
-allowed entries; symbols and orphaned tests are ungated entirely. The product therefore
-ships code that cannot be reached while its gate reports green. This record decides what
-closure means for that backlog and how each finding is resolved without weakening the
-instrument that found it.
+The reachability campaign must remove unreachable code and missing wiring without turning its investigation state into a second product model. The original decision required every finding to be entered in a closed classification ledger. Execution showed that this persisted transient judgements such as staged, deferred, superseded, and should-be-live; encouraged production docstrings to describe campaign state; and made quality gates depend on a hand-maintained list of module and symbol names. This amendment replaces that mechanism while preserving the requirement that every live finding is resolved through its owner.
 
 ## Considerations
 
-- A green ratchet is not evidence of a zero backlog; 1408 symbol findings sit outside
-  every gate; `2026-09-04-reachability-burndown-reference`.
-- Reachability establishes that code is not reached, never why. Duplicated, superseded,
-  deliberately staged, and genuinely orphaned code all present identically to the audit.
-- Outside-use labels already separate the population: 27 modules are reached only by
-  tests, 11 by dev and tests, 2 by dev alone, 3 by nothing.
-- 26 of the 49 module findings are inside `cadrumo.entrypoints.tui`, an in-flight surface
-  owned by another campaign.
-- Deleting or relocating shipped capability changes the product surface and is not a
-  reversible tidy-up.
-- The duplication campaign proved that a bar reachable only through a forbidden act
-  invites quiet relabelling rather than resolution; `2026-09-03-duplication-burndown-adr`.
-- Baselines, ratchet widening, and allowlist growth are forbidden;
-  `2026-07-14-honest-all-green-adr`.
+- Reachability proves the absence of a runtime path, not the reason for it; `2026-09-04-reachability-burndown-reference`.
+- Production code and tests must stand on their own and cannot cite campaign state, development tools, plans, or audits.
+- A maintained classification or exception inventory becomes a second authority and can outlive the code fact it describes.
+- The live source graph, command tree, fixture registry, typed contracts, and owning behavioral tests can establish implementation facts without a development-status catalogue.
+- Baseline, threshold, allowlist, frozen-prefix, and deferred-owner widening can all turn an unresolved signal green.
 
 ## Considered options
 
-- **O1 — Delete everything unreachable.** Rejected: it discards deliberately staged
-  capability and test support that has a correct home, and it cannot distinguish an
-  orphan from a module awaiting its wiring.
-- **O2 — Widen the ratchet to cover symbols and orphaned tests, then baseline the
-  current count.** Rejected: a baseline is the exact instrument-weakening the honesty
-  decision forbids, and it would freeze 1408 findings as permanently acceptable.
-- **O3 — Classify every finding into one of a closed taxonomy, resolve each by the remedy
-  its class dictates, and extend the gate to symbols and orphaned tests as the backlog
-  clears.** Chosen.
-- **O4 — Leave symbols ungated and track only modules.** Rejected: it preserves the false
-  green this record exists to close.
+- **Retain the classification ledger and strengthen its consistency tests.** Rejected because stronger bookkeeping still makes development metastate a code dependency.
+- **Move the same catalogue into another development file or generated form.** Rejected because generation changes transport, not authority; the maintained status model remains.
+- **Keep investigation state only in the active plan and Step Records, and make code-quality checks derive current structural facts from their owning sources.** Chosen.
+- **Delete the audits with the ledger.** Rejected because removing the detector would hide the defect rather than remove the invalid ownership mechanism.
 
 ## Constraints
 
-- Every finding resolves into exactly one class of the closed taxonomy recorded in the
-  reference: test support, harness code, design-time authority, superseded capability,
-  deliberately staged capability, orphaned capability, capability that should be live, or
-  deferred by ownership.
-- Harness code and design-time authority are separated by what the code IS, not by who
-  reads it. Harness code is written to serve the harness and relocates beside its dev
-  consumer. A design-time authority is a product declaration that constrains other
-  declarations; its only reader being a conformance gate is how a locked design is
-  enforced, and relocating one into `dev/` would move the product's own design out of the
-  product.
-- Classification is evidenced, not asserted. Supersession requires a named live module
-  that discharges the responsibility, found by semantic search rather than by name
-  similarity. Deliberate staging requires an accepted decision that records the
-  dependency being waited on.
-- Resolution is by relocation, deletion with tests, wiring, or an `[[intentional]]`
-  classification carrying its rationale. No threshold, exclusion, baseline, skip, or
-  allowlist widening, and the `allowed` list stays shrink-only.
-- Deletion or relocation of shipped capability requires its owner's recorded decision
-  before execution.
-- The `cadrumo.entrypoints.tui` prefix stays deferred while its owning campaign is in
-  flight. Deferral is scope, never permission.
-- Test-only and dev-only use never counts as use. Moving code to its correct home is the
-  remedy, not reclassifying the caller.
-- The gate extends to unused symbols and orphaned test modules once their populations are
-  classified. Extension is shrink-only from the day it lands.
+- No production source, test, configuration, audit, or quality gate may read or cite a reachability disposition catalogue or carry campaign states such as staged, deferred, superseded, ignored, implemented, or in flight as an exception mechanism.
+- No quality gate may maintain a list of module names, symbol names, code-name prefixes, frozen owners, or accepted findings to decide whether the current tree passes.
+- Audits derive their population from the live tree and report exact identities. A release gate is green only when the structural property it names is satisfied; an open campaign signal remains visibly red until its owning mechanism resolves it.
+- Resolution means deletion of displaced code, wiring through the real product boundary, relocation to the narrowest genuine owner, or replacement by a live structural declaration and detector. Classification alone never resolves a finding.
+- Tests assert behavior and structural relationships, not implementation status. Temporary triage and ownership notes live only in the plan and its Step Records.
+- Source under `src/` has no dependency on or prose awareness of `dev/`, Vaultspec, campaign state, or development-only exception mechanisms.
 
 ## Implementation
 
-Survey first, resolve second. Classify the population by outside-use label and area, then
-work one area at a time, smallest blast radius first: dev-only harness code, then
-test-only support, then the symbol backlog by owning package, then the modules requiring
-an owner decision.
+Delete the reachability classification ledger and every parser, consistency test, citation check, and source comment coupled to it. Preserve independent live detectors, but remove their exception and disposition joins. Replace identity baselines and frozen-prefix exclusions with live zero-target reports, then burn each reported finding down through the code or contract that owns it.
 
-Ground every classification with semantic search before acting. Query the behaviour and
-its domain nouns restricted to production to find a live equivalent, query the type's
-responsibility for class-level supersession, and query the decision corpus to recover
-whether a capability was staged deliberately. Confirm exact symbols with grep before
-editing.
+For TUI and command surfaces, derive availability and coverage from the executable route or fixture registry and from class structure. Do not maintain parallel `implemented`, `needed`, `development-only`, or ignored lists. A concrete surface is either registered and exercised or remains a live finding.
 
-After each area, re-measure the audit, run the owning tests, and shrink the ratchet by
-the entries the work resolved. Extend the gate to symbols and orphaned tests once those
-populations carry classifications.
+Each iteration re-measures the live signals, grounds one coherent finding, applies the owning repair, runs the focused gate, and records only the resulting file changes and verification in its Step Record. Contradicted decisions are amended before dependent plan work continues.
 
 ## Rationale
 
-O3 is the only option that removes the false green without either discarding decisions or
-freezing the debt. The taxonomy is what makes the backlog tractable: the audit reports one
-undifferentiated population, while the remedies differ completely, and applying the wrong
-remedy is how capability gets deleted or how dead code gets wired to nothing.
-
-Requiring evidence for the two dangerous classes — supersession and deliberate staging —
-is what keeps classification from becoming relabelling. Both are claims about intent that
-a name cannot establish, which is why semantic search over code and over the decision
-corpus is a constraint here rather than a convenience.
-
-### Amendment - design-time authority separated from harness code
-
-The original taxonomy had one class for "reached only by `dev/`", and execution proved it
-conflates two different things. Attempting the relocation remedy on the four modules first
-classified as harness code showed every one to be a product declaration: the locked CRUD
-design for the operator CLI, the contract types it instantiates, the supported calculation
-workflows, and the single authoritative home for registry record-specification constants.
-Relocating any of them would have moved the product's own design into `dev/`, and in the
-registry case would have moved filing-grade constants out of the registry authority.
-
-The class already existed in the tree without a name: `cadrumo.core.address_components`
-carries `design_time_authority` in the module ratchet for exactly this shape. The taxonomy
-now names it, and the remedy for the class is an `[[intentional]]` classification rather
-than a relocation.
-
-### Amendment - the constraint is the evidence, not the search tool
-
-Implementation names semantic search as "a constraint here rather than a convenience",
-and execution could not use it: the `vaultspec-rag` index was unavailable throughout, so
-every classification was grounded by reading the definition, tracing its callers, and
-confirming symbols with grep. The classifications that resulted held -- supersession was
-established from live equivalents and staging from the code's own recorded intent, which
-is what the constraint was protecting.
-
-So the constraint stands but was stated too narrowly. What must not happen is
-classification from a NAME; what establishes intent is evidence in the code and the
-decision corpus, and semantic search is one route to that rather than the only one.
-
-Execution also found a check the ADR does not mention, and it turned out to be the
-decisive one: read the definition body before accepting that a finding needs an owner.
-`find_invoice` was carried as a capability decision for weeks on entirely true reasoning
-about its surroundings -- documented as canonical, live siblings, test usage -- and its
-body was `return catalogue.get(invoice_id)`, a pass-through over an accessor its own
-argument already exposed. Reading the body afterwards for every other deferred finding
-found no second case, which is the point: the check costs one read and the deferral costs
-indefinite carrying.
+The chosen option keeps product truth in executable structures and keeps temporary coordination state in the lifecycle documents designed to expire with the work. It removes the closed-loop failure where a hand-authored exception and a test of that exception agree while the product remains unwired. It also makes closure unambiguous: the detector has no sanctioned identity to subtract, so only a real product change can clear the signal.
 
 ## Consequences
 
-- The gate will cover symbols and orphaned test modules, which it does not today.
-- Some findings resolve to `[[intentional]]` with a recorded rationale; the count closes
-  on classified resolution rather than on an integer reaching zero.
-- Relocation moves code out of the shipped wheel, which changes the distributed artifact
-  and must be verified against the packaging gates.
-- The TUI population stays open until its owning campaign lands, so this campaign cannot
-  close the module count alone.
-- Each deletion of product capability is recorded with the decision authorising it.
+- The previous closed-taxonomy, classification-ledger, intentional-disposition, and frozen-prefix requirements are withdrawn.
+- Existing ratchet and render-coverage baselines must be retired or converted to live zero-target detectors; they may remain red while the campaign burns down their exact findings.
+- Development-only prototypes and fixtures must live at their actual development boundary, while production registries expose only executable product structure.
+- More quality checks will be red during the campaign, but none can claim green by preserving a reviewed exception.
+- The plan and Step Records become the sole home for temporary triage, ownership, and sequencing state.

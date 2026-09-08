@@ -3,8 +3,8 @@ tags:
   - "#adr"
   - "#iva-bienes-inversion-regularizacion"
 date: "2026-07-01"
-modified: '2026-08-15'
-body_hash: 'sha256:e8d3670f57596cab3d0757dd96b64c185146a8ceaad4e2387764f6caa40021f8'
+modified: '2026-09-08'
+body_hash: 'sha256:1aea1781c31c00b3271d4c3874f93a06fa2619f5535aa7b02bb03ff655f1152e'
 related:
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-research]]"
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
@@ -34,14 +34,16 @@ ADR.
   eligibility) and per-taxpayer facts (which capital goods are owned, their acquisition year,
   cuota soportada deducted, and initial-year definitive prorrata percentage). The two obey
   different authorities: constants belong in the registry, facts do not.
-- A near-complete per-good record already exists for the income-tax amortization purpose:
-  `AssetRecord` carries acquisition date, IVA decomposition, and a `deductible_iva_ratio`. But
-  its class taxonomy is the LIS art. 12 coefficient set, not the LIVA mueble/inmueble window,
-  and its population is a superset of the LIVA population. It is a cross-reference target, not
-  the authority.
-- Two proven cross-year persistence patterns exist in-tree: the profile assets ledger and the
-  IVA-compensation history, both encrypted, bucket-local, and declared through the storage
-  namespace registry. The register is authoritative primary input, not a rebuildable cache.
+- The income-tax activity-asset scalar slice described by research finding F1 has been
+  withdrawn because it had no product acquisition path and did not implement its governing
+  validated amortization schedule. It is neither an authority nor a cross-reference target for
+  this independently owned LIVA register.
+- The live secure-object substrate and IVA-compensation history establish the relevant
+  encrypted, bucket-local, cross-year persistence pattern. The bienes-inversión register is
+  authoritative primary input, not a rebuildable cache.
+- `acquisition_ledger_id` is the register's reciprocal link to the live acquisition observation.
+  A second optional identifier with no resolving consumer would add ambiguous pass-through state
+  rather than provenance.
 - The feed into casilla 43 / M390 has an exact structural precedent: the
   `iva_compensation_annual_partition` registry-declared source that reads a profile store and
   materialises an annual box via an application projection.
@@ -64,15 +66,16 @@ ADR.
   contributions bound to a snapshot fingerprint (`ledger-derived-revisions-bundle-evidence`).
   The register is durable multi-year state independent of any one filing; forcing it into
   evidence rows is the wrong grain and would not survive across filing years cleanly.
-- **Extend `AssetRecord` / the assets ledger as the authority (rejected as authority, kept as
-  cross-reference).** Tempting because the record already holds acquisition date, IVA, and a
-  deductible ratio; rejected because the LIVA window taxonomy, population, and per-year
-  percentage series diverge from the income-tax amortization concern, and conflating the two
-  couples two independently-evolving lifecycles.
-- **New profile-scoped encrypted register (CHOSEN).** A dedicated domain model plus a new
-  bucket-local `FINANCIAL` storage namespace, mirroring the assets-ledger and IVA-compensation-
-  history patterns, carrying an optional cross-reference to an `AssetRecord` identifier to avoid
-  double data-entry. Facts in the register, constants in the registry.
+- **Reuse or cross-reference the activity-asset ledger (rejected).** The withdrawn scalar
+  activity-asset slice neither implements the legally validated activity-amortization authority
+  nor participates in a live acquisition path. Reusing its representation or retaining an
+  optional identifier would couple independent tax domains without a semantic resolver and
+  would preserve an abandoned product surface by reference.
+- **New profile-scoped encrypted register (CHOSEN).** A dedicated domain model plus a
+  bucket-local `FINANCIAL` secure-object namespace, following the live secure-object and
+  IVA-compensation-history patterns. Each record links reciprocally to its acquisition
+  observation through `acquisition_ledger_id`; no second activity-asset cross-reference is
+  carried. Taxpayer facts live in the register and regulatory constants live in the registry.
 
 **Decision 2 - the art-109 annual comparison and its feed.**
 
@@ -121,6 +124,14 @@ ADR.
 - **Secure storage only.** The register holds sensitive financial data and MUST persist only
   through the encrypted bucket-scoped secure-object substrate
   (`sensitive-financial-data-secure-storage-only`), never a plaintext side store.
+- **One acquisition identity.** `acquisition_ledger_id` is the sole cross-domain acquisition
+  link and MUST resolve reciprocally to the acquisition observation consumed by the
+  bienes-inversión workflow. The register MUST NOT carry an `AssetRecord` identifier or another
+  optional pass-through reference without an owning resolver and distinct legal purpose.
+- **Distinct domains remain distinct.** Withdrawal of the activity-asset scalar slice does not
+  alter the bienes-inversión register, persistence, calculation, or filing behavior. The removed
+  representation MUST NOT be recreated as a compatibility alias, optional field, or alternate
+  source of bienes-inversión facts.
 - **Registry authority preserved.** New regulatory constants land in the registry authoring tree
   and ride the loader/compiler (`aeat-registry-authority-flow`); feature code reads the compiled
   snapshot, never inlines the windows or divisors as Python literals
@@ -147,12 +158,13 @@ A dedicated Spanish-stemmed domain model (a `BienInversionIvaRecord` aggregate u
 `domain/bienes_inversion` package, sibling to `domain/iva_compensation`) carries, per capital
 good: a stable operator identifier, description, acquisition year, cuota soportada deducted,
 the initial-year definitive prorrata percentage, an asset kind mapping to the 4-year (mueble)
-or 9-year (inmueble) window, an art-108 concept eligibility flag, an optional `AssetRecord`
-cross-reference, and an optional disposal event (year plus sujeta-no-exenta / exenta-no-sujeta
-regime) carried but not yet computed. The record persists through a new bucket-local
-`FINANCIAL` secure-object namespace declared in the storage namespace registry, read and
-written through `SecureObjectRepository` exactly as the assets ledger and IVA-compensation
-history do.
+or 9-year (inmueble) window, an art-108 concept eligibility flag, the reciprocal
+`acquisition_ledger_id` of its acquisition observation, and an optional disposal event (year
+plus sujeta-no-exenta / exenta-no-sujeta regime) carried but not yet computed. The record
+persists through its bucket-local `FINANCIAL` secure-object namespace declared in the storage
+namespace registry and read and written through the live secure-object repository boundary.
+No `AssetRecord` cross-reference or replacement pass-through field participates in the model,
+CLI, persistence document, or calculation path.
 
 The regulatory constants - the 4/9-year windows, the over-10-point regularization gate, and the
 /5 and /10 divisors - are authored in the registry (grounded in arts. 107 and 109, corpus
@@ -183,11 +195,12 @@ disposal compute, the automatic prorrata-definitiva feed, and the multi-good liv
 The register-versus-registry split follows directly from the registry-authority rules
 (research F3): the windows and divisors are regulatory values with a binding provision, so they
 belong in the registry; the list of owned goods and their acquisition-year percentages are
-taxpayer facts, so they belong in a profile-scoped encrypted store. Reusing the proven
-assets-ledger and IVA-compensation-history persistence patterns (research F1, F2) keeps the
-register on the established secure-storage substrate without inventing a new persistence shape,
-and declining to overload `AssetRecord` avoids coupling the LIVA regularization lifecycle to the
-income-tax amortization lifecycle whose taxonomy and population differ.
+taxpayer facts, so they belong in a profile-scoped encrypted store. The live secure-object
+substrate and IVA-compensation-history pattern identified by research F2 support that durable
+store without making the withdrawn activity-asset slice a dependency. Keeping
+`acquisition_ledger_id` as the sole reciprocal acquisition link and removing the unconsumed
+`AssetRecord` reference preserves one provenance identity while maintaining the independent
+LIVA regularization and income-tax amortization lifecycles.
 
 Choosing an advisory-backed proposed value over a hard mesh binding for the first slice is
 forced by the deferred prorrata-definitiva parent (research F5): the silent-zero-base ADR proved
@@ -205,8 +218,15 @@ the core register plus the single-good annual path.
   computation instead of an untracked manual box; a taxpayer with in-window goods is alerted
   rather than silently under- or over-declaring. The register is reusable by both M303 (casilla
   43) and M390 (annual regularizacion field).
-- **Gain.** The register data model reuses established persistence and taxonomy patterns, so the
-  first slice is a bounded, well-precedented change.
+- **Gain.** The register remains on the established secure-object substrate and retains its live
+  reciprocal acquisition-observation link without depending on the withdrawn activity-asset
+  representation.
+- **Gain.** Removing the unconsumed `AssetRecord` reference eliminates ambiguous persisted and
+  CLI state while leaving bienes-inversión declaration, persistence, calculation, provenance,
+  and filing behavior unchanged.
+- **Constraint accepted.** The bienes-inversión register does not provide compatibility for the
+  withdrawn activity-asset slice, and that slice cannot be reconstructed by reinterpreting
+  `acquisition_ledger_id`.
 - **Cost accepted.** The first slice does not auto-populate casilla 43; the operator still
   confirms the proposed value. Full automation is gated on the separately-deferred prorrata-
   definitiva design, and this ADR deliberately does not attempt to unblock it.
@@ -232,7 +252,7 @@ the core register plus the single-good annual path.
 
 ## Status
 
-`proposed`. Closes the design portion of issue #349. Depends on the separately-deferred
+`accepted`. Closes the design portion of issue #349. Depends on the separately-deferred
 prorrata-definitiva source (`2026-06-19-silent-zero-base-aggregation-adr`) for full automation;
 the first slice ships independently of it. Sibling annual-IVA surface:
 `2026-06-21-m390-iva-carry-boxes-adr`.

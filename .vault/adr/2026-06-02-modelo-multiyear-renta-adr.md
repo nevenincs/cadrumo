@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#modelo-multiyear-renta'
 date: '2026-06-02'
-modified: '2026-08-15'
-body_hash: 'sha256:a93117e1ccf5754698a133cd008cbb76be2e0013a6ab5fff980b9228f3579c35'
+modified: '2026-09-07'
+body_hash: 'sha256:21ae70efa926b9ef0209da2e11540088e71499bd83da462ab56ba2de4bfa742b'
 related:
   - "[[2026-06-02-modelo-200-base-determination-adr]]"
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-research]]'
@@ -222,6 +222,18 @@ foundational gate here defines *how authorization is proven*; the mechanism ADRs
 *what each modelo's cross-year behaviour is*. Keeping them separate preserves per-mechanism
 legal grounding and keeps this ADR stable as mechanisms are researched and decided
 independently.
+
+### 2026-09-08 correction: work-unit admission is not implementation metastate
+
+This correction supersedes the earlier Constraints claim that Modelos 151, 210, 714, and 721 require engine-build work before a genuine calculation exists; the final sentence of Implementation (d) prescribing the established stub guard; the complete Engine-build sub-decision; the corresponding engine-build-debt consequence; and the concluding examples that repeat those claims.
+
+Registry application links describe capabilities exposed by a revision. They are not an implementation-status census and do not, by themselves, decide whether a modelo may have a work unit. Current registry declarations include calculation surfaces for Modelos 151, 210, and 714. Modelo 721 has no calculation link, but that absence cannot mean unsupported: 29 legitimate structural or informative modelos likewise have no calculation link. Work-unit admission must therefore proceed through registry resolution, while readiness, calculation, and filing each own their capability-specific validation or refusal.
+
+A modelo that is UNAUTHORIZED but has a working calculation path still computes on `work calculate` with the established advisory. `work create` does not consult a hand-maintained stub-modelo set or a modelo-specific engine-live flag. Once an AEAT modelo resolves through the validated registry authority, it proceeds to the boundary that owns the requested capability. A later boundary may refuse what it cannot perform, but creation does not predict that result from development metastate.
+
+Ceded autonomic taxes remain a separate domain-policy case. Their redirects identify the competent filing authority rather than software progress, so they remain instructive refusals directing operators to the appropriate autonomous-community route.
+
+Consequently, production code carries no `STUB_ONLY_MODELOS`, parallel stub locale-key census, or modelo-specific engine-live switch. Mechanism-specific records must describe real registry, readiness, calculation, or filing behavior and must not reintroduce production classifications such as stub, implemented, ignored, or other development-relative modelo states.
 
 ## Alternatives rejected
 

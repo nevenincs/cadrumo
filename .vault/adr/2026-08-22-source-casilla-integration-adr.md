@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#source-casilla-integration'
 date: '2026-08-22'
-modified: '2026-08-23'
+modified: '2026-09-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:ad8aff4a2527765970eb0c550b599238643c967d75fff524b9703ff5fde1ee68'
+body_hash: 'sha256:61ecdae5767f0bcf4d8eca133a159985779e7c502f7515c4302498e38f57d2b3'
 related:
   - "[[2026-08-22-source-casilla-integration-research]]"
   - "[[2026-08-22-modelo-work-binding-architecture-reference]]"
@@ -85,6 +85,30 @@ The ratcheted-census option is the only option that covers both present and futu
 - Some apparently obvious automation candidates will remain manual or be rejected after tax adjudication.
 - Continuous discovery produces recurring audit work and bounded child features rather than one perpetual plan, increasing lifecycle-document count while keeping each authorization honest.
 - The census and gates require maintenance whenever a new secure domain, ingress surface, assembler, helper, source kind, or registry binding is introduced.
+
+## Amendment (2026-09-07): retire shipped connectivity metastate
+
+### Problem
+
+The canonical census encodes development adjudication in shipped product data and types: candidate, blocked, deferred, manual, stale, owner, follow-up, review condition, and expiry. Product workspace readiness then consumes those development decisions as runtime closure state. This violates the product/development boundary and makes runtime behavior depend on a hand-maintained implementation ledger rather than executable production authorities.
+
+### Decision
+
+The source-connectivity census and its closed disposition vocabulary are retired without a compatibility path. No census, candidate classification, review condition, bounded follow-up, implementation status, or expiry schedule ships under `src/cadrumo`, and production code does not import a development connectivity mechanism.
+
+Production registry and workspace behavior derive only from executable production facts: validated registry bindings and source dispositions, registered resolvers, persisted calculation provenance, operator routes, encrypted revision evidence, and filing-export proof where the product consumes it. Registry closure capture no longer accepts a census, an adjudication date, or a connectivity proof authority, and it no longer publishes a source-connectivity limb.
+
+Development discovery remains live and zero-target. Each run derives disconnected capabilities from the current source tree and validated registry without consulting a stored identity baseline or disposition file. An unresolved finding exists only in its owning Vaultspec ADR, plan Step, and Step Record; accepted production work closes it by changing the executable authorities. A finding that is not applicable or deliberately manual is expressed in the owning production contract when that distinction affects product behavior, never in a parallel development catalogue.
+
+The existing connected-proof composition may remain only as development tooling that reads production authorities from the outside. Development modules may import product modules; product modules must never import the development proof implementation. The migration is atomic: product census modules and bundled census data are deleted, development consumers are re-homed or rewritten, and no aliases, dual readers, default census, or reserved vocabulary remain.
+
+### Consequences
+
+- Installed packages no longer carry project-management state or future implementation notes.
+- Product workspace readiness cannot change because a development row expires or is reclassified.
+- Registry bindings, resolver enrollment, provenance, and export proof retain their existing fail-closed production checks.
+- Connectivity discovery loses a durable classification ledger; the live detector plus Vaultspec lifecycle records become the sole campaign history and work authority.
+- Historical source-connectivity ADRs and execution records remain evidence of past decisions but do not authorize restoring a production census.
 
 ## Amendment (2026-08-23): composite calculation-source provenance
 

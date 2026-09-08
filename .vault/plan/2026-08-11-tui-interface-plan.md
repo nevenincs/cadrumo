@@ -17,8 +17,9 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
   - '[[2026-08-24-tui-modelo-workspace-interface-research]]'
+  - '[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]'
 modified: '2026-09-07'
-body_hash: 'sha256:2c98a1187a9e303e365fa4e5e31f0afcbeef01b921a4fa4f84baaac949932bdb'
+body_hash: 'sha256:e4062aa221418dd1eb87dbd7a32ca7271a07b59e2e414c071239c26d89022fcb'
 ---
 
 <!-- RETIRED: P09, S26, S35, S109 -->
@@ -30,6 +31,12 @@ Deliver the task-led, progressively disclosed TUI surface through cohorts gated 
 ## Description
 
 This L3 plan executes the accepted interface decision together with the accepted Workspace V1, ModeloEditContractV1, and Modelo workspace-interface decisions. W02-W04 preserve the existing profile, reusable component, secret, and guided-flow work. Modelo delivery is cohort-gated: W05.P10 is C1 bounded review; W05.P10a opens C2 on the Workspace conformance suite; W05.P11 is C2 complex read; W06.P12a opens C3 on the edit-contract and financial-operand invariant suites; W06.P12b is the C3 memory-only editor; W06.P12c is C4 lifecycle actions; and W06.P12 plus W06.P13 close C5 accessibility and the final fixed point.
+
+**Correction to closed Step W01.P01.S106.** Its historical row remains intact,
+but the family-wide boundary it records was refuted by measurement.
+`2026-09-07-quality-gate-zero-closure-blind-green-gates-adr` names three
+additional statically decidable classes and preserves corpus-only producer
+absence and semantic irrelevance as the undecidable remainders.
 
 **Cohort readiness has two halves, and they are recorded in different places.** The 2026-08-28 amendments to the interface, registry-API-gate, edit-contract and architecture decisions retired the code-resident dependency and exit receipts outright -- not renamed, not relocated. Whether the source tree HAS the shape a cohort requires is a real, currently-passing conformance suite under the owning package's `tests/`, asserting source-tree shape only and naming no vault path, decision stem, Step id, status or body hash. Whether a cohort is actually OPEN is a vaultspec execution record authored through the owning CLI verb at the moment it opens, citing the implementing suites and the commit they were proven against by `path:line`. **The predecessor chain travels as wiki-links between those execution records**; no code parses, hashes or asserts against any of them.
 

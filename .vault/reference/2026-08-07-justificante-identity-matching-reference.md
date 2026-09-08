@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#justificante-identity-matching'
 date: '2026-08-07'
-modified: '2026-08-15'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:5929bbf2effc41f8ea5a35d1baf463b96910142d233b4edc85fba288a62d0b47'
+body_hash: 'sha256:7a924976cdf3d3b1228cb3ebef8c44f56558febfa64997ef72d34947bd6e9741'
 related:
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
 ---
@@ -17,6 +17,12 @@ related:
 Grounded against real AEAT-issued Modelo 303 justificante PDFs pulled by a live
 authenticated session, loaded from encrypted storage, and run through the
 production parser and predicate directly — not reasoned about.
+
+## Declarations-register capture ownership remeasurement (2026-09-08)
+
+The current production call graph has one declarations-register capture owner: application callers hold an `open_declarations_register` session and invoke `DeclaracionesRegisterSession.capture_observation`, which resolves an exact `_row_locator_for_expediente` and passes it to `capture_filed_declaration_observation_from_row`. That path uses `capture_row_pdf_artefact` for the per-row cotejo redirect, independently-derived CSV, and PDF fetch, then returns one provenance-bearing `FiledDeclaracionObservation` containing all available register, justificante, declaration-copy, and submitted-file evidence.
+
+The module-level `capture_filed_declaration_observation` wrapper opens the same session for one call and delegates to that method; it has no production caller. The older `declarations.capture_declaration` separately repeats register search, row lookup, cotejo navigation, CSV extraction, and PDF fetch but returns only a raw `SedeCapture`; exact search finds it only in its live test, PDF-contract identity census, and documentation. The procedure-tree walker retains a distinct `capture_justificante` owner returning `SedeCapture` for `Expediente` records and is unaffected by declarations-register consolidation.
 
 ## Empirical finding
 

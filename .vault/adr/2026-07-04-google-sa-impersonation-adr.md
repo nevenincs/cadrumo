@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#google-sa-impersonation'
 date: '2026-07-04'
-modified: '2026-07-17'
-body_hash: 'sha256:b26fd81c449dda904903227cc46e7ab2e2aaec16490da450a4132cc173373da4'
+modified: '2026-09-08'
+body_hash: 'sha256:d8c40d6eae4a9c16975218d276aaef6551f95bdf1019870df85827a89bd9d982'
 related:
   - '[[2026-07-10-google-sa-impersonation-research]]'
 ---
@@ -66,9 +66,9 @@ without re-running the interactive consent flow on every machine.
 - `aeat-schema-central-config`: the closed set of Google credential sources is a
   regulatory-adjacent but genuinely code-level taxonomy (not an AEAT registry value); it
   belongs as a `StrEnum` in `core`, per `aeat-architecture-boundaries`.
-- `aeat-cli-pull-and-file-standard` and `aeat-locales-cli` govern the CLI verb and locale
-  strings this ADR intentionally defers (see Constraints); the core credential-resolution
-  slice does not touch either surface this wave.
+- `aeat-cli-pull-and-file-standard` and `aeat-locales-cli` govern the landed CLI verb and
+  locale strings. The CLI reads the typed configuration directly and delegates credential
+  resolution to the adapter rather than introducing another identity authority.
 
 ## Considered options
 
@@ -111,16 +111,15 @@ without re-running the interactive consent flow on every machine.
   *failure* path (no usable credential on host) is exercised for real in this slice by
   pointing `GOOGLE_APPLICATION_CREDENTIALS` at a nonexistent path — a genuine,
   hermetic, no-network reproduction of Google's own `DefaultCredentialsError`.
-- CLI verb (`aeat config google ... impersonate ...` or a sibling of `google register`)
-  and the four-language locale strings for it are explicitly deferred: the executing
-  branch has a standing constraint this wave that the shared locale YAML files are owned
-  by a concurrent campaign. The core resolver and its typed records are usable
-  programmatically and by a future CLI slice without further core changes.
+- The CLI verb and four-language locale strings were deferred from the original core
+  slice because the shared locale catalogues were concurrently owned. They have since
+  landed as `aeat config google credential-source set|show`; `show` renders
+  `GoogleImpersonationConfig.target_principal` directly without a token exchange.
 - ADC-freshness auto-detection (running `gcloud auth application-default login`
-  automatically) is deferred: invoking `gcloud` as a subprocess is an operator-facing UX
-  decision entangled with the CLI verb this wave defers; the core layer instead surfaces
-  a typed, actionable refusal when ADC is stale/absent/wrong-scope so a future CLI layer
-  can decide whether to auto-remediate or instruct the operator.
+  automatically) remains deferred: invoking `gcloud` as a subprocess is an
+  operator-facing UX decision. The core layer surfaces a typed, actionable refusal when
+  ADC is stale, absent, or wrong-scope, so the existing CLI can later decide whether to
+  auto-remediate or instruct the operator.
 - Domain-wide delegation (`subject=`) requires a Google Workspace domain administrator to
   have granted the target SA domain-wide delegation for the requested scopes — a
   configuration this application cannot verify or provision; the resolver exposes the
@@ -129,51 +128,29 @@ without re-running the interactive consent flow on every machine.
 
 ## Implementation
 
-A new `GoogleCredentialSourceKind` `StrEnum` (`oauth_desktop`, `service_account_
-impersonation`) is added to `cadrumo.core` as the closed taxonomy for how
+A new `GoogleCredentialSourceKind` `StrEnum` (`oauth_desktop`, `service_account_`
+`impersonation`) is added to `cadrumo.core` as the closed taxonomy for how
 `adapters.outbound.google` may obtain a `Credentials`-shaped object, per
 `aeat-architecture-boundaries`.
 
-`adapters.outbound.google` gains a new `_impersonation.py` module (mirroring the
-`_certificate_secret_backend.py` shape: typed records, a resolver function, a narrow
-exception taxonomy) exposing:
+`adapters.outbound.google` exposes:
 
-- `GoogleImpersonationConfig` — a strict frozen pydantic record: `target_principal`
-  (the SA email being impersonated), `target_scopes` (defaults to the existing
-  `REQUIRED_SCOPES`'s data-access subset — `drive.file` + `spreadsheets`, not the
-  identity scopes `openid`/`email`, which do not apply to a service-account grant),
-  optional `delegates` (chained impersonation), optional `subject` (domain-wide
-  delegation), and `lifetime_s` (bounded to Google's 3600s ceiling).
+- `GoogleImpersonationConfig` — a strict frozen pydantic record whose canonical
+  `target_principal` field is the SA email being impersonated. An operator-facing `show`
+  or `status` surface reads this field directly when displaying the exact identity before
+  an IAM grant; no parallel identity accessor is retained. The record also carries
+  `target_scopes`, optional `delegates`, optional `subject`, and bounded `lifetime_s`.
 - `resolve_impersonated_credentials(config) -> Credentials` — resolves ADC via
   `google.auth.default(scopes=config.target_scopes)`, wraps the result in
-  `google.auth.impersonated_credentials.Credentials(source_credentials=..., target_
-  principal=config.target_principal, target_scopes=config.target_scopes, delegates=
-  config.delegates, subject=config.subject, lifetime=config.lifetime_s)`, and returns it.
-  The function eagerly calls `.refresh()` once (a real, but locally-mockable-via-real-
-  ADC-fixture, network round-trip against Google's IAM credentials endpoint) so a
-  misconfigured SA (missing Token Creator grant, wrong scopes, revoked delegation) fails
-  loudly at resolution time rather than silently deep inside a later Sheets call.
-- A typed error taxonomy under the existing `GoogleAuthError` base:
-  `GoogleAuthAdcUnavailableError` (ADC discovery failed — no environment credential
-  found), `GoogleAuthImpersonationRefusedError` (IAM refused the impersonation grant —
-  the source identity lacks Token Creator on the target principal), each carrying
-  `context={"target_principal": ...}` so a caller can render "grant roles/iam.
-  serviceAccountTokenCreator to <source> on <target_principal>" without re-deriving it.
-- `describe_impersonation_target(config) -> str` — returns the exact
-  `target_principal` (satisfying the issue's "print the exact SA email" ask) without
-  requiring a live token exchange, so a future CLI `show`/`status` verb can surface it
-  before the operator grants IAM roles.
+  `google.auth.impersonated_credentials.Credentials` using the typed configuration, and
+  eagerly refreshes once so a misconfigured grant fails at resolution time.
+- A typed error taxonomy under the existing `GoogleAuthError` base. Refusals carry
+  `context={"target_principal": ...}` so callers can render the IAM remediation from the
+  same canonical identity field without re-deriving it.
 
-`build_google_credentials` (`adapters/outbound/storage/_factory.py`) is NOT changed in
-this wave's core slice — it remains the OAuth-Desktop path. Wiring
-`GoogleCredentialSourceKind` selection into the factory (reading a persisted per-profile
-selection and dispatching to `resolve_impersonated_credentials` vs the existing OAuth
-path) is the CLI-wave follow-up, once the storage/config surface for persisting a
-`GoogleImpersonationConfig` per profile is decided alongside the CLI verb (a natural
-non-secret candidate is the existing `GOOGLE_DRIVE_CONFIG_NAMESPACE`-shaped per-profile
-secure-object pattern the OAuth records already use, sensitivity `FINANCIAL` for the
-target principal / scopes, since no long-lived secret is stored — the impersonated token
-is minted fresh on every use and never persisted).
+The credential-source selection remains an alternative to OAuth Desktop rather than a
+parallel Sheets or Drive write path. Downstream export behavior consumes the resulting
+`Credentials` object without knowing which source produced it.
 
 ## Rationale
 
@@ -185,12 +162,11 @@ token mint. Modelling it as a typed, opt-in alternative `GoogleCredentialSourceK
 case, and gives the shared-team case a credential source that never persists a long-lived
 secret in this application's storage at all (the token is re-derived from ADC + IAM on
 every use) — a stronger security posture than the OAuth-Desktop refresh-token path it sits
-alongside, consistent with `sensitive-financial-data-secure-storage-only`. Scoping the
-core resolver + typed records to this wave and deferring the CLI verb, locale strings, and
-ADC-auto-remediation matches the executing constraint that the shared locale YAML files
-are owned by a concurrent campaign this wave, and keeps the slice small enough to review
-and land atomically without touching the config/CLI persistence layer decision, which
-deserves its own review once the CLI shape is drafted.
+alongside, consistent with `sensitive-financial-data-secure-storage-only`. The original core slice
+kept the resolver and typed records reviewable while the locale catalogues were
+concurrently owned. The subsequently landed CLI, persistence, and factory dispatch reuse
+those authorities: operator rendering reads `target_principal` directly, and runtime
+resolution remains adapter-owned. ADC auto-remediation remains a separate UX decision.
 
 ## Consequences
 
@@ -198,10 +174,9 @@ deserves its own review once the CLI shape is drafted.
   identity instead of N interactive OAuth logins; the impersonated-token path never
   persists a long-lived credential, which is a net security improvement over the existing
   OAuth-Desktop refresh-token store for the teams that adopt it.
-- The typed `GoogleImpersonationConfig` + resolver are usable today from application code
-  or a test harness, but there is no operator-facing verb yet to configure or select this
-  source; a CLI-less environment operator cannot yet opt in through the CLI, only
-  programmatically. This is an explicit, tracked gap, not a silent one.
+- The typed `GoogleImpersonationConfig` + resolver are selectable per profile through the
+  landed credential-source CLI. Its `show` command reports the canonical target principal
+  without ADC discovery or a token exchange.
 - ADC-freshness auto-detection and the `gcloud` re-login convenience the issue names
   remain open; the resolver surfaces a loud, typed refusal instead, which is safe but not
   yet as convenient as the issue's ideal UX.
@@ -210,9 +185,7 @@ deserves its own review once the CLI shape is drafted.
   `no-silent-under-declaration`'s spirit applied to credential configuration: a broken
   impersonation grant must never silently fall through to an unauthenticated or
   wrong-identity Sheets write.
-- Follow-up work (tracked against #591 remainder): the CLI verb family
-  (`aeat config google credential-source ...` or similar, exact naming TBD at CLI-design
-  time per `aeat-cli-pull-and-file-standard`), its locale strings across all four
-  languages, per-profile persistence of `GoogleImpersonationConfig`, `_factory.py`
-  dispatch wiring, and a live-gated integration test analogous to the certificate-source
-  live probes.
+- Remaining follow-up against #591 is limited to the optional operator-facing ADC
+  auto-remediation decision. The CLI verb family, four-language locale strings,
+  per-profile configuration persistence, factory dispatch, and live-gated integration
+  probe are landed.

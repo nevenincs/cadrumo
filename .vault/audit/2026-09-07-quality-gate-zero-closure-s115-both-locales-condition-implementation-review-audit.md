@@ -5,7 +5,7 @@ tags:
 date: '2026-09-07'
 modified: '2026-09-07'
 body_schema: 'body-v2'
-body_hash: 'sha256:630bcce9cb73d5ef60c278e31ad00ed1ef8f4112e76129239ddc7b5f42f20530'
+body_hash: 'sha256:d9b34fc7d2eee8f34e16890df79024f781016b15eeebf1dee74368955a9c06e9'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-plan]]"
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
@@ -173,3 +173,10 @@ preclaims-closure.
 
 S115 is approved. All recorded high findings are resolved, and no high or critical
 finding remains.
+
+**2026-09-07 final runtime-axis and record re-review.** The committed non-isolated positive control now executes the integration-marked repository node through the same helper used for detector hits, requires `1 passed`, and rejects any `deselected` result. Removing the explicit empty marker expression therefore makes the gate fail. This closes `repository-marker-override-has-no-positive-control`.
+
+The S115 execution record now states the seven-plus-one pre-repair hit set, keeps S116 repair ownership separate, names the isolated and real-repository runtime mechanisms, and records the final exact-byte mutation evidence. A fresh focused snapshot passed 63 tests. Its bounded run selected 475 mutants, killed 452, and left 23 individually disposed semantic equivalents; no behavior-changing survivor remains. The snapshot hashes match the current detector, test, and both fixture files, and its external scratch was removed. This closes `execution-record-preclaims-closure`.
+
+S115 is approved. All recorded high findings are closed; no high or critical finding remains.
+

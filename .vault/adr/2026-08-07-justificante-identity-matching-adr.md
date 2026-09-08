@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#justificante-identity-matching'
 date: '2026-08-07'
-modified: '2026-08-15'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:3db455d979f5f04b4f4ddc8609b0ae32f5f4f66dfd65e793b213db3e47d69add'
+body_hash: 'sha256:194b9fd64b9337d58719dad36999e3d9baef4658f2c5bfaa2ef27029f232187d'
 related:
   - "[[2026-08-07-justificante-identity-matching-reference]]"
   - "[[2026-06-10-live-justificante-reconcile-adr]]"
@@ -438,3 +438,11 @@ destroying the row-scoped binding this decision's entire safety argument now
 depends on more visibly than before. Any change to that fetch shape MUST
 re-establish an equivalent row-exact binding before landing, and MUST update
 this ADR's Considerations to record how.
+
+## Amendment (2026-09-08): normalized observation capture is the sole declarations-register owner
+
+This amendment replaces every statement in this record that names `capture_declaration` as a required part of the row-identity mechanism. The current ownership remeasurement is recorded in `2026-08-07-justificante-identity-matching-reference`: live application callers enter through `DeclaracionesRegisterSession.capture_observation`, which resolves the exact `_row_locator_for_expediente` and passes it to `capture_filed_declaration_observation_from_row`; the latter owns the per-row cotejo redirect, independently-derived CSV, PDF fetch, and normalized `FiledDeclaracionObservation`.
+
+The duplicate raw `capture_declaration` facade is not a second authority. It is removed with its export, identity-only live test, PDF-contract census row, and stale documentation rather than redirected or retained as compatibility vocabulary. The one-call `capture_filed_declaration_observation` wrapper is removed for the same reason: it only opens the canonical session and delegates, while production callers already hold the session owner directly. The empty-authenticated-identity refusal moves to `DeclaracionesRegisterSession.capture_observation` so consolidation strengthens the live boundary instead of deleting the wrapper's only additional check.
+
+The safety decision itself is unchanged. `_row_locator_for_expediente` remains exact; every declaration artefact fetch remains scoped to that locator and its AEAT-served cotejo redirect; and the independently-derived CSV/content identity checks remain intact. A future period-level, batch-level, or pooled artefact fetch must re-establish all three guarantees and amend this record. The procedure-tree walker's separate `capture_justificante`/`SedeCapture` path retains its own product owner and must not be weakened by this declarations-register consolidation.

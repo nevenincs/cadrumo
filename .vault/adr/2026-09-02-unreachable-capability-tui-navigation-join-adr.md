@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#unreachable-capability'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:638a45e7cb0585c29c8fb73a0aba981264493b5c00f4ade26d988423b0304b93'
+body_hash: 'sha256:cfcc5bb3dacab49584366fdf2b1a785b1c4e0cafa11b1fb56ead2af4e53625e4'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
   - '[[2026-09-02-unreachable-capability-fincas-unblock-research]]'
   - '[[2026-09-02-unreachable-capability-tui-root-composition-research]]'
   - '[[2026-09-02-unreachable-capability-tui-homepage-product-design-research]]'
+  - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
 ---
 # `unreachable-capability` adr: `one tui entrypoint and a home-screen navigation join` | (**status:** `accepted`)
 
@@ -41,9 +42,9 @@ The entrypoint question is already settled: bare `aeat --tui` starts the out-of-
 ## Constraints
 
 - The public navigation vocabulary is Home, Ledger, Declarations and AEAT Sync. Profile is always reachable through the account identity control. Implementation terms such as Secret, Flow, Operation and WorkUnit are not navigation labels.
-- “Declaration” is the human-facing term for a local Modelo/year/period case. “Filing” is reserved for submission or filing evidence.
+- â€œDeclarationâ€� is the human-facing term for a local Modelo/year/period case. â€œFilingâ€� is reserved for submission or filing evidence.
 - Home is local-only on initial load. AEAT network activity is always an explicit action with visible progress, result and failure state.
-- “Sync” means explicit pull, compare, reconcile and supported push or filing actions. It must not imply automatic two-way convergence or silently choose which side wins.
+- â€œSyncâ€� means explicit pull, compare, reconcile and supported push or filing actions. It must not imply automatic two-way convergence or silently choose which side wins.
 - Every Home zone and destination admission carries an explicit state such as available, locked, stale, never captured or unavailable. Unavailable destinations remain understandable rather than masquerading as empty data.
 - Only the active destination body is mounted. Navigation uses routed screens, not a tab container retaining inactive workspaces.
 - Focus, active destination, blockers and statuses have textual non-colour cues. Focus restoration uses semantic identity rather than row position.
@@ -79,4 +80,13 @@ Operators gain one coherent workbench, a first-class Ledger, a declaration lifec
 
 The architecture and interface plans must be reconciled before execution. Work now includes a Home projection and refresh contract, production area factories, host-neutral declaration navigation, a Ledger TUI, a public calendar/evidence composition provider, AEAT Sync and notification projections, global search, localization, responsive behavior and accessibility gates. These capabilities may land incrementally, but unavailable destinations cannot claim completion.
 
-The earlier “five existing areas, no shape changes” implementation text is retired by this amendment. The entrypoint retirement and out-of-process CLI boundary remain in force.
+The earlier â€œfive existing areas, no shape changesâ€� implementation text is retired by this amendment. The entrypoint retirement and out-of-process CLI boundary remain in force.
+
+## Amendment 2026-09-08: independent launcher replaces the global CLI request
+
+The earlier `aeat --tui` launch clause is withdrawn. `aeat app tui` is the sole CLI launch seam:
+it starts the independent TUI root as an opaque child process and returns its process status. It
+does not address a destination or command path and does not make the CLI a TUI routing authority.
+The retired `aeat-tui` spelling remains retired. TUI root navigation remains wholly inside the
+full-screen entrypoint.
+

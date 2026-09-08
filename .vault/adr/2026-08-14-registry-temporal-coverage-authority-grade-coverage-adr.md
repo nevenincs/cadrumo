@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-temporal-coverage'
 date: '2026-08-14'
-modified: '2026-08-27'
+modified: '2026-09-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:967e426d26ff367a59a20f86c8356aa64da96d6b5486ebac391f380a6cbf61e6'
+body_hash: 'sha256:158e079114477f1f0b9a7216ea5507293d15e428fae0248998aafe873bf28363'
 related:
   - "[[2026-08-14-registry-temporal-coverage-research]]"
   - "[[2026-08-14-registry-temporal-coverage-adr]]"
@@ -486,3 +486,13 @@ guess.
   promotion worklist the matrix will emit. Accepting this record ratifies
   the keyed-catalogue destination, the in-scope applicability migration, the
   embed-inventory teardown and the year gate.
+
+### 2026-09-08 correction: coverage residue is development-owned
+
+This correction qualifies the Constraints claims that declared-year completeness is enforced by registry build validation and that a gap refuses the complete load; the calendar-rollover claim that both calculation and filing refuse an undeclared year; Implementation's year-gate and enforcement descriptions insofar as they place the derived gap projection in production; and the final availability consequence. It also clarifies that the honest derived worklist replacing `_coverage.py` is development-owned.
+
+The supported-filing-years catalogue remains a registry declaration and the filing draft boundary remains its production consumer. The completeness projection over declared years is development-time review machinery, derived at report time from `ValidatedRegistryAuthority.modelos`, the supported-years catalogue, and source catalogues. No supported-year gap collection, cell advisory projection, or hand-maintained implementation-status surface belongs on `ValidatedRegistryAuthority` or elsewhere under `src/`.
+
+Registry loading validates the declaration's schema, not campaign completeness. `dev.registry.analysis.coverage_residue_worklist` owns the derived gap computation and combines it with temporal-coverage residue to emit the finite review worklist. This preserves one live derivation without making production retain development metastate or advisory APIs.
+
+Production enforcement is narrower than previously stated: `application.filing.draft_construction` refuses construction of a filing draft whose filing year is absent from the registry declaration. This correction does not establish an equivalent calculation-wide refusal, does not make derived coverage gaps fatal to registry loading, and does not promise whole-registry unavailability when one declared cell lacks review evidence. Any future expansion of that runtime policy requires evidence of a real product consumer and a further amendment.

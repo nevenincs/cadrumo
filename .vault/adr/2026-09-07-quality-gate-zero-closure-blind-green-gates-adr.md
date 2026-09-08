@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#quality-gate-zero-closure'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:6740343d7265bed8ba9aad804e61cbc71c850a9ec507b6d6c557054d947c2f89'
+body_hash: 'sha256:898cfb735aa95c4188dfc4b356d3558619b0614de5067edb25263b5e4b36ca31'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-adr]]"
   - "[[2026-07-25-test-harness-honesty-adr]]"
@@ -17,7 +17,6 @@ related:
   - '[[2026-09-07-quality-gate-zero-closure-never-emitted-decidability-measurement-audit]]'
   - '[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]'
 ---
-
 # `quality-gate-zero-closure` adr: `Blind green is a gate failure, and most of it is mechanically detectable` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -87,13 +86,18 @@ The work divides into domains that are independently completable and independent
 
 **Install mutmut as the prerequisite instrument.** mutmut is pinned as a development dependency with a recorded, reproducible invocation. Scope is bounded per package: this suite carries a documented history of multi-hour wedged runs, and an unbounded first run would establish nothing except that mutation testing is expensive. One bounded package is measured for wall clock, mutant count, and killed and surviving counts. Survivors are triaged into assertions that cannot fail and semantically inert mutants. The standing scope and cadence are then declared from the measured cost.
 
-**Standing mutation scope and cadence.** The initial standing scope is one
-detector module per run: `dev/quality/tautological_assertion_scan.py`, judged by
-`dev/quality/tests/test_tautological_assertion_gate.py`. The generated tree copies the
-two roots that gate actually sweeps, `src/cadrumo` and `dev`; they are test
-subjects, while mutation generation remains bounded to the selected detector.
-An additional detector enters this scope only after its own bounded run has
-been measured and its non-killed mutants individually disposed.
+**Standing mutation scope and cadence.** The standing scope is one detector
+module per run, judged by its paired gate: `tautological_assertion_scan.py` by
+`test_tautological_assertion_gate.py`; `subsuming_disjunctions.py` by
+`test_subsuming_disjunctions.py`; `self_echoing_tokens.py` by
+`test_self_echoing_tokens.py`; `locale_bound_assertions.py` by
+`test_locale_bound_assertions.py`; `taxonomy_absence_conformance.py` by
+`test_taxonomy_absence_conformance.py`; and `gate_verdict_grammar.py` by
+`test_gate_verdict_grammar.py`. Detector modules live in `dev/quality/` and
+paired gates in `dev/quality/tests/`. The generated tree copies the real-tree
+subjects `src/cadrumo` and `dev`, while mutation generation stays bounded to
+the selected detector. A further detector enters this scope only after its own
+bounded run has been measured and every non-killed mutant individually disposed.
 
 The manual trigger snapshots the current tree into WSL `/tmp`, so mutmut's generated
 `mutants/` tree never becomes repository-root scratch:
@@ -109,10 +113,10 @@ Run the selected detector after changing its implementation, its gate, or the
 mutation selection/copy configuration, and before closing the corresponding
 implementation Step. A shared mutation-configuration change triggers one
 bounded run for each affected detector, separately; unchanged detectors carry
-no calendar re-run. The minute-scale cost measured in
-`2026-09-07-quality-gate-zero-closure-bounded-mutmut-measurement-audit` makes
-this change-triggered cadence practical without moving mutation testing into
-commit time or CI. A future `just` wrapper or manually dispatched GitHub job
+no calendar re-run. Accepted bounded detector runs currently span approximately 58.2 seconds for
+the taxonomy detector through 1054.75 seconds for the verdict detector. Those
+measured costs support this manual, one-detector-at-a-time, change-triggered
+cadence without moving mutation testing into commit time or CI. A future `just` wrapper or manually dispatched GitHub job
 belongs to the owner of those surfaces and is not authorised here. Whole-suite
 mutation remains forbidden, every survivor remains an individual finding, and
 no aggregate score is calculated or reported.
@@ -175,3 +179,4 @@ The measured family extends from assertion expressions to verdict consumers: cod
 This adds one decidable class: direct containment, prefix, or suffix predicates against a declared gate-output token when that producer grammar admits surrounding structured text. Its detector must join the AST predicate to the declared producer grammar, sweep the real tree, carry a positive control and anti-vacuity floor under `dev/quality/tests/`, run in the existing per-push lane, and have its own gate killed by mutmut. Criterion 3 applies to this class exactly as it applies to the assertion classes. The extension adds no CI lane, threshold, baseline, suppression, or unchecked declaration, and does not turn the mutation run into a pass score.
 
 The same measurement also found a second hand-maintained declaration census and a mock that asserted a reset call rather than its cache effect. Those are repaired under the checked two-drift-direction declaration mechanism and effect observation respectively; they do not define additional structural detector classes.
+

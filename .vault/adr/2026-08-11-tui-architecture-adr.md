@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-08-28'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:b742d0cf67a1eb36f93137fba30276ad524d5228a86286977095f9dd1d944fc7'
+body_hash: 'sha256:ee1fe7f8cb82fec081c88597e018fc192b5c3725db5547eeb1282a35691d8d7f'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -23,6 +23,7 @@ related:
   - '[[2026-07-09-compatibility-lifecycle-adr]]'
   - '[[2026-08-10-current-schema-only-purge-adr]]'
   - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]'
+  - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
 ---
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
 
@@ -1467,3 +1468,69 @@ claim that "C0 and C3 remain independently gated by their exact dependency
 receipts" is unchanged in substance and is read under this split: "dependency
 receipt" there now means the execution record described above, never the
 retired code-resident artifacts.
+
+## Amendment 2026-09-07: TUI harness is development infrastructure
+
+The earlier decision that surface construction, pilot replay, screenshots, fixtures,
+and their command entrypoint live in `cadrumo.entrypoints.tui.devtools` is withdrawn.
+That package is removed from `src/`; `dev/tui/harness` becomes the sole home for
+those development capabilities and may import the installed TUI it exercises.
+
+This is a boundary correction, not a second frontend. Production controllers, screens,
+routes, models, and application-owned operation contracts remain in their existing
+homes. No product module may import or inspect the harness, and the harness is absent
+from wheel, sdist, installer, and installed command surfaces. Every target-tree,
+external-import, ownership, or verification clause that requires TUI development
+tooling to remain inside the product namespace is superseded by this amendment.
+
+## Amendment 2026-09-07: registered terminal failure codes
+
+The requirement that every frontend dispatch a registered operation through the
+supervisor also applies when an existing synchronous frontend distinguishes
+actionable failures. Supervision must not collapse those distinctions into one
+generic failure, but exception types, messages, contexts, paths, URLs and
+tracebacks remain forbidden public or persisted contracts.
+
+The canonical error registry already owns a stable code, category, message key and
+retry posture for every `CadrumoError`. The supervisor records that stable code as
+`failure_error_code` when a registered non-refusal error settles as `FAILED`.
+`FAILED` still carries the existing opaque `diagnostic_ref`, and its effect remains
+independently authoritative. An unregistered exception falls closed to the existing
+diagnostic-only failure.
+
+The public observation and terminal event expose only the registered code, never
+exception types, messages, arguments, contexts, paths, URLs or tracebacks. A frontend
+resolves presentation from the same canonical error-code authority; localized copy
+and transport exit behavior remain frontend concerns.
+
+Failure classification does not use `result_ref`, because an actionable explanation
+is not a successful or partial business result. It does not use `refusal_ref`, because
+a frontend's refusal presentation cannot change authoritative terminal semantics or
+erase an `UNKNOWN` effect after an irreversible boundary. It never encodes data in
+`diagnostic_ref`, whose correlation-only meaning is unchanged. Application guards
+that can reach an operation executor use registered `CadrumoError` subclasses rather
+than bare Python exceptions.
+
+## Amendment 2026-09-08: one opaque root-launch seam; no CLI destination routing
+
+Earlier launch clauses permit `aeat --tui [COMMAND_PATH]` and treat CLI command capability as
+the admission condition for a full-screen route. That makes the CLI an authority for the TUI's
+surface.
+
+The CLI may launch the TUI only through `aeat app tui`, which executes the TUI module as a fixed,
+opaque child-process target and returns its exit status. It may not import, load, annotate against,
+register from, enumerate, resolve, admit, select, or interpret a TUI route, screen, destination,
+action, outcome, or capability. The TUI likewise does not import or inspect the CLI graph. The TUI
+root owns every journey after process start.
+
+CLI uses of `FullScreenDestination`, `FullScreenSessionRequest`, and
+`FullScreenSessionOutcome` are retired. Any destination protocol is TUI-internal unless a
+separately identified non-CLI peer needs it; delete the shared protocol if no such peer remains.
+The launch command contains only child-process construction and exit-status propagation; it must
+not recreate a route protocol or presentation-capability gate.
+
+D11's no-import direction remains mandatory. Its permitted external reference is narrowed to
+packaging, direct module execution, and this single opaque root-launch command. All earlier
+`aeat --tui`, `AVAILABLE`/`NOT_IMPLEMENTED`, and CLI destination-launch authorizations are
+superseded.
+

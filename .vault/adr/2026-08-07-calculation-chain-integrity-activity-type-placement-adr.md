@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#calculation-chain-integrity'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-09-07'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e20cdedf4b3040276102f4db98c949a39e5897201acf59aa9b3e657d5eb6e23'
+body_hash: 'sha256:c6c322be613dbd140ec0d260c31e2baa30acb67916716b16b9b350c002eed4ac'
 related:
   - "[[2026-08-07-calculation-chain-integrity-plan]]"
   - "[[2026-07-26-multi-activity-profile-reference]]"
@@ -13,6 +13,7 @@ related:
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
   - '[[2026-08-07-calculation-chain-integrity-m390-annual-under-modelling-research]]'
 ---
+
 # `calculation-chain-integrity` adr: `Activity-type axis placement: the value is a profile activity row, the transaction carries a reference` | (**status:** `proposed`)
 
 ## Problem Statement
@@ -224,3 +225,13 @@ red, then reverted.
 So this ruling stands unamended in substance. What changed is that its constraint is
 discharged, its violation is recorded rather than quietly carried, and the moment it
 starts costing something is now guarded.
+
+## Amendment 2026-09-08: the unused sectoral projection is withdrawn
+
+The Implementation section above overreaches where it says the future activity join selects a rate subset already exposed by `sectoral_activity_retencion_rates`. That helper was not an implemented capability boundary: exact production search found no consumer, and the helper described itself as “DECLARED, NOT YET REACHED”. Keeping a speculative future projection and its development status in `src/` contradicts the production boundary.
+
+`sectoral_activity_retencion_rates` is therefore deleted. This corrects the prescribed implementation shape; it does not reject the activity-value placement or transaction-reference decision. If a grounded consumer later needs to distinguish the art. 95.4, 95.5, or 95.6.1.º rates, that consumer must introduce the smallest projection its owned legal determination requires at that time. This record does not reserve a production helper in anticipation of that work.
+
+The canonical registry-backed authority remains unchanged: `RirpfArt95RetencionRates` still loads all six separately grounded legal parameters; `statutory_activity_retencion_rates` exposes their distinct values; `professional_activity_retencion_rates` serves its active consumer; `rirpf_art95_retencion_legal_refs` preserves grounding; and `maximum_supported_activity_retencion_rate` supplies the active bounded-inference ceiling. Deleting the unused sectoral set removes neither a legal parameter nor a live calculation path.
+
+Accordingly, read the earlier Implementation sentence as a description of a possible future consumer need, not as authority to maintain `sectoral_activity_retencion_rates`. The owning consumer and its grounded classification mechanism must exist before such a projection belongs in production.
