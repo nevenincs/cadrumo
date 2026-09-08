@@ -1046,6 +1046,11 @@ def _numeric_derivation(
                 signed=signed,
                 export_record_id=export_record_id,
                 decimals=None if signed else adjudicated.decimal_digits,
+                # A note that mandates a value closes the slot's domain, and the
+                # schema carries that on the unsigned scaled shape only -- which
+                # is exactly what the declaration validator already refuses a
+                # signed run for, so no signed adjudication can arrive with one.
+                allowed_values=adjudicated.mandated_values,
                 derivation_code="numeric-note-governed-amount-v1",
             )
         return _schema_field(

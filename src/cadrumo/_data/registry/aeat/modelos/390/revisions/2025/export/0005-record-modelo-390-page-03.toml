@@ -731,6 +731,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -755,6 +756,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -827,6 +829,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -851,6 +854,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -875,6 +879,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -899,6 +904,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -1067,6 +1073,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -1093,6 +1100,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -1171,6 +1179,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -1197,6 +1206,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -1223,6 +1233,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -1249,6 +1260,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -1347,32 +1359,6 @@ offset = 914
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-21.cuota'
-data_type = 'decimal'
-required = false
-padding = 'left_zero'
-justification = 'right'
-decimals = 2
-signed = false
-legal_refs = [
-    'ley-37-1992:art-107',
-    'ley-37-1992:art-163-nonies',
-    'ley-37-1992:art-163-sexies',
-    'ley-37-1992:art-92',
-    'ley-37-1992:art-94',
-    'ley-37-1992:art-95',
-    'ley-37-1992:art-97',
-    'ley-37-1992:art-99',
-    'orden-eha-3111-2009:art-1',
-    'rd-1624-1992:art-71',
-]
-source_refs = ['aeat-dr-390-2025']
-
-[[revisions.2025.export_layouts.records.fields]]
-id = 'modelo-390-page-03-casilla-deducible-intragrupo-inversion-total-base'
-offset = 931
-length = 17
-kind = 'casilla'
-casilla_id = 'iva.anual.deducible.intragrupo-inversion.total.base'
 data_type = 'decimal'
 required = false
 padding = 'left_zero'

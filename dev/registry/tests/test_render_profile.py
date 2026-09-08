@@ -1203,6 +1203,15 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
     and the authority validates each against that source's own digest before
     projecting eligibility. It is source-side evidence, not a tree or layout
     oracle. A new local import outside this set still fails, which is the point.
+
+    ``render_profile_eligibility`` is admitted on the same test and for a reason
+    that STRENGTHENS the allow-list rather than widening it. It is the public
+    defining module the shared eligibility contract was hard-moved to, because
+    consumers outside this package must ask it and an underscore-private module
+    is not a cross-package API. It holds nothing this module did not already
+    hold: it resolves the pinned source's own declarations and calls this
+    module's projection. Nothing downstream of the parser is reachable through
+    it, which is what this allow-list is for.
     """
     module = ast.parse(inspect.getsource(_render_profile))
     local_imports = {
@@ -1214,6 +1223,7 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
         "_pydantic_error_detail",
         "_record_design_ir",
         "_semantic_map_join",
+        "render_profile_eligibility",
         "source_defects",
     }
     source_loader = next(

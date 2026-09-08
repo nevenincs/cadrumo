@@ -60,11 +60,13 @@ from __future__ import annotations
 
 import collections
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline.render_check import revision_render_inputs
 from .footnote_only_wire_facts import OUTSTANDING_KINDS
@@ -82,6 +84,7 @@ __all__ = [
     "NoteWorkItem",
     "classify_grounding",
     "grounding_worklist",
+    "reviewed_rule_contradictions",
     "revision_findings",
     "screen_authority",
 ]
@@ -187,6 +190,33 @@ def grounding_worklist(
     return tuple(sorted(items, key=lambda item: (-len(item.fields), item.modelo, item.design, item.note)))
 
 
+def reviewed_rule_contradictions(
+    findings: Iterable[GroundingFinding], *, anchored: frozenset[tuple[str, str, str]]
+) -> tuple[GroundingFinding, ...]:
+    """Return the fields this census owes a reviewed rule that ALREADY have one.
+
+    A field cannot both anchor a rule in a reviewed render profile and be
+    reported as needing one. The profile is the reviewed rule; a census row for
+    the same field says the work is outstanding. Both claims are made about the
+    same tree from the same declarations, so a field satisfying both is a
+    contradiction deducible without any new evidence, and the row is work
+    somebody would do twice.
+
+    This is the general form of a defect that has recurred: a mechanism lands
+    and its consumers keep reporting the population it already covers, each time
+    for a different reason - an eligibility question asked two ways, a covered
+    row never reclassified, a screen reaching past the routed predicate. Naming
+    the contradiction rather than any one of its causes is what makes the next
+    instance visible without knowing in advance how it will arrive.
+
+    ``anchored`` is the set of ``(modelo, revision, cell)`` keys the reviewed
+    profiles anchor, passed in rather than gathered here so this stays a
+    function of its arguments and so the census does not have to reach into the
+    profile loader to answer a question about its own rows.
+    """
+    return tuple(finding for finding in findings if (finding.modelo, finding.revision, finding.cell) in anchored)
+
+
 def revision_findings(
     authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
 ) -> tuple[GroundingFinding, ...]:
@@ -286,8 +316,23 @@ def classify_grounding(
 def screen_authority(
     authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
 ) -> tuple[GroundingFinding, ...]:
-    """Screen every revision that can produce render inputs."""
+    """Screen every revision that can produce render inputs.
+
+    A REFUSAL is kept apart from a revision this screen cannot read, for the
+    reason the pointer screen this one consumes keeps them apart: its routed
+    eligibility predicate validates each design's own pinned declarations, and
+    a stale pin raises a :class:`RegistryValidationError`, which is a
+    ``ValueError``. A single broad handler would file that under "declared
+    nothing this screen can read", so a revision whose reviewed reading had
+    stopped covering its design would silently drop out of the grounding census
+    while the census still read as complete.
+
+    Raises:
+        RegistryValidationError: when any revision's declarations refuse against
+            the design they are pinned to, naming every refusing revision.
+    """
     inapplicable: list[tuple[str, str, str]] = []
+    refused: list[str] = []
     attempted = 0
     findings: list[GroundingFinding] = []
     for modelo_id in modelo_ids:
@@ -295,6 +340,12 @@ def screen_authority(
             attempted += 1
             try:
                 findings.extend(revision_findings(authority, modelo=modelo_id, revision=str(revision_id)))
+            except RegistryValidationError as error:
+                # Ordered ABOVE the broad handler: a refusal is a ValueError, so
+                # the handler below would otherwise claim it and report a stale
+                # declaration as a revision with nothing to read.
+                refused.append(f"{modelo_id}/{revision_id}: {error}")
+                continue
             except (ValueError, KeyError, FileNotFoundError, OSError) as error:
                 # Inapplicable, not broken: these revisions declare no export
                 # layout or cite no record design, so the screen genuinely cannot
@@ -304,6 +355,11 @@ def screen_authority(
                 # it covered under a quarter of the corpus.
                 inapplicable.append((modelo_id, str(revision_id), str(error)))
                 continue
+    if refused:
+        raise RegistryValidationError(
+            f"{len(refused)} revision(s) refused their own pinned declarations and were not screened; "
+            "this is a stale declaration, not a revision with nothing to read: " + "; ".join(refused),
+        )
     if inapplicable:
         sys.stderr.write(
             f"rule_grounding_coverage: examined {attempted - len(inapplicable)} of {attempted} revision(s); "

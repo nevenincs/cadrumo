@@ -93,6 +93,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-85',
@@ -118,6 +119,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-85',
@@ -193,6 +195,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-85',
@@ -218,6 +221,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-85',
@@ -243,6 +247,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-85',
@@ -268,6 +273,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-85',
@@ -443,6 +449,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-84',
     'ley-37-1992:art-92',
@@ -466,6 +473,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-84',
     'ley-37-1992:art-92',
@@ -535,6 +543,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-84',
     'ley-37-1992:art-92',
@@ -558,6 +567,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-84',
     'ley-37-1992:art-92',
@@ -581,6 +591,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-84',
     'ley-37-1992:art-92',
@@ -604,6 +615,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-84',
     'ley-37-1992:art-92',

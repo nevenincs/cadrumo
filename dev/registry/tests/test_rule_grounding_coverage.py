@@ -492,3 +492,59 @@ def test_an_unmeasured_caller_gets_no_claim_about_drift() -> None:
         detail="",
     )
     assert grounding_worklist((finding,))[0].grounding_drifts is False
+
+
+def _grounding_finding(*, modelo: str, revision: str, cell: str) -> object:
+    """One census row, written here so the contradiction below is the only variable."""
+    from ..analysis.rule_grounding_coverage import GroundingFinding
+
+    return GroundingFinding(
+        modelo=modelo,
+        revision=revision,
+        cell=cell,
+        design="design.xlsx.extracted.md",
+        aeat_type="Num",
+        length=17,
+        kind="ungrounded",
+        notes=(),
+        detail="written in this test",
+    )
+
+
+def test_a_field_that_anchors_a_reviewed_rule_and_needs_one_is_reported() -> None:
+    """The teeth for the standing contradiction gate.
+
+    Both rows are census rows in the same shape and differ in one thing: whether
+    a reviewed rule anchors that exact cell. The anchored one is a contradiction
+    - the rule exists, so the row is work already done - and the unanchored one
+    is ordinary outstanding work that must not be swept up with it.
+
+    The keys are written here rather than taken from the shipped profiles. A
+    detector proven only against a clean corpus proves that the corpus is clean,
+    not that the detector fires; and the corpus is clean, so nothing in it could
+    have shown this.
+    """
+    from ..analysis.rule_grounding_coverage import reviewed_rule_contradictions
+
+    already_ruled = _grounding_finding(modelo="200", revision="2025", cell="Pag. 1!A10")
+    still_owed = _grounding_finding(modelo="200", revision="2025", cell="Pag. 1!A11")
+    anchored = frozenset({("200", "2025", "Pag. 1!A10")})
+
+    contradictions = reviewed_rule_contradictions((already_ruled, still_owed), anchored=anchored)
+
+    assert [item.cell for item in contradictions] == ["Pag. 1!A10"]
+    assert reviewed_rule_contradictions((still_owed,), anchored=anchored) == ()
+    # The key is whole: a matching cell on another revision or another modelo is
+    # a different field, and crediting it would silence a real row.
+    assert (
+        reviewed_rule_contradictions(
+            (_grounding_finding(modelo="200", revision="2024", cell="Pag. 1!A10"),), anchored=anchored
+        )
+        == ()
+    )
+    assert (
+        reviewed_rule_contradictions(
+            (_grounding_finding(modelo="202", revision="2025", cell="Pag. 1!A10"),), anchored=anchored
+        )
+        == ()
+    )

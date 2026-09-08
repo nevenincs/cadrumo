@@ -34,13 +34,11 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.record_design_pdf_rows import ABSENT_NATURALEZA_TYPE_CODE
 
 from ._pydantic_error_detail import validation_error_detail
-from ._record_design_ir import RecordDesignIntermediateField, RecordDesignIntermediateSource
+from ._record_design_ir import RecordDesignIntermediateField
 from ._semantic_map_join import JoinedRecordDesign
 from .source_defects import (
     NoteStatedApplicabilityDeclaration,
-    note_stated_applicability_for,
     note_states_only_applicability,
-    validate_note_stated_applicability_declarations,
 )
 
 __all__ = [
@@ -62,7 +60,6 @@ __all__ = [
     "load_render_profile_source_evidence",
     "project_render_profile_eligibility",
     "render_profile_digest",
-    "resolve_render_profile_eligibility",
     "validate_render_profile",
     "validate_render_profile_authority",
 ]
@@ -584,42 +581,18 @@ def validate_render_profile(
         source_ref=joined.source.source_ref,
         source_sha256=joined.source.source_sha256,
     )
+    # Imported at call time, not at module scope. The eligibility contract is
+    # shared beyond this package, so it has a public defining module of its own;
+    # that module reads this one's projection, and a module-level import back
+    # would close the cycle. There is one definition either way -- this
+    # validator and every screen ask that one function.
+    from .render_profile_eligibility import resolve_render_profile_eligibility
+
     eligibility = resolve_render_profile_eligibility(
         (joined_field.parser_field for joined_field in joined.fields),
         joined.source,
     )
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
-
-
-def resolve_render_profile_eligibility(
-    fixed_fields: Iterable[RecordDesignIntermediateField],
-    source: RecordDesignIntermediateSource,
-) -> RenderProfileEligibility:
-    """Partition fields of one PARSER-READ design, resolving its declarations here.
-
-    The declaration set is resolved from the source the parser read rather than
-    accepted from the caller, for the same reason
-    ``render_complete_export_tree`` resolves the note-governed amounts there:
-    every consumer -- the generator, the drift check, a screen, a test -- must
-    read ONE declaration set for one pinned design and cannot disagree about
-    which cells have been read.
-
-    This exists as a named function because a caller that assembles the argument
-    itself is a caller that can forget to. That is not hypothetical: the
-    pointer-only screen reached past this boundary into
-    :func:`project_render_profile_eligibility` and passed no declarations, so it
-    answered a question the renderer answers differently and reported a cell
-    whose note had been read, recorded and acted on as outstanding work. Routing
-    through one function removes the argument a caller could get wrong rather
-    than correcting the callers that got it wrong.
-
-    The pin is VALIDATED, not merely read: a declaration naming this source but
-    carrying another digest ends the call rather than being silently ignored,
-    which is the behaviour every consumer of an official design owes.
-    """
-    applicability_notes = note_stated_applicability_for(source.source_ref)
-    validate_note_stated_applicability_declarations(applicability_notes, source)
-    return project_render_profile_eligibility(fixed_fields, applicability_notes=applicability_notes)
 
 
 def validate_render_profile_authority(
@@ -915,8 +888,9 @@ def project_render_profile_eligibility(
     renderer's own routing ask ONE predicate with ONE input set.
 
     A caller holding a parser-read source wants
-    :func:`resolve_render_profile_eligibility` instead, which resolves and
-    validates that source's declarations before projecting.  Calling this
+    :func:`~dev.registry.pipeline.render_profile_eligibility.resolve_render_profile_eligibility`
+    instead, which resolves and validates that source's declarations before
+    projecting.  Calling this
     directly with a hand-assembled argument is how a consumer comes to answer a
     different question from the renderer.
     """

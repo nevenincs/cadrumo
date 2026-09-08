@@ -66,8 +66,8 @@ from dataclasses import dataclass
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.export import (
-    derive_export_layouts_from_bindings,
     resolved_export_endpoints,
+    resolved_export_fields,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
@@ -193,10 +193,27 @@ def amount_shaped_without_casilla(field: ExportFieldDefinition) -> bool:
 
     The shape test excludes what a fixed-width design actually puts in a numeric
     slot besides money. A ``value_policy`` names the slot as an ejercicio, an
-    enumeration, or an identifier digit string; ``allowed_values`` closes it to
-    a fixed domain, which an amount never is; a ``date_format`` makes it a date.
-    Each of those is a positive statement that the slot is NOT an amount, so a
-    field making any of them is refused here rather than compared by width.
+    enumeration, or an identifier digit string, and a ``date_format`` makes it a
+    date; each is a positive statement that the slot is not an amount.
+
+    ``allowed_values`` is refused on narrower ground, and the wider ground it
+    once rested on is gone. A closed domain is no longer proof that a slot is
+    not an amount: the registry now admits a scaled-amount value domain, and
+    eighty modelo 390 fields carry ``['0']`` while being unambiguously amounts.
+    What survives is this. A field reaching this predicate carries NO casilla,
+    so nothing states its meaning and it is being admitted to a comparison on
+    its width alone; a closed domain is a statement narrowing what the slot may
+    hold, and on a field that names no casilla the likeliest reading of that is
+    a code or an enumeration. The corpus agrees: of thirteen thousand six
+    hundred and eighty-one casilla-less fields, one hundred and twenty-one
+    declare a domain, and they are the flag, clave and tipo digits.
+
+    The scaled-amount domain does not reach here at all, which is why the
+    refusal costs nothing today: it is declared on casilla-bearing fields, whose
+    casilla data type settles the question without this predicate being asked.
+    Should a casilla-less scaled amount ever be authored, this refuses it and
+    the screen under-reports rather than compares a code as an amount - the safe
+    direction for an admission made on width.
     """
     if str(getattr(field.kind, "value", field.kind)) in _NON_VALUE_FIELD_KINDS:
         return False
@@ -214,14 +231,21 @@ def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Monet
     and one of them is wrong. This comparison is between declarations rather
     than against a rule, which is why no per-field gate can make it.
 
-    The run is read off the resolved RECORD rather than off the resolved
-    endpoints, because an endpoint exists only where a field reaches a casilla.
-    A filing-grade amount that carries no casilla -- a ``header`` field homed to
-    a producer key, which is how the official designs carry several rectificativa
-    importes -- yields no endpoint at all and was therefore invisible to exactly
-    the comparison that exists to catch an unscaled amount. Two such fields sat
-    unscaled beside twenty-three scaled siblings on modelo 200's DP200014B page
-    while this screen reported that modelo clean.
+    The run is read through the resolved FIELD accessor rather than the resolved
+    endpoints, because an endpoint is a casilla and exists only where a field
+    reaches one. A filing-grade amount that carries no casilla -- a ``header``
+    field homed to a producer key, which is how the official designs carry
+    several rectificativa importes -- yields no endpoint at all and was
+    therefore invisible to exactly the comparison that exists to catch an
+    unscaled amount. Two such fields sat unscaled beside twenty-three scaled
+    siblings on modelo 200's DP200014B page while this screen reported that
+    modelo clean.
+
+    Both accessors resolve the same surface and neither is reassembled here.
+    Rebuilding the surface from the binding derivation is how four published
+    figures came out wrong, each missing a linkage path the local walk did not
+    know about, so the field-level question got its own accessor rather than its
+    own walk.
 
     Widening the walk cannot make the screen invent an amount, because a group
     is compared only when a casilla-linked member has ALREADY proven it
@@ -233,22 +257,21 @@ def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Monet
     groups: dict[tuple[str, int], list[tuple[str, str, CasillaId | None]]] = collections.defaultdict(list)
     #: Groups a casilla declared monetary has vouched for. Nothing else is compared.
     monetary_runs: set[tuple[str, int]] = set()
-    for layout in derive_export_layouts_from_bindings(revision):
-        for record in layout.records:
-            for field in record.fields:
-                if field.length is None:
-                    # A field with no declared width cannot be compared against
-                    # siblings by width; the per-field checks report it instead.
-                    continue
-                casilla_id = field.casilla_id if field.casilla_id is not None else field.endpoint_casilla_id
-                if casilla_id is not None:
-                    if declared.get(casilla_id) != _MONETARY:
-                        continue
-                    monetary_runs.add((str(record.id), field.length))
-                elif not amount_shaped_without_casilla(field):
-                    continue
-                outcome = scale_outcome(str(field.data_type), getattr(field, "decimals", None))
-                groups[(str(record.id), field.length)].append((outcome, str(field.id), casilla_id))
+    for resolved in resolved_export_fields(revision):
+        field = resolved.field
+        if field.length is None:
+            # A field with no declared width cannot be compared against
+            # siblings by width; the per-field checks report it instead.
+            continue
+        casilla_id = resolved.casilla_id
+        if casilla_id is not None:
+            if declared.get(casilla_id) != _MONETARY:
+                continue
+            monetary_runs.add((resolved.record_id, field.length))
+        elif not amount_shaped_without_casilla(field):
+            continue
+        outcome = scale_outcome(str(field.data_type), getattr(field, "decimals", None))
+        groups[(resolved.record_id, field.length)].append((outcome, str(field.id), casilla_id))
 
     findings: list[MonetaryScaleFinding] = []
     for (record_id, length), members in sorted(groups.items()):

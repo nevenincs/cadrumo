@@ -93,6 +93,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -112,6 +113,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -131,6 +133,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -150,6 +153,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -210,6 +214,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -229,6 +234,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -248,6 +254,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -267,6 +274,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',

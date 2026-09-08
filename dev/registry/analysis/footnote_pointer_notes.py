@@ -322,7 +322,18 @@ def pointer_evidence_for_design(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Print each pointer in one design's extracted text with the note it resolves to."""
+    """Print every note one design defines, each under the sheet that prints it.
+
+    Reported by SHEET, through :func:`sheet_note_definitions`, because that is
+    what a note label identifies: a design numbers each page's notes from one,
+    so ``Nota 1`` names a different note on every sheet and a design-wide flat
+    listing prints several notes under one label. That ambiguity is why
+    :func:`note_definitions` requires a sheet rather than defaulting to the
+    design - and this entry point called it without one, so it raised on every
+    invocation and printed nothing at all. Taking one sheet as an argument would
+    only move the problem: the caller has a file, not a sheet name, and would
+    have to guess which page to ask for.
+    """
     argv = sys.argv[1:] if argv is None else argv
     if not argv:
         sys.stdout.write("usage: python -m dev.registry.analysis.footnote_pointer_notes <extracted.md>\n")
@@ -332,10 +343,13 @@ def main(argv: list[str] | None = None) -> int:
     # that an author is about to rely on - a note that quietly lost a word is
     # worse evidence than a note that failed to load.
     extracted = Path(argv[0]).read_text(encoding="utf-8")
-    definitions = note_definitions(extracted)
-    for label, text in sorted(definitions.items()):
-        sys.stdout.write(f"note_definition label={label!r} text={text!r}\n")
-    sys.stdout.write(f"summary definitions={len(definitions)}\n")
+    sheets = sheet_note_definitions(extracted)
+    defined = 0
+    for sheet, definitions in sorted(sheets.items()):
+        for label, text in sorted(definitions.items()):
+            defined += 1
+            sys.stdout.write(f"note_definition sheet={sheet!r} label={label!r} text={text!r}\n")
+    sys.stdout.write(f"summary sheets={len(sheets)} definitions={defined}\n")
     return 0
 
 

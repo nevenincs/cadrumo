@@ -271,6 +271,29 @@ class NoteGovernedAmountDeclaration(BaseModel):
     mapping ``N`` to signed would be right for one design and wrong for the
     other, so the pairing is declared and reviewed here, once per run.
     """
+    mandated_values: tuple[str, ...] | None
+    """The closed value domain the note MANDATES, or ``None`` when it mandates none.
+
+    A note can withhold more than a representation. Modelo 390's 2025 Nota 2 --
+    "estas casillas deben estar rellenas a 0" -- states the VALUE the expired
+    temporary-rate slots may carry, and a slot whose only admissible value is
+    zero is under-declared while the pipeline emits a nonzero one at the right
+    scale. This field is how that mandate is recorded, and it is required rather
+    than defaulted so a declaration that asserts no domain says so explicitly
+    instead of inheriting silence.
+
+    Members are spelled in WHOLE UNITS, unsigned and zero-canonical, because
+    that is the value the fixed-width codec settles against before it applies
+    the scale: ``"0"`` on a fifteen-and-two slot is the quantity zero, whose
+    wire form is the seventeen zero bytes the scale produces. A wire digit run
+    would read as minor units on a scaled slot and as units on an unscaled one,
+    so the two spellings would disagree by ``10 ** decimal_digits`` while
+    looking identical.
+
+    Deliberately NOT parsed out of ``note_statement``: the mandate is read by a
+    person and recorded here, so a note whose Spanish a matcher would misread
+    cannot quietly acquire or lose a domain.
+    """
     evidence: str = Field(min_length=1)
     """How the reading was established, in terms a later reviewer can re-check."""
 
@@ -303,6 +326,34 @@ class NoteGovernedAmountDeclaration(BaseModel):
             )
         return self
 
+    @model_validator(mode="after")
+    def _require_a_domain_the_export_schema_can_carry(self) -> NoteGovernedAmountDeclaration:
+        # The schema admits a closed domain on the unsigned scaled-amount shape
+        # only. A signed run renders through `money`, which declares no scale on
+        # the field and carries no reviewed domain, so a mandate declared beside
+        # one would be dropped on the way to the layout with nothing to notice.
+        if self.mandated_values is None:
+            return self
+        if self.signed:
+            raise ValueError(
+                f"{self.sign_policy} renders through the money wire type, which carries no value domain; "
+                "a mandated value cannot be declared on it",
+            )
+        if not self.mandated_values or len(set(self.mandated_values)) != len(self.mandated_values):
+            raise ValueError("mandated_values must be non-empty and unique")
+        invalid = tuple(
+            value
+            for value in self.mandated_values
+            if not (value.isascii() and value.isdigit() and str(int(value)) == value)
+            or len(value) > self.integer_digits
+        )
+        if invalid:
+            raise ValueError(
+                f"mandated_values must be zero-canonical unsigned unit values of at most "
+                f"{self.integer_digits} digits; {invalid!r} are not",
+            )
+        return self
+
 
 _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
     "aeat-dr-200-2025": (
@@ -318,6 +369,7 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
             integer_digits=15,
             decimal_digits=2,
             sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=None,
             evidence=(
                 "Twenty-six 'Deducción resto del grupo' slots on DP200019 carry the bare pointer 'Nota 1' where "
                 "their four siblings in each I+D+i year block -- 'Deducción pendiente/generada', 'Deducción "
@@ -344,6 +396,7 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
             integer_digits=15,
             decimal_digits=2,
             sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=None,
             evidence=(
                 "The single slot on DP200020B carrying the bare pointer 'Nota 1' is the 'Incremento porcentual "
                 "de la plantilla media total' row, aeat_type 'Num' at length 17 as read from the workbook. The "
@@ -369,6 +422,7 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
                 integer_digits=14,
                 decimal_digits=2,
                 sign_policy=_N_PREFIX_SIGN_POLICY,
+                mandated_values=None,
                 evidence=(
                     "Rows A94 and A95 of DP200014B are the two 'Rectificativa' slots the 2025 design added for "
                     "the anterior autoliquidación: ordinales 89 and 90, positions 1408 and 1425, length 17, "
@@ -429,6 +483,7 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
             integer_digits=15,
             decimal_digits=2,
             sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=("0",),
             evidence=(
                 "The 2025 design replaced the Contenido clause of the expired temporary-rate slots -- the "
                 "0%, 2%, 5% and 7,5% rows and the 0%, 0,26%, 0,62% and 1% recargo rows -- with the pointer "
@@ -438,7 +493,18 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
                 "written. The representation therefore stands unchanged from the surrounding run, which the "
                 "same sheet still states outright on every 17-position amount whose rate survives into 2025 "
                 "(4%, 10% and 21% bases and cuotas), and which the 2024 design states on these very rows. "
-                "Reading the pointer as an unscaled integer instead would emit euros into a cents field."
+                "Reading the pointer as an unscaled integer instead would emit euros into a cents field. "
+                "The note's OTHER half is the value: 'deben estar rellenas a 0' is a mandate, not guidance, "
+                "and it closes these slots to the single quantity zero, which is what mandated_values ('0') "
+                "records. Zero is the whole domain because the rates the slots priced -- 0%, 2%, 5%, 7,5% "
+                "and the 0%, 0,26%, 0,62% and 1% recargos -- expired before the 2025 ejercicio, so no base "
+                "or cuota can accrue against them; the slots survive only to hold the record layout's "
+                "positions. The unit spelling is what the fixed-width codec settles against, and on this "
+                "fifteen-and-two slot the quantity zero reaches the wire as seventeen zero bytes, which is "
+                "also the fill AEAT prescribes for an empty numeric slot -- so the mandate and the blank "
+                "fill agree byte for byte and the constraint adds refusal without changing any emitted "
+                "record. A cents reading of '0' would be the same bytes here and a hundredfold error on any "
+                "nonzero member, which is why the domain is declared in units."
             ),
         )
         for sheet, note_cell in (

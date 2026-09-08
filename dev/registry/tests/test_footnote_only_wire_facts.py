@@ -31,6 +31,7 @@ from typing import Final
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..analysis.footnote_only_wire_facts import (
     ADJUDICATED_KINDS,
@@ -42,10 +43,13 @@ from ..analysis.footnote_only_wire_facts import (
     pinned_adjudications,
     pinned_applicability_readings,
     revision_findings,
+    screen_authority,
     would_become_eligible,
 )
 from ..analysis.footnote_pointer_notes import note_definitions
-from ..pipeline._render_profile import project_render_profile_eligibility, resolve_render_profile_eligibility
+from ..pipeline._render_profile import project_render_profile_eligibility
+from ..pipeline.render_check import revision_render_inputs
+from ..pipeline.render_profile_eligibility import resolve_render_profile_eligibility
 from ..pipeline.source_defects import NoteGovernedAmountDeclaration, NoteStatedApplicabilityDeclaration
 
 #: Named once per module rather than repeated at each read site, where a typo
@@ -77,6 +81,7 @@ def _declaration(
         integer_digits=15,
         decimal_digits=2,
         sign_policy="unsigned",
+        mandated_values=("0",),
         evidence="Written in this test to exercise the screen's matcher; adjudicates nothing.",
     )
 
@@ -501,3 +506,103 @@ def test_an_applicability_reading_pinned_elsewhere_covers_nothing(
     assert cell_applicability_reading(authored, sheet="Pag. 2", content="Nota 2") is None
     assert cell_applicability_reading(authored, sheet="Pag. 1", content="Nota 3") is None
     assert cell_applicability_reading(authored, sheet="Pag. 1", content="Nota 2.") is None
+
+
+def test_a_stale_pin_refuses_through_the_screens_own_predicate(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The refusal this screen must not mistake for silence, produced for real.
+
+    The declarations are the SHIPPED ones for modelo 353's design, and the
+    source is that design's own parser-read source reissued under a digest it
+    does not carry - the exact shape of a pin that has gone stale because the
+    design was replaced. Nothing is patched: the routed predicate validates the
+    declaration set against the source it is handed and refuses.
+
+    The second assertion is the whole reason this refusal was invisible. A
+    ``RegistryValidationError`` IS a ``ValueError``, so a handler catching
+    ``ValueError`` to skip revisions it cannot read claims this one too.
+    """
+    from ..pipeline.render_check import revision_render_inputs
+
+    inputs = revision_render_inputs(authority, modelo="353", revision="2026-desde-02")
+    field = inputs.joined.fields[0].parser_field
+    reissued = inputs.joined.source.model_copy(update={"source_sha256": _FOREIGN_SHA256})
+
+    with pytest.raises(RegistryValidationError, match="not pinned to the parser intermediate") as refusal:
+        field_is_render_profile_eligible(field, reissued)
+
+    assert isinstance(refusal.value, ValueError), (
+        "a refusal that is not a ValueError would never have been swallowed by the skip handler, "
+        "so this test would prove nothing about the classification below"
+    )
+
+
+class _RevisionDefinition:
+    """One modelo definition carrying one revision id, and nothing else.
+
+    Written here rather than taken from the authority because the subject under
+    test is the SCREEN'S CLASSIFICATION of an error raised while walking a
+    revision, not the walk itself. The error objects below are real - one is the
+    refusal the routed predicate actually raises, the other the ``ValueError``
+    ninety-four bundled revisions actually raise - and this pair only decides
+    where they are delivered from.
+    """
+
+    def __init__(self) -> None:
+        self.revisions = {"2026-desde-02": None}
+
+
+class _AuthorityRaising:
+    """An authority whose revision walk ends in one given error."""
+
+    def __init__(self, error: Exception) -> None:
+        self._error = error
+
+    def modelo(self, modelo_id: str) -> _RevisionDefinition:
+        return _RevisionDefinition()
+
+    @property
+    def catalogues(self) -> object:
+        raise self._error
+
+
+def test_screen_authority_refuses_a_stale_pin_instead_of_counting_it_as_nothing_to_read(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The two states must not collapse, and only the delivered error differs.
+
+    Both runs below take the same path through the same screen and differ in one
+    thing: which error the revision walk ends in. A revision that declares no
+    export layout is inapplicable and is skipped, and the screen returns its
+    (empty) findings. A revision whose pinned declarations refuse is a stale
+    declaration in this repository's own tables, and the screen fails closed
+    naming it. Before this, one handler caught both and the second was reported
+    as the first - a revision that had silently stopped being screened,
+    indistinguishable from one with nothing to read.
+    """
+    inputs = revision_render_inputs(authority, modelo="353", revision="2026-desde-02")
+    reissued = inputs.joined.source.model_copy(update={"source_sha256": _FOREIGN_SHA256})
+    with pytest.raises(RegistryValidationError) as captured:
+        field_is_render_profile_eligible(inputs.joined.fields[0].parser_field, reissued)
+
+    inapplicable = ValueError("353/2026-desde-02 declares no export layout to render")
+    assert screen_authority(_AuthorityRaising(inapplicable), ("353",)) == ()
+
+    with pytest.raises(RegistryValidationError, match="refused their own pinned declarations") as refused:
+        screen_authority(_AuthorityRaising(captured.value), ("353",))
+    assert "353/2026-desde-02" in str(refused.value)
+
+
+def test_the_live_corpus_carries_no_refusal_today(authority: ValidatedRegistryAuthority) -> None:
+    """The fix above is latent, not live, and this is what says so.
+
+    Without it the gate above would be satisfied by a screen that refuses
+    everything, and a reader could not tell whether the corpus was clean or the
+    screen had stopped running. This screens the whole bundled authority and
+    requires it to complete: every revision it skips today raises a plain
+    ``ValueError``, and none of them is a refusal.
+    """
+    from ..analysis.corpus import bundled_modelo_ids
+
+    assert screen_authority(authority, bundled_modelo_ids()) is not None

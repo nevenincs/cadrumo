@@ -91,6 +91,11 @@ The screen exits 0 whatever it finds. It reports; it does not gate. The gate
 belongs with the predicate correction, which cannot land until the reviewed
 rules that correction makes due exist - and this screen is what those rules
 are grounded in.
+
+A REFUSAL is not a finding and is not covered by that. A revision whose pinned
+declarations no longer validate against the design they name is a defect in this
+repository's own tables, not a fact about the corpus, and it ends the run rather
+than joining the revisions the screen simply cannot read.
 """
 
 from __future__ import annotations
@@ -101,9 +106,10 @@ from dataclasses import dataclass
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..pipeline._record_design_ir import RecordDesignIntermediateField, RecordDesignIntermediateSource
-from ..pipeline._render_profile import resolve_render_profile_eligibility
+from ..pipeline.render_profile_eligibility import resolve_render_profile_eligibility
 from ..pipeline.render_check import revision_render_inputs
 from ..pipeline.source_defects import (
     NoteGovernedAmountDeclaration,
@@ -443,8 +449,28 @@ def screen_authority(
     enrolled profile - is skipped rather than reported: this screen is about
     what a content cell says, and a revision with no render inputs has no
     content cells to say it with.
+
+    A REFUSAL is not that, and the two are not allowed to collapse. The routed
+    eligibility predicate validates the design's own declarations against the
+    file the parser read, so a declaration whose pin has gone stale ends the
+    call with a :class:`RegistryValidationError`. That is a ``ValueError``, and
+    a single broad handler swallowed it into the skip list - a revision whose
+    reviewed reading had stopped covering its design would silently stop being
+    screened and be reported as having declared nothing to read. "I cannot look
+    at this" and "somebody's reviewed declaration no longer matches this design"
+    are different states with different remedies, and the second is a defect in
+    this repository's own tables rather than a fact about the corpus.
+
+    So a refusal fails the run closed. Every one is collected first rather than
+    raising on the first, because a corpus screen that stops at the earliest
+    refusal hides the others behind it.
+
+    Raises:
+        RegistryValidationError: when any revision's declarations refuse against
+            the design they are pinned to, naming every refusing revision.
     """
     inapplicable: list[tuple[str, str, str]] = []
+    refused: list[str] = []
     attempted = 0
     findings: list[PointerWireFactFinding] = []
     for modelo_id in modelo_ids:
@@ -453,6 +479,11 @@ def screen_authority(
             attempted += 1
             try:
                 findings.extend(revision_findings(authority, modelo=modelo_id, revision=str(revision_id)))
+            except RegistryValidationError as error:
+                # Ordered ABOVE the broad handler on purpose: this is a subclass
+                # of ValueError, so the handler below would otherwise claim it.
+                refused.append(f"{modelo_id}/{revision_id}: {error}")
+                continue
             except (ValueError, KeyError, FileNotFoundError, OSError) as error:
                 # Inapplicable, not broken: these revisions declare no export
                 # layout or cite no record design, so the screen genuinely cannot
@@ -462,6 +493,11 @@ def screen_authority(
                 # it covered close to a quarter of the corpus.
                 inapplicable.append((modelo_id, str(revision_id), str(error)))
                 continue
+    if refused:
+        raise RegistryValidationError(
+            f"{len(refused)} revision(s) refused their own pinned declarations and were not screened; "
+            "this is a stale declaration, not a revision with nothing to read: " + "; ".join(refused),
+        )
     if inapplicable:
         sys.stderr.write(
             f"footnote_only_wire_facts: examined {attempted - len(inapplicable)} of {attempted} revision(s); "

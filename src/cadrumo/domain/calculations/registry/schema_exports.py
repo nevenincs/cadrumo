@@ -634,40 +634,67 @@ def _export_field_wire_shape(field: ExportFieldDefinition) -> tuple[str, str, st
     )
 
 
+#: The unsigned scaled-amount slot: ``decimal`` data, left-zero padded and
+#: right justified, carrying a declared decimal count and no date format. It is
+#: the SECOND shape a closed value domain may be declared on, beside the
+#: enumerated-digit integer above, and it carries no value policy of its own --
+#: the scale in ``decimals`` already fixes how a member reaches the wire.
+#:
+#: A domain is admissible here because the codec settles a member against the
+#: SEMANTIC value it is handed, before the scale is applied: the member is
+#: therefore spelled in whole units, and the bytes it produces are that unit
+#: value multiplied by ten to the power of ``decimals``, left-zero padded into
+#: the slot. Spelling a member as a wire digit run instead would mean cents on
+#: this shape and units on the enumerated one, and the same table would then
+#: hold two incompatible readings of the same string.
+_SCALED_AMOUNT_DOMAIN_SHAPE: Final[tuple[str, str, str, bool, str | None]] = (
+    "decimal",
+    "left_zero",
+    "right",
+    True,
+    None,
+)
+
+
 def _allowed_values_failure(field: ExportFieldDefinition) -> str | None:
-    """Return the first contradiction in an enumerated-digit domain."""
+    """Return the first contradiction in a closed export value domain."""
     allowed_values = field.allowed_values
     if allowed_values is None:
         return None
-    if field.value_policy is not ExportValuePolicy.ENUMERATED_DIGITS:
+    if field.value_policy is not None and field.value_policy is not ExportValuePolicy.ENUMERATED_DIGITS:
         return (
             f"export field {field.id!r} allowed_values requires value_policy "
-            f"{ExportValuePolicy.ENUMERATED_DIGITS.value!r}"
+            f"{ExportValuePolicy.ENUMERATED_DIGITS.value!r} or no value policy at all"
         )
     if not allowed_values or len(set(allowed_values)) != len(allowed_values):
         return f"export field {field.id!r} allowed_values must be non-empty and unique"
     if _allowed_values_shape_is_invalid(field):
         return (
             f"export field {field.id!r} allowed_values requires an unsigned right-justified "
-            "left-zero-padded fixed-width integer"
+            "left-zero-padded fixed-width integer, or the same shape scaled by a declared decimal count"
         )
     length = field.length
     if length is None:
         return f"export field {field.id!r} allowed_values requires a declared length"
-    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, length))
+    # A member is spelled in whole units, so on a scaled slot its digits share
+    # the width with the ``decimals`` the scale spends. Charging the member the
+    # full slot width would admit a domain whose own canonical wire form
+    # overflows the field it constrains.
+    unit_digit_budget = length - (field.decimals or 0)
+    invalid = tuple(value for value in allowed_values if not _is_canonical_digit_run(value, unit_digit_budget))
     if invalid:
         return f"export field {field.id!r} allowed_values contains noncanonical or out-of-width entries: {invalid!r}"
     return None
 
 
 def _allowed_values_shape_is_invalid(field: ExportFieldDefinition) -> bool:
-    """Return whether a field cannot render enumerated digits canonically."""
-    return (
-        field.kind in _VALUE_POLICY_UNRENDERABLE_KINDS
-        or field.signed
-        or field.length is None
-        or _export_field_wire_shape(field) != _VALUE_POLICY_SHAPES[ExportValuePolicy.ENUMERATED_DIGITS]
-    )
+    """Return whether a field cannot render a closed value domain canonically."""
+    if field.kind in _VALUE_POLICY_UNRENDERABLE_KINDS or field.signed or field.length is None:
+        return True
+    shape = _export_field_wire_shape(field)
+    if field.value_policy is ExportValuePolicy.ENUMERATED_DIGITS:
+        return shape != _VALUE_POLICY_SHAPES[ExportValuePolicy.ENUMERATED_DIGITS]
+    return shape != _SCALED_AMOUNT_DOMAIN_SHAPE
 
 
 class RecordDiscriminator(RegistryModel):

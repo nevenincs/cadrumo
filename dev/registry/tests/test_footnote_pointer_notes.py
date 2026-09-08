@@ -379,3 +379,54 @@ def test_an_unnumbered_note_can_never_answer_a_pointer() -> None:
     extracted = _extracted("# A", "NOTA: Los importes son de 15 enteros.")
     assert sheet_unnumbered_notes(extracted) == {"A": "Los importes son de 15 enteros."}
     assert note_definitions(extracted, sheet="A") == {}
+
+
+def test_the_module_entry_point_runs_and_reports_each_note_under_its_sheet(
+    tmp_path: pathlib.Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The CLI is exercised, not merely imported.
+
+    It had been dead for its whole life: ``main`` called the sheet-scoped note
+    reader with no sheet, so every invocation raised ``TypeError`` before
+    printing a line. Nothing failed, because nothing ran it - an entry point is
+    exactly the surface that hides, since no other module imports it and the
+    import-time checks a package has cannot see inside a function body.
+
+    The transcription is written here rather than taken from the corpus, so the
+    assertion is on the notes this test states and not on whatever a shipped
+    design happens to define. Two sheets, each numbering its notes from one, is
+    the case a design-wide listing gets wrong.
+    """
+    from ..analysis.footnote_pointer_notes import main
+
+    transcription = tmp_path / "design.xlsx.extracted.md"
+    transcription.write_text(
+        _extracted(
+            "# Pag. 1",
+            "Nota 1: Se rellenara con dos decimales.",
+            "",
+            "# Pag. 2",
+            "Nota 1: Solo para periodos 02 y siguientes.",
+        ),
+        encoding=_UTF_8,
+    )
+
+    assert main([str(transcription)]) == 0
+
+    out = capsys.readouterr().out
+    assert "note_definition sheet='Pag. 1' label='nota 1' text='Se rellenara con dos decimales.'" in out
+    assert "note_definition sheet='Pag. 2' label='nota 1' text='Solo para periodos 02 y siguientes.'" in out
+    # Both notes are reported, each under its own sheet. A design-wide listing
+    # would key them on the same label and print one, which is the ambiguity the
+    # sheet-scoped reader exists to refuse.
+    assert "summary sheets=2 definitions=2" in out
+
+
+def test_the_entry_point_refuses_with_a_usage_line_and_no_argument(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The other half of the contract: a caller giving nothing is told what to give."""
+    from ..analysis.footnote_pointer_notes import main
+
+    assert main([]) == 2
+    assert "usage: python -m dev.registry.analysis.footnote_pointer_notes" in capsys.readouterr().out

@@ -647,8 +647,20 @@ def resolved_export_endpoints(revision: ModeloRevision) -> tuple[ResolvedExportE
       row's slot to its casilla, on the record rather than on any field.
 
     :func:`fixed_width_record_casilla_ids` deliberately covers a narrower scope
-    for the exemption and parity gates that own it. This function is the whole
-    surface, and is what a completeness or coverage measurement wants.
+    for the exemption and parity gates that own it.
+
+    What this covers is every CASILLA the resolved layouts carry, by all three
+    linkage paths - and nothing more. It is not the whole resolved surface. An
+    endpoint IS a casilla, so a field reaching none has no endpoint form here at
+    all: :attr:`ResolvedExportEndpoint.casilla_id` is non-optional, and a
+    filing-grade amount homed to a producer key carries no casilla. Two such
+    amounts on modelo 200's ``DP200014B`` page were invisible to a screen that
+    took this function for the whole surface, and sat unscaled beside their
+    scaled siblings while that screen reported the modelo clean.
+
+    So a completeness measurement over CASILLAS wants this function, and one
+    over FIELDS wants :func:`resolved_export_fields`, which returns every field
+    of every resolved record whether or not it reaches a casilla.
     """
     return tuple(_walk_resolved_endpoints(revision))
 
@@ -656,6 +668,59 @@ def resolved_export_endpoints(revision: ModeloRevision) -> tuple[ResolvedExportE
 def resolved_export_casillas(revision: ModeloRevision) -> frozenset[CasillaId]:
     """Return the complete set of casillas the resolved layouts of ``revision`` carry."""
     return frozenset(endpoint.casilla_id for endpoint in resolved_export_endpoints(revision))
+
+
+@dataclass(frozen=True, slots=True)
+class ResolvedExportField:
+    """One field the resolved layouts carry, whether or not it reaches a casilla.
+
+    The sibling of :class:`ResolvedExportEndpoint`, which is keyed on the
+    casilla and so cannot represent a field that reaches none: its
+    ``casilla_id`` is non-optional by design, because an endpoint IS a casilla
+    on the surface. That leaves a real population unrepresentable rather than
+    filtered out - a filing-grade amount homed to a producer key carries no
+    casilla, which is how the official designs carry several rectificativa
+    importes - and a measurement over fields rather than over casillas needs it.
+
+    ``casilla_id`` is the casilla the field reaches by either linkage that
+    belongs to a FIELD, direct or projected, and ``None`` when it reaches
+    neither. The record-level ``row_field`` linkage has no field of its own and
+    is therefore absent here; :func:`resolved_export_endpoints` is what covers
+    it.
+    """
+
+    layout_id: str
+    record_id: str
+    casilla_id: CasillaId | None
+    field: ExportFieldDefinition
+
+
+def resolved_export_fields(revision: ModeloRevision) -> tuple[ResolvedExportField, ...]:
+    """Return every field the resolved layouts of ``revision`` carry, in record order.
+
+    Use this where the question is about FIELDS - their widths, types, declared
+    scales, or how a field compares with the ones beside it in its record.
+    :func:`resolved_export_endpoints` answers the question about CASILLAS and
+    silently omits every field that carries none, so a completeness measurement
+    over fields cannot be taken from it.
+
+    Resolved through the same binding derivation the endpoint walk resolves
+    through, so a binding-derived record's fields are present here exactly as
+    they are there. That derivation is called HERE rather than by the caller:
+    three linkage paths reach a casilla on this surface, a walk that knows only
+    some of them under-reports it, and the walk is written once.
+    """
+    return tuple(
+        ResolvedExportField(
+            layout_id=str(layout.id),
+            record_id=str(record.id),
+            casilla_id=field.casilla_id if field.casilla_id is not None else field.endpoint_casilla_id,
+            field=field,
+        )
+        for layout in derive_export_layouts_from_bindings(revision)
+        for record in layout.records
+        for field in record.fields
+    )
 
 
 def _walk_resolved_endpoints(revision: ModeloRevision) -> Iterator[ResolvedExportEndpoint]:
@@ -675,6 +740,7 @@ def _walk_resolved_endpoints(revision: ModeloRevision) -> Iterator[ResolvedExpor
 __all__ = [
     "ResolvedExportEndpoint",
     "ResolvedExportEndpointPath",
+    "ResolvedExportField",
     "ResolvedExportLayout",
     "clasificar_casillas_oficiales",
     "derive_export_layouts_from_bindings",
@@ -682,4 +748,5 @@ __all__ = [
     "resolve_export_layout",
     "resolved_export_casillas",
     "resolved_export_endpoints",
+    "resolved_export_fields",
 ]

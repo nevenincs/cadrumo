@@ -22,6 +22,7 @@ declaration's own shape would reveal the difference.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
@@ -31,7 +32,11 @@ from pydantic import ValidationError
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.fixed_width_codec import (
+    ExportEncoding,
+    parse_fixed_width_export_field,
+    render_fixed_width_export_field,
+)
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
@@ -366,6 +371,7 @@ class TestNoteGovernedAmountAdjudication:
             # its surviving rate rows spell '15 enteros 2 decimales', which
             # fills all seventeen bytes and leaves no room for a sign marker.
             "sign_policy": "unsigned",
+            "mandated_values": ("0",),
             "evidence": "the surviving rates on the same sheet state 15 enteros 2 decimales at the same width",
         }
         fields.update(overrides)
@@ -413,6 +419,10 @@ class TestNoteGovernedAmountAdjudication:
             assert declaration.source_sha256 == self._M390_2025_SHA
             assert declaration.published_content == self._POINTER
             assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
+            # The note states two things, and both are recorded: the run's
+            # representation, and the value it mandates.
+            assert declaration.mandated_values == ("0",)
+            assert "rellenas a 0" in declaration.note_statement
 
     def test_an_adjudicated_pointer_renders_the_scale_its_run_states(self) -> None:
         derived = _numeric_derivation(
@@ -424,6 +434,69 @@ class TestNoteGovernedAmountAdjudication:
         assert derived.derivation_code == "numeric-note-governed-amount-v1"
         assert str(derived.field.data_type) == "decimal"
         assert derived.field.decimals == 2
+
+    def test_the_mandated_value_reaches_the_field_and_closes_its_domain(self) -> None:
+        """The note mandates zero, so the layout refuses anything else at the boundary.
+
+        Scale alone left the mandate unenforced: a nonzero would have been
+        emitted at the right scale, which is a silent under-declaration of what
+        the design states. The domain travels from the declaration onto the
+        field and the codec settles every value against it, in both directions.
+        """
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(self._declaration(),),
+        )
+
+        assert derived.field.allowed_values == ("0",)
+        # Zero renders as the seventeen zero bytes the mandate describes, which
+        # is byte-identical to the blank fill an absent numeric slot takes.
+        assert render_fixed_width_export_field(derived.field, Decimal("0.00")) == "0" * 17
+        assert render_fixed_width_export_field(derived.field, None) == "0" * 17
+        with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+            render_fixed_width_export_field(derived.field, Decimal("1.00"))
+        with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+            parse_fixed_width_export_field(derived.field, "0" * 14 + "100")
+
+    def test_a_run_whose_note_mandates_no_value_leaves_the_domain_open(self) -> None:
+        """Absence of a mandate is declared, never defaulted, and stays open.
+
+        A declaration is the record of what a person read in one note. Reading
+        390's Nota 2 must not close the domain of a run whose own note says
+        nothing about values.
+        """
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(self._declaration(mandated_values=None),),
+        )
+
+        assert derived.field.allowed_values is None
+        assert render_fixed_width_export_field(derived.field, Decimal("1.00")) == "0" * 14 + "100"
+
+    def test_a_mandated_value_the_export_schema_cannot_carry_is_refused(self) -> None:
+        """Teeth on the declaration itself, in the three ways it can be wrong."""
+        with pytest.raises(ValidationError, match="zero-canonical unsigned unit values"):
+            self._declaration(mandated_values=("00",))
+        with pytest.raises(ValidationError, match="zero-canonical unsigned unit values"):
+            self._declaration(mandated_values=("0", "1234567890123456"))
+        with pytest.raises(ValidationError, match="non-empty and unique"):
+            self._declaration(mandated_values=())
+
+    def test_a_signed_run_cannot_declare_a_mandated_value(self) -> None:
+        """``money`` declares no scale on the field and carries no reviewed domain.
+
+        Admitting one here would let a mandate be declared and then dropped on
+        the way to the layout, which is the failure mode this whole declaration
+        exists to prevent.
+        """
+        with pytest.raises(ValidationError, match="carries no value domain"):
+            self._declaration(
+                sign_policy="n-prefix-negative-blank-nonnegative",
+                integer_digits=14,
+                mandated_values=("0",),
+            )
 
     def test_an_unadjudicated_pointer_keeps_the_reading_it_always_had(self) -> None:
         """The correction is opt-in per design; it never re-scales a document nobody read."""
@@ -772,6 +845,10 @@ class TestNoteGovernedAmountsReachTheRenderer:
             assert derivation.parser_field.content == "Nota 2"
             assert str(derivation.field.data_type) == "decimal"
             assert derivation.field.decimals == 2
+            # The note mandates a value as well as implying a scale, and both
+            # halves reach the layout: every one of the eighty slots is closed
+            # to the quantity zero.
+            assert derivation.field.allowed_values == ("0",)
         assert not any(
             derivation.derivation_code == "numeric-integer-v1" and derivation.parser_field.length == 17
             for derivation in rendered.field_derivations
