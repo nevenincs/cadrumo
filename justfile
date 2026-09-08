@@ -1,5 +1,22 @@
 # ── Platform ─────────────────────────────────────────────────────────────────
-set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+# Requires just >= 1.38 (`set working-directory`, native modules, `[doc]`/`[group]`).
+#
+# This repository is the fleet's ONE pwsh exception, and the reason is quoting.
+# Unlike its siblings, several recipe bodies here carry real shell syntax - the
+# single-quoted pytest `-m 'unit and not perf'` selectors, `$( )` substitution,
+# `bash -c '...'` payloads handed to docker. `cmd.exe` does not treat `'` as a
+# quote character at all, so it would split `-m 'unit and not perf'` into five
+# argv entries and hand pytest a marker expression it never wrote - selecting a
+# different test population, silently, while still reporting green. Everywhere
+# a body IS a single bare command the fleet uses `cmd` instead, because it
+# forwards native exit codes verbatim where pwsh does not; `propagate` below is
+# what buys that fidelity back here.
+#
+# `-NoProfile` is load bearing: without it every recipe loads the operator's
+# personal PowerShell profile, so aliases shadowing `ls`/`curl`, a customised
+# `$ErrorActionPreference`, or an altered `PSModulePath` silently change what a
+# recipe does from one machine to the next.
+set windows-shell := ["pwsh.exe", "-NoLogo", "-NoProfile", "-Command"]
 
 # ── Dev-loop storage root ────────────────────────────────────────────────────
 # Keep a developer's state inside the checkout instead of the platform
