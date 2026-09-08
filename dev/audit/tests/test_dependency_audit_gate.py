@@ -40,7 +40,9 @@ def _describe(_identifier: str) -> dict[str, object]:
 
 
 def _report(suppressions: list[da.Suppression], hits: dict = HIT) -> da.Report:
-    return da.build_report([COORD], hits, suppressions, today=TODAY, describe_fn=_describe)
+    return da.build_report(
+        [COORD], hits, suppressions, today=TODAY, describe_fn=_describe
+    )
 
 
 def test_a_finding_fails_the_gate() -> None:
@@ -64,7 +66,9 @@ def test_a_live_suppression_accepts_the_finding_visibly() -> None:
 
 
 def test_a_suppression_matches_an_alias() -> None:
-    live = da.Suppression("CVE-2024-56201", "same advisory, CVE id", dt.date(2099, 1, 1))
+    live = da.Suppression(
+        "CVE-2024-56201", "same advisory, CVE id", dt.date(2099, 1, 1)
+    )
     assert _report([live]).exit_code == da.EXIT_OK
 
 
@@ -111,16 +115,20 @@ def test_every_ecosystem_with_a_lockfile_is_scanned() -> None:
     assert surfaces, "no dependency coordinates found at all"
 
 
-def test_no_artifact_without_the_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
-    """cadrumo's zero-artifact posture: unset means nothing is written."""
-    monkeypatch.delenv("VAULTSPEC_CI_REPORTS", raising=False)
-    assert da.write_artifact(_report([])) is None
+def test_no_artifact_without_a_destination() -> None:
+    """cadrumo's zero-artifact posture: no destination, nothing written.
+
+    The destination is passed as a value rather than patched into the
+    environment, so this asserts the behaviour itself and not the plumbing
+    that reads ``VAULTSPEC_CI_REPORTS``.
+    """
+    assert da.write_artifact(_report([]), "") is None
 
 
-def test_the_json_report_is_machine_readable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("VAULTSPEC_CI_REPORTS", str(tmp_path))
-    path = da.write_artifact(_report([]))
+def test_the_json_report_is_machine_readable(tmp_path: Path) -> None:
+    path = da.write_artifact(_report([]), str(tmp_path))
     assert path is not None
+    assert path == tmp_path / "dependency-audit.json"
     body = json.loads(path.read_text(encoding="utf-8"))
     assert body["gating"] is True
     assert body["exit_code"] == da.EXIT_FINDINGS
