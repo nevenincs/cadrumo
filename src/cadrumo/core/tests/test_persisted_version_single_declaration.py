@@ -401,11 +401,6 @@ def test_the_two_repaired_formats_stay_repaired(source_tree_ast: Mapping[Path, a
             "BUNDLE_SCHEMA_VERSION",
             "src/cadrumo/application/user_profile/bundle_export_contracts.py",
         ),
-        (
-            "src/cadrumo/domain/fincas/models.py",
-            "FINCA_SCHEMA_VERSION",
-            "src/cadrumo/adapters/persistence/storage/sql/orm.py",
-        ),
     )
     sites_by_path: dict[str, list[LiteralVersionAuthoringSite]] = {}
     for site in scan_items(production_ast_items(source_tree_ast)):
@@ -435,7 +430,7 @@ class MirrorManifest:
 """
 
 _SYNTHETIC_COLUMN_DEFAULT = """
-class FincaRow:
+class ExampleRecord:
     schema_version: Mapped[str] = mapped_column(String(8), default="1")
 """
 
@@ -463,8 +458,8 @@ class ProfileSessionRefusalReason(StrEnum):
 def test_detector_fires_on_each_shape_the_two_repairs_had() -> None:
     """The three authoring spellings all fire, including the string one.
 
-    The bundle carried a bare integer default; the rental-register rows carried
-    a ``mapped_column`` default holding a STRING. A detector that saw only the
+    A bundle can carry a bare integer default while an ORM row can carry a
+    ``mapped_column`` default holding a STRING. A detector that saw only the
     integer spelling would have missed one of the two cases it exists for.
     """
     bare = version_authoring_sites("synthetic.py", ast.parse(_SYNTHETIC_BARE_DEFAULT))
@@ -479,7 +474,7 @@ def test_detector_fires_on_each_shape_the_two_repairs_had() -> None:
 
     column = version_authoring_sites("synthetic.py", ast.parse(_SYNTHETIC_COLUMN_DEFAULT))
     assert [(s.class_name, s.field, s.value, s.form) for s in column] == [
-        ("FincaRow", "schema_version", "1", "mapped_column(default=...)")
+        ("ExampleRecord", "schema_version", "1", "mapped_column(default=...)")
     ]
 
 

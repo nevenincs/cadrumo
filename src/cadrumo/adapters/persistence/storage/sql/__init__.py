@@ -41,7 +41,7 @@ from .engine import (
     dispose_engines_for_bucket,
     get_engine,
 )
-from .orm import Base, FincaRow, SecureObjectRow, TransactionDateIndexRow
+from .orm import Base, SecureObjectRow, TransactionDateIndexRow
 from .records import CorpusArtifactRecord, ModeloCatalogueRecord, PortalAuthMethod, PortalRecord
 from .repository import (
     CorpusArtifactRepository,
@@ -66,7 +66,6 @@ __all__ = [
     "Base",
     "CorpusArtifactRecord",
     "CorpusArtifactRepository",
-    "FincaRow",
     "ModeloCatalogueRecord",
     "ModeloRepository",
     "PortalAuthMethod",

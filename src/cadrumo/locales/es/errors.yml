@@ -321,14 +321,6 @@ errors:
       inscritos en RETMAR deben presentar declaración del IRPF independientemente
       del nivel de ingresos (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: Un valor de la declaración de la Renta no es válido.
-    error_rental_amortization_cap_exceeded: La amortización acumulada superaría el
-      límite legal del activo arrendado.
-    error_rental_contract_not_found: No se encontró el contrato de alquiler indicado.
-    error_rental_finca_not_found: No se encontró la finca indicada.
-    error_rental_register: Se produjo un error en el registro de alquileres.
-    error_rental_tier_resolution: Los datos del contrato de alquiler son inconsistentes
-      y no se pudo determinar el tramo de reducción aplicable.
-    error_rental_validation: Un registro de alquiler no superó la validación.
     error_resources_backend: Se produjo un error al leer los datos incluidos en la
       aplicación.
     error_resources_load: No se pudo cargar un recurso incluido en la aplicación.

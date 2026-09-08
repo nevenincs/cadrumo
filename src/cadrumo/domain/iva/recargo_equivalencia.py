@@ -8,9 +8,7 @@ super-reduced 0.5 %, tobacco 1.75 %) live in
 citations and review metadata, and Python consumers import them
 from this module.
 
-The loader follows the same idiom as
-:mod:`cadrumo.domain.fincas.imputacion_parameters`: a frozen pydantic
-record loaded once at module import time, with an explicit
+The loader exposes a frozen pydantic record loaded once at module import time, with an explicit
 :func:`recargo_rate_for_applied_rate` lookup that answers from the rate a
 line actually carried and the date it carried it.
 The ``LIVA_ART_161_RECARGO`` accessor is the canonical source for

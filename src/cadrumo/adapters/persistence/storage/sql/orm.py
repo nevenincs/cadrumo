@@ -11,11 +11,9 @@ records.
 from __future__ import annotations
 
 from datetime import date, datetime
-from decimal import Decimal
 from typing import TYPE_CHECKING, Annotated
 
 from sqlalchemy import (
-    Boolean,
     CheckConstraint,
     Date,
     DateTime,
@@ -23,14 +21,13 @@ from sqlalchemy import (
     Index,
     Integer,
     LargeBinary,
-    Numeric,
     String,
     Text,
     UniqueConstraint,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from ..crypto.encrypted_columns import EncryptedString, HashedLookup
+from ..crypto.encrypted_columns import HashedLookup
 
 _HASH_HEX_LENGTH = 64
 
@@ -57,10 +54,8 @@ class Base(DeclarativeBase):
 # ever assigned to a `Mapped[T]`-declared name to be unsound.
 _intpk = Annotated[int, mapped_column(Integer, primary_key=True, autoincrement=True)]
 
-_str8 = Annotated[str, mapped_column(String(8), nullable=False)]
 _str32 = Annotated[str, mapped_column(String(32), nullable=False)]
 _str32_opt = Annotated[str | None, mapped_column(String(32), nullable=True)]
-_str48 = Annotated[str, mapped_column(String(48), nullable=False)]
 _str64 = Annotated[str, mapped_column(String(64), nullable=False)]
 _str64_unique = Annotated[str, mapped_column(String(64), unique=True, nullable=False)]
 _str64_opt = Annotated[str | None, mapped_column(String(64), nullable=True)]
@@ -73,27 +68,13 @@ _str1024 = Annotated[str, mapped_column(String(1024), nullable=False)]
 _text_opt = Annotated[str | None, mapped_column(Text, nullable=True)]
 
 _int_required = Annotated[int, mapped_column(Integer, nullable=False)]
-_int_opt = Annotated[int | None, mapped_column(Integer, nullable=True)]
-_int_default_zero = Annotated[int, mapped_column(Integer, nullable=False, default=0)]
 
 _date_required = Annotated[date, mapped_column(Date(), nullable=False)]
-_date_opt = Annotated[date | None, mapped_column(Date(), nullable=True)]
 _datetime_tz = Annotated[datetime, mapped_column(DateTime(timezone=True), nullable=False)]
 _datetime_tz_opt = Annotated[datetime | None, mapped_column(DateTime(timezone=True), nullable=True)]
 
-_decimal_15_2 = Annotated[Decimal, mapped_column(Numeric(15, 2), nullable=False)]
-_decimal_15_2_opt = Annotated[Decimal | None, mapped_column(Numeric(15, 2), nullable=True)]
-_decimal_8_4_opt = Annotated[Decimal | None, mapped_column(Numeric(8, 4), nullable=True)]
-#: A declared percentage in 0-100 with the two decimals casillas [0063]
-#: and [0064] accept — not a monetary amount, so not _decimal_15_2.
-_decimal_5_2 = Annotated[Decimal, mapped_column(Numeric(5, 2), nullable=False)]
-
-_bool_default_false = Annotated[bool, mapped_column(Boolean, nullable=False, default=False)]
-_bool_default_true = Annotated[bool, mapped_column(Boolean, nullable=False, default=True)]
-
 _large_binary = Annotated[bytes, mapped_column(LargeBinary, nullable=False)]
 _hashed_lookup = Annotated[bytes, mapped_column(HashedLookup(), nullable=False)]
-_encrypted_string = Annotated[str, mapped_column(EncryptedString(), nullable=False)]
 
 _portal_modelo_fk = Annotated[
     int | None,
@@ -102,14 +83,6 @@ _portal_modelo_fk = Annotated[
 _corpus_modelo_fk = Annotated[
     int,
     mapped_column(ForeignKey("modelos.id", ondelete="CASCADE"), nullable=False),
-]
-_finca_fk = Annotated[
-    int,
-    mapped_column(ForeignKey("rental_fincas.id", ondelete="CASCADE"), nullable=False),
-]
-_contract_fk = Annotated[
-    int,
-    mapped_column(ForeignKey("rental_contracts.id", ondelete="CASCADE"), nullable=False),
 ]
 
 
@@ -316,333 +289,6 @@ class SecureObjectRow(Base):
     source_event_id: Mapped[_str128_opt]
     conflict_policy: Mapped[_str32_opt]
     payload: Mapped[_large_binary]
-
-
-_RENTAL_USE_TYPE_VALUES = (
-    "VIVIENDA_ARRENDADA",
-    "VIVIENDA_HABITUAL",
-    "OTRO_INMUEBLE_NO_AFECTO",
-    "LOCAL_COMERCIAL",
-    "VIVIENDA_TURISTICA",
-    "VIVIENDA_DESOCUPADA",
-)
-
-_RENTAL_TITULARIDAD_REGIME_VALUES = (
-    "NO_DECLARADA",
-    "PLENO_DOMINIO",
-    "NUDA_PROPIEDAD",
-    "USUFRUCTO",
-    "PLENO_DOMINIO_Y_USUFRUCTO",
-)
-
-_RENTAL_TITULAR_CONTRIBUYENTE_VALUES = (
-    "COMUN",
-    "PRIMER_DECLARANTE",
-    "CONYUGE",
-    "HIJO",
-)
-
-_RENTAL_EXPENSE_CATEGORY_VALUES = (
-    "FINANCIACION_INTERESES",
-    "CONSERVACION_REPARACION",
-    "IBI_TRIBUTOS_NO_ESTATALES",
-    "COMUNIDAD",
-    "SEGUROS",
-    "SUMINISTROS",
-    "ADMINISTRACION_PORTERIA_VIGILANCIA",
-    "FORMALIZACION_CONTRATO",
-    "DEFENSA_JURIDICA",
-    "SALDOS_DUDOSO_COBRO",
-    "OTROS",
-)
-
-
-def _enum_check(values: tuple[str, ...]) -> str:
-    return "(" + ", ".join(repr(v) for v in values) + ")"
-
-
-class FincaRow(Base):
-    """Row in the ``rental_fincas`` table.
-
-    Models one Spanish urban property. The address column is encrypted
-    at rest via :class:`~adapters.persistence.storage.crypto.EncryptedString`
-    because finca addresses identify the contribuyente through the
-    Catastro stable reference and qualify as personal data under GDPR.
-
-    Attributes:
-        id: Surrogate integer primary key.
-        identifier: Stable natural key for the finca.
-        address: Encrypted street address.
-        valor_catastral_total: Total Catastro value (land + construction).
-        valor_catastral_construccion: Catastro value of the construction
-            component, used as the LIRPF art. 23.1.f amortization basis.
-        valor_catastral_revision_year: Year of the most recent Catastro
-            revision; ``None`` when unavailable.
-        coste_adquisicion: Total acquisition cost.
-        coste_adquisicion_construccion: Acquisition cost attributable to
-            the construction component (alternative amortization basis).
-        acquisition_date: Date the property was acquired.
-        disposal_date: Date the property was sold or otherwise disposed
-            of, when applicable.
-        use_type: Closed enum: ``VIVIENDA_ARRENDADA`` /
-            ``VIVIENDA_HABITUAL`` / ``OTRO_INMUEBLE_NO_AFECTO`` /
-            ``LOCAL_COMERCIAL`` / ``VIVIENDA_TURISTICA`` / ``VIVIENDA_DESOCUPADA``.
-        is_stressed_area: Whether the finca sits in a declared
-            stressed-rent area for LIRPF art. 23.2 tier resolution.
-        titularidad_regime: Which right the contribuyente holds over
-            the finca, and therefore which of the two percentages
-            attributes its figures. Closed enum, including the explicit
-            ``NO_DECLARADA`` state.
-        titularidad_contribuyente: Casilla [0062] — the member of the
-            unidad familiar holding the title, as a closed role
-            vocabulary. Carries no name and no NIF, so unlike
-            ``address`` it identifies nobody and is not encrypted.
-            ``None`` only when the regime is ``NO_DECLARADA``.
-        titularidad_hijo_ordinal: The ordinal in "Hijo 1º", "Hijo 2º" …;
-            ``None`` for every other titular.
-        porcentaje_propiedad: Casilla [0063], 0-100 with two decimals.
-        porcentaje_usufructo: Casilla [0064], on the same scale.
-        schema_version: Per-row schema version, always copied from the
-            domain record; this column declares no default of its own.
-    """
-
-    __tablename__ = "rental_fincas"
-    __table_args__ = (
-        CheckConstraint(
-            f"use_type IN {_enum_check(_RENTAL_USE_TYPE_VALUES)}",
-            name="ck_rental_fincas_use_type",
-        ),
-        CheckConstraint(
-            f"titularidad_regime IN {_enum_check(_RENTAL_TITULARIDAD_REGIME_VALUES)}",
-            name="ck_rental_fincas_titularidad_regime",
-        ),
-        CheckConstraint(
-            "titularidad_contribuyente IS NULL OR titularidad_contribuyente IN "
-            f"{_enum_check(_RENTAL_TITULAR_CONTRIBUYENTE_VALUES)}",
-            name="ck_rental_fincas_titularidad_contribuyente",
-        ),
-    )
-
-    id: Mapped[_intpk]
-    identifier: Mapped[_str64_unique]
-    address: Mapped[_encrypted_string]
-    valor_catastral_total: Mapped[_decimal_15_2]
-    valor_catastral_construccion: Mapped[_decimal_15_2]
-    valor_catastral_revision_year: Mapped[_int_opt]
-    coste_adquisicion: Mapped[_decimal_15_2]
-    coste_adquisicion_construccion: Mapped[_decimal_15_2]
-    acquisition_date: Mapped[_date_required]
-    disposal_date: Mapped[_date_opt]
-    use_type: Mapped[_str32]
-    is_stressed_area: Mapped[_bool_default_false]
-    titularidad_regime: Mapped[_str32]
-    titularidad_contribuyente: Mapped[_str32_opt]
-    titularidad_hijo_ordinal: Mapped[_int_opt]
-    porcentaje_propiedad: Mapped[_decimal_5_2]
-    porcentaje_usufructo: Mapped[_decimal_5_2]
-    schema_version: Mapped[_str8]
-
-
-class ArrendamientoRow(Base):
-    """Row in the ``rental_contracts`` table.
-
-    Per-contract metadata used by the LIRPF art. 23.2 tier resolver.
-    Tenant identifying fields, when added by future schema versions,
-    will use :class:`~adapters.persistence.storage.crypto.EncryptedString`.
-    The current schema models only counts and flags so the row itself
-    is not PII-bearing.
-
-    Attributes:
-        id: Surrogate integer primary key.
-        finca_id: Foreign key into :class:`FincaRow`.
-        contract_celebration_date: Date the contract was signed.
-        contract_termination_date: Date the contract terminated, when
-            applicable.
-        tenant_count: Total tenants on the contract.
-        qualifying_co_tenant_count: Subset of tenants that qualify for
-            the LIRPF art. 23.2 reduction.
-        tenant_min_age: Minimum tenant age, when known.
-        tenant_max_age: Maximum tenant age, when known.
-        tenant_is_public_admin: True when the tenant is a public
-            administration body.
-        tenant_is_ley_49_2002_entity_with_social_use: Ley 49/2002 social-
-            use qualifier.
-        tenant_is_imv_beneficiary: Ingreso Mínimo Vital beneficiary flag.
-        dwelling_in_public_program: Public housing program qualifier.
-        prior_contract_last_rent: Last rent under the previous contract,
-            when known.
-        prior_contract_indexation: Indexation factor applied to the
-            previous contract.
-        initial_rent: Initial monthly rent under the new contract.
-        is_first_rental: True when the dwelling has never been rented
-            before.
-        rehabilitation_finished_date: Date a qualifying rehabilitation
-            completed, when applicable.
-        lau_17_6_compliant: True when the contract complies with the
-            Ley de Arrendamientos Urbanos art. 17.6.
-        schema_version: Per-row schema version, always copied from the
-            domain record; this column declares no default of its own.
-    """
-
-    __tablename__ = "rental_contracts"
-    __table_args__ = (
-        CheckConstraint(
-            "tenant_count >= 1",
-            name="ck_rental_contracts_tenant_count_positive",
-        ),
-        CheckConstraint(
-            "qualifying_co_tenant_count >= 0",
-            name="ck_rental_contracts_qualifying_share_nonneg",
-        ),
-        CheckConstraint(
-            "qualifying_co_tenant_count <= tenant_count",
-            name="ck_rental_contracts_qualifying_share_bounded",
-        ),
-    )
-
-    id: Mapped[_intpk]
-    finca_id: Mapped[_finca_fk]
-    contract_celebration_date: Mapped[_date_required]
-    contract_termination_date: Mapped[_date_opt]
-    tenant_count: Mapped[_int_required]
-    qualifying_co_tenant_count: Mapped[_int_default_zero]
-    tenant_min_age: Mapped[_int_opt]
-    tenant_max_age: Mapped[_int_opt]
-    tenant_is_public_admin: Mapped[_bool_default_false]
-    tenant_is_ley_49_2002_entity_with_social_use: Mapped[_bool_default_false]
-    tenant_is_imv_beneficiary: Mapped[_bool_default_false]
-    dwelling_in_public_program: Mapped[_bool_default_false]
-    prior_contract_last_rent: Mapped[_decimal_15_2_opt]
-    prior_contract_indexation: Mapped[_decimal_8_4_opt]
-    initial_rent: Mapped[_decimal_15_2]
-    is_first_rental: Mapped[_bool_default_false]
-    rehabilitation_finished_date: Mapped[_date_opt]
-    lau_17_6_compliant: Mapped[_bool_default_true]
-    schema_version: Mapped[_str8]
-
-    if TYPE_CHECKING:
-        finca: Mapped[FincaRow]
-    else:
-        finca = relationship("FincaRow", lazy="joined")
-
-
-class FincaRendimientoRecordRow(Base):
-    """Row in the ``rental_income_records`` table.
-
-    Per-contract per-period gross-rent ledger. The
-    ``(contract_id, period_year)`` tuple is unique so each contract
-    surfaces a single income record per ejercicio.
-
-    Attributes:
-        id: Surrogate integer primary key.
-        contract_id: Foreign key into :class:`ArrendamientoRow`.
-        period_year: Tax year the income belongs to.
-        gross_rent_received: Gross rent received during the period.
-        dias_alquilados: Days the property was actually rented during
-            the period (0..366).
-        schema_version: Per-row schema version, always copied from the
-            domain record; this column declares no default of its own.
-    """
-
-    __tablename__ = "rental_income_records"
-    __table_args__ = (
-        UniqueConstraint(
-            "contract_id",
-            "period_year",
-            name="uq_rental_income_records_identity",
-        ),
-        CheckConstraint(
-            "dias_alquilados >= 0 AND dias_alquilados <= 366",
-            name="ck_rental_income_records_dias_alquilados_range",
-        ),
-    )
-
-    id: Mapped[_intpk]
-    contract_id: Mapped[_contract_fk]
-    period_year: Mapped[_int_required]
-    gross_rent_received: Mapped[_decimal_15_2]
-    dias_alquilados: Mapped[_int_required]
-    schema_version: Mapped[_str8]
-
-    if TYPE_CHECKING:
-        contract: Mapped[ArrendamientoRow]
-    else:
-        contract = relationship("ArrendamientoRow", lazy="joined")
-
-
-class FincaGastoRow(Base):
-    """Row in the ``rental_expenses`` table.
-
-    Per-finca per-period categorised expense surface for the LIRPF
-    art. 23.1 deductible-gasto rollup.
-
-    Attributes:
-        id: Surrogate integer primary key.
-        finca_id: Foreign key into :class:`FincaRow`.
-        period_year: Tax year the expense belongs to.
-        category: One of the closed expense categories
-            (``FINANCIACION_INTERESES``, ``CONSERVACION_REPARACION``,
-            ``IBI_TRIBUTOS_NO_ESTATALES``, ``COMUNIDAD``, ``SEGUROS``,
-            ``SUMINISTROS``, ``ADMINISTRACION_PORTERIA_VIGILANCIA``,
-            ``FORMALIZACION_CONTRATO``, ``DEFENSA_JURIDICA``,
-            ``SALDOS_DUDOSO_COBRO``, ``OTROS``).
-        amount: Expense amount.
-        schema_version: Per-row schema version, always copied from the
-            domain record; this column declares no default of its own.
-    """
-
-    __tablename__ = "rental_expenses"
-    __table_args__ = (
-        CheckConstraint(
-            f"category IN {_enum_check(_RENTAL_EXPENSE_CATEGORY_VALUES)}",
-            name="ck_rental_expenses_category",
-        ),
-    )
-
-    id: Mapped[_intpk]
-    finca_id: Mapped[_finca_fk]
-    period_year: Mapped[_int_required]
-    category: Mapped[_str48]
-    amount: Mapped[_decimal_15_2]
-    schema_version: Mapped[_str8]
-
-    if TYPE_CHECKING:
-        finca: Mapped[FincaRow]
-    else:
-        finca = relationship("FincaRow", lazy="joined")
-
-
-class FincaAmortizacionLedgerRow(Base):
-    """Row in the ``rental_amortization_ledger`` table.
-
-    Per-finca per-period art. 23.1.f amortización 3 % accrual with
-    cumulative-through-year tracking. The (finca_id, period_year)
-    tuple is unique so the ledger has one canonical entry per
-    finca per ejercicio.
-    """
-
-    __tablename__ = "rental_amortization_ledger"
-    __table_args__ = (
-        UniqueConstraint(
-            "finca_id",
-            "period_year",
-            name="uq_rental_amortization_ledger_identity",
-        ),
-    )
-
-    id: Mapped[_intpk]
-    finca_id: Mapped[_finca_fk]
-    period_year: Mapped[_int_required]
-    dias_alquilados: Mapped[_int_required]
-    basis_used: Mapped[_decimal_15_2]
-    amortization_amount: Mapped[_decimal_15_2]
-    cumulative_amortization_through_year: Mapped[_decimal_15_2]
-    schema_version: Mapped[_str8]
-
-    if TYPE_CHECKING:
-        finca: Mapped[FincaRow]
-    else:
-        finca = relationship("FincaRow", lazy="joined")
 
 
 metadata = Base.metadata

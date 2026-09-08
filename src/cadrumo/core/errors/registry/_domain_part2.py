@@ -68,66 +68,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.fincas.errors.FincaRegisterError",
-        ErrorCode(
-            code="ERROR_RENTAL_REGISTER",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_rental_register",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.fincas.errors.FincaNotFoundError",
-        ErrorCode(
-            code="ERROR_RENTAL_FINCA_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_rental_finca_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.fincas.errors.ContractNotFoundError",
-        ErrorCode(
-            code="ERROR_RENTAL_CONTRACT_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_rental_contract_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.fincas.errors.TierResolutionError",
-        ErrorCode(
-            code="ERROR_RENTAL_TIER_RESOLUTION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_rental_tier_resolution",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.fincas.errors.AmortizationLedgerCapExceededError",
-        ErrorCode(
-            code="ERROR_RENTAL_AMORTIZATION_CAP_EXCEEDED",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_rental_amortization_cap_exceeded",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.fincas.errors.FincaAggregationError",
-        ErrorCode(
-            code="ERROR_RENTAL_AGGREGATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_rental_register",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.calculations.registry.errors.RegistryError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY",
@@ -913,16 +853,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_TRANSACTION_CLASSIFICATION_RULE",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_transaction_classification_rule",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.fincas.errors.FincaValidationError",
-        ErrorCode(
-            code="ERROR_RENTAL_VALIDATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_rental_validation",
             retryable=False,
             runbook_id=None,
         ),

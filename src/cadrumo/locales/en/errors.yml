@@ -295,14 +295,6 @@ errors:
       Social Security regime must file an IRPF declaration regardless of income level
       (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: A RENTA field value is not valid.
-    error_rental_amortization_cap_exceeded: The cumulative amortization would exceed
-      the legal cap for the rental asset.
-    error_rental_contract_not_found: The rental contract provided was not found.
-    error_rental_finca_not_found: The property provided was not found.
-    error_rental_register: An error occurred in the rental register.
-    error_rental_tier_resolution: The rental contract data is inconsistent and the
-      applicable reduction tier could not be resolved.
-    error_rental_validation: A rental record failed validation.
     error_resources_backend: An error occurred while reading the bundled application
       data.
     error_resources_load: A bundled application resource could not be loaded.

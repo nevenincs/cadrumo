@@ -308,15 +308,6 @@ def test_lirpf_art_85_corpus_excerpt_quotes_imputation_rates() -> None:
     assert "diez períodos impositivos anteriores" in body
 
 
-def test_lirpf_art_85_imputacion_substrate_matches_boe_text() -> None:
-    from ...fincas.imputacion_parameters import load_imputacion_parameters
-
-    parameters = load_imputacion_parameters()
-    assert parameters.recent_revision_rate == Decimal("0.011")  # 1.1 %
-    assert parameters.old_or_no_revision_rate == Decimal("0.02")  # 2 %
-    assert parameters.catastral_revision_lookback_years == 10
-
-
 # ---------------------------------------------------------------------------
 # Cross-substrate IvaRate / IvaRateKind alignment
 # ---------------------------------------------------------------------------
