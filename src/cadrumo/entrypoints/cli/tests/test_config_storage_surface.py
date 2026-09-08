@@ -155,8 +155,8 @@ class TestTextOutputIsReadable:
         assert "área: estado" in output
         assert "número de entradas:" in output
         assert "motivo:" in output
-        assert "Refused" not in output
-        assert "the area contains durable state" not in output
+        assert "Refused" not in result.output
+        assert "the area contains durable state" not in result.output
 
     def test_spanish_unconfirmed_refusal_localizes_heading_and_context(self, tmp_path) -> None:
         with override_settings(cadrumo_local_storage_root=tmp_path):
@@ -171,7 +171,7 @@ class TestTextOutputIsReadable:
         assert "caché" in output
         assert "área: caché" in output
         assert "número de entradas:" in output
-        assert "Refused" not in output
+        assert "Refused" not in result.output
 
 
 class TestCheckKeepsInternalNodesPrivate:

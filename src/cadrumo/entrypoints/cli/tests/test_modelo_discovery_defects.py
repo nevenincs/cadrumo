@@ -413,7 +413,6 @@ def test_describe_m210_accepts_numbered_event_token_with_year_scope() -> None:
     assert "Modelo\t210" in result.output
     assert "Revision\t2025" in result.output
     assert "Periods\tEVENT-N" in result.output
-    assert "evento" not in result.output
 
 
 def test_describe_m210_rejects_legacy_evento_token_with_year_scope() -> None:

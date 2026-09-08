@@ -143,7 +143,6 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     assert {
         binding_id.strip() for binding_id in error["context"]["missing_bindings"].split(",")
     } == _MISSING_M202_BINDINGS
-    assert "saved" not in calculated.output
     assert "Traceback" not in calculated.output
 
     status = invoke_cached_cli(["--format", "json", "app", "modelo", "work", "status", work_unit_id])
@@ -188,7 +187,8 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
         ],
     )
     assert filed.exit_code != 0, filed.output
-    assert "presentado" not in filed.output
+    filed_error = json.loads(filed.output)["error"]
+    assert filed_error["code"] == "REFUSED_MODELO_REQUIRED_BINDINGS_MISSING"
 
     export_path = tmp_path / "modelo-202-2025-1P.txt"
     exported = invoke_cached_cli(

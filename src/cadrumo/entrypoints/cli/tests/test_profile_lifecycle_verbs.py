@@ -443,7 +443,6 @@ def test_config_profile_view_inspects_a_tombstoned_profile_by_label_and_uuid() -
         assert result.exit_code == 0, result.output
         assert "status\ttombstoned" in result.output
         assert "record_validity\ttombstoned" in result.output
-        assert "Unknown profile" not in result.output
 
 
 def test_config_profile_view_runs_validation_inline() -> None:

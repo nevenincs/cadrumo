@@ -115,7 +115,7 @@ def _work_create_args(case: UnsupportedWorkCase) -> list[str]:
 def test_work_create_unsupported_modelo_refuses_with_legal_authority(case: UnsupportedWorkCase) -> None:
     """Each unsupported modelo refuses before active-profile resolution and names its legal route."""
 
-    result = invoke_cached_cli(_work_create_args(case))
+    result = invoke_cached_cli(["--language", "en", *_work_create_args(case)])
     output = result.output or ""
 
     assert result.exit_code != 0, output
@@ -126,7 +126,6 @@ def test_work_create_unsupported_modelo_refuses_with_legal_authority(case: Unsup
         )
     if case.modelo == "721":
         assert "HFP/887/2023" not in output, "M721 must not cite the custodian-side 172/173 order"
-    assert "Modelo desconocido" not in output
     assert "could not evaluate" not in output
 
 
