@@ -739,6 +739,11 @@ convention = "google"
 "dev/quality/quiet.py" = ["S603"]
 "dev/quality/suite.py" = ["S603", "S607"]
 "dev/quality/types.py" = ["S603", "S607"]
+# The environment provisioning drivers: every argv is a literal vector built in
+# the module, never from user input, and none uses a shell.
+"dev/env/_install.py" = ["S603"]
+"dev/env/_venv.py" = ["S603", "S607"]
+"dev/env/_workstation.py" = ["S603", "S607"]
 # `password_env_var` is an env-var NAME, not a password; S106 false-positives
 # on cert-auth tests.
 "src/cadrumo/adapters/outbound/aeat/auth/tests/test_*.py" = ["S105", "S106"]
@@ -1037,7 +1042,20 @@ testpaths = [
 ]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
-addopts = "-n auto --dist=loadfile --tb=short -m 'unit and not external_tool and not os_keychain' --strict-markers --max-worker-restart=0"
+# `-ra` replaces the per-lane `-rsf`: pytest's default `-r` value is `fE`, so
+# a bare `-rs` REPLACES it and the short-summary `FAILED path::test` lines
+# disappear - the triage path this repository documents greps the log for
+# `^FAILED`. `a` reports every non-passing outcome, so nothing has to be
+# re-added flag by flag, and the reporting decision stops being restated on
+# every lane.
+#
+# `--strict-config` joins `--strict-markers`: an ini key no installed plugin
+# owns is otherwise ignored in silence, exactly as an unregistered marker used
+# to select nothing and exit 5.
+#
+# `--capture=sys` avoids pytest's fd-level dup2 capture, which dies silently
+# under Git Bash / MinTTY on this project's primary platform.
+addopts = "-n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not external_tool and not os_keychain' --strict-markers --strict-config --capture=sys --max-worker-restart=0"
 # Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
 # instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
 # wedged with idle workers on every recent run). pytest-timeout picks the

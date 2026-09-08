@@ -33,26 +33,8 @@ init:
     just env-setup
     -just doctor
 
-[windows]
 _init-venv:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    if (Test-Path '.venv/Scripts/python.exe') {
-        Write-Host 'Python environment already exists - leaving it in place.'
-    } else {
-        uv venv
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    }
-
-[unix]
-_init-venv:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ -x .venv/bin/python ]; then
-        echo "Python environment already exists — leaving it in place."
-    else
-        uv venv
-    fi
+    uv run --no-sync python -m dev.env init-venv
 
 # Retained as the established spelling for existing contributor workflows.
 [doc('Alias for `init`.')]
@@ -82,41 +64,8 @@ provision: env-playwright
 # editable metadata without removing locked executables from other agents.
 [doc('Additively install runtime, workbook, and dev dependencies into the current venv.')]
 [group('bootstrap')]
-[windows]
 install:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    $venv = (Resolve-Path '.venv').Path.TrimEnd('\')
-    $mutexName = 'Local\cadrumo-install-' + [Convert]::ToHexString(
-        [Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($venv))
-    )
-    $mutex = [Threading.Mutex]::new($false, $mutexName)
-    if (-not $mutex.WaitOne(0)) {
-        Write-Error "Another dependency install already owns $venv."
-        exit 1
-    }
-    try {
-        $users = @(Get-CimInstance Win32_Process | Where-Object {
-            ($_.ExecutablePath -and $_.ExecutablePath.StartsWith("$venv\", [StringComparison]::OrdinalIgnoreCase)) -or
-            ($_.CommandLine -and $_.CommandLine.Contains("$venv\", [StringComparison]::OrdinalIgnoreCase))
-        })
-        if ($users) {
-            $details = $users | ForEach-Object { "PID $($_.ProcessId): $($_.CommandLine)" }
-            Write-Error ("Refusing to mutate a virtualenv used by live processes. Stop the owning sessions first:`n" + ($details -join "`n"))
-            exit 1
-        }
-        uv pip install --python .venv/Scripts/python.exe --editable ".[workbook-windows]" --group dev
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    } finally {
-        $mutex.ReleaseMutex()
-        $mutex.Dispose()
-    }
-
-[doc('Additively install runtime, workbook, and dev dependencies into the current venv.')]
-[group('bootstrap')]
-[unix]
-install:
-    uv pip install --python .venv/bin/python --editable ".[workbook-windows]" --group dev
+    uv run --no-sync python -m dev.env install
 
 # Alias for `install` — explicit name for CI clarity without exact pruning.
 [group('bootstrap')]
@@ -126,74 +75,16 @@ sync:
 # Workstation CLI prerequisites for non-Python audit recipes.
 [doc('Workstation CLI prerequisites for non-Python audit recipes.')]
 [group('bootstrap')]
-[windows]
 workstation-tools:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-        Write-Error 'scoop is required for workstation tool provisioning.'
-        exit 1
-    }
-    foreach ($tool in @(
-        @{Command = 'uv'; Package = 'uv'},
-        @{Command = 'just'; Package = 'just'},
-        @{Command = 'node'; Package = 'nodejs-lts'},
-        @{Command = 'npx'; Package = 'nodejs-lts'}
-    )) {
-        if (-not (Get-Command $tool.Command -ErrorAction SilentlyContinue)) {
-            scoop install $tool.Package
-        }
-    }
-
-[doc('Workstation CLI prerequisites for non-Python audit recipes.')]
-[group('bootstrap')]
-[unix]
-workstation-tools:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    for tool in uv just node npx; do
-        command -v "$tool" >/dev/null 2>&1 || {
-            echo "$tool is required; install it with the workstation package manager." >&2
-            exit 1
-        }
-    done
+    uv run --no-sync python -m dev.env workstation-tools
 
 # ── Environment Setup and Doctor ─────────────────────────────────────────────
 
 # Copy env/.env.example → env/.env if the latter is missing. No-op otherwise.
 [doc('Copy env/.env.example to env/.env if the latter is missing; no-op otherwise.')]
 [group('environment')]
-[unix]
 env-setup:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ ! -f env/.env.example ]; then
-        echo "env/.env.example not found — cannot provision env/.env" >&2
-        exit 1
-    fi
-    if [ -f env/.env ]; then
-        echo "env/.env already exists — leaving it untouched."
-    else
-        cp env/.env.example env/.env
-        echo "Created env/.env from env/.env.example."
-    fi
-
-[doc('Copy env/.env.example to env/.env if the latter is missing; no-op otherwise.')]
-[group('environment')]
-[windows]
-env-setup:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    if (-not (Test-Path 'env/.env.example')) {
-        Write-Error 'env/.env.example not found - cannot provision env/.env'
-        exit 1
-    }
-    if (Test-Path 'env/.env') {
-        Write-Host 'env/.env already exists - leaving it untouched.'
-    } else {
-        Copy-Item 'env/.env.example' 'env/.env'
-        Write-Host 'Created env/.env from env/.env.example.'
-    }
+    uv run --no-sync python -m dev.env setup
 
 # Verify the local venv and workstation provide the full audit toolchain and RAG status.
 [group('environment')]
@@ -328,7 +219,7 @@ check-docs-synonyms:
 # Verify the core facade, import-edge, and no-shim architecture invariants.
 [group('static-checks')]
 check-architecture:
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_import_edge_integrity_gate.py
+    @uv run --no-sync pytest -v -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_import_edge_integrity_gate.py
 
 # Verify the production registry compiler and the bundled parity-oracle bindings.
 # The two commands are dependent: a failed production verification invalidates
@@ -430,7 +321,7 @@ packaging-smoke-dependencies:
 [doc('Verify the packaging preflight command contracts (dependency surface, source data, Docker/Scoop/Homebrew workflows).')]
 [group('packaging')]
 packaging-smoke-preflight-tests:
-    @uv run --no-sync pytest -v -rsf --tb=short -m "(unit or integration) and not serial and not perf" dev/packaging/tests
+    @uv run --no-sync pytest -v -m "(unit or integration) and not serial and not perf" dev/packaging/tests
 
 # Cheap source-data preflight: fail before wheel, venv, or Docker work if a
 # git-tracked shipped data file has been deleted from the worktree.
@@ -567,7 +458,7 @@ packaging-build-python-cohort: packaging-smoke-source
 # Run both installed public transports against the exact built cohort.
 [group('packaging')]
 packaging-smoke-installed-oracles: packaging-build-python-cohort
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
+    @uv run --no-sync pytest -v -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
 
 # Own the rest of the serial contracts in this directory. The preflight lane
 # selects `not serial` because these must not run concurrently, and the oracle
@@ -587,7 +478,7 @@ packaging-smoke-installed-oracles: packaging-build-python-cohort
 [doc('Run the serial packaging contracts the preflight lane excludes.')]
 [group('packaging')]
 packaging-smoke-serial: packaging-build-python-cohort
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 -m "serial" dev/packaging/tests
+    @uv run --no-sync pytest -v -n0 -m "serial" dev/packaging/tests
 
 # Local release-artifact smoke gates that do not need host package-manager access.
 # The campaign driver builds the cohort once and runs the flavor lanes
@@ -808,7 +699,7 @@ harness_exclusions := prepend("--ignore=", harness_members)
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 [group('testing')]
 test-ratchets:
-    @uv run --no-sync pytest -v -p no:cacheprovider -rsf dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py --tb=short
+    @uv run --no-sync pytest -v -p no:cacheprovider dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py
 
 # Run the worker-count hook verdict outer-serially so it can inspect the
 # installed pytest hook without nesting another worker pool.
@@ -816,21 +707,25 @@ test-ratchets:
 [group('testing')]
 test-harness:
     @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_worker_hook}}
-    @uv run --no-sync pytest -v -m integration -rsf --tb=short -n0 --timeout=900 {{harness_members}}
+    @uv run --no-sync pytest -v -m integration -n0 --timeout=900 {{harness_members}}
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Per-test
 # verdicts stream while the lane is running. `durations` is optional and prints
 # pytest's slowest-N-tests profile (CI passes a value to keep a rolling
 # public log of the suite's heaviest tests; local runs leave it unset).
 #
-# `-rsf`, not `-rs`: pytest's default `-r` value is `fE`, so passing `-rs`
-# REPLACES it rather than adding to it, and the short-summary `FAILED
-# path::test` lines disappear. The tracebacks still print, but every triage
-# path this repository documents -- see the background-capture rule -- greps
-# the log for `^FAILED` to get the fail list, so a 24-minute run yielded a
-# count with no identities and the whole suite had to be re-run to learn what
-# broke. Adding `f` back keeps the skip report the flag was added for.
-# `-v`, not `-q`: under `-q` pytest withholds every failure IDENTITY until the
+# The reporting flags now live in `[tool.pytest.ini_options]` addopts rather
+# than on every lane below, which restated `-rsf --tb=short` thirty-five times.
+# `-ra` there supersedes `-rsf`: pytest's default `-r` value is `fE`, so a bare
+# `-rs` REPLACES it and the short-summary `FAILED path::test` lines disappear,
+# and every triage path this repository documents -- see the background-capture
+# rule -- greps the log for `^FAILED`. `a` reports every non-passing outcome, so
+# nothing has to be re-added flag by flag. `--tb=short` is there for the same
+# reason it always was: a lane with thousands of failures writing a FULL
+# traceback each produced a TEN MILLION line log, slower to write than the tests
+# were to run and unreadable by any tool.
+#
+# `-v` stays on the lanes, and is the one reporting flag that does: under `-q` pytest withholds every failure IDENTITY until the
 # run completes, so an hour-long lane that is killed, wedged, or simply still
 # running tells you nothing at all -- only a growing wall of dots. `-rsf` was
 # added earlier for the same class of problem but only helps at the END. Under
@@ -838,21 +733,15 @@ test-harness:
 # finishes, so `grep -E '^\[gw.*FAILED' suite.log` yields a live fail list
 # while the lane is still running. The console is noisier; the capture rule
 # already says to redirect to a file, and a greppable file is the point.
-# `--tb=short`, not pytest's default: a lane with thousands of failures writes
-# a FULL traceback for each, and the measured cost of that is not academic --
-# one unit run produced a TEN MILLION line log, which is slower to write than
-# the tests are to run and unreadable by any tool. The short form keeps the
-# failing line and the assertion, which is what triage reads; the identity
-# comes from `-v` above.
 [doc('Run the unit test suite in parallel. Streams failure identities as they happen.')]
 [group('testing')]
 test-unit durations="":
-    @uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' {{ if durations == "" { "" } else { "--durations=" + durations } }}
+    @uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' {{ if durations == "" { "" } else { "--durations=" + durations } }}
 
 # Run the unit test suite serially for reruns after a parallel failure.
 [group('testing')]
 test-unit-serial:
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 -m 'unit and not external_tool and not os_keychain'
+    @uv run --no-sync pytest -v -n0 -m 'unit and not external_tool and not os_keychain'
 
 # Focused subsystem selectors use the same explicit offline-capability boundary
 # as the full lanes. Each runs ordinary tests under xdist and isolation-sensitive
@@ -860,8 +749,8 @@ test-unit-serial:
 [doc('Run all offline CLI tests, splitting parallel and isolation-sensitive serial passes.')]
 [group('testing')]
 test-cli:
-    @uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/cli
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/cli
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/cli
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/cli
 
 # The TUI currently has no serial-marked case. Keep an explicit serial pass so a
 # future one cannot fall out of the focused selector; pytest exit 5 is accepted
@@ -873,8 +762,8 @@ test-tui:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=0
-    uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py || failed=1
-    uv run --no-sync pytest -v -rsf --tb=short -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
     serial_status=$?
     if [[ "$serial_status" -eq 5 ]]; then
         echo "No serial TUI tests are currently declared."
@@ -890,9 +779,9 @@ test-tui:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     $failed = $false
-    uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
     if ($LASTEXITCODE -ne 0) { $failed = $true }
-    uv run --no-sync pytest -v -rsf --tb=short -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/entrypoints/tui dev/tui/tests src/cadrumo/entrypoints/cli/tests/test_tui_launcher.py dev/quality/tests/test_cli_tui_entrypoint_boundary.py dev/tests/test_importlinter_tui_boundaries.py
     $serialStatus = $LASTEXITCODE
     if ($serialStatus -eq 5) {
         Write-Host 'No serial TUI tests are currently declared.'
@@ -912,8 +801,8 @@ test-calculations:
     #!/usr/bin/env bash
     set -uo pipefail
     failed=0
-    uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests || failed=1
-    uv run --no-sync pytest -v -rsf --tb=short -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests || failed=1
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
     serial_status=$?
     if [[ "$serial_status" -eq 5 ]]; then
         echo "No serial calculation tests are currently declared."
@@ -929,9 +818,9 @@ test-calculations:
     #!pwsh
     $ErrorActionPreference = 'Stop'
     $failed = $false
-    uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
+    uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
     if ($LASTEXITCODE -ne 0) { $failed = $true }
-    uv run --no-sync pytest -v -rsf --tb=short -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
+    uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests src/cadrumo/application/registry/tests
     $serialStatus = $LASTEXITCODE
     if ($serialStatus -eq 5) {
         Write-Host 'No serial calculation tests are currently declared.'
@@ -949,8 +838,8 @@ test-calculations:
 [doc('Run the integration suite in two lanes: parallel xdist, then the isolation-sensitive serial tests alone.')]
 [group('testing')]
 test-integration:
-    @uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
-    @uv run --no-sync pytest -v -rsf --tb=short {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
+    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
+    @uv run --no-sync pytest -v {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
 
 # THIS FILE IS THE SOLE DECLARATION SITE FOR EVERY `dev/` TEST LANE.
 #
@@ -980,7 +869,7 @@ test-integration:
 [doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness, and TUI-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests dev/registry/parity/tests
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests dev/registry/parity/tests
 
 # Run the registry conformance suite. It sits in its own lane rather than in
 # `test-dev-tooling` because of cost, not category: a sequential local run
@@ -996,7 +885,7 @@ test-dev-tooling:
 [doc('Run the registry conformance suite (slow: walks every bundled revision).')]
 [group('testing')]
 test-registry-conformance:
-    @uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" --timeout=300 dev/registry/conformance/tests
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" --timeout=300 dev/registry/conformance/tests
 
 # Run the dev-tree workflow/tooling conformance gates that CI runs per-push
 # (workflow structural pins, evidence-transport conformance, shard-plugin
@@ -1055,8 +944,8 @@ test-registry-conformance:
 [doc('Run the dev-tree workflow/tooling conformance gates that CI runs per-push.')]
 [group('testing')]
 test-dev-ci:
-    @uv run --no-sync pytest -v -rsf --tb=short -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests dev/docs/tests/test_api_stubs.py
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 --timeout=900 -m "integration and serial" dev/ci/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
+    @uv run --no-sync pytest -v -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests dev/docs/tests/test_api_stubs.py
+    @uv run --no-sync pytest -v -n0 --timeout=900 -m "integration and serial" dev/ci/tests dev/quality/tests dev/release/tests dev/docs/apidocs/tests
 
 # Run the four conformance gates that are correctly `integration`-marked
 # (each genuinely crosses architectural layers) but were reached by no
@@ -1071,7 +960,7 @@ test-dev-ci:
 [doc('Run the four cross-layer conformance gates the per-push lane needs (rule-surface, status-frontend, self-referential-string, suggestion-command).')]
 [group('testing')]
 test-per-push-integration-gates:
-    @uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/application/user_profile/tests/test_status_projection.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "integration and not serial and not perf and not external_tool and not os_keychain and not resident_service" src/cadrumo_harness/tests/test_rule_surface_conformance.py src/cadrumo/application/user_profile/tests/test_status_projection.py src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py dev/tests/test_suggestion_command_conformance.py
 
 # Enrol the tests that query the resident vaultspec-rag search service. Held out
 # of every other lane by the `resident_service` marker, because the service is a
@@ -1088,7 +977,7 @@ test-per-push-integration-gates:
 [doc('Enrol the tests that query the resident vaultspec-rag search service (held out of every other lane).')]
 [group('testing')]
 test-resident-service:
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 -m "resident_service" dev/docs/preprocess/tests dev/docs/terminology/tests
+    @uv run --no-sync pytest -v -n0 -m "resident_service" dev/docs/preprocess/tests dev/docs/terminology/tests
 
 # Run BOTH lanes in sequence and report them separately. The default pytest
 # invocation is pinned to the unit lane by addopts, so `just test-unit` green
@@ -1232,12 +1121,12 @@ test-all:
 [doc('Run only the parallel integration lane, holding the isolation-sensitive serial tests out.')]
 [group('testing')]
 test-integration-parallel:
-    @uv run --no-sync pytest -v -rsf --tb=short -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
+    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 [group('testing')]
 test-integration-serial:
-    @uv run --no-sync pytest -v -rsf --tb=short {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
+    @uv run --no-sync pytest -v {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
 
 # Run the OS-credential-store custody tests. These carry `os_keychain` alongside
 # their execution marker, and EVERY lane above excludes it, so this recipe is the
@@ -1265,7 +1154,7 @@ test-integration-serial:
 [doc('Run the OS-credential-store custody tests (interactive desktop session only).')]
 [group('testing')]
 test-os-keychain:
-    uv run --no-sync pytest -v -rsf --tb=short -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/tests/test_secure_sql.py src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
+    uv run --no-sync pytest -v -n0 -m os_keychain src/cadrumo/application/user_profile/tests src/cadrumo/entrypoints/cli/tests src/cadrumo/tests/test_secure_sql.py src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/adapters/persistence/storage/master_key/tests src/cadrumo/adapters/persistence/storage/tests
 
 # Run live-read tests serially: they observe shared external state and the test
 # guide explicitly forbids xdist for live tests. Failure identities stream as
@@ -1273,12 +1162,12 @@ test-os-keychain:
 [doc('Run the opt-in live-read test suite serially. Streams failure identities as they happen.')]
 [group('testing')]
 test-live:
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 -m aeat_live
+    @uv run --no-sync pytest -v -n0 -m aeat_live
 
 # Run the produce, verify, and export end-to-end smoke tests.
 [group('testing')]
 test-smoke:
-    uv run --no-sync pytest -v -rsf --tb=short src/cadrumo/application/modelo/tests/test_file_flow_calculation.py src/cadrumo/application/modelo/tests/test_file_flow_verify.py src/cadrumo/application/modelo/tests/test_file_flow_filing.py src/cadrumo/application/modelo/tests/test_export.py
+    uv run --no-sync pytest -v src/cadrumo/application/modelo/tests/test_file_flow_calculation.py src/cadrumo/application/modelo/tests/test_file_flow_verify.py src/cadrumo/application/modelo/tests/test_file_flow_filing.py src/cadrumo/application/modelo/tests/test_export.py
 
 # Run the LibreOffice workbook parity tests. These carry `external_tool` rather
 # than `unit`, so the default `-m 'unit'` in addopts must be overridden here or
@@ -1287,7 +1176,7 @@ test-smoke:
 [doc('Run the LibreOffice workbook parity tests (external_tool marker, outside the default unit lane).')]
 [group('testing')]
 test-workbook-parity:
-    uv run --no-sync pytest -v -rsf --tb=short -n0 -m external_tool dev/registry/tests/test_workbook_parity.py
+    uv run --no-sync pytest -v -n0 -m external_tool dev/registry/tests/test_workbook_parity.py
 
 # Run the Homebrew/Scoop channel-artifact conformance tests. These bind
 # the generated formula and manifest to a real built cohort. Explicit paths
@@ -1298,14 +1187,14 @@ test-workbook-parity:
 [doc('Run the Homebrew/Scoop channel-artifact conformance tests (serial, builds real sdists and wheels).')]
 [group('testing')]
 test-channel-artifacts:
-    @uv run --no-sync pytest -v -rsf --tb=short -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests
+    @uv run --no-sync pytest -v -n0 --timeout=900 -m serial packaging/homebrew/tests packaging/scoop/tests
 
 # Run the unit suite with live per-test verdicts, coverage, and fail-under check.
 [doc('Run the unit test suite with a coverage report and a fail-under check.')]
 [group('testing')]
 [unix]
 test-coverage:
-    @uv run --no-sync pytest -v -rsf --tb=short --cov=cadrumo --cov-report=term-missing --cov-fail-under=60
+    @uv run --no-sync pytest -v --cov=cadrumo --cov-report=term-missing --cov-fail-under=60
 
 [doc('Run the unit test suite with a coverage report and a fail-under check.')]
 [group('testing')]
@@ -1313,7 +1202,7 @@ test-coverage:
 test-coverage:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    uv run --no-sync pytest -v -rsf --tb=short --cov=cadrumo --cov-report=term-missing --cov-fail-under=60
+    uv run --no-sync pytest -v --cov=cadrumo --cov-report=term-missing --cov-fail-under=60
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 # ── Advisory audits ──────────────────────────────────────────────────────────
@@ -1532,7 +1421,7 @@ docs-site-dry-run:
 [doc('Run docstring structure and Sphinx build checks. Streams failure identities as they happen.')]
 [group('docs')]
 docs-check workers="auto":
-    @uv run --no-sync pytest -v -rsf --tb=short -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m "docs or unit or (integration and not serial)"
+    @uv run --no-sync pytest -v -n {{workers}} dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m "docs or unit or (integration and not serial)"
     @uv run --no-sync doc8 docs
     @uv run --no-sync interrogate -c pyproject.toml src/cadrumo
 
