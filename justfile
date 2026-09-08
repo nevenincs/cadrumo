@@ -62,27 +62,22 @@ propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
 # `.venv/init-report.json`; an environment held open by a live session exits 6.
 
 [doc('Initialize a fresh clone or worktree: Python, dev dependencies, vaultspec, and env/.env.')]
-[group('setup')]
+[group('bootstrap')]
 init:
     uv run --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
 
 [doc('Create the pinned environment and additively install every dependency.')]
-[group('setup')]
+[group('bootstrap')]
 init-python:
     uv run --no-project --python 3.13.11 -- python -m dev.init python{{propagate}}
 
-[doc('Restore the pinned Node dependency graph. A no-op in this repository.')]
-[group('setup')]
-init-node:
-    uv run --no-project --python 3.13.11 -- python -m dev.init node{{propagate}}
-
 [doc('Install the Vaultspec tooling and report the resulting configuration.')]
-[group('setup')]
+[group('bootstrap')]
 init-tools:
     uv run --no-project --python 3.13.11 -- python -m dev.init tools{{propagate}}
 
 [doc('Report whether this worktree is initialized. Mutates nothing; exits 3 if not.')]
-[group('setup')]
+[group('bootstrap')]
 init-check:
     uv run --no-project --python 3.13.11 -- python -m dev.init check{{propagate}}
 
@@ -92,17 +87,9 @@ init-check:
 # opted-in capability has a missing dependency. This is the product-side
 # "is my workstation ready" check (the dev-toolchain probe is `just doctor-env`).
 [doc('Verify the workstation is ready: external dependency availability plus the active profile capability posture.')]
-[group('setup')]
+[group('doctor')]
 doctor-check:
     uv run --no-sync aeat config check
-
-# Provision the optional external dependencies a fresh workstation needs for the
-# capability surfaces: the Playwright browser binary now; Ollama + the vision model
-# are guided by `just doctor-check` (run `ollama pull <model>` per its remediation rows).
-[doc('Provision the optional external dependencies a fresh workstation needs: the Playwright browser binary now.')]
-[group('setup')]
-setup-provision: setup-playwright
-    @echo "Playwright Chromium + chrome channel provisioned (verify with 'just doctor-playwright'). For on-host LLM vision, run 'ollama serve' and 'ollama pull qwen2.5vl:3b' (see 'just doctor-check')."
 
 # Additively install runtime, workbook, and dev dependencies into the current
 # venv. This is intentionally not an exact sync: it repairs missing packages and
@@ -111,11 +98,6 @@ setup-provision: setup-playwright
 [group('setup')]
 setup-install:
     uv run --no-sync python -m dev.env install
-
-# Alias for `setup-install` — explicit name for CI clarity without exact pruning.
-[group('setup')]
-setup-sync:
-    just setup-install
 
 # Workstation CLI prerequisites for non-Python audit recipes.
 [doc('Workstation CLI prerequisites for non-Python audit recipes.')]
@@ -132,8 +114,8 @@ setup-env:
     uv run --no-sync python -m dev.env setup
 
 # Verify the local venv and workstation provide the full audit toolchain and RAG status.
-[group('setup')]
-doctor-env: setup-playwright
+[group('doctor')]
+doctor-env:
     uv run --no-sync python -c "import cadrumo; print(cadrumo.__file__)"
     uv run --no-sync ruff --version
     uv run --no-sync ty --version
@@ -146,16 +128,17 @@ doctor-env: setup-playwright
     uvx --from semgrep==1.168.0 semgrep --version
     npx --yes $(uv run --no-sync python -c "from dev.audit.duplication import _JSCPD_SPEC; print(_JSCPD_SPEC)") --version
     just doctor-pip
-    -just check-rag
+    just doctor-playwright
+    -just rag-service-status
 
 [doc('Verify installed packages satisfy their declared dependency constraints.')]
-[group('setup')]
+[group('doctor')]
 [windows]
 doctor-pip:
     uv pip check --python .venv/Scripts/python.exe
 
 [doc('Verify installed packages satisfy their declared dependency constraints.')]
-[group('setup')]
+[group('doctor')]
 [unix]
 doctor-pip:
     uv pip check --python .venv/bin/python
@@ -184,27 +167,27 @@ setup-playwright:
 # reads the live setting) and prints the exact remediation command on failure.
 # Exits non-zero when the environment cannot satisfy the configured channel.
 [doc('Verify the local environment is provisioned with the configured Playwright browser channel and its dependencies.')]
-[group('setup')]
+[group('doctor')]
 doctor-playwright:
     uv run --no-sync python -m dev.env.playwright_doctor
 
 # Start the background vaultspec-rag HTTP service daemon on loopback port 8766.
-[group('dev')]
+[group('service')]
 rag-service-start:
     uv run --no-sync vaultspec-rag server start --updates --port 8766
 
 # Stop the background vaultspec-rag HTTP service daemon.
-[group('dev')]
+[group('service')]
 rag-service-stop:
     uv run --no-sync vaultspec-rag server stop
 
 # Report what the temp directory is holding, and which sessions still own it. Deletes nothing.
-[group('dev')]
+[group('maintenance')]
 dev-temp-report:
     uv run --no-sync python -m dev.env.temp_reaper
 
 # Reclaim the session scratchpads the report judged abandoned. Read the report first.
-[group('dev')]
+[group('maintenance')]
 dev-temp-reap:
     uv run --no-sync python -m dev.env.temp_reaper --apply
 
@@ -541,13 +524,13 @@ test-runner-image: build-runner-image
 # 55,378 lines for 365 findings on this tree), so this recipe and audit-all's
 # security dimension cannot drift apart or disagree. Pass --full for the
 # uncapped finding list.
-[doc('Verify codebase security posture using semgrep scans; capped console report, --full for everything.')]
-[group('check')]
-check-security:
+[doc('Audit codebase security posture using semgrep scans; advisory and always non-blocking.')]
+[group('audit')]
+audit-security:
     @uv run --no-sync python -m dev.audit.security
 
 # Check if the RAG service daemon is running.
-[group('dev')]
+[group('service')]
 rag-service-status:
     @uv run --no-sync vaultspec-rag server status --port 8766
 
@@ -602,7 +585,7 @@ fix-all:
     @uv run --no-sync python -m dev.quality.fixes
 
 # Trigger incremental vector re-indexing via the loopback service.
-[group('dev')]
+[group('service')]
 rag-index:
     @uv run --no-sync vaultspec-rag index --type all --port 8766
 
@@ -644,31 +627,31 @@ docs-terminology-synonyms *ARGS:
 
 # Route locale catalogue changes through their canonical maintenance CLI.
 [doc('Run a locale catalogue maintenance command.')]
-[group('dev')]
+[group('maintenance')]
 dev-locales *ARGS:
     @uv run --no-sync python -m dev.locales {{ARGS}}
 
 # Scaffold a modelo or render its contributor checklist through the owning CLI.
 [doc('Run a new-modelo scaffolding or checklist command.')]
-[group('dev')]
+[group('maintenance')]
 dev-newmodelo *ARGS:
     @uv run --no-sync python -m dev.registry.newmodelo {{ARGS}}
 
 # Check, publish, or republish a generated registry target through the owning CLI.
 [doc('Run a generated registry pipeline command.')]
-[group('dev')]
+[group('maintenance')]
 dev-registry-pipeline *ARGS:
     @uv run --no-sync python -m dev.registry.pipeline {{ARGS}}
 
 # Generate and maintain TUI visual-review artifacts.
 [doc('Run a TUI visual-review command.')]
-[group('dev')]
+[group('maintenance')]
 dev-tui-review *ARGS:
     @uv run --no-sync python -m dev.tui {{ARGS}}
 
 # Drive the persistent interactive TUI harness session.
 [doc('Run an interactive TUI harness command.')]
-[group('dev')]
+[group('maintenance')]
 dev-tui-harness *ARGS:
     @uv run --no-sync python -m dev.tui.harness {{ARGS}}
 
@@ -731,11 +714,6 @@ test-harness:
 [group('test')]
 test-unit durations="":
     @uv run --no-sync pytest -v -n {{pytest_workers}} --dist=loadfile -m 'unit and not external_tool and not os_keychain' {{ if durations == "" { "" } else { "--durations=" + durations } }}
-
-# Run the unit test suite serially for reruns after a parallel failure.
-[group('test')]
-test-unit-serial:
-    @uv run --no-sync pytest -v -n0 -m 'unit and not external_tool and not os_keychain'
 
 # Focused subsystem selectors use the same explicit offline-capability boundary
 # as the full lanes. Each runs ordinary tests under xdist and isolation-sensitive
@@ -832,8 +810,8 @@ test-calculations:
 [doc('Run the integration suite in two lanes: parallel xdist, then the isolation-sensitive serial tests alone.')]
 [group('test')]
 test-integration:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} {{harness_exclusions}} -m "integration and not serial and not os_keychain"
-    @uv run --no-sync pytest -v {{harness_exclusions}} -m "integration and serial and not perf and not os_keychain" -n0
+    @just test-integration-parallel
+    @just test-integration-serial
 
 # THIS FILE IS THE SOLE DECLARATION SITE FOR EVERY `dev/` TEST LANE.
 #
@@ -1137,7 +1115,7 @@ audit-types:
 # zero-Actions-artifact posture is preserved.
 [doc('Gate on published vulnerability advisories against every pinned dependency; the one audit that fails the build.')]
 [group('audit')]
-audit-dependencies *ARGS:
+audit-deps *ARGS:
     @uv run --no-sync python -m dev.audit.dependency_audit {{ARGS}}
 
 # Run complexity audits for production code.
@@ -1203,7 +1181,7 @@ audit-duplication:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-duplication -- uv run --no-sync python -m dev.audit.duplication
 
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
-[group('dev')]
+[group('service')]
 rag-search QUERY:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-rag -- uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
 
@@ -1217,13 +1195,8 @@ rag-search QUERY:
 # Advisory-audit sibling of `check-all` (the fast static gates).
 [doc('Run all advisory audits; full command-identified results persist below .logs/audit-runs/.')]
 [group('audit')]
-audit-all:
-    @uv run --no-sync python -m dev.audit.advisory
-
-# Same composed advisory-audit dashboard, machine-readable.
-[group('audit')]
-audit-all-json:
-    @uv run --no-sync python -m dev.audit.advisory --json
+audit-all *ARGS:
+    @uv run --no-sync python -m dev.audit.advisory {{ARGS}}
 
 # Monthly code-health report: shadowing, duplication, layering, complexity,
 # each classified red/amber/green. Composes the scanners above (plus
@@ -1231,13 +1204,8 @@ audit-all-json:
 # dimension is RED; AMBER dimensions are advisory debt, not a gate.
 [doc('Monthly code-health report: shadowing, duplication, layering, and complexity, each classified red/amber/green.')]
 [group('audit')]
-audit-health-report:
-    @uv run --no-sync python -m dev.audit.report
-
-# Same report, machine-readable.
-[group('audit')]
-audit-health-report-json:
-    @uv run --no-sync python -m dev.audit.report --json
+audit-health-report *ARGS:
+    @uv run --no-sync python -m dev.audit.report {{ARGS}}
 
 # Show conformance status across all modelo revisions and the derived release
 # closure. Both verbs exit 0 always (screen posture): ``report`` renders every
@@ -1325,9 +1293,9 @@ docs-lang LANG:
 [doc('Build the user-scope documentation for every translation language, each into its own root.')]
 [group('docs')]
 docs-langs:
-    uv run --no-sync python -m dev.docs.build --scope user --language es --out-dir docs/_build/html/es
-    uv run --no-sync python -m dev.docs.build --scope user --language ca --out-dir docs/_build/html/ca
-    uv run --no-sync python -m dev.docs.build --scope user --language hu --out-dir docs/_build/html/hu
+    just docs-lang es
+    just docs-lang ca
+    just docs-lang hu
 
 # Build every published site root exactly as a publish builds it and run every
 # pre-upload validation against the result. It belongs in this group and not in
@@ -1358,14 +1326,14 @@ docs-check workers="auto":
 # Generate a new Alembic database migration file. Identical body across
 # platforms — a single plain `uv run` invocation needs no shell preamble.
 [doc('Generate a new Alembic database migration file.')]
-[group('dev')]
+[group('maintenance')]
 dev-db-migrate message:
     uv run alembic revision --autogenerate -m "{{message}}"
 
 # Upgrade the database schema to the latest version. Identical body across
 # platforms — a single plain `uv run` invocation needs no shell preamble.
 [doc('Upgrade the database schema to the latest version.')]
-[group('dev')]
+[group('maintenance')]
 dev-db-upgrade:
     uv run alembic upgrade head
 
@@ -1390,7 +1358,7 @@ dev-db-upgrade:
 # not publication: a one-time stack create/update that no workflow performs and
 # no release step calls. Operator-only.
 [doc('Create or update the private Cadrumo docs stack (infrastructure provisioning, operator-only).')]
-[group('docs')]
+[group('deploy')]
 docs-stack-deploy:
     uv run --no-sync python -m dev.deploy.docs_static_site provision --confirm provision-cadrumo-docs
 
@@ -1401,7 +1369,7 @@ docs-stack-deploy:
 # is the release runbook's distribution-complete tripwire — see RELEASING.md
 # phase 4, the one post-publication step still held by a human.
 [doc('Build and publish the complete Cadrumo docs site (human half; docs-publish.yml is the automated peer).')]
-[group('docs')]
+[group('deploy')]
 docs-deploy:
     uv run --no-sync python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs
 
@@ -1416,13 +1384,8 @@ docs-deploy:
 # docs/_release_checklist.yaml and RELEASING.md.
 [doc('Audit-state readiness gate: version-surface parity, changelog sanity, and packaging-smoke evidence.')]
 [group('release')]
-release-readiness:
-    uv run --no-sync python -m dev.release.readiness
-
-# Same gate, machine-readable.
-[group('release')]
-release-readiness-json:
-    uv run --no-sync python -m dev.release.readiness --json
+release-readiness *ARGS:
+    uv run --no-sync python -m dev.release.readiness {{ARGS}}
 
 # Print the rollback procedure for a released version that must be pulled.
 # Read-only — never runs a destructive action; every step below is printed
@@ -1446,9 +1409,7 @@ release-publish:
 # what a green CI run means. The composition is the fleet's, and the two
 # rulings inside it are worth stating where they are made:
 #
-#   `audit-dependencies` and NOTHING else from the audit group. (The other
-#   four repositories spell that recipe `audit-deps`; the name differs here
-#   and the role does not - both run `dev/audit/dependency_audit.py`.) Every other audit
+#   `audit-deps` and NOTHING else from the audit group. Every other audit
 #   dimension is advisory by construction - each finding is a lead to confirm,
 #   and a pipeline that fails on a lead teaches people to stop reading it. A
 #   published advisory against a pinned version is not a lead, it is a verdict.
@@ -1463,6 +1424,6 @@ release-publish:
 [group('check')]
 ci:
     @just check-all
-    @just audit-dependencies
+    @just audit-deps
     @just test-unit
     @just build-all

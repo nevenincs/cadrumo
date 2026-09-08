@@ -72,6 +72,18 @@ class _WorkbookSheetRows:
     notes: dict[str, str] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class _WorkbookFieldRow:
+    """The workbook cells that decide which kind of row was printed."""
+
+    ordinal: int | None
+    ordinal_label: str | None
+    offset: int | None
+    length: int | None
+    raw_offset: str | None
+    raw_length: str | None
+
+
 def extract_sheet(worksheet: Worksheet, corrections: CorrectionIndex = EMPTY_CORRECTIONS) -> RecordDesignSheet:
     """Extract a record-design sheet from an openpyxl ``.xlsx`` worksheet."""
     header, header_correction = find_header(worksheet, corrections.header_corrections)
@@ -251,41 +263,102 @@ def _consume_field_row(
     # (variable-body, relative-suffix) are unrelated types whose own ``ordinal``
     # field is still a plain sequential ``int``, so they keep reading the
     # int-or-None form.
-    ordinal_int = int_or_none(cell_at(values, header.ordinal_index))
-    ordinal_label = ordinal_text(cell_at(values, header.ordinal_index))
-    offset = int_or_none(cell_at(values, header.offset_index))
-    length = int_or_none(cell_at(values, header.length_index))
-    raw_offset = optional_text(cell_at(values, header.offset_index))
-    raw_length = optional_text(cell_at(values, header.length_index))
-    if raw_length == "Variable":
-        parsed_rows.variable_body_marker_rows.append(row_number)
-        if ordinal_int is not None and offset is not None:
-            parsed_rows.variable_bodies.append(
-                _variable_body_marker(sheet_name, header, row_number, values, ordinal_int, offset),
-            )
+    row_shape = _workbook_field_row(header, values)
+    if row_shape.raw_length == "Variable":
+        _consume_variable_body_row(parsed_rows, sheet_name, header, row_number, values, row_shape)
         return
-    if raw_offset == "***":
-        parsed_rows.relative_suffix_marker_rows.append(row_number)
-        if ordinal_int is not None and length is not None:
-            parsed_rows.relative_suffixes.append(
-                _relative_suffix_marker(sheet_name, header, row_number, values, ordinal_int, length),
-            )
+    if row_shape.raw_offset == "***":
+        _consume_relative_suffix_row(parsed_rows, sheet_name, header, row_number, values, row_shape)
         return
-    if offset is None or length is None:
+    if row_shape.offset is None or row_shape.length is None:
         return
+    _append_field_row(
+        parsed_rows,
+        sheet_name,
+        header,
+        row_number,
+        values,
+        corrections,
+        row_shape,
+        row_shape.offset,
+        row_shape.length,
+    )
+
+
+def _workbook_field_row(header: WorkbookHeader, values: tuple[object, ...]) -> _WorkbookFieldRow:
+    """Read the discriminating cells of one workbook row exactly once."""
+    return _WorkbookFieldRow(
+        ordinal=int_or_none(cell_at(values, header.ordinal_index)),
+        ordinal_label=ordinal_text(cell_at(values, header.ordinal_index)),
+        offset=int_or_none(cell_at(values, header.offset_index)),
+        length=int_or_none(cell_at(values, header.length_index)),
+        raw_offset=optional_text(cell_at(values, header.offset_index)),
+        raw_length=optional_text(cell_at(values, header.length_index)),
+    )
+
+
+def _consume_variable_body_row(
+    parsed_rows: _WorkbookSheetRows,
+    sheet_name: str,
+    header: WorkbookHeader,
+    row_number: int,
+    values: tuple[object, ...],
+    row_shape: _WorkbookFieldRow,
+) -> None:
+    """Retain a variable-body marker and its valid typed representation."""
+    parsed_rows.variable_body_marker_rows.append(row_number)
+    if row_shape.ordinal is not None and row_shape.offset is not None:
+        parsed_rows.variable_bodies.append(
+            _variable_body_marker(sheet_name, header, row_number, values, row_shape.ordinal, row_shape.offset),
+        )
+
+
+def _consume_relative_suffix_row(
+    parsed_rows: _WorkbookSheetRows,
+    sheet_name: str,
+    header: WorkbookHeader,
+    row_number: int,
+    values: tuple[object, ...],
+    row_shape: _WorkbookFieldRow,
+) -> None:
+    """Retain a relative-suffix marker and its valid typed representation."""
+    parsed_rows.relative_suffix_marker_rows.append(row_number)
+    if row_shape.ordinal is not None and row_shape.length is not None:
+        parsed_rows.relative_suffixes.append(
+            _relative_suffix_marker(sheet_name, header, row_number, values, row_shape.ordinal, row_shape.length),
+        )
+
+
+def _append_field_row(
+    parsed_rows: _WorkbookSheetRows,
+    sheet_name: str,
+    header: WorkbookHeader,
+    row_number: int,
+    values: tuple[object, ...],
+    corrections: TypeCorrectionIndex,
+    row_shape: _WorkbookFieldRow,
+    offset: int,
+    length: int,
+) -> None:
+    """Build one fixed field and attach it to a preceding component parent."""
     field, applied_correction = _record_design_field(
         sheet_name,
         header,
         row_number,
         values,
-        ordinal_label,
+        row_shape.ordinal_label,
         offset,
         length,
         corrections,
     )
     if applied_correction is not None:
         parsed_rows.corrections_applied.append(applied_correction)
-    parent_index = _matching_component_parent_index(parsed_rows.fields, ordinal_label, offset, length)
+    parent_index = _matching_component_parent_index(
+        parsed_rows.fields,
+        row_shape.ordinal_label,
+        offset,
+        length,
+    )
     if parent_index is not None:
         parent = parsed_rows.fields[parent_index]
         parsed_rows.fields[parent_index] = parent.model_copy(update={"components": (*parent.components, field)})

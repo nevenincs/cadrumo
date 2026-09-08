@@ -23,7 +23,7 @@ from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..iva.classification import InvoiceKind
 from ..transactions.enums import TransactionDirection
-from ..transactions.models import TransactionCatalogue
+from ..transactions.models import Transaction, TransactionCatalogue
 from .errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,
@@ -195,51 +195,94 @@ def suggest_reconciliations(
         Deterministic tuple of :class:`ReconciliationSuggestion` objects sorted by
         ``(score desc, invoice_id asc, transaction_id asc)``.
     """
-    unmatched_invoices = tuple(invoice for invoice in invoices.values() if not invoice.linked_transaction_ids)
-    candidate_transactions = tuple(
-        transaction for transaction in transactions.values() if transaction.invoice_id is None
-    )
+    unmatched_invoices = _unmatched_reconciliation_invoices(invoices)
+    candidate_transactions = _unlinked_reconciliation_transactions(transactions)
     suggestions: list[ReconciliationSuggestion] = []
     for invoice in unmatched_invoices:
-        # ``amount`` is a non-negative magnitude; flow is carried by
-        # ``direction``. An ISSUED invoice
-        # reconciles against an INCOMING transaction, a RECEIVED invoice
-        # against an OUTGOING transaction, both matched on the magnitude
-        # against the invoice grand total.
-        expected_direction = (
-            TransactionDirection.INCOMING if invoice.kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
-        )
-        invoice_counterparty = invoice.counterparty_name.strip().lower()
         for transaction in candidate_transactions:
-            if transaction.direction is not expected_direction:
-                continue
-            amount_match = abs(transaction.raw.amount - invoice.grand_total) <= amount_tolerance
-            if not amount_match:
-                continue
-            tx_counterparty = transaction.raw.counterparty
-            counterparty_match = False
-            if tx_counterparty is not None and invoice_counterparty:
-                tx_normalised = tx_counterparty.strip().lower()
-                # ``bool(tx_normalised)`` guards against the empty-string case;
-                # without it ``"" in invoice_counterparty`` returns True and
-                # grants a false-positive 0.5 score boost.
-                counterparty_match = bool(tx_normalised) and (
-                    invoice_counterparty in tx_normalised or tx_normalised in invoice_counterparty
-                )
-            score = Decimal("0.5") * (1 if amount_match else 0)
-            score += Decimal("0.5") * (1 if counterparty_match else 0)
-            suggestions.append(
-                ReconciliationSuggestion(
-                    invoice_id=invoice.invoice_id,
-                    transaction_id=transaction.transaction_id,
-                    amount_match=amount_match,
-                    counterparty_match=counterparty_match,
-                    score=score,
-                ),
-            )
+            suggestion = _suggestion_for_pair(invoice, transaction, amount_tolerance=amount_tolerance)
+            if suggestion is not None:
+                suggestions.append(suggestion)
     suggestions.sort(key=lambda s: (-s.score, s.invoice_id, s.transaction_id))
     _LOGGER.debug("suggest_reconciliations: %d candidate(s)", len(suggestions))
     return tuple(suggestions)
+
+
+def _unmatched_reconciliation_invoices(catalogue: InvoiceCatalogue) -> tuple[Invoice, ...]:
+    """Return invoices eligible for reconciliation suggestions."""
+    return tuple(invoice for invoice in catalogue.values() if not invoice.linked_transaction_ids)
+
+
+def _unlinked_reconciliation_transactions(catalogue: TransactionCatalogue) -> tuple[Transaction, ...]:
+    """Return transactions eligible for reconciliation suggestions."""
+    return tuple(transaction for transaction in catalogue.values() if transaction.invoice_id is None)
+
+
+def _expected_reconciliation_direction(invoice: Invoice) -> TransactionDirection:
+    """Return the ledger flow expected for an invoice kind."""
+    # ``amount`` is a non-negative magnitude; flow is carried by ``direction``.
+    # An ISSUED invoice reconciles against an INCOMING transaction, a RECEIVED
+    # invoice against an OUTGOING transaction.
+    return TransactionDirection.INCOMING if invoice.kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
+
+
+def _reconciliation_amount_matches(
+    invoice: Invoice,
+    transaction: Transaction,
+    *,
+    amount_tolerance: Decimal,
+) -> bool:
+    """Return whether the transaction amount is within the requested tolerance."""
+    return abs(transaction.raw.amount - invoice.grand_total) <= amount_tolerance
+
+
+def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:
+    """Return whether both counterparties have a non-empty overlapping name."""
+    invoice_counterparty = invoice.counterparty_name.strip().lower()
+    tx_counterparty = transaction.raw.counterparty
+    if tx_counterparty is None or not invoice_counterparty:
+        return False
+    tx_normalised = tx_counterparty.strip().lower()
+    # ``bool(tx_normalised)`` guards against the empty-string case; without it
+    # ``"" in invoice_counterparty`` returns True and grants a false-positive
+    # 0.5 score boost.
+    return bool(tx_normalised) and (invoice_counterparty in tx_normalised or tx_normalised in invoice_counterparty)
+
+
+def _reconciliation_score(*, amount_match: bool, counterparty_match: bool) -> Decimal:
+    """Calculate the existing amount and counterparty confidence score."""
+    score = Decimal("0.5") * (1 if amount_match else 0)
+    score += Decimal("0.5") * (1 if counterparty_match else 0)
+    return score
+
+
+def _suggestion_for_pair(
+    invoice: Invoice,
+    transaction: Transaction,
+    *,
+    amount_tolerance: Decimal,
+) -> ReconciliationSuggestion | None:
+    """Build one suggestion when a candidate pair satisfies flow and amount."""
+    if transaction.direction is not _expected_reconciliation_direction(invoice):
+        return None
+    amount_match = _reconciliation_amount_matches(
+        invoice,
+        transaction,
+        amount_tolerance=amount_tolerance,
+    )
+    if not amount_match:
+        return None
+    counterparty_match = _reconciliation_counterparty_matches(invoice, transaction)
+    return ReconciliationSuggestion(
+        invoice_id=invoice.invoice_id,
+        transaction_id=transaction.transaction_id,
+        amount_match=amount_match,
+        counterparty_match=counterparty_match,
+        score=_reconciliation_score(
+            amount_match=amount_match,
+            counterparty_match=counterparty_match,
+        ),
+    )
 
 
 def verify_link_consistency(

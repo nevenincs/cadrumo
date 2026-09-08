@@ -103,15 +103,6 @@ PYTHON = Phase(
     artifacts=(".venv",),
 )
 
-NODE = Phase(
-    name="node",
-    summary="Restore the pinned Node dependency graph.",
-    skip_reason=(
-        "this repository has no Node dependency graph; node and npx are probed "
-        "as advisory host tools and installed by `just setup-workstation-tools`"
-    ),
-)
-
 TOOLS = Phase(
     name="tools",
     summary="Install the Vaultspec tooling and diagnose the result.",
@@ -142,6 +133,5 @@ TOOLS = Phase(
 #: exercise, and CI already invokes it as its own step.
 PHASE_PLAN: Final[dict[str, Phase]] = {
     "python": PYTHON,
-    "node": NODE,
     "tools": TOOLS,
 }

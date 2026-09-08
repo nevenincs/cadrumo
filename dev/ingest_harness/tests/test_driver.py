@@ -22,14 +22,14 @@ from __future__ import annotations
 import pytest
 
 from .._driver import DriverError, measure_structured_document, read_structured_draft
-from .._key import CorpusKey
+from .._key import CorpusKey, IngestCorpusDocument
 from .._result import EngineRoute, HarnessModelTier, HarnessRefusalError, PipelineStage, Scored
 from .._runner import HarnessReport
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 
-def _structured_documents(key: CorpusKey) -> list:
+def _structured_documents(key: CorpusKey) -> list[IngestCorpusDocument]:
     return [document for document in key.documents if document.path.lower().endswith(".xml")]
 
 

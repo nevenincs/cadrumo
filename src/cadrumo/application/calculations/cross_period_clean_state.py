@@ -786,6 +786,15 @@ class _CrossPeriodSource(NamedTuple):
     blockers: tuple[CrossPeriodCleanStateBlocker, ...]
 
 
+class _MemberSourceSelection(NamedTuple):
+    value_member_payloads: tuple[ObservationPayload, ...]
+    observed_member_nifs: tuple[str, ...]
+    expected_member_nifs: tuple[str, ...]
+    missing_member_nifs: tuple[str, ...]
+    unexpected_member_nifs: tuple[str, ...]
+    blockers: tuple[CrossPeriodCleanStateBlocker, ...]
+
+
 class _MemberHistory(NamedTuple):
     member_filing_record_ids: tuple[str, ...]
     member_calculation_revision_ids: tuple[str, ...]
@@ -851,96 +860,155 @@ def _aeat_register_provenance_blockers(
     return blockers
 
 
+def _member_payloads_for_requirement(
+    requirement: CrossPeriodDependencyRequirement,
+    observation_repository: CalculationObservationRepository,
+) -> tuple[ObservationPayload, ...]:
+    # CAST-RATIONALE-CROSS-PERIOD-MEMBER-PAYLOAD: iter_modelo records are typed envelopes at runtime.
+    return tuple(
+        # CAST-RATIONALE-CROSS-PERIOD-MEMBER-ITEM: iter_modelo records are typed envelopes at runtime.
+        cast(  # nosemgrep: no-cast-in-domain-application reason: repository rows satisfy _ObservationPayload.
+            ObservationPayload,
+            item,
+        )
+        for item in observation_repository.iter_modelo(requirement.source_modelo)
+        if item.observation.filing_year == requirement.filing_year
+        and item.observation.period == requirement.period.registry_token
+        and item.member_nif is not None
+    )
+
+
+def _select_member_source_payloads(
+    requirement: CrossPeriodDependencyRequirement,
+    observation_repository: CalculationObservationRepository,
+    expected_member_set: CrossPeriodExpectedMemberSet | None,
+) -> _MemberSourceSelection:
+    member_payloads = _member_payloads_for_requirement(requirement, observation_repository)
+    observed_member_nifs = tuple(sorted({str(item.member_nif) for item in member_payloads}))
+    if expected_member_set is None:
+        value_member_payloads = member_payloads
+        roster_blockers: tuple[CrossPeriodCleanStateBlocker, ...] = (
+            CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER,
+            CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE,
+        )
+        return _MemberSourceSelection(
+            value_member_payloads,
+            observed_member_nifs,
+            (),
+            (),
+            (),
+            roster_blockers,
+        )
+
+    expected_member_nifs = tuple(sorted(set(expected_member_set.member_nifs)))
+    expected_member_nif_set = set(expected_member_nifs)
+    observed_member_nif_set = set(observed_member_nifs)
+    missing_member_nifs = tuple(sorted(expected_member_nif_set - observed_member_nif_set))
+    unexpected_member_nifs = tuple(sorted(observed_member_nif_set - expected_member_nif_set))
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    if missing_member_nifs:
+        blockers.append(CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE)
+    if unexpected_member_nifs:
+        blockers.append(CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE)
+    value_member_payloads = tuple(item for item in member_payloads if str(item.member_nif) in expected_member_nif_set)
+    return _MemberSourceSelection(
+        value_member_payloads,
+        observed_member_nifs,
+        expected_member_nifs,
+        missing_member_nifs,
+        unexpected_member_nifs,
+        tuple(blockers),
+    )
+
+
+def _member_source_revision_blockers(
+    requirement: CrossPeriodDependencyRequirement,
+    value_member_payloads: tuple[ObservationPayload, ...],
+) -> tuple[CrossPeriodCleanStateBlocker, ...]:
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    for item in value_member_payloads:
+        blockers.extend(_aeat_register_provenance_blockers(item, expected_tax_id=item.member_nif))
+        blockers.extend(
+            _revision_carry_check(
+                item.stamped_revision_id,
+                requirement.source_modelo,
+                requirement.filing_year,
+                requirement.period,
+            ),
+        )
+    return tuple(blockers)
+
+
+def _single_source_payload(
+    requirement: CrossPeriodDependencyRequirement,
+    observation_repository: CalculationObservationRepository,
+) -> ObservationPayload | None:
+    # CAST-RATIONALE-CROSS-PERIOD-SINGLE-PAYLOAD: load_observation returns the same envelope contract as iteration.
+    # CAST-RATIONALE-CROSS-PERIOD-SINGLE-RESULT: load_observation returns the same envelope contract as iteration.
+    return cast(  # nosemgrep: no-cast-in-domain-application reason: lookup returns this Protocol or None.
+        ObservationPayload | None,
+        observation_repository.load_observation(
+            requirement.source_modelo,
+            requirement.period,
+        ),
+    )
+
+
+def _single_source_revision_blockers(
+    requirement: CrossPeriodDependencyRequirement,
+    payload: ObservationPayload | None,
+    taxpayer_tax_id: str | None,
+) -> tuple[CrossPeriodCleanStateBlocker, ...]:
+    if payload is None:
+        return ()
+    blockers = _aeat_register_provenance_blockers(payload, expected_tax_id=taxpayer_tax_id)
+    blockers.extend(
+        _revision_carry_check(
+            payload.stamped_revision_id,
+            requirement.source_modelo,
+            requirement.filing_year,
+            requirement.period,
+        ),
+    )
+    return tuple(blockers)
+
+
 def _resolve_cross_period_source(
     requirement: CrossPeriodDependencyRequirement,
     observation_repository: CalculationObservationRepository,
     expected_member_set: CrossPeriodExpectedMemberSet | None,
     taxpayer_tax_id: str | None,
 ) -> _CrossPeriodSource:
-    blockers: list[CrossPeriodCleanStateBlocker] = []
-    value_member_payloads: tuple[ObservationPayload, ...] = ()
-    observed_member_nifs: tuple[str, ...] = ()
-    expected_member_nifs: tuple[str, ...] = ()
-    missing_member_nifs: tuple[str, ...] = ()
-    unexpected_member_nifs: tuple[str, ...] = ()
-    payload: ObservationPayload | None = None
     if requirement.requires_member_fan_in:
-        member_payloads = tuple(
-            item
-            for item in observation_repository.iter_modelo(requirement.source_modelo)
-            if item.observation.filing_year == requirement.filing_year
-            and item.observation.period == requirement.period.registry_token
-            and item.member_nif is not None
+        selection = _select_member_source_payloads(
+            requirement,
+            observation_repository,
+            expected_member_set,
         )
-        observed_member_nifs = tuple(sorted({str(item.member_nif) for item in member_payloads}))
-        if expected_member_set is None:
-            blockers.append(CrossPeriodCleanStateBlocker.MISSING_EXPECTED_GROUP_MEMBER_ROSTER)
-            blockers.append(CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE)
-            # CAST-RATIONALE-CROSS-PERIOD-MEMBER-PAYLOAD: iter_modelo records are typed envelopes at runtime.
-            value_member_payloads = tuple(
-                # CAST-RATIONALE-CROSS-PERIOD-MEMBER-ITEM: iter_modelo records are typed envelopes at runtime.
-                cast(  # nosemgrep: no-cast-in-domain-application reason: repository rows satisfy _ObservationPayload.
-                    ObservationPayload,
-                    item,
-                )
-                for item in member_payloads
-            )
-        else:
-            expected_member_nifs = tuple(sorted(set(expected_member_set.member_nifs)))
-            expected_member_nif_set = set(expected_member_nifs)
-            observed_member_nif_set = set(observed_member_nifs)
-            missing_member_nifs = tuple(sorted(expected_member_nif_set - observed_member_nif_set))
-            unexpected_member_nifs = tuple(sorted(observed_member_nif_set - expected_member_nif_set))
-            if missing_member_nifs:
-                blockers.append(CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE)
-            if unexpected_member_nifs:
-                blockers.append(CrossPeriodCleanStateBlocker.UNEXPECTED_GROUP_MEMBER_SOURCE)
-            # CAST-RATIONALE-CROSS-PERIOD-FILTERED-PAYLOAD: roster filtering retains the typed repository envelope.
-            value_member_payloads = tuple(
-                # CAST-RATIONALE-CROSS-PERIOD-FILTERED-ITEM: roster filtering retains the typed repository envelope.
-                cast(  # nosemgrep: no-cast-in-domain-application reason: roster rows satisfy _ObservationPayload.
-                    ObservationPayload,
-                    item,
-                )
-                for item in member_payloads
-                if str(item.member_nif) in expected_member_nif_set
-            )
-        # R2 carry gate: check revision stamp on each member payload.
-        for item in value_member_payloads:
-            blockers.extend(_aeat_register_provenance_blockers(item, expected_tax_id=item.member_nif))
-            extra_blockers = _revision_carry_check(
-                item.stamped_revision_id,
-                requirement.source_modelo,
-                requirement.filing_year,
-                requirement.period,
-            )
-            blockers.extend(extra_blockers)
-    else:
-        # CAST-RATIONALE-CROSS-PERIOD-SINGLE-PAYLOAD: load_observation returns the same envelope contract as iteration.
-        # CAST-RATIONALE-CROSS-PERIOD-SINGLE-RESULT: load_observation returns the same envelope contract as iteration.
-        payload = cast(  # nosemgrep: no-cast-in-domain-application reason: lookup returns this Protocol or None.
-            ObservationPayload | None,
-            observation_repository.load_observation(
-                requirement.source_modelo,
-                requirement.period,
+        blockers = [
+            *selection.blockers,
+            *_member_source_revision_blockers(
+                requirement,
+                selection.value_member_payloads,
             ),
+        ]
+        return _CrossPeriodSource(
+            selection.value_member_payloads,
+            selection.observed_member_nifs,
+            selection.expected_member_nifs,
+            selection.missing_member_nifs,
+            selection.unexpected_member_nifs,
+            None,
+            tuple(blockers),
         )
-        # R2 carry gate: re-confirm stamped revision == law-determined revision.
-        if payload is not None:
-            blockers.extend(_aeat_register_provenance_blockers(payload, expected_tax_id=taxpayer_tax_id))
-            extra_blockers = _revision_carry_check(
-                payload.stamped_revision_id,
-                requirement.source_modelo,
-                requirement.filing_year,
-                requirement.period,
-            )
-            blockers.extend(extra_blockers)
+    payload = _single_source_payload(requirement, observation_repository)
+    blockers = _single_source_revision_blockers(requirement, payload, taxpayer_tax_id)
     return _CrossPeriodSource(
-        value_member_payloads,
-        observed_member_nifs,
-        expected_member_nifs,
-        missing_member_nifs,
-        unexpected_member_nifs,
+        (),
+        (),
+        (),
+        (),
+        (),
         payload,
         tuple(blockers),
     )
@@ -951,34 +1019,50 @@ def _resolve_observation_values(
     value_member_payloads: tuple[ObservationPayload, ...],
     payload: ObservationPayload | None,
 ) -> tuple[ObservationSourceKind | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
-    blockers: list[CrossPeriodCleanStateBlocker] = []
-    observation_source_kind: ObservationSourceKind | None = None
-    observation_values: dict[CasillaId, object] = {}
-
-    def _is_missing_declared_source(values: Mapping[CasillaId, object]) -> bool:
-        missing_required, missing_groups = source_presence_gaps(
-            required_source_casilla_ids=requirement.enforced_source_casilla_ids,
-            source_presence_groups=requirement.source_presence_groups,
-            observed_source_casilla_ids=values,
-        )
-        return bool(missing_required or missing_groups)
-
     if requirement.requires_member_fan_in and value_member_payloads:
-        observation_source_kind = _combined_source_kind(item.source_kind for item in value_member_payloads)
-        if any(item.source_kind is ObservationSourceKind.OPERATOR_MANUAL for item in value_member_payloads):
-            blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
-        for item in value_member_payloads:
-            if _is_missing_declared_source(item.observation.casilla_values):
-                blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
-    elif payload is None:
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVATION)
-    else:
-        observation_source_kind = payload.source_kind
-        observation_values = dict(payload.observation.casilla_values)
-        if payload.source_kind is ObservationSourceKind.OPERATOR_MANUAL:
-            blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
-        if _is_missing_declared_source(observation_values):
+        return _member_observation_values(requirement, value_member_payloads)
+    if payload is None:
+        return None, {}, [CrossPeriodCleanStateBlocker.MISSING_OBSERVATION]
+    return _single_observation_values(requirement, payload)
+
+
+def _is_missing_declared_source(
+    requirement: CrossPeriodDependencyRequirement,
+    values: Mapping[CasillaId, object],
+) -> bool:
+    missing_required, missing_groups = source_presence_gaps(
+        required_source_casilla_ids=requirement.enforced_source_casilla_ids,
+        source_presence_groups=requirement.source_presence_groups,
+        observed_source_casilla_ids=values,
+    )
+    return bool(missing_required or missing_groups)
+
+
+def _member_observation_values(
+    requirement: CrossPeriodDependencyRequirement,
+    value_member_payloads: tuple[ObservationPayload, ...],
+) -> tuple[ObservationSourceKind | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
+    observation_source_kind = _combined_source_kind(item.source_kind for item in value_member_payloads)
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    if any(item.source_kind is ObservationSourceKind.OPERATOR_MANUAL for item in value_member_payloads):
+        blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
+    for item in value_member_payloads:
+        if _is_missing_declared_source(requirement, item.observation.casilla_values):
             blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
+    return observation_source_kind, {}, blockers
+
+
+def _single_observation_values(
+    requirement: CrossPeriodDependencyRequirement,
+    payload: ObservationPayload,
+) -> tuple[ObservationSourceKind | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
+    observation_source_kind = payload.source_kind
+    observation_values: dict[CasillaId, object] = dict(payload.observation.casilla_values)
+    blockers: list[CrossPeriodCleanStateBlocker] = []
+    if payload.source_kind is ObservationSourceKind.OPERATOR_MANUAL:
+        blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
+    if _is_missing_declared_source(requirement, observation_values):
+        blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
     return observation_source_kind, observation_values, blockers
 
 
@@ -998,49 +1082,22 @@ def _aggregate_member_history(
 ) -> _MemberHistory:
     member_payload_by_nif = {str(item.member_nif): item for item in value_member_payloads}
     members_to_check = expected_member_nifs or observed_member_nifs
-    blockers: list[CrossPeriodCleanStateBlocker] = []
-    member_filing_record_ids: list[str] = []
-    member_calculation_revision_ids: list[str] = []
-    revision_state: CalculationRevisionState | None = None
-    verification_status: VerificationCompletenessStatus | None = None
-    aeat_accepted: bool | None = None
-    external_evidence_kind: ExternalEvidenceKind | None = None
-    for member_nif in members_to_check:
-        member_payload = member_payload_by_nif.get(member_nif)
-        member_values = dict(member_payload.observation.casilla_values) if member_payload is not None else {}
-        member_source_kind = member_payload.source_kind if member_payload is not None else observation_source_kind
-        member_source_metadata = member_payload.source_metadata if member_payload is not None else None
-        member_result = _evaluate_filing_history(
+    results = tuple(
+        _evaluate_member_history(
             requirement,
+            member_nif=member_nif,
+            member_payload=member_payload_by_nif.get(member_nif),
             bucket_id=bucket_id,
             filing_catalogue=filing_catalogue,
             calculation_catalogue=calculation_catalogue,
             verification_catalogue=verification_catalogue,
             justificante_repository=justificante_repository,
             taxpayer_tax_id=taxpayer_tax_id,
-            observation_source_kind=member_source_kind,
-            observation_source_metadata=member_source_metadata,
-            observation_values=member_values,
-            member_nif=member_nif,
+            observation_source_kind=observation_source_kind,
         )
-        blockers.extend(member_result.blockers)
-        if member_result.filing_record_id is not None:
-            member_filing_record_ids.append(member_result.filing_record_id)
-        if member_result.calculation_revision_id is not None:
-            member_calculation_revision_ids.append(member_result.calculation_revision_id)
-        revision_state = member_result.calculation_revision_state or revision_state
-        verification_status = member_result.verification_status or verification_status
-        aeat_accepted = member_result.aeat_accepted if member_result.aeat_accepted is not None else aeat_accepted
-        external_evidence_kind = member_result.external_evidence_kind or external_evidence_kind
-    return _MemberHistory(
-        tuple(member_filing_record_ids),
-        tuple(member_calculation_revision_ids),
-        revision_state,
-        verification_status,
-        aeat_accepted,
-        external_evidence_kind,
-        blockers,
+        for member_nif in members_to_check
     )
+    return _member_history_from_results(results)
 
 
 def _evaluate_requirement(
@@ -1186,6 +1243,89 @@ class _FilingHistory(NamedTuple):
     aeat_accepted: bool | None
     external_evidence_kind: ExternalEvidenceKind | None
     blockers: list[CrossPeriodCleanStateBlocker]
+
+
+def _evaluate_member_history(
+    requirement: CrossPeriodDependencyRequirement,
+    *,
+    member_nif: str,
+    member_payload: ObservationPayload | None,
+    bucket_id: str,
+    filing_catalogue: ModeloRecordCatalogue,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    verification_catalogue: VerificationReportCatalogue,
+    justificante_repository: JustificanteRepository,
+    taxpayer_tax_id: str | None,
+    observation_source_kind: ObservationSourceKind | None,
+) -> _FilingHistory:
+    member_values = dict(member_payload.observation.casilla_values) if member_payload is not None else {}
+    member_source_kind = member_payload.source_kind if member_payload is not None else observation_source_kind
+    member_source_metadata = member_payload.source_metadata if member_payload is not None else None
+    return _evaluate_filing_history(
+        requirement,
+        bucket_id=bucket_id,
+        filing_catalogue=filing_catalogue,
+        calculation_catalogue=calculation_catalogue,
+        verification_catalogue=verification_catalogue,
+        justificante_repository=justificante_repository,
+        taxpayer_tax_id=taxpayer_tax_id,
+        observation_source_kind=member_source_kind,
+        observation_source_metadata=member_source_metadata,
+        observation_values=member_values,
+        member_nif=member_nif,
+    )
+
+
+def _member_history_from_results(results: tuple[_FilingHistory, ...]) -> _MemberHistory:
+    return _MemberHistory(
+        _member_filing_record_ids(results),
+        _member_calculation_revision_ids(results),
+        _last_member_revision_state(results),
+        _last_member_verification_status(results),
+        _last_member_aeat_acceptance(results),
+        _last_member_external_evidence_kind(results),
+        _member_history_blockers(results),
+    )
+
+
+def _member_filing_record_ids(results: tuple[_FilingHistory, ...]) -> tuple[str, ...]:
+    return tuple(result.filing_record_id for result in results if result.filing_record_id is not None)
+
+
+def _member_calculation_revision_ids(results: tuple[_FilingHistory, ...]) -> tuple[CalculationRevisionId, ...]:
+    return tuple(result.calculation_revision_id for result in results if result.calculation_revision_id is not None)
+
+
+def _last_member_revision_state(
+    results: tuple[_FilingHistory, ...],
+) -> CalculationRevisionState | None:
+    return next(
+        (result.calculation_revision_state for result in reversed(results) if result.calculation_revision_state),
+        None,
+    )
+
+
+def _last_member_verification_status(
+    results: tuple[_FilingHistory, ...],
+) -> VerificationCompletenessStatus | None:
+    return next((result.verification_status for result in reversed(results) if result.verification_status), None)
+
+
+def _last_member_aeat_acceptance(results: tuple[_FilingHistory, ...]) -> bool | None:
+    return next((result.aeat_accepted for result in reversed(results) if result.aeat_accepted is not None), None)
+
+
+def _last_member_external_evidence_kind(
+    results: tuple[_FilingHistory, ...],
+) -> ExternalEvidenceKind | None:
+    return next(
+        (result.external_evidence_kind for result in reversed(results) if result.external_evidence_kind),
+        None,
+    )
+
+
+def _member_history_blockers(results: tuple[_FilingHistory, ...]) -> list[CrossPeriodCleanStateBlocker]:
+    return [blocker for result in results for blocker in result.blockers]
 
 
 def _evaluate_filing_history(

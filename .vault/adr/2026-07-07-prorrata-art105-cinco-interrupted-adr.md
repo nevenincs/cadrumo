@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#prorrata-art105-cinco-interrupted'
 date: '2026-07-07'
-modified: '2026-07-17'
-body_hash: 'sha256:16aadb89f68d992a6058f46bb29b2d48d7d973971fd2067e3d168f2179e3438e'
+modified: '2026-09-08'
+body_hash: 'sha256:a1385b41c319de586eba4d559e34c6218232bdb3ec6c0d42075d73d290c24817'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
@@ -196,3 +196,7 @@ entangled of the four with the ledger/CLI surfaces:
 - NO change to `domain/transactions/_models.py`, NO change to
   `application/aggregation/_iva_ledger.py` per-input routing, NO CLI ledger change —
   distinguishing this ADR from the three ledger-touching siblings.
+
+## 2026-09-08 implementation amendment
+
+The register's interrupted-state vocabulary and last-three-active-years aggregation remain accepted domain capability, but the prescribed application seed builder is withdrawn from the current product surface. Exact reachability proves no application workflow calls it; its only consumer was a synthetic unit suite, while the live annual and sector resolvers follow their own wired paths. Reintroduce an application projector only with a composition-root caller that actually seeds a resumed filing and surfaces insufficient history. Until then, the domain register representation is not evidence that an application DTO or advisory path is shipped.

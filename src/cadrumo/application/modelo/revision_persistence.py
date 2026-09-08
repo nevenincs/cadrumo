@@ -214,6 +214,288 @@ def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRe
     return sha256_hex("\n".join(lines).encode("utf-8"))
 
 
+def _validate_calculation_revision_target(
+    *,
+    work_unit: WorkUnit,
+    registry_snapshot_ref: RegistrySnapshotRef,
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
+    filing_instance_evidence: FilingInstanceEvidence | None,
+) -> None:
+    """Validate the work-unit coordinates before deriving or persisting a revision."""
+    _require_filing_instance_evidence_for_work_unit(
+        work_unit=work_unit,
+        evidence=filing_instance_evidence,
+        operation="calculation revision creation",
+    )
+    expected_snapshot_ref = RegistrySnapshotRef(
+        modelo=work_unit.modelo,
+        revision_id=work_unit.revision_id,
+        modelo_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    if registry_snapshot_ref != expected_snapshot_ref:
+        raise ValueError("calculation revision registry snapshot ref must equal the parent work-unit coordinate")
+    if any(item.materialization_rule_version != work_unit.revision_id for item in row_casilla_provenance.values()):
+        raise ValueError("row casilla materialization rule version must equal the parent work-unit revision")
+
+
+def _stamp_annual_summary_handoff(
+    handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None,
+    revision_id: str,
+) -> M303RegimenSimplificadoAnnualSummaryHandoff | None:
+    """Bind an annual-summary handoff to the revision content address."""
+    if handoff is None:
+        return None
+    return handoff.stamped_for_target_calculation_revision(revision_id)
+
+
+def _build_calculation_revision(
+    *,
+    revision_id: str,
+    work_unit_id: str,
+    registry_snapshot_ref: RegistrySnapshotRef,
+    input_values_by_casilla_id: dict[CasillaId, str],
+    binding_overrides: dict[BindingId, str],
+    row_binding_values: dict[BindingId, dict[str, str]],
+    row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    row_casilla_values: Mapping[RowCasillaKey, Decimal],
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
+    relation_overrides: dict[RelationId, str],
+    source_transaction_ids: tuple[str, ...],
+    m210_official_tipo_renta_code: str | None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
+    borrador_snapshot_id: str | None,
+    bindings_sourced_from_borrador: tuple[BindingId, ...],
+    cleared_casilla_ids: tuple[CasillaId, ...],
+    casilla_values: dict[CasillaId, Decimal],
+    observations: tuple[CasillaObservation, ...],
+    unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
+    source_provenance: tuple[CalculationSourceRef, ...],
+    source_issues: tuple[CalculationSourceIssue, ...],
+    detail_rows: tuple[ModeloDetailRow, ...],
+    ledger_filing_snapshot: LedgerFilingSnapshot | None,
+    filing_instance_evidence: FilingInstanceEvidence | None,
+    m303_regimen_simplificado_annual_summary_handoff: (M303RegimenSimplificadoAnnualSummaryHandoff | None),
+    now: datetime,
+) -> CalculationRevision:
+    """Materialize a draft revision from the already-derived calculation inputs."""
+    return CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        row_binding_values=row_binding_values,
+        row_source_identities=row_source_identities,
+        row_casilla_values=row_casilla_values,
+        row_casilla_provenance=row_casilla_provenance,
+        relation_overrides=relation_overrides,
+        source_transaction_ids=source_transaction_ids,
+        m210_official_tipo_renta_code=m210_official_tipo_renta_code,
+        m210_gross_income_source_mode=m210_gross_income_source_mode,
+        borrador_snapshot_id=borrador_snapshot_id,
+        bindings_sourced_from_borrador=bindings_sourced_from_borrador,
+        cleared_casilla_ids=cleared_casilla_ids,
+        casilla_values=casilla_values,
+        observations=observations,
+        unresolved_outcomes=unresolved_outcomes,
+        source_provenance=source_provenance,
+        source_issues=source_issues,
+        detail_rows=detail_rows,
+        ledger_filing_snapshot=ledger_filing_snapshot,
+        filing_instance_evidence=filing_instance_evidence,
+        m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
+        created_at=now,
+        updated_at=now,
+    )
+
+
+def _duplicate_calculation_work_units(
+    *,
+    existing: CalculationRevision,
+    revision_id: str,
+    work_unit: WorkUnit,
+    work_units: WorkUnitCatalogue,
+    now: datetime,
+) -> WorkUnitCatalogue:
+    """Restore a duplicate draft as current without touching sealed revisions."""
+    if existing.state is not CalculationRevisionState.BORRADOR:
+        return work_units
+    if work_unit.current_calculation_revision_id == revision_id:
+        return work_units
+    return upsert_work_unit(
+        work_units,
+        work_unit.model_copy(
+            update={
+                "current_calculation_revision_id": revision_id,
+                "updated_at": now,
+            },
+        ),
+    )
+
+
+def _duplicate_calculation_secure_writes(
+    *,
+    revision_id: str,
+    additional_secure_object_writes_for_revision: (Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None),
+) -> tuple[SecureObjectWrite, ...]:
+    """Build duplicate-path side-effect writes with no fresh event id."""
+    if additional_secure_object_writes_for_revision is None:
+        return ()
+    return additional_secure_object_writes_for_revision(revision_id, None)
+
+
+def _persist_duplicate_calculation_revision(
+    *,
+    existing: CalculationRevision,
+    revision_id: str,
+    work_unit: WorkUnit,
+    work_units: WorkUnitCatalogue,
+    work_units_revision_id: str,
+    now: datetime,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    additional_secure_object_writes_for_revision: (Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None),
+) -> CalculationRevision:
+    """Guard and co-commit duplicate-result pointer and side-effect writes."""
+    duplicate_work_units = _duplicate_calculation_work_units(
+        existing=existing,
+        revision_id=revision_id,
+        work_unit=work_unit,
+        work_units=work_units,
+        now=now,
+    )
+    duplicate_writes = _duplicate_calculation_secure_writes(
+        revision_id=revision_id,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+    )
+    if duplicate_work_units is work_units and not duplicate_writes:
+        return existing
+    # Guarded, never a bare `.save`: an unguarded write here would silently
+    # discard a concurrent catalogue change this branch never observed, and it
+    # is the one place a co-committed receipt write could otherwise be dropped.
+    work_unit_repository.save_with_secure_object_writes(
+        duplicate_work_units,
+        duplicate_writes,
+        expected_revision_id=work_units_revision_id,
+    )
+    return existing
+
+
+def _advance_calculation_work_unit(
+    *,
+    work_units: WorkUnitCatalogue,
+    work_unit: WorkUnit,
+    revision_id: str,
+    now: datetime,
+) -> WorkUnitCatalogue:
+    """Advance the parent pointer for a newly persisted draft revision."""
+    return upsert_work_unit(
+        work_units,
+        work_unit.model_copy(
+            update={
+                "current_calculation_revision_id": revision_id,
+                "updated_at": now,
+            },
+        ),
+    )
+
+
+def _build_calculation_created_event(
+    *,
+    revision_id: str,
+    work_unit_id: str,
+    work_unit: WorkUnit,
+    input_values_by_casilla_id: dict[CasillaId, str],
+    row_binding_values: dict[BindingId, dict[str, str]],
+    row_casilla_values: Mapping[RowCasillaKey, Decimal],
+    casilla_values: dict[CasillaId, Decimal],
+    formula_count: int,
+    source_transaction_ids: tuple[str, ...],
+    borrador_snapshot_id: str | None,
+    bindings_sourced_from_borrador: tuple[BindingId, ...],
+    observations: tuple[CasillaObservation, ...],
+    source_provenance: tuple[CalculationSourceRef, ...],
+    actor: str,
+    now: datetime,
+) -> BucketEvent:
+    """Build the compact audit event for a newly created calculation."""
+    return build_modelo_bucket_event(
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_CALCULATION_CREATED,
+        occurred_at=now,
+        actor=actor,
+        object_type=BucketEventObjectType.CALCULATION_REVISION,
+        object_id=revision_id,
+        payload={
+            "calculation_revision_id": revision_id,
+            "work_unit_id": work_unit_id,
+            "modelo": work_unit.modelo,
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period.registry_token,
+            "input_casilla_count": str(len(input_values_by_casilla_id)),
+            "row_binding_count": str(sum(len(rows) for rows in row_binding_values.values())),
+            "row_casilla_count": str(len(row_casilla_values)),
+            "casilla_count": str(len(casilla_values)),
+            "formula_count": str(formula_count),
+            "source_transaction_count": str(len(source_transaction_ids)),
+            "borrador_snapshot_id": borrador_snapshot_id or "",
+            "borrador_participated": "true" if bindings_sourced_from_borrador else "false",
+            "borrador_binding_count": str(len(bindings_sourced_from_borrador)),
+            "borrador_bindings_trace_sha256": sha256_hex(
+                "\n".join(bindings_sourced_from_borrador).encode("utf-8"),
+            ),
+            "has_provenance": "true" if observations else "false",
+            "source_provenance_count": str(len(source_provenance)),
+            "source_provenance_trace_sha256": _source_provenance_trace_sha256(source_provenance),
+        },
+    )
+
+
+def _additional_calculation_secure_writes(
+    *,
+    revision_id: str,
+    bucket_event_id: str,
+    additional_secure_object_writes_for_revision: (Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None),
+) -> tuple[SecureObjectWrite, ...]:
+    """Build new-revision side-effect writes after the event id exists."""
+    if additional_secure_object_writes_for_revision is None:
+        return ()
+    return additional_secure_object_writes_for_revision(revision_id, bucket_event_id)
+
+
+def _persist_new_calculation_revision(
+    *,
+    revision: CalculationRevision,
+    revisions: CalculationRevisionCatalogue,
+    revisions_revision_id: str,
+    advanced_work_units: WorkUnitCatalogue,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    work_units_revision_id: str,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    created_event: BucketEvent,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    additional_secure_object_writes_for_revision: (Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None),
+) -> None:
+    """Atomically persist the draft, current pointer, event, and side effects."""
+    calculation_repository.save_with_secure_object_writes(
+        upsert_calculation_revision(revisions, revision),
+        (
+            work_unit_repository.to_secure_object_write(
+                advanced_work_units,
+                expected_revision_id=work_units_revision_id,
+            ),
+            bucket_event_history_write(bucket_event_repository, (created_event,)),
+            *_additional_calculation_secure_writes(
+                revision_id=revision.calculation_revision_id,
+                bucket_event_id=created_event.event_id,
+                additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+            ),
+        ),
+        expected_revision_id=revisions_revision_id,
+    )
+
+
 def persist_calculation_revision(
     *,
     work_unit_id: str,
@@ -306,21 +588,12 @@ def persist_calculation_revision(
     emitted, and returns the writes to co-commit. ``None`` by default, so
     every existing caller's write set is unchanged.
     """
-    _require_filing_instance_evidence_for_work_unit(
+    _validate_calculation_revision_target(
         work_unit=work_unit,
-        evidence=filing_instance_evidence,
-        operation="calculation revision creation",
+        registry_snapshot_ref=registry_snapshot_ref,
+        row_casilla_provenance=row_casilla_provenance,
+        filing_instance_evidence=filing_instance_evidence,
     )
-    expected_snapshot_ref = RegistrySnapshotRef(
-        modelo=work_unit.modelo,
-        revision_id=work_unit.revision_id,
-        modelo_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
-    )
-    if registry_snapshot_ref != expected_snapshot_ref:
-        raise ValueError("calculation revision registry snapshot ref must equal the parent work-unit coordinate")
-    if any(item.materialization_rule_version != work_unit.revision_id for item in row_casilla_provenance.values()):
-        raise ValueError("row casilla materialization rule version must equal the parent work-unit revision")
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -343,10 +616,9 @@ def persist_calculation_revision(
         m303_regimen_simplificado_annual_summary_handoff=m303_regimen_simplificado_annual_summary_handoff,
         cleared_casilla_ids=cleared_casilla_ids,
     )
-    stamped_annual_summary_handoff = (
-        m303_regimen_simplificado_annual_summary_handoff.stamped_for_target_calculation_revision(revision_id)
-        if m303_regimen_simplificado_annual_summary_handoff is not None
-        else None
+    stamped_annual_summary_handoff = _stamp_annual_summary_handoff(
+        m303_regimen_simplificado_annual_summary_handoff,
+        revision_id,
     )
     # Revisioned: this catalogue is composed into a co-commit, so it cannot
     # use a self-committing mutation, and an unguarded read would write the
@@ -354,43 +626,20 @@ def persist_calculation_revision(
     revisions, revisions_revision_id = calculation_repository.load_revisioned()
     existing = revisions.get(revision_id)
     if existing is not None:
-        if (
-            existing.state is CalculationRevisionState.BORRADOR
-            and work_unit.current_calculation_revision_id != revision_id
-        ):
-            duplicate_work_units = upsert_work_unit(
-                work_units,
-                work_unit.model_copy(
-                    update={
-                        "current_calculation_revision_id": revision_id,
-                        "updated_at": now,
-                    },
-                ),
-            )
-        else:
-            duplicate_work_units = work_units
-        duplicate_writes = (
-            additional_secure_object_writes_for_revision(revision_id, None)
-            if additional_secure_object_writes_for_revision is not None
-            else ()
+        return _persist_duplicate_calculation_revision(
+            existing=existing,
+            revision_id=revision_id,
+            work_unit=work_unit,
+            work_units=work_units,
+            work_units_revision_id=work_units_revision_id,
+            now=now,
+            work_unit_repository=work_unit_repository,
+            additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
         )
-        if duplicate_work_units is not work_units or duplicate_writes:
-            # Guarded, never a bare `.save`: an unguarded write here would
-            # silently discard a concurrent catalogue change this branch never
-            # observed, and it is the one place a co-committed receipt write
-            # could otherwise be dropped on the duplicate-result path.
-            work_unit_repository.save_with_secure_object_writes(
-                duplicate_work_units,
-                duplicate_writes,
-                expected_revision_id=work_units_revision_id,
-            )
-        return existing
-
-    revision = CalculationRevision(
-        calculation_revision_id=revision_id,
+    revision = _build_calculation_revision(
+        revision_id=revision_id,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=registry_snapshot_ref,
-        state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
         row_binding_values=row_binding_values,
@@ -413,68 +662,47 @@ def persist_calculation_revision(
         ledger_filing_snapshot=ledger_filing_snapshot,
         filing_instance_evidence=filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff=stamped_annual_summary_handoff,
-        created_at=now,
-        updated_at=now,
+        now=now,
     )
-    advanced_work_units = upsert_work_unit(
-        work_units,
-        work_unit.model_copy(
-            update={
-                "current_calculation_revision_id": revision_id,
-                "updated_at": now,
-            },
-        ),
+    advanced_work_units = _advance_calculation_work_unit(
+        work_units=work_units,
+        work_unit=work_unit,
+        revision_id=revision_id,
+        now=now,
     )
-    created_event = build_modelo_bucket_event(
-        bucket_id=work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_CALCULATION_CREATED,
-        occurred_at=now,
+    created_event = _build_calculation_created_event(
+        revision_id=revision_id,
+        work_unit_id=work_unit_id,
+        work_unit=work_unit,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        row_binding_values=row_binding_values,
+        row_casilla_values=row_casilla_values,
+        casilla_values=casilla_values,
+        formula_count=formula_count,
+        source_transaction_ids=source_transaction_ids,
+        borrador_snapshot_id=borrador_snapshot_id,
+        bindings_sourced_from_borrador=bindings_sourced_from_borrador,
+        observations=observations,
+        source_provenance=source_provenance,
         actor=actor,
-        object_type=BucketEventObjectType.CALCULATION_REVISION,
-        object_id=revision_id,
-        payload={
-            "calculation_revision_id": revision_id,
-            "work_unit_id": work_unit_id,
-            "modelo": work_unit.modelo,
-            "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period.registry_token,
-            "input_casilla_count": str(len(input_values_by_casilla_id)),
-            "row_binding_count": str(sum(len(rows) for rows in row_binding_values.values())),
-            "row_casilla_count": str(len(row_casilla_values)),
-            "casilla_count": str(len(casilla_values)),
-            "formula_count": str(formula_count),
-            "source_transaction_count": str(len(source_transaction_ids)),
-            "borrador_snapshot_id": borrador_snapshot_id or "",
-            "borrador_participated": "true" if bindings_sourced_from_borrador else "false",
-            "borrador_binding_count": str(len(bindings_sourced_from_borrador)),
-            "borrador_bindings_trace_sha256": sha256_hex(
-                "\n".join(bindings_sourced_from_borrador).encode("utf-8"),
-            ),
-            "has_provenance": "true" if observations else "false",
-            "source_provenance_count": str(len(source_provenance)),
-            "source_provenance_trace_sha256": _source_provenance_trace_sha256(source_provenance),
-        },
+        now=now,
     )
     # One unit of work: the draft revision, the advanced current-calculation
     # pointer, and MODELO_CALCULATION_CREATED. Emitted through a separate write,
     # an event-storage failure left the draft durable and pointed-at as current
     # while the history stayed unchanged, with no recovery marker or retry
     # contract naming the missing entry.
-    calculation_repository.save_with_secure_object_writes(
-        upsert_calculation_revision(revisions, revision),
-        (
-            work_unit_repository.to_secure_object_write(
-                advanced_work_units,
-                expected_revision_id=work_units_revision_id,
-            ),
-            bucket_event_history_write(bucket_event_repository, (created_event,)),
-            *(
-                additional_secure_object_writes_for_revision(revision_id, created_event.event_id)
-                if additional_secure_object_writes_for_revision is not None
-                else ()
-            ),
-        ),
-        expected_revision_id=revisions_revision_id,
+    _persist_new_calculation_revision(
+        revision=revision,
+        revisions=revisions,
+        revisions_revision_id=revisions_revision_id,
+        advanced_work_units=advanced_work_units,
+        work_unit_repository=work_unit_repository,
+        work_units_revision_id=work_units_revision_id,
+        bucket_event_repository=bucket_event_repository,
+        created_event=created_event,
+        calculation_repository=calculation_repository,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
     return revision
 

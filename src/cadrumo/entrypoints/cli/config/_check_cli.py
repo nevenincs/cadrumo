@@ -75,10 +75,23 @@ def _assess_selected_model_load(profile: HardwareProfile) -> ContentionSnapshot 
     return assess_model_load_contention(runtime_id, required_bytes, profile=profile)
 
 
-def config_check(ctx: typer.Context) -> None:
-    """Report external-dependency availability + the active profile's capability posture."""
-    from ....adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
-    from ....application.preflight import run_preflight_checks
+def _capability_posture() -> tuple[list[dict[str, object]], dict[str, object]]:
+    from ....application.user_profile.capabilities import resolve_active_capability
+
+    capabilities: list[dict[str, object]] = []
+    for cap in ServiceCapability:
+        decision = resolve_active_capability(cap)
+        capabilities.append(
+            {"capability": cap.value, "enabled": decision.enabled, "source": decision.source.value},
+        )
+    return capabilities, {str(row["capability"]): row["enabled"] for row in capabilities}
+
+
+def _probe_dependency_statuses() -> tuple[
+    tuple[DependencyStatus, ...],
+    DependencyStatus,
+    tuple[DependencyStatus, ...],
+]:
     from ....application.provisioning import (
         probe_hardware_profile,
         probe_local_inference_hardware,
@@ -88,19 +101,7 @@ def config_check(ctx: typer.Context) -> None:
         probe_optional_extras,
         probe_playwright_browser,
     )
-    from ....application.user_profile.capabilities import resolve_active_capability
-    from ....core.config import load_settings
     from ._check_hardware_rows import contention_row
-
-    profile_id = resolve_active_bucket_id()
-
-    capabilities: list[dict[str, object]] = []
-    for cap in ServiceCapability:
-        decision = resolve_active_capability(cap)
-        capabilities.append(
-            {"capability": cap.value, "enabled": decision.enabled, "source": decision.source.value},
-        )
-    cap_enabled = {row["capability"]: row["enabled"] for row in capabilities}
 
     ollama = probe_ollama_vision()
     hardware_floor = probe_model_runtime_hardware_floor()
@@ -114,22 +115,15 @@ def config_check(ctx: typer.Context) -> None:
     playwright = probe_playwright_browser()
     provisioning = probe_local_model_provisioning()
     extras = probe_optional_extras()
-    dependency_payloads = tuple(
-        _dependency_payload(status)
-        for status in (ollama, hardware_floor, hardware, contention, provisioning, playwright, *extras)
-    )
-    # Keep the nested strict DTO instances intact until the one final
-    # envelope serialization. A JSON dump here turns tuple/enum action
-    # fields into primitives before ConfigCheckResult validates them.
-    dependencies = list(dependency_payloads)
-    # Per-provider cert/clave health, storage/corpus/env preflight, and
-    # registry referential integrity. Report-only: a red preflight row is
-    # surfaced for operator visibility but does not, on its own, flip the
-    # capability/dependency exit contract below.
-    # The worst-case object-path suffix is measured from the on-disk grammar the
-    # storage adapter owns, so it is supplied here at the composition root rather
-    # than reached for from the application layer.
-    preflight = [
+    statuses = (ollama, hardware_floor, hardware, contention, provisioning, playwright, *extras)
+    return statuses, ollama, extras
+
+
+def _preflight_payloads() -> list[CheckPreflightPayload]:
+    from ....adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
+    from ....application.preflight import run_preflight_checks
+
+    return [
         CheckPreflightPayload(
             check=row.check,
             healthy=row.healthy,
@@ -145,25 +139,83 @@ def config_check(ctx: typer.Context) -> None:
             object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
         )
     ]
-    extra_available = {status.service: status.available for status in extras}
 
+
+def _check_issues(
+    *,
+    capabilities: dict[str, object],
+    ollama: DependencyStatus,
+    extras: tuple[DependencyStatus, ...],
+) -> list[str]:
+    from ....core.config import load_settings
+
+    extra_available = {status.service: status.available for status in extras}
     issues: list[str] = []
-    if cap_enabled[ServiceCapability.LLM_VISION.value] and not ollama.available:
+    if capabilities[ServiceCapability.LLM_VISION.value] and not ollama.available:
         issues.append(ollama.service)
-    if cap_enabled[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
+    if capabilities[ServiceCapability.GOOGLE_EXPORT.value] and not extra_available.get("extra:google", False):
         issues.append("extra:google")
     # The eligibility bar's own row. Reported in the SAME shape as the two
     # above -- the capability is on, but the layer beneath it refuses -- so
     # an operator who turned the bar on and expected off-host reading to
     # work is told which of the two switches is still closed, rather than
     # meeting a per-invocation refusal with no explanation. The capability's
-    # posture itself is already rendered by the loop above; this is the
+    # posture itself is rendered by the capability loop; this is the
     # inconsistency between it and the deployment flag.
-    if cap_enabled[ServiceCapability.CLOUD_EVIDENCE_UPLOAD.value] and not (
+    if capabilities[ServiceCapability.CLOUD_EVIDENCE_UPLOAD.value] and not (
         load_settings().cadrumo_evidence_cloud_upload_permitted
     ):
         issues.append("cloud_evidence_upload:deployment_permission")
+    return issues
 
+
+def _check_text_lines(
+    *,
+    profile_id: str | None,
+    capabilities: list[dict[str, object]],
+    dependencies: tuple[CheckDependencyPayload, ...],
+    preflight: list[CheckPreflightPayload],
+    issues: list[str],
+) -> tuple[str, ...]:
+    lines = [f"{tr('cli.config.check.profile_label')}\t{profile_id or '-'}"]
+    capability_label = tr("cli.config.check.capability_label")
+    preflight_label = tr("cli.config.check.preflight_label")
+    for cap in capabilities:
+        state = tr(
+            "cli.config.profile.capabilities.enabled" if cap["enabled"] else "cli.config.profile.capabilities.disabled"
+        )
+        lines.append(f"{capability_label}\t{cap['capability']}\t{state}\t{cap['source']}")
+    for dependency in dependencies:
+        lines.extend(_dependency_text_lines(dependency))
+    for row in preflight:
+        lines.append(f"{preflight_label}\t{row.check}\t{row.severity}")
+        action = row.precondition_action
+        if action is not None:
+            lines.extend(f"{row.check}.{line}" for line in precondition_action_lines(action))
+    for issue in issues:
+        lines.append(f"{tr('cli.config.check.issue_label')}\t{issue}")
+    return tuple(lines)
+
+
+def config_check(ctx: typer.Context) -> None:
+    """Report external-dependency availability + the active profile's capability posture."""
+    profile_id = resolve_active_bucket_id()
+    capabilities, cap_enabled = _capability_posture()
+    dependency_statuses, ollama, extras = _probe_dependency_statuses()
+    dependency_payloads = tuple(_dependency_payload(status) for status in dependency_statuses)
+    # Keep the nested strict DTO instances intact until the one final
+    # envelope serialization. A JSON dump here turns tuple/enum action
+    # fields into primitives before ConfigCheckResult validates them.
+    dependencies = list(dependency_payloads)
+    # Per-provider cert/clave health, storage/corpus/env preflight, and
+    # registry referential integrity. Report-only: a red preflight row is
+    # surfaced for operator visibility but does not, on its own, flip the
+    # capability/dependency exit contract below.
+    # The worst-case object-path suffix is measured from the on-disk grammar the
+    # storage adapter owns, so it is supplied here at the composition root rather
+    # than reached for from the application layer.
+    preflight = _preflight_payloads()
+    issues = _check_issues(capabilities=cap_enabled, ollama=ollama, extras=extras)
     ok = not issues
     result = ConfigCheckResult.model_validate(
         {
@@ -175,24 +227,14 @@ def config_check(ctx: typer.Context) -> None:
             "issues": issues,
         },
     )
-    lines = [f"{tr('cli.config.check.profile_label')}\t{profile_id or '-'}"]
-    capability_label = tr("cli.config.check.capability_label")
-    preflight_label = tr("cli.config.check.preflight_label")
-    for cap in capabilities:
-        state = tr(
-            "cli.config.profile.capabilities.enabled" if cap["enabled"] else "cli.config.profile.capabilities.disabled"
-        )
-        lines.append(f"{capability_label}\t{cap['capability']}\t{state}\t{cap['source']}")
-    for dependency in dependency_payloads:
-        lines.extend(_dependency_text_lines(dependency))
-    for row in preflight:
-        lines.append(f"{preflight_label}\t{row.check}\t{row.severity}")
-        action = row.precondition_action
-        if action is not None:
-            lines.extend(f"{row.check}.{line}" for line in precondition_action_lines(action))
-    for issue in issues:
-        lines.append(f"{tr('cli.config.check.issue_label')}\t{issue}")
-    emit_envelope(ctx, command="config.check", result=result, lines=tuple(lines))
+    lines = _check_text_lines(
+        profile_id=profile_id,
+        capabilities=capabilities,
+        dependencies=dependency_payloads,
+        preflight=preflight,
+        issues=issues,
+    )
+    emit_envelope(ctx, command="config.check", result=result, lines=lines)
     if not ok:
         raise typer.Exit(code=2)
 

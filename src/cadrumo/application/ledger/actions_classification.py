@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import csv
 import io
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import ValidationError
@@ -84,97 +85,141 @@ def _raw_csv_text(value: object) -> str:
     return value.strip() if isinstance(value, str) else ""
 
 
-def _parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRow], list[BulkClassifyFailure]]:
-    # Parse the CSV header to detect unknown columns before touching storage.
-    reader = csv.DictReader(io.StringIO(csv_text))
-    if reader.fieldnames is None:
-        return [], []
-    unknown = frozenset(reader.fieldnames) - BULK_CLASSIFY_ALLOWED_COLUMNS
+def _validate_bulk_classify_headers(fieldnames: Sequence[str] | None) -> bool:
+    """Validate CSV columns before any row or storage processing begins."""
+    if fieldnames is None:
+        return False
+    unknown = frozenset(fieldnames) - BULK_CLASSIFY_ALLOWED_COLUMNS
     if unknown:
         raise TransactionValidationError(
             f"bulk classify CSV contains unknown columns: {', '.join(sorted(unknown))}",
             context={"unknown_columns": sorted(unknown)},
         )
-    if "transaction_id" not in reader.fieldnames or "classification" not in reader.fieldnames:
+    if "transaction_id" not in fieldnames or "classification" not in fieldnames:
         raise TransactionValidationError(
             "bulk classify CSV must include 'transaction_id' and 'classification' columns",
         )
+    return True
+
+
+def _surplus_bulk_classify_failure(
+    idx: int,
+    raw_row: Mapping[str | None, object],
+) -> BulkClassifyFailure | None:
+    """Return the localized failure for a row wider than its CSV header."""
+    transaction_id = _raw_csv_text(raw_row.get("transaction_id", ""))
+    if not raw_row.get(None):
+        return None
+    return BulkClassifyFailure(
+        row_index=idx,
+        transaction_id=transaction_id,
+        reason="bulk classify CSV row has more cells than header columns",
+    )
+
+
+def _normalise_bulk_classify_row(
+    raw_row: Mapping[str | None, object],
+) -> tuple[str, dict[str, str | None], list[str]]:
+    """Trim textual CSV cells and identify cells that cannot be classified."""
+    transaction_id = _raw_csv_text(raw_row.get("transaction_id", ""))
+    normalised_row: dict[str, str | None] = {}
+    malformed_cells: list[str] = []
+    for key, value in raw_row.items():
+        if key is None:
+            malformed_cells.append("<extra>")
+            continue
+        if value is not None and not isinstance(value, str):
+            malformed_cells.append(str(key))
+            continue
+        normalised_row[key] = (value.strip() or None) if value is not None else None
+    return transaction_id, normalised_row, malformed_cells
+
+
+def _parse_bulk_classify_data_row(
+    idx: int,
+    raw_row: Mapping[str | None, object],
+) -> tuple[BulkClassifyRow | None, frozenset[str], BulkClassifyFailure | None]:
+    """Parse one normalized row and retain its source-row failure context."""
+    transaction_id, normalised_row, malformed_cells = _normalise_bulk_classify_row(raw_row)
+    if malformed_cells:
+        return (
+            None,
+            frozenset(),
+            BulkClassifyFailure(
+                row_index=idx,
+                transaction_id=transaction_id,
+                reason=f"bulk classify CSV row contains non-text cells: {', '.join(malformed_cells)}",
+            ),
+        )
+    try:
+        parsed = BulkClassifyRow.model_validate(
+            # A present-but-blank optional cell (e.g. an empty
+            # ``taxable_base`` on a classification-only row) maps to
+            # ``None`` so the row behaves exactly as if the column were
+            # absent; a populated cell carries its trimmed text into the
+            # same typed ``Decimal`` coercion the single-classify path
+            # uses, so a malformed value reds the row rather than
+            # coercing silently.
+            normalised_row,
+            strict=False,
+        )
+    except (ValidationError, ValueError, KeyError) as exc:
+        return (
+            None,
+            frozenset(),
+            BulkClassifyFailure(
+                row_index=idx,
+                transaction_id=transaction_id,
+                reason=str(exc),
+            ),
+        )
+    if not is_classified(parsed.classification):
+        # Mirror the single-classify guard: only BUSINESS / PERSONAL / MIXED
+        # are operator-assignable. A row naming a pipeline-managed state
+        # (SKIPPED_BY_RULE, FAILED_VALIDATION, ...) reds rather than applying.
+        return (
+            None,
+            frozenset(),
+            BulkClassifyFailure(
+                row_index=idx,
+                transaction_id=parsed.transaction_id,
+                reason=(
+                    f"classification '{parsed.classification.value}' is set automatically by aeat; "
+                    "use BUSINESS, PERSONAL, or MIXED"
+                ),
+            ),
+        )
+    return parsed, _provided_bulk_classify_patch_columns(normalised_row), None
+
+
+def _provided_bulk_classify_patch_columns(normalised_row: Mapping[str, str | None]) -> frozenset[str]:
+    """Return populated patch columns, excluding the row identity column."""
+    return frozenset(
+        column
+        for column in _BULK_CLASSIFY_PATCH_COLUMNS
+        if column != "classification" and normalised_row.get(column) is not None
+    )
+
+
+def _parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRow], list[BulkClassifyFailure]]:
+    """Parse the CSV header and collect localized row failures in input order."""
+    # Parse the CSV header to detect unknown columns before touching storage.
+    reader = csv.DictReader(io.StringIO(csv_text))
+    if not _validate_bulk_classify_headers(reader.fieldnames):
+        return [], []
 
     parsed_rows: list[_ParsedBulkClassifyRow] = []
     parse_failures: list[BulkClassifyFailure] = []
     for idx, raw_row in enumerate(reader):
-        transaction_id = _raw_csv_text(raw_row.get("transaction_id", ""))
-        surplus_cells = raw_row.get(None)
-        if surplus_cells:
-            parse_failures.append(
-                BulkClassifyFailure(
-                    row_index=idx,
-                    transaction_id=transaction_id,
-                    reason="bulk classify CSV row has more cells than header columns",
-                ),
-            )
+        surplus_failure = _surplus_bulk_classify_failure(idx, raw_row)
+        if surplus_failure is not None:
+            parse_failures.append(surplus_failure)
             continue
-        normalised_row: dict[str, str | None] = {}
-        malformed_cells: list[str] = []
-        for key, value in raw_row.items():
-            if key is None:
-                malformed_cells.append("<extra>")
-                continue
-            if value is not None and not isinstance(value, str):
-                malformed_cells.append(str(key))
-                continue
-            normalised_row[key] = (value.strip() or None) if value is not None else None
-        if malformed_cells:
-            parse_failures.append(
-                BulkClassifyFailure(
-                    row_index=idx,
-                    transaction_id=transaction_id,
-                    reason=f"bulk classify CSV row contains non-text cells: {', '.join(malformed_cells)}",
-                ),
-            )
-            continue
-        try:
-            parsed = BulkClassifyRow.model_validate(
-                # A present-but-blank optional cell (e.g. an empty
-                # ``taxable_base`` on a classification-only row) maps to
-                # ``None`` so the row behaves exactly as if the column were
-                # absent; a populated cell carries its trimmed text into the
-                # same typed ``Decimal`` coercion the single-classify path
-                # uses, so a malformed value reds the row rather than
-                # coercing silently.
-                normalised_row,
-                strict=False,
-            )
-        except (ValidationError, ValueError, KeyError) as exc:
-            parse_failures.append(
-                BulkClassifyFailure(
-                    row_index=idx,
-                    transaction_id=transaction_id,
-                    reason=str(exc),
-                ),
-            )
-            continue
-        if not is_classified(parsed.classification):
-            # Mirror the single-classify guard: only BUSINESS / PERSONAL / MIXED
-            # are operator-assignable. A row naming a pipeline-managed state
-            # (SKIPPED_BY_RULE, FAILED_VALIDATION, ...) reds rather than applying.
-            parse_failures.append(
-                BulkClassifyFailure(
-                    row_index=idx,
-                    transaction_id=parsed.transaction_id,
-                    reason=(
-                        f"classification '{parsed.classification.value}' is set automatically by aeat; "
-                        "use BUSINESS, PERSONAL, or MIXED"
-                    ),
-                ),
-            )
-            continue
-        provided_patch_columns = frozenset(
-            column
-            for column in _BULK_CLASSIFY_PATCH_COLUMNS
-            if column != "classification" and normalised_row.get(column) is not None
-        )
-        parsed_rows.append((idx, parsed, provided_patch_columns))
+        parsed, provided_patch_columns, parse_failure = _parse_bulk_classify_data_row(idx, raw_row)
+        if parse_failure is not None:
+            parse_failures.append(parse_failure)
+        elif parsed is not None:
+            parsed_rows.append((idx, parsed, provided_patch_columns))
     return parsed_rows, parse_failures
 
 
@@ -449,6 +494,68 @@ class ClassificationRulePlan(NamedTuple):
     matches: tuple[ClassificationRulePlanRow, ...]
 
 
+def _classification_rule_in_scope(transaction: Transaction, *, reaffirm: bool) -> bool:
+    """Return whether one transaction belongs to the rule-engine scan."""
+    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        return False
+    if transaction.business_classification is BusinessClassification.NOT_YET_PROCESSED:
+        return True
+    return reaffirm and transaction.classified_by == CLASSIFIED_BY_MANUAL
+
+
+def _classification_rule_scope(
+    catalogue: TransactionCatalogue,
+    *,
+    reaffirm: bool,
+) -> tuple[tuple[Transaction, ...], int]:
+    """Collect in-scope rows and count active rows excluded from that scope."""
+    in_scope = tuple(
+        transaction
+        for transaction in catalogue.transactions.values()
+        if _classification_rule_in_scope(transaction, reaffirm=reaffirm)
+    )
+    skipped_already_classified = sum(
+        1
+        for transaction in catalogue.transactions.values()
+        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+        and not _classification_rule_in_scope(transaction, reaffirm=reaffirm)
+        and transaction.business_classification is not BusinessClassification.NOT_YET_PROCESSED
+    )
+    return in_scope, skipped_already_classified
+
+
+def _winning_classification_rule(
+    transaction: Transaction,
+    rules: tuple[LedgerClassificationRule, ...],
+) -> LedgerClassificationRule | None:
+    """Return the first stored rule matching a transaction description."""
+    return next((rule for rule in rules if rule.matches(transaction.raw.description)), None)
+
+
+def _planned_rule_matches(
+    transactions: tuple[Transaction, ...],
+    rules: tuple[LedgerClassificationRule, ...],
+) -> tuple[int, tuple[ClassificationRulePlanRow, ...]]:
+    """Build ordered winning-rule rows and count transactions with no match."""
+    matches: list[ClassificationRulePlanRow] = []
+    no_match = 0
+    for transaction in transactions:
+        winner = _winning_classification_rule(transaction, rules)
+        if winner is None:
+            no_match += 1
+            continue
+        matches.append(
+            ClassificationRulePlanRow(
+                transaction_id=transaction.transaction_id,
+                description=transaction.raw.description,
+                matched_rule_id=winner.rule_id,
+                classification=winner.classification,
+                category_id=winner.category_id,
+            )
+        )
+    return no_match, tuple(matches)
+
+
 def plan_classification_rules(
     *,
     bucket_id: str,
@@ -484,39 +591,8 @@ def plan_classification_rules(
     )
     rules: tuple[LedgerClassificationRule, ...] = rule_repo.list_rules()
     catalogue = tx_repo.load()
-
-    def _in_scope(tx: Transaction) -> bool:
-        if tx.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            return False
-        if tx.business_classification is BusinessClassification.NOT_YET_PROCESSED:
-            return True
-        return reaffirm and tx.classified_by == CLASSIFIED_BY_MANUAL
-
-    in_scope = [tx for tx in catalogue.transactions.values() if _in_scope(tx)]
-    skipped_already_classified = sum(
-        1
-        for tx in catalogue.transactions.values()
-        if tx.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and not _in_scope(tx)
-        and tx.business_classification is not BusinessClassification.NOT_YET_PROCESSED
-    )
-
-    matches: list[ClassificationRulePlanRow] = []
-    no_match = 0
-    for tx in in_scope:
-        winner = next((rule for rule in rules if rule.matches(tx.raw.description)), None)
-        if winner is None:
-            no_match += 1
-            continue
-        matches.append(
-            ClassificationRulePlanRow(
-                transaction_id=tx.transaction_id,
-                description=tx.raw.description,
-                matched_rule_id=winner.rule_id,
-                classification=winner.classification,
-                category_id=winner.category_id,
-            )
-        )
+    in_scope, skipped_already_classified = _classification_rule_scope(catalogue, reaffirm=reaffirm)
+    no_match, matches = _planned_rule_matches(in_scope, rules)
 
     return ClassificationRulePlan(
         rules_evaluated=len(rules),

@@ -26,7 +26,43 @@ from dataclasses import dataclass
 
 _CWD = os.getcwd().replace("\\", "/")
 
-TY_TARGET = "src"
+#: What ty checks. `src` has always been here; the `dev` entries are admitted
+#: one subtree at a time, each added only once it reaches zero, which is the
+#: same sequence `core` followed into the pyrefly gate. That ordering is the
+#: only honest one available while baselines and ratchets are banned: an
+#: unadmitted subtree is visibly absent from this list rather than silently
+#: suppressed inside a gate that claims to cover it.
+#:
+#: `dev/` matters because flattening the justfile moved every recipe's real
+#: logic into it - target dispatch, exit-code policy, environment provisioning -
+#: so what is left out is the tooling deciding whether every other gate passes.
+#:
+#: STILL OUT, with the diagnostic count each would bring in today:
+#:   registry 200, docs 76, audit 36, tests 30, ci 27, locales 22,
+#:   packaging 22, tui 12, deploy 10, agent_eval 7  (442 total)
+#: Admit each by burning it to zero and moving it into the list below.
+TY_TARGETS = (
+    "src",
+    "dev/__init__.py",
+    "dev/_paths.py",
+    "dev/actionlint.py",
+    "dev/ci_contract.py",
+    "dev/ci_reports.py",
+    "dev/exit_codes.py",
+    "dev/scripted_registration_channels.py",
+    "dev/containers",
+    "dev/corpus",
+    "dev/env",
+    "dev/identity",
+    "dev/ingest_harness",
+    "dev/init",
+    "dev/quality",
+    "dev/readme",
+    "dev/release",
+    "dev/sanitizer",
+    "dev/smoke",
+    "dev/test_runs",
+)
 # pyrefly takes NO path arguments on purpose. Its checked subset and its test
 # exclusion are declared in `[tool.pyrefly]`, and `project_excludes` filters
 # only `project_includes` — a path passed here would bypass the exclusion and
@@ -60,7 +96,7 @@ class _ExternalGap:
 # Documented, reviewed suppression for genuinely-irreducible external
 # dependency / third-party-stub IMPORT gaps — deliberately NOT a tech-debt
 # baseline. Each entry would be a proven optional-dep / missing-stub import that
-# no in-source escape (``# type: ignore`` / ``cast`` / ``Any``) and no local stub
+# no in-source escape (an ignore comment, ``cast``, ``Any``) and no local stub
 # can resolve within the two checkers' constraints. The match is intentionally
 # tight — (path suffix, checker, rule, message substring) — so a NEW diagnostic
 # under any other rule or naming ANY other symbol is still a hard failure.
@@ -126,7 +162,7 @@ def require_report(payload: str, result: subprocess.CompletedProcess[str], check
 
 def collect_ty() -> list[Diagnostic]:
     """Run ty and parse its GitLab-JSON diagnostics."""
-    result = _run(["ty", "check", TY_TARGET, "--output-format", "gitlab", "--color", "never"])
+    result = _run(["ty", "check", *TY_TARGETS, "--output-format", "gitlab", "--color", "never"])
     payload = result.stdout.strip()
     require_report(payload, result, "ty")
     try:

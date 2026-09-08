@@ -6,7 +6,7 @@ import hashlib
 import json
 import sys
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 import pytest
 
@@ -196,7 +196,10 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
     for sidecar_path in sidecars:
         rel_sidecar = sidecar_path.relative_to(_REPO_ROOT).as_posix()
         try:
-            data: dict[str, object] = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            data = cast(
+                "dict[str, object]",
+                json.loads(sidecar_path.read_text(encoding="utf-8")),
+            )
         except Exception as exc:
             failures.append(f"{rel_sidecar}: cannot parse JSON: {exc}")
             continue

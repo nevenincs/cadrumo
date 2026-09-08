@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import re
 from hashlib import sha256
+from typing import Any, cast
 
 import pytest
 from pydantic import SecretStr, ValidationError
@@ -259,7 +260,10 @@ def test_every_replacement_subclass_is_reached_by_the_case_tables() -> None:
     )
 
     def _declares_synthetic_validator(cls: type) -> bool:
-        decorators = cls.__pydantic_decorators__.field_validators
+        # `__pydantic_decorators__` is populated by the model metaclass at
+        # class-creation time and is absent from pydantic's stubs, so the
+        # attribute is real but unresolvable; the cast says so in one place.
+        decorators = cast("Any", cls).__pydantic_decorators__.field_validators
         return any("synthetic" in decorator.info.fields for decorator in decorators.values())
 
     rejected = {case[1].__name__ for case in _INVALID_REPLACEMENT_CASES}

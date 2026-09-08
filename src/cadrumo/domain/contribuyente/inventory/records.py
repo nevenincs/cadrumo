@@ -229,62 +229,79 @@ class InventoryAcquisitionCost(BaseModel):
     @model_validator(mode="after")
     def _validate_complete_decomposition(self) -> InventoryAcquisitionCost:
         evidence_ids = tuple(item.reference.reference for item in self.evidence)
-        if len(set(evidence_ids)) != len(evidence_ids):
-            raise InventoryValidationError("inventory acquisition evidence references must be unique")
-        component_ids = tuple(item.component_id for item in self.attributable_cost_components)
-        if len(set(component_ids)) != len(component_ids):
-            raise InventoryValidationError("inventory acquisition component identities must be unique")
-        declared_refs = {
-            self.completeness.consideration_evidence.reference,
-            self.completeness.attributable_cost_review_evidence.reference,
-            self.completeness.iva_recoverability_review_evidence.reference,
-            *(
-                reference.reference
-                for component in self.attributable_cost_components
-                for reference in component.evidence_references
-            ),
-        }
-        missing = sorted(declared_refs - set(evidence_ids))
-        if missing:
-            raise InventoryValidationError(f"inventory acquisition evidence references are unresolved: {missing!r}")
-        evidence_by_reference = {item.reference.reference: item.evidence_kind for item in self.evidence}
-        if (
-            evidence_by_reference[self.completeness.attributable_cost_review_evidence.reference]
-            is not InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW
-        ):
-            raise InventoryValidationError("attributable-cost completeness requires attributable-cost review evidence")
-        if (
-            evidence_by_reference[self.completeness.iva_recoverability_review_evidence.reference]
-            is not InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW
-        ):
-            raise InventoryValidationError("IVA completeness requires IVA-recoverability review evidence")
-        consideration_kind = evidence_by_reference[self.completeness.consideration_evidence.reference]
-        if consideration_kind in {
-            InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW,
-            InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW,
-        }:
-            raise InventoryValidationError("purchase consideration requires acquisition evidence, not review evidence")
-
-        attributable = sum((item.taxable_base for item in self.attributable_cost_components), MONEY_ZERO)
-        recoverable = _quantize(
-            self.consideration_iva_amount * self.consideration_deductible_iva_ratio,
-        ) + sum((item.recoverable_iva for item in self.attributable_cost_components), MONEY_ZERO)
-        total_iva = self.consideration_iva_amount + sum(
-            (item.iva_amount for item in self.attributable_cost_components),
-            MONEY_ZERO,
-        )
-        nonrecoverable = total_iva - recoverable
-        total = self.consideration_excluding_iva + attributable + nonrecoverable
-        expected = {
-            "directly_attributable_cost_total": _quantize(attributable),
-            "recoverable_iva_excluded": _quantize(recoverable),
-            "nonrecoverable_iva_included": _quantize(nonrecoverable),
-            "total_acquisition_cost": _quantize(total),
-        }
-        for field_name, expected_value in expected.items():
-            if getattr(self, field_name) != expected_value:
-                raise InventoryValidationError(f"{field_name} does not match the acquisition decomposition")
+        evidence_by_reference = _validate_acquisition_evidence_links(self, evidence_ids)
+        _validate_acquisition_evidence_roles(self, evidence_by_reference)
+        _validate_acquisition_amount_decomposition(self)
         return self
+
+
+def _validate_acquisition_evidence_links(
+    acquisition: InventoryAcquisitionCost,
+    evidence_ids: tuple[str, ...],
+) -> dict[str, InventoryAcquisitionEvidenceKind]:
+    if len(set(evidence_ids)) != len(evidence_ids):
+        raise InventoryValidationError("inventory acquisition evidence references must be unique")
+    component_ids = tuple(item.component_id for item in acquisition.attributable_cost_components)
+    if len(set(component_ids)) != len(component_ids):
+        raise InventoryValidationError("inventory acquisition component identities must be unique")
+    declared_refs = {
+        acquisition.completeness.consideration_evidence.reference,
+        acquisition.completeness.attributable_cost_review_evidence.reference,
+        acquisition.completeness.iva_recoverability_review_evidence.reference,
+        *(
+            reference.reference
+            for component in acquisition.attributable_cost_components
+            for reference in component.evidence_references
+        ),
+    }
+    missing = sorted(declared_refs - set(evidence_ids))
+    if missing:
+        raise InventoryValidationError(f"inventory acquisition evidence references are unresolved: {missing!r}")
+    return {item.reference.reference: item.evidence_kind for item in acquisition.evidence}
+
+
+def _validate_acquisition_evidence_roles(
+    acquisition: InventoryAcquisitionCost,
+    evidence_by_reference: dict[str, InventoryAcquisitionEvidenceKind],
+) -> None:
+    if (
+        evidence_by_reference[acquisition.completeness.attributable_cost_review_evidence.reference]
+        is not InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW
+    ):
+        raise InventoryValidationError("attributable-cost completeness requires attributable-cost review evidence")
+    if (
+        evidence_by_reference[acquisition.completeness.iva_recoverability_review_evidence.reference]
+        is not InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW
+    ):
+        raise InventoryValidationError("IVA completeness requires IVA-recoverability review evidence")
+    consideration_kind = evidence_by_reference[acquisition.completeness.consideration_evidence.reference]
+    if consideration_kind in {
+        InventoryAcquisitionEvidenceKind.ATTRIBUTABLE_COST_REVIEW,
+        InventoryAcquisitionEvidenceKind.IVA_RECOVERABILITY_REVIEW,
+    }:
+        raise InventoryValidationError("purchase consideration requires acquisition evidence, not review evidence")
+
+
+def _validate_acquisition_amount_decomposition(acquisition: InventoryAcquisitionCost) -> None:
+    attributable = sum((item.taxable_base for item in acquisition.attributable_cost_components), MONEY_ZERO)
+    recoverable = _quantize(
+        acquisition.consideration_iva_amount * acquisition.consideration_deductible_iva_ratio,
+    ) + sum((item.recoverable_iva for item in acquisition.attributable_cost_components), MONEY_ZERO)
+    total_iva = acquisition.consideration_iva_amount + sum(
+        (item.iva_amount for item in acquisition.attributable_cost_components),
+        MONEY_ZERO,
+    )
+    nonrecoverable = total_iva - recoverable
+    total = acquisition.consideration_excluding_iva + attributable + nonrecoverable
+    expected = {
+        "directly_attributable_cost_total": _quantize(attributable),
+        "recoverable_iva_excluded": _quantize(recoverable),
+        "nonrecoverable_iva_included": _quantize(nonrecoverable),
+        "total_acquisition_cost": _quantize(total),
+    }
+    for field_name, expected_value in expected.items():
+        if getattr(acquisition, field_name) != expected_value:
+            raise InventoryValidationError(f"{field_name} does not match the acquisition decomposition")
 
 
 class ValuationMethod(StrEnum):
@@ -636,28 +653,50 @@ class InventoryClosingResolution(BaseModel):
 
     @model_validator(mode="after")
     def _conflict_is_retained(self) -> InventoryClosingResolution:
-        has_physical = self.physical_observed_value is not None and self.physical_observation_fingerprint is not None
-        if (self.physical_observed_value is None) != (self.physical_observation_fingerprint is None):
-            raise InventoryValidationError("physical observed value and fingerprint must travel together")
-        if has_physical != (self.physical_observation_id is not None):
-            raise InventoryValidationError("physical observation identity must travel with physical resolution state")
-        if self.authority is InventoryClosingAuthority.PHYSICAL_OBSERVATION:
-            if not has_physical or self.authoritative_value != self.physical_observed_value:
-                raise InventoryValidationError("physical authority value must equal the physical observation")
-        elif self.authoritative_value != self.movement_derived_value:
-            raise InventoryValidationError("movement-derived authority value must equal movement-derived closing")
-        differs = has_physical and self.physical_observed_value != self.movement_derived_value
-        if differs != (self.conflict is not None):
-            raise InventoryValidationError("physical closing conflict diagnostic must exactly match value conflict")
-        if self.conflict is not None and (
-            self.conflict.actividad_id != self.actividad_id
-            or self.conflict.filing_year != self.filing_year
-            or self.conflict.movement_derived_value != self.movement_derived_value
-            or self.conflict.physical_observed_value != self.physical_observed_value
-            or self.conflict.physical_observation_fingerprint != self.physical_observation_fingerprint
-        ):
-            raise InventoryValidationError("physical closing conflict diagnostic does not match resolution state")
+        has_physical = _validate_resolution_physical_state(self)
+        _validate_resolution_authority_value(self, has_physical)
+        _validate_resolution_conflict(self, has_physical)
         return self
+
+
+def _validate_resolution_physical_state(resolution: InventoryClosingResolution) -> bool:
+    has_physical = (
+        resolution.physical_observed_value is not None
+        and resolution.physical_observation_fingerprint is not None
+    )
+    if (resolution.physical_observed_value is None) != (resolution.physical_observation_fingerprint is None):
+        raise InventoryValidationError("physical observed value and fingerprint must travel together")
+    if has_physical != (resolution.physical_observation_id is not None):
+        raise InventoryValidationError("physical observation identity must travel with physical resolution state")
+    return has_physical
+
+
+def _validate_resolution_authority_value(
+    resolution: InventoryClosingResolution,
+    has_physical: bool,
+) -> None:
+    if resolution.authority is InventoryClosingAuthority.PHYSICAL_OBSERVATION:
+        if not has_physical or resolution.authoritative_value != resolution.physical_observed_value:
+            raise InventoryValidationError("physical authority value must equal the physical observation")
+    elif resolution.authoritative_value != resolution.movement_derived_value:
+        raise InventoryValidationError("movement-derived authority value must equal movement-derived closing")
+
+
+def _validate_resolution_conflict(
+    resolution: InventoryClosingResolution,
+    has_physical: bool,
+) -> None:
+    differs = has_physical and resolution.physical_observed_value != resolution.movement_derived_value
+    if differs != (resolution.conflict is not None):
+        raise InventoryValidationError("physical closing conflict diagnostic must exactly match value conflict")
+    if resolution.conflict is not None and (
+        resolution.conflict.actividad_id != resolution.actividad_id
+        or resolution.conflict.filing_year != resolution.filing_year
+        or resolution.conflict.movement_derived_value != resolution.movement_derived_value
+        or resolution.conflict.physical_observed_value != resolution.physical_observed_value
+        or resolution.conflict.physical_observation_fingerprint != resolution.physical_observation_fingerprint
+    ):
+        raise InventoryValidationError("physical closing conflict diagnostic does not match resolution state")
 
 
 class InventoryClosingAuthorityRecord(BaseModel):
@@ -802,34 +841,52 @@ class MovementRecord(BaseModel):
     @model_validator(mode="after")
     def _validate_movement_amounts(self) -> MovementRecord:
         """Enforce that opening / purchase movements carry a cost and IVA decomposes consistently."""
-        needs_cost = self.kind in {MovementKind.OPENING, MovementKind.PURCHASE}
-        if needs_cost and self.unit_cost is None and self.taxable_base is None:
-            raise InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
-        if self.taxable_base is not None:
-            computed_iva = _quantize(self.taxable_base * self.iva_rate / HUNDRED)
-            if self.iva_amount is not None and self.iva_amount != computed_iva:
-                raise InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
-        if (
-            self.unit_cost is not None
-            and self.taxable_base is not None
-            and _quantize(self.quantity * self.unit_cost) != self.taxable_base
-        ):
-            raise InventoryValidationError("taxable_base must equal quantity * unit_cost")
-        if self.kind is MovementKind.PURCHASE:
-            if self.acquisition_cost is None:
-                raise InventoryValidationError("purchase movements require complete acquisition_cost")
-            if self.acquisition_cost.consideration_excluding_iva != _quantize(self.value):
-                raise InventoryValidationError("acquisition consideration must equal the purchase consideration")
-            expected_iva = self.iva_amount
-            if expected_iva is None:
-                expected_iva = _quantize(self.value * self.iva_rate / HUNDRED)
-            if self.acquisition_cost.consideration_iva_amount != expected_iva:
-                raise InventoryValidationError("acquisition consideration IVA must equal the purchase IVA")
-            if self.acquisition_cost.consideration_deductible_iva_ratio != self.deductible_iva_ratio:
-                raise InventoryValidationError("acquisition IVA recoverability must equal the purchase ratio")
-        elif self.acquisition_cost is not None:
-            raise InventoryValidationError("acquisition_cost is permitted only for purchase movements")
+        _require_movement_cost(self)
+        _validate_movement_taxable_amount(self)
+        _validate_purchase_movement_acquisition(self)
+        _validate_non_purchase_movement_acquisition(self)
         return self
+
+
+def _require_movement_cost(movement: MovementRecord) -> None:
+    needs_cost = movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}
+    if needs_cost and movement.unit_cost is None and movement.taxable_base is None:
+        raise InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
+
+
+def _validate_movement_taxable_amount(movement: MovementRecord) -> None:
+    if movement.taxable_base is not None:
+        computed_iva = _quantize(movement.taxable_base * movement.iva_rate / HUNDRED)
+        if movement.iva_amount is not None and movement.iva_amount != computed_iva:
+            raise InventoryValidationError("iva_amount must equal taxable_base * iva_rate")
+    if (
+        movement.unit_cost is not None
+        and movement.taxable_base is not None
+        and _quantize(movement.quantity * movement.unit_cost) != movement.taxable_base
+    ):
+        raise InventoryValidationError("taxable_base must equal quantity * unit_cost")
+
+
+def _validate_purchase_movement_acquisition(movement: MovementRecord) -> None:
+    if movement.kind is not MovementKind.PURCHASE:
+        return
+    acquisition_cost = movement.acquisition_cost
+    if acquisition_cost is None:
+        raise InventoryValidationError("purchase movements require complete acquisition_cost")
+    if acquisition_cost.consideration_excluding_iva != _quantize(movement.value):
+        raise InventoryValidationError("acquisition consideration must equal the purchase consideration")
+    expected_iva = movement.iva_amount
+    if expected_iva is None:
+        expected_iva = _quantize(movement.value * movement.iva_rate / HUNDRED)
+    if acquisition_cost.consideration_iva_amount != expected_iva:
+        raise InventoryValidationError("acquisition consideration IVA must equal the purchase IVA")
+    if acquisition_cost.consideration_deductible_iva_ratio != movement.deductible_iva_ratio:
+        raise InventoryValidationError("acquisition IVA recoverability must equal the purchase ratio")
+
+
+def _validate_non_purchase_movement_acquisition(movement: MovementRecord) -> None:
+    if movement.kind is not MovementKind.PURCHASE and movement.acquisition_cost is not None:
+        raise InventoryValidationError("acquisition_cost is permitted only for purchase movements")
 
 
 class StockLayer(BaseModel):
@@ -1196,11 +1253,40 @@ def resolve_inventory_authoritative_closing(
     prior_closing_link: PriorAuthoritativeClosingLink | None,
 ) -> InventoryClosingResolution:
     """Resolve closing authority while retaining any physical/movement conflict."""
+    _validate_closing_decision_coordinate(ledger, decision)
+    derived = _derive_inventory_closing_value(ledger)
+    prior_closing_link = _require_prior_closing_continuity(ledger, prior_closing_link)
+    _validate_decision_physical_presence(decision, physical_observation)
+    if physical_observation is None:
+        return _movement_closing_resolution(ledger, decision, derived, prior_closing_link)
+    _validate_physical_closing_observation(ledger, decision, physical_observation)
+    return _physical_closing_resolution(
+        ledger,
+        decision,
+        physical_observation,
+        prior_closing_link,
+        derived,
+    )
+
+
+def _validate_closing_decision_coordinate(
+    ledger: InventoryLedger,
+    decision: InventoryClosingAuthorityDecision,
+) -> None:
     if decision.actividad_id != ledger.actividad_id or decision.filing_year != ledger.year:
         raise InventoryValidationError("closing authority decision does not match the inventory ledger coordinate")
+
+
+def _derive_inventory_closing_value(ledger: InventoryLedger) -> Decimal:
     from .valuation import compute_inventory_valuation
 
-    derived = compute_inventory_valuation(ledger).closing_value
+    return compute_inventory_valuation(ledger).closing_value
+
+
+def _require_prior_closing_continuity(
+    ledger: InventoryLedger,
+    prior_closing_link: PriorAuthoritativeClosingLink | None,
+) -> PriorAuthoritativeClosingLink:
     if prior_closing_link is None:
         raise InventoryValidationError("closing authority requires complete prior-closing continuity")
     if (
@@ -1211,21 +1297,41 @@ def resolve_inventory_authoritative_closing(
         raise InventoryValidationError(
             "prior closing continuity does not match the inventory ledger coordinate and opening",
         )
+    return prior_closing_link
 
+
+def _validate_decision_physical_presence(
+    decision: InventoryClosingAuthorityDecision,
+    physical_observation: PhysicalClosingObservation | None,
+) -> None:
     decision_names_physical = decision.physical_observation_id is not None
     if decision_names_physical != (physical_observation is not None):
         raise InventoryValidationError("closing decision and competing physical observation must travel together")
-    if physical_observation is None:
-        return InventoryClosingResolution(
-            actividad_id=ledger.actividad_id,
-            filing_year=ledger.year,
-            authority=decision.authority,
-            authoritative_value=derived,
-            movement_derived_value=derived,
-            decision_id=decision.decision_id,
-            decision_fingerprint=decision.fingerprint,
-            prior_closing_link_fingerprint=prior_closing_link.fingerprint,
-        )
+
+
+def _movement_closing_resolution(
+    ledger: InventoryLedger,
+    decision: InventoryClosingAuthorityDecision,
+    derived: Decimal,
+    prior_closing_link: PriorAuthoritativeClosingLink,
+) -> InventoryClosingResolution:
+    return InventoryClosingResolution(
+        actividad_id=ledger.actividad_id,
+        filing_year=ledger.year,
+        authority=decision.authority,
+        authoritative_value=derived,
+        movement_derived_value=derived,
+        decision_id=decision.decision_id,
+        decision_fingerprint=decision.fingerprint,
+        prior_closing_link_fingerprint=prior_closing_link.fingerprint,
+    )
+
+
+def _validate_physical_closing_observation(
+    ledger: InventoryLedger,
+    decision: InventoryClosingAuthorityDecision,
+    physical_observation: PhysicalClosingObservation,
+) -> None:
     if decision.physical_observation_id != physical_observation.observation_id:
         raise InventoryValidationError("closing authority decision names a different physical observation")
     if decision.physical_observation_fingerprint != physical_observation.fingerprint:
@@ -1241,16 +1347,17 @@ def resolve_inventory_authoritative_closing(
     }[ledger.valuation_method]
     if physical_observation.valuation_basis is not expected_basis:
         raise InventoryValidationError("physical closing valuation basis does not match the ledger valuation method")
+
+
+def _physical_closing_resolution(
+    ledger: InventoryLedger,
+    decision: InventoryClosingAuthorityDecision,
+    physical_observation: PhysicalClosingObservation,
+    prior_closing_link: PriorAuthoritativeClosingLink,
+    derived: Decimal,
+) -> InventoryClosingResolution:
     observed = physical_observation.closing_value
-    conflict = None
-    if observed != derived:
-        conflict = InventoryClosingConflictDiagnostic(
-            actividad_id=ledger.actividad_id,
-            filing_year=ledger.year,
-            movement_derived_value=derived,
-            physical_observed_value=observed,
-            physical_observation_fingerprint=physical_observation.fingerprint,
-        )
+    conflict = _closing_conflict_diagnostic(ledger, physical_observation, derived)
     return InventoryClosingResolution(
         actividad_id=ledger.actividad_id,
         filing_year=ledger.year,
@@ -1266,4 +1373,21 @@ def resolve_inventory_authoritative_closing(
         physical_observation_id=physical_observation.observation_id,
         prior_closing_link_fingerprint=prior_closing_link.fingerprint,
         conflict=conflict,
+    )
+
+
+def _closing_conflict_diagnostic(
+    ledger: InventoryLedger,
+    physical_observation: PhysicalClosingObservation,
+    derived: Decimal,
+) -> InventoryClosingConflictDiagnostic | None:
+    observed = physical_observation.closing_value
+    if observed == derived:
+        return None
+    return InventoryClosingConflictDiagnostic(
+        actividad_id=ledger.actividad_id,
+        filing_year=ledger.year,
+        movement_derived_value=derived,
+        physical_observed_value=observed,
+        physical_observation_fingerprint=physical_observation.fingerprint,
     )

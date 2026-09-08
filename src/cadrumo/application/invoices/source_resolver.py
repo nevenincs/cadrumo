@@ -20,7 +20,7 @@ through one resolver envelope.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import date
 from decimal import Decimal
 from typing import ClassVar, Final
@@ -81,6 +81,8 @@ _OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
     BindingSourceKind.PAYABLE_INVOICE,
     BindingSourceKind.M347_THIRD_PARTY_OPERATION,
 )
+_ObservedInvoice = tuple[Invoice, InvoiceObservation]
+_IncoherentInvoice = tuple[Invoice, InvoiceDecomposition]
 STORAGE_DEGRADATION_ERRORS = _STORAGE_DEGRADATION_ERRORS
 _M349_PAYABLE_SUMMARY_BINDING_MIRRORS: dict[str, str] = {
     "iva-349-declarante-numero-operadores-adquisicion": "iva-349-declarante-numero-operadores",
@@ -173,6 +175,83 @@ def invoice_direction_to_source_kind(kind: InvoiceKind) -> BindingSourceKind:
     return BindingSourceKind.PAYABLE_INVOICE
 
 
+def _invoice_sources_in_context(
+    invoices: Iterable[Invoice],
+    *,
+    context: CalculationSourceContext,
+    active_sources: frozenset[BindingSourceKind],
+) -> tuple[Invoice, ...]:
+    return tuple(
+        invoice
+        for invoice in invoices
+        if _invoice_in_context(invoice, context) and _invoice_source_kind(invoice) in active_sources
+    )
+
+
+def _observe_invoice_sources(
+    source_invoices: Sequence[Invoice],
+    *,
+    context: CalculationSourceContext,
+) -> tuple[tuple[_ObservedInvoice, ...], tuple[_IncoherentInvoice, ...], tuple[Invoice, ...]]:
+    observed_items: list[_ObservedInvoice] = []
+    incoherent: list[_IncoherentInvoice] = []
+    withheld_for_conversion: list[Invoice] = []
+    for invoice in source_invoices:
+        if _is_unconverted_foreign_invoice(invoice):
+            withheld_for_conversion.append(invoice)
+        observation = _invoice_observation(invoice, context=context)
+        if observation is None:
+            continue
+        verdict = _m349_incoherent_verdict(invoice, context=context)
+        if verdict is not None:
+            incoherent.append((invoice, verdict))
+            continue
+        observed_items.append((invoice, observation))
+    return tuple(observed_items), tuple(incoherent), tuple(withheld_for_conversion)
+
+
+def _invoice_resolution_from_observations(
+    *,
+    context: CalculationSourceContext,
+    catalogue_invoices: Sequence[Invoice],
+    source_invoices: Sequence[Invoice],
+    observed_items: tuple[_ObservedInvoice, ...],
+    incoherent: tuple[_IncoherentInvoice, ...],
+    withheld_for_conversion: tuple[Invoice, ...],
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution:
+    observations = tuple(observation for _, observation in observed_items)
+    binding_values = resolve_invoice_binding_values(context.revision, observations)
+    declared_invoices = tuple(invoice for invoice, _ in observed_items)
+    diagnostics = _m349_incoherence_diagnostics(incoherent, resolver_id=resolver_id)
+    diagnostics += _unconverted_foreign_diagnostics(
+        withheld_for_conversion,
+        context=context,
+        resolver_id=resolver_id,
+    )
+    if context.modelo == Modelo.M349.value:
+        diagnostics += _m349_inferred_clave_diagnostics(
+            declared_invoices,
+            bucket_invoices=catalogue_invoices,
+            resolver_id=resolver_id,
+        )
+    diagnostics += _m347_role_fact_advisories(source_invoices, context=context, resolver_id=resolver_id)
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        binding_values=_m349_declarante_summary_union(context=context, binding_values=binding_values),
+        detail_rows=_m349_operador_rows_from_observations(context=context, observations=observations),
+        source_transaction_ids=tuple(
+            sorted(
+                {transaction_id for invoice, _ in observed_items for transaction_id in invoice.linked_transaction_ids},
+            ),
+        ),
+        diagnostics=diagnostics,
+        provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in observed_items),
+    )
+
+
 class InvoiceCatalogueSourceResolver:
     """Resolve invoice-source bindings and detail rows from persisted invoice records.
 
@@ -228,59 +307,25 @@ class InvoiceCatalogueSourceResolver:
                 source_kinds=tuple(active_sources),
                 error=exc,
             )
-        source_invoices = tuple(
-            invoice
-            for invoice in catalogue.values()
-            if _invoice_in_context(invoice, context) and _invoice_source_kind(invoice) in active_sources
+        catalogue_invoices = tuple(catalogue.values())
+        source_invoices = _invoice_sources_in_context(
+            catalogue_invoices,
+            context=context,
+            active_sources=active_sources,
         )
-        catalogue_observed_items: list[tuple[Invoice, InvoiceObservation]] = []
-        incoherent: list[tuple[Invoice, InvoiceDecomposition]] = []
-        withheld_for_conversion: list[Invoice] = []
-        for invoice in source_invoices:
-            if _is_unconverted_foreign_invoice(invoice):
-                withheld_for_conversion.append(invoice)
-            observation = _invoice_observation(invoice, context=context)
-            if observation is None:
-                continue
-            verdict = _m349_incoherent_verdict(invoice, context=context)
-            if verdict is not None:
-                incoherent.append((invoice, verdict))
-                continue
-            catalogue_observed_items.append((invoice, observation))
-        catalogue_observed = tuple(catalogue_observed_items)
-        observations = tuple(observation for _, observation in catalogue_observed)
-        binding_values = resolve_invoice_binding_values(context.revision, observations)
-        return CalculationSourceResolution(
+        observed_items, incoherent, withheld_for_conversion = _observe_invoice_sources(
+            source_invoices,
+            context=context,
+        )
+        return _invoice_resolution_from_observations(
+            context=context,
+            catalogue_invoices=catalogue_invoices,
+            source_invoices=source_invoices,
+            observed_items=observed_items,
+            incoherent=incoherent,
+            withheld_for_conversion=withheld_for_conversion,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=_m349_declarante_summary_union(context=context, binding_values=binding_values),
-            detail_rows=_m349_operador_rows_from_observations(context=context, observations=observations),
-            source_transaction_ids=tuple(
-                sorted(
-                    {
-                        transaction_id
-                        for invoice, _ in catalogue_observed
-                        for transaction_id in invoice.linked_transaction_ids
-                    },
-                ),
-            ),
-            diagnostics=_m349_incoherence_diagnostics(incoherent, resolver_id=self.resolver_id)
-            + _unconverted_foreign_diagnostics(
-                withheld_for_conversion,
-                context=context,
-                resolver_id=self.resolver_id,
-            )
-            + (
-                _m349_inferred_clave_diagnostics(
-                    [invoice for invoice, _ in catalogue_observed],
-                    bucket_invoices=tuple(catalogue.values()),
-                    resolver_id=self.resolver_id,
-                )
-                if context.modelo == Modelo.M349.value
-                else ()
-            )
-            + _m347_role_fact_advisories(source_invoices, context=context, resolver_id=self.resolver_id),
-            provenance=tuple(_invoice_provenance(invoice, observation) for invoice, observation in catalogue_observed),
         )
 
 
@@ -771,6 +816,35 @@ def _m347_invoice_observation(invoice: Invoice, *, context: CalculationSourceCon
     )
 
 
+def _m347_role_operation_clave(
+    invoice: Invoice,
+    *,
+    declaration_roles: frozenset[ThirdPartyDeclarationRole],
+) -> str | None:
+    if (
+        invoice.collected_on_behalf_of_tax_id is not None
+        and ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR in declaration_roles
+    ):
+        return "C"
+    if invoice.outside_economic_activity is True and declaration_roles & _M347_CLAVE_D_ROLES:
+        return "D"
+    if (
+        invoice.is_subvencion_ayuda is True
+        and ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
+    ):
+        return "E"
+    return None
+
+
+def _m347_mediation_operation_clave(invoice: Invoice) -> str | None:
+    mediation = invoice.travel_agency_mediation
+    if mediation is not None and invoice.kind is InvoiceKind.ISSUED:
+        return "F"
+    if mediation is TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT and invoice.kind is InvoiceKind.RECEIVED:
+        return "G"
+    return None
+
+
 def _m347_operation_clave(
     invoice: Invoice,
     *,
@@ -798,23 +872,12 @@ def _m347_operation_clave(
     tri-state ``None`` never silently classifies either way -- it falls
     through here and is surfaced as an advisory by the caller instead.
     """
-    if (
-        invoice.collected_on_behalf_of_tax_id is not None
-        and ThirdPartyDeclarationRole.THIRD_PARTY_FEE_COLLECTOR in declaration_roles
-    ):
-        return "C"
-    if invoice.outside_economic_activity is True and declaration_roles & _M347_CLAVE_D_ROLES:
-        return "D"
-    if (
-        invoice.is_subvencion_ayuda is True
-        and ThirdPartyDeclarationRole.PUBLIC_ADMINISTRATION_ENTITY in declaration_roles
-    ):
-        return "E"
-    mediation = invoice.travel_agency_mediation
-    if mediation is not None and invoice.kind is InvoiceKind.ISSUED:
-        return "F"
-    if mediation is TravelAgencyMediationType.AIR_PASSENGER_TRANSPORT and invoice.kind is InvoiceKind.RECEIVED:
-        return "G"
+    role_clave = _m347_role_operation_clave(invoice, declaration_roles=declaration_roles)
+    if role_clave is not None:
+        return role_clave
+    mediation_clave = _m347_mediation_operation_clave(invoice)
+    if mediation_clave is not None:
+        return mediation_clave
     return m347_operation_clave(source_kind)
 
 
@@ -913,6 +976,58 @@ def _m349_declarante_summary_union(
     return merged
 
 
+def _m349_operador_row_indexes(row_values: Mapping[tuple[BindingId, int], Decimal | str]) -> list[int]:
+    return sorted(
+        {row_index for binding_id, row_index in row_values if binding_id in _M349_OPERADOR_ROW_BINDINGS},
+    )
+
+
+def _m349_operador_row_values(
+    row_values: Mapping[tuple[BindingId, int], Decimal | str],
+    *,
+    row_index: int,
+) -> dict[str, Decimal | str]:
+    return {
+        attr: row_values[(binding_id, row_index)]
+        for binding_id, attr in _M349_OPERADOR_ROW_BINDINGS.items()
+        if (binding_id, row_index) in row_values
+    }
+
+
+def _m349_operador_row_from_values(
+    values: Mapping[str, Decimal | str],
+    *,
+    row_index: int,
+) -> Modelo349OperadorRow:
+    if set(values) != set(_M349_OPERADOR_ROW_BINDINGS.values()):
+        raise RegistryValidationError(f"Modelo 349 invoice row {row_index} is incomplete")
+    codigo_pais = values["codigo_pais"]
+    nif_comunitario = values["nif_comunitario"]
+    razon_social = values["razon_social"]
+    clave_operacion = values["clave_operacion"]
+    importe = values["importe"]
+    if not (
+        isinstance(codigo_pais, str)
+        and isinstance(nif_comunitario, str)
+        and isinstance(razon_social, str)
+        and isinstance(clave_operacion, str)
+        and isinstance(importe, Decimal)
+    ):
+        raise RegistryValidationError(f"Modelo 349 invoice row {row_index} has invalid field types")
+    try:
+        return Modelo349OperadorRow.model_validate(
+            {
+                "codigo_pais": codigo_pais,
+                "nif_comunitario": f"{codigo_pais}{nif_comunitario}",
+                "razon_social": razon_social,
+                "clave_operacion": clave_operacion,
+                "importe": importe,
+            },
+        )
+    except ValueError as exc:
+        raise RegistryValidationError(str(exc)) from exc
+
+
 def _m349_operador_rows_from_observations(
     *,
     context: CalculationSourceContext,
@@ -921,45 +1036,13 @@ def _m349_operador_rows_from_observations(
     if context.modelo != Modelo.M349.value or not observations:
         return ()
     row_values = resolve_invoice_binding_row_values(context.revision, observations)
-    rows: list[Modelo349OperadorRow] = []
-    row_indexes = sorted(
-        {row_index for binding_id, row_index in row_values if binding_id in _M349_OPERADOR_ROW_BINDINGS},
+    return tuple(
+        _m349_operador_row_from_values(
+            _m349_operador_row_values(row_values, row_index=row_index),
+            row_index=row_index,
+        )
+        for row_index in _m349_operador_row_indexes(row_values)
     )
-    for row_index in row_indexes:
-        values = {
-            attr: row_values[(binding_id, row_index)]
-            for binding_id, attr in _M349_OPERADOR_ROW_BINDINGS.items()
-            if (binding_id, row_index) in row_values
-        }
-        if set(values) != set(_M349_OPERADOR_ROW_BINDINGS.values()):
-            raise RegistryValidationError(f"Modelo 349 invoice row {row_index} is incomplete")
-        codigo_pais = values["codigo_pais"]
-        nif_comunitario = values["nif_comunitario"]
-        razon_social = values["razon_social"]
-        clave_operacion = values["clave_operacion"]
-        importe = values["importe"]
-        if not (
-            isinstance(codigo_pais, str)
-            and isinstance(nif_comunitario, str)
-            and isinstance(razon_social, str)
-            and isinstance(clave_operacion, str)
-            and isinstance(importe, Decimal)
-        ):
-            raise RegistryValidationError(f"Modelo 349 invoice row {row_index} has invalid field types")
-        try:
-            row = Modelo349OperadorRow.model_validate(
-                {
-                    "codigo_pais": codigo_pais,
-                    "nif_comunitario": f"{codigo_pais}{nif_comunitario}",
-                    "razon_social": razon_social,
-                    "clave_operacion": clave_operacion,
-                    "importe": importe,
-                },
-            )
-        except ValueError as exc:
-            raise RegistryValidationError(str(exc)) from exc
-        rows.append(row)
-    return tuple(rows)
 
 
 def _invoice_provenance(invoice: Invoice, observation: InvoiceObservation) -> CalculationSourceProvenance:

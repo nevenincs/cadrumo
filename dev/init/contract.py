@@ -3,7 +3,7 @@
 Everything a caller can rely on is declared here once, as data. The phases are
 fixed and identical in every repository even where one of them has nothing to
 do, because a caller that must probe which recipes a repository happens to
-define has no contract at all - it has a lookup table. ``just init-node`` in a
+define has no contract at all - it has a lookup table. An empty phase in a
 repository with no Node dependency graph reports ``skipped`` with a reason,
 which is an answer; a missing recipe is an error message about `just`.
 
@@ -31,7 +31,7 @@ CONTRACT_VERSION: Final = 1
 #: not a preference: `tools` installs git hooks and enrolls the framework out
 #: of the environment `python` creates, and in one repository those hooks lint
 #: the SPA that `node` restores.
-PHASES: Final[tuple[str, ...]] = ("python", "node", "tools")
+PHASES: Final[tuple[str, ...]] = ("python", "tools")
 
 #: The environment variable that turns on the NDJSON event stream, so the
 #: justfile recipes can stay argument-free and a caller can still ask for

@@ -174,52 +174,15 @@ def compute_modelo_349_operador_totals_parity(
     from .invoice_bindings import resolve_invoice_binding_row_values
 
     rows = resolve_invoice_binding_row_values(revision, observations)
-    nif_by_row = {
-        row_index: value
-        for (binding_id, row_index), value in rows.items()
-        if binding_id == "iva-349-operador-row-nif" and isinstance(value, str)
-    }
-    country_by_row = {
-        row_index: value
-        for (binding_id, row_index), value in rows.items()
-        if binding_id == "iva-349-operador-row-codigo-pais" and isinstance(value, str)
-    }
-    clave_by_row = {
-        row_index: value
-        for (binding_id, row_index), value in rows.items()
-        if binding_id == "iva-349-operador-row-clave" and isinstance(value, str)
-    }
-    base_by_row = {
-        row_index: value
-        for (binding_id, row_index), value in rows.items()
-        if binding_id == "iva-349-operador-row-base" and isinstance(value, Decimal)
-    }
-    operators: set[tuple[str, str, str]] = set()
-    operator_base: dict[tuple[str, str, str], Decimal] = {}
-    base_row_total = Decimal("0")
-    for row_index in sorted(base_by_row):
-        clave = clave_by_row.get(row_index)
-        country = country_by_row.get(row_index)
-        nif = nif_by_row.get(row_index)
-        if clave is None or country is None or nif is None:
-            continue
-        key = (country, nif, clave)
-        operators.add(key)
-        operator_base[key] = operator_base.get(key, Decimal("0")) + base_by_row[row_index]
-        base_row_total += base_by_row[row_index]
-    by_clave_operators: dict[str, set[tuple[str, str]]] = {}
-    by_clave_base: dict[str, Decimal] = {}
-    for (country, nif, clave), base in operator_base.items():
-        by_clave_operators.setdefault(clave, set()).add((country, nif))
-        by_clave_base[clave] = by_clave_base.get(clave, Decimal("0")) + base
-    by_clave = tuple(
-        Modelo349OperadorClaveTotal(
-            clave=clave,
-            operator_count=len(by_clave_operators[clave]),
-            base_total=by_clave_base[clave],
-        )
-        for clave in sorted(by_clave_operators)
+    nif_by_row, country_by_row, clave_by_row, base_by_row = _modelo_349_operator_columns(rows)
+    operators, operator_base, base_row_total = _aggregate_modelo_349_operator_rows(
+        nif_by_row,
+        country_by_row,
+        clave_by_row,
+        base_by_row,
     )
+    by_clave_operators, by_clave_base = _aggregate_modelo_349_clave_totals(operator_base)
+    by_clave = _build_modelo_349_clave_totals(by_clave_operators, by_clave_base)
     operator_row_total = len(operators)
     operator_delta = operator_row_total - int(operator_summary_total)
     base_delta = base_row_total - base_summary_total
@@ -235,6 +198,82 @@ def compute_modelo_349_operador_totals_parity(
         tolerance=tolerance,
         is_consistent=is_consistent,
     )
+
+
+def _modelo_349_operator_columns(
+    rows: Mapping[tuple[BindingId, int], Decimal | str],
+) -> tuple[dict[int, str], dict[int, str], dict[int, str], dict[int, Decimal]]:
+    """Project the four operator-row columns needed by the parity gate."""
+    return (
+        _modelo_349_operator_column(rows, "iva-349-operador-row-nif", str),
+        _modelo_349_operator_column(rows, "iva-349-operador-row-codigo-pais", str),
+        _modelo_349_operator_column(rows, "iva-349-operador-row-clave", str),
+        _modelo_349_operator_column(rows, "iva-349-operador-row-base", Decimal),
+    )
+
+
+def _modelo_349_operator_column[ValueT: (str, Decimal)](
+    rows: Mapping[tuple[BindingId, int], Decimal | str],
+    requested_binding: BindingId,
+    value_type: type[ValueT],
+) -> dict[int, ValueT]:
+    """Select one typed operator-row column without changing row ordering."""
+    return {
+        row_index: value
+        for (binding_id, row_index), value in rows.items()
+        if binding_id == requested_binding and isinstance(value, value_type)
+    }
+
+
+def _aggregate_modelo_349_operator_rows(
+    nif_by_row: Mapping[int, str],
+    country_by_row: Mapping[int, str],
+    clave_by_row: Mapping[int, str],
+    base_by_row: Mapping[int, Decimal],
+) -> tuple[set[tuple[str, str, str]], dict[tuple[str, str, str], Decimal], Decimal]:
+    """Group operator rows by country, tax identity, and intracommunity clave."""
+    operators: set[tuple[str, str, str]] = set()
+    operator_base: dict[tuple[str, str, str], Decimal] = {}
+    base_row_total = Decimal("0")
+    for row_index in sorted(base_by_row):
+        clave = clave_by_row.get(row_index)
+        country = country_by_row.get(row_index)
+        nif = nif_by_row.get(row_index)
+        if clave is None or country is None or nif is None:
+            continue
+        key = (country, nif, clave)
+        operators.add(key)
+        operator_base[key] = operator_base.get(key, Decimal("0")) + base_by_row[row_index]
+        base_row_total += base_by_row[row_index]
+    return operators, operator_base, base_row_total
+
+
+def _aggregate_modelo_349_clave_totals(
+    operator_base: Mapping[tuple[str, str, str], Decimal],
+) -> tuple[dict[str, set[tuple[str, str]]], dict[str, Decimal]]:
+    """Aggregate distinct operators and bases once more by Modelo 349 clave."""
+    by_clave_operators: dict[str, set[tuple[str, str]]] = {}
+    by_clave_base: dict[str, Decimal] = {}
+    for (country, nif, clave), base in operator_base.items():
+        by_clave_operators.setdefault(clave, set()).add((country, nif))
+        by_clave_base[clave] = by_clave_base.get(clave, Decimal("0")) + base
+    return by_clave_operators, by_clave_base
+
+
+def _build_modelo_349_clave_totals(
+    by_clave_operators: Mapping[str, set[tuple[str, str]]],
+    by_clave_base: Mapping[str, Decimal],
+) -> tuple[Modelo349OperadorClaveTotal, ...]:
+    """Build the stable, clave-sorted Modelo 349 parity breakdown."""
+    by_clave = tuple(
+        Modelo349OperadorClaveTotal(
+            clave=clave,
+            operator_count=len(by_clave_operators[clave]),
+            base_total=by_clave_base[clave],
+        )
+        for clave in sorted(by_clave_operators)
+    )
+    return by_clave
 
 
 def normalise_m349_nif_export_rows(

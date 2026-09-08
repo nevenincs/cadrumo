@@ -62,33 +62,32 @@ def revision_selection_coordinates(
     return tuple((filing_year, period) for filing_year in years for period in selector.periods)
 
 
-def select_revision_for_year(
+def _revision_is_effective_on(revision: ModeloRevision, on: date | None) -> bool:
+    """Return whether ``on`` falls within a revision's inclusive date window."""
+    return on is None or (revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to))
+
+
+def _year_revision_candidates(
     modelo: ModeloDefinition,
     *,
     filing_year: int,
-    on: date | None = None,
-) -> ModeloRevision:
-    """Select exactly one revision for a filing year and effective date.
-
-    This is the year-only authority for read-only revision-wide surfaces such
-    as bindings discovery.  Callers that already have its revision may
-    materialise a snapshot with that explicit ``revision_id`` rather than
-    independently selecting again.
-
-    Args:
-        modelo: The :class:`ModeloDefinition` whose declared revisions are
-            searched for the one matching ``filing_year`` and ``on``.
-        filing_year: AEAT filing year used to narrow revisions by their
-            ``period_selector``.
-        on: Optional reference date that must fall within the revision's
-            ``valid_from`` / ``valid_to`` window.
-    """
-    candidates = [
+    on: date | None,
+) -> list[ModeloRevision]:
+    """Return year-matching revisions in the model's declared order."""
+    return [
         revision
         for revision in modelo.revisions.values()
-        if revision.period_selector.includes_year(filing_year)
-        and (on is None or (revision.valid_from <= on and (revision.valid_to is None or on <= revision.valid_to)))
+        if revision.period_selector.includes_year(filing_year) and _revision_is_effective_on(revision, on)
     ]
+
+
+def _select_single_year_revision(
+    modelo: ModeloDefinition,
+    candidates: list[ModeloRevision],
+    *,
+    filing_year: int,
+) -> ModeloRevision:
+    """Resolve year candidates, refusing both absence and mid-year ambiguity."""
     if not candidates:
         raise NoRevisionForPeriodError(
             modelo_id=modelo.id,
@@ -114,6 +113,34 @@ def select_revision_for_year(
             translated_message="errors.snapshot.ambiguous_revision_selection_year_only",
         )
     return candidates[0]
+
+
+def select_revision_for_year(
+    modelo: ModeloDefinition,
+    *,
+    filing_year: int,
+    on: date | None = None,
+) -> ModeloRevision:
+    """Select exactly one revision for a filing year and effective date.
+
+    This is the year-only authority for read-only revision-wide surfaces such
+    as bindings discovery.  Callers that already have its revision may
+    materialise a snapshot with that explicit ``revision_id`` rather than
+    independently selecting again.
+
+    Args:
+        modelo: The :class:`ModeloDefinition` whose declared revisions are
+            searched for the one matching ``filing_year`` and ``on``.
+        filing_year: AEAT filing year used to narrow revisions by their
+            ``period_selector``.
+        on: Optional reference date that must fall within the revision's
+            ``valid_from`` / ``valid_to`` window.
+    """
+    return _select_single_year_revision(
+        modelo,
+        _year_revision_candidates(modelo, filing_year=filing_year, on=on),
+        filing_year=filing_year,
+    )
 
 
 def select_revision(

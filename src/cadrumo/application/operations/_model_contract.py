@@ -68,16 +68,43 @@ def _require_model_config(
     require_validated_defaults: bool,
 ) -> None:
     config = model_type.model_config
+    _require_model_flags(config, path=path)
+    _require_model_structure(model_type, path=path)
+    _require_model_schema_contract(model_type, config=config, path=path)
+    _require_model_decorators(model_type, path=path)
+    _require_validated_defaults(
+        model_type,
+        config=config,
+        path=path,
+        require_validated_defaults=require_validated_defaults,
+    )
+
+
+def _require_model_flags(config: Mapping[str, object], *, path: str) -> None:
+    """Require the strict, immutable, closed model configuration flags."""
     if config.get("strict") is not True:
         raise ValueError(f"operation {path} model must set strict=True")
     if config.get("frozen") is not True:
         raise ValueError(f"operation {path} model must set frozen=True")
     if config.get("extra") != "forbid":
         raise ValueError(f"operation {path} model must set extra='forbid'")
+
+
+def _require_model_structure(model_type: type[BaseModel], *, path: str) -> None:
+    """Reject model state or computed output outside the validation schema."""
     if model_type.__private_attributes__:
         raise ValueError(f"operation {path} model must not declare private mutable state")
     if model_type.model_computed_fields:
         raise ValueError(f"operation {path} model must not declare computed fields outside its validation schema")
+
+
+def _require_model_schema_contract(
+    model_type: type[BaseModel],
+    *,
+    config: Mapping[str, object],
+    path: str,
+) -> None:
+    """Reject schema hooks and structural customisation on a public model."""
     _require_no_custom_json_schema_hook(model_type, path=path)
     _require_no_custom_core_schema_hook(model_type, path=path)
     _require_nonstructural_json_schema_extra(config.get("json_schema_extra"), path=path)
@@ -86,6 +113,10 @@ def _require_model_config(
             field.json_schema_extra,
             path=f"{path}.{field_name}",
         )
+
+
+def _require_model_decorators(model_type: type[BaseModel], *, path: str) -> None:
+    """Reject validators and serializers that can drift from the public schema."""
     decorators = model_type.__pydantic_decorators__
     coercive_field_validators = tuple(
         validator for validator in decorators.field_validators.values() if validator.info.mode != "after"
@@ -97,15 +128,21 @@ def _require_model_config(
         raise ValueError(f"operation {path} model must not declare coercive before, plain, or wrap validators")
     if decorators.field_serializers or decorators.model_serializers:
         raise ValueError(f"operation {path} model must not declare serializers that drift from validation schema")
-    if (
-        require_validated_defaults
-        and any(not field.is_required() for field in model_type.model_fields.values())
-        and config.get(
-            "validate_default",
-        )
-        is not True
-    ):
-        raise ValueError(f"operation {path} model with defaults must set validate_default=True")
+
+
+def _require_validated_defaults(
+    model_type: type[BaseModel],
+    *,
+    config: Mapping[str, object],
+    path: str,
+    require_validated_defaults: bool,
+) -> None:
+    """Require validation for every default when the caller requests it."""
+    if not require_validated_defaults or config.get("validate_default") is True:
+        return
+    if not any(not field.is_required() for field in model_type.model_fields.values()):
+        return
+    raise ValueError(f"operation {path} model with defaults must set validate_default=True")
 
 
 def _require_no_custom_json_schema_hook(model_type: type[BaseModel], *, path: str) -> None:
@@ -151,6 +188,49 @@ def _require_annotation_contract(
     reject_mutable_annotations: bool,
     require_validated_defaults: bool,
 ) -> None:
+    if _require_annotation_class_contract(
+        annotation,
+        path=path,
+        visiting=visiting,
+        reject_mutable_annotations=reject_mutable_annotations,
+        require_validated_defaults=require_validated_defaults,
+    ):
+        return
+    if _require_annotation_alias_contract(
+        annotation,
+        path=path,
+        visiting=visiting,
+        reject_mutable_annotations=reject_mutable_annotations,
+        require_validated_defaults=require_validated_defaults,
+    ):
+        return
+    origin = get_origin(annotation)
+    _require_mutable_annotation(
+        annotation,
+        origin=origin,
+        path=path,
+        reject_mutable_annotations=reject_mutable_annotations,
+    )
+    if origin is None:
+        return
+    _require_annotation_arguments(
+        annotation,
+        path=path,
+        visiting=visiting,
+        reject_mutable_annotations=reject_mutable_annotations,
+        require_validated_defaults=require_validated_defaults,
+    )
+
+
+def _require_annotation_class_contract(
+    annotation: object,
+    *,
+    path: str,
+    visiting: set[type[BaseModel]],
+    reject_mutable_annotations: bool,
+    require_validated_defaults: bool,
+) -> bool:
+    """Validate class annotations and report whether recursion is complete."""
     if isinstance(annotation, type):
         if issubclass(annotation, BaseModel):
             _require_model_graph(
@@ -160,12 +240,24 @@ def _require_annotation_contract(
                 reject_mutable_annotations=reject_mutable_annotations,
                 require_validated_defaults=require_validated_defaults,
             )
-            return
+            return True
         if is_typeddict(cast(type[object], annotation)):
             if reject_mutable_annotations:
                 raise ValueError(f"operation {path} must not declare a mutable TypedDict")
-            return
+            return True
         _require_no_custom_core_schema_hook(cast(object, annotation), path=path)
+    return False
+
+
+def _require_annotation_alias_contract(
+    annotation: object,
+    *,
+    path: str,
+    visiting: set[type[BaseModel]],
+    reject_mutable_annotations: bool,
+    require_validated_defaults: bool,
+) -> bool:
+    """Unwrap a type alias before checking its underlying annotation."""
     if isinstance(annotation, TypeAliasType):
         _require_annotation_contract(
             annotation.__value__,
@@ -174,13 +266,45 @@ def _require_annotation_contract(
             reject_mutable_annotations=reject_mutable_annotations,
             require_validated_defaults=require_validated_defaults,
         )
-        return
-    origin = get_origin(annotation)
-    mutable_origins = (list, set, dict, Mapping, MutableMapping, Sequence, MutableSequence, Set, MutableSet)
-    if reject_mutable_annotations and (annotation in mutable_origins or origin in mutable_origins):
+        return True
+    return False
+
+
+def _require_mutable_annotation(
+    annotation: object,
+    *,
+    origin: object,
+    path: str,
+    reject_mutable_annotations: bool,
+) -> None:
+    """Reject container origins that expose mutable public model state."""
+    mutable_origins: tuple[object, ...] = (
+        list,
+        set,
+        dict,
+        Mapping,
+        MutableMapping,
+        Sequence,
+        MutableSequence,
+        Set,
+        MutableSet,
+    )
+    if reject_mutable_annotations and (
+        any(annotation == mutable_origin for mutable_origin in mutable_origins)
+        or any(origin == mutable_origin for mutable_origin in mutable_origins)
+    ):
         raise ValueError(f"operation {path} must use tuple or frozenset instead of a mutable container")
-    if origin is None:
-        return
+
+
+def _require_annotation_arguments(
+    annotation: object,
+    *,
+    path: str,
+    visiting: set[type[BaseModel]],
+    reject_mutable_annotations: bool,
+    require_validated_defaults: bool,
+) -> None:
+    """Validate every nested argument in a parameterized annotation."""
     for argument in get_args(annotation):
         _require_annotation_contract(
             argument,

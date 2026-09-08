@@ -17,14 +17,14 @@ abstaining one -- so a green result means the path discriminates.
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
 from cadrumo.core.field_role import FieldRole
 from cadrumo.core.tabular import normalize_tabular_bytes
 
-from .._key import CORPUS_ROOT, load_corpus_key
+from .._key import CORPUS_ROOT, CorpusKey, load_corpus_key
 from .._scoring import score_emission
 from .._tabular_truth import (
     TABULAR_COLUMN_ROLE_TRUTH,
@@ -264,7 +264,9 @@ def test_the_truth_document_lookup_refuses_an_unauthored_document() -> None:
     is refused rather than sent to the corpus to fail there.
     """
     with pytest.raises(TabularTruthError, match="no column-role truth is authored"):
-        column_role_truth_document("OP-NOT-a-real-document", key=None)  # type: ignore[arg-type]
+        # The None is the point: the refusal has to precede the key access,
+        # so the call is made with a key that could not be used if reached.
+        column_role_truth_document("OP-NOT-a-real-document", key=cast("CorpusKey", None))
 
 
 def test_defensible_alternates_refuse_an_unauthored_document() -> None:

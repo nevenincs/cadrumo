@@ -243,7 +243,8 @@ def version_selections(payload: str) -> tuple[VersionSelection, ...]:
         offered: list[str] = []
         checked: str | None = None
         for radio in _VERSION_RADIO.finditer(block):
-            version = radio.group("version")
+            # `Match.group` is typed `str | Any`; the group is non-optional.
+            version = str(radio.group("version"))
             offered.append(version)
             if _CHECKED.search(radio.group(0)):
                 checked = version
@@ -450,7 +451,7 @@ def article_block_title(payload: str) -> str:
         none. Never a value derived from the block id.
     """
     found = _BLOCK_TITLE.search(payload)
-    return found.group("titulo") if found else ""
+    return str(found.group("titulo")) if found else ""
 
 
 def article_redaction_markup(payload: str, redaction: ArticleRedaction) -> str:

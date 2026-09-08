@@ -35,8 +35,24 @@ def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -
     separate requirement to declare a retirement for a disappearing surface.
     """
     continuidad_ids_by_revision = _continuidad_ids_by_revision(modelo)
-    failures: list[str] = []
     declared_evolutions = _iter_declared_continuity_evolutions(modelo)
+    failures = _continuity_evolution_duplicate_failures(modelo, declared_evolutions)
+    for declaring_revision_id, evolution in declared_evolutions:
+        failures.extend(
+            _continuity_evolution_reference_failures(
+                modelo,
+                continuidad_ids_by_revision,
+                declaring_revision_id,
+                evolution,
+            ),
+        )
+    return tuple(failures)
+
+
+def _continuity_evolution_duplicate_failures(
+    modelo: ModeloDefinition,
+    declared_evolutions: tuple[tuple[str, CasillaContinuidadEvolutionDefinition], ...],
+) -> list[str]:
     evolutions_by_boundary: dict[
         tuple[str, RevisionId, RevisionId],
         list[CasillaContinuidadEvolutionDefinition],
@@ -45,6 +61,7 @@ def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -
         evolutions_by_boundary[(evolution.continuidad_id, evolution.from_revision, evolution.to_revision)].append(
             evolution,
         )
+    failures: list[str] = []
     for (continuidad_id, from_revision, to_revision), evolutions in sorted(evolutions_by_boundary.items()):
         if len(evolutions) > 1:
             failures.append(
@@ -53,84 +70,141 @@ def _validate_strict_continuity_evolution_references(modelo: ModeloDefinition) -
                 f"revisions {from_revision!r}->{to_revision!r} has overlapping declarations "
                 f"{tuple(sorted(evolution.id for evolution in evolutions))!r}",
             )
+    return failures
 
-    for declaring_revision_id, evolution in declared_evolutions:
-        revision_pair = _revision_pair_for_evolution(modelo, evolution)
-        if revision_pair is None:
-            failures.append(
-                _format_unmatched_continuity_evolution_failure(
-                    modelo.id,
-                    declaring_revision_id,
-                    evolution,
-                    "evolution references a revision that the modelo does not declare",
-                ),
-            )
-            continue
-        left_revision, right_revision = revision_pair
-        if declaring_revision_id != evolution.to_revision:
-            failures.append(
-                _format_unmatched_continuity_evolution_failure(
-                    modelo.id,
-                    declaring_revision_id,
-                    evolution,
-                    "evolution must be declared under its target revision",
-                ),
-            )
 
-        left_ids = continuidad_ids_by_revision[left_revision.id]
-        right_ids = continuidad_ids_by_revision[right_revision.id]
-        source_present = evolution.continuidad_id in left_ids
-        target_present = evolution.continuidad_id in right_ids
-        if not source_present and not target_present:
-            failures.append(
-                _format_unmatched_continuity_evolution_failure(
-                    modelo.id,
-                    declaring_revision_id,
-                    evolution,
-                    "no matching casilla continuity id in either revision",
-                ),
-            )
-            continue
+def _continuity_evolution_reference_failures(
+    modelo: ModeloDefinition,
+    continuidad_ids_by_revision: dict[str, set[str]],
+    declaring_revision_id: str,
+    evolution: CasillaContinuidadEvolutionDefinition,
+) -> tuple[str, ...]:
+    revision_pair = _revision_pair_for_evolution(modelo, evolution)
+    if revision_pair is None:
+        return (
+            _format_unmatched_continuity_evolution_failure(
+                modelo.id,
+                declaring_revision_id,
+                evolution,
+                "evolution references a revision that the modelo does not declare",
+            ),
+        )
+    left_revision, right_revision = revision_pair
+    failures: list[str] = []
+    if declaring_revision_id != evolution.to_revision:
+        failures.append(
+            _format_unmatched_continuity_evolution_failure(
+                modelo.id,
+                declaring_revision_id,
+                evolution,
+                "evolution must be declared under its target revision",
+            ),
+        )
+    source_present = evolution.continuidad_id in continuidad_ids_by_revision[left_revision.id]
+    target_present = evolution.continuidad_id in continuidad_ids_by_revision[right_revision.id]
+    failures.extend(
+        _continuity_surface_reference_failures(
+            modelo,
+            declaring_revision_id,
+            evolution,
+            source_present=source_present,
+            target_present=target_present,
+        ),
+    )
+    return tuple(failures)
 
-        if evolution.evolution_kind == "retired":
-            if not source_present:
-                failures.append(
-                    _format_unmatched_continuity_evolution_failure(
-                        modelo.id,
-                        declaring_revision_id,
-                        evolution,
-                        "retired evolution has no source casilla continuity id",
-                    ),
-                )
-            if target_present:
-                failures.append(
-                    _format_unmatched_continuity_evolution_failure(
-                        modelo.id,
-                        declaring_revision_id,
-                        evolution,
-                        "retired evolution target revision still declares the continuity id",
-                    ),
-                )
-            continue
 
-        if not source_present:
-            failures.append(
-                _format_unmatched_continuity_evolution_failure(
-                    modelo.id,
-                    declaring_revision_id,
-                    evolution,
-                    "non-retired evolution has no source casilla continuity id",
-                ),
-            )
-        if not target_present:
-            failures.append(
-                _format_unmatched_continuity_evolution_failure(
-                    modelo.id,
-                    declaring_revision_id,
-                    evolution,
-                    "non-retired evolution has no target casilla continuity id",
-                ),
-            )
+def _continuity_surface_reference_failures(
+    modelo: ModeloDefinition,
+    declaring_revision_id: str,
+    evolution: CasillaContinuidadEvolutionDefinition,
+    *,
+    source_present: bool,
+    target_present: bool,
+) -> tuple[str, ...]:
+    if not source_present and not target_present:
+        return (
+            _format_unmatched_continuity_evolution_failure(
+                modelo.id,
+                declaring_revision_id,
+                evolution,
+                "no matching casilla continuity id in either revision",
+            ),
+        )
+    if evolution.evolution_kind == "retired":
+        return _retired_surface_reference_failures(
+            modelo,
+            declaring_revision_id,
+            evolution,
+            source_present=source_present,
+            target_present=target_present,
+        )
+    return _non_retired_surface_reference_failures(
+        modelo,
+        declaring_revision_id,
+        evolution,
+        source_present=source_present,
+        target_present=target_present,
+    )
+
+
+def _retired_surface_reference_failures(
+    modelo: ModeloDefinition,
+    declaring_revision_id: str,
+    evolution: CasillaContinuidadEvolutionDefinition,
+    *,
+    source_present: bool,
+    target_present: bool,
+) -> tuple[str, ...]:
+    failures: list[str] = []
+    if not source_present:
+        failures.append(
+            _format_unmatched_continuity_evolution_failure(
+                modelo.id,
+                declaring_revision_id,
+                evolution,
+                "retired evolution has no source casilla continuity id",
+            ),
+        )
+    if target_present:
+        failures.append(
+            _format_unmatched_continuity_evolution_failure(
+                modelo.id,
+                declaring_revision_id,
+                evolution,
+                "retired evolution target revision still declares the continuity id",
+            ),
+        )
+    return tuple(failures)
+
+
+def _non_retired_surface_reference_failures(
+    modelo: ModeloDefinition,
+    declaring_revision_id: str,
+    evolution: CasillaContinuidadEvolutionDefinition,
+    *,
+    source_present: bool,
+    target_present: bool,
+) -> tuple[str, ...]:
+    failures: list[str] = []
+    if not source_present:
+        failures.append(
+            _format_unmatched_continuity_evolution_failure(
+                modelo.id,
+                declaring_revision_id,
+                evolution,
+                "non-retired evolution has no source casilla continuity id",
+            ),
+        )
+    if not target_present:
+        failures.append(
+            _format_unmatched_continuity_evolution_failure(
+                modelo.id,
+                declaring_revision_id,
+                evolution,
+                "non-retired evolution has no target casilla continuity id",
+            ),
+        )
     return tuple(failures)
 
 

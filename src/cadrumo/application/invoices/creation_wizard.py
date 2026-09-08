@@ -112,6 +112,21 @@ class _WizardFieldError(Exception):
     reason: str
 
 
+@dataclass(frozen=True, slots=True)
+class _ValidatedWizardFields:
+    country: str
+    nif: str
+    name: str
+    number: str
+    invoice_date: date | None
+    operation_date: date | None
+    taxable_base: Decimal | None
+    iva_rate: Decimal | None
+    currency: str
+    retention_amount: Decimal | None
+    retention_rate: Decimal | None
+
+
 def _collect_wizard_field[T](
     field_errors: list[InvoiceWizardFieldError],
     validate: Callable[[], T],
@@ -345,6 +360,193 @@ def _derived_domestic_category(
     return domestic_categories_by_rate_kind().get(tiers[0])
 
 
+def _validate_wizard_fields(
+    *,
+    counterparty_nif: str,
+    counterparty_name: str,
+    invoice_number: str,
+    invoice_date: str,
+    taxable_base: str,
+    iva_rate: str | None,
+    currency: str,
+    operation_date: str | None,
+    country_code: str,
+    retention_rate: str | None,
+    retention_amount: str | None,
+) -> tuple[_ValidatedWizardFields, list[InvoiceWizardFieldError]]:
+    field_errors: list[InvoiceWizardFieldError] = []
+    # A pre-validation placeholder, never an output. It is read below by the NIF
+    # check, so a malformed country makes that check run under Spanish rules and
+    # report a second, misleading error -- but the function raises whenever any
+    # field error accumulated, so this value cannot escape. Do not "fix" it to
+    # None: the NIF check needs a country, and the accumulate-then-refuse shape
+    # is what lets one call name every failing field instead of the first.
+    resolved_country = _collect_wizard_field(field_errors, lambda: _validate_country_code(country_code), fallback="ES")
+    resolved_nif = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_counterparty_nif(counterparty_nif, country=resolved_country),
+        fallback="",
+    )
+    resolved_name = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_counterparty_name(counterparty_name),
+        fallback="",
+    )
+    resolved_number = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_invoice_number(invoice_number),
+        fallback="",
+    )
+    resolved_date = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_invoice_date(invoice_date),
+        fallback=None,
+    )
+    resolved_operation_date = (
+        _collect_wizard_field(
+            field_errors,
+            lambda: _validate_operation_date(operation_date),
+            fallback=None,
+        )
+        if operation_date is not None
+        else None
+    )
+    resolved_base = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_taxable_base(taxable_base),
+        fallback=None,
+    )
+    resolved_rate = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_iva_rate(iva_rate),
+        fallback=None,
+    )
+    resolved_currency = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_currency(currency),
+        fallback="",
+    )
+    resolved_retention_amount = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_retention_amount(retention_amount),
+        fallback=None,
+    )
+    resolved_retention_rate = _collect_wizard_field(
+        field_errors,
+        lambda: _validate_retention_rate(retention_rate),
+        fallback=None,
+    )
+    return (
+        _ValidatedWizardFields(
+            country=resolved_country,
+            nif=resolved_nif,
+            name=resolved_name,
+            number=resolved_number,
+            invoice_date=resolved_date,
+            operation_date=resolved_operation_date,
+            taxable_base=resolved_base,
+            iva_rate=resolved_rate,
+            currency=resolved_currency,
+            retention_amount=resolved_retention_amount,
+            retention_rate=resolved_retention_rate,
+        ),
+        field_errors,
+    )
+
+
+def _raise_wizard_field_errors(field_errors: list[InvoiceWizardFieldError]) -> None:
+    if not field_errors:
+        return
+    joined = "; ".join(f"{err.field}: {err.reason}" for err in field_errors)
+    raise InvoiceValidationError(
+        f"invoice wizard refused {len(field_errors)} field(s): {joined}",
+        translated_message="application.invoices.wizard.errors.field_errors",
+        context={
+            "field_count": str(len(field_errors)),
+            "fields": ", ".join(err.field for err in field_errors),
+            "detail": joined,
+        },
+    )
+
+
+def _require_wizard_core_fields(fields: _ValidatedWizardFields) -> tuple[date, Decimal]:
+    resolved_date = fields.invoice_date
+    resolved_base = fields.taxable_base
+    if resolved_date is None or resolved_base is None:
+        raise InvoiceValidationError(
+            "the invoice wizard recorded no field error yet resolved neither an issue date nor a taxable base",
+        )
+    return resolved_date, resolved_base
+
+
+def _build_wizard_invoice(
+    *,
+    bucket_id: str,
+    kind: InvoiceKind,
+    fields: _ValidatedWizardFields,
+    invoice_date: date,
+    taxable_base: Decimal,
+    iva_category: IvaCategory | None,
+    operation_type: IntracomOperationType | None,
+    notes: str,
+) -> Invoice:
+    try:
+        # Derived once, before construction, so the built candidate and the
+        # persisted record cannot disagree about the category. An
+        # operator-supplied value always wins: this only fills a silence.
+        effective_category = iva_category or _derived_domestic_category(
+            country_code=fields.country,
+            iva_rate=fields.iva_rate,
+            on_date=fields.operation_date or invoice_date,
+        )
+        return build_catalogue_invoice(
+            bucket_id=bucket_id,
+            kind=kind,
+            counterparty_name=fields.name,
+            counterparty_tax_id=fields.nif,
+            counterparty_country=fields.country,
+            invoice_number=fields.number,
+            issued_at=invoice_date,
+            operation_date=fields.operation_date,
+            taxable_base=taxable_base,
+            iva_rate=fields.iva_rate,
+            currency=fields.currency,
+            notes=notes,
+            iva_category=effective_category,
+            operation_type=operation_type,
+            retention_rate=fields.retention_rate,
+            retention_amount=fields.retention_amount,
+        )
+    except (InvoiceValidationError, ValidationError, CoreValidationError) as exc:
+        reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
+        raise InvoiceValidationError(
+            f"invoice wizard refused: {reason}",
+            translated_message="application.invoices.wizard.errors.build_failed",
+            context={"detail": reason},
+        ) from exc
+
+
+def _persist_or_resolve_wizard_invoice(
+    candidate: Invoice,
+    *,
+    repository: InvoiceCatalogueRepositoryProtocol,
+) -> InvoiceWizardResult:
+    catalogue = repository.load()
+    existing = catalogue.get(candidate.invoice_id)
+    if existing is not None:
+        # Guarded idempotent retry (aeat-cli-contract):
+        # the same fields were already submitted and catalogued under this
+        # content-derived identity. Return the existing record; nothing is
+        # re-written and no duplicate is raised.
+        return InvoiceWizardResult(invoice=existing, already_existed=True)
+
+    result = create_catalogue_invoice(
+        invoice=candidate,
+        repository=repository,
+    )
+    return InvoiceWizardResult(invoice=result.invoice, already_existed=False)
+
+
 def create_invoice_via_wizard(
     *,
     bucket_id: str,
@@ -417,133 +619,30 @@ def create_invoice_via_wizard(
         InvoiceValidationError: naming every failing field in one message when
             one or more fields are malformed.
     """
-    field_errors: list[InvoiceWizardFieldError] = []
-    # A pre-validation placeholder, never an output. It is read below by the NIF
-    # check, so a malformed country makes that check run under Spanish rules and
-    # report a second, misleading error -- but the function raises whenever any
-    # field error accumulated, so this value cannot escape. Do not "fix" it to
-    # None: the NIF check needs a country, and the accumulate-then-refuse shape
-    # is what lets one call name every failing field instead of the first.
-    resolved_country = _collect_wizard_field(field_errors, lambda: _validate_country_code(country_code), fallback="ES")
-    resolved_nif = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_counterparty_nif(counterparty_nif, country=resolved_country),
-        fallback="",
+    fields, field_errors = _validate_wizard_fields(
+        counterparty_nif=counterparty_nif,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        currency=currency,
+        operation_date=operation_date,
+        country_code=country_code,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
     )
-    resolved_name = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_counterparty_name(counterparty_name),
-        fallback="",
-    )
-    resolved_number = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_invoice_number(invoice_number),
-        fallback="",
-    )
-    resolved_date = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_invoice_date(invoice_date),
-        fallback=None,
-    )
-    resolved_operation_date = (
-        _collect_wizard_field(
-            field_errors,
-            lambda: _validate_operation_date(operation_date),
-            fallback=None,
-        )
-        if operation_date is not None
-        else None
-    )
-    resolved_base = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_taxable_base(taxable_base),
-        fallback=None,
-    )
-    resolved_rate = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_iva_rate(iva_rate),
-        fallback=None,
-    )
-    resolved_currency = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_currency(currency),
-        fallback="",
-    )
-    resolved_retention_amount = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_retention_amount(retention_amount),
-        fallback=None,
-    )
-    resolved_retention_rate = _collect_wizard_field(
-        field_errors,
-        lambda: _validate_retention_rate(retention_rate),
-        fallback=None,
-    )
-
-    if field_errors:
-        joined = "; ".join(f"{err.field}: {err.reason}" for err in field_errors)
-        raise InvoiceValidationError(
-            f"invoice wizard refused {len(field_errors)} field(s): {joined}",
-            translated_message="application.invoices.wizard.errors.field_errors",
-            context={
-                "field_count": str(len(field_errors)),
-                "fields": ", ".join(err.field for err in field_errors),
-                "detail": joined,
-            },
-        )
-
-    if resolved_date is None or resolved_base is None:
-        raise InvoiceValidationError(
-            "the invoice wizard recorded no field error yet resolved neither an issue date nor a taxable base",
-        )
-
+    _raise_wizard_field_errors(field_errors)
+    resolved_date, resolved_base = _require_wizard_core_fields(fields)
     repo = repository or InvoiceCatalogueRepository(bucket_id=bucket_id)
-
-    try:
-        # Derived once, before both construction sites, so the built candidate
-        # and the persisted record cannot disagree about the category. An
-        # operator-supplied value always wins: this only fills a silence.
-        effective_category = iva_category or _derived_domestic_category(
-            country_code=resolved_country,
-            iva_rate=resolved_rate,
-            on_date=resolved_operation_date or resolved_date,
-        )
-        candidate = build_catalogue_invoice(
-            bucket_id=bucket_id,
-            kind=kind,
-            counterparty_name=resolved_name,
-            counterparty_tax_id=resolved_nif,
-            counterparty_country=resolved_country,
-            invoice_number=resolved_number,
-            issued_at=resolved_date,
-            taxable_base=resolved_base,
-            iva_rate=resolved_rate,
-            currency=resolved_currency,
-            notes=notes,
-            iva_category=effective_category,
-            operation_type=operation_type,
-            retention_rate=resolved_retention_rate,
-            retention_amount=resolved_retention_amount,
-        )
-    except (InvoiceValidationError, ValidationError, CoreValidationError) as exc:
-        reason = str(exc.errors()[0].get("msg", str(exc))) if isinstance(exc, ValidationError) else str(exc)
-        raise InvoiceValidationError(
-            f"invoice wizard refused: {reason}",
-            translated_message="application.invoices.wizard.errors.build_failed",
-            context={"detail": reason},
-        ) from exc
-
-    catalogue = repo.load()
-    existing = catalogue.get(candidate.invoice_id)
-    if existing is not None:
-        # Guarded idempotent retry (aeat-cli-contract):
-        # the same fields were already submitted and catalogued under this
-        # content-derived identity. Return the existing record; nothing is
-        # re-written and no duplicate is raised.
-        return InvoiceWizardResult(invoice=existing, already_existed=True)
-
-    result = create_catalogue_invoice(
-        invoice=candidate,
-        repository=repo,
+    candidate = _build_wizard_invoice(
+        bucket_id=bucket_id,
+        kind=kind,
+        fields=fields,
+        invoice_date=resolved_date,
+        taxable_base=resolved_base,
+        iva_category=iva_category,
+        operation_type=operation_type,
+        notes=notes,
     )
-    return InvoiceWizardResult(invoice=result.invoice, already_existed=False)
+    return _persist_or_resolve_wizard_invoice(candidate, repository=repo)

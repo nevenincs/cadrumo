@@ -5,7 +5,7 @@ Mirrors ``dev.audit.duplication``'s "the runner owns the whole measurement"
 shape: source selection, command construction, execution, timeout handling,
 parsing, and availability classification all live here, and there is
 deliberately no second semgrep invocation anywhere in the tree -- both
-``just check-security`` and ``dev.audit.advisory``'s security dimension call
+``just audit-security`` and ``dev.audit.advisory``'s security dimension call
 :func:`run_security_scan`.
 
 semgrep runs through ``uvx`` (a pinned, ephemeral, network-touching tool
@@ -27,7 +27,7 @@ See Also:
     :mod:`dev.audit.duplication`
         The sibling runner this module's shape is copied from.
     :func:`run_security_scan`
-        The one entry point both ``just check-security`` and
+        The one entry point both ``just audit-security`` and
         ``dev.audit.advisory`` call.
 """
 
@@ -294,7 +294,7 @@ def run_security_scan(
 
 
 def render_console_report(result: SecurityResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:
-    """Render the operator-facing console report for `just check-security`."""
+    """Render the operator-facing console report for `just audit-security`."""
     out = [f"security: {result.headline()}"]
     if result.parse_errors:
         for err in result.parse_errors[: 5 if not full else len(result.parse_errors)]:
@@ -313,7 +313,7 @@ def render_console_report(result: SecurityResult, *, full: bool = False, cap: in
 def main() -> int:
     """Run the security scan and print the reduced console report.
 
-    Always exits 0: matches today's `check-security` behaviour under
+    Always exits 0: matches the `audit-security` advisory contract under
     `--config auto` with no login/policy (verified against the live tool --
     it exits 0 with findings present), so this is a representation change,
     not a new gate.

@@ -498,6 +498,9 @@ def _evaluate_exclusive_use_rule(
     deductible_basis: Decimal,
 ) -> _RentaDeductibilityDecision:
     if context.exclusive_use_confirmed:
+        # Confirmation gates whether the cost is deductible, never what the
+        # deductible cost is.  The basis excludes recoverable input IVA and
+        # includes only the non-recoverable share (PGC NRV 12.ª).
         return _RentaDeductibilityDecision(
             status=RentaDeductibilityStatus.ELIGIBLE,
             reason="deductible",
@@ -666,14 +669,17 @@ def _resolve_statutory_cap(
     return None
 
 
-def _resolve_fixed_statutory_cap(rule: ProportionalityRule, *, context: RentaDeductibilityContext) -> Decimal:
+def _resolve_fixed_statutory_cap(
+    rule: ProportionalityRule,
+    *,
+    context: RentaDeductibilityContext,
+) -> Decimal | None:
+    amount = rule.statutory_cap_eur
+    if amount is None:
+        return None
     if rule.statutory_cap_period is StatutoryCapPeriod.YEAR_PER_PERSON:
-        # The model guarantees this field whenever the fixed amount mode is selected.
-        assert rule.statutory_cap_eur is not None
-        return rule.statutory_cap_eur * Decimal(context.statutory_cap_person_count)
-    # The caller only enters this helper when the amount is present.
-    assert rule.statutory_cap_eur is not None
-    return rule.statutory_cap_eur
+        return amount * Decimal(context.statutory_cap_person_count)
+    return amount
 
 
 def _resolve_daily_statutory_cap(
@@ -681,11 +687,11 @@ def _resolve_daily_statutory_cap(
     *,
     context: RentaDeductibilityContext,
 ) -> Decimal | None:
-    if context.statutory_cap_days is None:
+    amount = rule.statutory_cap_eur_per_day
+    days = context.statutory_cap_days
+    if amount is None or days is None:
         return None
-    # The caller only enters this helper when the daily amount is present.
-    assert rule.statutory_cap_eur_per_day is not None
-    return rule.statutory_cap_eur_per_day * context.statutory_cap_days
+    return amount * days
 
 
 def _resolve_variant_statutory_cap(

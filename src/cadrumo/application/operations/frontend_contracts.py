@@ -417,6 +417,12 @@ def _validate_projection_review_interaction(projection: OperationPublicProjectio
 
 
 def _validate_projection_settlement(projection: OperationPublicProjectionV1) -> None:
+    _validate_projection_settlement_references(projection)
+    _validate_projection_failure(projection)
+    _validate_projection_nonterminal_settlement(projection)
+
+
+def _validate_projection_settlement_references(projection: OperationPublicProjectionV1) -> None:
     references = (projection.result_ref, projection.refusal_ref)
     if all(value is not None for value in references):
         raise ValueError("public projection cannot expose result and refusal references together")
@@ -424,6 +430,9 @@ def _validate_projection_settlement(projection: OperationPublicProjectionV1) -> 
         raise ValueError("successful public projection requires a result reference")
     if projection.terminal_condition is OperationTerminalCondition.REFUSED and projection.refusal_ref is None:
         raise ValueError("refused public projection requires a refusal reference")
+
+
+def _validate_projection_failure(projection: OperationPublicProjectionV1) -> None:
     if (
         projection.terminal_condition is not OperationTerminalCondition.FAILED
         and projection.failure_error_code is not None
@@ -433,6 +442,10 @@ def _validate_projection_settlement(projection: OperationPublicProjectionV1) -> 
         from ...core.errors.error_codes import get_registered_error_code_by_code
 
         get_registered_error_code_by_code(projection.failure_error_code)
+
+
+def _validate_projection_nonterminal_settlement(projection: OperationPublicProjectionV1) -> None:
+    references = (projection.result_ref, projection.refusal_ref)
     if projection.lifecycle is not OperationLifecycle.TERMINAL and (
         any(value is not None for value in references) or projection.failure_error_code is not None
     ):
@@ -461,16 +474,33 @@ def _validate_projection_cancellation_availability(projection: OperationPublicPr
 
 
 def _validate_projection_cancellation_facts(projection: OperationPublicProjectionV1) -> None:
+    _validate_unsupported_cancellation_facts(projection)
+    _validate_cancellation_request_fact(projection)
+    _validate_cancellation_lifecycle(projection)
+    _validate_cancellation_acknowledgement(projection)
+    _validate_cancelled_terminal_fact(projection)
+
+
+def _validate_unsupported_cancellation_facts(projection: OperationPublicProjectionV1) -> None:
     if projection.cancellation is OperationCancellation.UNSUPPORTED and (
         projection.cancellation_requested or projection.cancellation_acknowledged
     ):
         raise ValueError("unsupported cancellation cannot carry request or acknowledgement facts")
+
+
+def _validate_cancellation_request_fact(projection: OperationPublicProjectionV1) -> None:
     if projection.cancellation_requested != (projection.cleanup_deadline_at is not None):
         raise ValueError("public cleanup deadline and cancellation request must be declared together")
+
+
+def _validate_cancellation_lifecycle(projection: OperationPublicProjectionV1) -> None:
     if projection.lifecycle is OperationLifecycle.CANCELLATION_REQUESTED and not projection.cancellation_requested:
         raise ValueError("cancellation-requested lifecycle requires its declared request fact")
     if projection.cancellation_requested and projection.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST:
         raise ValueError("public cancellation request disagrees with the current lifecycle")
+
+
+def _validate_cancellation_acknowledgement(projection: OperationPublicProjectionV1) -> None:
     if projection.cancellation_acknowledged and not projection.cancellation_requested:
         raise ValueError("cancellation acknowledgement requires a cancellation request")
     if projection.cancellation_acknowledged and projection.lifecycle not in {
@@ -478,6 +508,9 @@ def _validate_projection_cancellation_facts(projection: OperationPublicProjectio
         OperationLifecycle.TERMINAL,
     }:
         raise ValueError("cancellation acknowledgement requires settling or terminal lifecycle")
+
+
+def _validate_cancelled_terminal_fact(projection: OperationPublicProjectionV1) -> None:
     if (
         projection.terminal_condition is OperationTerminalCondition.CANCELLED
         and not projection.cancellation_acknowledged
@@ -616,34 +649,60 @@ class OperationPublicEventPageV1(BaseModel):
 
     @model_validator(mode="after")
     def _validate_page(self) -> OperationPublicEventPageV1:
-        if self.requested_cursor > self.anchor_cursor:
-            raise ValueError("public event-page cursor cannot exceed its anchor")
+        _validate_event_page_requested_cursor(self)
         if self.status is OperationReplayStatus.PAGE:
-            if not self.events:
-                raise ValueError("public event page requires at least one event")
-            sequences = tuple(event.sequence for event in self.events)
-            if sequences[0] != self.requested_cursor + 1 or any(
-                current != previous + 1 for previous, current in pairwise(sequences)
-            ):
-                raise ValueError("public event page must be contiguous after the requested cursor")
-            if self.next_cursor != sequences[-1] or self.restart_cursor is not None:
-                raise ValueError("public event page cursor does not match its final row")
+            _validate_event_page_rows(self)
         elif self.status is OperationReplayStatus.CAUGHT_UP:
-            if (
-                self.events
-                or self.requested_cursor != self.anchor_cursor
-                or self.next_cursor != self.anchor_cursor
-                or self.restart_cursor is not None
-            ):
-                raise ValueError("caught-up public event page must equal its observation anchor cursor")
+            _validate_caught_up_event_page(self)
         elif self.status in RESYNCHRONIZING_REPLAY_STATUSES:
-            if self.events or self.restart_cursor is None or self.next_cursor != self.restart_cursor:
-                raise ValueError("resynchronizing public event page requires one restart cursor and no rows")
-            if self.restart_cursor <= self.requested_cursor:
-                raise ValueError("public restart cursor must advance beyond the requested cursor")
-        if self.next_cursor > self.anchor_cursor or any(event.sequence > self.anchor_cursor for event in self.events):
-            raise ValueError("public event rows cannot exceed their observation anchor")
+            _validate_resynchronizing_event_page(self)
+        _validate_event_page_anchor_bounds(self)
         return self
+
+
+def _validate_event_page_requested_cursor(page: OperationPublicEventPageV1) -> None:
+    """Require an observation page to start at or before its captured anchor."""
+    if page.requested_cursor > page.anchor_cursor:
+        raise ValueError("public event-page cursor cannot exceed its anchor")
+
+
+def _validate_event_page_rows(page: OperationPublicEventPageV1) -> None:
+    """Validate non-empty, contiguous rows and their final continuation cursor."""
+    if not page.events:
+        raise ValueError("public event page requires at least one event")
+    sequences = tuple(event.sequence for event in page.events)
+    if sequences[0] != page.requested_cursor + 1 or any(
+        current != previous + 1 for previous, current in pairwise(sequences)
+    ):
+        raise ValueError("public event page must be contiguous after the requested cursor")
+    if page.next_cursor != sequences[-1] or page.restart_cursor is not None:
+        raise ValueError("public event page cursor does not match its final row")
+
+
+def _validate_caught_up_event_page(page: OperationPublicEventPageV1) -> None:
+    """Require caught-up pages to carry only their observation anchor cursor."""
+    if (
+        page.events
+        or page.requested_cursor != page.anchor_cursor
+        or page.next_cursor != page.anchor_cursor
+        or page.restart_cursor is not None
+    ):
+        raise ValueError("caught-up public event page must equal its observation anchor cursor")
+
+
+def _validate_resynchronizing_event_page(page: OperationPublicEventPageV1) -> None:
+    """Require expired or compacted pages to carry an advancing restart cursor."""
+    restart_cursor = page.restart_cursor
+    if page.events or restart_cursor is None or page.next_cursor != restart_cursor:
+        raise ValueError("resynchronizing public event page requires one restart cursor and no rows")
+    if restart_cursor <= page.requested_cursor:
+        raise ValueError("public restart cursor must advance beyond the requested cursor")
+
+
+def _validate_event_page_anchor_bounds(page: OperationPublicEventPageV1) -> None:
+    """Keep both the continuation cursor and every row within the observation anchor."""
+    if page.next_cursor > page.anchor_cursor or any(event.sequence > page.anchor_cursor for event in page.events):
+        raise ValueError("public event rows cannot exceed their observation anchor")
 
 
 class OperationObservationSuccessV1(BaseModel):

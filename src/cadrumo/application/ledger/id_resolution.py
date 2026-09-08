@@ -84,6 +84,12 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
             candidates so the operator can disambiguate by lengthening
             their prefix.
     """
+    normalized = _normalise_transaction_id_prefix(prefix)
+    return _resolve_normalised_transaction_id(prefix, normalized, transaction_ids)
+
+
+def _normalise_transaction_id_prefix(prefix: str) -> str:
+    """Validate and normalise an operator-supplied transaction-id prefix."""
     normalized = (prefix or "").strip().lower()
     if not normalized:
         raise TransactionIdPrefixError(
@@ -99,7 +105,12 @@ def resolve_transaction_id(prefix: str, transaction_ids: Iterable[str]) -> str:
             translated_message="application.ledger.errors.transaction_id_prefix_too_long",
             context={"prefix": repr(prefix), "max_length": _FULL_ID_LENGTH},
         )
-    matches: list[str] = sorted(tx_id for tx_id in transaction_ids if tx_id.startswith(normalized))
+    return normalized
+
+
+def _resolve_normalised_transaction_id(prefix: str, normalized: str, transaction_ids: Iterable[str]) -> str:
+    """Resolve a validated prefix against one iterable of canonical ids."""
+    matches = sorted(tx_id for tx_id in transaction_ids if tx_id.startswith(normalized))
     if not matches:
         raise TransactionIdPrefixError(
             translated_message="application.ledger.errors.transaction_id_prefix_no_match",
@@ -125,6 +136,18 @@ def _lineage_handles(transaction: Transaction) -> tuple[str, ...]:
     :class:`cadrumo.domain.transactions.TransactionEditLineageEntry` chain.
     """
     return transaction_modelo_source_ids(transaction)
+
+
+def _lineage_match_heirs(normalized: str, catalogue: TransactionCatalogue) -> set[str]:
+    """Return current ids whose historical handles match ``normalized``."""
+    current_ids = {transaction.transaction_id for transaction in catalogue.values()}
+    heirs = {
+        handle: transaction.transaction_id
+        for transaction in catalogue.values()
+        for handle in _lineage_handles(transaction)
+        if handle != transaction.transaction_id and handle.startswith(normalized)
+    }
+    return {current for current in heirs.values() if current in current_ids}
 
 
 def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue) -> str:
@@ -178,16 +201,8 @@ def resolve_lineage_transaction_id(prefix: str, catalogue: TransactionCatalogue)
             # original refusal unchanged. Discriminate on the typed error key
             # rather than the rendered (now localised) message text.
             raise
-        normalized = prefix.strip().lower()
-        heirs: dict[str, str] = {}
-        for transaction in catalogue.values():
-            for handle in _lineage_handles(transaction):
-                if handle == transaction.transaction_id:
-                    continue
-                if handle.startswith(normalized):
-                    heirs[handle] = transaction.transaction_id
-        current_ids = {transaction.transaction_id for transaction in catalogue.values()}
-        resolved = {current for current in heirs.values() if current in current_ids}
+        normalized = _normalise_transaction_id_prefix(prefix)
+        resolved = _lineage_match_heirs(normalized, catalogue)
         if not resolved:
             raise
         if len(resolved) > 1:

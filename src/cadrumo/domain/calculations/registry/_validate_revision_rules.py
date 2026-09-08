@@ -156,7 +156,18 @@ def validate_periodic_deadline_completeness(
     The shared filing-schedule cadence compatibility gate validates the period
     vocabulary; it is not replaced by a deadline-specific parser or table.
     """
-    candidate_periods = sorted(
+    candidate_periods = _periodic_schedule_periods(modelo)
+    failures: list[str] = []
+    for filing_year in supported_filing_years:
+        for period in candidate_periods:
+            failure = _periodic_deadline_completeness_failure(modelo, filing_year, period)
+            if failure is not None:
+                failures.append(failure)
+    return failures
+
+
+def _periodic_schedule_periods(modelo: ModeloDefinition) -> list[str]:
+    return sorted(
         {
             period
             for revision in modelo.revisions.values()
@@ -165,32 +176,45 @@ def validate_periodic_deadline_completeness(
             for period in schedule.periods
         },
     )
-    failures: list[str] = []
-    for filing_year in supported_filing_years:
-        for period in candidate_periods:
-            try:
-                selected = select_revision(modelo, filing_year=filing_year, period=period)
-            except RegistrySnapshotError:
-                continue
-            selected_schedules = tuple(
-                schedule
-                for schedule in selected.filing_schedules
-                if schedule.is_periodic and period in schedule.periods
-            )
-            if not selected_schedules:
-                continue
-            if any(
-                window.filing_year == filing_year
-                and window.period.registry_token == period
-                and not filing_schedule_period_kind_mismatches(window.period_kind, (period,))
-                for window in selected.deadline_windows
-            ):
-                continue
-            failures.append(
-                f"modelo {modelo.id} revision {selected.id}: periodic filing schedule coordinate "
-                f"({filing_year}, {period!r}) has no deadline window",
-            )
-    return failures
+
+
+def _periodic_deadline_completeness_failure(
+    modelo: ModeloDefinition,
+    filing_year: int,
+    period: str,
+) -> str | None:
+    try:
+        selected = select_revision(modelo, filing_year=filing_year, period=period)
+    except RegistrySnapshotError:
+        return None
+    if not _selected_revision_has_periodic_schedule(selected, period):
+        return None
+    if _selected_revision_has_deadline_window(selected, filing_year, period):
+        return None
+    return (
+        f"modelo {modelo.id} revision {selected.id}: periodic filing schedule coordinate "
+        f"({filing_year}, {period!r}) has no deadline window"
+    )
+
+
+def _selected_revision_has_periodic_schedule(
+    revision: ModeloRevision,
+    period: str,
+) -> bool:
+    return any(schedule.is_periodic and period in schedule.periods for schedule in revision.filing_schedules)
+
+
+def _selected_revision_has_deadline_window(
+    revision: ModeloRevision,
+    filing_year: int,
+    period: str,
+) -> bool:
+    return any(
+        window.filing_year == filing_year
+        and window.period.registry_token == period
+        and not filing_schedule_period_kind_mismatches(window.period_kind, (period,))
+        for window in revision.deadline_windows
+    )
 
 
 def validate_informative_class_invariant(modelo: ModeloDefinition) -> list[str]:

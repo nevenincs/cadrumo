@@ -40,9 +40,7 @@ def _describe(_identifier: str) -> dict[str, object]:
 
 
 def _report(suppressions: list[da.Suppression], hits: dict = HIT) -> da.Report:
-    return da.build_report(
-        [COORD], hits, suppressions, today=TODAY, describe_fn=_describe
-    )
+    return da.build_report([COORD], hits, suppressions, today=TODAY, describe_fn=_describe)
 
 
 def test_a_finding_fails_the_gate() -> None:
@@ -66,9 +64,7 @@ def test_a_live_suppression_accepts_the_finding_visibly() -> None:
 
 
 def test_a_suppression_matches_an_alias() -> None:
-    live = da.Suppression(
-        "CVE-2024-56201", "same advisory, CVE id", dt.date(2099, 1, 1)
-    )
+    live = da.Suppression("CVE-2024-56201", "same advisory, CVE id", dt.date(2099, 1, 1))
     assert _report([live]).exit_code == da.EXIT_OK
 
 

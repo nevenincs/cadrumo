@@ -3,15 +3,23 @@ tags:
   - '#plan'
   - '#justfile-redesign'
 date: '2026-06-09'
-modified: '2026-07-17'
-body_hash: 'sha256:ae30def5753ef4e4652f76084bd685d13e8ef1177d5d281ec3c95349063778e4'
 tier: L1
 related:
   - '[[2026-06-09-justfile-redesign-adr]]'
   - '[[2026-06-09-justfile-redesign-research]]'
+modified: '2026-09-08'
+body_hash: 'sha256:8d8afd917a0ed2145b4c8f4a6abc97643dc94dc428f200ef04478e113e8fec90'
 ---
 
 # `justfile-redesign` `implementation` plan
+
+Redesign the root build harness and project quality checks to enforce naming prefix standards, script separation, verify-only hooks, and programmatic RAG semantic audits.
+
+## Description
+
+This plan implements the build harness and project quality gate redesign authorized by `2026-06-09-justfile-redesign-adr`. It restructures the `just` recipe taxonomy under standardized prefixes, extracts inline python calculations into discrete scripts with zero-noise success filtering, resolves pre-existing pytest marker contradictions, and implements programmatic semantic audits with silent-on-success assertions.
+
+## Steps
 
 - [x] `S01` - extract complexity calculation heredocs with zero-noise success filtering; `scripts/audit_complexity.py`.
 - [x] `S02` - implement programmatic semantic audit checks with silent-on-success assertions; `scripts/audit_semantic.py`.
@@ -60,13 +68,14 @@ related:
 - [x] `S45` - Audit docs-check output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
 - [x] `S46` - Relocate scripts/ dev tooling into dev.quality and dev.audit submodules with cohabiting tests; `rewire recipes, ruff ignores, and the utf8/ratchet gates; `dev/quality, dev/audit, justfile`.
 - [x] `S47` - Relocate docs/tools into dev.docs (build, cli_reference, apidocs) with cohabiting tests; `rewire conf.py, recipes, ruff ignores, and the docs rules; `dev/docs, docs/conf.py, justfile`.
-Redesign the root build harness and project quality checks to enforce naming prefix standards, script separation, verify-only hooks, and programmatic RAG semantic audits.
-
-## Description
-
-This plan implements the build harness and project quality gate redesign authorized by `2026-06-09-justfile-redesign-adr`. It restructures the `just` recipe taxonomy under standardized prefixes, extracts inline python calculations into discrete scripts with zero-noise success filtering, resolves pre-existing pytest marker contradictions, and implements programmatic semantic audits with silent-on-success assertions.
-
-## Steps
+- [ ] `S48` - Consolidate redundant recipes and reorganize command groups; `justfile`.
+- [ ] `S49` - Update initialization selector and documentation after removing the empty Node phase; `dev/init`.
+- [ ] `S50` - Migrate workflow calls to parameterized audit output; `.github/workflows/code-health-report.yml`.
+- [ ] `S51` - Rename advisory security wiring without presenting it as a blocking check; `dev/audit and dev/quality`.
+- [ ] `S52` - Update contributor and container command references to canonical setup recipes; `CONTRIBUTING.md and .devcontainer`.
+- [ ] `S53` - Update recipe-contract tests and reachability expectations; `dev tests`.
+- [ ] `S54` - Run focused justfile, workflow, initialization, and quality-suite verification; `justfile consumers`.
+- [ ] `S55` - Review the final command surface for semantic duplication and CI parity; `justfile and workflows`.
 
 ## Parallelization
 

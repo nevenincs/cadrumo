@@ -23,7 +23,9 @@ _OPERATOR_BULLET = re.compile(r"^\* ``(.+?)``", re.MULTILINE)
 def _documented_operators() -> frozenset[str]:
     """The operator tokens the module docstring lists as handled."""
     assert _streams.__doc__ is not None, "the module docstring is the documentation under test"
-    return frozenset(_OPERATOR_BULLET.findall(_streams.__doc__))
+    # `findall` is typed `list[Any]`; one capture group means every element
+    # is the `str` this frozenset is declared to hold.
+    return frozenset(str(token) for token in _OPERATOR_BULLET.findall(_streams.__doc__))
 
 
 def _walked_operators() -> frozenset[str]:

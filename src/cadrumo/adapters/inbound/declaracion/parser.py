@@ -43,6 +43,7 @@ from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.schema_extraction import (
+    BboxAnchorSpec,
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
@@ -385,6 +386,33 @@ def _resolve_template(
             modelo and año.
         DeclaracionParseError: When an override conflicts with the detected metadata.
     """
+    explicit = _complete_template_override(
+        modelo_override=modelo_override,
+        template_revision_override=template_revision_override,
+        año_override=año_override,
+    )
+    if explicit is not None:
+        return explicit
+
+    detected = detect_template_revision_from_pages(pages) if pages is not None else detect_template_revision(path)
+    if detected is None:
+        return _template_from_missing_detection(
+            modelo_override=modelo_override,
+            template_revision_override=template_revision_override,
+            año_override=año_override,
+        )
+
+    _validate_template_overrides(detected, modelo_override=modelo_override, año_override=año_override)
+    return _apply_template_revision_override(detected, template_revision_override)
+
+
+def _complete_template_override(
+    *,
+    modelo_override: str | None,
+    template_revision_override: str | None,
+    año_override: int | None,
+) -> TemplateRevision | None:
+    """Build the highest-precedence template when all three coordinates are explicit."""
     if modelo_override and año_override and template_revision_override:
         return TemplateRevision(
             modelo=modelo_override,
@@ -392,21 +420,36 @@ def _resolve_template(
             revision=template_revision_override,
             detected_from="explicit_override",
         )
+    return None
 
-    detected = detect_template_revision_from_pages(pages) if pages is not None else detect_template_revision(path)
-    if detected is None:
-        if not modelo_override or not año_override:
-            raise TemplateNotDetectedError(
-                translated_message="adapters.inbound.declaracion.errors.template_not_detected",
-                context={"path": _INPUT_PDF_SOURCE_LABEL},
-            )
-        return TemplateRevision(
-            modelo=modelo_override,
-            año=año_override,
-            revision=template_revision_override or f"{año_override}.01",
-            detected_from="explicit_override",
+
+def _template_from_missing_detection(
+    *,
+    modelo_override: str | None,
+    template_revision_override: str | None,
+    año_override: int | None,
+) -> TemplateRevision:
+    """Resolve the explicit fallback or retain the template-not-detected refusal."""
+    if not modelo_override or not año_override:
+        raise TemplateNotDetectedError(
+            translated_message="adapters.inbound.declaracion.errors.template_not_detected",
+            context={"path": _INPUT_PDF_SOURCE_LABEL},
         )
+    return TemplateRevision(
+        modelo=modelo_override,
+        año=año_override,
+        revision=template_revision_override or f"{año_override}.01",
+        detected_from="explicit_override",
+    )
 
+
+def _validate_template_overrides(
+    detected: TemplateRevision,
+    *,
+    modelo_override: str | None,
+    año_override: int | None,
+) -> None:
+    """Refuse explicit modelo/year overrides that contradict detected metadata."""
     if modelo_override and modelo_override != detected.modelo:
         raise DeclaracionParseError(
             translated_message="adapters.inbound.declaracion.errors.modelo_conflict",
@@ -418,6 +461,12 @@ def _resolve_template(
             context={"year": año_override, "detected": detected.año},
         )
 
+
+def _apply_template_revision_override(
+    detected: TemplateRevision,
+    template_revision_override: str | None,
+) -> TemplateRevision:
+    """Replace only the revision when its explicit override survives metadata checks."""
     if template_revision_override:
         return TemplateRevision(
             modelo=detected.modelo,
@@ -1059,43 +1108,13 @@ def _find_bbox_casilla_hits(
     Ambiguous matches (multiple anchors on a page) are returned as multiple
     entries so the caller can detect and report them as ``ambiguous``.
     """
-    anchor_spec = target.bbox_anchor
-    if anchor_spec is None:
-        raise DeclaracionParseError(
-            f"extraction target {target.casilla_id!r} takes the bbox-anchored path without a bbox anchor",
-        )
+    anchor_spec = _require_bbox_anchor(target)
     box_re = re.compile(anchor_spec.box_number_pattern)
 
     hits: list[tuple[int, str]] = []
 
     for page_index, words in enumerate(pages_words, start=1):
-        if not words:
-            continue
-
-        # When column_anchor is set, restrict to words in the column x-range.
-        col_x_min: float | None = None
-        col_x_max: float | None = None
-        if anchor_spec.column_anchor:
-            col_x_min, col_x_max = _find_column_x_range(words, anchor_spec.column_anchor)
-
-        anchor_words = [
-            w
-            for w in words
-            if box_re.fullmatch(w["text"])
-            and (anchor_spec.anchor_x_min is None or w["x0"] >= anchor_spec.anchor_x_min)
-            and (anchor_spec.anchor_x_max is None or w["x0"] <= anchor_spec.anchor_x_max)
-            and (col_x_min is None or col_x_max is None or col_x_min <= w["x0"] <= col_x_max)
-        ]
-
-        for anchor_word in anchor_words:
-            value_word = _resolve_value_word(
-                words,
-                anchor_word,
-                anchor_spec.value_offset,
-                value_x_max=anchor_spec.value_x_max,
-            )
-            if value_word is not None:
-                hits.append((page_index, value_word["text"]))
+        hits.extend(_find_bbox_page_hits(page_index, words, box_re=box_re, anchor_spec=anchor_spec))
 
     return hits
 
@@ -1105,6 +1124,67 @@ _BBOX_Y_TOLERANCE: float = 3.0
 
 _BBOX_X_GAP_TOLERANCE: float = 150.0
 """Maximum horizontal distance (points) to the right for ``right_of_number`` search."""
+
+
+def _require_bbox_anchor(target: ExtractionTargetDefinition) -> BboxAnchorSpec:
+    """Require a bbox target to carry the spatial anchor its strategy names."""
+    anchor_spec = target.bbox_anchor
+    if anchor_spec is None:
+        raise DeclaracionParseError(
+            f"extraction target {target.casilla_id!r} takes the bbox-anchored path without a bbox anchor",
+        )
+    return anchor_spec
+
+
+def _find_bbox_page_hits(
+    page_index: int,
+    words: list[_PdfWord],
+    *,
+    box_re: re.Pattern[str],
+    anchor_spec: BboxAnchorSpec,
+) -> list[tuple[int, str]]:
+    """Resolve every matching bbox anchor on one page into value words."""
+    if not words:
+        return []
+    col_x_min, col_x_max = _bbox_column_bounds(words, anchor_spec)
+    anchor_words = _bbox_anchor_words(words, box_re, anchor_spec, col_x_min=col_x_min, col_x_max=col_x_max)
+    hits: list[tuple[int, str]] = []
+    for anchor_word in anchor_words:
+        value_word = _resolve_value_word(
+            words,
+            anchor_word,
+            anchor_spec.value_offset,
+            value_x_max=anchor_spec.value_x_max,
+        )
+        if value_word is not None:
+            hits.append((page_index, value_word["text"]))
+    return hits
+
+
+def _bbox_column_bounds(words: list[_PdfWord], anchor_spec: BboxAnchorSpec) -> tuple[float | None, float | None]:
+    """Return the optional column constraint for one page's bbox anchors."""
+    if anchor_spec.column_anchor:
+        return _find_column_x_range(words, anchor_spec.column_anchor)
+    return None, None
+
+
+def _bbox_anchor_words(
+    words: list[_PdfWord],
+    box_re: re.Pattern[str],
+    anchor_spec: BboxAnchorSpec,
+    *,
+    col_x_min: float | None,
+    col_x_max: float | None,
+) -> list[_PdfWord]:
+    """Select box-number words inside the target's configured spatial bounds."""
+    return [
+        word
+        for word in words
+        if box_re.fullmatch(word["text"])
+        and (anchor_spec.anchor_x_min is None or word["x0"] >= anchor_spec.anchor_x_min)
+        and (anchor_spec.anchor_x_max is None or word["x0"] <= anchor_spec.anchor_x_max)
+        and (col_x_min is None or col_x_max is None or col_x_min <= word["x0"] <= col_x_max)
+    ]
 
 
 def _resolve_value_word(
@@ -1130,52 +1210,71 @@ def _resolve_value_word(
         The matched value word, or ``None`` if no candidate satisfies the offset
         and proximity constraints.
     """
-    anchor_top = anchor_word["top"]
-    anchor_x1 = anchor_word["x1"]
-
     if value_offset == "right_of_number":
-        # Find the word on the same y-row to the right of the anchor with the
-        # smallest x-gap (closest word), within a reasonable horizontal distance.
-        candidates = [
-            w
-            for w in words
-            if abs(w["top"] - anchor_top) <= _BBOX_Y_TOLERANCE
-            and w["x0"] > anchor_x1
-            and (w["x0"] - anchor_x1) <= _BBOX_X_GAP_TOLERANCE
-            and (value_x_max is None or w["x0"] <= value_x_max)
-        ]
-        if not candidates:
-            return None
-        return min(candidates, key=lambda w: w["x0"])
+        return _resolve_right_value_word(words, anchor_word, value_x_max=value_x_max)
 
     if value_offset == "left_of_number":
-        anchor_x0 = anchor_word["x0"]
-        candidates = [
-            w
-            for w in words
-            if abs(w["top"] - anchor_top) <= _BBOX_Y_TOLERANCE
-            and w["x1"] < anchor_x0
-            and (anchor_x0 - w["x1"]) <= _BBOX_X_GAP_TOLERANCE
-        ]
-        if not candidates:
-            return None
-        return max(candidates, key=lambda w: w["x1"])
+        return _resolve_left_value_word(words, anchor_word)
 
     if value_offset == "above_number":
-        anchor_x0 = anchor_word["x0"]
-        anchor_x1_val = anchor_word["x1"]
-        candidates = [
-            w
-            for w in words
-            if w["bottom"] < anchor_top
-            and w["x0"] >= anchor_x0 - _BBOX_Y_TOLERANCE
-            and w["x1"] <= anchor_x1_val + _BBOX_Y_TOLERANCE
-        ]
-        if not candidates:
-            return None
-        return max(candidates, key=lambda w: w["bottom"])
+        return _resolve_above_value_word(words, anchor_word)
 
     return None  # pragma: no cover — exhaustive via Literal type
+
+
+def _resolve_right_value_word(
+    words: list[_PdfWord],
+    anchor_word: _PdfWord,
+    *,
+    value_x_max: float | None,
+) -> _PdfWord | None:
+    """Choose the closest same-row word to the right of a box number."""
+    anchor_top = anchor_word["top"]
+    anchor_x1 = anchor_word["x1"]
+    candidates = [
+        word
+        for word in words
+        if abs(word["top"] - anchor_top) <= _BBOX_Y_TOLERANCE
+        and word["x0"] > anchor_x1
+        and (word["x0"] - anchor_x1) <= _BBOX_X_GAP_TOLERANCE
+        and (value_x_max is None or word["x0"] <= value_x_max)
+    ]
+    if not candidates:
+        return None
+    return min(candidates, key=lambda word: word["x0"])
+
+
+def _resolve_left_value_word(words: list[_PdfWord], anchor_word: _PdfWord) -> _PdfWord | None:
+    """Choose the closest same-row word to the left of a box number."""
+    anchor_top = anchor_word["top"]
+    anchor_x0 = anchor_word["x0"]
+    candidates = [
+        word
+        for word in words
+        if abs(word["top"] - anchor_top) <= _BBOX_Y_TOLERANCE
+        and word["x1"] < anchor_x0
+        and (anchor_x0 - word["x1"]) <= _BBOX_X_GAP_TOLERANCE
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda word: word["x1"])
+
+
+def _resolve_above_value_word(words: list[_PdfWord], anchor_word: _PdfWord) -> _PdfWord | None:
+    """Choose the nearest vertically preceding word within the anchor column."""
+    anchor_top = anchor_word["top"]
+    anchor_x0 = anchor_word["x0"]
+    anchor_x1 = anchor_word["x1"]
+    candidates = [
+        word
+        for word in words
+        if word["bottom"] < anchor_top
+        and word["x0"] >= anchor_x0 - _BBOX_Y_TOLERANCE
+        and word["x1"] <= anchor_x1 + _BBOX_Y_TOLERANCE
+    ]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda word: word["bottom"])
 
 
 def _find_column_x_range(

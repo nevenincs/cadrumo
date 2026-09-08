@@ -37,7 +37,6 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         "check-all",
         "check-rag",
         "check-semantic",
-        "check-security",
         "check-corpus-text",
         "check-registry",
     }

@@ -178,17 +178,19 @@ def _load_revision(*, modelo: str, filing_year: int, period: Period) -> ModeloRe
         ) from exc
 
 
-def _canonical_casilla_values[CasillaKey](
-    *,
-    revision: ModeloRevision,
-    casilla_values: Mapping[CasillaKey, object],
-) -> dict[CasillaId, Decimal]:
+def _require_local_observation_values[CasillaKey](casilla_values: Mapping[CasillaKey, object]) -> None:
+    """Require at least one operator value before touching registry state."""
     if not casilla_values:
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
             context={"casilla_value_count": 0},
         )
 
+
+def _canonicalize_local_observation_values[CasillaKey](
+    casilla_values: Mapping[CasillaKey, object],
+) -> tuple[dict[CasillaId, Decimal], list[str], list[str]]:
+    """Separate canonical Decimal rows from malformed input diagnostics."""
     canonical: dict[CasillaId, Decimal] = {}
     malformed: list[str] = []
     non_decimal: list[str] = []
@@ -202,7 +204,16 @@ def _canonical_casilla_values[CasillaKey](
             non_decimal.append(casilla_id)
             continue
         canonical[casilla_id] = value
+    return canonical, malformed, non_decimal
 
+
+def _raise_local_observation_input_errors(
+    *,
+    revision: ModeloRevision,
+    malformed: list[str],
+    non_decimal: list[str],
+) -> None:
+    """Raise canonical boundary diagnostics in their original precedence."""
     if malformed:
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
@@ -214,31 +225,46 @@ def _canonical_casilla_values[CasillaKey](
             context={"casillas": ",".join(sorted(non_decimal)), "revision_id": revision.id},
         )
 
+
+def _raise_unknown_local_observation_casillas(
+    *,
+    revision: ModeloRevision,
+    canonical: Mapping[CasillaId, Decimal],
+) -> None:
+    """Reject undeclared ids and explain printed-number ambiguity."""
     unknown = undeclared_casilla_ids(revision, canonical)
-    if unknown:
-        noncanonical = {
-            casilla_id: targets
-            for casilla_id in unknown
-            if (targets := casilla_noncanonical_reference_targets(revision, casilla_id))
-        }
-        if noncanonical:
-            details = "; ".join(
-                format_noncanonical_casilla_reference(casilla_id, targets)
-                for casilla_id, targets in sorted(noncanonical.items())
-            )
-            raise ModeloLocalObservationError(
-                translated_message="errors.error.error_modelos",
-                context={
-                    "casillas": ",".join(sorted(noncanonical)),
-                    "revision_id": revision.id,
-                    "noncanonical_reference_targets": details,
-                },
-            )
+    if not unknown:
+        return
+    noncanonical = {
+        casilla_id: targets
+        for casilla_id in unknown
+        if (targets := casilla_noncanonical_reference_targets(revision, casilla_id))
+    }
+    if noncanonical:
+        details = "; ".join(
+            format_noncanonical_casilla_reference(casilla_id, targets)
+            for casilla_id, targets in sorted(noncanonical.items())
+        )
         raise ModeloLocalObservationError(
             translated_message="errors.error.error_modelos",
-            context={"casillas": ",".join(unknown), "revision_id": revision.id},
+            context={
+                "casillas": ",".join(sorted(noncanonical)),
+                "revision_id": revision.id,
+                "noncanonical_reference_targets": details,
+            },
         )
+    raise ModeloLocalObservationError(
+        translated_message="errors.error.error_modelos",
+        context={"casillas": ",".join(unknown), "revision_id": revision.id},
+    )
 
+
+def _raise_non_numeric_local_observation_casillas(
+    *,
+    revision: ModeloRevision,
+    canonical: Mapping[CasillaId, Decimal],
+) -> None:
+    """Reject canonical ids whose registry declaration is not numeric."""
     declared = casillas_by_id(revision)
     non_numeric = sorted(
         casilla_id for casilla_id in canonical if declared[casilla_id].data_type not in NUMERIC_CASILLA_DATA_TYPES
@@ -248,6 +274,24 @@ def _canonical_casilla_values[CasillaKey](
             translated_message="errors.error.error_modelos",
             context={"casillas": ",".join(non_numeric), "revision_id": revision.id},
         )
+
+
+def _canonical_casilla_values[CasillaKey](
+    *,
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaKey, object],
+) -> dict[CasillaId, Decimal]:
+    """Validate and return registry-canonical numeric local observation values."""
+    _require_local_observation_values(casilla_values)
+    canonical, malformed, non_decimal = _canonicalize_local_observation_values(casilla_values)
+    _raise_local_observation_input_errors(
+        revision=revision,
+        malformed=malformed,
+        non_decimal=non_decimal,
+    )
+    _raise_unknown_local_observation_casillas(revision=revision, canonical=canonical)
+    _raise_non_numeric_local_observation_casillas(revision=revision, canonical=canonical)
+
     return canonical
 
 

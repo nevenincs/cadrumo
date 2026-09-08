@@ -156,31 +156,65 @@ class RegistryClosureLimb(_ClosureModel):
     @model_validator(mode="after")
     def _require_fail_closed_outcome(self) -> RegistryClosureLimb:
         """Require evidence for success and a responsible refusal for every other result."""
-        evidence_ids = tuple((item.authority, item.locator) for item in self.evidence)
-        if len(set(evidence_ids)) != len(evidence_ids):
-            raise ValueError("closure limb evidence locators must be unique")
-        if self.outcome == "satisfied":
-            if not self.evidence:
-                raise ValueError("satisfied closure limb requires evidence")
-            if self.refusal is not None:
-                raise ValueError("satisfied closure limb cannot carry a refusal")
+        _require_unique_limb_evidence(self.evidence)
+        if _require_satisfied_limb_contract(self):
             return self
-        if self.outcome == "not_applicable":
-            if self.name != "filing_export":
-                raise ValueError("only the filing-export limb may be not applicable")
-            if self.evidence:
-                raise ValueError("not-applicable filing-export limb cannot carry capability evidence")
-            if self.refusal is not None:
-                raise ValueError("not-applicable filing-export limb cannot carry a refusal")
+        if _require_not_applicable_limb_contract(self):
             return self
-        if self.refusal is None:
-            raise ValueError("unsatisfied closure limb requires an actionable refusal")
-        if self.refusal.disposition.limb != self.name:
-            raise ValueError("closure refusal disposition must name the owning limb")
-        if self.refusal.disposition.state == "resolved":
-            raise ValueError("active closure refusal cannot carry a resolved owner disposition")
-        if self.outcome == "unmeasured" and self.refusal.reason != "unmeasured":
-            raise ValueError("unmeasured closure limb requires the unmeasured refusal reason")
-        if self.outcome == "refused" and self.refusal.reason == "unmeasured":
-            raise ValueError("refused closure limb cannot use the unmeasured refusal reason")
+        _require_unsatisfied_limb_contract(self)
         return self
+
+
+def _require_unique_limb_evidence(evidence: tuple[RegistryClosureEvidence, ...]) -> None:
+    """Reject repeated authority/locator pairs in one closure limb."""
+    evidence_ids = tuple((item.authority, item.locator) for item in evidence)
+    if len(set(evidence_ids)) != len(evidence_ids):
+        raise ValueError("closure limb evidence locators must be unique")
+
+
+def _require_satisfied_limb_contract(limb: RegistryClosureLimb) -> bool:
+    """Validate the evidence-bearing satisfied outcome."""
+    if limb.outcome != "satisfied":
+        return False
+    if not limb.evidence:
+        raise ValueError("satisfied closure limb requires evidence")
+    if limb.refusal is not None:
+        raise ValueError("satisfied closure limb cannot carry a refusal")
+    return True
+
+
+def _require_not_applicable_limb_contract(limb: RegistryClosureLimb) -> bool:
+    """Validate the filing-only not-applicable outcome."""
+    if limb.outcome != "not_applicable":
+        return False
+    if limb.name != "filing_export":
+        raise ValueError("only the filing-export limb may be not applicable")
+    if limb.evidence:
+        raise ValueError("not-applicable filing-export limb cannot carry capability evidence")
+    if limb.refusal is not None:
+        raise ValueError("not-applicable filing-export limb cannot carry a refusal")
+    return True
+
+
+def _require_unsatisfied_limb_contract(limb: RegistryClosureLimb) -> None:
+    """Validate the refusal that explains every unsatisfied outcome."""
+    if limb.refusal is None:
+        raise ValueError("unsatisfied closure limb requires an actionable refusal")
+    _require_refusal_ownership(limb, limb.refusal)
+    _require_refusal_outcome_reason(limb, limb.refusal)
+
+
+def _require_refusal_ownership(limb: RegistryClosureLimb, refusal: RegistryClosureRefusal) -> None:
+    """Require an active refusal to identify this limb and owner disposition."""
+    if refusal.disposition.limb != limb.name:
+        raise ValueError("closure refusal disposition must name the owning limb")
+    if refusal.disposition.state == "resolved":
+        raise ValueError("active closure refusal cannot carry a resolved owner disposition")
+
+
+def _require_refusal_outcome_reason(limb: RegistryClosureLimb, refusal: RegistryClosureRefusal) -> None:
+    """Keep unmeasured and refused outcomes distinct in their refusal reasons."""
+    if limb.outcome == "unmeasured" and refusal.reason != "unmeasured":
+        raise ValueError("unmeasured closure limb requires the unmeasured refusal reason")
+    if limb.outcome == "refused" and refusal.reason == "unmeasured":
+        raise ValueError("refused closure limb cannot use the unmeasured refusal reason")

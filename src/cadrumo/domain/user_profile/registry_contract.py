@@ -290,59 +290,78 @@ def profile_binding_selectors(selector: Mapping[str, object] | BaseModel) -> tup
         # ``source == BindingSourceKind.PROFILE`` binding, which the
         # discriminated-union field validator on ``DataBindingDefinition``
         # (``_coerce_selector`` -> ``ProfileSelector.model_validate``) has
-        # already hydrated into the typed model by construction time. Reading
-        # the typed ATTRIBUTES here -- rather than round-tripping through
-        # ``model_dump()`` into a plain dict and re-reading it with string
-        # literals -- means a field rename on ``ProfileSelector`` (e.g.
-        # ``required_when_profile_key``, declared at ``_bindings.py``) fails
-        # loud (``AttributeError``, and at static analysis time) instead of
-        # the dict-literal read silently and permanently returning ``None``.
-        selectors: list[str] = []
-        profile_key = selector.profile_key
-        if isinstance(profile_key, str):
-            selectors.append(profile_key)
-        selectors.extend(selector.profile_keys)
-        required_when_profile_key = selector.required_when_profile_key
-        if isinstance(required_when_profile_key, str):
-            selectors.append(required_when_profile_key)
-        profile_model = selector.profile_model
-        profile_field = selector.field
-        if isinstance(profile_model, str) and isinstance(profile_field, str):
-            collection = selector.collection
-            if isinstance(collection, str):
-                selectors.append(f"{profile_model}.{collection}.{profile_field}")
-            else:
-                selectors.append(f"{profile_model}.{profile_field}")
-        return tuple(dict.fromkeys(selectors))
+        # already hydrated into the typed model by construction time. The
+        # typed helper deliberately reads ATTRIBUTES rather than round-tripping
+        # through ``model_dump()`` so a renamed field fails loud.
+        return _deduplicate_profile_selectors(_typed_profile_selector_values(selector))
     if isinstance(selector, BaseModel):
         # A different binding-source family's typed selector; its shape never
         # carries a profile key, so no read is needed.
         return ()
-    selectors = []
+    return _deduplicate_profile_selectors(_mapping_profile_selector_values(selector))
+
+
+def _typed_profile_selector_values(selector: ProfileSelector) -> list[str]:
+    """Read selector paths from an already-hydrated profile selector."""
+    selectors: list[str] = []
+    profile_key = selector.profile_key
+    if isinstance(profile_key, str):
+        selectors.append(profile_key)
+    selectors.extend(selector.profile_keys)
+    required_when_profile_key = selector.required_when_profile_key
+    if isinstance(required_when_profile_key, str):
+        selectors.append(required_when_profile_key)
+    model_selector = _profile_model_selector(
+        profile_model=selector.profile_model,
+        collection=selector.collection,
+        field=selector.field,
+    )
+    if model_selector is not None:
+        selectors.append(model_selector)
+    return selectors
+
+
+def _mapping_profile_selector_values(selector: Mapping[str, object]) -> list[str]:
+    """Read selector paths from a raw profile-selector mapping."""
+    selectors: list[str] = []
     profile_key = selector.get("profile_key")
     if isinstance(profile_key, str):
         selectors.append(profile_key)
-    profile_keys = selector.get("profile_keys")
-    if isinstance(profile_keys, tuple):
-        selectors.extend(
-            item
-            # CAST-RATIONALE-PROFILE-KEYS-TUPLE: isinstance narrows to tuple but
-            # not its element type; each item is filtered by isinstance below.
-            # nosemgrep: no-cast-in-domain-application
-            for item in cast(tuple[object, ...], profile_keys)
-            if isinstance(item, str)
-        )
+    selectors.extend(_mapping_profile_keys(selector.get("profile_keys")))
     required_when_profile_key = selector.get("required_when_profile_key")
     if isinstance(required_when_profile_key, str):
         selectors.append(required_when_profile_key)
-    profile_model = selector.get("profile_model")
-    profile_field = selector.get("field")
-    if isinstance(profile_model, str) and isinstance(profile_field, str):
-        collection = selector.get("collection")
-        if isinstance(collection, str):
-            selectors.append(f"{profile_model}.{collection}.{profile_field}")
-        else:
-            selectors.append(f"{profile_model}.{profile_field}")
+    model_selector = _profile_model_selector(
+        profile_model=selector.get("profile_model"),
+        collection=selector.get("collection"),
+        field=selector.get("field"),
+    )
+    if model_selector is not None:
+        selectors.append(model_selector)
+    return selectors
+
+
+def _mapping_profile_keys(value: object) -> tuple[str, ...]:
+    """Return string members from the mapping form's tuple-only key field."""
+    if not isinstance(value, tuple):
+        return ()
+    # CAST-RATIONALE-PROFILE-KEYS-TUPLE: isinstance narrows to tuple but not
+    # its element type; each item is filtered by isinstance below.
+    # nosemgrep: no-cast-in-domain-application
+    return tuple(item for item in cast(tuple[object, ...], value) if isinstance(item, str))
+
+
+def _profile_model_selector(*, profile_model: object, collection: object, field: object) -> str | None:
+    """Build the canonical path for a typed profile-model field."""
+    if not isinstance(profile_model, str) or not isinstance(field, str):
+        return None
+    if isinstance(collection, str):
+        return f"{profile_model}.{collection}.{field}"
+    return f"{profile_model}.{field}"
+
+
+def _deduplicate_profile_selectors(selectors: Iterable[str]) -> tuple[str, ...]:
+    """Preserve declaration order while removing duplicate selector paths."""
     return tuple(dict.fromkeys(selectors))
 
 

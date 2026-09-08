@@ -11,7 +11,7 @@ import unicodedata
 from dataclasses import dataclass
 from html.parser import HTMLParser
 from pathlib import Path
-from typing import Final, NotRequired, TypedDict, override
+from typing import Final, NotRequired, TypedDict, cast, override
 from urllib.parse import urljoin, urlparse
 
 import httpx
@@ -482,7 +482,12 @@ def _load_historical_exclusions() -> _HistoricalExclusions:
     ``urls`` list as the authority for what is classified out, and the window as
     prose that has drifted from it.
     """
-    return json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding=_UTF_8))
+    # `json.loads` is typed `Any`; the cast states the shape this endpoint
+    # is documented to return, in one place instead of at every use.
+    return cast(
+        "_HistoricalExclusions",
+        json.loads(_HISTORICAL_EXCLUSIONS_PATH.read_text(encoding=_UTF_8)),
+    )
 
 
 def _artifact_urls(artifact: _Artifact) -> set[str]:
@@ -499,7 +504,7 @@ def _supported_modelo_from_title(title: str, supported_modelos: set[str]) -> str
     match = re.match(r"^(\d{2,3})\b", title)
     if match is None:
         return None
-    modelo = match.group(1).zfill(3)
+    modelo = str(match.group(1)).zfill(3)
     return modelo if modelo in supported_modelos else None
 
 

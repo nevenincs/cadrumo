@@ -55,7 +55,6 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import (
-    ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
@@ -75,10 +74,8 @@ from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva.flow import IvaFlowDirection
 from ...domain.iva.m303_settlement import m303_annual_settlement_period_order
 from ...domain.iva.prorrata import (
-    ProrrataInputs,
     RegularizacionProrrataDireccion,
     RegularizacionProrrataResult,
-    compute_prorrata_definitiva_anual,
     compute_regularizacion_prorrata_anual,
     especial_mandatory_rule,
     is_especial_mandatory,
@@ -91,7 +88,6 @@ from ...domain.prorrata_register.register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
-    ThreeActiveYearsAggregate,
 )
 from ..aggregation import (
     CalculationSourceContext,
@@ -172,6 +168,12 @@ class _CurrentYearSourcePeriodFeed:
     @property
     def complete(self) -> bool:
         return not self.missing_source_periods
+
+
+@dataclass(frozen=True, slots=True)
+class _ProrrataProvisionalSource:
+    percentage: Decimal | None
+    provenance: tuple[CalculationSourceProvenance, ...]
 
 
 class ProrrataRegularizacionFeedProjection(BaseModel):
@@ -330,88 +332,6 @@ def build_prorrata_missing_provisional_advisory(
         message=message,
         casilla_id=CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
     )
-
-
-class ProrrataInterruptedSeed(BaseModel):
-    """The LIVA art. 105.Cinco resumption seed for an ejercicio after an interruption.
-
-    Carries the global definitive percentage over the aggregate of the last three
-    active años naturales and the :class:`~core.ProrrataProvisionalProvenance`
-    stamping it as the art. 105.Cinco three-year rule. When the register holds
-    fewer than three active years the seed is unresolved (``percentage is None``)
-    and the caller surfaces the insufficient-history advisory rather than assuming
-    a percentage.
-
-    See Also:
-        :func:`build_interrumpida_tres_ultimos_seed`
-            Builds this seed and the optional insufficient-history diagnostic.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    percentage: Decimal | None = None
-    provenance: ProrrataProvisionalProvenance | None = None
-    contributing_ejercicios: tuple[int, ...] = ()
-    aggregate: ThreeActiveYearsAggregate | None = None
-
-    @property
-    def resolved(self) -> bool:
-        """Whether the three-active-years rule resolved a percentage."""
-        return self.percentage is not None
-
-
-def build_interrumpida_tres_ultimos_seed(
-    register: ProrrataRegister,
-    *,
-    ejercicio: int,
-    sector_id: str | None = None,
-) -> tuple[ProrrataInterruptedSeed, CalculationSourceDiagnostic | None]:
-    """Seed a resumed ejercicio from the LIVA art. 105.Cinco three-active-years rule.
-
-    When the immediately prior year is interrupted, seed the resuming ejercicio
-    from the GLOBAL definitive percentage over the AGGREGATE volumes of the last
-    three active años naturales (skipping the interruption gap), computed via
-    :func:`~domain.iva.compute_prorrata_definitiva_anual` over the summed volumes -
-    never the average of the three definitive percentages, never silently the
-    single pre-interruption year. With fewer than three active years no percentage
-    is assumed: a visible insufficient-history advisory is returned instead
-    (``no-silent-under-declaration``).
-
-    See Also:
-        :meth:`~domain.prorrata_register.ProrrataRegister.collect_last_three_active_years`
-            The register walk that aggregates the three active years' volumes.
-    """
-    aggregate = register.collect_last_three_active_years(before_ejercicio=ejercicio, sector_id=sector_id)
-    if not aggregate.sufficient:
-        found = len(aggregate.contributing_ejercicios)
-        years = ", ".join(str(year) for year in aggregate.contributing_ejercicios) or "ninguno"
-        message = (
-            f"Prorrata art. 105.Cinco para {ejercicio}: historial insuficiente para la siembra por interrupción "
-            f"(se requieren tres años naturales con operaciones; se encontraron {found}: {years}). "
-            "Registre o siembre el porcentaje manualmente; no se aplica un porcentaje por defecto."
-        )
-        diagnostic = CalculationSourceDiagnostic(
-            reason="source_issue",
-            source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
-            message=message,
-            casilla_id=CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA,
-        )
-        return ProrrataInterruptedSeed(contributing_ejercicios=aggregate.contributing_ejercicios), diagnostic
-
-    result = compute_prorrata_definitiva_anual(
-        ProrrataInputs(
-            operaciones_con_derecho_deduccion=aggregate.summed_volume_con_derecho,
-            operaciones_sin_derecho_deduccion=aggregate.summed_volume_sin_derecho,
-        ),
-        year=ejercicio,
-    )
-    seed = ProrrataInterruptedSeed(
-        percentage=result.percentage,
-        provenance=ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
-        contributing_ejercicios=aggregate.contributing_ejercicios,
-        aggregate=aggregate,
-    )
-    return seed, None
 
 
 def build_prorrata_declared_volume_divergence_advisory(
@@ -745,6 +665,69 @@ def _stamped_prior_year_definitiva(
     return max(candidates, key=lambda item: (item[0], item[1]))[2]
 
 
+def _observed_source_period_values(
+    repository: CalculationObservationRepository,
+    *,
+    periods: tuple[str, ...],
+    filing_year: int,
+) -> tuple[dict[str, Mapping[CasillaId, Decimal]], tuple[str, ...]]:
+    observed_by_period: dict[str, Mapping[CasillaId, Decimal]] = {}
+    missing_periods: list[str] = []
+    for period in periods:
+        payload = repository.load_observation(Modelo.M303.value, Period.from_year_and_code(filing_year, period))
+        if payload is None:
+            missing_periods.append(period)
+            continue
+        observation = payload.observation
+        if revision_carry_outcome(payload.registry_snapshot_ref).refused:
+            missing_periods.append(period)
+            continue
+        observed_by_period[period] = observation.casilla_values
+    return observed_by_period, tuple(missing_periods)
+
+
+def _regularised_cuota_value(
+    observed_by_period: Mapping[str, Mapping[CasillaId, Decimal]],
+    periods: tuple[str, ...],
+) -> Decimal | None:
+    regularised_periods = periods[:-1] if len(periods) > 1 else periods
+    cuota_values = [
+        period_values[_CUOTA_DEDUCIBLE_TOTAL_ID]
+        for period in regularised_periods
+        if (period_values := observed_by_period.get(period)) is not None and _CUOTA_DEDUCIBLE_TOTAL_ID in period_values
+    ]
+    if len(cuota_values) != len(regularised_periods):
+        return None
+    return sum(cuota_values, Decimal("0"))
+
+
+def _settlement_source_values(
+    observed_by_period: Mapping[str, Mapping[CasillaId, Decimal]],
+    periods: tuple[str, ...],
+) -> dict[CasillaId, Decimal]:
+    settlement_period = next(reversed(periods), None)
+    settlement_values = observed_by_period.get(settlement_period) if settlement_period is not None else None
+    if settlement_values is None:
+        return {}
+    return {
+        casilla_id: value
+        for casilla_id in (_VOLUMEN_CON_DERECHO_ID, _VOLUMEN_TOTAL_ID, _PORCENTAJE_ID)
+        if (value := settlement_values.get(casilla_id)) is not None
+    }
+
+
+def _project_source_period_values(
+    observed_by_period: Mapping[str, Mapping[CasillaId, Decimal]],
+    periods: tuple[str, ...],
+) -> dict[CasillaId, Decimal]:
+    values: dict[CasillaId, Decimal] = {}
+    cuota_value = _regularised_cuota_value(observed_by_period, periods)
+    if cuota_value is not None:
+        values[_CUOTA_DEDUCIBLE_TOTAL_ID] = cuota_value
+    values.update(_settlement_source_values(observed_by_period, periods))
+    return values
+
+
 def _source_period_feed_from_observations(
     repository: CalculationObservationRepository,
     *,
@@ -755,42 +738,17 @@ def _source_period_feed_from_observations(
     if not periods:
         return _CurrentYearSourcePeriodFeed(values={}, source_periods=())
 
-    observed_by_period: dict[str, Mapping[CasillaId, Decimal]] = {}
-    missing_periods: list[str] = []
-    for period in periods:
-        payload = repository.load_observation(Modelo.M303.value, Period.from_year_and_code(filing_year, period))
-        if payload is None:
-            missing_periods.append(period)
-            continue
-        observation = payload.observation
-        refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
-        if refused:
-            missing_periods.append(period)
-            continue
-        observed_by_period[period] = observation.casilla_values
-
-    values: dict[CasillaId, Decimal] = {}
-    regularised_periods = periods[:-1] if len(periods) > 1 else periods
-    cuota_values = [
-        period_values[_CUOTA_DEDUCIBLE_TOTAL_ID]
-        for period in regularised_periods
-        if (period_values := observed_by_period.get(period)) is not None and _CUOTA_DEDUCIBLE_TOTAL_ID in period_values
-    ]
-    if len(cuota_values) == len(regularised_periods):
-        values[_CUOTA_DEDUCIBLE_TOTAL_ID] = sum(cuota_values, Decimal("0"))
-
-    settlement_period = next(reversed(periods), None)
-    settlement_values = observed_by_period.get(settlement_period) if settlement_period is not None else None
-    if settlement_values is not None:
-        for casilla_id in (_VOLUMEN_CON_DERECHO_ID, _VOLUMEN_TOTAL_ID, _PORCENTAJE_ID):
-            value = settlement_values.get(casilla_id)
-            if value is not None:
-                values[casilla_id] = value
+    observed_by_period, missing_periods = _observed_source_period_values(
+        repository,
+        periods=periods,
+        filing_year=filing_year,
+    )
+    values = _project_source_period_values(observed_by_period, periods)
 
     return _CurrentYearSourcePeriodFeed(
         values=values,
         source_periods=periods,
-        missing_source_periods=tuple(missing_periods),
+        missing_source_periods=missing_periods,
     )
 
 
@@ -838,6 +796,191 @@ def _modelo_303_target_inputs(
     return {CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA: binding_values[binding_id]}
 
 
+def _revision_for_context(
+    context: CalculationSourceContext,
+    registry_snapshot: RegistrySnapshot | None,
+) -> ModeloRevision:
+    revision = registry_snapshot.revision if registry_snapshot is not None else None
+    if revision is not None:
+        return revision
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)
+    return select_revision(
+        modelo,
+        filing_year=context.filing_year,
+        period=context.period.registry_token,
+    )
+
+
+def _merge_current_year_values(
+    source_period_feed: _CurrentYearSourcePeriodFeed,
+    *,
+    supplied_values: Mapping[CasillaId, Decimal],
+    missing_casilla_ids: Iterable[CasillaId],
+    unresolved_casilla_ids: Iterable[CasillaId],
+) -> tuple[dict[CasillaId, Decimal], tuple[CasillaId, ...]]:
+    current_year_values = {
+        **supplied_values,
+        **dict(source_period_feed.values),
+    }
+    missing_current = tuple(
+        dict.fromkeys(
+            (
+                *_missing_current_year_casillas(current_year_values),
+                *(casilla_id for casilla_id in missing_casilla_ids if casilla_id not in current_year_values),
+                *(casilla_id for casilla_id in unresolved_casilla_ids if casilla_id not in current_year_values),
+            )
+        )
+    )
+    return current_year_values, missing_current
+
+
+def _missing_current_year_resolution(
+    *,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+    declared_binding_ids: tuple[BindingId, ...],
+    missing_current: tuple[CasillaId, ...],
+) -> CalculationSourceResolution | None:
+    if not missing_current:
+        return None
+    message = (
+        f"prorrata_regularizacion binding requires current-year registry casillas "
+        f"{tuple(str(casilla_id) for casilla_id in missing_current)} before it can resolve"
+    )
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        unresolved_binding_ids=declared_binding_ids,
+        diagnostics=_unresolved_binding_diagnostics(
+            binding_ids=declared_binding_ids,
+            resolver_id=resolver_id,
+            message=message,
+        ),
+    )
+
+
+def _resolve_prorrata_provisional_source(
+    register: ProrrataRegister,
+    prior_definitiva: _PriorDefinitivaCarry | None,
+    *,
+    context: CalculationSourceContext,
+    revision: ModeloRevision,
+    current_provenance: CalculationSourceProvenance,
+) -> _ProrrataProvisionalSource:
+    provisional = register.resolve_provisional(context.filing_year)
+    if provisional.resolved:
+        register_entry = _entry_for_register_provenance(register, ejercicio=context.filing_year)
+        provenance = (
+            current_provenance,
+            _register_provenance(
+                context=context,
+                entry=register_entry,
+                provisional_resolution=provisional,
+                revision=revision,
+            ),
+        )
+        if provisional.percentage is None:
+            raise ValueError(
+                "prorrata register reported a resolved provisional percentage without a value",
+            )
+        return _ProrrataProvisionalSource(percentage=provisional.percentage, provenance=provenance)
+    if prior_definitiva is not None:
+        return _ProrrataProvisionalSource(
+            percentage=prior_definitiva.percentage,
+            provenance=(
+                current_provenance,
+                _prior_definitiva_provenance(carry=prior_definitiva, revision=revision),
+            ),
+        )
+    return _ProrrataProvisionalSource(percentage=None, provenance=(current_provenance,))
+
+
+def _missing_provisional_resolution(
+    *,
+    context: CalculationSourceContext,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+    declared_binding_ids: tuple[BindingId, ...],
+    provenance: tuple[CalculationSourceProvenance, ...],
+) -> CalculationSourceResolution:
+    message = (
+        f"prorrata_regularizacion binding for {context.filing_year} requires a resolved provisional "
+        "percentage from the prorrata register or a stamped prior-year Modelo 303 settlement observation"
+    )
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        unresolved_binding_ids=declared_binding_ids,
+        diagnostics=_unresolved_binding_diagnostics(
+            binding_ids=declared_binding_ids,
+            resolver_id=resolver_id,
+            message=message,
+        ),
+        provenance=provenance,
+    )
+
+
+def _zero_prorrata_resolution(
+    *,
+    revision: ModeloRevision,
+    context: CalculationSourceContext,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+    declared_binding_ids: tuple[BindingId, ...],
+    current_provenance: CalculationSourceProvenance,
+) -> CalculationSourceResolution:
+    zero_values = {binding_id: MONEY_ZERO for binding_id in declared_binding_ids}
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        binding_values=zero_values,
+        bound_inputs_by_casilla_id=_modelo_303_target_inputs(
+            revision,
+            binding_values=zero_values,
+            modelo=context.modelo,
+        ),
+        provenance=(current_provenance,),
+    )
+
+
+def _resolved_prorrata_resolution(
+    *,
+    revision: ModeloRevision,
+    context: CalculationSourceContext,
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+    declared_binding_ids: tuple[BindingId, ...],
+    current_year_values: Mapping[CasillaId, Decimal],
+    provisional_percentage: Decimal,
+    provenance: tuple[CalculationSourceProvenance, ...],
+) -> CalculationSourceResolution:
+    binding_values = _resolve_prorrata_regularizacion_binding_values(
+        revision,
+        current_year_values=current_year_values,
+        provisional_percentage=provisional_percentage,
+    )
+    unresolved = tuple(binding_id for binding_id in declared_binding_ids if binding_id not in binding_values)
+    diagnostics = _unresolved_binding_diagnostics(
+        binding_ids=unresolved,
+        resolver_id=resolver_id,
+        message="prorrata_regularizacion binding selector did not map to a resolver output",
+    )
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        binding_values=binding_values,
+        bound_inputs_by_casilla_id=_modelo_303_target_inputs(
+            revision,
+            binding_values=binding_values,
+            modelo=context.modelo,
+        ),
+        unresolved_binding_ids=unresolved,
+        diagnostics=diagnostics,
+        provenance=provenance,
+    )
+
+
 class ProrrataRegularizacionSourceResolver:
     """Resolve annual prorrata-general regularisation bindings from governed carries."""
 
@@ -880,15 +1023,7 @@ class ProrrataRegularizacionSourceResolver:
         carry lookup to produce the bound value or an explicit missing/unresolved
         diagnostic.
         """
-        revision = self._registry_snapshot.revision if self._registry_snapshot is not None else None
-        if revision is None:
-            modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-            modelo = next(candidate for candidate in modelos if candidate.id == context.modelo)
-            revision = select_revision(
-                modelo,
-                filing_year=context.filing_year,
-                period=context.period.registry_token,
-            )
+        revision = _revision_for_context(context, self._registry_snapshot)
         declared_binding_ids = _prorrata_declared_binding_ids(revision)
         if not declared_binding_ids:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
@@ -906,42 +1041,20 @@ class ProrrataRegularizacionSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        current_year_values = {
-            **self._current_year_values,
-            **dict(source_period_feed.values),
-        }
-        missing_current = tuple(
-            dict.fromkeys(
-                (
-                    *_missing_current_year_casillas(current_year_values),
-                    *(
-                        casilla_id
-                        for casilla_id in self._missing_current_year_casilla_ids
-                        if casilla_id not in current_year_values
-                    ),
-                    *(
-                        casilla_id
-                        for casilla_id in self._unresolved_current_year_casilla_ids
-                        if casilla_id not in current_year_values
-                    ),
-                )
-            )
+        current_year_values, missing_current = _merge_current_year_values(
+            source_period_feed,
+            supplied_values=self._current_year_values,
+            missing_casilla_ids=self._missing_current_year_casilla_ids,
+            unresolved_casilla_ids=self._unresolved_current_year_casilla_ids,
         )
-        if missing_current:
-            message = (
-                f"prorrata_regularizacion binding requires current-year registry casillas "
-                f"{tuple(str(casilla_id) for casilla_id in missing_current)} before it can resolve"
-            )
-            return CalculationSourceResolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                unresolved_binding_ids=declared_binding_ids,
-                diagnostics=_unresolved_binding_diagnostics(
-                    binding_ids=declared_binding_ids,
-                    resolver_id=self.resolver_id,
-                    message=message,
-                ),
-            )
+        missing_resolution = _missing_current_year_resolution(
+            resolver_id=self.resolver_id,
+            owned_sources=self.owned_sources,
+            declared_binding_ids=declared_binding_ids,
+            missing_current=missing_current,
+        )
+        if missing_resolution is not None:
+            return missing_resolution
 
         try:
             register = require_prorrata_register_coordinates_current(self._prorrata_register_repository.load())
@@ -969,83 +1082,39 @@ class ProrrataRegularizacionSourceResolver:
             declared_volume_con_derecho=current_year_values[_VOLUMEN_CON_DERECHO_ID],
         )
         if not applicability.applies:
-            zero_values = {binding_id: MONEY_ZERO for binding_id in declared_binding_ids}
-            return CalculationSourceResolution(
+            return _zero_prorrata_resolution(
+                revision=revision,
+                context=context,
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
-                binding_values=zero_values,
-                bound_inputs_by_casilla_id=_modelo_303_target_inputs(
-                    revision,
-                    binding_values=zero_values,
-                    modelo=context.modelo,
-                ),
-                provenance=(current_provenance,),
+                declared_binding_ids=declared_binding_ids,
+                current_provenance=current_provenance,
             )
 
-        provisional = register.resolve_provisional(context.filing_year)
-        provenance: tuple[CalculationSourceProvenance, ...]
-        if provisional.resolved:
-            register_entry = _entry_for_register_provenance(register, ejercicio=context.filing_year)
-            provenance = (
-                current_provenance,
-                _register_provenance(
-                    context=context,
-                    entry=register_entry,
-                    provisional_resolution=provisional,
-                    revision=revision,
-                ),
-            )
-            if provisional.percentage is None:
-                raise ValueError(
-                    "prorrata register reported a resolved provisional percentage without a value",
-                )
-            provisional_percentage = provisional.percentage
-        elif prior_definitiva is not None:
-            provenance = (
-                current_provenance,
-                _prior_definitiva_provenance(carry=prior_definitiva, revision=revision),
-            )
-            provisional_percentage = prior_definitiva.percentage
-        else:
-            message = (
-                f"prorrata_regularizacion binding for {context.filing_year} requires a resolved provisional "
-                "percentage from the prorrata register or a stamped prior-year Modelo 303 settlement observation"
-            )
-            return CalculationSourceResolution(
+        provisional_source = _resolve_prorrata_provisional_source(
+            register,
+            prior_definitiva,
+            context=context,
+            revision=revision,
+            current_provenance=current_provenance,
+        )
+        if provisional_source.percentage is None:
+            return _missing_provisional_resolution(
+                context=context,
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
-                unresolved_binding_ids=declared_binding_ids,
-                diagnostics=_unresolved_binding_diagnostics(
-                    binding_ids=declared_binding_ids,
-                    resolver_id=self.resolver_id,
-                    message=message,
-                ),
-                provenance=(current_provenance,),
+                declared_binding_ids=declared_binding_ids,
+                provenance=provisional_source.provenance,
             )
-
-        binding_values = _resolve_prorrata_regularizacion_binding_values(
-            revision,
-            current_year_values=current_year_values,
-            provisional_percentage=provisional_percentage,
-        )
-        unresolved = tuple(binding_id for binding_id in declared_binding_ids if binding_id not in binding_values)
-        diagnostics = _unresolved_binding_diagnostics(
-            binding_ids=unresolved,
-            resolver_id=self.resolver_id,
-            message="prorrata_regularizacion binding selector did not map to a resolver output",
-        )
-        return CalculationSourceResolution(
+        return _resolved_prorrata_resolution(
+            revision=revision,
+            context=context,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            binding_values=binding_values,
-            bound_inputs_by_casilla_id=_modelo_303_target_inputs(
-                revision,
-                binding_values=binding_values,
-                modelo=context.modelo,
-            ),
-            unresolved_binding_ids=unresolved,
-            diagnostics=diagnostics,
-            provenance=provenance,
+            declared_binding_ids=declared_binding_ids,
+            current_year_values=current_year_values,
+            provisional_percentage=provisional_source.percentage,
+            provenance=provisional_source.provenance,
         )
 
 
@@ -1195,10 +1264,8 @@ __all__ = [
     "CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA",
     "ProrrataApplicabilityProjection",
     "ProrrataDeclaredVolumeLedgerRollup",
-    "ProrrataInterruptedSeed",
     "ProrrataRegularizacionFeedProjection",
     "ProrrataRegularizacionSourceResolver",
-    "build_interrumpida_tres_ultimos_seed",
     "build_prorrata_declared_volume_divergence_advisory",
     "build_prorrata_especial_mandatory_advisory",
     "build_prorrata_missing_provisional_advisory",

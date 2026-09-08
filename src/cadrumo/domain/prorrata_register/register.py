@@ -472,6 +472,46 @@ class ThreeActiveYearsAggregate(BaseModel):
         return len(self.contributing_ejercicios) == 3
 
 
+def _last_three_active_entries(
+    entries: tuple[ProrrataRegisterEntry, ...],
+    *,
+    before_ejercicio: int,
+    sector_id: str | None,
+) -> tuple[ProrrataRegisterEntry, ...]:
+    """Select settled, non-interrupted entries in newest-first statutory order."""
+    return tuple(
+        sorted(
+            (
+                entry
+                for entry in entries
+                if entry.sector_id == sector_id
+                and entry.ejercicio < before_ejercicio
+                and not entry.interrupted
+                and entry.definitive_percentage is not None
+                and entry.definitive_volume_con_derecho is not None
+                and entry.definitive_volume_sin_derecho is not None
+            ),
+            key=lambda entry: entry.ejercicio,
+            reverse=True,
+        )[:3]
+    )
+
+
+def _sum_active_year_volumes(
+    active: tuple[ProrrataRegisterEntry, ...],
+) -> tuple[Decimal, Decimal]:
+    """Validate and sum both definitive volume channels for selected active years."""
+    con_volumes = [
+        entry.definitive_volume_con_derecho for entry in active if entry.definitive_volume_con_derecho is not None
+    ]
+    sin_volumes = [
+        entry.definitive_volume_sin_derecho for entry in active if entry.definitive_volume_sin_derecho is not None
+    ]
+    if len(con_volumes) != len(active) or len(sin_volumes) != len(active):
+        raise ProrrataRegisterValidationError("settled prorrata entry is missing definitive volume evidence")
+    return sum(con_volumes, Decimal("0")), sum(sin_volumes, Decimal("0"))
+
+
 class ProrrataRegister(BaseModel):
     """Encrypted JSON document holding the per-ejercicio prorrata register.
 
@@ -641,30 +681,12 @@ class ProrrataRegister(BaseModel):
         turns an insufficient aggregate into a visible advisory rather than
         assuming a percentage.
         """
-        active = sorted(
-            (
-                entry
-                for entry in self.entries
-                if entry.sector_id == sector_id
-                and entry.ejercicio < before_ejercicio
-                and not entry.interrupted
-                and entry.definitive_percentage is not None
-                and entry.definitive_volume_con_derecho is not None
-                and entry.definitive_volume_sin_derecho is not None
-            ),
-            key=lambda entry: entry.ejercicio,
-            reverse=True,
-        )[:3]
-        con_volumes = [
-            entry.definitive_volume_con_derecho for entry in active if entry.definitive_volume_con_derecho is not None
-        ]
-        sin_volumes = [
-            entry.definitive_volume_sin_derecho for entry in active if entry.definitive_volume_sin_derecho is not None
-        ]
-        if len(con_volumes) != len(active) or len(sin_volumes) != len(active):
-            raise ProrrataRegisterValidationError("settled prorrata entry is missing definitive volume evidence")
-        summed_con = sum(con_volumes, Decimal("0"))
-        summed_sin = sum(sin_volumes, Decimal("0"))
+        active = _last_three_active_entries(
+            self.entries,
+            before_ejercicio=before_ejercicio,
+            sector_id=sector_id,
+        )
+        summed_con, summed_sin = _sum_active_year_volumes(active)
         return ThreeActiveYearsAggregate(
             contributing_ejercicios=tuple(entry.ejercicio for entry in active),
             summed_volume_con_derecho=summed_con,

@@ -40,6 +40,18 @@ _JSON_OBJECT_ADAPTER: Final[TypeAdapter[dict[str, object]]] = TypeAdapter(dict[s
 _JSON_ARRAY_ADAPTER: Final[TypeAdapter[list[object]]] = TypeAdapter(list[object])
 
 
+def _load_annotation_entries(path: Path, field_name: str, error_message: str) -> list[object]:
+    """Decode one annotation document and return its required JSON list."""
+    try:
+        payload = _JSON_OBJECT_ADAPTER.validate_python(json.loads(path.read_text(encoding=UTF_8_ENCODING)))
+    except ValidationError as exc:
+        raise RegistryValidationError(f"{path}: {error_message}") from exc
+    try:
+        return _JSON_ARRAY_ADAPTER.validate_python(payload.get(field_name))
+    except ValidationError as exc:
+        raise RegistryValidationError(f"{path}: {error_message}") from exc
+
+
 def _resolve_annotation(path: Path) -> Path | None:
     """Locate one record-design annotation across every installed data root.
 
@@ -125,6 +137,112 @@ EMPTY_CORRECTIONS: Final[CorrectionIndex] = CorrectionIndex(
 )
 
 
+def _store_type_correction(
+    corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection],
+    correction: RecordDesignFieldTypeCorrection,
+    sidecar_path: Path,
+) -> None:
+    """Store a field-type correction, rejecting a repeated source row."""
+    key = (correction.sheet, correction.source_row)
+    if key in corrections:
+        raise RegistryValidationError(
+            f"{sidecar_path}: duplicate type correction for sheet {correction.sheet!r} row {correction.source_row}",
+        )
+    corrections[key] = correction
+
+
+def _store_range_start_correction(
+    corrections: dict[tuple[str, int], RecordDesignRangeStartCorrection],
+    correction: RecordDesignRangeStartCorrection,
+    sidecar_path: Path,
+) -> None:
+    """Store a range-start correction, rejecting a repeated declared start."""
+    key = (correction.sheet, correction.declared_start)
+    if key in corrections:
+        raise RegistryValidationError(
+            f"{sidecar_path}: duplicate range-start correction for sheet "
+            f"{correction.sheet!r} start {correction.declared_start}",
+        )
+    corrections[key] = correction
+
+
+def _store_single_position_correction(
+    corrections: dict[tuple[str, int], RecordDesignSinglePositionCorrection],
+    correction: RecordDesignSinglePositionCorrection,
+    sidecar_path: Path,
+) -> None:
+    """Store a single-position correction, rejecting a repeated PDF position."""
+    key = (correction.sheet, correction.position)
+    if key in corrections:
+        raise RegistryValidationError(
+            f"{sidecar_path}: duplicate single-position correction for sheet "
+            f"{correction.sheet!r} position {correction.position}",
+        )
+    corrections[key] = correction
+
+
+def _store_header_correction(
+    corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection],
+    correction: RecordDesignHeaderCellCorrection,
+    sidecar_path: Path,
+) -> None:
+    """Store a header correction, rejecting a repeated header role."""
+    key = (correction.sheet, correction.header_row, correction.column_role)
+    if key in corrections:
+        raise RegistryValidationError(
+            f"{sidecar_path}: duplicate header correction for sheet {correction.sheet!r} "
+            f"row {correction.header_row} role {correction.column_role!r}",
+        )
+    corrections[key] = correction
+
+
+def _index_correction(
+    type_corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection],
+    header_corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection],
+    single_position_corrections: dict[tuple[str, int], RecordDesignSinglePositionCorrection],
+    range_start_corrections: dict[tuple[str, int], RecordDesignRangeStartCorrection],
+    correction: RecordDesignCorrection,
+    sidecar_path: Path,
+) -> None:
+    """Route one validated correction to its kind-specific index."""
+    if isinstance(correction, RecordDesignFieldTypeCorrection):
+        _store_type_correction(type_corrections, correction, sidecar_path)
+    elif isinstance(correction, RecordDesignRangeStartCorrection):
+        _store_range_start_correction(range_start_corrections, correction, sidecar_path)
+    elif isinstance(correction, RecordDesignSinglePositionCorrection):
+        _store_single_position_correction(single_position_corrections, correction, sidecar_path)
+    else:
+        _store_header_correction(header_corrections, correction, sidecar_path)
+
+
+def _correction_index(entries: list[object], sidecar_path: Path) -> CorrectionIndex:
+    """Validate and index all entries from one correction sidecar."""
+    type_corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
+    header_corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection] = {}
+    single_position_corrections: dict[tuple[str, int], RecordDesignSinglePositionCorrection] = {}
+    range_start_corrections: dict[tuple[str, int], RecordDesignRangeStartCorrection] = {}
+    for entry in entries:
+        # ``strict=False`` here only: JSON has no tuple literal, so the sidecar's
+        # ``editions_read`` array arrives as a ``list`` and needs the ordinary
+        # list-to-tuple coercion. Every field's own type is still checked --
+        # this does not relax ``min_length``, blank-string, discriminator, or shape checks.
+        correction = _CORRECTION_ADAPTER.validate_python(entry, strict=False)
+        _index_correction(
+            type_corrections,
+            header_corrections,
+            single_position_corrections,
+            range_start_corrections,
+            correction,
+            sidecar_path,
+        )
+    return CorrectionIndex(
+        type_corrections=type_corrections,
+        header_corrections=header_corrections,
+        single_position_corrections=single_position_corrections,
+        range_start_corrections=range_start_corrections,
+    )
+
+
 def load_corrections(source_path: Path) -> CorrectionIndex:
     """Load a hand-authored, per-binary sidecar declaring record-design corrections.
 
@@ -142,70 +260,37 @@ def load_corrections(source_path: Path) -> CorrectionIndex:
     sidecar_path = _resolve_annotation(source_path.with_name(source_path.name + _CORRECTION_SUFFIX))
     if sidecar_path is None:
         return EMPTY_CORRECTIONS
-    try:
-        payload = _JSON_OBJECT_ADAPTER.validate_python(json.loads(sidecar_path.read_text(encoding=UTF_8_ENCODING)))
-    except ValidationError as exc:
-        raise RegistryValidationError(
-            f"{sidecar_path}: correction sidecar must declare a 'corrections' list",
-        ) from exc
-    try:
-        entries = _JSON_ARRAY_ADAPTER.validate_python(payload.get("corrections"))
-    except ValidationError as exc:
-        raise RegistryValidationError(
-            f"{sidecar_path}: correction sidecar must declare a 'corrections' list",
-        ) from exc
-    type_corrections: dict[tuple[str, int], RecordDesignFieldTypeCorrection] = {}
-    header_corrections: dict[tuple[str, int, str], RecordDesignHeaderCellCorrection] = {}
-    single_position_corrections: dict[tuple[str, int], RecordDesignSinglePositionCorrection] = {}
-    range_start_corrections: dict[tuple[str, int], RecordDesignRangeStartCorrection] = {}
-    for entry in entries:
-        # ``strict=False`` here only: JSON has no tuple literal, so the sidecar's
-        # ``editions_read`` array arrives as a ``list`` and needs the ordinary
-        # list-to-tuple coercion. Every field's own type is still checked --
-        # this does not relax ``min_length``, blank-string, discriminator, or shape checks.
-        correction = _CORRECTION_ADAPTER.validate_python(entry, strict=False)
-        if isinstance(correction, RecordDesignFieldTypeCorrection):
-            type_key = (correction.sheet, correction.source_row)
-            if type_key in type_corrections:
-                raise RegistryValidationError(
-                    f"{sidecar_path}: duplicate type correction for sheet {correction.sheet!r} "
-                    f"row {correction.source_row}",
-                )
-            type_corrections[type_key] = correction
-        elif isinstance(correction, RecordDesignRangeStartCorrection):
-            range_key = (correction.sheet, correction.declared_start)
-            if range_key in range_start_corrections:
-                raise RegistryValidationError(
-                    f"{sidecar_path}: duplicate range-start correction for sheet "
-                    f"{correction.sheet!r} start {correction.declared_start}",
-                )
-            range_start_corrections[range_key] = correction
-        elif isinstance(correction, RecordDesignSinglePositionCorrection):
-            position_key = (correction.sheet, correction.position)
-            if position_key in single_position_corrections:
-                raise RegistryValidationError(
-                    f"{sidecar_path}: duplicate single-position correction for sheet "
-                    f"{correction.sheet!r} position {correction.position}",
-                )
-            single_position_corrections[position_key] = correction
-        else:
-            header_key = (correction.sheet, correction.header_row, correction.column_role)
-            if header_key in header_corrections:
-                raise RegistryValidationError(
-                    f"{sidecar_path}: duplicate header correction for sheet {correction.sheet!r} "
-                    f"row {correction.header_row} role {correction.column_role!r}",
-                )
-            header_corrections[header_key] = correction
-    return CorrectionIndex(
-        type_corrections=type_corrections,
-        header_corrections=header_corrections,
-        single_position_corrections=single_position_corrections,
-        range_start_corrections=range_start_corrections,
+    entries = _load_annotation_entries(
+        sidecar_path,
+        "corrections",
+        "correction sidecar must declare a 'corrections' list",
     )
+    return _correction_index(entries, sidecar_path)
 
 
 _DECLARED_NON_RECORD_SHEETS_FILENAME: Final[str] = "declared-non-record-sheets.json"
 _EMPTY_DECLARED_NON_RECORD_SHEET_REASONS: Final[Mapping[str, str]] = dict[str, str]()
+
+
+def _declared_sheet_reason(entry: object, declaration_path: Path) -> tuple[str, str]:
+    """Decode one declared non-record sheet and its reviewer reason."""
+    try:
+        entry_map = _JSON_OBJECT_ADAPTER.validate_python(entry)
+    except ValidationError as exc:
+        raise RegistryValidationError(
+            f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
+        ) from exc
+    sheet_value = entry_map.get("sheet")
+    reason_value = entry_map.get("reason")
+    if not isinstance(sheet_value, str) or not isinstance(reason_value, str):
+        raise RegistryValidationError(
+            f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
+        )
+    sheet = sheet_value.strip()
+    reason = reason_value.strip()
+    if not sheet or not reason:
+        raise RegistryValidationError(f"{declaration_path}: 'sheet' and 'reason' must be non-blank")
+    return sheet, reason
 
 
 def load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, str]:
@@ -225,38 +310,14 @@ def load_declared_non_record_sheet_reasons(source_path: Path) -> Mapping[str, st
     declaration_path = _resolve_annotation(modelo_root / _DECLARED_NON_RECORD_SHEETS_FILENAME)
     if declaration_path is None:
         return _EMPTY_DECLARED_NON_RECORD_SHEET_REASONS
-    try:
-        payload = _JSON_OBJECT_ADAPTER.validate_python(
-            json.loads(declaration_path.read_text(encoding=UTF_8_ENCODING)),
-        )
-    except ValidationError as exc:
-        raise RegistryValidationError(
-            f"{declaration_path}: must declare a 'declared_non_record_sheets' list",
-        ) from exc
-    try:
-        entries = _JSON_ARRAY_ADAPTER.validate_python(payload.get("declared_non_record_sheets"))
-    except ValidationError as exc:
-        raise RegistryValidationError(
-            f"{declaration_path}: must declare a 'declared_non_record_sheets' list",
-        ) from exc
+    entries = _load_annotation_entries(
+        declaration_path,
+        "declared_non_record_sheets",
+        "must declare a 'declared_non_record_sheets' list",
+    )
     reasons: dict[str, str] = {}
     for entry in entries:
-        try:
-            entry_map = _JSON_OBJECT_ADAPTER.validate_python(entry)
-        except ValidationError as exc:
-            raise RegistryValidationError(
-                f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
-            ) from exc
-        sheet_value = entry_map.get("sheet")
-        reason_value = entry_map.get("reason")
-        if not isinstance(sheet_value, str) or not isinstance(reason_value, str):
-            raise RegistryValidationError(
-                f"{declaration_path}: every entry needs a string 'sheet' and a string 'reason'",
-            )
-        sheet = sheet_value.strip()
-        reason = reason_value.strip()
-        if not sheet or not reason:
-            raise RegistryValidationError(f"{declaration_path}: 'sheet' and 'reason' must be non-blank")
+        sheet, reason = _declared_sheet_reason(entry, declaration_path)
         if sheet in reasons:
             raise RegistryValidationError(f"{declaration_path}: duplicate declaration for sheet {sheet!r}")
         reasons[sheet] = reason

@@ -544,6 +544,77 @@ def _text_casilla_data_types(snapshot: _RegistrySnapshot) -> dict[_CasillaId, st
     }
 
 
+def _refuse_non_string_input_keys(inputs: _ModeloInputs) -> None:
+    non_string = tuple(repr(key) for key in inputs if type(key) is not str)
+    if not non_string:
+        return
+    raise _ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.input_key_not_string",
+        context={
+            "offending_count": len(non_string),
+            "input_keys": tuple(sorted(non_string)),
+        },
+    )
+
+
+def _refuse_padded_input_keys(inputs: _ModeloInputs) -> None:
+    padded = tuple(key for key in inputs if key != key.strip())
+    if not padded:
+        return
+    raise _ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.input_key_padded",
+        context={
+            "offending_count": len(padded),
+            "input_keys": tuple(sorted(padded)),
+        },
+    )
+
+
+def _refuse_noncanonical_casilla_input_keys(inputs: _ModeloInputs, snapshot: _RegistrySnapshot) -> None:
+    noncanonical_tokens = _casilla_noncanonical_reference_tokens(snapshot.revision)
+    supplied_noncanonical = tuple(key for key in inputs if key in noncanonical_tokens)
+    if not supplied_noncanonical:
+        return
+    raise _ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.input_key_noncanonical_casilla",
+        context={
+            "modelo": snapshot.modelo.id,
+            "offending_count": len(supplied_noncanonical),
+            "input_keys": tuple(sorted(supplied_noncanonical)),
+            "noncanonical_references": tuple(
+                {
+                    "token": key,
+                    "canonical_casilla_ids": tuple(noncanonical_tokens[key]),
+                }
+                for key in sorted(supplied_noncanonical)
+            ),
+        },
+    )
+
+
+def _refuse_unknown_input_keys(
+    inputs: _ModeloInputs,
+    *,
+    accepted_ids: set[_BindingId | _CasillaId | _RelationId],
+    snapshot: _RegistrySnapshot,
+) -> None:
+    unknown = tuple(key for key in inputs if key not in accepted_ids)
+    if not unknown:
+        return
+    raise _ModeloBuilderError(
+        translated_message="application.filing.build_draft.errors.input_key_unknown",
+        context={
+            "modelo": snapshot.modelo.id,
+            "schema_version": _registry_schema_version(
+                modelo=snapshot.modelo.id,
+                revision_id=snapshot.revision.id,
+            ),
+            "offending_count": len(unknown),
+            "input_keys": tuple(sorted(unknown)),
+        },
+    )
+
+
 def _validate_filing_input_keys(
     inputs: _ModeloInputs,
     *,
@@ -551,59 +622,10 @@ def _validate_filing_input_keys(
     snapshot: _RegistrySnapshot,
 ) -> None:
     """Reject input keys that are not canonical registry input ids."""
-    non_string = tuple(repr(key) for key in inputs if type(key) is not str)
-    if non_string:
-        raise _ModeloBuilderError(
-            translated_message="application.filing.build_draft.errors.input_key_not_string",
-            context={
-                "offending_count": len(non_string),
-                "input_keys": tuple(sorted(non_string)),
-            },
-        )
-
-    padded = tuple(key for key in inputs if key != key.strip())
-    if padded:
-        raise _ModeloBuilderError(
-            translated_message="application.filing.build_draft.errors.input_key_padded",
-            context={
-                "offending_count": len(padded),
-                "input_keys": tuple(sorted(padded)),
-            },
-        )
-
-    noncanonical_tokens = _casilla_noncanonical_reference_tokens(snapshot.revision)
-    supplied_noncanonical = tuple(key for key in inputs if key in noncanonical_tokens)
-    if supplied_noncanonical:
-        raise _ModeloBuilderError(
-            translated_message="application.filing.build_draft.errors.input_key_noncanonical_casilla",
-            context={
-                "modelo": snapshot.modelo.id,
-                "offending_count": len(supplied_noncanonical),
-                "input_keys": tuple(sorted(supplied_noncanonical)),
-                "noncanonical_references": tuple(
-                    {
-                        "token": key,
-                        "canonical_casilla_ids": tuple(noncanonical_tokens[key]),
-                    }
-                    for key in sorted(supplied_noncanonical)
-                ),
-            },
-        )
-
-    unknown = tuple(key for key in inputs if key not in accepted_ids)
-    if unknown:
-        raise _ModeloBuilderError(
-            translated_message="application.filing.build_draft.errors.input_key_unknown",
-            context={
-                "modelo": snapshot.modelo.id,
-                "schema_version": _registry_schema_version(
-                    modelo=snapshot.modelo.id,
-                    revision_id=snapshot.revision.id,
-                ),
-                "offending_count": len(unknown),
-                "input_keys": tuple(sorted(unknown)),
-            },
-        )
+    _refuse_non_string_input_keys(inputs)
+    _refuse_padded_input_keys(inputs)
+    _refuse_noncanonical_casilla_input_keys(inputs, snapshot)
+    _refuse_unknown_input_keys(inputs, accepted_ids=accepted_ids, snapshot=snapshot)
 
 
 def _date_inputs_for_ids(inputs: _ModeloInputs, input_ids: set[_BindingId]) -> dict[_BindingId, date]:

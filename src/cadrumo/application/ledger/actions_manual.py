@@ -12,7 +12,7 @@ persistence.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal
@@ -36,6 +36,7 @@ from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
+from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -471,6 +472,34 @@ def query_ledger_review_rows(
     )
 
 
+def _display_optional_decimal(value: Decimal | None) -> str | None:
+    """Render an optional Decimal exactly as a ledger read projection expects."""
+    if value is None:
+        return None
+    return display_decimal(value)
+
+
+def _optional_iso_date(value: date | None) -> str | None:
+    """Render an optional ledger date as an ISO calendar date."""
+    if value is None:
+        return None
+    return value.isoformat()
+
+
+def _optional_iso_datetime(value: datetime | None) -> str | None:
+    """Render an optional ledger timestamp as an ISO-8601 string."""
+    if value is None:
+        return None
+    return value.isoformat()
+
+
+def _optional_ledger_enum_value(value: IvaCategory | EUMemberState | None) -> str | None:
+    """Project a nullable string-valued ledger enum without changing its token."""
+    if value is None:
+        return None
+    return value.value
+
+
 def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPayload:
     """Return the :class:`~cadrumo.application.ledger.models.LedgerTransactionPayload` for one ledger transaction."""
     raw = transaction.raw
@@ -478,24 +507,22 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         transaction_id=transaction.transaction_id,
         date=(raw.value_date or raw.booked_date).isoformat(),
         booked_date=raw.booked_date.isoformat(),
-        value_date=raw.value_date.isoformat() if raw.value_date else None,
+        value_date=_optional_iso_date(raw.value_date),
         amount=display_decimal(raw.amount),
         currency=raw.currency,
         direction=transaction.direction.value,
         counterparty=raw.display_counterparty,
         description=raw.description,
         business_classification=transaction.business_classification.value,
-        business_pct=display_decimal(transaction.business_pct) if transaction.business_pct is not None else None,
+        business_pct=_display_optional_decimal(transaction.business_pct),
         category_id=transaction.category_id,
-        taxable_base=display_decimal(transaction.taxable_base) if transaction.taxable_base is not None else None,
-        iva_rate=display_decimal(transaction.iva_rate) if transaction.iva_rate is not None else None,
-        iva_amount=display_decimal(transaction.iva_amount) if transaction.iva_amount is not None else None,
-        iva_category=transaction.iva_category.value if transaction.iva_category is not None else None,
+        taxable_base=_display_optional_decimal(transaction.taxable_base),
+        iva_rate=_display_optional_decimal(transaction.iva_rate),
+        iva_amount=_display_optional_decimal(transaction.iva_amount),
+        iva_category=_optional_ledger_enum_value(transaction.iva_category),
         counterparty_country=transaction.counterparty_country,
-        counterparty_identification_state=(
-            transaction.counterparty_identification_state.value
-            if transaction.counterparty_identification_state is not None
-            else None
+        counterparty_identification_state=_optional_ledger_enum_value(
+            transaction.counterparty_identification_state,
         ),
         irpf_category=transaction.irpf_category,
         m210_income_classification=transaction.m210_income_classification,
@@ -506,16 +533,12 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         notes=transaction.notes,
         lifecycle_state=transaction.lifecycle_state.value,
         classified_by=transaction.classified_by,
-        classified_at=transaction.classified_at.isoformat() if transaction.classified_at is not None else None,
+        classified_at=_optional_iso_datetime(transaction.classified_at),
         classification_reason=transaction.classification_reason,
-        classification_confidence=(
-            display_decimal(transaction.classification_confidence)
-            if transaction.classification_confidence is not None
-            else None
-        ),
+        classification_confidence=_display_optional_decimal(transaction.classification_confidence),
         source_jurisdiction=transaction.source_jurisdiction,
-        value_in_eur=display_decimal(transaction.value_in_eur) if transaction.value_in_eur is not None else None,
-        fx_rate=display_decimal(transaction.fx_rate) if transaction.fx_rate is not None else None,
+        value_in_eur=_display_optional_decimal(transaction.value_in_eur),
+        fx_rate=_display_optional_decimal(transaction.fx_rate),
         created_at=transaction.created_at.isoformat(),
         modified_at=transaction.modified_at.isoformat(),
     )
@@ -564,6 +587,111 @@ def ledger_transaction_tracking_payload(transaction: Transaction) -> LedgerTrans
     )
 
 
+def _manual_transaction_snapshot(
+    *,
+    bucket_id: str,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    catalogue: TransactionCatalogue | None,
+) -> tuple[Transaction, ...]:
+    """Load one stable transaction snapshot, reusing a caller-owned catalogue."""
+    if catalogue is None:
+        catalogue = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository).load()
+    return tuple(catalogue.values())
+
+
+def _review_status_counts(transactions: tuple[Transaction, ...]) -> dict[LedgerReviewStatus, int]:
+    """Count review statuses for active transactions in one snapshot."""
+    status_counts: dict[LedgerReviewStatus, int] = {
+        LedgerReviewStatus.PENDING: 0,
+        LedgerReviewStatus.REVIEWED: 0,
+        LedgerReviewStatus.SKIPPED: 0,
+    }
+    for transaction in transactions:
+        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE:
+            status_counts[ledger_transaction_review_status(transaction)] += 1
+    return status_counts
+
+
+def _readiness_summary(
+    *,
+    bucket_id: str,
+    period: Period | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+) -> tuple[int, int, bool | None]:
+    """Return readiness counts while preserving the period-gated repository read."""
+    if period is None:
+        return 0, 0, None
+    preflight = preflight_ledger_tax_readiness(
+        bucket_id=bucket_id,
+        period=period,
+        transaction_repository=resolve_transaction_repository(
+            bucket_id=bucket_id,
+            repository=transaction_repository,
+        ),
+    )
+    return preflight.checked_transaction_count, len(preflight.issues), preflight.ready
+
+
+def _business_money_contribution(
+    transaction: Transaction,
+    *,
+    period: Period | None,
+) -> tuple[Decimal, Decimal, int]:
+    """Return income, expense, and unconverted counts for one eligible row."""
+    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        return Decimal("0"), Decimal("0"), 0
+    if transaction.business_classification not in {
+        BusinessClassification.BUSINESS,
+        BusinessClassification.MIXED,
+    }:
+        return Decimal("0"), Decimal("0"), 0
+    if period is not None and not period.contains(transaction.raw.value_date or transaction.raw.booked_date):
+        return Decimal("0"), Decimal("0"), 0
+    if is_non_eur_without_conversion(transaction):
+        return Decimal("0"), Decimal("0"), 1
+    eur = abs(effective_eur_amount(transaction))
+    if transaction.direction is TransactionDirection.INCOMING:
+        return eur, Decimal("0"), 0
+    if transaction.direction is TransactionDirection.OUTGOING:
+        return Decimal("0"), eur, 0
+    return Decimal("0"), Decimal("0"), 0
+
+
+def _business_money_summary(
+    transactions: tuple[Transaction, ...],
+    *,
+    period: Period | None,
+) -> tuple[Decimal, Decimal, int]:
+    """Aggregate active business/mixed rows into gross EUR totals."""
+    income_total = Decimal("0")
+    expense_total = Decimal("0")
+    unconverted_count = 0
+    for transaction in transactions:
+        income, expense, unconverted = _business_money_contribution(transaction, period=period)
+        income_total += income
+        expense_total += expense
+        unconverted_count += unconverted
+    return income_total, expense_total, unconverted_count
+
+
+def _count_lifecycle_state(
+    transactions: tuple[Transaction, ...],
+    state: TransactionLifecycleState,
+) -> int:
+    """Count rows carrying one lifecycle state in the snapshot."""
+    return sum(1 for transaction in transactions if transaction.lifecycle_state is state)
+
+
+def _lifecycle_counts(transactions: tuple[Transaction, ...]) -> tuple[int, int, int, int]:
+    """Return active, archived, stashed, and split counts in report order."""
+    return (
+        _count_lifecycle_state(transactions, TransactionLifecycleState.ACTIVE),
+        _count_lifecycle_state(transactions, TransactionLifecycleState.ARCHIVED),
+        _count_lifecycle_state(transactions, TransactionLifecycleState.STASHED),
+        _count_lifecycle_state(transactions, TransactionLifecycleState.SPLIT),
+    )
+
+
 def summarize_manual_transactions(
     *,
     bucket_id: str,
@@ -578,74 +706,32 @@ def summarize_manual_transactions(
     decrypted read and, if a write interleaved, would describe a different
     instant from the rows the caller is projecting beside it.
     """
-    if catalogue is None:
-        # Resolving the concrete repository is a precondition of READING, not
-        # of summarising: a caller that already holds this bucket's catalogue
-        # has nothing left for the repository to do unless a period is given.
-        catalogue = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository).load()
-    transactions = tuple(catalogue.values())
-    status_counts: dict[LedgerReviewStatus, int] = {
-        LedgerReviewStatus.PENDING: 0,
-        LedgerReviewStatus.REVIEWED: 0,
-        LedgerReviewStatus.SKIPPED: 0,
-    }
-    for transaction in transactions:
-        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            continue
-        status_counts[ledger_transaction_review_status(transaction)] += 1
-    checked = 0
-    issue_count = 0
-    ready: bool | None = None
-    if period is not None:
-        preflight = preflight_ledger_tax_readiness(
-            bucket_id=bucket_id,
-            period=period,
-            transaction_repository=resolve_transaction_repository(
-                bucket_id=bucket_id, repository=transaction_repository
-            ),
-        )
-        checked = preflight.checked_transaction_count
-        issue_count = len(preflight.issues)
-        ready = preflight.ready
+    transactions = _manual_transaction_snapshot(
+        bucket_id=bucket_id,
+        transaction_repository=transaction_repository,
+        catalogue=catalogue,
+    )
+    status_counts = _review_status_counts(transactions)
+    checked, issue_count, ready = _readiness_summary(
+        bucket_id=bucket_id,
+        period=period,
+        transaction_repository=transaction_repository,
+    )
     # Money roll-up over active business/mixed rows (period-filtered when given):
     # the year-end / readiness money picture the personas asked for. Gross EUR
     # (value_in_eur for foreign rows), not a registry calculation.
-    money_period = period
-    income_total = Decimal("0")
-    expense_total = Decimal("0")
-    unconverted_count = 0
-    for item in transactions:
-        if item.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-            continue
-        if item.business_classification not in {BusinessClassification.BUSINESS, BusinessClassification.MIXED}:
-            continue
-        if money_period is not None and not money_period.contains(item.raw.value_date or item.raw.booked_date):
-            continue
-        # A foreign row with no conversion applied has no EUR value to add.
-        # Falling back to `raw.amount` here added a foreign figure to a
-        # euro-denominated total at face value -- 1000 USD landing in the
-        # roll-up as 1000 EUR -- which is not an approximation but a different
-        # number wearing the wrong unit. Such rows are excluded and counted, so
-        # the operator sees that the total is partial rather than a total that
-        # is quietly wrong.
-        if is_non_eur_without_conversion(item):
-            unconverted_count += 1
-            continue
-        eur = abs(effective_eur_amount(item))
-        if item.direction is TransactionDirection.INCOMING:
-            income_total += eur
-        elif item.direction is TransactionDirection.OUTGOING:
-            expense_total += eur
+    income_total, expense_total, unconverted_count = _business_money_summary(transactions, period=period)
+    active_count, archived_count, stashed_count, split_count = _lifecycle_counts(transactions)
     return LedgerStatusReport(
         bucket_id=bucket_id,
         business_income_total=display_decimal(income_total),
         business_expense_total=display_decimal(expense_total),
         business_net_total=display_decimal(income_total - expense_total),
         total_count=len(transactions),
-        active_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ACTIVE),
-        archived_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.ARCHIVED),
-        stashed_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.STASHED),
-        split_count=sum(1 for item in transactions if item.lifecycle_state is TransactionLifecycleState.SPLIT),
+        active_count=active_count,
+        archived_count=archived_count,
+        stashed_count=stashed_count,
+        split_count=split_count,
         pending_review_count=status_counts[LedgerReviewStatus.PENDING],
         reviewed_count=status_counts[LedgerReviewStatus.REVIEWED],
         skipped_count=status_counts[LedgerReviewStatus.SKIPPED],
@@ -1549,8 +1635,9 @@ def _source_sha256(command: ManualLedgerTransactionCommand, *, occurred_at: date
     return content_hash_hex(payload)
 
 
-def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
-    values = {
+def _raw_field_values(command: ManualLedgerTransactionCommand) -> dict[str, str]:
+    """Build raw fields that are present for every manual-ledger row."""
+    return {
         "source_kind": BindingSourceKind.LEDGER_TRANSACTION,
         "source_command": command.source_command,
         "actor": command.actor,
@@ -1569,6 +1656,11 @@ def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
         "purchase_invoice_evidence_id": command.purchase_invoice_evidence_id or "",
         "attachment_ids": ",".join(command.attachment_ids),
     }
+
+
+def _optional_raw_field_values(command: ManualLedgerTransactionCommand) -> dict[str, str]:
+    """Build optional raw fields while retaining their historical insertion order."""
+    values: dict[str, str] = {}
     if command.business_pct is not None:
         values["business_pct"] = format_decimal(command.business_pct)
     if command.category_id is not None:
@@ -1576,6 +1668,11 @@ def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
     if command.idempotency_key is not None:
         values["idempotency_key"] = command.idempotency_key
     return values
+
+
+def _raw_fields(command: ManualLedgerTransactionCommand) -> Mapping[str, str]:
+    """Build the canonical raw-field projection for a manual transaction."""
+    return {**_raw_field_values(command), **_optional_raw_field_values(command)}
 
 
 command_from_patch = _command_from_patch

@@ -255,14 +255,8 @@ _DASH_NATURALEZA_RE = re.compile(r"[-–_]+")
 _FILLER_DESCRIPTION_RE = re.compile(r"(?i)^(?:blancos?|ceros?)\b")
 
 
-def parse_pdf_row(line: str, source_row: int) -> PdfRow | None:
-    """Parse one record-design PDF line into a :class:`PdfRow`, or ``None`` if it is not one.
-
-    Tries the compact ordinal-led row shapes first, then the narrative
-    ``start-end naturaleza description`` shape guarded by :func:`naturaleza_or_none` so
-    that prose sentences opening with a field's own position range are rejected rather
-    than read as a row.
-    """
+def _compact_pdf_row(line: str, source_row: int) -> PdfRow | None:
+    """Parse an ordinal-led row, including the compact CRLF terminator shape."""
     compact = _COMPACT_PDF_ROW_RE.match(line)
     if compact is not None:
         return PdfRow(
@@ -275,55 +269,54 @@ def parse_pdf_row(line: str, source_row: int) -> PdfRow | None:
         )
 
     crlf = _COMPACT_PDF_CRLF_ROW_RE.match(line)
-    if crlf is not None:
-        return PdfRow(
-            source_row=source_row,
-            ordinal=crlf.group("ordinal"),
-            offset=int(crlf.group("offset")),
-            length=2,
-            type_code=crlf.group("type"),
-            description=crlf.group("text").strip(),
-        )
+    if crlf is None:
+        return None
+    return PdfRow(
+        source_row=source_row,
+        ordinal=crlf.group("ordinal"),
+        offset=int(crlf.group("offset")),
+        length=2,
+        type_code=crlf.group("type"),
+        description=crlf.group("text").strip(),
+    )
 
+
+def _accept_narrative_naturaleza(naturaleza: str, type_token: str, text: str) -> bool:
+    """Return whether a narrative type token is a field type rather than prose."""
+    # A BARE DASH in the naturaleza column means "no data type -- filler",
+    # so the row's own description says which filler: BLANCOS/BLANCO or
+    # CEROS. When it says anything else the dash is not a naturaleza at all
+    # but the punctuation of an ENUMERATED PROSE ITEM inside a field's
+    # description -- AEAT writes "1 - En el caso de que en el campo Clave
+    # Tipo de Identificacion se haya consignado una 'C'..." -- and reading
+    # that as a row invents a field at position 1.
+    #
+    # That invention is not a lost row, it is a lost RECORD: because the
+    # fabricated offset restarts at 1, the extractor concluded a new record
+    # body began mid-description and reported an unidentified record it
+    # could not name. Modelo 181 lost one that way in each of its three
+    # bundled editions.
+    #
+    # MEASURED before narrowing, across all 102 bundled design PDFs: 183
+    # rows carry a bare-dash naturaleza. Every legitimate one describes
+    # filler -- including eight that declare a SINGLE position rather than a
+    # range (BLANCOS at 58, 81 and 500 across modelos 185, 270, 296 and
+    # 347), which is why the absence of a range is NOT the discriminator and
+    # rejecting on it would have dropped eight real rows. The six that
+    # describe prose are exactly modelo 181's three editions, twice each.
+    return not (_DASH_NATURALEZA_RE.fullmatch(type_token) and not _FILLER_DESCRIPTION_RE.match(text.strip()))
+
+
+def _narrative_pdf_row(line: str, source_row: int) -> PdfRow | None:
+    """Parse a narrative position row after validating its naturaleza token."""
     narrative = _NARRATIVE_PDF_ROW_RE.match(line)
     if narrative is None:
         return None
 
-    naturaleza = naturaleza_or_none(narrative.group("type"))
-    if (
-        naturaleza is not None
-        and _DASH_NATURALEZA_RE.fullmatch(narrative.group("type") or "")
-        and not _FILLER_DESCRIPTION_RE.match(narrative.group("text").strip())
-    ):
-        # A BARE DASH in the naturaleza column means "no data type -- filler",
-        # so the row's own description says which filler: BLANCOS/BLANCO or
-        # CEROS. When it says anything else the dash is not a naturaleza at all
-        # but the punctuation of an ENUMERATED PROSE ITEM inside a field's
-        # description -- AEAT writes "1 - En el caso de que en el campo Clave
-        # Tipo de Identificacion se haya consignado una 'C'..." -- and reading
-        # that as a row invents a field at position 1.
-        #
-        # That invention is not a lost row, it is a lost RECORD: because the
-        # fabricated offset restarts at 1, the extractor concluded a new record
-        # body began mid-description and reported an unidentified record it
-        # could not name. Modelo 181 lost one that way in each of its three
-        # bundled editions.
-        #
-        # MEASURED before narrowing, across all 102 bundled design PDFs: 183
-        # rows carry a bare-dash naturaleza. Every legitimate one describes
-        # filler -- including eight that declare a SINGLE position rather than a
-        # range (BLANCOS at 58, 81 and 500 across modelos 185, 270, 296 and
-        # 347), which is why the absence of a range is NOT the discriminator and
-        # rejecting on it would have dropped eight real rows. The six that
-        # describe prose are exactly modelo 181's three editions, twice each.
-        return None
-    if naturaleza is None:
-        # The line has a leading number but the token after it names no
-        # naturaleza AEAT uses, so this is prose, not a position row. AEAT
-        # routinely opens a field's DESCRIPTION with that field's own range
-        # ("68-107 APELLIDOS Y NOMBRE: Se consignara el primer ..."), and
-        # treating those as rows would invent positions wholesale -- measured
-        # across the bundled corpus, 41 designs carry such prose.
+    type_token = narrative.group("type")
+    text = narrative.group("text")
+    naturaleza = naturaleza_or_none(type_token)
+    if naturaleza is None or not _accept_narrative_naturaleza(naturaleza, type_token, text):
         return None
 
     start = int(narrative.group("start"))
@@ -337,8 +330,19 @@ def parse_pdf_row(line: str, source_row: int) -> PdfRow | None:
         offset=start,
         length=end - start + 1,
         type_code=naturaleza,
-        description=narrative.group("text").strip(),
+        description=text.strip(),
     )
+
+
+def parse_pdf_row(line: str, source_row: int) -> PdfRow | None:
+    """Parse one record-design PDF line into a :class:`PdfRow`, or ``None`` if it is not one.
+
+    Compact ordinal-led rows take precedence over narrative
+    ``start-end naturaleza description`` rows. Narrative rows are admitted only
+    when their naturaleza token is recognised, so prose that restates a position
+    range is rejected rather than read as a field.
+    """
+    return _compact_pdf_row(line, source_row) or _narrative_pdf_row(line, source_row)
 
 
 #: A row whose ORDINAL and POSITION were run together by the PDF text layer:

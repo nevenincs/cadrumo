@@ -432,26 +432,55 @@ def _scoped_relation_source_requirements(
 
     scoped: list[RegistryFoldRequirement] = []
     for requirement in requirements:
-        kept = tuple(
-            token
-            for token in requirement.periods
-            if not _relation_period_scoped_out(
-                requirement.source_modelo,
-                requirement.filing_year,
-                token,
-                activity_start_date=activity_start_date,
-                m111_no_retenciones_periods=attested_m111_periods,
-            )
+        scoped_requirement = _scope_relation_requirement(
+            requirement,
+            activity_start_date=activity_start_date,
+            m111_no_retenciones_periods=attested_m111_periods,
         )
-        if len(kept) == len(requirement.periods):
-            scoped.append(requirement)
-        elif kept:
-            kept_filing = tuple(period for period in requirement.filing_periods if period.registry_token in kept)
-            scoped.append(requirement.model_copy(update={"periods": kept, "filing_periods": kept_filing}))
-        # else: EVERY source period is strictly pre-activity → no obligation at
-        # all; drop the requirement (its ``periods`` field is min_length=1 and
-        # cannot be emptied). The relation then resolves to None as before.
+        if scoped_requirement is not None:
+            scoped.append(scoped_requirement)
     return tuple(scoped)
+
+
+def _scope_relation_requirement(
+    requirement: RegistryFoldRequirement,
+    *,
+    activity_start_date: date | None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]],
+) -> RegistryFoldRequirement | None:
+    kept = _kept_relation_periods(
+        requirement,
+        activity_start_date=activity_start_date,
+        m111_no_retenciones_periods=m111_no_retenciones_periods,
+    )
+    if len(kept) == len(requirement.periods):
+        return requirement
+    if not kept:
+        # Every source period is outside the obligation. Dropping the
+        # requirement keeps its min-length period invariant intact; the
+        # relation then resolves to None as before.
+        return None
+    kept_filing = tuple(period for period in requirement.filing_periods if period.registry_token in kept)
+    return requirement.model_copy(update={"periods": kept, "filing_periods": kept_filing})
+
+
+def _kept_relation_periods(
+    requirement: RegistryFoldRequirement,
+    *,
+    activity_start_date: date | None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]],
+) -> tuple[str, ...]:
+    return tuple(
+        token
+        for token in requirement.periods
+        if not _relation_period_scoped_out(
+            requirement.source_modelo,
+            requirement.filing_year,
+            token,
+            activity_start_date=activity_start_date,
+            m111_no_retenciones_periods=m111_no_retenciones_periods,
+        )
+    )
 
 
 def _relation_period_scoped_out(
@@ -477,6 +506,157 @@ def _relation_period_scoped_out(
     return period_strictly_before_activity_start(
         Period.from_year_and_code(filing_year, period_token),
         activity_start_date,
+    )
+
+
+def _default_activity_start_date(activity_start_date: date | None) -> date | None:
+    if activity_start_date is not None:
+        return activity_start_date
+    from ...core.bucket_pointer import resolve_active_bucket_id
+
+    active_bucket_id = resolve_active_bucket_id()
+    if active_bucket_id is None:
+        return None
+    return activity_start_date_for_bucket(active_bucket_id)
+
+
+def _default_m111_no_retenciones_periods(
+    m111_no_retenciones_periods: frozenset[tuple[int, str]] | None,
+) -> frozenset[tuple[int, str]]:
+    if m111_no_retenciones_periods is not None:
+        return m111_no_retenciones_periods
+    from ...core.bucket_pointer import resolve_active_bucket_id
+
+    active_bucket_id = resolve_active_bucket_id()
+    if active_bucket_id is None:
+        return frozenset[tuple[int, str]]()
+    return m111_no_retenciones_periods_for_bucket(active_bucket_id)
+
+
+def _default_not_applicable_source_modelos(
+    snapshot: RegistrySnapshot,
+    not_applicable_source_modelos: frozenset[str] | None,
+) -> frozenset[str]:
+    if not_applicable_source_modelos is not None:
+        return not_applicable_source_modelos
+    from ...core.bucket_pointer import resolve_active_bucket_id
+
+    active_bucket_id = resolve_active_bucket_id()
+    if active_bucket_id is None:
+        return frozenset[str]()
+    return _not_applicable_source_modelos_for_bucket(snapshot, active_bucket_id)
+
+
+def _unresolved_relation_value(
+    relation: RelationDefinition,
+    *,
+    requirement: RegistryFoldRequirement | None,
+    grounding: _RelationGrounding,
+    target_year: int,
+    source_periods: tuple[str, ...],
+    resolved_at: datetime,
+    modelo_202_first_year_cuota: bool,
+    not_applicable_source_modelos: frozenset[str],
+) -> RelationValue:
+    if modelo_202_first_year_cuota and requirement is not None and requirement.source_modelo == str(Modelo.M202):
+        return RelationValue(
+            relation=relation.id,
+            value=Decimal("0"),
+            provenance=SheetRelationProvenance.OPERATOR_MANUAL,
+            source_filing_year=target_year,
+            source_periods=source_periods,
+            **grounding,
+            resolved_at=resolved_at,
+            note=(
+                "first-year IS filer under modalidad cuota (LIS art. 40.2): no Modelo 202 "
+                "pago-fraccionado obligation; relation resolved to 0 (see verify advisory)"
+            ),
+        )
+    if requirement is not None and requirement.source_modelo in not_applicable_source_modelos:
+        return RelationValue(
+            relation=relation.id,
+            value=Decimal("0"),
+            provenance=SheetRelationProvenance.OPERATOR_MANUAL,
+            source_filing_year=target_year,
+            source_periods=source_periods,
+            **grounding,
+            resolved_at=resolved_at,
+            note=(
+                f"source modelo {requirement.source_modelo} is not applicable for the bucket "
+                "profile; relation resolved to 0 without a synthetic filing"
+            ),
+        )
+    return RelationValue(relation=relation.id, value=None, **grounding)
+
+
+def _relation_value_for_relation(
+    relation: RelationDefinition,
+    *,
+    requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
+    resolved_map: Mapping[RelationId, Decimal],
+    resolved_at: datetime,
+    modelo_202_first_year_cuota: bool,
+    not_applicable_source_modelos: frozenset[str],
+    filing_year: int,
+) -> RelationValue:
+    requirement = requirements_by_relation.get(relation.id)
+    target_year = (
+        requirement.filing_year
+        if requirement is not None
+        else _relation_source_filing_year(relation, filing_year=filing_year)
+    )
+    source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
+    grounding = _relation_value_grounding(relation, requirement)
+    resolved = resolved_map.get(relation.id)
+    if resolved is None:
+        return _unresolved_relation_value(
+            relation,
+            requirement=requirement,
+            grounding=grounding,
+            target_year=target_year,
+            source_periods=source_periods,
+            resolved_at=resolved_at,
+            modelo_202_first_year_cuota=modelo_202_first_year_cuota,
+            not_applicable_source_modelos=not_applicable_source_modelos,
+        )
+    return RelationValue(
+        relation=relation.id,
+        value=Decimal(resolved),
+        provenance=SheetRelationProvenance.LOCAL_FILING,
+        source_filing_year=target_year,
+        source_periods=source_periods,
+        **grounding,
+        resolved_at=resolved_at,
+        note=_provenance_note(
+            relation.id,
+            relation.source_modelo,
+            source_periods,
+            target_year,
+            resolved_at,
+        ),
+    )
+
+
+def _relation_values_for_snapshot(
+    snapshot: RegistrySnapshot,
+    *,
+    requirements_by_relation: Mapping[RelationId, RegistryFoldRequirement],
+    resolved_map: Mapping[RelationId, Decimal],
+    resolved_at: datetime,
+    modelo_202_first_year_cuota: bool,
+    not_applicable_source_modelos: frozenset[str],
+) -> tuple[RelationValue, ...]:
+    return tuple(
+        _relation_value_for_relation(
+            relation,
+            requirements_by_relation=requirements_by_relation,
+            resolved_map=resolved_map,
+            resolved_at=resolved_at,
+            modelo_202_first_year_cuota=modelo_202_first_year_cuota,
+            not_applicable_source_modelos=not_applicable_source_modelos,
+            filing_year=snapshot.filing_year,
+        )
+        for relation in snapshot.revision.relations
     )
 
 
@@ -531,35 +711,12 @@ def resolve_relations_from_local_store(
     """
     repo = repository if repository is not None else CalculationObservationRepository()
     when = captured_at if captured_at is not None else now()
-    if activity_start_date is None:
-        # Default to the active bucket's activity start so BOTH live surfaces scope
-        # identically (one-aggregation-path: the mesh/calculate path passes an
-        # explicit value from its context bucket; the Sheets-pull path calls this
-        # bare). An explicit caller value (e.g. a deterministic test) is never
-        # overridden; absent an active bucket, derivation returns None (no scoping).
-        from ...core.bucket_pointer import resolve_active_bucket_id
-
-        active_bucket_id = resolve_active_bucket_id()
-        if active_bucket_id is not None:
-            activity_start_date = activity_start_date_for_bucket(active_bucket_id)
-    if m111_no_retenciones_periods is None:
-        from ...core.bucket_pointer import resolve_active_bucket_id
-
-        active_bucket_id = resolve_active_bucket_id()
-        m111_no_retenciones_periods = (
-            m111_no_retenciones_periods_for_bucket(active_bucket_id)
-            if active_bucket_id is not None
-            else frozenset[tuple[int, str]]()
-        )
-    if not_applicable_source_modelos is None:
-        from ...core.bucket_pointer import resolve_active_bucket_id
-
-        active_bucket_id = resolve_active_bucket_id()
-        not_applicable_source_modelos = (
-            _not_applicable_source_modelos_for_bucket(snapshot, active_bucket_id)
-            if active_bucket_id is not None
-            else frozenset[str]()
-        )
+    activity_start_date = _default_activity_start_date(activity_start_date)
+    m111_no_retenciones_periods = _default_m111_no_retenciones_periods(m111_no_retenciones_periods)
+    not_applicable_source_modelos = _default_not_applicable_source_modelos(
+        snapshot,
+        not_applicable_source_modelos,
+    )
     observations = _gather_observations_for_snapshot(
         snapshot,
         repository=repo,
@@ -573,90 +730,19 @@ def resolve_relations_from_local_store(
             m111_no_retenciones_periods=m111_no_retenciones_periods,
         ),
     )
-
-    resolved_map = _resolve_available_relation_values(observations, requirements_by_relation=requirements_by_relation)
-
-    values: list[RelationValue] = []
-    for relation in snapshot.revision.relations:
-        requirement = requirements_by_relation.get(relation.id)
-        target_year = (
-            requirement.filing_year
-            if requirement is not None
-            else _relation_source_filing_year(relation, filing_year=snapshot.filing_year)
-        )
-        source_periods = requirement.periods if requirement is not None else tuple(relation.source_periods)
-        grounding = _relation_value_grounding(relation, requirement)
-        resolved = resolved_map.get(relation.id)
-        if resolved is None:
-            # A first-year IS
-            # filer under modalidad cuota (LIS art. 40.2) has no Modelo 202
-            # pago-fraccionado obligation, so the M202 fold-in relation has no
-            # source filing to resolve. Resolve it to 0 (rather than leaving it
-            # None, which would crash draft-build on the cuota-diferencial formula
-            # that requires the value). Fail-closed: only when the caller derived
-            # the first-year-modalidad-cuota flag AND the source is Modelo 202 — a
-            # genuinely-resolved M202 value, modalidad base, or an undeterminable
-            # modality is never zeroed here. The clean-state gate surfaces the
-            # operator-facing advisory; this mirrors that single determination.
-            if (
-                modelo_202_first_year_cuota
-                and requirement is not None
-                and requirement.source_modelo == str(Modelo.M202)
-            ):
-                values.append(
-                    RelationValue(
-                        relation=relation.id,
-                        value=Decimal("0"),
-                        provenance=SheetRelationProvenance.OPERATOR_MANUAL,
-                        source_filing_year=target_year,
-                        source_periods=source_periods,
-                        **grounding,
-                        resolved_at=when,
-                        note=(
-                            "first-year IS filer under modalidad cuota (LIS art. 40.2): no Modelo 202 "
-                            "pago-fraccionado obligation; relation resolved to 0 (see verify advisory)"
-                        ),
-                    ),
-                )
-                continue
-            if requirement is not None and requirement.source_modelo in not_applicable_source_modelos:
-                values.append(
-                    RelationValue(
-                        relation=relation.id,
-                        value=Decimal("0"),
-                        provenance=SheetRelationProvenance.OPERATOR_MANUAL,
-                        source_filing_year=target_year,
-                        source_periods=source_periods,
-                        **grounding,
-                        resolved_at=when,
-                        note=(
-                            f"source modelo {requirement.source_modelo} is not applicable for the bucket "
-                            "profile; relation resolved to 0 without a synthetic filing"
-                        ),
-                    ),
-                )
-                continue
-            values.append(RelationValue(relation=relation.id, value=None, **grounding))
-            continue
-        values.append(
-            RelationValue(
-                relation=relation.id,
-                value=Decimal(resolved),
-                provenance=SheetRelationProvenance.LOCAL_FILING,
-                source_filing_year=target_year,
-                source_periods=source_periods,
-                **grounding,
-                resolved_at=when,
-                note=_provenance_note(
-                    relation.id,
-                    relation.source_modelo,
-                    source_periods,
-                    target_year,
-                    when,
-                ),
-            ),
-        )
-    return RelationValues(values=tuple(values))
+    resolved_map = _resolve_available_relation_values(
+        observations,
+        requirements_by_relation=requirements_by_relation,
+    )
+    values = _relation_values_for_snapshot(
+        snapshot,
+        requirements_by_relation=requirements_by_relation,
+        resolved_map=resolved_map,
+        resolved_at=when,
+        modelo_202_first_year_cuota=modelo_202_first_year_cuota,
+        not_applicable_source_modelos=not_applicable_source_modelos,
+    )
+    return RelationValues(values=values)
 
 
 def _resolve_available_relation_values(
@@ -1047,6 +1133,148 @@ def _unresolved_relation_diagnostics(
     return tuple(diagnostics)
 
 
+class _RelationPrefillContextInputs(NamedTuple):
+    activity_start_date: date | None
+    m111_no_retenciones_periods: frozenset[tuple[int, str]]
+    not_applicable_source_modelos: frozenset[str]
+    modelo_202_first_year_cuota: bool
+
+
+def _snapshot_for_context(
+    registry_snapshot: RegistrySnapshot | None,
+    context: CalculationSourceContext,
+) -> RegistrySnapshot:
+    if registry_snapshot is not None:
+        return registry_snapshot
+    return bundled_authority().snapshot(
+        context.modelo,
+        filing_year=context.filing_year,
+        period=context.period.registry_token,
+    )
+
+
+def _relation_prefill_context_inputs(
+    snapshot: RegistrySnapshot,
+    context: CalculationSourceContext,
+) -> _RelationPrefillContextInputs:
+    bucket_id = str(context.bucket_id)
+    return _RelationPrefillContextInputs(
+        activity_start_date=activity_start_date_for_bucket(bucket_id),
+        m111_no_retenciones_periods=m111_no_retenciones_periods_for_bucket(bucket_id),
+        not_applicable_source_modelos=_not_applicable_source_modelos_for_bucket(snapshot, bucket_id),
+        modelo_202_first_year_cuota=(
+            str(context.modelo) == str(Modelo.M200)
+            and _first_year_modalidad_cuota_no_m202(
+                bucket_id,
+                filing_year=context.filing_year,
+            )
+        ),
+    )
+
+
+def _resolve_context_relation_values(
+    snapshot: RegistrySnapshot,
+    *,
+    context: CalculationSourceContext,
+    repository: CalculationObservationRepository | None,
+    captured_at: datetime | None,
+    inputs: _RelationPrefillContextInputs,
+) -> RelationValues:
+    return resolve_relations_from_local_store(
+        snapshot,
+        repository=repository,
+        captured_at=captured_at or context.calculated_at,
+        modelo_202_first_year_cuota=inputs.modelo_202_first_year_cuota,
+        activity_start_date=inputs.activity_start_date,
+        m111_no_retenciones_periods=inputs.m111_no_retenciones_periods,
+        not_applicable_source_modelos=inputs.not_applicable_source_modelos,
+    )
+
+
+def _relation_prefill_resolution(
+    *,
+    snapshot: RegistrySnapshot,
+    context: CalculationSourceContext,
+    relation_values: RelationValues,
+    activity_start_date: date | None,
+    m111_no_retenciones_periods: frozenset[tuple[int, str]],
+    resolver_id: str,
+    owned_sources: tuple[BindingSourceKind, ...],
+) -> CalculationSourceResolution:
+    requirements_by_relation = relation_requirement_index(
+        _scoped_relation_source_requirements(
+            snapshot,
+            activity_start_date,
+            m111_no_retenciones_periods=m111_no_retenciones_periods,
+        ),
+    )
+    resolved = tuple(item for item in relation_values.values if item.value is not None)
+    unresolved = _unresolved_relation_ids(
+        snapshot,
+        relation_values=relation_values,
+        requirements_by_relation=requirements_by_relation,
+        modelo_id=str(context.modelo),
+    )
+    relation_target_binding = _relation_target_bindings(snapshot)
+    resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
+    binding_values = materialize_relation_binding_values(
+        snapshot.revision,
+        resolved_relation_values,
+        period=context.period.registry_token,
+    )
+    binding_values = {
+        **_modelo_202_first_period_previous_payment_defaults(
+            snapshot.revision,
+            modelo=str(context.modelo),
+            period=context.period.registry_token,
+        ),
+        **binding_values,
+    }
+    return CalculationSourceResolution(
+        resolver_id=resolver_id,
+        owned_sources=owned_sources,
+        relation_values=resolved_relation_values,
+        unresolved_relation_ids=tuple(sorted(unresolved.formula_fed)),
+        binding_values=binding_values,
+        diagnostics=_unresolved_relation_diagnostics(
+            unresolved_relation_ids=unresolved.formula_fed,
+            requirements_by_relation=requirements_by_relation,
+            resolver_id=resolver_id,
+        )
+        + _unresolved_relation_diagnostics(
+            unresolved_relation_ids=unresolved.orphaned,
+            requirements_by_relation=requirements_by_relation,
+            resolver_id=resolver_id,
+        )
+        + _absent_bound_carry_diagnostics(
+            unresolved_relation_ids=unresolved.bound,
+            requirements_by_relation=requirements_by_relation,
+            relation_target_binding=relation_target_binding,
+            resolver_id=resolver_id,
+        ),
+        provenance=tuple(
+            CalculationSourceProvenance(
+                resolver_id=resolver_id,
+                resolved_binding_source=BindingSourceKind.RELATION_PREFILL,
+                contributor_source_kind="relation_prefill",
+                contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
+                lineage_role=CalculationSourceLineageRole.PRIMARY,
+                source_ref=_relation_provenance_ref(item),
+                parent_source_ref=None,
+                relation_id=item.relation,
+                source_modelo=item.source_modelo,
+                source_filing_year=item.source_filing_year,
+                source_periods=item.source_periods,
+                source_casilla_ids=item.source_casilla_ids,
+                legal_refs=item.legal_refs,
+                source_refs=item.source_refs,
+                dependency_treatment=item.dependency_treatment,
+            )
+            for item in resolved
+        ),
+    )
+
+
 class RelationPrefillSourceResolver:
     """Source-mesh adapter for local ``relation_prefill`` values.
 
@@ -1081,40 +1309,15 @@ class RelationPrefillSourceResolver:
             carrying relation values, binding values, diagnostics for
             unresolved formula relations, and provenance for local filings.
         """
-        snapshot = self._registry_snapshot
-        if snapshot is None:
-            snapshot = bundled_authority().snapshot(
-                context.modelo,
-                filing_year=context.filing_year,
-                period=context.period.registry_token,
-            )
-        # Activity-start scoping (IRPF-1): a mid-year-start filer has no obligation
-        # for source quarters strictly before the activity start, so those quarters
-        # are scoped out of the relation fold so their absence does not unresolve
-        # the whole fold. Derived once from the bucket profile and shared by the
-        # resolution and the diagnostic so both see the same scoped requirement set.
-        activity_start_date = activity_start_date_for_bucket(str(context.bucket_id))
-        m111_no_retenciones_periods = m111_no_retenciones_periods_for_bucket(str(context.bucket_id))
-        not_applicable_source_modelos = _not_applicable_source_modelos_for_bucket(snapshot, str(context.bucket_id))
+        snapshot = _snapshot_for_context(self._registry_snapshot, context)
+        inputs = _relation_prefill_context_inputs(snapshot, context)
         try:
-            relation_values = resolve_relations_from_local_store(
+            relation_values = _resolve_context_relation_values(
                 snapshot,
+                context=context,
                 repository=self._repository,
-                captured_at=self._captured_at or context.calculated_at,
-                # Scope the first-year M202 zero-resolution to the Modelo 200 annual
-                # fold-in target only — NEVER to a Modelo 202 snapshot's own
-                # intra-year cumulation (2P folds 1P, also source_modelo 202), which
-                # must keep its real prior-instalment values.
-                modelo_202_first_year_cuota=(
-                    str(context.modelo) == str(Modelo.M200)
-                    and _first_year_modalidad_cuota_no_m202(
-                        str(context.bucket_id),
-                        filing_year=context.filing_year,
-                    )
-                ),
-                activity_start_date=activity_start_date,
-                m111_no_retenciones_periods=m111_no_retenciones_periods,
-                not_applicable_source_modelos=not_applicable_source_modelos,
+                captured_at=self._captured_at,
+                inputs=inputs,
             )
         except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -1123,89 +1326,14 @@ class RelationPrefillSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        requirements_by_relation = relation_requirement_index(
-            _scoped_relation_source_requirements(
-                snapshot,
-                activity_start_date,
-                m111_no_retenciones_periods=m111_no_retenciones_periods,
-            ),
-        )
-        resolved = tuple(item for item in relation_values.values if item.value is not None)
-        unresolved = _unresolved_relation_ids(
-            snapshot,
+        return _relation_prefill_resolution(
+            snapshot=snapshot,
+            context=context,
             relation_values=relation_values,
-            requirements_by_relation=requirements_by_relation,
-            modelo_id=str(context.modelo),
-        )
-        unresolved_relation_ids = unresolved.formula_fed
-        unresolved_non_formula_relation_ids = unresolved.orphaned
-        unresolved_bound_relation_ids = unresolved.bound
-        # Still needed below: the bound-silence diagnostic names each relation's
-        # target binding, so the caller keeps the lookup the partition also used.
-        relation_target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
-        resolved_relation_values = {item.relation: item.value for item in resolved if item.value is not None}
-        # Materialise the resolved relation values into their declared
-        # ``target_binding`` slots HERE, inside the resolver, so the merged
-        # resolution carries them in ``binding_values`` and the mesh
-        # ``_claim_binding`` exclusive-ownership guard adjudicates any collision
-        # with another resolver loudly. This
-        # replaces the silent post-mesh merge that previously let every other
-        # source override a relation-materialised value without a finding.
-        binding_values = materialize_relation_binding_values(
-            snapshot.revision,
-            resolved_relation_values,
-            period=context.period.registry_token,
-        )
-        binding_values = {
-            **_modelo_202_first_period_previous_payment_defaults(
-                snapshot.revision,
-                modelo=str(context.modelo),
-                period=context.period.registry_token,
-            ),
-            **binding_values,
-        }
-        return CalculationSourceResolution(
+            activity_start_date=inputs.activity_start_date,
+            m111_no_retenciones_periods=inputs.m111_no_retenciones_periods,
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
-            relation_values=resolved_relation_values,
-            unresolved_relation_ids=tuple(sorted(unresolved_relation_ids)),
-            binding_values=binding_values,
-            diagnostics=_unresolved_relation_diagnostics(
-                unresolved_relation_ids=unresolved_relation_ids,
-                requirements_by_relation=requirements_by_relation,
-                resolver_id=self.resolver_id,
-            )
-            + _unresolved_relation_diagnostics(
-                unresolved_relation_ids=unresolved_non_formula_relation_ids,
-                requirements_by_relation=requirements_by_relation,
-                resolver_id=self.resolver_id,
-            )
-            + _absent_bound_carry_diagnostics(
-                unresolved_relation_ids=unresolved_bound_relation_ids,
-                requirements_by_relation=requirements_by_relation,
-                relation_target_binding=relation_target_binding,
-                resolver_id=self.resolver_id,
-            ),
-            provenance=tuple(
-                CalculationSourceProvenance(
-                    resolver_id=self.resolver_id,
-                    resolved_binding_source=BindingSourceKind.RELATION_PREFILL,
-                    contributor_source_kind="relation_prefill",
-                    contributor_binding_source=BindingSourceKind.RELATION_PREFILL,
-                    lineage_role=CalculationSourceLineageRole.PRIMARY,
-                    source_ref=_relation_provenance_ref(item),
-                    parent_source_ref=None,
-                    relation_id=item.relation,
-                    source_modelo=item.source_modelo,
-                    source_filing_year=item.source_filing_year,
-                    source_periods=item.source_periods,
-                    source_casilla_ids=item.source_casilla_ids,
-                    legal_refs=item.legal_refs,
-                    source_refs=item.source_refs,
-                    dependency_treatment=item.dependency_treatment,
-                )
-                for item in resolved
-            ),
         )
 
 

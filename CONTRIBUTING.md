@@ -63,7 +63,7 @@ Provision the optional Playwright browser and get guidance for the on-host
 vision model:
 
 ```bash
-just setup-provision
+just setup-playwright
 ```
 
 Run `just doctor-check` again after each change to confirm the gap is closed.

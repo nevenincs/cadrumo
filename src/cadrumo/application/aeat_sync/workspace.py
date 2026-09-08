@@ -637,12 +637,7 @@ def project_aeat_sync_workspace(
         AeatSyncWorkspaceZone.EVIDENCE_COMPARISON: evidence_comparison,
         AeatSyncWorkspaceZone.RECONCILIATION: reconciliation,
     }
-    for facts in groups.values():
-        for fact in facts:
-            if fact.bucket_id != bucket_id:
-                raise AeatSyncWorkspaceProjectionError("foreign bucket")
-            if fact.subject_key != subject_key:
-                raise AeatSyncWorkspaceProjectionError("mixed subjects")
+    _validate_fact_scope(groups, bucket_id=bucket_id, subject_key=subject_key)
     _duplicates(overview, census, filed_declarations, notifications, evidence_comparison, reconciliation)
     _actions(groups, action_catalogue, operation_contracts)
     _source_claims(groups, obs)
@@ -686,6 +681,20 @@ def project_aeat_sync_workspace(
     )
 
 
+def _validate_fact_scope(
+    groups: Mapping[AeatSyncWorkspaceZone, tuple[Any, ...]],
+    *,
+    bucket_id: BucketId,
+    subject_key: str,
+) -> None:
+    for facts in groups.values():
+        for fact in facts:
+            if fact.bucket_id != bucket_id:
+                raise AeatSyncWorkspaceProjectionError("foreign bucket")
+            if fact.subject_key != subject_key:
+                raise AeatSyncWorkspaceProjectionError("mixed subjects")
+
+
 def _observations(
     values: tuple[AeatSyncWorkspaceZoneObservationV1, ...],
 ) -> dict[AeatSyncWorkspaceZone, AeatSyncWorkspaceZoneObservationV1]:
@@ -715,6 +724,65 @@ def _duplicates(
     _unique((_natural(f.row) for f in reconciliation), "reconciliation addresses")
 
 
+def _action_row_key(zone: AeatSyncWorkspaceZone, row: BaseModel) -> str:
+    if zone is AeatSyncWorkspaceZone.OVERVIEW:
+        if not isinstance(row, AeatSyncWorkspaceOverviewRowV1):
+            raise AeatSyncWorkspaceProjectionError("overview facts require overview rows")
+        return f"overview:{row.area.value}"
+    return zone.value
+
+
+def _validate_action_ids(
+    ids: tuple[str, ...],
+    *,
+    key: str,
+    catalogue: ActionCatalogue,
+) -> None:
+    for action_id in ids:
+        try:
+            catalogue.lookup(action_id)
+        except KeyError as error:
+            raise AeatSyncWorkspaceProjectionError("action is not admitted by catalogue") from error
+    if not set(ids) <= _ALLOWED[key]:
+        raise AeatSyncWorkspaceProjectionError("action is not allowed for row area/state")
+
+
+def _validate_operation_ids(
+    operation_ids: tuple[OperationDefinitionId, ...],
+    *,
+    key: str,
+    contract_by_id: Mapping[OperationDefinitionId, Any],
+) -> set[str]:
+    operation_id_values: set[str] = {str(item) for item in operation_ids}
+    _unique(operation_ids, "row operations")
+    for operation_id in operation_ids:
+        contract = contract_by_id.get(operation_id)
+        if contract is None or OperationFrontendProjection.TUI not in contract.permitted_frontends:
+            raise AeatSyncWorkspaceProjectionError("operation is not admitted by public contracts")
+    if not set(operation_ids) <= _ALLOWED_OPERATIONS[key]:
+        raise AeatSyncWorkspaceProjectionError("operation is not allowed for row area/state")
+    return operation_id_values
+
+
+def _validate_action_operation_joins(
+    actions: tuple[ActionReference, ...],
+    *,
+    operation_id_values: set[str],
+    contracts: OperationPublicContractSetV1,
+) -> None:
+    for action in actions:
+        joined = tuple(
+            contract
+            for contract in contracts.definitions
+            if contract.action_reference == action and str(contract.definition_id) in operation_id_values
+        )
+        if not joined and str(action.action_id) in {
+            "operator.live.filed.pull",
+            "operator.live.filed.pull_all",
+        }:
+            raise AeatSyncWorkspaceProjectionError("pull action lacks its exact public operation join")
+
+
 def _actions(
     groups: dict[AeatSyncWorkspaceZone, tuple[Any, ...]],
     catalogue: ActionCatalogue,
@@ -729,45 +797,119 @@ def _actions(
             actions = action_row.supported_actions
             ids = tuple(str(item.action_id) for item in actions)
             _unique(ids, "row actions")
-            if zone is AeatSyncWorkspaceZone.OVERVIEW:
-                if not isinstance(fact.row, AeatSyncWorkspaceOverviewRowV1):
-                    raise AeatSyncWorkspaceProjectionError("overview facts require overview rows")
-                key = f"overview:{fact.row.area.value}"
-            else:
-                key = zone.value
-            for action_id in ids:
-                try:
-                    catalogue.lookup(action_id)
-                except KeyError as error:
-                    raise AeatSyncWorkspaceProjectionError("action is not admitted by catalogue") from error
-            if not set(ids) <= _ALLOWED[key]:
-                raise AeatSyncWorkspaceProjectionError("action is not allowed for row area/state")
+            key = _action_row_key(zone, fact.row)
+            _validate_action_ids(ids, key=key, catalogue=catalogue)
             operation_ids = action_row.supported_operations
-            operation_id_values: set[str] = {str(item) for item in operation_ids}
-            _unique(operation_ids, "row operations")
-            allowed_operations = _ALLOWED_OPERATIONS[key]
-            for operation_id in operation_ids:
-                contract = contract_by_id.get(operation_id)
-                if contract is None or OperationFrontendProjection.TUI not in contract.permitted_frontends:
-                    raise AeatSyncWorkspaceProjectionError("operation is not admitted by public contracts")
-            if not set(operation_ids) <= allowed_operations:
-                raise AeatSyncWorkspaceProjectionError("operation is not allowed for row area/state")
-            for action in actions:
-                joined = tuple(
-                    contract
-                    for contract in contracts.definitions
-                    if contract.action_reference == action and str(contract.definition_id) in operation_id_values
-                )
-                if not joined and str(action.action_id) in {
-                    "operator.live.filed.pull",
-                    "operator.live.filed.pull_all",
-                }:
-                    raise AeatSyncWorkspaceProjectionError("pull action lacks its exact public operation join")
+            operation_id_values = _validate_operation_ids(
+                operation_ids,
+                key=key,
+                contract_by_id=contract_by_id,
+            )
+            _validate_action_operation_joins(
+                actions,
+                operation_id_values=operation_id_values,
+                contracts=contracts,
+            )
 
 
 def _public_row[RowT: BaseModel](row: BaseModel, row_type: type[RowT]) -> RowT:
     """Strip subclass and extra state by rebuilding the exact public class."""
     return row_type.model_validate(row.model_dump(include=set(row_type.model_fields)))
+
+
+def _require_overview_sources(
+    row: AeatSyncWorkspaceOverviewRowV1,
+    sources: Mapping[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
+) -> None:
+    local_source, aeat_source = _OVERVIEW_SOURCES[row.area]
+    _require(
+        row.local_state is AeatSyncSourceState.NOT_OBSERVED,
+        sources[local_source],
+        "local",
+        absent=row.local_state is AeatSyncSourceState.ABSENT,
+    )
+    _require(
+        row.aeat_state is AeatSyncSourceState.NOT_OBSERVED,
+        sources[aeat_source],
+        "AEAT",
+        absent=row.aeat_state is AeatSyncSourceState.ABSENT,
+    )
+
+
+def _require_census_sources(
+    row: AeatSyncWorkspaceCensusRowV1,
+    sources: Mapping[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
+) -> None:
+    # The local side is required for every census row: the row exists because
+    # the profile was read. The AEAT side is required only for a row that claims
+    # a VERDICT; NOT_COMPARED means no AEAT observation exists.
+    _require(False, sources[AeatSyncWorkspaceSource.LOCAL_PROFILE], "local census")
+    if row.status in COMPARED_CENSUS_STATUSES:
+        _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
+
+
+def _require_dual_sources(
+    row: _DualRow,
+    sources: Mapping[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
+) -> None:
+    _require(
+        row.local_state is AeatSyncSourceState.NOT_OBSERVED,
+        sources[AeatSyncWorkspaceSource.LOCAL_FILINGS],
+        "local",
+    )
+    _require(
+        row.aeat_state is AeatSyncSourceState.NOT_OBSERVED,
+        sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS],
+        "AEAT",
+    )
+
+
+def _require_filed_declaration_sources(
+    row: AeatSyncWorkspaceFiledDeclarationRowV1,
+    sources: Mapping[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
+) -> None:
+    _require(
+        row.local_filing_state is AeatSyncLocalFilingState.NOT_OBSERVED,
+        sources[AeatSyncWorkspaceSource.LOCAL_FILINGS],
+        "local filing",
+    )
+    _require(
+        row.aeat_observation_state is AeatSyncAeatObservationState.NOT_OBSERVED,
+        sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS],
+        "AEAT filing",
+    )
+
+
+def _require_notification_sources(
+    row: AeatSyncWorkspaceNotificationRowV1,
+    sources: Mapping[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
+) -> None:
+    _require(
+        row.read_state is AeatSyncNotificationReadState.UNKNOWN,
+        sources[AeatSyncWorkspaceSource.AEAT_NOTIFICATIONS],
+        "AEAT notification",
+    )
+    missing = row.document_custody_state in {
+        AeatSyncDocumentCustodyState.NOT_CAPTURED,
+        AeatSyncDocumentCustodyState.UNAVAILABLE,
+    }
+    _require(missing, sources[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY], "notification custody")
+
+
+def _source_claims_for_row(
+    row: BaseModel,
+    sources: Mapping[AeatSyncWorkspaceSource, AeatSyncWorkspaceSourceObservationV1],
+) -> None:
+    if isinstance(row, AeatSyncWorkspaceOverviewRowV1):
+        _require_overview_sources(row, sources)
+    if isinstance(row, AeatSyncWorkspaceCensusRowV1):
+        _require_census_sources(row, sources)
+    if isinstance(row, _DualRow):
+        _require_dual_sources(row, sources)
+    if isinstance(row, AeatSyncWorkspaceFiledDeclarationRowV1):
+        _require_filed_declaration_sources(row, sources)
+    if isinstance(row, AeatSyncWorkspaceNotificationRowV1):
+        _require_notification_sources(row, sources)
 
 
 def _source_claims(
@@ -779,65 +921,7 @@ def _source_claims(
         if facts and not any(_observable(item.availability) for item in sources.values()):
             raise AeatSyncWorkspaceProjectionError("unobservable zone carries rows")
         for fact in facts:
-            row = fact.row
-            if isinstance(row, AeatSyncWorkspaceOverviewRowV1):
-                local_source, aeat_source = _OVERVIEW_SOURCES[row.area]
-                _require(
-                    row.local_state is AeatSyncSourceState.NOT_OBSERVED,
-                    sources[local_source],
-                    "local",
-                    absent=row.local_state is AeatSyncSourceState.ABSENT,
-                )
-                _require(
-                    row.aeat_state is AeatSyncSourceState.NOT_OBSERVED,
-                    sources[aeat_source],
-                    "AEAT",
-                    absent=row.aeat_state is AeatSyncSourceState.ABSENT,
-                )
-            if isinstance(row, AeatSyncWorkspaceCensusRowV1):
-                # The local side is required for every census row: the row
-                # exists because the profile was read. The AEAT side is
-                # required only for a row that claims a VERDICT -- a
-                # NOT_COMPARED row's whole content is that no AEAT observation
-                # exists, so demanding one to publish it would make the state
-                # unrepresentable and force a pre-pull census zone to stay
-                # empty beside a local source reporting rows it holds.
-                _require(False, sources[AeatSyncWorkspaceSource.LOCAL_PROFILE], "local census")
-                if row.status in COMPARED_CENSUS_STATUSES:
-                    _require(False, sources[AeatSyncWorkspaceSource.AEAT_CENSUS], "AEAT census")
-            if isinstance(row, _DualRow):
-                _require(
-                    row.local_state is AeatSyncSourceState.NOT_OBSERVED,
-                    sources[AeatSyncWorkspaceSource.LOCAL_FILINGS],
-                    "local",
-                )
-                _require(
-                    row.aeat_state is AeatSyncSourceState.NOT_OBSERVED,
-                    sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS],
-                    "AEAT",
-                )
-            if isinstance(row, AeatSyncWorkspaceFiledDeclarationRowV1):
-                _require(
-                    row.local_filing_state is AeatSyncLocalFilingState.NOT_OBSERVED,
-                    sources[AeatSyncWorkspaceSource.LOCAL_FILINGS],
-                    "local filing",
-                )
-                _require(
-                    row.aeat_observation_state is AeatSyncAeatObservationState.NOT_OBSERVED,
-                    sources[AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS],
-                    "AEAT filing",
-                )
-            if isinstance(row, AeatSyncWorkspaceNotificationRowV1):
-                _require(
-                    row.read_state is AeatSyncNotificationReadState.UNKNOWN,
-                    sources[AeatSyncWorkspaceSource.AEAT_NOTIFICATIONS],
-                    "AEAT notification",
-                )
-                missing = row.document_custody_state in {
-                    AeatSyncDocumentCustodyState.NOT_CAPTURED,
-                    AeatSyncDocumentCustodyState.UNAVAILABLE,
-                }
-                _require(missing, sources[AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY], "notification custody")
+            _source_claims_for_row(fact.row, sources)
 
 
 def _require(
@@ -937,22 +1021,35 @@ collapsing into one.
 """
 
 
+def _zone_seen(
+    zone: AeatSyncWorkspaceZone,
+    states: tuple[AeatSyncWorkspaceAvailability, ...],
+) -> bool:
+    if zone in _COMPARISON_ZONES:
+        return all(_observable(item) for item in states)
+    return any(_observable(item) for item in states)
+
+
+def _zone_availability(
+    states: tuple[AeatSyncWorkspaceAvailability, ...],
+    *,
+    seen: bool,
+) -> AeatSyncWorkspaceAvailability:
+    if all(item is AeatSyncWorkspaceAvailability.AVAILABLE for item in states):
+        return AeatSyncWorkspaceAvailability.AVAILABLE
+    if seen:
+        return AeatSyncWorkspaceAvailability.STALE
+    if AeatSyncWorkspaceAvailability.LOCKED in states:
+        return AeatSyncWorkspaceAvailability.LOCKED
+    if all(item is AeatSyncWorkspaceAvailability.NEVER_CAPTURED for item in states):
+        return AeatSyncWorkspaceAvailability.NEVER_CAPTURED
+    return AeatSyncWorkspaceAvailability.UNAVAILABLE
+
+
 def _zone_state(observation: AeatSyncWorkspaceZoneObservationV1, count: int) -> AeatSyncWorkspaceZoneStateV1:
     states = tuple(item.availability for item in observation.sources)
-    if observation.zone in _COMPARISON_ZONES:
-        seen = all(_observable(item) for item in states)
-    else:
-        seen = any(_observable(item) for item in states)
-    if all(item is AeatSyncWorkspaceAvailability.AVAILABLE for item in states):
-        availability = AeatSyncWorkspaceAvailability.AVAILABLE
-    elif seen:
-        availability = AeatSyncWorkspaceAvailability.STALE
-    elif AeatSyncWorkspaceAvailability.LOCKED in states:
-        availability = AeatSyncWorkspaceAvailability.LOCKED
-    elif all(item is AeatSyncWorkspaceAvailability.NEVER_CAPTURED for item in states):
-        availability = AeatSyncWorkspaceAvailability.NEVER_CAPTURED
-    else:
-        availability = AeatSyncWorkspaceAvailability.UNAVAILABLE
+    seen = _zone_seen(observation.zone, states)
+    availability = _zone_availability(states, seen=seen)
     return AeatSyncWorkspaceZoneStateV1(
         zone=observation.zone,
         availability=availability,

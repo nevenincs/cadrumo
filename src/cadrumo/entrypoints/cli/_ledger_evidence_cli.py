@@ -17,6 +17,7 @@ from ...application.ledger.evidence import (
 )
 from ...application.ledger.invoice_confirmation import InvoiceConfirmationResult, confirm_invoice_draft_from_evidence
 from ...application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
+from ...application.ledger.invoice_draft_records import InvoiceDraft
 from ...application.user_profile.capabilities import cloud_evidence_upload_eligible_for_active_profile
 from ...core.aggregation import IntracomOperationType
 from ...core.config import load_settings
@@ -324,6 +325,113 @@ def _mint_extract_consent(
     )
 
 
+def _require_exact_evidence_reference(evidence_id: str | None, attachment_id: str | None) -> None:
+    """Require exactly one secure evidence reference for a read or confirm."""
+    if (evidence_id is None) == (attachment_id is None):
+        raise bad(tr("cli.app.ledger.evidence.extract_reference_required"))
+
+
+def _extract_evidence_draft(
+    *,
+    bucket_id: str,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    off_host_provider: LLMProvider | None,
+    consent_token: EvidenceConsentToken | None,
+) -> InvoiceDraft:
+    """Run the application-owned evidence reader for one secure reference."""
+    return extract_invoice_draft_from_evidence(
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        off_host_provider=off_host_provider,
+        consent_token=consent_token,
+    )
+
+
+def _display_optional(value: object) -> object:
+    """Render an absent scalar with the extract surface's established marker."""
+    return value if value is not None else "-"
+
+
+def _display_text(value: str | None) -> str:
+    """Render an absent text field with the extract surface's established marker."""
+    return value or "-"
+
+
+def _display_suggested_kind(draft: InvoiceDraft) -> str:
+    """Render the optional application-derived invoice kind."""
+    return "-" if draft.suggested_kind is None else draft.suggested_kind.value
+
+
+def _evidence_extract_payload(
+    *,
+    bucket_id: str,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    off_host_provider: LLMProvider | None,
+    consent_token: EvidenceConsentToken | None,
+    draft: InvoiceDraft,
+) -> dict[str, object]:
+    """Project the application draft and one-read consent provenance."""
+    return {
+        "bucket_id": bucket_id,
+        "evidence_id": evidence_id,
+        "attachment_id": attachment_id,
+        **draft.model_dump(mode="json"),
+        "off_host_provider": None if consent_token is None else off_host_provider,
+        "off_host_acknowledged_surface": None if consent_token is None else consent_token.surface,
+    }
+
+
+def _evidence_extract_lines(
+    bucket_id: str,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    draft: InvoiceDraft,
+) -> list[str]:
+    """Render the stable tabular projection of one extracted draft."""
+    return [
+        f"bucket_id\t{bucket_id}",
+        f"evidence_id\t{_display_text(evidence_id)}",
+        f"attachment_id\t{_display_text(attachment_id)}",
+        f"supplier_tax_id\t{_display_text(draft.supplier_tax_id)}",
+        f"supplier_name\t{_display_text(draft.supplier_name)}",
+        f"customer_tax_id\t{_display_text(draft.customer_tax_id)}",
+        f"customer_name\t{_display_text(draft.customer_name)}",
+        f"invoice_number\t{_display_text(draft.invoice_number)}",
+        f"invoice_series\t{_display_text(draft.invoice_series)}",
+        f"invoice_date\t{_display_text(draft.invoice_date)}",
+        f"taxable_base\t{_display_optional(draft.taxable_base)}",
+        f"iva_rate\t{_display_optional(draft.iva_rate)}",
+        f"iva_amount\t{_display_optional(draft.iva_amount)}",
+        f"grand_total\t{_display_optional(draft.grand_total)}",
+        f"currency\t{_display_optional(draft.currency)}",
+        f"retencion_rate\t{_display_optional(draft.retencion_rate)}",
+        f"retencion_amount\t{_display_optional(draft.retencion_amount)}",
+        f"suplidos_amount\t{_display_optional(draft.suplidos_amount)}",
+        f"suggested_kind\t{_display_suggested_kind(draft)}",
+        f"transcription_sha256\t{_display_text(draft.transcription_sha256)}",
+        f"provenance_fields\t{len(draft.provenance)}",
+        f"discrepancies\t{len(draft.discrepancies)}",
+        f"raw_text_length\t{draft.raw_text_length}",
+    ]
+
+
+def _evidence_extract_notices(reference: str, draft: InvoiceDraft) -> list[Notice]:
+    """Project review and field-degradation notices for one extracted draft."""
+    notices: list[Notice] = [
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="ledger.evidence.extract.review_hint",
+            message=tr("cli.app.ledger.evidence.extract_review_hint_message"),
+            context={"reference": reference},
+        ),
+    ]
+    notices.extend(field_degradation_notices(draft.provenance))
+    return notices
+
+
 def evidence_extract(
     ctx: typer.Context,
     evidence_id: str | None = None,
@@ -341,8 +449,7 @@ def evidence_extract(
     ``null`` rather than guessed. Extracting never mints or persists an
     invoice; confirmation is a separate operator action.
     """
-    if (evidence_id is None) == (attachment_id is None):
-        raise bad(tr("cli.app.ledger.evidence.extract_reference_required"))
+    _require_exact_evidence_reference(evidence_id, attachment_id)
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
     consent_token = _mint_extract_consent(
         bucket_id=transaction_repository.bucket_id,
@@ -350,62 +457,29 @@ def evidence_extract(
         off_host_provider=off_host_provider,
         acknowledged=acknowledge_off_host,
     )
-    draft = extract_invoice_draft_from_evidence(
+    draft = _extract_evidence_draft(
         bucket_id=transaction_repository.bucket_id,
         evidence_id=evidence_id,
         attachment_id=attachment_id,
         off_host_provider=off_host_provider,
         consent_token=consent_token,
     )
-    payload = {
-        "bucket_id": transaction_repository.bucket_id,
-        "evidence_id": evidence_id,
-        "attachment_id": attachment_id,
-        **draft.model_dump(mode="json"),
-        "off_host_provider": None if consent_token is None else off_host_provider,
-        "off_host_acknowledged_surface": None if consent_token is None else consent_token.surface,
-    }
-    lines = [
-        f"bucket_id\t{transaction_repository.bucket_id}",
-        f"evidence_id\t{evidence_id or '-'}",
-        f"attachment_id\t{attachment_id or '-'}",
-        f"supplier_tax_id\t{draft.supplier_tax_id or '-'}",
-        f"supplier_name\t{draft.supplier_name or '-'}",
-        f"customer_tax_id\t{draft.customer_tax_id or '-'}",
-        f"customer_name\t{draft.customer_name or '-'}",
-        f"invoice_number\t{draft.invoice_number or '-'}",
-        f"invoice_series\t{draft.invoice_series or '-'}",
-        f"invoice_date\t{draft.invoice_date or '-'}",
-        f"taxable_base\t{(draft.taxable_base if draft.taxable_base is not None else '-')}",
-        f"iva_rate\t{(draft.iva_rate if draft.iva_rate is not None else '-')}",
-        f"iva_amount\t{(draft.iva_amount if draft.iva_amount is not None else '-')}",
-        f"grand_total\t{(draft.grand_total if draft.grand_total is not None else '-')}",
-        f"currency\t{(draft.currency if draft.currency is not None else '-')}",
-        f"retencion_rate\t{(draft.retencion_rate if draft.retencion_rate is not None else '-')}",
-        f"retencion_amount\t{(draft.retencion_amount if draft.retencion_amount is not None else '-')}",
-        f"suplidos_amount\t{(draft.suplidos_amount if draft.suplidos_amount is not None else '-')}",
-        f"suggested_kind\t{(draft.suggested_kind.value if draft.suggested_kind is not None else '-')}",
-        f"transcription_sha256\t{draft.transcription_sha256 or '-'}",
-        f"provenance_fields\t{len(draft.provenance)}",
-        f"discrepancies\t{len(draft.discrepancies)}",
-        f"raw_text_length\t{draft.raw_text_length}",
-    ]
     reviewed_reference = evidence_id or attachment_id or ""
-    notices: list[Notice] = [
-        Notice(
-            severity=NoticeSeverity.INFO,
-            code="ledger.evidence.extract.review_hint",
-            message=tr("cli.app.ledger.evidence.extract_review_hint_message"),
-            context={"reference": reviewed_reference},
-        )
-    ]
-    notices.extend(field_degradation_notices(draft.provenance))
     emit_envelope(
         ctx,
         command="ledger.evidence.extract",
-        result=EvidenceExtractResult.model_validate(payload),
-        lines=lines,
-        notices=notices,
+        result=EvidenceExtractResult.model_validate(
+            _evidence_extract_payload(
+                bucket_id=transaction_repository.bucket_id,
+                evidence_id=evidence_id,
+                attachment_id=attachment_id,
+                off_host_provider=off_host_provider,
+                consent_token=consent_token,
+                draft=draft,
+            ),
+        ),
+        lines=_evidence_extract_lines(transaction_repository.bucket_id, evidence_id, attachment_id, draft),
+        notices=_evidence_extract_notices(reviewed_reference, draft),
     )
 
 
@@ -463,9 +537,9 @@ def evidence_confirm(
     )
 
 
-def _run_evidence_confirm(
+def _confirm_evidence_result(
     *,
-    ctx: typer.Context,
+    bucket_id: str,
     kind: InvoiceKind,
     evidence_id: str | None,
     attachment_id: str | None,
@@ -484,16 +558,11 @@ def _run_evidence_confirm(
     series: str | None,
     notes: str,
     resolve: list[str],
-) -> None:
-    if (evidence_id is None) == (attachment_id is None):
-        raise bad(
-            tr("cli.app.ledger.evidence.extract_reference_required"),
-        )
-    transaction_repository = transaction_catalogue_repo(current_workflow_state())
-    bucket_id = transaction_repository.bucket_id
+) -> InvoiceConfirmationResult:
+    """Run the application confirmation service with CLI-normalized values."""
     resolutions: list[FindingResolution] = [parse_finding_resolution(raw) for raw in resolve]
     try:
-        result = confirm_invoice_draft_from_evidence(
+        return confirm_invoice_draft_from_evidence(
             bucket_id=bucket_id,
             kind=kind,
             counterparty_country=country_code,
@@ -522,8 +591,17 @@ def _run_evidence_confirm(
             raise refusal from None
         raise
 
+
+def _evidence_confirm_payload(
+    *,
+    bucket_id: str,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    result: InvoiceConfirmationResult,
+) -> dict[str, object]:
+    """Project the confirmed invoice and both draft/provenance views."""
     invoice = result.invoice
-    payload = {
+    return {
         "bucket_id": bucket_id,
         "evidence_id": evidence_id,
         "attachment_id": attachment_id,
@@ -547,7 +625,17 @@ def _run_evidence_confirm(
         "iva_category": _resolved_category(result),
         "iva_category_outcome": _resolved_outcome(result),
     }
-    lines = [
+
+
+def _evidence_confirm_lines(
+    bucket_id: str,
+    result: InvoiceConfirmationResult,
+    evidence_id: str | None,
+    attachment_id: str | None,
+) -> list[str]:
+    """Render the stable tabular projection of one confirmed invoice."""
+    invoice = result.invoice
+    return [
         f"bucket_id\t{bucket_id}",
         f"evidence_id\t{evidence_id or '-'}",
         f"attachment_id\t{attachment_id or '-'}",
@@ -560,7 +648,12 @@ def _run_evidence_confirm(
         f"issued_at\t{invoice.issued_at.isoformat()}",
         f"grand_total\t{format(invoice.grand_total, 'f')}",
         f"currency\t{invoice.currency}",
+        *confirm_resolution_lines(result.establishment),
     ]
+
+
+def _evidence_confirm_notices(result: InvoiceConfirmationResult) -> list[Notice]:
+    """Project discrepancy, idempotency, and field-resolution notices."""
     notices: list[Notice] = []
     if result.total_discrepancy is not None:
         # The derived total stands; this only reports that the document disagrees
@@ -580,7 +673,7 @@ def _run_evidence_confirm(
                     "printed_total": format(discrepancy.printed_total, "f"),
                     "recorded_total": format(discrepancy.recorded_total, "f"),
                     "difference": format(discrepancy.difference, "f"),
-                    "currency": invoice.currency,
+                    "currency": result.invoice.currency,
                 },
             ),
         )
@@ -592,7 +685,7 @@ def _run_evidence_confirm(
                 message=tr(
                     "cli.app.ledger.evidence.confirm_already_exists_message",
                 ),
-                context={"invoice_id": invoice.invoice_id},
+                context={"invoice_id": result.invoice.invoice_id},
             ),
         )
     else:
@@ -600,12 +693,8 @@ def _run_evidence_confirm(
             Notice(
                 severity=NoticeSeverity.INFO,
                 code="ledger.evidence.confirm.linked_transaction_hint",
-                message=tr(
-                    "cli.app.ledger.evidence.confirm_link_hint_message",
-                ),
-                context={
-                    "invoice_id": invoice.invoice_id,
-                },
+                message=tr("cli.app.ledger.evidence.confirm_link_hint_message"),
+                context={"invoice_id": result.invoice.invoice_id},
             ),
         )
     # The confirm surface describes the SAME pre-override draft, so the operator
@@ -615,13 +704,68 @@ def _run_evidence_confirm(
     # what it left open. Every one of these was computed on this call and read
     # by nobody before this line.
     notices.extend(confirm_resolution_notices(result.establishment))
-    lines.extend(confirm_resolution_lines(result.establishment))
+    return notices
+
+
+def _run_evidence_confirm(
+    *,
+    ctx: typer.Context,
+    kind: InvoiceKind,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    counterparty_nif: str | None,
+    counterparty_name: str | None,
+    invoice_number: str | None,
+    invoice_date: str | None,
+    taxable_base: str | None,
+    iva_rate: str | None,
+    country_code: str,
+    currency: str | None,
+    operation_type: IntracomOperationType | None,
+    supply_nature: SupplyNature | None,
+    invoice_class: InvoiceClass | None,
+    rectifies: str | None,
+    series: str | None,
+    notes: str,
+    resolve: list[str],
+) -> None:
+    _require_exact_evidence_reference(evidence_id, attachment_id)
+    transaction_repository = transaction_catalogue_repo(current_workflow_state())
+    bucket_id = transaction_repository.bucket_id
+    result = _confirm_evidence_result(
+        bucket_id=bucket_id,
+        kind=kind,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        counterparty_nif=counterparty_nif,
+        counterparty_name=counterparty_name,
+        invoice_number=invoice_number,
+        invoice_date=invoice_date,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        country_code=country_code,
+        currency=currency,
+        operation_type=operation_type,
+        supply_nature=supply_nature,
+        invoice_class=invoice_class,
+        rectifies=rectifies,
+        series=series,
+        notes=notes,
+        resolve=resolve,
+    )
     emit_envelope(
         ctx,
         command="ledger.evidence.confirm",
-        result=EvidenceConfirmResult.model_validate(payload),
-        lines=lines,
-        notices=notices,
+        result=EvidenceConfirmResult.model_validate(
+            _evidence_confirm_payload(
+                bucket_id=bucket_id,
+                evidence_id=evidence_id,
+                attachment_id=attachment_id,
+                result=result,
+            ),
+        ),
+        lines=_evidence_confirm_lines(bucket_id, result, evidence_id, attachment_id),
+        notices=_evidence_confirm_notices(result),
     )
 
 
