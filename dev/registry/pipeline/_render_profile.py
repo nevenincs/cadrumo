@@ -34,8 +34,14 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.record_design_pdf_rows import ABSENT_NATURALEZA_TYPE_CODE
 
 from ._pydantic_error_detail import validation_error_detail
-from ._record_design_ir import RecordDesignIntermediateField
+from ._record_design_ir import RecordDesignIntermediateField, RecordDesignIntermediateSource
 from ._semantic_map_join import JoinedRecordDesign
+from .source_defects import (
+    NoteStatedApplicabilityDeclaration,
+    note_stated_applicability_for,
+    note_states_only_applicability,
+    validate_note_stated_applicability_declarations,
+)
 
 __all__ = [
     "RENDER_PROFILE_SCHEMA_VERSION",
@@ -56,6 +62,7 @@ __all__ = [
     "load_render_profile_source_evidence",
     "project_render_profile_eligibility",
     "render_profile_digest",
+    "resolve_render_profile_eligibility",
     "validate_render_profile",
     "validate_render_profile_authority",
 ]
@@ -151,11 +158,18 @@ class OfficialSourceEvidence(_StrictModel):
 
 
 class ReviewedPolicyDecision(_StrictModel):
-    """An exact-anchor policy decision that makes no claim about source text."""
+    """A reviewed policy decision that makes no claim about official source text."""
 
     authority_kind: Literal["reviewed_policy"]
     decision_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9-]*$")
-    governed_anchor: RenderProfileAnchor
+    #: The single anchor a SINGLETON decision governs, and omitted entirely on a
+    #: width-17 membership decision, whose governed set is the rule's own
+    #: ``anchors`` enumeration. Restating that enumeration here would duplicate
+    #: the one authority the coverage gate already checks and could drift from
+    #: it. Which shape is required is decided by the owning rule, both ways, so
+    #: neither a singleton without its anchor nor a membership with a stray one
+    #: can be authored.
+    governed_anchor: RenderProfileAnchor | None = None
     decision_statement: str = Field(min_length=1)
     justification: str = Field(min_length=1)
 
@@ -222,8 +236,16 @@ class Width17MembershipRule(_StrictModel):
 
     @model_validator(mode="after")
     def _require_explicit_type_specific_representation(self) -> Width17MembershipRule:
-        if not isinstance(self.evidence, OfficialSourceEvidence):
-            raise ValueError("width-17 membership requires verified official-source evidence")
+        # A membership rule may rest on either authority kind, exactly as a
+        # singleton may. Demanding official-source evidence here did not make the
+        # membership better grounded: an official design that states the amount
+        # type, alignment and sign but never its integer/decimal split cannot
+        # ground the split, so the requirement only forced the split's reviewed
+        # inference to be labelled as quoted official text. The label then
+        # asserted an authority the quoted statement does not carry, which is the
+        # under-declaration this authority kind exists to make visible.
+        if isinstance(self.evidence, ReviewedPolicyDecision) and self.evidence.governed_anchor is not None:
+            raise ValueError("width-17 membership policy governs its anchor enumeration, not one named anchor")
         expected = (15, "unsigned") if self.aeat_type == "Num" else (14, "n-prefix-negative-blank-nonnegative")
         if (self.integer_digits, self.sign_policy) != expected:
             raise ValueError(f"{self.aeat_type} width-17 representation conflicts with its explicit sign policy")
@@ -341,7 +363,9 @@ class SingletonNumericRule(_StrictModel):
             raise ValueError(f"{self.semantic_kind} requires exactly {expected_shape!r} integer/decimal digits")
         if self.semantic_kind == "checkbox" and self.allowed_values != ("0", "1"):
             raise ValueError("checkbox requires allowed_values ('0', '1')")
-        if isinstance(self.evidence, ReviewedPolicyDecision) and self.evidence.governed_anchor != self.anchor:
+        if isinstance(self.evidence, ReviewedPolicyDecision) and (
+            self.evidence.governed_anchor is None or self.evidence.governed_anchor != self.anchor
+        ):
             raise ValueError("reviewed policy must name the exact governed anchor")
         return self
 
@@ -560,8 +584,42 @@ def validate_render_profile(
         source_ref=joined.source.source_ref,
         source_sha256=joined.source.source_sha256,
     )
-    eligibility = project_render_profile_eligibility(joined_field.parser_field for joined_field in joined.fields)
+    eligibility = resolve_render_profile_eligibility(
+        (joined_field.parser_field for joined_field in joined.fields),
+        joined.source,
+    )
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
+
+
+def resolve_render_profile_eligibility(
+    fixed_fields: Iterable[RecordDesignIntermediateField],
+    source: RecordDesignIntermediateSource,
+) -> RenderProfileEligibility:
+    """Partition fields of one PARSER-READ design, resolving its declarations here.
+
+    The declaration set is resolved from the source the parser read rather than
+    accepted from the caller, for the same reason
+    ``render_complete_export_tree`` resolves the note-governed amounts there:
+    every consumer -- the generator, the drift check, a screen, a test -- must
+    read ONE declaration set for one pinned design and cannot disagree about
+    which cells have been read.
+
+    This exists as a named function because a caller that assembles the argument
+    itself is a caller that can forget to. That is not hypothetical: the
+    pointer-only screen reached past this boundary into
+    :func:`project_render_profile_eligibility` and passed no declarations, so it
+    answered a question the renderer answers differently and reported a cell
+    whose note had been read, recorded and acted on as outstanding work. Routing
+    through one function removes the argument a caller could get wrong rather
+    than correcting the callers that got it wrong.
+
+    The pin is VALIDATED, not merely read: a declaration naming this source but
+    carrying another digest ends the call rather than being silently ignored,
+    which is the behaviour every consumer of an official design owes.
+    """
+    applicability_notes = note_stated_applicability_for(source.source_ref)
+    validate_note_stated_applicability_declarations(applicability_notes, source)
+    return project_render_profile_eligibility(fixed_fields, applicability_notes=applicability_notes)
 
 
 def validate_render_profile_authority(
@@ -783,7 +841,11 @@ def _is_filing_instruction_only(content: str) -> bool:
     return content.strip().rstrip(".").casefold() in _FILING_INSTRUCTION_ONLY_CONTENTS
 
 
-def _states_no_wire_fact(field: RecordDesignIntermediateField) -> bool:
+def _states_no_wire_fact(
+    field: RecordDesignIntermediateField,
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
+) -> bool:
     """Whether the design left this field's wire fact unstated at its anchor.
 
     A WORKBOOK field has a Contenido cell, so a non-blank one is the design
@@ -802,16 +864,43 @@ def _states_no_wire_fact(field: RecordDesignIntermediateField) -> bool:
     Where the prose DOES state a fact the reviewed rule must agree with it, which
     keeps the official design's veto intact; that agreement is checked where the
     rule's own evidence is validated, not here.
+
+    ``applicability_notes`` is the third case, and it is the narrowest: a cell
+    whose whole content is a pointer to a note SOMEBODY HAS READ and recorded as
+    stating applicability rather than representation. AEAT's own vocabulary makes
+    that cell equivalent to a blank one -- ``Contenido`` holds "aclaraciones
+    relativas al formato del campo" and a ``Nota`` holds "aclaraciones al
+    contenido", so a note about which periods a slot applies to states no format
+    -- and the field goes where a blank cell goes. Read as a wire fact instead it
+    is unparseable, and the numeric derivation falls through to an unscaled
+    integer nobody reviewed.
+
+    The gate is the DECLARATION and not the shape of the text, deliberately. A
+    pointer-shaped cell whose note nobody has opened may still state the wire
+    fact outright; admitting all of them on shape would make roughly 183 fields
+    newly eligible at once, each owing a reviewed rule that does not exist, and
+    would silently swallow the runs an adjudicated
+    :class:`~dev.registry.pipeline.source_defects.NoteGovernedAmountDeclaration`
+    already covers. So an unread pointer keeps the reading it has today and stays
+    visible as outstanding work.
     """
     if field.source_cell is None:
         return True
     if field.content is None or not field.content.strip():
         return True
-    return _is_filing_instruction_only(field.content)
+    if _is_filing_instruction_only(field.content):
+        return True
+    return note_states_only_applicability(
+        applicability_notes,
+        sheet=field.sheet,
+        published_content=" ".join(field.content.split()),
+    )
 
 
 def project_render_profile_eligibility(
     fixed_fields: Iterable[RecordDesignIntermediateField],
+    *,
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> RenderProfileEligibility:
     """Partition fixed joined fields eligible for reviewed absent-wire authority.
 
@@ -819,12 +908,23 @@ def project_render_profile_eligibility(
     a wire fact the official design left unstated, and a reserved run has no
     wire fact beyond being filler, so admitting one would force an author to
     model numeric meaning onto a slot that carries none.
+
+    ``applicability_notes`` reaches :func:`_states_no_wire_fact` unchanged.  It
+    is threaded rather than resolved here so that this projection stays a pure
+    function of the fields it is given, and so that eligibility and the
+    renderer's own routing ask ONE predicate with ONE input set.
+
+    A caller holding a parser-read source wants
+    :func:`resolve_render_profile_eligibility` instead, which resolves and
+    validates that source's declarations before projecting.  Calling this
+    directly with a hand-assembled argument is how a consumer comes to answer a
+    different question from the renderer.
     """
     eligible = tuple(
         field
         for field in fixed_fields
         if (_is_numeric_aeat_type(field.aeat_type) or _has_absent_naturaleza(field))
-        and _states_no_wire_fact(field)
+        and _states_no_wire_fact(field, applicability_notes=applicability_notes)
         and not _is_source_reserved_field(field)
     )
     return RenderProfileEligibility(

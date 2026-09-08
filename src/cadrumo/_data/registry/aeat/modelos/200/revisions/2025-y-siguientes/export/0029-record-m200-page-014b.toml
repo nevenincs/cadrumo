@@ -460,11 +460,11 @@ offset = 1408
 length = 17
 kind = 'header'
 producer_key = 'm200.resultado_a_ingresar_correspondiente_a_la_an'
-data_type = 'integer'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -480,11 +480,11 @@ offset = 1425
 length = 17
 kind = 'header'
 producer_key = 'm200.resultado_a_ingresar_correspondiente_a_la_an_2'
-data_type = 'integer'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',

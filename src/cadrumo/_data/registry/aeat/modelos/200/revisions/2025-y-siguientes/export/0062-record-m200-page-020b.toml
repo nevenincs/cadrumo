@@ -681,10 +681,11 @@ offset = 472
 length = 17
 kind = 'casilla'
 casilla_id = '03594'
-data_type = 'integer'
+data_type = 'decimal'
 required = false
 padding = 'left_zero'
 justification = 'right'
+decimals = 2
 signed = false
 legal_refs = [
     'ley-27-2014:art-41',

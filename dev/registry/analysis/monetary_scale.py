@@ -65,8 +65,12 @@ from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
+from cadrumo.domain.calculations.registry.export import (
+    derive_export_layouts_from_bindings,
+    resolved_export_endpoints,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
 from .corpus import bundled_modelo_ids
 
@@ -90,14 +94,28 @@ _MONETARY = "money"
 #: A monetary casilla rendered by either is not under-declared.
 _SELF_SCALING_WIRE_TYPES = frozenset({"money", "decimal"})
 
+#: Field kinds that carry no produced value, so no scale question arises: a
+#: literal emits its declared text and a filler emits spaces.
+_NON_VALUE_FIELD_KINDS = frozenset({"literal", "filler"})
+
+#: The wire types an amount can be written in. ``text``, ``date`` and
+#: ``boolean`` are not amounts under any reading, so a field declaring one is
+#: never admitted to a sibling comparison on the strength of its width alone.
+_AMOUNT_WIRE_TYPES = frozenset({"money", "decimal", "integer"})
+
 
 @dataclass(frozen=True, slots=True)
 class MonetaryScaleFinding:
-    """One export field whose declared scale does not account for its casilla."""
+    """One export field whose declared scale does not account for its casilla.
+
+    ``casilla_id`` is ``None`` for a field that carries no casilla of its own.
+    Such a field is reachable only by the sibling comparison, which identifies
+    an amount by the run it sits in rather than by a casilla declaration.
+    """
 
     modelo: str
     revision: str
-    casilla_id: CasillaId
+    casilla_id: CasillaId | None
     field_id: str
     kind: str
     detail: str
@@ -164,6 +182,29 @@ def scale_outcome(wire_type: str, decimals: int | None) -> str:
     return "unscaled"
 
 
+def amount_shaped_without_casilla(field: ExportFieldDefinition) -> bool:
+    """Report whether a casilla-less field could be an amount at all.
+
+    A field carrying no casilla has no declared data type to prove it monetary,
+    so admitting it to an amount comparison needs a different kind of evidence.
+    Two things supply it together, and neither is sufficient alone: this shape
+    test, and the caller's requirement that the run it joins is already proven
+    monetary by casilla-linked members of the same record and width.
+
+    The shape test excludes what a fixed-width design actually puts in a numeric
+    slot besides money. A ``value_policy`` names the slot as an ejercicio, an
+    enumeration, or an identifier digit string; ``allowed_values`` closes it to
+    a fixed domain, which an amount never is; a ``date_format`` makes it a date.
+    Each of those is a positive statement that the slot is NOT an amount, so a
+    field making any of them is refused here rather than compared by width.
+    """
+    if str(getattr(field.kind, "value", field.kind)) in _NON_VALUE_FIELD_KINDS:
+        return False
+    if str(field.data_type) not in _AMOUNT_WIRE_TYPES:
+        return False
+    return field.value_policy is None and not field.allowed_values and field.date_format is None
+
+
 def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[MonetaryScaleFinding, ...]:
     """Report monetary fields of one record and width whose siblings scale differently.
 
@@ -172,22 +213,47 @@ def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Monet
     them scales differently from the others, the design gives no reason for it
     and one of them is wrong. This comparison is between declarations rather
     than against a rule, which is why no per-field gate can make it.
+
+    The run is read off the resolved RECORD rather than off the resolved
+    endpoints, because an endpoint exists only where a field reaches a casilla.
+    A filing-grade amount that carries no casilla -- a ``header`` field homed to
+    a producer key, which is how the official designs carry several rectificativa
+    importes -- yields no endpoint at all and was therefore invisible to exactly
+    the comparison that exists to catch an unscaled amount. Two such fields sat
+    unscaled beside twenty-three scaled siblings on modelo 200's DP200014B page
+    while this screen reported that modelo clean.
+
+    Widening the walk cannot make the screen invent an amount, because a group
+    is compared only when a casilla-linked member has ALREADY proven it
+    monetary. A casilla-less field joins a proven run on
+    :func:`amount_shaped_without_casilla`; it can never form a run of its own,
+    so a record of counts, codes or years is never compared with itself.
     """
     declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
-    groups: dict[tuple[str, int], list[tuple[str, str, CasillaId]]] = collections.defaultdict(list)
-    for endpoint in resolved_export_endpoints(revision):
-        field = endpoint.field
-        if field is None or declared.get(endpoint.casilla_id) != _MONETARY:
-            continue
-        if field.length is None:
-            # A field with no declared width cannot be compared against siblings
-            # by width; it is reported by the per-field checks instead.
-            continue
-        outcome = scale_outcome(str(field.data_type), getattr(field, "decimals", None))
-        groups[(endpoint.record_id, field.length)].append((outcome, str(field.id), endpoint.casilla_id))
+    groups: dict[tuple[str, int], list[tuple[str, str, CasillaId | None]]] = collections.defaultdict(list)
+    #: Groups a casilla declared monetary has vouched for. Nothing else is compared.
+    monetary_runs: set[tuple[str, int]] = set()
+    for layout in derive_export_layouts_from_bindings(revision):
+        for record in layout.records:
+            for field in record.fields:
+                if field.length is None:
+                    # A field with no declared width cannot be compared against
+                    # siblings by width; the per-field checks report it instead.
+                    continue
+                casilla_id = field.casilla_id if field.casilla_id is not None else field.endpoint_casilla_id
+                if casilla_id is not None:
+                    if declared.get(casilla_id) != _MONETARY:
+                        continue
+                    monetary_runs.add((str(record.id), field.length))
+                elif not amount_shaped_without_casilla(field):
+                    continue
+                outcome = scale_outcome(str(field.data_type), getattr(field, "decimals", None))
+                groups[(str(record.id), field.length)].append((outcome, str(field.id), casilla_id))
 
     findings: list[MonetaryScaleFinding] = []
     for (record_id, length), members in sorted(groups.items()):
+        if (record_id, length) not in monetary_runs:
+            continue
         if len(members) < 2:
             continue
         outcomes = {outcome for outcome, _, _ in members}

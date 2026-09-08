@@ -22,31 +22,67 @@ declaration's own shape would reveal the difference.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Final
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.filing_producer_key import FilingProducerKey
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-from ..pipeline._export_tree import ExportTreeTransportProfile, _literal_derivation
-from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
+from ..pipeline._export_tree import (
+    ExportTreeTransportProfile,
+    _literal_derivation,
+    _numeric_derivation,
+    render_complete_export_tree,
+)
+from ..pipeline._record_design_ir import (
+    RecordDesignIntermediate,
+    RecordDesignIntermediateField,
+    RecordDesignWorkbookFormat,
+    load_record_design_intermediate,
+)
+from ..pipeline._render_profile import (
+    _states_no_wire_fact,
+    load_render_profile,
+    load_render_profile_source_evidence,
+    project_render_profile_eligibility,
+)
 from ..pipeline._semantic_map import SemanticMapEntry
-from ..pipeline._semantic_map_join import JoinedRecordDesignField
+from ..pipeline._semantic_map_join import JoinedRecordDesignField, join_record_design_semantics
+from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline.source_defects import (
+    NoteGovernedAmountDeclaration,
+    NoteStatedApplicabilityDeclaration,
     SourceDefectDeclaration,
     adjudicated_literal_for,
+    note_governed_amounts_for,
+    note_stated_applicability_for,
     source_defects_for,
+    validate_note_governed_amount_declarations,
+    validate_note_stated_applicability_declarations,
     validate_source_defect_declarations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+#: The hash-pinned 2025 Modelo 390 design both adjudication mechanisms are read from.
+_M390_2025_SOURCE_REF: Final = "aeat-dr-390-2025"
+
 #: The real modelo 390 filing-year 2022 workbook digest this mechanism was built for.
 _SHA: Final = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
 _SHA_2023: Final = "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7"
 _OTHER_SHA: Final = "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7"
+
+#: The slot width every adjudicated amount run of these designs declares. Both
+#: paired forms of modelo 200's DP200001!A121 fill it: fifteen digits and two
+#: decimals unsigned, or a sign position with fourteen and two.
+_WIDTH_17: Final = 17
 
 #: The cell content EXACTLY as the production parser hands it to the renderer.
 #: Read from the hash-pinned workbook rather than composed here. The wrapper is
@@ -292,3 +328,589 @@ class TestTheValidatorMatchesWhatTheRendererPassesIt:
     def test_the_validator_accepts_a_real_joined_source(self) -> None:
         """Drives the actual object the renderer holds, not a stand-in."""
         validate_source_defect_declarations((_declaration(),), _intermediate().source)
+
+
+class TestNoteGovernedAmountAdjudication:
+    """A ``Contenido`` cell holding only a footnote pointer states no scale.
+
+    Modelo 390's 2025 design replaced the ``15 enteros 2 decimales`` clause of
+    its expired temporary-rate amount slots with the bare pointer ``Nota 2``,
+    whose note reads "estas casillas deben estar rellenas a 0" -- it withholds
+    the VALUE and says nothing about how digits are written. Read as an unscaled
+    integer, those slots emit euros into a run of monetary casillas whose every
+    surviving member emits cents, which is a filing wrong by two orders of
+    magnitude and the one condition no per-field rule can see.
+
+    These tests pin the same three properties the literal adjudication above
+    relies on -- exact published content, parser-read digest, and geometry fed
+    back through the normal width check -- plus the one this mechanism adds: an
+    unadjudicated pointer keeps the historical reading rather than being
+    silently re-scaled by a rule nobody reviewed for that document.
+    """
+
+    _M390_2025_SHA: Final = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
+    _POINTER: Final = "Nota 2"
+
+    @staticmethod
+    def _declaration(**overrides: object) -> NoteGovernedAmountDeclaration:
+        fields: dict[str, object] = {
+            "source_ref": "aeat-dr-390-2025",
+            "source_sha256": TestNoteGovernedAmountAdjudication._M390_2025_SHA,
+            "sheet": "Pág. 2",
+            "published_content": TestNoteGovernedAmountAdjudication._POINTER,
+            "note_cell": "A119",
+            "note_statement": "Nota 2: estas casillas deben estar rellenas a 0",
+            "integer_digits": 15,
+            "decimal_digits": 2,
+            # This design pairs Tipo 'N' with an UNSIGNED fifteen-digit form:
+            # its surviving rate rows spell '15 enteros 2 decimales', which
+            # fills all seventeen bytes and leaves no room for a sign marker.
+            "sign_policy": "unsigned",
+            "evidence": "the surviving rates on the same sheet state 15 enteros 2 decimales at the same width",
+        }
+        fields.update(overrides)
+        return NoteGovernedAmountDeclaration.model_validate(fields)
+
+    @staticmethod
+    def _joined_amount_field(*, sheet: str = "Pág. 2", length: int = 17) -> JoinedRecordDesignField:
+        parser_field = RecordDesignIntermediateField.model_validate(
+            {
+                "sheet": sheet,
+                "record_identity": sheet,
+                "source_row": 14,
+                "source_cell": "A14",
+                "ordinal": "9",
+                "offset": 64,
+                "length": length,
+                "aeat_type": "N",
+                "normalized_description": "Reg. ordin. - Tipo 2% - Cuota [668]",
+                "content": TestNoteGovernedAmountAdjudication._POINTER,
+            }
+        )
+        entry = SemanticMapEntry.model_validate(
+            {
+                "anchor": {
+                    "sheet": parser_field.sheet,
+                    "source_row": parser_field.source_row,
+                    "source_cell": parser_field.source_cell,
+                    "ordinal": parser_field.ordinal,
+                    "record_identity": parser_field.record_identity,
+                },
+                "export_field_id": "modelo-390-page-02-casilla-tipo-2-cuota",
+                "kind": "casilla",
+                "casilla_id": "iva.anual.repercutido.tipo-2.cuota",
+                "legal_refs": ("ley-37-1992:art-90",),
+                "source_refs": ("aeat-dr-390-2025",),
+            }
+        )
+        return JoinedRecordDesignField(parser_field=parser_field, semantic_entry=entry)
+
+    def test_the_live_catalogue_covers_every_sheet_the_2025_design_points_from(self) -> None:
+        declarations = note_governed_amounts_for("aeat-dr-390-2025")
+
+        assert {item.sheet for item in declarations} == {"Pág. 2", "Pág. 2 bis", "Pág. 3", "Pág. 4"}
+        for declaration in declarations:
+            assert declaration.source_sha256 == self._M390_2025_SHA
+            assert declaration.published_content == self._POINTER
+            assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
+
+    def test_an_adjudicated_pointer_renders_the_scale_its_run_states(self) -> None:
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(self._declaration(),),
+        )
+
+        assert derived.derivation_code == "numeric-note-governed-amount-v1"
+        assert str(derived.field.data_type) == "decimal"
+        assert derived.field.decimals == 2
+
+    def test_an_unadjudicated_pointer_keeps_the_reading_it_always_had(self) -> None:
+        """The correction is opt-in per design; it never re-scales a document nobody read."""
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(),
+        )
+
+        assert derived.derivation_code == "numeric-integer-v1"
+        assert str(derived.field.data_type) == "integer"
+
+    def test_a_declaration_does_not_reach_another_sheets_note_of_the_same_number(self) -> None:
+        """A note label identifies a note only together with the sheet printing it."""
+        derived = _numeric_derivation(
+            self._joined_amount_field(sheet="Pág. 5"),
+            export_record_id="modelo-390-page-05",
+            note_governed_amounts=(self._declaration(),),
+        )
+
+        assert derived.derivation_code == "numeric-integer-v1"
+
+    def test_the_declared_representation_cannot_contradict_the_slots_own_width(self) -> None:
+        with pytest.raises(RegistryValidationError, match="content declares 17"):
+            _numeric_derivation(
+                self._joined_amount_field(length=16),
+                export_record_id="modelo-390-page-02",
+                note_governed_amounts=(self._declaration(),),
+            )
+
+    def test_a_declaration_pinned_to_another_digest_is_refused(self) -> None:
+        with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
+            validate_note_governed_amount_declarations(
+                (self._declaration(source_sha256=_OTHER_SHA),),
+                _intermediate(source_ref="aeat-dr-390-2025", sha=self._M390_2025_SHA).source,
+            )
+
+
+class TestModelo200NoteGovernedAmounts:
+    """Modelo 200's 2025 design points two amount runs at notes that state no scale.
+
+    Twenty-six ``Deducción resto del grupo`` slots on DP200019 and the
+    ``Incremento porcentual de la plantilla media`` slot on DP200020B carry the
+    bare pointer ``Nota 1`` where their siblings carry no ``Contenido`` at all.
+    DP200019's note names WHO fills the slot; DP200020B's note spells the
+    maximum admissible value together with the seventeen-character wire form it
+    takes, which states fifteen integer positions and two decimals outright.
+    Either way the run's representation is the one this design states for itself
+    in ``DP200001!A121``, and the unscaled integer reading emits euros into a
+    cents field.
+
+    These tests hold the declared adjudication against that design, and hold the
+    boundary that keeps it from travelling: the two notes carry the same label,
+    so a declaration for one sheet must not reach the other.
+    """
+
+    _M200_2025_SHA: Final = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
+    _POINTER: Final = "Nota 1"
+
+    @staticmethod
+    def _joined_amount_field(*, sheet: str, length: int = 17, content: str | None = None) -> JoinedRecordDesignField:
+        # DP200014B's two pointer rows are Tipo 'N'; the DP200019 run this
+        # helper was written for is Tipo 'Num'. The type travels with the sheet
+        # so each case exercises the row shape its own design publishes.
+        signed_sheet = sheet == "DP200014B"
+        parser_field = RecordDesignIntermediateField.model_validate(
+            {
+                "sheet": sheet,
+                "record_identity": sheet,
+                "source_row": 94 if signed_sheet else 119,
+                "source_cell": "A94" if signed_sheet else "A119",
+                "ordinal": "89" if signed_sheet else "114",
+                "offset": 1408 if signed_sheet else 1849,
+                "length": length,
+                "aeat_type": "N" if signed_sheet else "Num",
+                "normalized_description": (
+                    "Resultado a ingresar correspondiente a la anterior autoliquidación (A)"
+                    if signed_sheet
+                    else "Deducciones I+D+i excluidas de límite - Deducción resto del grupo"
+                ),
+                "content": content if content is not None else TestModelo200NoteGovernedAmounts._POINTER,
+            }
+        )
+        entry = SemanticMapEntry.model_validate(
+            {
+                "anchor": {
+                    "sheet": parser_field.sheet,
+                    "source_row": parser_field.source_row,
+                    "source_cell": parser_field.source_cell,
+                    "ordinal": parser_field.ordinal,
+                    "record_identity": parser_field.record_identity,
+                },
+                "export_field_id": "m200-2025.dp200019.f0114",
+                "kind": "header",
+                "producer_key": FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO,
+                "legal_refs": ("ley-27-2014:art-39",),
+                "source_refs": ("aeat-dr-200-2025",),
+            }
+        )
+        return JoinedRecordDesignField(parser_field=parser_field, semantic_entry=entry)
+
+    def test_the_live_catalogue_pins_every_pointer_run_to_the_read_design(self) -> None:
+        declarations = note_governed_amounts_for("aeat-dr-200-2025")
+
+        assert {item.sheet for item in declarations} == {"DP200019", "DP200020B", "DP200014B"}
+        for declaration in declarations:
+            assert declaration.source_sha256 == self._M200_2025_SHA
+            assert declaration.note_statement.strip() == declaration.note_statement
+            assert declaration.note_statement
+            # Every run of this design fills the same seventeen-byte slot, by
+            # one of the two paired forms DP200001!A121 states.
+            assert declaration.wire_length == _WIDTH_17
+            assert declaration.decimal_digits == 2
+
+    def test_the_unsigned_runs_spend_every_byte_on_digits(self) -> None:
+        by_sheet = {item.sheet: item for item in note_governed_amounts_for("aeat-dr-200-2025")}
+
+        for sheet in ("DP200019", "DP200020B"):
+            declaration = by_sheet[sheet]
+            assert declaration.published_content == self._POINTER
+            assert declaration.sign_policy == "unsigned"
+            assert declaration.signed is False
+            assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
+
+    def test_each_declaration_quotes_the_note_its_own_sheet_defines(self) -> None:
+        by_sheet = {item.sheet: item for item in note_governed_amounts_for("aeat-dr-200-2025")}
+
+        assert by_sheet["DP200019"].note_cell == "A254"
+        assert "grupos mercantiles" in by_sheet["DP200019"].note_statement
+        assert by_sheet["DP200020B"].note_cell == "A106"
+        assert "00000000009999999" in by_sheet["DP200020B"].note_statement
+
+    def test_the_pointer_run_renders_the_scale_its_design_states(self) -> None:
+        derived = _numeric_derivation(
+            self._joined_amount_field(sheet="DP200019"),
+            export_record_id="m200-2025-dp200019",
+            note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+        )
+
+        assert derived.field.data_type == "decimal"
+        assert derived.field.decimals == 2
+        assert derived.derivation_code == "numeric-note-governed-amount-v1"
+
+    def test_the_same_label_on_an_undeclared_sheet_keeps_the_unscaled_reading(self) -> None:
+        derived = _numeric_derivation(
+            self._joined_amount_field(sheet="DP200015"),
+            export_record_id="m200-2025-dp200015",
+            note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+        )
+
+        assert derived.field.data_type == "integer"
+        assert derived.field.decimals is None
+        assert derived.derivation_code == "numeric-integer-v1"
+
+    def test_the_signed_rectificativa_run_renders_the_paired_form_its_design_states(self) -> None:
+        """``DP200001!A121`` states two forms; a Tipo 'N' slot takes ``N + 14``.
+
+        The unsigned reading is not merely differently spelled here: it drops
+        the sign the rectificativa subtraction Nota 2 describes needs, and reads
+        fourteen integer positions as fifteen, which is a magnitude error of ten
+        on top of the hundredfold one the unscaled reading makes.
+        """
+        for pointer in ("Nota 1", "Nota 2"):
+            derived = _numeric_derivation(
+                self._joined_amount_field(sheet="DP200014B", content=pointer),
+                export_record_id="m200-2025-dp200014b",
+                note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+            )
+
+            assert derived.derivation_code == "numeric-note-governed-amount-v1"
+            assert derived.field.data_type == "money", pointer
+            assert derived.field.signed is True, pointer
+            # `money` carries its scale inside the codec, and the schema refuses
+            # a field declaring decimals beside any other data_type.
+            assert derived.field.decimals is None, pointer
+
+    def test_each_signed_declaration_quotes_the_note_its_own_row_points_at(self) -> None:
+        by_pointer = {
+            item.published_content: item
+            for item in note_governed_amounts_for("aeat-dr-200-2025")
+            if item.sheet == "DP200014B"
+        }
+
+        assert set(by_pointer) == {"Nota 1", "Nota 2"}
+        for declaration in by_pointer.values():
+            assert declaration.sign_policy == "n-prefix-negative-blank-nonnegative"
+            assert declaration.signed is True
+            assert (declaration.integer_digits, declaration.decimal_digits) == (14, 2)
+        assert by_pointer["Nota 1"].note_cell == "A102"
+        assert "solo pueden tener contenido" in by_pointer["Nota 1"].note_statement
+        assert by_pointer["Nota 2"].note_cell == "A106"
+        assert "01578" in by_pointer["Nota 2"].note_statement
+
+    def test_the_signed_width_check_counts_the_sign_position(self) -> None:
+        """Sixteen digits and a marker fill seventeen bytes; sixteen bytes do not.
+
+        Without the sign position in the count, this declaration would appear to
+        need sixteen bytes and would silently pass in a sixteen-byte slot.
+        """
+        with pytest.raises(RegistryValidationError, match="content declares 17"):
+            _numeric_derivation(
+                self._joined_amount_field(sheet="DP200014B", content="Nota 1", length=16),
+                export_record_id="m200-2025-dp200014b",
+                note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+            )
+
+    def test_a_signed_declaration_cannot_carry_a_scale_the_money_codec_refuses(self) -> None:
+        """The signed wire type fixes two decimals, so no other count may be declared.
+
+        Admitting one would publish a field whose declared scale and emitted
+        scale disagree, with nothing downstream positioned to notice.
+        """
+        signed = next(item for item in note_governed_amounts_for("aeat-dr-200-2025") if item.sheet == "DP200014B")
+
+        with pytest.raises(ValidationError, match="fixes 2 decimals"):
+            NoteGovernedAmountDeclaration.model_validate({**signed.model_dump(), "decimal_digits": 4})
+
+    def test_the_sign_is_declared_per_run_and_never_inferred_from_the_aeat_type(self) -> None:
+        """Modelo 390 pairs Tipo 'N' with an UNSIGNED fifteen-digit representation.
+
+        Both designs print 'N' in the Tipo column on width-17 amount rows, and
+        they mean different wire forms by it: modelo 200's own DP200001!A121
+        spells 'N + 14' beside the unsigned '15', while modelo 390's 2025 rows
+        carry sibling Contenido cells reading '15 enteros 2 decimales', which
+        fills all seventeen bytes and leaves no room for a marker. A rule
+        mapping the type to a sign would be right for one and wrong for the
+        other, so this holds the two live declarations apart.
+        """
+        m200 = next(item for item in note_governed_amounts_for("aeat-dr-200-2025") if item.sheet == "DP200014B")
+        m390 = next(iter(note_governed_amounts_for("aeat-dr-390-2025")))
+
+        assert m200.signed is True
+        assert (m200.integer_digits, m200.decimal_digits) == (14, 2)
+        assert m390.signed is False
+        assert (m390.integer_digits, m390.decimal_digits) == (15, 2)
+        assert m200.wire_length == m390.wire_length == _WIDTH_17
+
+    def test_the_declared_scale_cannot_contradict_the_slots_own_width(self) -> None:
+        with pytest.raises(RegistryValidationError, match="content declares 17"):
+            _numeric_derivation(
+                self._joined_amount_field(sheet="DP200019", length=16),
+                export_record_id="m200-2025-dp200019",
+                note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+            )
+
+    def test_a_declaration_pinned_to_another_digest_is_refused(self) -> None:
+        stale = tuple(
+            item.model_copy(update={"source_sha256": _OTHER_SHA})
+            for item in note_governed_amounts_for("aeat-dr-200-2025")
+        )
+
+        with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
+            validate_note_governed_amount_declarations(
+                stale,
+                _intermediate(source_ref="aeat-dr-200-2025", sha=self._M200_2025_SHA).source,
+            )
+
+
+@pytest.fixture(scope="module")
+def m390_2025_render_authorities():
+    """Assemble the real 390/2025 render inputs the drift gate itself assembles.
+
+    Deliberately the shipped semantic map, render profile, registry tree and
+    hash-verified design binary rather than a constructed stand-in: the property
+    under test is that the renderer resolves its adjudication set from the
+    PARSER-READ source, which a synthetic source could not prove.
+    """
+    epoch = "2025"
+    semantic_map = load_semantic_map(Path("dev/registry/mappings/modelo_390") / epoch)
+    render_profile = load_render_profile(Path("dev/registry/render_profiles/modelo_390") / epoch)
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(item for item in modelos if str(item.id) == "390")
+    inspection = RegistryRevisionInspection.from_revision(
+        modelo=modelo,
+        revision=modelo.revisions["2025"],
+        source_root=bundled_path(),
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
+    )
+    intermediate = load_record_design_intermediate(
+        bundled_path(),
+        catalogues.sources,
+        source_ref=_M390_2025_SOURCE_REF,
+        filing_year=2025,
+        design_epoch=epoch,
+    )
+    joined = join_record_design_semantics(semantic_map, intermediate, inspection)
+    transport = ExportTreeTransportProfile(
+        modelo="390",
+        design_epoch=epoch,
+        source_ref=_M390_2025_SOURCE_REF,
+        source_sha256=intermediate.source.source_sha256,
+        layout_id="generated-modelo-390-2025-fichero",
+        format="fixed_width",
+        encoding=ExportEncoding.ISO_8859_1,
+        line_ending="crlf",
+        serializer_convention="rtoml-pretty-v1",
+    )
+    evidence = load_render_profile_source_evidence(
+        bundled_path() / catalogues.sources[_M390_2025_SOURCE_REF].corpus_path,
+        render_profile,
+    )
+    return joined, semantic_map, transport, render_profile, evidence
+
+
+class TestNoteGovernedAmountsReachTheRenderer:
+    """The renderer owns the adjudication set; a caller cannot supply or suppress one.
+
+    ``render_complete_export_tree`` takes no note-governed parameter. It resolves
+    the set from the joined source it was handed and validates the digest pin
+    before rendering, so these two tests drive the real entry point over the real
+    390/2025 design rather than asserting that the wiring is spelled a particular
+    way in the module text.
+    """
+
+    def test_the_expired_rate_slots_render_scaled_with_no_caller_involvement(
+        self,
+        m390_2025_render_authorities,
+        tmp_path: Path,
+    ) -> None:
+        joined, semantic_map, transport, render_profile, evidence = m390_2025_render_authorities
+
+        rendered = render_complete_export_tree(
+            tmp_path / "export",
+            revision_id="2025",
+            joined=joined,
+            semantic_map=semantic_map,
+            transport_profile=transport,
+            render_profile=render_profile,
+            render_profile_source_evidence=evidence,
+        )
+
+        adjudicated = tuple(
+            derivation
+            for derivation in rendered.field_derivations
+            if derivation.derivation_code == "numeric-note-governed-amount-v1"
+        )
+        assert len(adjudicated) == 80, "the expired-rate slots the 2025 design points at Nota 2"
+        assert {derivation.parser_field.sheet for derivation in adjudicated} == {
+            "Pág. 2",
+            "Pág. 2 bis",
+            "Pág. 3",
+            "Pág. 4",
+        }
+        for derivation in adjudicated:
+            assert derivation.parser_field.content == "Nota 2"
+            assert str(derivation.field.data_type) == "decimal"
+            assert derivation.field.decimals == 2
+        assert not any(
+            derivation.derivation_code == "numeric-integer-v1" and derivation.parser_field.length == 17
+            for derivation in rendered.field_derivations
+        ), "no width-17 amount may still emit unscaled"
+
+    def test_a_source_the_declarations_are_not_pinned_to_is_refused_by_the_renderer(
+        self,
+        m390_2025_render_authorities,
+        tmp_path: Path,
+    ) -> None:
+        """Validation runs inside the render path, not merely beside it."""
+        joined, semantic_map, transport, render_profile, evidence = m390_2025_render_authorities
+        drifted = joined.model_copy(update={"source": joined.source.model_copy(update={"source_sha256": _OTHER_SHA})})
+        drifted_transport = transport.model_copy(update={"source_sha256": _OTHER_SHA})
+
+        with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
+            render_complete_export_tree(
+                tmp_path / "export",
+                revision_id="2025",
+                joined=drifted,
+                semantic_map=semantic_map,
+                transport_profile=drifted_transport,
+                render_profile=render_profile,
+                render_profile_source_evidence=evidence,
+            )
+
+
+class TestNoteStatedApplicabilityAdmission:
+    """A note that states WHEN a slot applies leaves its wire fact unstated.
+
+    Modelo 353's 2026 design gives its 'Pago a cuenta de entregas de gasolinas'
+    slot the ``Contenido`` cell ``Nota 4.`` and leaves the Contenido cell of its
+    twenty-eight structurally identical siblings -- same record, same width,
+    same amount family -- empty. The note reads "Solo para periodos 02 y
+    siguientes." in full: it names the periods the slot applies to and states no
+    scale, decimal count, sign or alignment. The siblings reach the reviewed
+    width-17 render profile; this one alone fell through to an unscaled integer,
+    emitting euros into a run that emits cents.
+
+    A declaration admits the field to that same reviewed profile. It adjudicates
+    NO representation -- the model carries no digit counts to adjudicate one
+    with -- so the field inherits the profile's reviewed project inference on
+    exactly the standing its siblings have, and no better.
+
+    These tests hold the two properties that keep the mechanism from spreading:
+    the gate is the declaration and never the pointer-shaped text, and one
+    predicate answers for both the renderer's routing and the profile's own
+    eligibility, so a field cannot be admitted on one side and refused on the
+    other.
+    """
+
+    _M353_2026_SHA: Final = "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380"
+    _POINTER: Final = "Nota 4."
+
+    @staticmethod
+    def _amount_field(*, sheet: str = "35301", content: str = "Nota 4.") -> RecordDesignIntermediateField:
+        return RecordDesignIntermediateField.model_validate(
+            {
+                "sheet": sheet,
+                "record_identity": sheet,
+                "source_row": 132,
+                "source_cell": "A132",
+                "ordinal": "127",
+                "offset": 1211,
+                "length": 17,
+                "aeat_type": "Num",
+                "normalized_description": (
+                    "Liquidacion. Pago a cuenta de entregas de gasolinas, gasoleos y biocarburantes [10]"
+                ),
+                "content": content,
+            }
+        )
+
+    def test_the_live_catalogue_records_the_note_that_was_read(self) -> None:
+        declarations = note_stated_applicability_for("aeat-dr-353-2026")
+
+        assert len(declarations) == 1
+        declaration = declarations[0]
+        assert declaration.source_sha256 == self._M353_2026_SHA
+        assert (declaration.sheet, declaration.published_content) == ("35301", self._POINTER)
+        assert declaration.note_statement == "Solo para periodos 02 y siguientes."
+        assert "no scale" in declaration.evidence
+
+    def test_the_declaration_cannot_state_a_representation(self) -> None:
+        """The family adjudicates admission and nothing about the wire.
+
+        A digit count on this model would let an author adjudicate a scale
+        through the family that exists precisely because none was stated.
+        """
+        with pytest.raises(ValidationError):
+            NoteStatedApplicabilityDeclaration.model_validate(
+                {
+                    "source_ref": "aeat-dr-353-2026",
+                    "source_sha256": self._M353_2026_SHA,
+                    "sheet": "35301",
+                    "published_content": self._POINTER,
+                    "note_cell": "B157",
+                    "note_statement": "Solo para periodos 02 y siguientes.",
+                    "integer_digits": 15,
+                    "decimal_digits": 2,
+                    "evidence": "x",
+                }
+            )
+
+    def test_an_undeclared_pointer_cell_still_states_a_wire_fact(self) -> None:
+        """The gate is the reading, not the shape: an unopened note moves nothing."""
+        field = self._amount_field()
+
+        assert not _states_no_wire_fact(field)
+        assert not project_render_profile_eligibility([field]).all_fields
+
+    def test_a_declared_pointer_cell_reaches_the_profile_exactly_as_a_blank_one_does(self) -> None:
+        declarations = note_stated_applicability_for("aeat-dr-353-2026")
+        field = self._amount_field()
+
+        assert _states_no_wire_fact(field, applicability_notes=declarations)
+        eligible = project_render_profile_eligibility([field], applicability_notes=declarations)
+        assert eligible.width_17_fields == (field,)
+        # The same field with the cell left empty, which is what the declaration
+        # says this one amounts to, lands in exactly the same partition.
+        assert project_render_profile_eligibility([self._amount_field(content="")]).width_17_fields == (
+            self._amount_field(content=""),
+        )
+
+    def test_a_declaration_does_not_reach_another_sheet(self) -> None:
+        """A note label identifies a note only together with the sheet printing it."""
+        assert not _states_no_wire_fact(
+            self._amount_field(sheet="35302"),
+            applicability_notes=note_stated_applicability_for("aeat-dr-353-2026"),
+        )
+
+    def test_a_declaration_pinned_to_another_digest_is_refused(self) -> None:
+        stale = tuple(
+            item.model_copy(update={"source_sha256": _OTHER_SHA})
+            for item in note_stated_applicability_for("aeat-dr-353-2026")
+        )
+
+        with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
+            validate_note_stated_applicability_declarations(
+                stale,
+                _intermediate(source_ref="aeat-dr-353-2026", sha=self._M353_2026_SHA).source,
+            )

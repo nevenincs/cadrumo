@@ -549,6 +549,54 @@ def test_profile_models_refuse_implicit_defaults_selectors_and_sign_conflicts() 
         SingletonNumericRule.model_validate(policy_payload)
 
 
+def _membership_policy_evidence() -> dict[str, object]:
+    return {
+        "authority_kind": "reviewed_policy",
+        "decision_id": "m200-2025-width17-num-amount-representation",
+        "decision_statement": "Every width-17 Num amount slot carries fifteen integer positions and two decimals.",
+        "justification": "The official design states type, alignment and padding but never the decimal split.",
+    }
+
+
+def test_width_17_membership_accepts_a_reviewed_policy_over_its_anchor_enumeration() -> None:
+    """A membership rule may rest on reviewed policy, governing its own anchors.
+
+    An official design that states an amount type, its alignment and its sign but
+    never its integer/decimal split cannot ground that split.  Requiring
+    official-source evidence here would force the split's reviewed inference to
+    be labelled as quoted official text, asserting an authority the quoted
+    statement does not carry.
+    """
+    payload = _width_rule("Num", _anchor(10)).model_dump(mode="python")
+    payload["evidence"] = _membership_policy_evidence()
+    rule = Width17MembershipRule.model_validate(payload)
+    evidence = rule.evidence
+    assert isinstance(evidence, ReviewedPolicyDecision)
+    assert evidence.governed_anchor is None
+    assert rule.anchors == (_anchor(10),)
+
+
+def test_width_17_membership_policy_refuses_a_named_governed_anchor() -> None:
+    """A membership decision governs the rule's enumeration, never one anchor."""
+    payload = _width_rule("N", _anchor(11)).model_dump(mode="python")
+    payload["evidence"] = _membership_policy_evidence() | {
+        "decision_id": "m200-2025-width17-n-amount-representation",
+        "governed_anchor": _anchor(11),
+    }
+    with pytest.raises(ValidationError, match="anchor enumeration"):
+        Width17MembershipRule.model_validate(payload)
+
+
+def test_singleton_policy_refuses_an_omitted_governed_anchor() -> None:
+    """A singleton decision must still name the exact anchor it governs."""
+    payload = _singleton(_anchor(12)).model_dump(mode="python")
+    payload["evidence"] = _membership_policy_evidence() | {
+        "decision_id": "m200-2025-dp200001-r0012",
+    }
+    with pytest.raises(ValidationError, match="exact governed anchor"):
+        SingletonNumericRule.model_validate(payload)
+
+
 @pytest.mark.parametrize(
     ("semantic_kind", "value_policy", "integer_digits", "decimal_digits", "allowed_values", "error"),
     (
@@ -1139,14 +1187,35 @@ def test_real_source_loader_refuses_a_linked_official_binary_before_hashing(tmp_
 
 
 def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
-    """The authority depends only on parser IR and exact joined source fields."""
+    """The authority depends only on parser IR and exact joined source facts.
+
+    The set is an ALLOW-LIST, not a record of what the module happens to import:
+    what it forbids is this authority reaching a generated tree, an export
+    layout, or any other downstream artefact to decide what a field's wire
+    representation is. Eligibility must be answerable from the official design
+    the parser read and the reviewed declarations pinned to that exact design,
+    or the render profile stops being the thing that states an absent wire fact
+    and starts inferring it from what was already generated.
+
+    ``source_defects`` is admitted on that test, not by accretion: it carries the
+    adjudicated declarations ABOUT the same pinned source -- which notes state
+    applicability rather than format, and which amounts a read note governs --
+    and the authority validates each against that source's own digest before
+    projecting eligibility. It is source-side evidence, not a tree or layout
+    oracle. A new local import outside this set still fails, which is the point.
+    """
     module = ast.parse(inspect.getsource(_render_profile))
     local_imports = {
         node.module
         for node in ast.walk(module)
         if isinstance(node, ast.ImportFrom) and node.level and node.module is not None
     }
-    assert local_imports == {"_pydantic_error_detail", "_record_design_ir", "_semantic_map_join"}
+    assert local_imports == {
+        "_pydantic_error_detail",
+        "_record_design_ir",
+        "_semantic_map_join",
+        "source_defects",
+    }
     source_loader = next(
         node
         for node in module.body

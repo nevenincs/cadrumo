@@ -185,11 +185,10 @@ ordinal = "128"
 record_identity = "35301"
 
 [width_17_rules.evidence]
-authority_kind = "official_source"
-source_sheet = "35301"
-source_cell = "B146"
-expected_normalized_statement = "5. Los campos numéricos con signo (N) admiten números más el carácter N . Los datos numéricos deberán estar alineados a la derecha rellenando con ceros por la izquierda."
-justification = "The design states the sign contract for this numeric type in its own Nota 1 block; every width-17 amount slot on this modelo is an importe, so the reviewed membership carries the standard fifteen-position amount representation under that stated sign rule."
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-width17-n-amount-representation"
+decision_statement = "Every width-17 N amount slot of this design is rendered as a fourteen-position integer part followed by two decimal positions, right-aligned and left-padded with zeros, with the remaining leading position of the seventeen-byte slot carrying the sign: the character N for a negative value and blank otherwise."
+justification = "The exact official design states, for N fields, only that they admit digits plus the character N and are right-aligned with left zero padding, and it leaves Contenido blank at every width-17 amount slot; it states no integer/decimal split, and no such split is stated anywhere in this modelo's designs. The fourteen-plus-two split, which reserves one of the seventeen positions for that stated sign character, is therefore a reviewed project decision, not a quotation of official text, applied uniformly to every anchor this rule enumerates because each is a seventeen-position importe of that same type."
 
 [design_identity]
 modelo = "353"

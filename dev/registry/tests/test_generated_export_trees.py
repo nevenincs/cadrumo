@@ -359,11 +359,11 @@ def _authorities(tree: _GeneratedTree):
         line_ending="crlf",
         serializer_convention="rtoml-pretty-v1",
     )
-    # A width-17 membership rule REQUIRES official-source evidence by schema, so
-    # a profile carrying one only validates against text actually read back out
-    # of the hash-verified design binary. A profile whose every rule is a
-    # reviewed policy claims no cell, and reading the workbook for it would be
-    # both pointless and a refusal, since the resolver rejects an empty claim set.
+    # A rule of either kind may claim an official cell, and such a claim only
+    # validates against text actually read back out of the hash-verified design
+    # binary. A profile whose every rule is a reviewed policy claims no cell, and
+    # reading the workbook for it would be both pointless and a refusal for a
+    # design that is not a workbook at all.
     claims_official = any(
         rule.evidence.authority_kind != "reviewed_policy"
         for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)

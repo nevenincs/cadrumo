@@ -71,8 +71,15 @@ from ._variable_envelope import (
     compile_filing_envelope_definition,
 )
 from .source_defects import (
+    NoteGovernedAmountDeclaration,
+    NoteStatedApplicabilityDeclaration,
     SourceDefectDeclaration,
     adjudicated_literal_for,
+    note_governed_amount_scale_for,
+    note_governed_amounts_for,
+    note_stated_applicability_for,
+    validate_note_governed_amount_declarations,
+    validate_note_stated_applicability_declarations,
     validate_source_defect_declarations,
 )
 
@@ -416,6 +423,13 @@ def render_complete_export_tree(
     """
     _validate_transport_profile(joined, transport_profile)
     validate_source_defect_declarations(source_defects, joined.source)
+    # Resolved from the parser-read source rather than accepted from the caller,
+    # so every render path -- generator, drift check, test -- reads one
+    # adjudication set for one pinned design and cannot disagree about it.
+    note_governed_amounts = note_governed_amounts_for(joined.source.source_ref)
+    validate_note_governed_amount_declarations(note_governed_amounts, joined.source)
+    applicability_notes = note_stated_applicability_for(joined.source.source_ref)
+    validate_note_stated_applicability_declarations(applicability_notes, joined.source)
     if joined.variable_envelopes and joined.variable_envelope_contract is None:
         identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
         raise RegistryValidationError(
@@ -429,7 +443,12 @@ def render_complete_export_tree(
         )
     validate_render_profile(render_profile, joined, render_profile_source_evidence)
     records, derivations = _render_records(
-        joined.records, transport_profile, render_profile, source_defects=source_defects
+        joined.records,
+        transport_profile,
+        render_profile,
+        source_defects=source_defects,
+        note_governed_amounts=note_governed_amounts,
+        applicability_notes=applicability_notes,
     )
     _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
     filing_envelope = (
@@ -576,6 +595,8 @@ def _render_records(
     render_profile: RenderProfile,
     *,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
     records: list[ExportRecordDefinition] = []
     derivations: list[ExportFieldDerivation] = []
@@ -594,6 +615,8 @@ def _render_records(
                 render_profile,
                 export_record_id=record_id,
                 source_defects=source_defects,
+                note_governed_amounts=note_governed_amounts,
+                applicability_notes=applicability_notes,
             )
             for field in joined_record.fields
         )
@@ -698,6 +721,8 @@ def _normalise_field(
     *,
     export_record_id: str,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
+    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
@@ -760,13 +785,21 @@ def _normalise_field(
         # here it counted as stating one, so the field was refused as ambiguous
         # AND rejected by profile coverage as ineligible -- unreachable from
         # either side.
-        if _states_no_wire_fact(parser_field):
+        # The declaration set travels WITH the predicate, so the routing here and
+        # the profile's own eligibility admit exactly the same fields. Passing it
+        # on one side only would put a field into the profile that the renderer
+        # never sends there, or send one the profile refuses to cover.
+        if _states_no_wire_fact(parser_field, applicability_notes=applicability_notes):
             return _render_profile_numeric_derivation(
                 joined_field,
                 render_profile,
                 export_record_id=export_record_id,
             )
-        return _numeric_derivation(joined_field, export_record_id=export_record_id)
+        return _numeric_derivation(
+            joined_field,
+            export_record_id=export_record_id,
+            note_governed_amounts=note_governed_amounts,
+        )
     if _has_absent_naturaleza(parser_field):
         # AEAT printed the naturaleza cell EMPTY, so the parser stamped the
         # absent-naturaleza marker rather than guessing a type. There is nothing
@@ -951,6 +984,7 @@ def _numeric_derivation(
     joined_field: JoinedRecordDesignField,
     *,
     export_record_id: str,
+    note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     content = parser_field.content
@@ -968,8 +1002,52 @@ def _numeric_derivation(
     # clause is not a wrapper and must still reach the ambiguity refusal.
     if normalised_content.startswith("[") and normalised_content.endswith("]"):
         normalised_content = normalised_content[1:-1].strip()
+    pointer_content = normalised_content
     normalised_content, note_references = _split_official_note_references(normalised_content)
     if not normalised_content and note_references:
+        # A cell holding nothing but a pointer states no representation. There
+        # are three readings of that, and which one applies is decided by what
+        # somebody has READ, never by the shape of the text:
+        #
+        # * The note states the representation outright, or the design states it
+        #   for the surrounding run -- a ``NoteGovernedAmountDeclaration`` -- and
+        #   that stated representation applies here.
+        # * The note states APPLICABILITY and no representation -- a
+        #   ``NoteStatedApplicabilityDeclaration`` -- and the cell is then
+        #   equivalent to a blank one. Such a field never reaches this function:
+        #   ``_states_no_wire_fact`` sends it to the reviewed render profile
+        #   above, exactly where its blank-Contenido siblings go.
+        # * Nobody has opened the note yet, which is everything below. The
+        #   historical unscaled reading stands rather than being silently
+        #   re-scaled by a rule nobody reviewed for that document -- but it is a
+        #   reading the design does not support, not a derivation, and the
+        #   footnote-pointer screen carries the outstanding queue.
+        adjudicated = note_governed_amount_scale_for(
+            note_governed_amounts,
+            sheet=parser_field.sheet,
+            published_content=pointer_content,
+        )
+        if adjudicated is not None:
+            # The sign travels with the adjudication and drives data_type,
+            # `signed` and `decimals` together, exactly as it does in
+            # `_profile_width_17_derivation`: `money` carries its scale inside
+            # the codec and the schema refuses a field declaring decimals beside
+            # any other data_type, so a signed run must not pass one. The width
+            # check counts the sign position, so a signed adjudication that does
+            # not fill the slot is refused like an unsigned one.
+            signed = adjudicated.signed
+            _require_numeric_extent(joined_field, expected_length=adjudicated.wire_length)
+            return _schema_field(
+                joined_field,
+                data_type="money" if signed else "decimal",
+                required=_is_required(parser_field.validation),
+                padding=ExportPadding.LEFT_ZERO,
+                justification=ExportJustification.RIGHT,
+                signed=signed,
+                export_record_id=export_record_id,
+                decimals=None if signed else adjudicated.decimal_digits,
+                derivation_code="numeric-note-governed-amount-v1",
+            )
         return _schema_field(
             joined_field,
             data_type="integer",

@@ -67,7 +67,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 from ..pipeline.render_check import revision_render_inputs
-from .footnote_only_wire_facts import revision_findings as fields_needing_rules
+from .footnote_only_wire_facts import OUTSTANDING_KINDS
+from .footnote_only_wire_facts import revision_findings as pointer_wire_facts
 from .footnote_pointer_notes import design_transcription_path, sheet_unnumbered_notes
 from .type_convention_notes import revision_findings as type_conventions
 
@@ -190,7 +191,15 @@ def revision_findings(
     authority: ValidatedRegistryAuthority, *, modelo: str, revision: str
 ) -> tuple[GroundingFinding, ...]:
     """Return one revision's fields needing a rule, each with its grounding."""
-    needed = fields_needing_rules(authority, modelo=modelo, revision=revision)
+    # A field whose pointer has been adjudicated already HAS its reviewed rule,
+    # so it is not owed one. Filtered on the screen's own outstanding set rather
+    # than on a kind named here, so a condition added there is counted as work
+    # until that screen says otherwise.
+    needed = tuple(
+        finding
+        for finding in pointer_wire_facts(authority, modelo=modelo, revision=revision)
+        if finding.kind in OUTSTANDING_KINDS
+    )
     if not needed:
         return ()
     by_type: dict[str, list[str]] = collections.defaultdict(list)
