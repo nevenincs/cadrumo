@@ -37,6 +37,7 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         "check-all",
         "check-rag",
         "check-semantic",
+        "check-workflow",
         "check-corpus-text",
         "check-registry",
     }
@@ -94,7 +95,7 @@ def _justfile_static_checks() -> set[str]:
             stripped = above.strip()
             if not stripped.startswith(("[", "#")):
                 break
-            if "group('static-checks')" in stripped:
+            if "group('check')" in stripped:
                 names.add(match.group(1))
                 break
     return names
