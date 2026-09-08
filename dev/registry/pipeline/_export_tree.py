@@ -72,11 +72,14 @@ from ._variable_envelope import (
 )
 from .source_defects import (
     NoteGovernedAmountDeclaration,
+    NoteStatedApplicabilityDeclaration,
     SourceDefectDeclaration,
     adjudicated_literal_for,
     note_governed_amount_scale_for,
     note_governed_amounts_for,
+    note_stated_applicability_for,
     validate_note_governed_amount_declarations,
+    validate_note_stated_applicability_declarations,
     validate_source_defect_declarations,
 )
 
@@ -425,6 +428,8 @@ def render_complete_export_tree(
     # adjudication set for one pinned design and cannot disagree about it.
     note_governed_amounts = note_governed_amounts_for(joined.source.source_ref)
     validate_note_governed_amount_declarations(note_governed_amounts, joined.source)
+    applicability_notes = note_stated_applicability_for(joined.source.source_ref)
+    validate_note_stated_applicability_declarations(applicability_notes, joined.source)
     if joined.variable_envelopes and joined.variable_envelope_contract is None:
         identities = ", ".join(repr(envelope.record_identity) for envelope in joined.variable_envelopes)
         raise RegistryValidationError(
@@ -443,6 +448,7 @@ def render_complete_export_tree(
         render_profile,
         source_defects=source_defects,
         note_governed_amounts=note_governed_amounts,
+        applicability_notes=applicability_notes,
     )
     _validate_generated_projection_bijection(tuple(derivations), joined.projection_endpoints)
     filing_envelope = (
@@ -590,6 +596,7 @@ def _render_records(
     *,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
     records: list[ExportRecordDefinition] = []
     derivations: list[ExportFieldDerivation] = []
@@ -609,6 +616,7 @@ def _render_records(
                 export_record_id=record_id,
                 source_defects=source_defects,
                 note_governed_amounts=note_governed_amounts,
+                applicability_notes=applicability_notes,
             )
             for field in joined_record.fields
         )
@@ -714,6 +722,7 @@ def _normalise_field(
     export_record_id: str,
     source_defects: tuple[SourceDefectDeclaration, ...] = (),
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
+    applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
 ) -> ExportFieldDerivation:
     parser_field = joined_field.parser_field
     semantic_entry = joined_field.semantic_entry
@@ -776,7 +785,11 @@ def _normalise_field(
         # here it counted as stating one, so the field was refused as ambiguous
         # AND rejected by profile coverage as ineligible -- unreachable from
         # either side.
-        if _states_no_wire_fact(parser_field):
+        # The declaration set travels WITH the predicate, so the routing here and
+        # the profile's own eligibility admit exactly the same fields. Passing it
+        # on one side only would put a field into the profile that the renderer
+        # never sends there, or send one the profile refuses to cover.
+        if _states_no_wire_fact(parser_field, applicability_notes=applicability_notes):
             return _render_profile_numeric_derivation(
                 joined_field,
                 render_profile,
@@ -992,11 +1005,23 @@ def _numeric_derivation(
     pointer_content = normalised_content
     normalised_content, note_references = _split_official_note_references(normalised_content)
     if not normalised_content and note_references:
-        # A cell holding nothing but a pointer states no representation. Where
-        # the note it names has been read and adjudicated for this exact design
-        # and sheet, the run's own stated representation applies; everywhere else
-        # the historical unscaled reading stands rather than being silently
-        # re-scaled by a rule nobody reviewed for that document.
+        # A cell holding nothing but a pointer states no representation. There
+        # are three readings of that, and which one applies is decided by what
+        # somebody has READ, never by the shape of the text:
+        #
+        # * The note states the representation outright, or the design states it
+        #   for the surrounding run -- a ``NoteGovernedAmountDeclaration`` -- and
+        #   that stated representation applies here.
+        # * The note states APPLICABILITY and no representation -- a
+        #   ``NoteStatedApplicabilityDeclaration`` -- and the cell is then
+        #   equivalent to a blank one. Such a field never reaches this function:
+        #   ``_states_no_wire_fact`` sends it to the reviewed render profile
+        #   above, exactly where its blank-Contenido siblings go.
+        # * Nobody has opened the note yet, which is everything below. The
+        #   historical unscaled reading stands rather than being silently
+        #   re-scaled by a rule nobody reviewed for that document -- but it is a
+        #   reading the design does not support, not a derivation, and the
+        #   footnote-pointer screen carries the outstanding queue.
         adjudicated_scale = note_governed_amount_scale_for(
             note_governed_amounts,
             sheet=parser_field.sheet,

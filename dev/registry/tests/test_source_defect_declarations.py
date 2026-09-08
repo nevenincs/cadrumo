@@ -47,17 +47,25 @@ from ..pipeline._record_design_ir import (
     RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
-from ..pipeline._render_profile import load_render_profile, load_render_profile_source_evidence
+from ..pipeline._render_profile import (
+    _states_no_wire_fact,
+    load_render_profile,
+    load_render_profile_source_evidence,
+    project_render_profile_eligibility,
+)
 from ..pipeline._semantic_map import SemanticMapEntry
 from ..pipeline._semantic_map_join import JoinedRecordDesignField, join_record_design_semantics
 from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline.source_defects import (
     NoteGovernedAmountDeclaration,
+    NoteStatedApplicabilityDeclaration,
     SourceDefectDeclaration,
     adjudicated_literal_for,
     note_governed_amounts_for,
+    note_stated_applicability_for,
     source_defects_for,
     validate_note_governed_amount_declarations,
+    validate_note_stated_applicability_declarations,
     validate_source_defect_declarations,
 )
 
@@ -676,4 +684,121 @@ class TestNoteGovernedAmountsReachTheRenderer:
                 transport_profile=drifted_transport,
                 render_profile=render_profile,
                 render_profile_source_evidence=evidence,
+            )
+
+
+class TestNoteStatedApplicabilityAdmission:
+    """A note that states WHEN a slot applies leaves its wire fact unstated.
+
+    Modelo 353's 2026 design gives its 'Pago a cuenta de entregas de gasolinas'
+    slot the ``Contenido`` cell ``Nota 4.`` and leaves the Contenido cell of its
+    twenty-eight structurally identical siblings -- same record, same width,
+    same amount family -- empty. The note reads "Solo para periodos 02 y
+    siguientes." in full: it names the periods the slot applies to and states no
+    scale, decimal count, sign or alignment. The siblings reach the reviewed
+    width-17 render profile; this one alone fell through to an unscaled integer,
+    emitting euros into a run that emits cents.
+
+    A declaration admits the field to that same reviewed profile. It adjudicates
+    NO representation -- the model carries no digit counts to adjudicate one
+    with -- so the field inherits the profile's reviewed project inference on
+    exactly the standing its siblings have, and no better.
+
+    These tests hold the two properties that keep the mechanism from spreading:
+    the gate is the declaration and never the pointer-shaped text, and one
+    predicate answers for both the renderer's routing and the profile's own
+    eligibility, so a field cannot be admitted on one side and refused on the
+    other.
+    """
+
+    _M353_2026_SHA: Final = "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380"
+    _POINTER: Final = "Nota 4."
+
+    @staticmethod
+    def _amount_field(*, sheet: str = "35301", content: str = "Nota 4.") -> RecordDesignIntermediateField:
+        return RecordDesignIntermediateField.model_validate(
+            {
+                "sheet": sheet,
+                "record_identity": sheet,
+                "source_row": 132,
+                "source_cell": "A132",
+                "ordinal": "127",
+                "offset": 1211,
+                "length": 17,
+                "aeat_type": "Num",
+                "normalized_description": (
+                    "Liquidacion. Pago a cuenta de entregas de gasolinas, gasoleos y biocarburantes [10]"
+                ),
+                "content": content,
+            }
+        )
+
+    def test_the_live_catalogue_records_the_note_that_was_read(self) -> None:
+        declarations = note_stated_applicability_for("aeat-dr-353-2026")
+
+        assert len(declarations) == 1
+        declaration = declarations[0]
+        assert declaration.source_sha256 == self._M353_2026_SHA
+        assert (declaration.sheet, declaration.published_content) == ("35301", self._POINTER)
+        assert declaration.note_statement == "Solo para periodos 02 y siguientes."
+        assert "no scale" in declaration.evidence
+
+    def test_the_declaration_cannot_state_a_representation(self) -> None:
+        """The family adjudicates admission and nothing about the wire.
+
+        A digit count on this model would let an author adjudicate a scale
+        through the family that exists precisely because none was stated.
+        """
+        with pytest.raises(ValidationError):
+            NoteStatedApplicabilityDeclaration.model_validate(
+                {
+                    "source_ref": "aeat-dr-353-2026",
+                    "source_sha256": self._M353_2026_SHA,
+                    "sheet": "35301",
+                    "published_content": self._POINTER,
+                    "note_cell": "B157",
+                    "note_statement": "Solo para periodos 02 y siguientes.",
+                    "integer_digits": 15,
+                    "decimal_digits": 2,
+                    "evidence": "x",
+                }
+            )
+
+    def test_an_undeclared_pointer_cell_still_states_a_wire_fact(self) -> None:
+        """The gate is the reading, not the shape: an unopened note moves nothing."""
+        field = self._amount_field()
+
+        assert not _states_no_wire_fact(field)
+        assert not project_render_profile_eligibility([field]).all_fields
+
+    def test_a_declared_pointer_cell_reaches_the_profile_exactly_as_a_blank_one_does(self) -> None:
+        declarations = note_stated_applicability_for("aeat-dr-353-2026")
+        field = self._amount_field()
+
+        assert _states_no_wire_fact(field, applicability_notes=declarations)
+        eligible = project_render_profile_eligibility([field], applicability_notes=declarations)
+        assert eligible.width_17_fields == (field,)
+        # The same field with the cell left empty, which is what the declaration
+        # says this one amounts to, lands in exactly the same partition.
+        assert project_render_profile_eligibility([self._amount_field(content="")]).width_17_fields == (
+            self._amount_field(content=""),
+        )
+
+    def test_a_declaration_does_not_reach_another_sheet(self) -> None:
+        """A note label identifies a note only together with the sheet printing it."""
+        assert not _states_no_wire_fact(
+            self._amount_field(sheet="35302"),
+            applicability_notes=note_stated_applicability_for("aeat-dr-353-2026"),
+        )
+
+    def test_a_declaration_pinned_to_another_digest_is_refused(self) -> None:
+        stale = tuple(
+            item.model_copy(update={"source_sha256": _OTHER_SHA})
+            for item in note_stated_applicability_for("aeat-dr-353-2026")
+        )
+
+        with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
+            validate_note_stated_applicability_declarations(
+                stale,
+                _intermediate(source_ref="aeat-dr-353-2026", sha=self._M353_2026_SHA).source,
             )

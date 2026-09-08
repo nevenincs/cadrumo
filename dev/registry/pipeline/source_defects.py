@@ -45,12 +45,16 @@ if TYPE_CHECKING:
 
 __all__ = [
     "NoteGovernedAmountDeclaration",
+    "NoteStatedApplicabilityDeclaration",
     "SourceDefectDeclaration",
     "adjudicated_literal_for",
     "note_governed_amount_scale_for",
     "note_governed_amounts_for",
+    "note_stated_applicability_for",
+    "note_states_only_applicability",
     "source_defects_for",
     "validate_note_governed_amount_declarations",
+    "validate_note_stated_applicability_declarations",
     "validate_source_defect_declarations",
 ]
 
@@ -376,3 +380,144 @@ def note_governed_amount_scale_for(
             continue
         return declaration.integer_digits, declaration.decimal_digits
     return None
+
+
+class NoteStatedApplicabilityDeclaration(BaseModel):
+    """One ``Contenido`` cell whose whole content is a note about WHEN a slot applies.
+
+    A :class:`NoteGovernedAmountDeclaration` answers the question "what does this
+    note say the representation is". This one answers a different question and
+    gives a different answer: the note was read, it states applicability -- which
+    periods, which filers, which conditions -- and it states no representation at
+    all. Nothing about the wire form was learned, so nothing about the wire form
+    may be adjudicated here, and this declaration carries no digit counts by
+    construction.
+
+    What it settles is a routing question the design's own vocabulary already
+    answers. AEAT's ``Diseños de registro`` manual defines ``Contenido`` as
+    "aclaraciones relativas al formato del campo, valores que puede tomar, etc."
+    and a ``Nota`` as "aclaraciones al contenido". A cell holding only a pointer
+    to an applicability note therefore states no format, exactly as a blank cell
+    states none, and the field belongs where every blank-``Contenido`` numeric
+    field of its design already goes: to the reviewed render profile.
+
+    That is a REVIEWED PROJECT INFERENCE and not official authority. The field
+    inherits whatever rule the profile states for its anchor, on the same
+    evidence and with the same standing as its structurally identical siblings --
+    no better. What this declaration removes is the anomaly of one field of a run
+    being read differently from the rest of it for no reason the design gives.
+
+    It is pinned exactly as its sibling families are -- one file by digest, one
+    sheet by name, one exact published pointer -- and is self-limiting for the
+    same reasons:
+
+    * The SHA-256 makes a reissued design drop out of the table, so the field
+      returns to the historical reading until somebody re-reads the new file.
+    * The declaration admits a field to the reviewed profile and decides nothing
+      there. If the profile states no rule for that anchor the generator refuses,
+      so a declaration cannot by itself put a representation on the wire.
+    * The scope is the sheet that PRINTS the note, because a note label
+      identifies a note only together with its sheet.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid", str_strip_whitespace=False)
+
+    source_ref: str = Field(min_length=1)
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    sheet: str = Field(min_length=1)
+    published_content: str = Field(min_length=1)
+    """The pointer exactly as the ``Contenido`` cell publishes it, whitespace-normalised."""
+    note_cell: str = Field(min_length=1)
+    """Where on this sheet the design defines the note the pointer names."""
+    note_statement: str = Field(min_length=1)
+    """The note's text as read from that cell, so a later reviewer re-reads it."""
+    evidence: str = Field(min_length=1)
+    """How the reading was established, in terms a later reviewer can re-check."""
+
+
+_NOTE_STATED_APPLICABILITY_BY_REF: dict[str, tuple[NoteStatedApplicabilityDeclaration, ...]] = {
+    "aeat-dr-353-2026": (
+        NoteStatedApplicabilityDeclaration(
+            source_ref="aeat-dr-353-2026",
+            source_sha256="cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380",
+            sheet="35301",
+            published_content="Nota 4.",
+            note_cell="B157",
+            note_statement="Solo para periodos 02 y siguientes.",
+            evidence=(
+                "Row A132 of sheet 35301 is the 'Liquidación. Pago a cuenta de entregas de gasolinas, gasóleos "
+                "y biocarburantes ... atribuible a la Administración del Estado [10]' slot: position 1211, "
+                "length 17, naturaleza 'Num'. Twenty-eight fields of the same record share its width and its "
+                "amount family, and every one of them leaves the Contenido cell empty and takes the reviewed "
+                "width-17 render profile. This one differs from them in exactly one respect: its Contenido "
+                "cell reads 'Nota 4.'. The note is defined on the same sheet at B156/B157 and reads in full "
+                "'Solo para periodos 02 y siguientes.' -- a statement of WHEN the slot applies, carrying no "
+                "scale, no decimal count, no sign and no alignment. Nothing about the wire form is stated "
+                "there, and nothing about it is adjudicated here. This design states no representation for "
+                "the slot anywhere: neither the 2026 workbook nor the 2021-2025 one contains the word "
+                "'enteros' at all, the 2008 dr353.pdf leaves Contenido empty on every 17-position amount, and "
+                "AEAT's general 'Diseños de registro - breve manual de uso' sets no corpus-wide importe rule. "
+                "So the field is admitted to the reviewed render profile that already governs its twenty-eight "
+                "siblings, and inherits their rule and their evidence -- a reviewed project inference, not an "
+                "official statement. Reading the pointer as an unscaled integer instead, which is what the "
+                "unadjudicated fallthrough does, emits euros into a run whose every other member emits cents."
+            ),
+        ),
+    ),
+}
+
+
+def note_stated_applicability_for(source_ref: str) -> tuple[NoteStatedApplicabilityDeclaration, ...]:
+    """Return the complete applicability-note set declared for one official source."""
+    return _NOTE_STATED_APPLICABILITY_BY_REF.get(source_ref, ())
+
+
+def validate_note_stated_applicability_declarations(
+    declarations: tuple[NoteStatedApplicabilityDeclaration, ...],
+    source: RecordDesignIntermediateSource,
+) -> None:
+    """Refuse a declaration set that is not pinned to the design being rendered.
+
+    The SHA-256 is checked against the PARSER-READ source, exactly as the two
+    sibling validators check it, so a declaration cannot be admitted by a caller
+    that merely asserts the digest it wants.
+    """
+    seen: set[tuple[str, str, str]] = set()
+    for declaration in declarations:
+        key = (declaration.source_ref, declaration.sheet, declaration.published_content)
+        if key in seen:
+            raise RegistryValidationError(
+                f"duplicate note-stated applicability declaration for {declaration.source_ref!r} "
+                f"sheet {declaration.sheet!r} content {declaration.published_content!r}",
+            )
+        seen.add(key)
+        if declaration.source_ref != source.source_ref:
+            raise RegistryValidationError(
+                f"note-stated applicability declaration source {declaration.source_ref!r} does not match parser "
+                f"intermediate source {source.source_ref!r}",
+            )
+        if declaration.source_sha256 != source.source_sha256:
+            raise RegistryValidationError(
+                f"note-stated applicability declaration for {declaration.source_ref!r} is not pinned to the "
+                "parser intermediate SHA-256",
+            )
+
+
+def note_states_only_applicability(
+    declarations: tuple[NoteStatedApplicabilityDeclaration, ...],
+    *,
+    sheet: str,
+    published_content: str,
+) -> bool:
+    """Report whether this exact cell has been read and found to state no wire fact.
+
+    ``published_content`` is the cell's whitespace-normalised content, which is
+    what both the eligibility predicate and the numeric derivation read. Anything
+    the declaration does not name exactly leaves the caller's own reading
+    standing, which is the behaviour a reader should be able to assume when no
+    declaration applies.
+    """
+    return any(
+        declaration.sheet == sheet and declaration.published_content == published_content
+        for declaration in declarations
+    )
