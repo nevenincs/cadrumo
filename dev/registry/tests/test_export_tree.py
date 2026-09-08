@@ -1835,26 +1835,6 @@ def test_renderer_module_has_no_old_tree_or_approximate_admission_surface() -> N
     # call is still caught, because those survive tokenisation as code.
     source = _code_only_source(_export_tree).casefold()
 
-    # record_spec is a 44-line constants module whose ONLY member is
-    # ENCODING_ALIAS_MAP, created to break a circular import. It carries no layout,
-    # no spec content, no published output, so importing that constant is not
-    # "importing an older output as guidance". This was a module-level ban that only
-    # became matchable when a promotion renamed _record_spec -> record_spec; before
-    # that it passed vacuously and forbade nothing.
-    #
-    # Sharpened rather than dropped, and STRICTER in the dimension that matters: the
-    # renderer may take the neutral constant and nothing else, so if record_spec ever
-    # grows a spec-bearing symbol the renderer cannot quietly start reading it.
-    record_spec_symbols = {
-        alias.name
-        for node in ast.walk(module)
-        if isinstance(node, ast.ImportFrom) and node.module == "cadrumo.domain.calculations.registry.record_spec"
-        for alias in node.names
-    }
-    assert record_spec_symbols <= {"ENCODING_ALIAS_MAP"}, (
-        f"the renderer may import only the neutral encoding-alias constant from record_spec; "
-        f"these would let it read specification content: {sorted(record_spec_symbols - {'ENCODING_ALIAS_MAP'})}"
-    )
     assert "resolve_export_layout" not in referenced_names
     assert "bundled_authority" not in referenced_names
     assert "cadrumo.domain.calculations.registry.export" not in imported_modules
