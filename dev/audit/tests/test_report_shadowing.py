@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 import pytest
 
 from dev.audit import report
 from dev.quality.import_hygiene_scan import MultiSourcedSymbol
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def _symbol(*, confidence: str = "high", facades: list[str] | None = None) -> MultiSourcedSymbol:
@@ -49,3 +52,18 @@ def test_non_structural_candidates_do_not_manufacture_debt_state(monkeypatch) ->
 
     assert finding.status is report.Status.GREEN
     assert finding.details == []
+
+
+def test_persisted_health_report_identifies_its_command(tmp_path: Path) -> None:
+    health = report.HealthReport(
+        dimensions=(report.DimensionReport(name="layering", status=report.Status.GREEN, headline="kept"),)
+    )
+    command = ("python", "-m", "dev.audit.report", "--full")
+
+    run_dir = report.persist_report(tmp_path, health, command)
+
+    assert run_dir.parent.parent.parent == tmp_path / ".logs"
+    payload = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
+    assert payload["command"] == list(command)
+    assert payload["report"]["overall"] == "green"
+    assert "command: python -m dev.audit.report --full" in (run_dir / "report.md").read_text(encoding="utf-8")

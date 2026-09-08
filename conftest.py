@@ -113,7 +113,7 @@ if TYPE_CHECKING:
 register_collection_storage_root_cleanup(collection_storage_root())
 
 
-@pytest.hookimpl(tryfirst=True)
+@pytest.hookimpl(trylast=True)
 def pytest_configure(config: pytest.Config) -> None:
     """Create and announce this pytest invocation's durable run log."""
     _run_logging.configure(config)
@@ -138,7 +138,6 @@ def pytest_collectreport(report: pytest.CollectReport) -> None:
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitCode) -> None:
     """Finalize the unique run metadata without changing pytest's exit status."""
     _run_logging.finish(session.config, exitstatus)
-
 
 
 @pytest.fixture(scope="session")

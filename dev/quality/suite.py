@@ -40,6 +40,16 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
     ("check-imports", ("lint-imports",)),
     ("check-relative-imports", (sys.executable, "-m", "dev.quality.relative_imports")),
+    ("check-identity", (sys.executable, "-m", "dev.identity")),
+    ("check-locales", (sys.executable, "-m", "dev.locales", "audit")),
+    (
+        "check-docs-api",
+        (sys.executable, "-m", "dev.docs.apidocs", "scaffold", "--check"),
+    ),
+    (
+        "check-docs-synonyms",
+        (sys.executable, "-m", "dev.docs.terminology.synonyms", "validate"),
+    ),
     ("check-modelo-regulatory-literals", (sys.executable, "-m", "dev.quality.modelo_regulatory_literals")),
     ("check-modelo-regulatory-embeds", (sys.executable, "-m", "dev.quality.modelo_regulatory_embeds")),
     # Aggregated deliberately: the recipe existed in the static-checks group
@@ -81,7 +91,9 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
             sys.executable,
             "-m",
             "pytest",
-            "-q",
+            "-v",
+            "-rsf",
+            "--tb=short",
             "-n0",
             "dev/tests/test_cross_package_private_imports.py",
             "dev/tests/test_import_edge_integrity_gate.py",

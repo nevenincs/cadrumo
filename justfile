@@ -301,6 +301,30 @@ check-imports:
 check-relative-imports:
     @uv run --no-sync python -m dev.quality.relative_imports
 
+# Refuse tracked identity canaries while retaining the value-free advisory report.
+[doc('Verify that tracked content contains no configured identity canary.')]
+[group('static-checks')]
+check-identity:
+    @uv run --no-sync python -m dev.identity
+
+# Verify every locale catalogue against the live code and registry surface.
+[doc('Audit locale keys, values, placeholders, and codebase enrolment.')]
+[group('static-checks')]
+check-locales:
+    @uv run --no-sync python -m dev.locales audit
+
+# Verify the committed API-reference stub tree without rewriting it.
+[doc('Verify that generated API documentation stubs match the source module tree.')]
+[group('static-checks')]
+check-docs-api:
+    @uv run --no-sync python -m dev.docs.apidocs scaffold --check
+
+# Verify that synonym ratification decisions agree with the shipped vocabulary.
+[doc('Verify the terminology synonym ratification queue.')]
+[group('static-checks')]
+check-docs-synonyms:
+    @uv run --no-sync python -m dev.docs.terminology.synonyms validate
+
 # Verify the core facade, import-edge, and no-shim architecture invariants.
 [group('static-checks')]
 check-architecture:
@@ -697,6 +721,72 @@ fix-all: fix-style fix-format
 fix-rag:
     @uv run --no-sync vaultspec-rag index --type all --port 8766
 
+# Reconcile the committed API-reference stubs with the source module tree.
+[doc('Regenerate API documentation stubs; pass CLI options through unchanged.')]
+[group('mutations')]
+docs-api-scaffold *ARGS:
+    @uv run --no-sync python -m dev.docs.apidocs scaffold {{ARGS}}
+
+# Refresh committed CLI-sequence goldens. Scope with the underlying CLI options.
+[doc('Refresh committed documentation CLI-sequence goldens.')]
+[group('mutations')]
+docs-sequences-refresh *ARGS:
+    @uv run --no-sync python -m dev.docs.sequences refresh {{ARGS}}
+
+# Run Terminology Handbook curation commands such as scaffold, set, and relate.
+[doc('Run a Terminology Handbook mutation command.')]
+[group('mutations')]
+docs-terminology *ARGS:
+    @uv run --no-sync python -m dev.docs.terminology_handbook {{ARGS}}
+
+# Regenerate the committed terminology coverage report.
+[doc('Regenerate the terminology coverage report.')]
+[group('mutations')]
+docs-terminology-coverage *ARGS:
+    @uv run --no-sync python -m dev.docs.terminology.coverage report {{ARGS}}
+
+# Run the resident-RAG terminology sweep and optionally write its reviewed map.
+[doc('Run the terminology relevance sweep against the resident RAG service.')]
+[group('mutations')]
+docs-terminology-sweep *ARGS:
+    @uv run --no-sync python -m dev.docs.terminology.sweep {{ARGS}}
+
+# Mine or otherwise maintain the synonym ratification queue.
+[doc('Run a terminology synonym maintenance command.')]
+[group('mutations')]
+docs-terminology-synonyms *ARGS:
+    @uv run --no-sync python -m dev.docs.terminology.synonyms {{ARGS}}
+
+# Route locale catalogue changes through their canonical maintenance CLI.
+[doc('Run a locale catalogue maintenance command.')]
+[group('mutations')]
+locales *ARGS:
+    @uv run --no-sync python -m dev.locales {{ARGS}}
+
+# Scaffold a modelo or render its contributor checklist through the owning CLI.
+[doc('Run a new-modelo scaffolding or checklist command.')]
+[group('mutations')]
+newmodelo *ARGS:
+    @uv run --no-sync python -m dev.registry.newmodelo {{ARGS}}
+
+# Check, publish, or republish a generated registry target through the owning CLI.
+[doc('Run a generated registry pipeline command.')]
+[group('mutations')]
+registry-pipeline *ARGS:
+    @uv run --no-sync python -m dev.registry.pipeline {{ARGS}}
+
+# Generate and maintain TUI visual-review artifacts.
+[doc('Run a TUI visual-review command.')]
+[group('mutations')]
+tui-review *ARGS:
+    @uv run --no-sync python -m dev.tui {{ARGS}}
+
+# Drive the persistent interactive TUI harness session.
+[doc('Run an interactive TUI harness command.')]
+[group('mutations')]
+tui-harness *ARGS:
+    @uv run --no-sync python -m dev.tui.harness {{ARGS}}
+
 # ── Testing ──────────────────────────────────────────────────────────────────
 
 pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
@@ -1049,6 +1139,14 @@ full_test_lanes := "test-harness check-registry test-unit test-integration-paral
 test-all:
     #!/usr/bin/env bash
     set -uo pipefail
+    run_day=$(date -u +%Y-%m-%d)
+    run_marker="$(date -u +%Y%m%dT%H%M%S.%NZ)-test-all-$$-$RANDOM"
+    run_root="$(pwd)/.logs/test-runs/$run_day/$run_marker"
+    mkdir -p "$run_root/artifacts" "$run_root/cache" "$run_root/scratch"
+    log="$run_root/run.log"
+    exec > >(tee -a "$log") 2>&1
+    echo "test-all run log: $log"
+    export CADRUMO_TEST_ALL_RUN_ROOT="$run_root"
     lanes=( {{full_test_lanes}} )
     names=()
     statuses=()
@@ -1084,6 +1182,16 @@ test-all:
 test-all:
     #!pwsh
     $ErrorActionPreference = 'Stop'
+    $runDay = [DateTime]::UtcNow.ToString('yyyy-MM-dd')
+    $runMarker = '{0}-test-all-{1}-{2}' -f [DateTime]::UtcNow.ToString('yyyyMMddTHHmmss.fffffffZ'), $PID, ([Guid]::NewGuid().ToString('N').Substring(0, 8))
+    $runRoot = Join-Path (Join-Path (Join-Path (Get-Location) '.logs/test-runs') $runDay) $runMarker
+    foreach ($child in @('artifacts', 'cache', 'scratch')) {
+        New-Item -ItemType Directory -Force -Path (Join-Path $runRoot $child) | Out-Null
+    }
+    $log = Join-Path $runRoot 'run.log'
+    Start-Transcript -LiteralPath $log -NoClobber | Out-Null
+    Write-Host "test-all run log: $log"
+    $env:CADRUMO_TEST_ALL_RUN_ROOT = $runRoot
     $lanes = '{{full_test_lanes}}'.Split(' ', [System.StringSplitOptions]::RemoveEmptyEntries)
     $results = @()
     $overall = 0
@@ -1109,6 +1217,7 @@ test-all:
     foreach ($result in $results) {
         Write-Host ("  {0,-34} exit={1,-3} {2}s" -f $result.Lane, $result.Status, $result.Seconds)
     }
+    Stop-Transcript | Out-Null
     exit $overall
 
 # Run only the PARALLEL integration lane, holding the serial tests out.
@@ -1212,12 +1321,12 @@ test-coverage:
 # List every ty + pyrefly diagnostic verbatim (advisory; always exits 0).
 [group('audits')]
 audit-types:
-    @uv run --no-sync python -m dev.quality.types --full
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-types -- uv run --no-sync python -m dev.quality.types --full
 
 # Run complexity audits for production code.
 [group('audits')]
 audit-complexity:
-    @uv run --no-sync python -m dev.audit.complexity
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-complexity -- uv run --no-sync python -m dev.audit.complexity
 
 # Scan for dead code. The whitelist clears individually-justified
 # false positives (contract-fixed signature params); see its docstring.
@@ -1227,7 +1336,7 @@ audit-complexity:
 [doc('Scan for dead code, clearing individually-justified false positives via the whitelist.')]
 [group('audits')]
 audit-dead-code:
-    @uv run --no-sync python -m dev.audit.dead_code
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-dead-code -- uv run --no-sync python -m dev.audit.dead_code
 
 # Audit shipped code no console-script entrypoint can reach. Unlike
 # `audit-dead-code` (vulture's name heuristics), this walks the import graph
@@ -1250,7 +1359,7 @@ audit-dead-code:
 [doc('Audit shipped code unreachable from the console-script entrypoints; test-only and dev-only use is labelled, not credited.')]
 [group('audits')]
 audit-unreachable-code *ARGS:
-    @uv run --no-sync python -m dev.audit.unreachable_code {{ARGS}}
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-unreachable-code -- uv run --no-sync python -m dev.audit.unreachable_code {{ARGS}}
 
 # Audit the DATA path the reachability audit cannot see: a snapshot service
 # whose list/show/latest side a console script reaches, while its capture side
@@ -1266,7 +1375,7 @@ audit-unreachable-code *ARGS:
 [doc('Audit persistence surfaces a product command reads but no production code writes.')]
 [group('audits')]
 audit-write-paths *ARGS:
-    @uv run --no-sync python -m dev.audit.write_path_coverage {{ARGS}}
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-write-paths -- uv run --no-sync python -m dev.audit.write_path_coverage {{ARGS}}
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
 # The runner owns the jscpd invocation AND its parsing, so this recipe and the
@@ -1274,21 +1383,22 @@ audit-write-paths *ARGS:
 [doc('Scan for copy-paste code duplication; aggregate line count plus a capped clone list.')]
 [group('audits')]
 audit-duplication:
-    @uv run --no-sync python -m dev.audit.duplication
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-duplication -- uv run --no-sync python -m dev.audit.duplication
 
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 [group('audits')]
 audit-rag QUERY:
-    @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-rag -- uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
 
 # Run all retained advisory audits (complexity, dead code, duplication,
 # security) as one composed red/amber/green dashboard; tolerant of
 # individual findings (always exits 0). The runner (dev.audit.advisory) owns
 # the composition, so this recipe cannot drift from what it reports. Full,
-# uncapped results are persisted to dev/audit/.runs/ every run (summary.json
-# for machine parsing, summary.md for the human-readable uncapped text).
+# uncapped results are persisted to a unique date-partitioned directory below
+# .logs/audit-runs/ every run (summary.json for machine parsing, summary.md for
+# the human-readable uncapped text); both identify the producing command.
 # Advisory-audit sibling of `check-all` (the fast static gates).
-[doc('Run all advisory audits as one composed red/amber/green dashboard; full results persisted to dev/audit/.runs/.')]
+[doc('Run all advisory audits; full command-identified results persist below .logs/audit-runs/.')]
 [group('audits')]
 audit-all:
     @uv run --no-sync python -m dev.audit.advisory
@@ -1319,8 +1429,14 @@ audit-health-report-json:
 [doc('Show conformance status across all modelo revisions and the derived release closure.')]
 [group('audits')]
 audit-registry-conformance:
-    @uv run --no-sync python -m dev.registry.conformance report
-    @uv run --no-sync python -m dev.registry.conformance closure
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-registry-report -- uv run --no-sync python -m dev.registry.conformance report
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-registry-closure -- uv run --no-sync python -m dev.registry.conformance closure
+
+# Inspect AEIP continuity events, open adjudications, or the proposed plan.
+[doc('Run an AEIP continuity audit command.')]
+[group('audits')]
+audit-aeip *ARGS:
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-aeip -- uv run --no-sync python -m dev.registry.aeip {{ARGS}}
 
 # ── Documentation ────────────────────────────────────────────────────────────
 
@@ -1362,6 +1478,18 @@ docs-changed-rag BASE="HEAD":
 [group('docs')]
 docs-gettext:
     uv run --no-sync python -m dev.docs.i18n
+
+# Re-execute committed CLI sequences and report divergence without rewriting.
+[doc('Verify committed documentation CLI-sequence goldens.')]
+[group('docs')]
+docs-sequences-check *ARGS:
+    uv run --no-sync python -m dev.docs.sequences check {{ARGS}}
+
+# Report the health of the curated Terminology Handbook.
+[doc('Audit the curated Terminology Handbook.')]
+[group('docs')]
+docs-terminology-audit:
+    uv run --no-sync python -m dev.test_runs.command --family audit-runs --label docs-terminology-audit -- uv run --no-sync python -m dev.docs.terminology_handbook audit
 
 # Build the user-scope documentation in one language (es/en/ca/hu) into that
 # language's own root. `--out-dir` is what puts a build in a per-language

@@ -22,12 +22,12 @@ Two things this module adds that no existing `dev/audit` scanner has:
 * A capped, human-scannable text dashboard by default (`--json` for a
   machine-readable single shot), mirroring `dev.audit.report`'s own
   red/amber/green shape.
-* Disk persistence, every run, of the FULL uncapped result --
-  `dev/audit/.runs/summary.json` (machine-parseable), `summary.md` (the same
-  content, human-readable, no cap), and `security-findings.json` (the raw
-  semgrep JSON payload, richer than the trimmed structured findings). Nothing
-  here is committed; see the `.gitignore` entry beside `.ruff_cache/` and
-  friends.
+* Disk persistence, every run, of the FULL uncapped result in a unique
+  date-partitioned directory below `.logs/audit-runs/`: `summary.json`
+  (machine-parseable), `summary.md` (the same content, human-readable, no
+  cap), and `security-findings.json` (the raw semgrep JSON payload, richer
+  than the trimmed structured findings). Both summaries identify the exact
+  command that produced them.
 
 This module is deliberately advisory throughout: `main()` always exits 0,
 matching today's `audit-all` contract (the old recipe chained every step with
@@ -57,13 +57,14 @@ from pathlib import Path
 from typing import Final
 
 from .._paths import REPO_ROOT, UTF_8
+from ..test_runs.paths import allocate_run_directory
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
 from .report import DimensionReport, Status, audit_complexity, audit_duplication
 from .security import SecurityOutcome, run_security_scan
 
 _UTF_8: Final[str] = UTF_8
 _TEXT_CAP: Final[int] = 8
-_RUN_DIR_NAME: Final[str] = ".runs"
+_RUN_FAMILY: Final[str] = "audit-runs"
 
 _STATUS_GLYPH: Final[dict[Status, str]] = {Status.RED: "RED", Status.AMBER: "AMBER", Status.GREEN: "GREEN"}
 _STATUS_PRECEDENCE: Final[tuple[Status, ...]] = (Status.RED, Status.AMBER, Status.GREEN)
@@ -272,10 +273,17 @@ def _total_findings(dimension: AdvisoryDimension) -> int:
     return int(match.group(1)) if match else 0
 
 
-def to_json(dimensions: tuple[AdvisoryDimension, ...], overall: Status, generated_at: str) -> dict[str, object]:
+def to_json(
+    dimensions: tuple[AdvisoryDimension, ...],
+    overall: Status,
+    generated_at: str,
+    *,
+    command: tuple[str, ...] = (),
+) -> dict[str, object]:
     """Serialise the full, uncapped result as a JSON-ready mapping."""
     return {
         "generated_at": generated_at,
+        "command": list(command),
         "overall": overall.value,
         "dimensions": [
             {
@@ -292,19 +300,27 @@ def to_json(dimensions: tuple[AdvisoryDimension, ...], overall: Status, generate
     }
 
 
-def persist(run_dir: Path, dimensions: tuple[AdvisoryDimension, ...], overall: Status) -> Path:
+def persist(
+    run_dir: Path,
+    dimensions: tuple[AdvisoryDimension, ...],
+    overall: Status,
+    *,
+    command: tuple[str, ...] = (),
+) -> Path:
     """Write the full, uncapped result to disk. Returns the run directory."""
     run_dir.mkdir(parents=True, exist_ok=True)
     generated_at = datetime.now(tz=UTC).isoformat()
 
-    payload = to_json(dimensions, overall, generated_at)
+    payload = to_json(dimensions, overall, generated_at, command=command)
     (run_dir / "summary.json").write_text(
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
         encoding=_UTF_8,
         newline="\n",
     )
     (run_dir / "summary.md").write_text(
-        f"generated at {generated_at}\n\n" + render_text(dimensions, overall, full=True) + "\n",
+        f"generated at {generated_at}\ncommand: {' '.join(command)}\n\n"
+        + render_text(dimensions, overall, full=True)
+        + "\n",
         encoding=_UTF_8,
         newline="\n",
     )
@@ -317,6 +333,11 @@ def persist(run_dir: Path, dimensions: tuple[AdvisoryDimension, ...], overall: S
             )
 
     return run_dir
+
+
+def allocate_run_dir(repository: Path, *, now: datetime | None = None) -> Path:
+    """Return one collision-resistant, date-partitioned audit run directory."""
+    return allocate_run_directory(repository, family=_RUN_FAMILY, label="audit-all", now=now)
 
 
 # ---------------------------------------------------------------------------
@@ -347,7 +368,8 @@ def main() -> int:
     else:
         print(render_text(dimensions, overall, full=args.full))
 
-    run_dir = persist(repo_root / "dev" / "audit" / _RUN_DIR_NAME, dimensions, overall)
+    command = tuple(sys.argv)
+    run_dir = persist(allocate_run_dir(repo_root), dimensions, overall, command=command)
     if not args.json:
         print(f"\nfull report persisted to {run_dir / 'summary.json'} and {run_dir / 'summary.md'}")
 

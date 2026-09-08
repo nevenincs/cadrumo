@@ -1031,7 +1031,6 @@ reportUnnecessaryIsInstance = "none"
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-cache_dir = ".logs/cache/pytest"
 testpaths = [
   "src/cadrumo",
   "src/cadrumo_harness",
