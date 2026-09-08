@@ -18,7 +18,6 @@ __all__ = [
     "AeatCsv",
     "AeatExpedienteId",
     "AeatPresentationId",
-    "RegistrySnapshotId",
 ]
 
 
@@ -104,29 +103,6 @@ Carried unchanged at the bound the debt boundary already evidences. No shape
 pattern is asserted: unlike an expediente id, no clave de liquidación grammar
 has been observed across enough captures to constrain beyond a length, and
 asserting one on a single sighting would be invention rather than evidence.
-"""
-
-RegistrySnapshotId = Annotated[str, StringConstraints(min_length=1, max_length=128)]
-"""The colon-joined four-coordinate identity of one validated registry snapshot.
-
-A registry snapshot is addressed by ``modelo:revision_id:filing_year:period``
-(see :func:`~domain.calculations.registry.registry_snapshot_id`), because AEAT
-binds each ``(modelo, filing_year, period)`` triple to exactly one revision by
-published orden -- dropping any coordinate produces an id two genuinely
-different snapshots can share.
-
-Explicitly NOT :data:`~core.identity.SnapshotId`: that alias is a SHA-256
-content-address of a payload, while this one is DERIVED from four coordinates
-and carries no digest. Two snapshots with identical content but different
-coordinates get different ids here and would collide under the content-address
-scheme, so they require distinct aliases.
-
-No colon-structure pattern is asserted, matching :data:`AeatClaveLiquidacion`'s
-reasoning: the ``revision_id`` segment is a human-authored registry slug of
-variable shape (see :data:`~domain.calculations.registry.RevisionId`), so a
-regex built from today's observed values would be invention, not evidence. The
-bound is carried unchanged from the one production field this alias replaces
-(``adapters.outbound.aeat.sede.schema``).
 """
 
 AeatCertificadoId = Annotated[str, StringConstraints(min_length=10, max_length=16, pattern=r"^\d{10,16}$")]

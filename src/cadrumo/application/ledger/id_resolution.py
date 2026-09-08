@@ -43,6 +43,7 @@ from .actions_common import transaction_modelo_source_ids
 MINIMUM_DISPLAY_ID_WIDTH = 8
 _FULL_ID_LENGTH = 64
 
+
 def compute_display_id_width(transaction_ids: Iterable[str]) -> int:
     """Return the minimum unique-prefix width over ``transaction_ids``.
 

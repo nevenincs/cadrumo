@@ -1,7 +1,6 @@
 """Tests for the census source universe.
 
-`dev.quality.module_test_reach` listed `dev/quality/repository_sources.py` as
-unreached. It is the DENOMINATOR for three identity censuses and an identifier
+It is the DENOMINATOR for three identity censuses and an identifier
 namespace gate, and it had nothing establishing that the universe it hands them
 is the whole one.
 

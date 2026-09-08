@@ -36,8 +36,6 @@ def root_command(
     detail: bool = False,
     help_: bool = False,
     format_: OutputFormat = OutputFormat.TEXT,
-    tui: bool = False,
-    self_test: bool = False,
     quiet: bool = False,
     verbose: bool = False,
     debug: bool = False,
@@ -49,7 +47,6 @@ def root_command(
         ctx.with_resource(override_settings(cadrumo_output_language=language))
     state = cast("dict[str, object]", ctx.ensure_object(dict))
     state["format"] = format_
-    state["tui_requested"] = tui
     state["log_level"] = resolve_log_level(quiet=quiet, verbose=verbose, debug=debug)
     if version:
         emit_version_report_and_exit(detail=detail)
@@ -63,16 +60,6 @@ def root_command(
     preserve_requested_cli_leaf(ctx)
     state["profile_override"] = profile
     if ctx.invoked_subcommand is None:
-        from ._tui_policy import enforce_tui_request
-        from .command_specs import COMMAND_GRAPH
-
-        if enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["root"], require_console=not self_test):
-            # A bare `aeat --tui` asks for the full-screen session itself, not a
-            # routed command, so the request ends here in a child interpreter
-            # rather than falling through to the scripted landing surface.
-            from ._tui_session import run_tui_session
-
-            raise typer.Exit(run_tui_session(self_test=self_test))
         if profile is not None:
             activate_profile_override(ctx, profile)
         else:
@@ -89,10 +76,6 @@ def root_command(
 def app_root(ctx: typer.Context, help_: bool = False) -> None:
     """Render app-level workflow help when requested."""
     if help_ or ctx.invoked_subcommand is None:
-        from ._tui_policy import enforce_tui_request
-        from .command_specs import COMMAND_GRAPH
-
-        enforce_tui_request(ctx, spec=COMMAND_GRAPH.by_key()["app"])
         from ...application.operator_surface.help import build_help_document, render_help_text
         from ...core.json_contract import strict_round_trip
         from ._common import emit_envelope

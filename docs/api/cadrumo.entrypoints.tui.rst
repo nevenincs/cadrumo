@@ -33,7 +33,6 @@ Submodules
    cadrumo.entrypoints.tui.account
    cadrumo.entrypoints.tui.app
    cadrumo.entrypoints.tui.bootstrap
-   cadrumo.entrypoints.tui.destination_session
    cadrumo.entrypoints.tui.home
    cadrumo.entrypoints.tui.installed_session
    cadrumo.entrypoints.tui.launcher

@@ -15,23 +15,6 @@ import os
 import sys
 from collections.abc import Sequence
 from contextlib import suppress
-from pathlib import Path
-
-
-def bootstrap_interpreter() -> str:
-    """Return the real CPython executable that must inherit allowlisted HANDLEs.
-
-    A virtual-environment ``python.exe`` may be a launcher which creates a
-    second process without forwarding ``STARTUPINFOEX.handle_list``.  Windows
-    supervisors must therefore start the base interpreter directly.
-    """
-    candidate = getattr(sys, "_base_executable", None)
-    if not isinstance(candidate, str) or not candidate:
-        raise RuntimeError("the base CPython executable is unavailable")
-    resolved = Path(candidate).resolve(strict=True)
-    if resolved.name.lower() not in {"python.exe", "pythonw.exe"}:
-        raise RuntimeError("the base CPython executable is invalid")
-    return str(resolved)
 
 
 def descriptor_from_inherited_handle(handle: int, *, writable: bool = False) -> int:
@@ -164,4 +147,4 @@ if __name__ == "__main__":  # pragma: no cover - exercised as a process on Windo
     main()
 
 
-__all__ = ["bootstrap_argv", "bootstrap_interpreter", "descriptor_from_inherited_handle", "main"]
+__all__ = ["bootstrap_argv", "descriptor_from_inherited_handle", "main"]

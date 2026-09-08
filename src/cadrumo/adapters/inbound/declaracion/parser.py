@@ -34,7 +34,7 @@ from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
 from ....core.hashing import sha256_hex
 from ....core.identity import IdentityError, validate_spanish_tax_id
 from ....core.logging import get_logger
-from ....core.period import Period, is_administrative_period_token
+from ....core.period import Period, PeriodError, is_administrative_period_token
 from ....core.resources.bundled_data import bundled_path
 from ....core.text_fold import fold_diacritics
 from ....core.time.clock import now
@@ -309,9 +309,16 @@ def _parse_declaracion_pages(
         modelo_year=snapshot.filing_year,
         period=snapshot.period,
     )
+    try:
+        filing_period = _filing_period_for_observation(template.año, period)
+    except PeriodError as exc:
+        raise DeclaracionParseError(
+            translated_message="adapters.inbound.declaracion.errors.period_unresolved",
+        ) from exc
+
     return InboundDeclaracionObservation(
         modelo=template.modelo,
-        period=_filing_period_for_observation(template.año, period),
+        period=filing_period,
         ejercicio=str(template.año),
         tax_id=tax_id,
         template_revision=template,

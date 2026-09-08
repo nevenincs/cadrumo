@@ -729,17 +729,20 @@ def _persist_unreadable_prior_303(period_code: str = "4T", filing_year: int = 20
             ),
             source_kind="operator_manual",
             captured_at=_T1,
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo="303",
-                filing_year=filing_year,
-                period=period_code,
-                observations=registry_grounded_observations(
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
                     modelo="303",
                     filing_year=filing_year,
                     period=period_code,
-                    casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("850.00")},
-                ),
-            )))
+                    observations=registry_grounded_observations(
+                        modelo="303",
+                        filing_year=filing_year,
+                        period=period_code,
+                        casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("850.00")},
+                    ),
+                )
+            ),
+        )
     )
 
 
@@ -812,17 +815,20 @@ def _persist_prior_303(repository: CalculationObservationRepository) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T1,
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo="303",
-                filing_year=2026,
-                period="1T",
-                observations=registry_grounded_observations(
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
                     modelo="303",
                     filing_year=2026,
                     period="1T",
-                    casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("1200.00")},
-                ),
-            )))
+                    observations=registry_grounded_observations(
+                        modelo="303",
+                        filing_year=2026,
+                        period="1T",
+                        casilla_values={_M303_COMPENSACION_DISPONIBLE_CASILLA: Decimal("1200.00")},
+                    ),
+                )
+            ),
+        )
     )
 
 

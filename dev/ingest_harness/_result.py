@@ -34,13 +34,13 @@ from typing import Final, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._caveats import caveats_for_document
-from ._key import CorpusDocument
+from ._key import IngestCorpusDocument
 
 __all__ = [
     "EmittedOnly",
     "EngineRoute",
+    "HarnessModelTier",
     "HarnessRefusalError",
-    "ModelTier",
     "PipelineStage",
     "ResultRow",
     "Scored",
@@ -55,7 +55,7 @@ class HarnessRefusalError(RuntimeError):
     """The harness refuses to record or report a result in an unquotable shape."""
 
 
-class ModelTier(StrEnum):
+class HarnessModelTier(StrEnum):
     """What CLASS of model produced a figure, and whether it can be a baseline.
 
     Named by the role the tier plays in the decision rather than by vendor or
@@ -81,7 +81,7 @@ class ModelTier(StrEnum):
     @property
     def is_baseline_eligible(self) -> bool:
         """Whether a figure at this tier may set or test an acceptance floor."""
-        return self is not ModelTier.UPPER_REFERENCE
+        return self is not HarnessModelTier.UPPER_REFERENCE
 
 
 class EngineRoute(StrEnum):
@@ -188,7 +188,7 @@ class ResultRow(BaseModel):
     engine_route: EngineRoute
     model_identity: str = Field(min_length=1)
     model_revision: str = Field(min_length=1)
-    model_tier: ModelTier
+    model_tier: HarnessModelTier
     outcome: Scored | EmittedOnly
     caveats: tuple[str, ...] = ()
 
@@ -200,13 +200,13 @@ class ResultRow(BaseModel):
 
 def build_result_row(
     *,
-    document: CorpusDocument,
+    document: IngestCorpusDocument,
     key_sha256: str,
     stage: PipelineStage,
     engine_route: EngineRoute,
     model_identity: str,
     model_revision: str,
-    model_tier: ModelTier,
+    model_tier: HarnessModelTier,
     outcome: Scored | EmittedOnly,
 ) -> ResultRow:
     """Build a row, stamping its caveats and refusing an incoherent pairing.

@@ -31,7 +31,8 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from types import MappingProxyType
 from typing import TYPE_CHECKING
@@ -68,6 +69,28 @@ _AEAT_SUBMISSION_RANK: MappingProxyType[OverviewAeatSubmissionState, int] = Mapp
         OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED: 3,
     },
 )
+
+
+@dataclass(frozen=True, slots=True)
+class _CalendarFilingEvidenceContext:
+    """Already-loaded metadata shared by every filing-evidence projection."""
+
+    justificantes_by_csv: Mapping[str, tuple[Justificante, ...]]
+    verified_filed_artefact_refs: frozenset[str]
+    verified_filed_csv_by_ref: Mapping[str, str]
+    expected_tax_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class _CalculationObservationEvidenceInput:
+    """Validated coordinates needed to project one calculation observation."""
+
+    source_kind: ObservationSourceKind
+    source_metadata: Mapping[str, object]
+    modelo: str
+    filing_year: int
+    period: _Period
+    aeat_reference_id: str
 
 
 def _calendar_event_sort_key(event: OverviewCalendarEvent) -> tuple[date, str, str, str]:
@@ -217,60 +240,139 @@ def calendar_filing_evidence_from_sources(
     baselines, local filings, observed submissions, and verified
     justificantes do not overwrite each other's meaning.
     """
-    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}  # (modelo, year, registry_token)
-    event_specific: list[OverviewCalendarFilingEvidence] = []
-    justificantes_by_csv = _justificantes_by_csv(justificantes)
-    verified_filed_artefact_refs = frozenset(verified_filed_declaration_artefact_refs)
-    verified_filed_csv_by_ref = verified_filed_declaration_artefact_csvs or {}
-    for record in filing_records:
-        evidence = _filing_evidence_from_modelo_record(
-            record,
-            justificantes_by_csv=justificantes_by_csv,
-            expected_tax_id=expected_tax_id,
-        )
+    context = _CalendarFilingEvidenceContext(
+        justificantes_by_csv=_justificantes_by_csv(justificantes),
+        verified_filed_artefact_refs=frozenset(verified_filed_declaration_artefact_refs),
+        verified_filed_csv_by_ref=verified_filed_declaration_artefact_csvs or {},
+        expected_tax_id=expected_tax_id,
+    )
+    by_key, event_specific = _collect_calendar_filing_evidence(
+        context=context,
+        filing_records=filing_records,
+        observed_events=observed_events,
+        filed_declaration_observations=filed_declaration_observations,
+        calculation_observations=calculation_observations,
+        justificante_capture_snapshots=justificante_capture_snapshots,
+    )
+    return _finalize_calendar_filing_evidence(by_key, event_specific)
+
+
+def _collect_calendar_filing_evidence(
+    *,
+    context: _CalendarFilingEvidenceContext,
+    filing_records: tuple[ModeloRecord, ...],
+    observed_events: tuple[OverviewCalendarEvent, ...],
+    filed_declaration_observations: tuple[FiledDeclaracionObservation, ...],
+    calculation_observations: tuple[ObservationEnvelopePayload, ...],
+    justificante_capture_snapshots: tuple[JustificanteCaptureSnapshot, ...],
+) -> tuple[
+    dict[tuple[str, int, str], OverviewCalendarFilingEvidence],
+    list[OverviewCalendarFilingEvidence],
+]:
+    """Collect source projections while preserving their established precedence order."""
+    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence] = {}
+    _merge_projected_evidence(
+        by_key,
+        (
+            _filing_evidence_from_modelo_record(
+                record,
+                justificantes_by_csv=context.justificantes_by_csv,
+                expected_tax_id=context.expected_tax_id,
+            )
+            for record in filing_records
+        ),
+    )
+    _merge_projected_evidence(
+        by_key,
+        (
+            _filing_evidence_from_observed_event(event, expected_tax_id=context.expected_tax_id)
+            for event in observed_events
+        ),
+    )
+    filed_evidence = _filed_declaration_evidence_from_sources(
+        filed_declaration_observations,
+        expected_tax_id=context.expected_tax_id,
+        verified_artefact_refs=context.verified_filed_artefact_refs,
+        verified_artefact_csv_by_ref=context.verified_filed_csv_by_ref,
+    )
+    _merge_projected_evidence(by_key, filed_evidence)
+    event_specific = [evidence for evidence in filed_evidence if evidence.justificante_verified]
+    _merge_projected_evidence(
+        by_key,
+        (
+            _filing_evidence_from_calculation_observation(
+                payload,
+                expected_tax_id=context.expected_tax_id,
+                justificantes_by_csv=context.justificantes_by_csv,
+            )
+            for payload in calculation_observations
+        ),
+    )
+    _merge_projected_evidence(
+        by_key,
+        (
+            _filing_evidence_from_justificante_capture_snapshot(
+                snapshot,
+                justificantes_by_csv=context.justificantes_by_csv,
+                expected_tax_id=context.expected_tax_id,
+            )
+            for snapshot in justificante_capture_snapshots
+        ),
+    )
+    return by_key, event_specific
+
+
+def _merge_projected_evidence(
+    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence],
+    candidates: Iterable[OverviewCalendarFilingEvidence | None],
+) -> None:
+    """Merge non-null source projections into the canonical obligation map."""
+    for evidence in candidates:
         if evidence is not None:
             _merge_filing_evidence(by_key, evidence)
-    for event in observed_events:
-        evidence = _filing_evidence_from_observed_event(event, expected_tax_id=expected_tax_id)
-        if evidence is not None:
-            _merge_filing_evidence(by_key, evidence)
-    for observation in filed_declaration_observations:
+
+
+def _filed_declaration_evidence_from_sources(
+    observations: tuple[FiledDeclaracionObservation, ...],
+    *,
+    expected_tax_id: str | None,
+    verified_artefact_refs: frozenset[str],
+    verified_artefact_csv_by_ref: Mapping[str, str],
+) -> tuple[OverviewCalendarFilingEvidence, ...]:
+    """Project filed-declaration observations, omitting rejected rows."""
+    projected: list[OverviewCalendarFilingEvidence] = []
+    for observation in observations:
         evidence = _filing_evidence_from_filed_declaration_observation(
             observation,
             expected_tax_id=expected_tax_id,
-            verified_artefact_refs=verified_filed_artefact_refs,
-            verified_artefact_csv_by_ref=verified_filed_csv_by_ref,
+            verified_artefact_refs=verified_artefact_refs,
+            verified_artefact_csv_by_ref=verified_artefact_csv_by_ref,
         )
         if evidence is not None:
-            if evidence.justificante_verified:
-                event_specific.append(evidence)
-            _merge_filing_evidence(by_key, evidence)
-    for payload in calculation_observations:
-        evidence = _filing_evidence_from_calculation_observation(
-            payload,
-            expected_tax_id=expected_tax_id,
-            justificantes_by_csv=justificantes_by_csv,
-        )
-        if evidence is not None:
-            _merge_filing_evidence(by_key, evidence)
-    for snapshot in justificante_capture_snapshots:
-        evidence = _filing_evidence_from_justificante_capture_snapshot(
-            snapshot,
-            justificantes_by_csv=justificantes_by_csv,
-            expected_tax_id=expected_tax_id,
-        )
-        if evidence is not None:
-            _merge_filing_evidence(by_key, evidence)
+            projected.append(evidence)
+    return tuple(projected)
+
+
+def _finalize_calendar_filing_evidence(
+    by_key: dict[tuple[str, int, str], OverviewCalendarFilingEvidence],
+    event_specific: list[OverviewCalendarFilingEvidence],
+) -> tuple[OverviewCalendarFilingEvidence, ...]:
+    """Keep aggregate and filed-observation identities, then sort deterministically."""
     unique: dict[tuple[str | None, int | None, str | None, str | None], OverviewCalendarFilingEvidence] = {}
     for evidence in (*by_key.values(), *event_specific):
-        key_reference = (
-            evidence.aeat_reference_id if evidence.evidence_source == "filed_declaration_observation" else None
-        )
-        _period_token = evidence.period.registry_token if evidence.period is not None else None
-        key = (evidence.modelo, evidence.filing_year, _period_token, key_reference)
+        key = _calendar_filing_evidence_identity(evidence)
         existing = unique.get(key)
         unique[key] = evidence if existing is None else _stronger_filing_evidence(existing, evidence)
     return tuple(sorted(unique.values(), key=_calendar_filing_evidence_sort_key))
+
+
+def _calendar_filing_evidence_identity(
+    evidence: OverviewCalendarFilingEvidence,
+) -> tuple[str | None, int | None, str | None, str | None]:
+    """Return the output identity, retaining one row per verified filed reference."""
+    key_reference = evidence.aeat_reference_id if evidence.evidence_source == "filed_declaration_observation" else None
+    period_token = evidence.period.registry_token if evidence.period is not None else None
+    return evidence.modelo, evidence.filing_year, period_token, key_reference
 
 
 def _justificantes_by_csv(justificantes: tuple[Justificante, ...]) -> dict[str, tuple[Justificante, ...]]:
@@ -488,22 +590,12 @@ def _filing_evidence_from_filed_declaration_observation(
         return None
     if not _is_active_aeat_filing_status(observation.status):
         return None
-    justificante = next(
-        (
-            artefact
-            for artefact in observation.artefacts
-            if artefact.kind == "justificante_pdf"
-            and artefact.storage_ref is not None
-            and artefact.storage_ref in verified_artefact_refs
-        ),
-        None,
+    verified_csv = _filed_declaration_verified_csv(
+        observation,
+        verified_artefact_refs=verified_artefact_refs,
+        verified_artefact_csv_by_ref=verified_artefact_csv_by_ref,
     )
-    verified = justificante is not None
-    verified_csv = None
-    if justificante is not None and justificante.storage_ref is not None:
-        verified_csv = verified_artefact_csv_by_ref.get(justificante.storage_ref)
-    if verified and not verified_csv:
-        verified = False
+    verified = verified_csv is not None
     return OverviewCalendarFilingEvidence(
         modelo=observation.modelo,
         filing_year=observation.ejercicio,
@@ -520,6 +612,32 @@ def _filing_evidence_from_filed_declaration_observation(
         justificante_verified=verified,
         evidence_source="filed_declaration_observation",
     )
+
+
+def _filed_declaration_verified_csv(
+    observation: FiledDeclaracionObservation,
+    *,
+    verified_artefact_refs: frozenset[str],
+    verified_artefact_csv_by_ref: Mapping[str, str],
+) -> str | None:
+    """Return the first storage-verified justificante CSV, if its CSV is known."""
+    artefact = next(
+        (item for item in observation.artefacts if _is_verified_justificante_artefact(item, verified_artefact_refs)),
+        None,
+    )
+    if artefact is None or artefact.storage_ref is None:
+        return None
+    return verified_artefact_csv_by_ref.get(artefact.storage_ref) or None
+
+
+def _is_verified_justificante_artefact(
+    artefact: object,
+    verified_artefact_refs: frozenset[str],
+) -> bool:
+    """Whether one observation artefact is a storage-verified justificante PDF."""
+    kind = getattr(artefact, "kind", None)
+    storage_ref = getattr(artefact, "storage_ref", None)
+    return kind == "justificante_pdf" and storage_ref is not None and storage_ref in verified_artefact_refs
 
 
 def _is_active_aeat_filing_status(status: str | None) -> bool:
@@ -540,49 +658,22 @@ def _filing_evidence_from_calculation_observation(
     the row to :attr:`OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED`;
     otherwise the row remains submitted-observed evidence.
     """
-    source_kind = payload.source_kind
-    if not is_official_aeat_observation_source(source_kind):
+    target = _calculation_observation_evidence_input(payload, expected_tax_id=expected_tax_id)
+    if target is None:
         return None
-    source_metadata = payload.source_metadata
-    if not source_metadata:
-        return None
-    status = str(source_metadata.get("aeat_register_status", "")).strip()
-    if not _is_active_aeat_filing_status(status):
-        return None
-    aeat_expediente_id = str(source_metadata.get("aeat_expediente_id") or "").strip()
-    if not aeat_expediente_id:
-        return None
-    authenticated_identity = str(source_metadata.get("authenticated_identity", ""))
-    if expected_tax_id and not same_tax_identifier(authenticated_identity, expected_tax_id):
-        return None
-    observation = payload.observation
-    _obs_year = observation.filing_year
-    _obs_period = observation.filing_period
-    if _obs_period is not None:
-        if _obs_period.filing_year != _obs_year:
-            return None
-    else:
-        # filing_period is derived at construction from filing_year and period,
-        # so it is absent only when a caller passed None explicitly. The model
-        # permits that, so the fallback stays live rather than being deleted as
-        # unreachable.
-        try:
-            _obs_period = _period_from_registry_token(_obs_year, observation.period)
-        except ValueError:
-            return None
     verified_justificante = _calculation_observation_verified_justificante(
-        modelo=str(observation.modelo),
-        filing_year=_obs_year,
-        period=_obs_period,
-        source_metadata=source_metadata,
+        modelo=target.modelo,
+        filing_year=target.filing_year,
+        period=target.period,
+        source_metadata=target.source_metadata,
         justificantes_by_csv=justificantes_by_csv,
         expected_tax_id=expected_tax_id,
     )
     verified = verified_justificante is not None
     return OverviewCalendarFilingEvidence(
-        modelo=str(observation.modelo),
-        filing_year=_obs_year,
-        period=_obs_period,
+        modelo=target.modelo,
+        filing_year=target.filing_year,
+        period=target.period,
         aeat_submission_state=(
             OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED
             if verified
@@ -591,12 +682,62 @@ def _filing_evidence_from_calculation_observation(
         aeat_submitted_at=verified_justificante.presented_at
         if verified_justificante is not None
         else payload.captured_at,
-        aeat_reference_id=aeat_expediente_id,
-        aeat_evidence_kind=source_kind.value,
+        aeat_reference_id=target.aeat_reference_id,
+        aeat_evidence_kind=target.source_kind.value,
         verified_justificante_csv=verified_justificante.csv if verified_justificante is not None else None,
         justificante_verified=verified,
-        evidence_source=source_kind.value,
+        evidence_source=target.source_kind.value,
     )
+
+
+def _calculation_observation_evidence_input(
+    payload: ObservationEnvelopePayload,
+    *,
+    expected_tax_id: str | None,
+) -> _CalculationObservationEvidenceInput | None:
+    """Validate official register metadata and resolve the observation period."""
+    source_kind = payload.source_kind
+    source_metadata = payload.source_metadata
+    if not is_official_aeat_observation_source(source_kind) or not source_metadata:
+        return None
+    if not _is_active_aeat_filing_status(str(source_metadata.get("aeat_register_status", "")).strip()):
+        return None
+    aeat_reference_id = str(source_metadata.get("aeat_expediente_id") or "").strip()
+    if not aeat_reference_id:
+        return None
+    authenticated_identity = str(source_metadata.get("authenticated_identity", ""))
+    if expected_tax_id and not same_tax_identifier(authenticated_identity, expected_tax_id):
+        return None
+    observation = payload.observation
+    period = _calculation_observation_period(observation.filing_year, observation.period, observation.filing_period)
+    if period is None:
+        return None
+    return _CalculationObservationEvidenceInput(
+        source_kind=source_kind,
+        source_metadata=source_metadata,
+        modelo=str(observation.modelo),
+        filing_year=observation.filing_year,
+        period=period,
+        aeat_reference_id=aeat_reference_id,
+    )
+
+
+def _calculation_observation_period(
+    filing_year: int,
+    registry_token: str,
+    filing_period: _Period | None,
+) -> _Period | None:
+    """Return a consistent observation period, deriving it for administrative rows."""
+    if filing_period is not None:
+        return filing_period if filing_period.filing_year == filing_year else None
+    # filing_period is derived at construction from filing_year and period,
+    # so it is absent only when a caller passed None explicitly. The model
+    # permits that, so the fallback stays live rather than being deleted as
+    # unreachable.
+    try:
+        return _period_from_registry_token(filing_year, registry_token)
+    except ValueError:
+        return None
 
 
 def _calculation_observation_verified_justificante(
@@ -789,26 +930,52 @@ def _merged_conflict_reference_ids(
     candidate: OverviewCalendarFilingEvidence,
 ) -> tuple[str, ...]:
     """Return normalized AEAT evidence references that disagree for one obligation."""
-    references: list[str] = [
+    references = [
         *existing.aeat_evidence_conflict_reference_ids,
         *candidate.aeat_evidence_conflict_reference_ids,
+        *_conflicting_reference_additions(existing, candidate),
     ]
+    return tuple(sorted({reference for reference in references if reference}))
+
+
+def _conflicting_reference_additions(
+    existing: OverviewCalendarFilingEvidence,
+    candidate: OverviewCalendarFilingEvidence,
+) -> tuple[str, ...]:
+    """Return newly observed identifiers when the two AEAT axes disagree."""
     existing_ref = _clean_reference_id(existing.aeat_reference_id)
     candidate_ref = _clean_reference_id(candidate.aeat_reference_id)
     existing_csv = _clean_reference_id(existing.verified_justificante_csv)
     candidate_csv = _clean_reference_id(candidate.verified_justificante_csv)
     if existing_csv is not None and candidate_csv is not None:
-        if existing_csv == candidate_csv:
-            return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
-        references.extend((existing_csv, candidate_csv))
-        return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
-    if existing_csv is not None and candidate_ref is not None and candidate_ref == existing_csv:
-        return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
-    if candidate_csv is not None and existing_ref is not None and existing_ref == candidate_csv:
-        return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
-    if existing_ref is not None and candidate_ref is not None and existing_ref != candidate_ref:
-        references.extend((existing_ref, candidate_ref))
-    return tuple(dict.fromkeys(sorted(ref for ref in references if ref)))
+        return _conflicting_csv_references(existing_csv, candidate_csv)
+    if _cross_namespace_references_match(existing_csv, candidate_ref, candidate_csv, existing_ref):
+        return ()
+    return _conflicting_reference_pair(existing_ref, candidate_ref)
+
+
+def _conflicting_csv_references(existing_csv: str, candidate_csv: str) -> tuple[str, ...]:
+    """Return both CSV identifiers only when verified receipts differ."""
+    return () if existing_csv == candidate_csv else (existing_csv, candidate_csv)
+
+
+def _cross_namespace_references_match(
+    existing_csv: str | None,
+    candidate_ref: str | None,
+    candidate_csv: str | None,
+    existing_ref: str | None,
+) -> bool:
+    """Whether one receipt CSV and the opposite expediente reference agree."""
+    return (existing_csv is not None and candidate_ref is not None and candidate_ref == existing_csv) or (
+        candidate_csv is not None and existing_ref is not None and existing_ref == candidate_csv
+    )
+
+
+def _conflicting_reference_pair(existing_ref: str | None, candidate_ref: str | None) -> tuple[str, ...]:
+    """Return both expediente references when they differ."""
+    if existing_ref is None or candidate_ref is None or existing_ref == candidate_ref:
+        return ()
+    return existing_ref, candidate_ref
 
 
 def _clean_reference_id(reference_id: str | None) -> str | None:
@@ -869,36 +1036,31 @@ def _calendar_events_with_filing_evidence(
     events: tuple[OverviewCalendarEvent, ...],
     evidence: tuple[OverviewCalendarFilingEvidence, ...],
 ) -> tuple[OverviewCalendarEvent, ...]:
-    enriched: list[OverviewCalendarEvent] = []
-    for event in events:
-        if event.event_type is not OverviewCalendarEventType.FILING:
-            enriched.append(event)
-            continue
-        if event.status is not None and not _is_active_aeat_filing_status(event.status):
-            enriched.append(event)
-            continue
-        if event.modelo is None or event.filing_year is None or event.period is None:
-            enriched.append(event)
-            continue
-        row = _calendar_event_filing_evidence(event=event, evidence=evidence)
-        if row is None:
-            enriched.append(event)
-            continue
-        current_state = event.aeat_submission_state or OverviewAeatSubmissionState.SUBMITTED_OBSERVED
-        if _AEAT_SUBMISSION_RANK[row.aeat_submission_state] <= _AEAT_SUBMISSION_RANK[current_state]:
-            enriched.append(event)
-            continue
-        enriched.append(
-            event.model_copy(
-                update={
-                    "aeat_submission_state": row.aeat_submission_state,
-                    "aeat_submitted_at": row.aeat_submitted_at or event.aeat_submitted_at,
-                    "justificante_verified": row.justificante_verified,
-                    "verified_justificante_csv": row.verified_justificante_csv,
-                },
-            ),
-        )
+    enriched = [_calendar_event_with_filing_evidence(event, evidence) for event in events]
     return _dedupe_calendar_events(enriched)
+
+
+def _calendar_event_with_filing_evidence(
+    event: OverviewCalendarEvent,
+    evidence: tuple[OverviewCalendarFilingEvidence, ...],
+) -> OverviewCalendarEvent:
+    """Promote one event only when a stronger matching AEAT state is available."""
+    if event.event_type is not OverviewCalendarEventType.FILING or _calendar_event_filing_target(event) is None:
+        return event
+    row = _calendar_event_filing_evidence(event=event, evidence=evidence)
+    if row is None:
+        return event
+    current_state = event.aeat_submission_state or OverviewAeatSubmissionState.SUBMITTED_OBSERVED
+    if _AEAT_SUBMISSION_RANK[row.aeat_submission_state] <= _AEAT_SUBMISSION_RANK[current_state]:
+        return event
+    return event.model_copy(
+        update={
+            "aeat_submission_state": row.aeat_submission_state,
+            "aeat_submitted_at": row.aeat_submitted_at or event.aeat_submitted_at,
+            "justificante_verified": row.justificante_verified,
+            "verified_justificante_csv": row.verified_justificante_csv,
+        },
+    )
 
 
 def _calendar_event_filing_evidence(
@@ -906,25 +1068,61 @@ def _calendar_event_filing_evidence(
     event: OverviewCalendarEvent,
     evidence: tuple[OverviewCalendarFilingEvidence, ...],
 ) -> OverviewCalendarFilingEvidence | None:
+    target = _calendar_event_filing_target(event)
+    if target is None:
+        return None
+    modelo, filing_year, period = target
+    matching_refs = tuple(
+        item
+        for item in evidence
+        if _calendar_event_evidence_matches(
+            item,
+            reference_id=event.reference_id,
+            modelo=modelo,
+            filing_year=filing_year,
+            period=period,
+        )
+    )
+    if not matching_refs:
+        return None
+    return _strongest_filing_evidence(matching_refs)
+
+
+def _calendar_event_filing_target(event: OverviewCalendarEvent) -> tuple[str, int, _Period] | None:
+    """Return an active event's natural filing target, or reject the event."""
     if event.modelo is None or event.filing_year is None or event.period is None:
         return None
     if event.status is not None and not _is_active_aeat_filing_status(event.status):
         return None
-    matching_refs = tuple(
-        item
-        for item in evidence
-        if item.aeat_reference_id == event.reference_id
-        and item.modelo == event.modelo
-        and item.filing_year == event.filing_year
-        and item.period is not None
-        and item.period.registry_token == event.period.registry_token
+    return event.modelo, event.filing_year, event.period
+
+
+def _calendar_event_evidence_matches(
+    evidence: OverviewCalendarFilingEvidence,
+    *,
+    reference_id: str,
+    modelo: str,
+    filing_year: int,
+    period: _Period,
+) -> bool:
+    """Whether one evidence row addresses the event's exact reference and target."""
+    return (
+        evidence.aeat_reference_id == reference_id
+        and evidence.modelo == modelo
+        and evidence.filing_year == filing_year
+        and evidence.period is not None
+        and evidence.period.registry_token == period.registry_token
     )
-    if not matching_refs:
-        return None
-    row = matching_refs[0]
-    for candidate in matching_refs[1:]:
-        row = _stronger_filing_evidence(row, candidate)
-    return row
+
+
+def _strongest_filing_evidence(
+    evidence_rows: tuple[OverviewCalendarFilingEvidence, ...],
+) -> OverviewCalendarFilingEvidence:
+    """Fold matching rows through the axis-aware merge precedence."""
+    strongest = evidence_rows[0]
+    for candidate in evidence_rows[1:]:
+        strongest = _stronger_filing_evidence(strongest, candidate)
+    return strongest
 
 
 authenticated_identity_matches_expected = _authenticated_identity_matches_expected

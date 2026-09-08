@@ -58,10 +58,8 @@ _EXEMPT: Final[dict[str, str]] = {
     "quality/tests/test_lint_scope_covers_scaffolding.py": "excludes: keeps the trees out of the product lint scope",
     "quality/tests/test_doc_privacy.py": "excludes: the privacy lint scans committed text without them",
     "registry/tests/test_declaration_invariant_gates.py": "detects: refuses a vault citation in a declaration",
-    "tests/_marker_metadata_patterns.py": "detects: the citation patterns the marker gate matches on",
     "tests/test_dev_governance_isolation.py": "detects: this gate, which must name what it refuses",
     "tests/test_governance_corpus_isolation.py": "detects: the sibling gate for the src/ boundary",
-    "tests/test_tracked_content_excludes_transient_trees.py": "detects: refuses a transient tree in tracked content",
 }
 
 

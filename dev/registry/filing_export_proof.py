@@ -15,7 +15,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal, Protocol
+from typing import Literal, Protocol, cast
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -74,6 +74,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
 )
 from cadrumo.domain.filing.errors import FilingExportError
+from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
@@ -405,7 +406,7 @@ def build_pinned_conformance_evidence(
     )
 
 
-def load_pinned_conformance_inputs(document: PinnedConformanceVectorDocument) -> dict[str, object]:
+def load_pinned_conformance_inputs(document: PinnedConformanceVectorDocument) -> ModeloInputs:
     """Return one pinned vector's declared non-sensitive mechanism inputs.
 
     Returns:
@@ -424,7 +425,7 @@ def load_pinned_conformance_inputs(document: PinnedConformanceVectorDocument) ->
         )
     inputs: dict[str, object] = {key: Decimal(value) for key, value in decimal_inputs.items()}
     inputs.update(enum_inputs)
-    return inputs
+    return cast("ModeloInputs", inputs)
 
 
 @dataclass(frozen=True, slots=True)
@@ -718,11 +719,27 @@ def _derive_static_filing_export_conformance_enrollment(
             continue
         try:
             probes = _public_vector_probes(layout)
+            snapshot_ref = (
+                validated_authority.snapshot(
+                    selected.modelo,
+                    filing_year=filing_year,
+                    period=period_code,
+                    grade=RegistryAuthorityGrade.FILING,
+                ).snapshot_ref
+                if validated_authority is not None
+                else RegistrySnapshotRef(
+                    modelo=selected.modelo,
+                    revision_id=selected.revision,
+                    modelo_year=filing_year,
+                    period=period_code,
+                )
+            )
             evidence = FilingExportConformanceVectorEvidence(
                 authority_id=_CONFORMANCE_AUTHORITY_ID,
                 coordinate=FilingExportProofCoordinate(
                     modelo=selected.modelo,
                     revision=selected.revision,
+                    snapshot_ref=snapshot_ref,
                     layout_ids=selected.layout_ids,
                 ),
                 filing_year=filing_year,

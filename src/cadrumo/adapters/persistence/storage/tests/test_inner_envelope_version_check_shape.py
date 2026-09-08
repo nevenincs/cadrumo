@@ -279,14 +279,13 @@ def load(record):
     return envelope.payload
 """
 
-_OUTER_ROW_UPGRADE_PATH = """
+_OUTER_ROW_VERSION_GATE = """
 from ..storage import Envelope
-from ..schema_lineage import upgrade_secure_object_payload
 
 def decode(row, max_supported_version):
     envelope = Envelope
-    if row.schema_version < max_supported_version:
-        return upgrade_secure_object_payload(row.payload)
+    if row.schema_version != max_supported_version:
+        raise ValueError("not current")
     return row.payload
 """
 
@@ -333,7 +332,7 @@ def test_detector_ignores_an_ordering_compare_on_a_non_envelope_receiver() -> No
     the attribute name alone would red it, in a module that does bind
     ``Envelope``.
     """
-    assert inner_envelope_inequality_violations(_OUTER_ROW_UPGRADE_PATH, _CONSUMER_MODULE) == []
+    assert inner_envelope_inequality_violations(_OUTER_ROW_VERSION_GATE, _CONSUMER_MODULE) == []
 
 
 def test_detector_ignores_a_module_that_does_not_read_the_inner_envelope() -> None:

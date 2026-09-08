@@ -549,32 +549,41 @@ def _sheet_constants(sheet: RecordDesignSheet) -> dict[tuple[int, int], str]:
     ``Constante`` is what keeps an ENUMERATION ("01" ... "12" o "1T") -- which
     would produce a WRONG join rather than a missing one -- out of the set.
     """
-    constants: dict[tuple[int, int], str] = {}
-    for field in sheet.fields:
-        cells = (field.content, field.description)
-        # Identifier-block rows (``<T360010>``-style) are read ONLY through the
-        # identifier pattern: the same row's CONTENT cell can carry pages of
-        # nota prose whose first quoted word would otherwise become a wrong
-        # anchor (Modelo 360's fin-de-registro cells showed exactly that).
-        if any(text and _IDENTIFIER_VOCABULARY.search(text) for text in cells):
-            for text in cells:
-                if not text:
-                    continue
-                identifier = _IDENTIFIER_VALUE.search(text)
-                if identifier is not None:
-                    constants[(field.offset, field.length)] = identifier.group(0).strip()
-                    break
+    return {
+        (field.offset, field.length): value for field in sheet.fields if (value := _field_constant(field)) is not None
+    }
+
+
+def _field_constant(field: RecordDesignField) -> str | None:
+    """Return one field's constant, keeping identifier rows on their own grammar."""
+    cells = (field.content, field.description)
+    if any(text and _IDENTIFIER_VOCABULARY.search(text) for text in cells):
+        return _identifier_constant(cells)
+    if not any(text and _CONSTANT_DECLARATION.search(text) for text in cells):
+        return None
+    return _quoted_constant(cells)
+
+
+def _identifier_constant(cells: tuple[str | None, str | None]) -> str | None:
+    """Read the angle-bracket identifier from an identifier-block row."""
+    for text in cells:
+        if not text:
             continue
-        if not any(text and _CONSTANT_DECLARATION.search(text) for text in cells):
+        identifier = _IDENTIFIER_VALUE.search(text)
+        if identifier is not None:
+            return identifier.group(0).strip()
+    return None
+
+
+def _quoted_constant(cells: tuple[str | None, str | None]) -> str | None:
+    """Read a quoted constant declared in either design cell."""
+    for text in cells:
+        if not text:
             continue
-        for text in cells:
-            if not text:
-                continue
-            matched = _QUOTED_VALUE.search(text)
-            if matched is not None:
-                constants[(field.offset, field.length)] = matched.group(1).strip()
-                break
-    return constants
+        matched = _QUOTED_VALUE.search(text)
+        if matched is not None:
+            return matched.group(1).strip()
+    return None
 
 
 def _design_constant_values(revision: ModeloRevision) -> Mapping[str, str]:
@@ -614,7 +623,17 @@ def _record_literals(
     registry build, and a record that uses the second is no less identified than
     one that uses the first.
     """
-    literals = {
+    literals = _inline_record_literals(record)
+    if not constants_by_binding:
+        return literals
+    for coordinate, value in _bound_record_literals(record, constants_by_binding).items():
+        literals.setdefault(coordinate, value)
+    return literals
+
+
+def _inline_record_literals(record: ExportRecordDefinition) -> dict[tuple[int, int], str]:
+    """Return literal fields that identify an authored record directly."""
+    return {
         (field.offset, field.length): field.literal
         for field in record.fields
         if field.kind is CasillaFieldKind.LITERAL
@@ -622,8 +641,14 @@ def _record_literals(
         and field.offset is not None
         and field.length is not None
     }
-    if not constants_by_binding:
-        return literals
+
+
+def _bound_record_literals(
+    record: ExportRecordDefinition,
+    constants_by_binding: Mapping[str, str],
+) -> dict[tuple[int, int], str]:
+    """Return design-constant fields that identify an authored record."""
+    literals: dict[tuple[int, int], str] = {}
     for field in record.fields:
         if field.offset is None or field.length is None or field.binding is None:
             continue
@@ -888,19 +913,37 @@ def _join_record(
     constants = _sheet_constants(sheet)
     if not constants:
         return None
-    scored: list[tuple[int, ExportRecordDefinition]] = []
-    for record in records:
-        literals = _record_literals(record, constants_by_binding)
-        shared = constants.keys() & literals.keys()
-        if not shared:
-            continue
-        if any(constants[key] != literals[key] for key in shared):
-            continue
-        scored.append((len(shared), record))
+    scored = _score_records(constants, records, constants_by_binding)
     if not scored:
         return None
+    winners = _best_records(scored)
+    return _resolve_record_tie(sheet, winners)
+
+
+def _score_records(
+    constants: Mapping[tuple[int, int], str],
+    records: Sequence[ExportRecordDefinition],
+    constants_by_binding: Mapping[str, str] | None,
+) -> list[tuple[int, ExportRecordDefinition]]:
+    """Collect records whose shared constants agree with a design sheet."""
+    return [
+        (score, record)
+        for record in records
+        if (score := _record_constant_agreement(constants, record, constants_by_binding)) is not None
+    ]
+
+
+def _best_records(scored: Sequence[tuple[int, ExportRecordDefinition]]) -> list[ExportRecordDefinition]:
+    """Return records tied for the highest constant agreement."""
     best = max(score for score, _ in scored)
-    winners = [record for score, record in scored if score == best]
+    return [record for score, record in scored if score == best]
+
+
+def _resolve_record_tie(
+    sheet: RecordDesignSheet,
+    winners: Sequence[ExportRecordDefinition],
+) -> ExportRecordDefinition | None:
+    """Resolve equal constant scores only through a declared discriminator."""
     if len(winners) == 1:
         return winners[0]
     # ONLY a tie-breaker, never an override: reached solely when the declared
@@ -910,6 +953,19 @@ def _join_record(
     # unjoined rather than taking an arbitrary winner.
     preferred = [record for record in winners if _discriminator_prefers(sheet, record) is True]
     return preferred[0] if len(preferred) == 1 else None
+
+
+def _record_constant_agreement(
+    constants: Mapping[tuple[int, int], str],
+    record: ExportRecordDefinition,
+    constants_by_binding: Mapping[str, str] | None,
+) -> int | None:
+    """Score one authored record against a design sheet's constants."""
+    literals = _record_literals(record, constants_by_binding)
+    shared = constants.keys() & literals.keys()
+    if not shared or any(constants[key] != literals[key] for key in shared):
+        return None
+    return len(shared)
 
 
 def _design_sources(
@@ -963,6 +1019,144 @@ def _envelope_written_bytes(envelope: FilingEnvelopeDefinition) -> set[int]:
     return written
 
 
+@dataclass(frozen=True, slots=True)
+class _CoverageInputs:
+    """The fields, bytes, and diagnostic scope for one design sheet."""
+
+    consulted: tuple[ExportFieldDefinition, ...]
+    written: set[int]
+    emitted: set[int]
+    scope: str
+
+
+def _layout_write_sets(
+    records: Sequence[ExportRecordDefinition],
+    envelope: FilingEnvelopeDefinition | None,
+) -> tuple[set[int], set[int]]:
+    """Collect layout-wide data and emitted byte extents for fallback coverage."""
+    written: set[int] = set()
+    emitted: set[int] = set()
+    for record in records:
+        written |= _written_bytes(record.fields, data_only=True)
+        emitted |= _written_bytes(record.fields, data_only=False)
+    if envelope is not None:
+        envelope_bytes = _envelope_written_bytes(envelope)
+        written |= envelope_bytes
+        emitted |= envelope_bytes
+    return written, emitted
+
+
+def _uncounted_required_positions(
+    sheet: RecordDesignSheet,
+    counted: set[tuple[str, int, int]],
+) -> tuple[_RequiredPosition, ...]:
+    """Return this sheet's required positions not counted by another edition."""
+    return tuple(
+        position
+        for position in _required_positions(sheet)
+        if (sheet.name, position.offset, position.length) not in counted
+    )
+
+
+def _sheet_coverage_inputs(
+    sheet: RecordDesignSheet,
+    records: Sequence[ExportRecordDefinition],
+    *,
+    envelope: FilingEnvelopeDefinition | None,
+    auxiliary_header: AuxiliaryEnvelopeHeaderDefinition | None,
+    layout_written: set[int],
+    layout_emitted: set[int],
+    constants_by_binding: Mapping[str, str] | None,
+) -> _CoverageInputs:
+    """Resolve the authoritative byte source and scope for one design sheet."""
+    is_envelope_sheet = envelope is not None and sheet.name == envelope.record_identity
+    if is_envelope_sheet and envelope is not None:
+        written = _envelope_written_bytes(envelope)
+        return _CoverageInputs((), written, written, f"filing envelope {sheet.name!r}")
+
+    joined = _join_record(sheet, records, constants_by_binding)
+    if joined is not None:
+        consulted = tuple(joined.fields)
+        return _CoverageInputs(
+            consulted,
+            _written_bytes(consulted, data_only=True),
+            _written_bytes(consulted, data_only=False),
+            f"authored record {joined.id!r} (record_type {joined.record_type!r})",
+        )
+
+    if sheet.auxiliary_envelope_header is not None:
+        return _auxiliary_header_coverage_inputs(sheet, auxiliary_header)
+
+    consulted = tuple(field for record in records for field in record.fields)
+    return _CoverageInputs(
+        consulted,
+        layout_written,
+        layout_emitted,
+        "NO authored record could be identified for this design record, so the check fell "
+        "back to asking whether any record of the layout writes the coordinate -- a weaker "
+        "question, so this count is a floor, not the whole gap",
+    )
+
+
+def _auxiliary_header_coverage_inputs(
+    sheet: RecordDesignSheet,
+    auxiliary_header: AuxiliaryEnvelopeHeaderDefinition | None,
+) -> _CoverageInputs:
+    """Resolve the separate auxiliary-header emission contract for one sheet."""
+    if auxiliary_header is None:
+        written: set[int] = set()
+        scope = (
+            f"auxiliary envelope header {sheet.name!r}, which this layout does not emit: the "
+            "header is a source-proved 328-byte composition outside the fixed-record totals, so "
+            "it needs its own emission contract rather than an authored fixed record"
+        )
+    else:
+        written = set(range(1, auxiliary_header.prefix_extent + 1))
+        scope = f"auxiliary envelope header {sheet.name!r}"
+    return _CoverageInputs((), written, written, scope)
+
+
+def _sheet_missing_positions(
+    required: Sequence[_RequiredPosition],
+    coverage: _CoverageInputs,
+) -> tuple[_RequiredPosition, ...]:
+    """Find required positions whose bytes are not emitted by the resolved source."""
+    return tuple(position for position in required if not _covers(position, coverage.written, coverage.emitted))
+
+
+def _missing_positions_line(
+    sheet: RecordDesignSheet,
+    required: Sequence[_RequiredPosition],
+    missing: Sequence[_RequiredPosition],
+    scope: str,
+) -> str:
+    """Render the bounded diagnostic worklist for one sheet's missing positions."""
+    shown = ", ".join(
+        f"@{position.offset}+{position.length} "
+        f"{'[OBLIGATORIO] ' if position.obligatorio else ''}{position.description!r}"
+        for position in missing[:_ENUMERATED_PER_RECORD]
+    )
+    remainder = f" and {len(missing) - _ENUMERATED_PER_RECORD} more" if len(missing) > _ENUMERATED_PER_RECORD else ""
+    return (
+        f"design record {sheet.name!r}: {len(missing)} of {len(required)} required positions "
+        f"unwritten by {scope}; {shown}{remainder}"
+    )
+
+
+def _sheet_coverage_result(
+    sheet: RecordDesignSheet,
+    required: Sequence[_RequiredPosition],
+    coverage: _CoverageInputs,
+) -> tuple[int, list[str]]:
+    """Return missing-count and diagnostics for one resolved sheet."""
+    missing = _sheet_missing_positions(required, coverage)
+    intrusions = _reserved_write_failures(sheet, coverage.consulted)
+    lines = [f"design record {sheet.name!r}: {'; '.join(intrusions)}"] if intrusions else []
+    if missing:
+        lines.append(_missing_positions_line(sheet, required, missing, coverage.scope))
+    return len(missing) + len(intrusions), lines
+
+
 def _missing_report(
     sheets: Sequence[RecordDesignSheet],
     records: Sequence[ExportRecordDefinition],
@@ -972,14 +1166,7 @@ def _missing_report(
     constants_by_binding: Mapping[str, str] | None = None,
 ) -> tuple[int, int, list[str]]:
     """Return ``(required, missing, per-sheet lines)`` for one design against one layout."""
-    layout_written: set[int] = set()
-    layout_emitted: set[int] = set()
-    for record in records:
-        layout_written |= _written_bytes(record.fields, data_only=True)
-        layout_emitted |= _written_bytes(record.fields, data_only=False)
-    if envelope is not None:
-        layout_written |= _envelope_written_bytes(envelope)
-        layout_emitted |= _envelope_written_bytes(envelope)
+    layout_written, layout_emitted = _layout_write_sets(records, envelope)
     required_total = 0
     missing_total = 0
     lines: list[str] = []
@@ -996,103 +1183,21 @@ def _missing_report(
     for sheet in sheets:
         if not _belongs_to_layout(sheet, records):
             continue
-        required = tuple(
-            position
-            for position in _required_positions(sheet)
-            if (sheet.name, position.offset, position.length) not in counted
-        )
+        required = _uncounted_required_positions(sheet, counted)
         counted.update((sheet.name, position.offset, position.length) for position in required)
         required_total += len(required)
-        is_envelope_sheet = envelope is not None and sheet.name == envelope.record_identity
-        # The envelope sheet is decided BEFORE the content join, never after it.
-        # The join matches on declared constants, and an envelope opens with the
-        # same `<T` and modelo bytes its page records do, so it agrees with every
-        # one of them. With a single body record that agreement is trivially a
-        # unique maximum, and the envelope is "joined" to a page whose fields sit
-        # at unrelated offsets -- reporting the page's identificación block as
-        # intruding on the envelope's own reserved run. Modelo 353's 2008-2025
-        # edition, which has exactly one body record, showed that. The envelope
-        # is emitted by the envelope contract and is never an authored record, so
-        # its coverage question has one correct answer regardless of the join.
-        joined = None if is_envelope_sheet else _join_record(sheet, records, constants_by_binding)
-        if is_envelope_sheet and envelope is not None:
-            consulted = ()
-            written = _envelope_written_bytes(envelope)
-            emitted = written
-        elif joined is not None:
-            consulted = tuple(joined.fields)
-            written = _written_bytes(consulted, data_only=True)
-            emitted = _written_bytes(consulted, data_only=False)
-        elif sheet.auxiliary_envelope_header is not None:
-            # An auxiliary header is NOT a fixed record and no authored record
-            # renders it, so the generic fallback below is actively wrong here:
-            # it asks whether ANY record writes the coordinate, and the other
-            # records' fields sit at the same low offsets, so a header position
-            # gets "covered" by an unrelated record's field or -- worse --
-            # reported as that field intruding on the header's reserved run.
-            # Modelo 232 showed exactly that, blaming dr23201 fields for writing
-            # into DR23200's administración bytes.
-            #
-            # A declared header is emitted byte-for-byte over its prefix spans:
-            # every one of its required positions carries a real value at filing
-            # time (literals, modelo, year, period, product identity), so the
-            # full extent counts as written. A layout that declares none
-            # genuinely emits nothing for the header, and every required
-            # position is attributed to the header itself.
-            consulted = ()
-            if auxiliary_header is not None:
-                # Design offsets are one-based, so the declared extent covers
-                # bytes @1..@extent exactly.
-                written = set(range(1, auxiliary_header.prefix_extent + 1))
-                emitted = written
-            else:
-                written: set[int] = set()
-                emitted: set[int] = set()
-        else:
-            consulted = tuple(field for record in records for field in record.fields)
-            written = layout_written
-            emitted = layout_emitted
-        missing = [position for position in required if not _covers(position, written, emitted)]
-        missing_total += len(missing)
-        # Checked against whichever fields the coverage question consulted,
-        # joined or not: an unjoined sheet still knows which bytes AEAT keeps,
-        # and a wide field claiming them is a defect either way.
-        if intrusions := _reserved_write_failures(sheet, consulted):
-            # Counted alongside the gap so a layout cannot trade one for the
-            # other: writing across the administración's bytes is how a single
-            # wide field "covers" every position it spans.
-            missing_total += len(intrusions)
-            lines.append(f"design record {sheet.name!r}: {'; '.join(intrusions)}")
-        if not missing:
-            continue
-        if is_envelope_sheet:
-            scope = f"filing envelope {sheet.name!r}"
-        elif joined is not None:
-            scope = f"authored record {joined.id!r} (record_type {joined.record_type!r})"
-        elif sheet.auxiliary_envelope_header is not None:
-            scope = (
-                f"auxiliary envelope header {sheet.name!r}, which this layout does not emit: the "
-                "header is a source-proved 328-byte composition outside the fixed-record totals, so "
-                "it needs its own emission contract rather than an authored fixed record"
-            )
-        else:
-            scope = (
-                "NO authored record could be identified for this design record, so the check fell "
-                "back to asking whether any record of the layout writes the coordinate -- a weaker "
-                "question, so this count is a floor, not the whole gap"
-            )
-        shown = ", ".join(
-            f"@{position.offset}+{position.length} "
-            f"{'[OBLIGATORIO] ' if position.obligatorio else ''}{position.description!r}"
-            for position in missing[:_ENUMERATED_PER_RECORD]
+        coverage = _sheet_coverage_inputs(
+            sheet,
+            records,
+            envelope=envelope,
+            auxiliary_header=auxiliary_header,
+            layout_written=layout_written,
+            layout_emitted=layout_emitted,
+            constants_by_binding=constants_by_binding,
         )
-        remainder = (
-            f" and {len(missing) - _ENUMERATED_PER_RECORD} more" if len(missing) > _ENUMERATED_PER_RECORD else ""
-        )
-        lines.append(
-            f"design record {sheet.name!r}: {len(missing)} of {len(required)} required positions "
-            f"unwritten by {scope}; {shown}{remainder}"
-        )
+        sheet_missing, sheet_lines = _sheet_coverage_result(sheet, required, coverage)
+        missing_total += sheet_missing
+        lines.extend(sheet_lines)
     return required_total, missing_total, lines
 
 

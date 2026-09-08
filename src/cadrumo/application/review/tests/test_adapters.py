@@ -93,11 +93,15 @@ def _summary(text: str = "demo") -> tr:
 def _snapshot_ref(modelo: str, period: Period) -> RegistrySnapshotRef:
     """Return the law-selected coordinate used by the live draft gate."""
 
-    return bundled_authority().snapshot(
-        modelo,
-        filing_year=period.filing_year,
-        period=period.registry_token,
-    ).snapshot_ref
+    return (
+        bundled_authority()
+        .snapshot(
+            modelo,
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
+        .snapshot_ref
+    )
 
 
 def _schema_version(modelo: str = "130", period: Period = _PERIOD) -> str:

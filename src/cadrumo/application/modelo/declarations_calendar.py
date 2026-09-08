@@ -8,6 +8,7 @@ deliberately absent from the output model.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime
 from enum import StrEnum
 from typing import Final, Self
@@ -24,6 +25,7 @@ from ..operator_actions.models import DeclaredNextAction
 from ..overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendar,
+    OverviewCalendarEntry,
     OverviewCalendarEntrySource,
     OverviewCalendarFilingEvidence,
     OverviewCalendarRange,
@@ -82,6 +84,19 @@ class DeclarationsCalendarSourceStateV1(DeclarationsCalendarSourceObservationV1)
         if observable != (self.item_count is not None):
             raise ValueError("only observable calendar sources carry a measured count")
         return self
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparedCalendarInputs:
+    """Validated authorities and observability for one calendar projection."""
+
+    schedule_observation: DeclarationsCalendarSourceObservationV1
+    local_observation: DeclarationsCalendarSourceObservationV1
+    aeat_observation: DeclarationsCalendarSourceObservationV1
+    evidence_by_address: dict[tuple[str, int, str], OverviewCalendarFilingEvidence]
+    schedule_observable: bool
+    local_observable: bool
+    aeat_observable: bool
 
 
 class DeclarationsCalendarEntryRefV1(BaseModel):
@@ -176,34 +191,7 @@ class DeclarationsCalendarProjectionV1(BaseModel):
 
     @model_validator(mode="after")
     def _sources_are_total_and_entries_unique(self) -> Self:
-        if self.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION:
-            raise ValueError("unsupported Declarations calendar contract version")
-        if tuple(item.source for item in self.sources) != tuple(DeclarationsCalendarSource):
-            raise ValueError("calendar sources must be total and canonically ordered")
-        if not self.query_range.covers(self.as_of):
-            raise ValueError("calendar as_of must fall inside its query range")
-        keys = tuple(item.semantic_key() for item in self.entries)
-        if len(keys) != len(set(keys)):
-            raise ValueError("calendar entries require unique natural legal identities")
-        by_source = {item.source: item for item in self.sources}
-        schedule = by_source[DeclarationsCalendarSource.SCHEDULE]
-        local = by_source[DeclarationsCalendarSource.LOCAL_FILING]
-        aeat = by_source[DeclarationsCalendarSource.AEAT_EVIDENCE]
-        if schedule.item_count is not None and schedule.item_count != len(self.entries):
-            raise ValueError("calendar schedule count must equal its projected rows")
-        if (
-            _observable(local.availability) != all(row.local_filing_state is not None for row in self.entries)
-            and self.entries
-        ):
-            raise ValueError("calendar rows contradict local source observability")
-        if (
-            _observable(aeat.availability)
-            != all(
-                row.aeat_submission_state is not None and row.justificante_verified is not None for row in self.entries
-            )
-            and self.entries
-        ):
-            raise ValueError("calendar rows contradict AEAT source observability")
+        _validate_projection_model(self)
         return self
 
 
@@ -220,6 +208,24 @@ def project_declarations_calendar(
     observation states, and it carries all of them. It withholds nothing the
     operator is entitled to; there is simply no monetary fact in a calendar.
     """
+    prepared = _prepare_calendar_inputs(calendar=calendar, evidence=evidence, schedule_observation=schedule_observation)
+    rows = _project_calendar_rows(calendar.entries, prepared)
+    sources = _project_calendar_sources(evidence.evidence, rows, prepared)
+    return DeclarationsCalendarProjectionV1(
+        as_of=as_of,
+        generated_at=calendar.generated_at,
+        query_range=calendar.range,
+        sources=sources,
+        entries=tuple(rows),
+    )
+
+
+def _prepare_calendar_inputs(
+    *,
+    calendar: OverviewCalendar,
+    evidence: CalendarEvidenceProjection,
+    schedule_observation: DeclarationsCalendarSourceObservationV1,
+) -> _PreparedCalendarInputs:
     if schedule_observation.source is not DeclarationsCalendarSource.SCHEDULE:
         raise DeclarationsCalendarProjectionError("schedule observation names another calendar source")
     schedule_observable = _observable(schedule_observation.availability)
@@ -231,80 +237,189 @@ def project_declarations_calendar(
     evidence_by_address = _evidence_by_address(evidence.evidence)
     local_observable = _observable(local_observation.availability)
     aeat_observable = _observable(aeat_observation.availability)
+    _validate_unobservable_evidence(
+        evidence.evidence,
+        local_observable=local_observable,
+        aeat_observable=aeat_observable,
+    )
+
+    schedule_addresses = _schedule_addresses(calendar.entries)
+    if set(evidence_by_address).difference(schedule_addresses):
+        raise DeclarationsCalendarProjectionError("calendar evidence has no scheduled natural address")
+    return _PreparedCalendarInputs(
+        schedule_observation=schedule_observation,
+        local_observation=local_observation,
+        aeat_observation=aeat_observation,
+        evidence_by_address=evidence_by_address,
+        schedule_observable=schedule_observable,
+        local_observable=local_observable,
+        aeat_observable=aeat_observable,
+    )
+
+
+def _schedule_addresses(entries: tuple[OverviewCalendarEntry, ...]) -> set[tuple[str, int, str]]:
+    addresses: set[tuple[str, int, str]] = set()
+    for entry in entries:
+        if entry.filing_year != entry.period.filing_year:
+            raise DeclarationsCalendarProjectionError("calendar entry filing year contradicts its period")
+        addresses.add(_calendar_entry_address(entry))
+    return addresses
+
+
+def _calendar_entry_address(entry: OverviewCalendarEntry) -> tuple[str, int, str]:
+    return (entry.modelo, entry.period.filing_year, entry.period.registry_token)
+
+
+def _validate_unobservable_evidence(
+    rows: tuple[OverviewCalendarFilingEvidence, ...],
+    *,
+    local_observable: bool,
+    aeat_observable: bool,
+) -> None:
     if not local_observable and any(
-        row.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE for row in evidence.evidence
+        row.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE for row in rows
     ):
         raise DeclarationsCalendarProjectionError("unobservable local evidence carries a confident claim")
     if not aeat_observable and any(
         row.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED or row.justificante_verified
-        for row in evidence.evidence
+        for row in rows
     ):
         raise DeclarationsCalendarProjectionError("unobservable AEAT evidence carries a confident claim")
 
-    schedule_addresses: set[tuple[str, int, str]] = set()
-    for entry in calendar.entries:
-        if entry.filing_year != entry.period.filing_year:
-            raise DeclarationsCalendarProjectionError("calendar entry filing year contradicts its period")
-        schedule_addresses.add((entry.modelo, entry.period.filing_year, entry.period.registry_token))
-    orphaned_evidence = set(evidence_by_address).difference(schedule_addresses)
-    if orphaned_evidence:
-        raise DeclarationsCalendarProjectionError("calendar evidence has no scheduled natural address")
 
-    rows: list[DeclarationsCalendarEntryRefV1] = []
-    for entry in calendar.entries:
-        key = (entry.modelo, entry.period.filing_year, entry.period.registry_token)
-        authority = evidence_by_address.get(key) or OverviewCalendarFilingEvidence(
-            modelo=entry.modelo,
-            filing_year=entry.period.filing_year,
-            period=entry.period,
-        )
-        _validate_calendar_evidence_join(
-            entry=entry.filing_evidence,
-            authority=authority,
-            local_observable=local_observable,
-            aeat_observable=aeat_observable,
-        )
-        _validate_recovery_action(entry.recovery_action, key)
-        rows.append(
-            DeclarationsCalendarEntryRefV1(
-                modelo=ModeloCode(entry.modelo),
-                filing_year=entry.period.filing_year,
-                period=entry.period,
-                opens_on=entry.opens_on,
-                adjusted_closes_on=entry.adjusted_closes_on,
-                payment_cutoff_on=entry.payment_cutoff_on,
-                legal_status=entry.status,
-                user_state=entry.user_state,
-                local_filing_state=authority.local_filing_state if local_observable else None,
-                aeat_submission_state=authority.aeat_submission_state if aeat_observable else None,
-                justificante_verified=authority.justificante_verified if aeat_observable else None,
-                source=entry.source,
-                recovery_action=entry.recovery_action,
-            )
-        )
+def _project_calendar_rows(
+    entries: tuple[OverviewCalendarEntry, ...],
+    prepared: _PreparedCalendarInputs,
+) -> list[DeclarationsCalendarEntryRefV1]:
+    rows = [_project_calendar_row(entry, prepared) for entry in entries]
     rows.sort(key=lambda row: (row.adjusted_closes_on, *row.semantic_key()))
     keys = tuple(row.semantic_key() for row in rows)
     if len(keys) != len(set(keys)):
         raise DeclarationsCalendarProjectionError("calendar contains duplicate natural legal identities")
+    return rows
 
-    local_count = sum(
-        item.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE for item in evidence.evidence
+
+def _project_calendar_row(
+    entry: OverviewCalendarEntry,
+    prepared: _PreparedCalendarInputs,
+) -> DeclarationsCalendarEntryRefV1:
+    key = _calendar_entry_address(entry)
+    authority = prepared.evidence_by_address.get(key) or OverviewCalendarFilingEvidence(
+        modelo=entry.modelo,
+        filing_year=entry.period.filing_year,
+        period=entry.period,
     )
-    aeat_count = sum(
-        item.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED for item in evidence.evidence
+    _validate_calendar_evidence_join(
+        entry=entry.filing_evidence,
+        authority=authority,
+        local_observable=prepared.local_observable,
+        aeat_observable=prepared.aeat_observable,
     )
-    sources = (
-        _state(schedule_observation, len(rows) if schedule_observable else None),
-        _state(local_observation, local_count if local_observable else None),
-        _state(aeat_observation, aeat_count if aeat_observable else None),
+    _validate_recovery_action(entry.recovery_action, key)
+    local_filing_state, aeat_submission_state, justificante_verified = _projected_evidence_axes(
+        authority,
+        local_observable=prepared.local_observable,
+        aeat_observable=prepared.aeat_observable,
     )
-    return DeclarationsCalendarProjectionV1(
-        as_of=as_of,
-        generated_at=calendar.generated_at,
-        query_range=calendar.range,
-        sources=sources,
-        entries=tuple(rows),
+    return DeclarationsCalendarEntryRefV1(
+        modelo=ModeloCode(entry.modelo),
+        filing_year=entry.period.filing_year,
+        period=entry.period,
+        opens_on=entry.opens_on,
+        adjusted_closes_on=entry.adjusted_closes_on,
+        payment_cutoff_on=entry.payment_cutoff_on,
+        legal_status=entry.status,
+        user_state=entry.user_state,
+        local_filing_state=local_filing_state,
+        aeat_submission_state=aeat_submission_state,
+        justificante_verified=justificante_verified,
+        source=entry.source,
+        recovery_action=entry.recovery_action,
     )
+
+
+def _projected_evidence_axes(
+    authority: OverviewCalendarFilingEvidence,
+    *,
+    local_observable: bool,
+    aeat_observable: bool,
+) -> tuple[
+    OverviewLocalFilingState | None,
+    OverviewAeatSubmissionState | None,
+    bool | None,
+]:
+    local_filing_state = authority.local_filing_state if local_observable else None
+    if aeat_observable:
+        aeat_submission_state = authority.aeat_submission_state
+        justificante_verified = authority.justificante_verified
+    else:
+        aeat_submission_state = None
+        justificante_verified = None
+    return local_filing_state, aeat_submission_state, justificante_verified
+
+
+def _project_calendar_sources(
+    evidence: tuple[OverviewCalendarFilingEvidence, ...],
+    rows: list[DeclarationsCalendarEntryRefV1],
+    prepared: _PreparedCalendarInputs,
+) -> tuple[DeclarationsCalendarSourceStateV1, ...]:
+    local_count = sum(item.local_filing_state is not OverviewLocalFilingState.NOT_READY_TO_FILE for item in evidence)
+    aeat_count = sum(item.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED for item in evidence)
+    return (
+        _state(prepared.schedule_observation, len(rows) if prepared.schedule_observable else None),
+        _state(prepared.local_observation, local_count if prepared.local_observable else None),
+        _state(prepared.aeat_observation, aeat_count if prepared.aeat_observable else None),
+    )
+
+
+def _validate_projection_model(projection: DeclarationsCalendarProjectionV1) -> None:
+    if projection.contract_version != DECLARATIONS_CALENDAR_CONTRACT_VERSION:
+        raise ValueError("unsupported Declarations calendar contract version")
+    _validate_source_order(projection.sources)
+    if not projection.query_range.covers(projection.as_of):
+        raise ValueError("calendar as_of must fall inside its query range")
+    _validate_unique_projection_entries(projection.entries)
+    by_source = {item.source: item for item in projection.sources}
+    _validate_schedule_projection_count(by_source[DeclarationsCalendarSource.SCHEDULE], len(projection.entries))
+    _validate_local_projection_rows(by_source[DeclarationsCalendarSource.LOCAL_FILING], projection.entries)
+    _validate_aeat_projection_rows(by_source[DeclarationsCalendarSource.AEAT_EVIDENCE], projection.entries)
+
+
+def _validate_source_order(sources: tuple[DeclarationsCalendarSourceStateV1, ...]) -> None:
+    if tuple(item.source for item in sources) != tuple(DeclarationsCalendarSource):
+        raise ValueError("calendar sources must be total and canonically ordered")
+
+
+def _validate_unique_projection_entries(entries: tuple[DeclarationsCalendarEntryRefV1, ...]) -> None:
+    keys = tuple(item.semantic_key() for item in entries)
+    if len(keys) != len(set(keys)):
+        raise ValueError("calendar entries require unique natural legal identities")
+
+
+def _validate_schedule_projection_count(
+    schedule: DeclarationsCalendarSourceStateV1,
+    entry_count: int,
+) -> None:
+    if schedule.item_count is not None and schedule.item_count != entry_count:
+        raise ValueError("calendar schedule count must equal its projected rows")
+
+
+def _validate_local_projection_rows(
+    local: DeclarationsCalendarSourceStateV1,
+    entries: tuple[DeclarationsCalendarEntryRefV1, ...],
+) -> None:
+    if entries and _observable(local.availability) != all(row.local_filing_state is not None for row in entries):
+        raise ValueError("calendar rows contradict local source observability")
+
+
+def _validate_aeat_projection_rows(
+    aeat: DeclarationsCalendarSourceStateV1,
+    entries: tuple[DeclarationsCalendarEntryRefV1, ...],
+) -> None:
+    if entries and _observable(aeat.availability) != all(
+        row.aeat_submission_state is not None and row.justificante_verified is not None for row in entries
+    ):
+        raise ValueError("calendar rows contradict AEAT source observability")
 
 
 def _observable(availability: HomeAvailability) -> bool:

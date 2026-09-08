@@ -4,9 +4,8 @@ See Also:
     :func:`~application.filing.draft_review._profile_activity_fingerprint`
         Order-independent digest helper under test for relation-scoping profile
         facts.
-    :func:`~application.filing.empty_profile_activity_fingerprint`
-        Public empty-surface sentinel compared against the private digest
-        helper.
+    :func:`~cadrumo.tests.filing.empty_profile_activity_fingerprint`
+        Test-support empty-surface digest compared against the private helper.
     :class:`~application.filing.ModeloApprovalStaleReason`
         Staleness reason enum whose ``PROFILE_ACTIVITY_CHANGED`` member is fed
         by this fingerprint.
@@ -16,7 +15,8 @@ from __future__ import annotations
 
 import pytest
 
-from ..draft_review import _profile_activity_fingerprint, empty_profile_activity_fingerprint
+from ....tests.filing import empty_profile_activity_fingerprint
+from ..draft_review import _profile_activity_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

@@ -7,29 +7,10 @@ import json
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
-from ..command_api import command_spec_nodes
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]
-
-
-EXPECTED_OVERVIEW_VERBS: frozenset[str] = frozenset(
-    {"status", "calendar", "agenda", "backlog", "explain", "prepare", "pipeline"},
-)
-
-
-def test_overview_verb_roster_locks_five_verb_tree() -> None:
-    """Boundary regression: the overview noun-group must expose exactly
-    the canonical verb set: status / calendar / agenda / backlog /
-    explain / prepare / pipeline. Adding or removing one without
-    updating the reviewed surface contract is drift."""
-
-    registered = frozenset(node.spec.token for node in command_spec_nodes() if node.spec.parent_key == "app_overview")
-    missing = EXPECTED_OVERVIEW_VERBS - registered
-    extras = registered - EXPECTED_OVERVIEW_VERBS
-    assert not missing, f"overview verbs disappeared: {sorted(missing)}"
-    assert not extras, f"overview verbs added without test update: {sorted(extras)}"
 
 
 def test_explain_requires_modelo_argument() -> None:

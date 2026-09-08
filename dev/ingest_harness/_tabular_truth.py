@@ -54,7 +54,7 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ._key import CorpusDocument, CorpusKey
+from ._key import CorpusKey, IngestCorpusDocument
 
 __all__ = [
     "TABULAR_COLUMN_ROLE_TRUTH",
@@ -223,7 +223,7 @@ TABULAR_COLUMN_ROLE_TRUTH: Final[Mapping[str, tuple[ColumnExpectation, ...]]] = 
 }
 
 
-def column_role_truth_document(doc_id: str, *, key: CorpusKey) -> CorpusDocument:
+def column_role_truth_document(doc_id: str, *, key: CorpusKey) -> IngestCorpusDocument:
     """Project one export into a document whose truth is the authored mapping.
 
     The corpus key is pinned by content hash and read-only, so the authored truth
@@ -245,7 +245,7 @@ def column_role_truth_document(doc_id: str, *, key: CorpusKey) -> CorpusDocument
             f"{sorted(TABULAR_COLUMN_ROLE_TRUTH)}",
         )
     source = key.document(doc_id)
-    return CorpusDocument(
+    return IngestCorpusDocument(
         doc_id=source.doc_id,
         path=source.path,
         provenance_class=source.provenance_class,

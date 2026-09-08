@@ -1,7 +1,6 @@
 """Tests for the pip-core lane's claim list and argument contract.
 
-`dev.quality.module_test_reach` listed `dev/packaging/smoke_pip_core.py` as
-unreached. The lane itself builds a stdlib venv and installs a digest-pinned
+The lane itself builds a stdlib venv and installs a digest-pinned
 cohort into it, which is what the packaging-smoke workflow runs; reproducing
 that here would prove nothing the live lane does not.
 

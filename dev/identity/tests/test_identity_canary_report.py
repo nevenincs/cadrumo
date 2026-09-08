@@ -1,6 +1,5 @@
 """Tests for the identity canary's report shape.
 
-`dev.quality.module_test_reach` listed `dev/identity/__main__.py` as unreached.
 It is not one of the thin entry-point shims: it decides what a reader is told
 about identity material in this tree, and it is the clearest example in the
 repository of the discipline this campaign has spent its time restoring

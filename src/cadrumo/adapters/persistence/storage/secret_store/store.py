@@ -331,12 +331,6 @@ class SecretStore:
         # real format change would have been read by a build that could not
         # interpret it, and -- because every mutation rewrites the whole
         # index -- the misread would have been written back.
-        #
-        # The index is enrolled in the persistence compatibility policy as a
-        # DURABLE format (``secret_index`` in :data:`~core.PERSISTED_FORMATS`),
-        # so a future version bump is governed by the same upgrade-chain
-        # rules as every other persisted format rather than by this check
-        # alone.
         if index.schema_version != SECRET_INDEX_SCHEMA_VERSION:
             raise EnvelopeVersionError(
                 f"secret-store index is at version {index.schema_version}; "

@@ -132,10 +132,8 @@ def _walk_modelos() -> Iterator[EnrolmentCandidate]:
     Walking the whole enum conflated "identifier the code references" with
     "concept a taxpayer looks up". The cost was measurable and invisible: 76 of
     the enum's 149 members are non-registry, and enrolling them made the
-    Handbook report 118 unenrolled concepts against a committed 117 -- a backlog
-    that would have tripled the curation ratchet, produced entirely by a change
-    made in a different subsystem for unrelated reasons. Nobody saw it because
-    the gate that reports it lived in a directory no test lane collected.
+    Handbook report 118 unenrolled concepts instead of the registry-backed set,
+    produced entirely by a change made in a different subsystem.
 
     Excluding them creates and deletes nothing. It narrows the candidate set to
     the forms this product actually models, which is what

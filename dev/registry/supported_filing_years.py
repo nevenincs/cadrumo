@@ -59,8 +59,7 @@ def _cell_gaps(
     if revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
         gaps.append(_gap(modelo.id, filing_year, period, "filing authority grade"))
     if not any(
-        _source_backs_cell(sources.get(ref), filing_year=filing_year, period=period)
-        for ref in revision.source_refs
+        _source_backs_cell(sources.get(ref), filing_year=filing_year, period=period) for ref in revision.source_refs
     ):
         gaps.append(_gap(modelo.id, filing_year, period, "evidence-backed source cell"))
     return tuple(gaps)

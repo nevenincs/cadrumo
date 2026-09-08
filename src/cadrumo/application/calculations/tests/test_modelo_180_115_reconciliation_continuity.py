@@ -238,7 +238,10 @@ def _compute_year_115_totals(
                 _115_observation(filing_year=filing_year, period=period, result=result),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(_115_observation(filing_year=filing_year, period=period, result=result)))
+                stamped_revision_id=revision_id_for_observation(
+                    _115_observation(filing_year=filing_year, period=period, result=result)
+                ),
+            )
         )
         for cid in totals:
             totals[cid] += result.values[cid]

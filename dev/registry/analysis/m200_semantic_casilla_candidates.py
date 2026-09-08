@@ -411,8 +411,6 @@ def _load_bundled_candidates() -> tuple[M200CasillaCandidate, ...]:
 
 def load_bundled_m200_target_identity_worklist() -> M200TargetIdentityWorklist:
     """Load the complete 2024 target-only map-owner and orphan worklist."""
-    from .m200_restored_semantic_audit import _candidate_payloads
-
     source_root = bundled_path()
     registry_root = bundled_path("registry", "aeat")
     modelo = load_modelo_directory(registry_root / "modelos" / "200")
@@ -433,7 +431,7 @@ def load_bundled_m200_target_identity_worklist() -> M200TargetIdentityWorklist:
         load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / target_epoch),
         target_design,
         target_declarations={declaration.id: declaration for declaration in target.casillas},
-        target_candidate_ids=frozenset(_candidate_payloads()),
+        target_candidate_ids=frozenset(),
     )
 
 

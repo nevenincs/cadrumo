@@ -75,9 +75,11 @@ def test_no_default_root_constants_in_production() -> None:
         f"route through cadrumo.core.resources.resources() instead: {offenders}"
     )
 
+
 _FILE_WALK_RE = re.compile(
     r"Path\(__file__\)\.resolve\(\)((?:\.parent)+)|Path\(__file__\)\.resolve\(\)\.parents\[(\d+)\]",
 )
+
 
 def test_no_production_module_walks_out_of_the_package() -> None:
     """No production module may walk ``__file__`` out of the ``cadrumo`` package.

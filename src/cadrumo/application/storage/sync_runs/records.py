@@ -51,6 +51,7 @@ from typing import Annotated, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
+from ....core.hex import HEX_PATTERN_64
 from ....core.identity import BucketId
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.sync_surface import SyncSurface
@@ -68,9 +69,14 @@ __all__ = [
     "sync_run_record_key",
 ]
 
+_SYNC_RUN_RECORD_REFERENCE_PATTERN = (
+    rf"^sync-run:(?:filed_declarations|calc_sheets_export):"
+    rf"{HEX_PATTERN_64.removeprefix('^').removesuffix('$')}$"
+)
+
 SyncRunRecordReference = Annotated[
     str,
-    Field(pattern=r"^sync-run:(?:filed_declarations|calc_sheets_export):[0-9a-f]{64}$"),
+    Field(pattern=_SYNC_RUN_RECORD_REFERENCE_PATTERN),
 ]
 """Stable encrypted-store key resolving one persisted sync-run record."""
 

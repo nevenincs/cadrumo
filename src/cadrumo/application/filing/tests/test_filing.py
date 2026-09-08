@@ -25,6 +25,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....tests.filing import empty_prior_filing_observations_fingerprint, empty_profile_activity_fingerprint
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ..conftest import _BUCKET_ID
@@ -32,8 +33,6 @@ from ..draft_construction import _binding_provenance, build_draft
 from ..draft_review import (
     approve_draft,
     compute_current_approval_basis,
-    empty_prior_filing_observations_fingerprint,
-    empty_profile_activity_fingerprint,
     refresh_review_status,
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider

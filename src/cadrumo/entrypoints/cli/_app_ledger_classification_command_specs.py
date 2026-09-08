@@ -4,12 +4,18 @@
 
 from __future__ import annotations
 
+from ...application.ledger.operator_input_contracts import (
+    COUNTERPARTY_IDENTIFICATION_STATE_INPUT,
+    DEDUCTION_FACT_KIND_INPUT,
+    IVA_CATEGORY_INPUT,
+)
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_7,
 )
 from ._app_ledger_command_spec_support import (
     _boolean_flag_option,
+    _option_from_application_contract,
     _optional_text_option,
 )
 from .command_spec import (
@@ -122,56 +128,16 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ("--m210-asset-or-right-id",),
                 "cli.ledger.classify.m210_asset_or_right_id_help",
             ),
-            OptionSpec(
-                name="iva_category",
-                declarations=("--iva-category",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "IvaCategory")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.classify.iva_category_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
-                name="deduction_fact_kind",
-                declarations=("--deduction-kind",),
-                value=ValueContract(DeferredTarget("cadrumo.core.iva_deduction_fact", "IvaDeductionFactKind")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.classify.deduction_fact_kind_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
+            _option_from_application_contract(IVA_CATEGORY_INPUT, "cli.ledger.classify.iva_category_help"),
+            _option_from_application_contract(
+                DEDUCTION_FACT_KIND_INPUT, "cli.ledger.classify.deduction_fact_kind_help"
             ),
             _optional_text_option(
                 "counterparty_country", ("--counterparty-country",), "cli.ledger.classify.counterparty_country_help"
             ),
-            OptionSpec(
-                name="counterparty_identification_state",
-                declarations=("--counterparty-identification-state",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "EUMemberState")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.classify.counterparty_identification_state_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
+            _option_from_application_contract(
+                COUNTERPARTY_IDENTIFICATION_STATE_INPUT,
+                "cli.ledger.classify.counterparty_identification_state_help",
             ),
             _optional_text_option("actor", ("--actor",), "cli.ledger.add.actor_help"),
             _boolean_flag_option("reaffirm", ("--reaffirm",), "cli.ledger.classify.reaffirm_help"),

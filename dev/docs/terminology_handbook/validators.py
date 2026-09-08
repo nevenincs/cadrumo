@@ -158,8 +158,8 @@ def approved_completeness_validator() -> HandbookValidator:
     ``definition`` AND a ``source`` citation, and EVERY authored language
     section MUST carry a non-empty ``short_description``. ``draft`` (and
     ``deprecated`` / ``retired``) concepts are exempt: a draft with an
-    empty definition is the curation-backlog signal the standing ratchet
-    measures, not a hard failure here.
+    empty definition remains visible in the audit report, not a hard failure
+    here.
     """
 
     def _validate(handbook: TerminologyHandbook) -> None:

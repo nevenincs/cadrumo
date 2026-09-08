@@ -53,6 +53,7 @@ Resumability rules:
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass, replace
 from datetime import datetime
 from typing import TYPE_CHECKING
 
@@ -193,6 +194,23 @@ class WorkflowResumeContext(BaseModel):
     aborted_reason: WorkflowAbortReason
 
 
+@dataclass(frozen=True)
+class _ResumeTargetInputs:
+    """Normalised operator selectors used by the unified resume resolver."""
+
+    target: str | None
+    workflow_run_id: str | None
+    work_unit_id: str | None
+    calculation_revision_id: CalculationRevisionId | None
+    modelo: str | None
+    year: int | None
+    period: Period | None
+    registry_revision_id: RevisionId | None
+    bucket_id: str | None
+    selector: object | None
+    visible_supplied: bool
+
+
 def resume_modelo_workflow(run_id: str) -> WorkflowResumeContext:
     """Validate that ``run_id`` may be resumed and return a fresh-attempt context.
 
@@ -282,57 +300,115 @@ def resolve_modelo_workflow_resume_target(
         A :class:`application.workflow.WorkflowResumeTargetResolution`
         carrying the selected run id and any resolved modelo work metadata.
     """
-    clean_target = target.strip() if target is not None and target.strip() else None
-    clean_run_id = workflow_run_id.strip() if workflow_run_id is not None and workflow_run_id.strip() else None
-    clean_work_id = work_unit_id.strip() if work_unit_id is not None and work_unit_id.strip() else None
-    clean_revision_id = (
-        calculation_revision_id.strip()
-        if calculation_revision_id is not None and calculation_revision_id.strip()
-        else None
+    inputs = _resume_target_inputs(
+        target=target,
+        workflow_run_id=workflow_run_id,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        registry_revision_id=registry_revision_id,
+        bucket_id=bucket_id,
+        selector=selector,
     )
-    visible_supplied = any(value is not None for value in (modelo, year, period, registry_revision_id, bucket_id))
-    exact_count = sum(value is not None for value in (clean_target, clean_run_id, clean_work_id, clean_revision_id))
-    if exact_count > 1 or (clean_target is not None and visible_supplied):
+    _reject_resume_target_contradiction(inputs)
+    inputs = _classify_resume_target(inputs)
+
+    if inputs.workflow_run_id is not None:
+        return _workflow_run_id_resolution(inputs.workflow_run_id, source="workflow_run_id")
+    if inputs.calculation_revision_id is not None:
+        return _resolve_resume_from_calculation_revision(inputs.calculation_revision_id)
+    if inputs.work_unit_id is not None:
+        return _resolve_resume_from_work_unit_id(inputs.work_unit_id, selector=inputs.selector)
+    if inputs.visible_supplied:
+        return _resolve_resume_from_visible_inputs(inputs)
+    raise WorkflowError(translated_message="application.workflow.errors.resume_target_required")
+
+
+def _resume_target_inputs(
+    *,
+    target: str | None,
+    workflow_run_id: str | None,
+    work_unit_id: str | None,
+    calculation_revision_id: CalculationRevisionId | None,
+    modelo: str | None,
+    year: int | None,
+    period: Period | None,
+    registry_revision_id: RevisionId | None,
+    bucket_id: str | None,
+    selector: object | None,
+) -> _ResumeTargetInputs:
+    """Normalise optional exact ids while retaining visible-selector presence."""
+    clean_target = _clean_resume_id(target)
+    clean_run_id = _clean_resume_id(workflow_run_id)
+    clean_work_id = _clean_resume_id(work_unit_id)
+    clean_revision_id = _clean_resume_id(calculation_revision_id)
+    return _ResumeTargetInputs(
+        target=clean_target,
+        workflow_run_id=clean_run_id,
+        work_unit_id=clean_work_id,
+        calculation_revision_id=clean_revision_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        registry_revision_id=registry_revision_id,
+        bucket_id=bucket_id,
+        selector=selector,
+        visible_supplied=any(value is not None for value in (modelo, year, period, registry_revision_id, bucket_id)),
+    )
+
+
+def _clean_resume_id(value: str | None) -> str | None:
+    """Return a stripped id, treating whitespace-only input as absent."""
+    if value is None:
+        return None
+    return value.strip() or None
+
+
+def _reject_resume_target_contradiction(inputs: _ResumeTargetInputs) -> None:
+    """Refuse multiple exact addresses or an exact plus visible address."""
+    exact_count = sum(
+        value is not None
+        for value in (inputs.target, inputs.workflow_run_id, inputs.work_unit_id, inputs.calculation_revision_id)
+    )
+    if exact_count > 1 or (inputs.target is not None and inputs.visible_supplied):
         raise WorkflowError(translated_message="application.workflow.errors.resume_target_contradiction")
 
-    if clean_run_id is not None:
-        return _workflow_run_id_resolution(clean_run_id, source="workflow_run_id")
-    if clean_target is not None:
-        if _WORKFLOW_RUN_ID_RE.fullmatch(clean_target):
-            return WorkflowResumeTargetResolution(run_id=clean_target, source="workflow_run_id")
-        if _WORK_UNIT_ID_RE.fullmatch(clean_target):
-            clean_work_id = clean_target
-        else:
-            raise WorkflowError(
-                translated_message="application.workflow.errors.resume_target_invalid",
-                context={"target": clean_target},
-            )
 
-    if clean_revision_id is not None:
-        return _resolve_resume_from_calculation_revision(clean_revision_id)
-    if clean_work_id is not None:
-        return _resolve_resume_from_work_unit_id(clean_work_id, selector=selector)
+def _classify_resume_target(inputs: _ResumeTargetInputs) -> _ResumeTargetInputs:
+    """Map the generic target token onto its canonical exact-id field."""
+    if inputs.target is None:
+        return inputs
+    if _WORKFLOW_RUN_ID_RE.fullmatch(inputs.target):
+        return replace(inputs, workflow_run_id=inputs.target)
+    if _WORK_UNIT_ID_RE.fullmatch(inputs.target):
+        return replace(inputs, work_unit_id=inputs.target)
+    raise WorkflowError(
+        translated_message="application.workflow.errors.resume_target_invalid",
+        context={"target": inputs.target},
+    )
 
-    if visible_supplied:
-        if modelo is None or year is None or period is None:
-            raise WorkflowError(
-                translated_message="application.workflow.errors.resume_visible_target_incomplete",
-                context={
-                    "modelo": modelo or "",
-                    "year": "" if year is None else str(year),
-                    "period": "" if period is None else str(period),
-                },
-            )
-        return _resolve_resume_from_visible_target(
-            modelo=modelo,
-            year=year,
-            period=period,
-            registry_revision_id=registry_revision_id,
-            bucket_id=bucket_id,
-            selector=selector,
+
+def _resolve_resume_from_visible_inputs(inputs: _ResumeTargetInputs) -> WorkflowResumeTargetResolution:
+    """Validate and resolve a visible modelo filing selector."""
+    if inputs.modelo is None or inputs.year is None or inputs.period is None:
+        raise WorkflowError(
+            translated_message="application.workflow.errors.resume_visible_target_incomplete",
+            context={
+                "modelo": inputs.modelo or "",
+                "year": "" if inputs.year is None else str(inputs.year),
+                "period": "" if inputs.period is None else str(inputs.period),
+            },
         )
-
-    raise WorkflowError(translated_message="application.workflow.errors.resume_target_required")
+    return _resolve_resume_from_visible_target(
+        modelo=inputs.modelo,
+        year=inputs.year,
+        period=inputs.period,
+        registry_revision_id=inputs.registry_revision_id,
+        bucket_id=inputs.bucket_id,
+        selector=inputs.selector,
+    )
 
 
 def _workflow_run_id_resolution(run_id: str, *, source: str) -> WorkflowResumeTargetResolution:

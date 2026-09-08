@@ -83,6 +83,8 @@ class _QueryOverrides(TypedDict, total=False):
     sort_by: LedgerSortField | None
     sort_order: LedgerSortOrder
     exclude_llm_rejected: bool
+
+
 def _query(**overrides: Unpack[_QueryOverrides]) -> LedgerTransactionListQuery:
     return LedgerTransactionListQuery(spec=LedgerReviewFilterSpec(clauses=()), **overrides)
 

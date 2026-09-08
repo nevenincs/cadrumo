@@ -10,10 +10,6 @@ selected, they fail when prerequisites are absent and must never self-skip. No
 item may carry both ``unit`` and ``aeat_live`` markers.
 
 See Also:
-    :mod:`~tests.test_mock_inventory`
-        Companion production-test guard for mock and test-double shortcuts.
-    :mod:`~tests.test_monkeypatch_inventory`
-        Companion production-test guard for monkeypatch mutation shortcuts.
     :func:`~tests._inventory.discover_test_control_modules`
         Source-tree deterministic test-control surface walked by this gate.
     :func:`~tests._inventory.project_test_control_modules`

@@ -589,6 +589,90 @@ def validate_m349_nif_format(nif: str, pais: str) -> bool:
     return bool(spec.pattern.match(normalized_nif))
 
 
+def _is_before_m349_transition(year: int | None) -> bool:
+    """Return whether a filing or rectification predates the 2021 transition."""
+    return year is not None and year < 2021
+
+
+def _is_m349_2021_goods_transition(*, year: int | None, period: str, clave: str) -> bool:
+    """Return whether a code is allowed in the first 2021 goods transition period."""
+    return year == 2021 and period in _M349_2021_FIRST_PERIODS and clave not in _M349_SERVICE_CLAVES
+
+
+def _validate_m349_xi_context(
+    *,
+    country: str,
+    clave: str,
+    filing_year: int,
+    period_code: str,
+    is_rectification: bool,
+    rectified_year: int | None,
+) -> None:
+    """Apply the Modelo 349 Northern Ireland prefix rules in their refusal order."""
+    if clave in _M349_SERVICE_CLAVES:
+        _raise_m349_country_context_error(
+            country_code=country,
+            clave_operacion=clave,
+            filing_year=filing_year,
+            period=period_code,
+            reason="Northern Ireland prefix XI is not accepted for service keys S or I",
+        )
+    if is_rectification and _is_before_m349_transition(rectified_year):
+        _raise_m349_country_context_error(
+            country_code=country,
+            clave_operacion=clave,
+            filing_year=filing_year,
+            period=period_code,
+            reason="pre-2021 rectifications use GB, not XI",
+        )
+    if not is_rectification and _is_before_m349_transition(filing_year):
+        _raise_m349_country_context_error(
+            country_code=country,
+            clave_operacion=clave,
+            filing_year=filing_year,
+            period=period_code,
+            reason="XI applies only from 2021 onward",
+        )
+
+
+def _validate_m349_gb_context(
+    *,
+    country: str,
+    clave: str,
+    filing_year: int,
+    period_code: str,
+    is_rectification: bool,
+    rectified_year: int | None,
+    rectified_period_code: str | None,
+) -> None:
+    """Apply the Modelo 349 Great Britain transition exceptions."""
+    if is_rectification:
+        if _is_before_m349_transition(rectified_year):
+            return
+        if _is_m349_2021_goods_transition(year=rectified_year, period=rectified_period_code or "", clave=clave):
+            return
+        _raise_m349_country_context_error(
+            country_code=country,
+            clave_operacion=clave,
+            filing_year=filing_year,
+            period=period_code,
+            reason="GB is limited to pre-2021 rectifications and the 2021 1M/1T transition case",
+        )
+        return
+
+    if _is_before_m349_transition(filing_year):
+        return
+    if _is_m349_2021_goods_transition(year=filing_year, period=period_code, clave=clave):
+        return
+    _raise_m349_country_context_error(
+        country_code=country,
+        clave_operacion=clave,
+        filing_year=filing_year,
+        period=period_code,
+        reason="ordinary post-transition Modelo 349 rows use XI for Northern Ireland goods and exclude GB",
+    )
+
+
 def validate_m349_country_prefix_context(
     *,
     country_code: str,
@@ -613,63 +697,25 @@ def validate_m349_country_prefix_context(
     rectified_period_code = _normalise_m349_period(rectified_period) if rectified_period is not None else None
 
     if country == _M349_NI_PREFIX:
-        if clave in _M349_SERVICE_CLAVES:
-            _raise_m349_country_context_error(
-                country_code=country,
-                clave_operacion=clave,
-                filing_year=filing_year,
-                period=period_code,
-                reason="Northern Ireland prefix XI is not accepted for service keys S or I",
-            )
-        if is_rectification and rectified_year is not None and rectified_year < 2021:
-            _raise_m349_country_context_error(
-                country_code=country,
-                clave_operacion=clave,
-                filing_year=filing_year,
-                period=period_code,
-                reason="pre-2021 rectifications use GB, not XI",
-            )
-        if not is_rectification and filing_year < 2021:
-            _raise_m349_country_context_error(
-                country_code=country,
-                clave_operacion=clave,
-                filing_year=filing_year,
-                period=period_code,
-                reason="XI applies only from 2021 onward",
-            )
-        return
-
-    if country != _M349_GB_PREFIX:
-        return
-
-    if is_rectification:
-        if rectified_year is not None and rectified_year < 2021:
-            return
-        if (
-            rectified_year == 2021
-            and rectified_period_code in _M349_2021_FIRST_PERIODS
-            and clave not in _M349_SERVICE_CLAVES
-        ):
-            return
-        _raise_m349_country_context_error(
-            country_code=country,
-            clave_operacion=clave,
+        _validate_m349_xi_context(
+            country=country,
+            clave=clave,
             filing_year=filing_year,
-            period=period_code,
-            reason="GB is limited to pre-2021 rectifications and the 2021 1M/1T transition case",
+            period_code=period_code,
+            is_rectification=is_rectification,
+            rectified_year=rectified_year,
         )
-
-    if filing_year < 2021:
         return
-    if filing_year == 2021 and period_code in _M349_2021_FIRST_PERIODS and clave not in _M349_SERVICE_CLAVES:
-        return
-    _raise_m349_country_context_error(
-        country_code=country,
-        clave_operacion=clave,
-        filing_year=filing_year,
-        period=period_code,
-        reason="ordinary post-transition Modelo 349 rows use XI for Northern Ireland goods and exclude GB",
-    )
+    if country == _M349_GB_PREFIX:
+        _validate_m349_gb_context(
+            country=country,
+            clave=clave,
+            filing_year=filing_year,
+            period_code=period_code,
+            is_rectification=is_rectification,
+            rectified_year=rectified_year,
+            rectified_period_code=rectified_period_code,
+        )
 
 
 def _normalise_m349_period(period: str | None) -> str:

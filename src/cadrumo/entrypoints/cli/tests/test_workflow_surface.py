@@ -140,8 +140,9 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
 ) -> None:
     """Profile setup, config reads, deadlines, and filing runtime use one profile bucket."""
 
-    from ....application.filing.runtime import load_default_filing_profile
+    from ....application.filing.runtime import filing_profile_from_taxpayer
     from ....application.user_profile.projections import fact_value
+    from ....application.wizard.status import load_active_taxpayer_profile
     from ....application.workflow.persistence import workflow_state_repository
     from ....tests.profile_capsule import load_test_profile_record
 
@@ -241,7 +242,7 @@ def test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket(
     calendar_payload = calendar_envelope["result"]
     assert "iva.regime" in calendar_payload["completeness"]["explicitly_set_keys"]
 
-    filing_profile = load_default_filing_profile()
+    filing_profile = filing_profile_from_taxpayer(load_active_taxpayer_profile(state))
     assert filing_profile.tax_id == "00000000T"
 
 

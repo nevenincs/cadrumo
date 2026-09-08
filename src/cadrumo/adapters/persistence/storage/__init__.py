@@ -19,7 +19,7 @@ Where the contracts live:
   non-raising inner-envelope predicates
   :func:`inner_envelope_version_is_current` and
   :func:`inner_envelope_classification_is_expected`, and the layer-one row
-  ceiling :func:`ensure_schema_version_readable`. The two are different
+  exact row-version gate :func:`ensure_schema_version_readable`. The two are different
   contracts; a layer-two caller wants the predicates.
 - Encryption substrate — ``envelope``, ``blob_store``, ``master_key``,
   ``secret_store`` and ``crypto``, defining :class:`Envelope`,

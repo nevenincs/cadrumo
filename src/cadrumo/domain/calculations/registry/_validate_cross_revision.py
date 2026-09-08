@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable
+from itertools import combinations
 
 from ....core.casilla_id import CasillaId
 from ._cross_revision_divergence import (
@@ -33,6 +34,8 @@ __all__ = [
     "declared_cross_revision_continuity_semantic_linkage_failures",
     "validate_cross_revision_casilla_consistency",
 ]
+
+type _ContinuityOccurrence = tuple[ModeloRevision, CasillaDefinition]
 
 
 def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefinition]) -> None:
@@ -62,55 +65,96 @@ def declared_cross_revision_continuity_semantic_linkage_failures(
     """
     failures: list[str] = []
     for modelo in modelos:
-        casillas_by_continuidad_id: dict[str, list[tuple[ModeloRevision, CasillaDefinition]]] = defaultdict(list)
-        for revision in modelo.revisions.values():
-            for casilla in revision.casillas:
-                if casilla.continuidad_id is not None:
-                    casillas_by_continuidad_id[casilla.continuidad_id].append((revision, casilla))
-
-        for continuidad_id, occurrences in sorted(casillas_by_continuidad_id.items()):
-            chain_revisions = tuple(dict.fromkeys(revision.id for revision, _casilla in occurrences))
-            if not any(
-                not revisions_overlap(modelo.revisions[left_revision_id], modelo.revisions[right_revision_id])
-                for index, left_revision_id in enumerate(chain_revisions)
-                for right_revision_id in chain_revisions[index + 1 :]
-            ):
-                continue
-
-            missing_roles = [(revision, casilla) for revision, casilla in occurrences if casilla.semantic_role is None]
-            for revision, casilla in missing_roles:
-                failures.append(
-                    "cross-revision continuity semantic linkage missing: "
-                    f"modelo {modelo.id} continuidad_id {continuidad_id!r} "
-                    f"revision {revision.id!r} casilla {casilla.id!r} has no semantic_role",
-                )
-            if missing_roles:
-                continue
-
-            # Only non-None roles enter the set: the loop above already
-            # `continue`d past any chain carrying a missing one, so the filter
-            # narrows the type without changing which chains are considered.
-            semantic_roles = {
-                casilla.semantic_role for _revision, casilla in occurrences if casilla.semantic_role is not None
-            }
-            if len(semantic_roles) != 1:
-                continue
-            semantic_role = semantic_roles.pop()
-            if any(
-                sum(casilla.semantic_role == semantic_role for casilla in revision.casillas) != 1
-                for revision_id in chain_revisions
-                for revision in (modelo.revisions[revision_id],)
-            ):
-                continue
-
-            expected_continuidad_id = semantic_role.lower().replace("_", "-")
-            if continuidad_id != expected_continuidad_id:
-                failures.append(
-                    "cross-revision continuity semantic linkage mismatch: "
-                    f"modelo {modelo.id} role-unique continuity chain {continuidad_id!r} "
-                    f"must equal semantic-role-derived id {expected_continuidad_id!r}",
-                )
+        for continuidad_id, occurrences in sorted(_continuity_occurrences(modelo).items()):
+            failures.extend(_semantic_linkage_failures(modelo, continuidad_id, occurrences))
     return tuple(failures)
+
+
+def _continuity_occurrences(modelo: ModeloDefinition) -> dict[str, list[_ContinuityOccurrence]]:
+    """Group stamped casillas by their declared continuity id."""
+    occurrences: dict[str, list[_ContinuityOccurrence]] = defaultdict(list)
+    for revision in modelo.revisions.values():
+        for casilla in revision.casillas:
+            continuidad_id = casilla.continuidad_id
+            if continuidad_id is not None:
+                occurrences[continuidad_id].append((revision, casilla))
+    return occurrences
+
+
+def _semantic_linkage_failures(
+    modelo: ModeloDefinition,
+    continuidad_id: str,
+    occurrences: list[_ContinuityOccurrence],
+) -> tuple[str, ...]:
+    """Return semantic-linkage failures for one declared continuity chain."""
+    chain_revisions = _chain_revision_ids(occurrences)
+    if not _crosses_revision_boundary(modelo, chain_revisions):
+        return ()
+
+    missing_roles = _missing_semantic_role_failures(modelo, continuidad_id, occurrences)
+    if missing_roles:
+        return missing_roles
+
+    semantic_role = _unique_semantic_role(occurrences)
+    if semantic_role is None or not _role_is_unique_in_revisions(modelo, chain_revisions, semantic_role):
+        return ()
+
+    expected_continuidad_id = semantic_role.lower().replace("_", "-")
+    if continuidad_id == expected_continuidad_id:
+        return ()
+    return (
+        "cross-revision continuity semantic linkage mismatch: "
+        f"modelo {modelo.id} role-unique continuity chain {continuidad_id!r} "
+        f"must equal semantic-role-derived id {expected_continuidad_id!r}",
+    )
+
+
+def _chain_revision_ids(occurrences: Iterable[_ContinuityOccurrence]) -> tuple[RevisionId, ...]:
+    """Return the first-seen revision ids represented in one continuity chain."""
+    return tuple(dict.fromkeys(revision.id for revision, _casilla in occurrences))
+
+
+def _crosses_revision_boundary(modelo: ModeloDefinition, revision_ids: tuple[RevisionId, ...]) -> bool:
+    """Return whether any pair of chain revisions has a non-overlapping window."""
+    return any(
+        not revisions_overlap(modelo.revisions[left_revision_id], modelo.revisions[right_revision_id])
+        for left_revision_id, right_revision_id in combinations(revision_ids, 2)
+    )
+
+
+def _missing_semantic_role_failures(
+    modelo: ModeloDefinition,
+    continuidad_id: str,
+    occurrences: Iterable[_ContinuityOccurrence],
+) -> tuple[str, ...]:
+    """Format every occurrence that lacks the semantic role required by a chain."""
+    return tuple(
+        "cross-revision continuity semantic linkage missing: "
+        f"modelo {modelo.id} continuidad_id {continuidad_id!r} "
+        f"revision {revision.id!r} casilla {casilla.id!r} has no semantic_role"
+        for revision, casilla in occurrences
+        if casilla.semantic_role is None
+    )
+
+
+def _unique_semantic_role(occurrences: Iterable[_ContinuityOccurrence]) -> str | None:
+    """Return the chain role when all occurrences carry the same role."""
+    semantic_roles = {casilla.semantic_role for _revision, casilla in occurrences if casilla.semantic_role is not None}
+    if len(semantic_roles) != 1:
+        return None
+    return semantic_roles.pop()
+
+
+def _role_is_unique_in_revisions(
+    modelo: ModeloDefinition,
+    revision_ids: Iterable[RevisionId],
+    semantic_role: str,
+) -> bool:
+    """Return whether a role occurs exactly once in every chain revision."""
+    return all(
+        sum(casilla.semantic_role == semantic_role for casilla in modelo.revisions[revision_id].casillas) == 1
+        for revision_id in revision_ids
+    )
 
 
 def _validate_cross_revision_casilla_consistency(

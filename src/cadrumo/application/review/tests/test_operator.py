@@ -7,13 +7,13 @@ from datetime import UTC, datetime, timedelta, timezone
 import pytest
 from pydantic import ValidationError
 
-from ....core.config import Settings, override_settings
+from ....core.config import Settings
 from ....core.errors.error_codes import resolve_error_message
 from ....core.i18n import tr
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.user_profile import register_minimal_profile
 from ..enums import ReviewSeverity, ReviewState
-from ..errors import ReviewError, ReviewKindReservedError
+from ..errors import ReviewError
 from ..models import FindingReviewItem
 from ..operator import (
     ACCEPTED_KINDS,
@@ -88,19 +88,6 @@ def test_project_review_item_not_found_error_omits_raw_item_id() -> None:
     assert exc_info.value.translated_message == "review.operator.errors.item_not_found"
     assert exc_info.value.context is None
     assert sensitive_item_id not in str(exc_info.value)
-
-
-def test_reserved_review_kind_error_omits_raw_operator_value() -> None:
-    sensitive_kind = "client-tax-id-12345678Z-private-note"
-    with override_settings(cadrumo_output_language="en"):
-        error = ReviewKindReservedError(sensitive_kind, "classification decisions are not emitted review items")
-        rendered = resolve_error_message(error)
-
-    assert error.translated_message == "review.operator.errors.reserved_kind"
-    assert error.context == {"reason": "classification decisions are not emitted review items"}
-    assert rendered == "Review kind is reserved and is not an emitted review item."
-    assert sensitive_kind not in str(error)
-    assert sensitive_kind not in repr(error.context)
 
 
 def _finding_item() -> FindingReviewItem:

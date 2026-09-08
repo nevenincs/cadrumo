@@ -219,6 +219,7 @@ class MountedCommandFamily(BaseModel):
             raise ValueError("mounted command child must be a lower-case command token")
         return value
 
+
 class ManifestActionProfile(BaseModel):
     """One declarative precondition outcome exposed by the operator manifest.
 

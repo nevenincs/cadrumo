@@ -686,17 +686,20 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
                     ),
                 ),
                 source_kind="app_filing",
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="130",
-                    filing_year=2026,
-                    period="1T",
-                    observations=registry_grounded_observations(
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
                         modelo="130",
                         filing_year=2026,
                         period="1T",
-                        casilla_values={validated_casilla_id("03"): Decimal("1499.99")},
-                    ),
-                ))),
+                        observations=registry_grounded_observations(
+                            modelo="130",
+                            filing_year=2026,
+                            period="1T",
+                            casilla_values={validated_casilla_id("03"): Decimal("1499.99")},
+                        ),
+                    )
+                ),
+            ),
         )
 
         notices = recapture_divergence_notices((_filed_130_observation_for_tests(),), repository=repo)
@@ -727,17 +730,20 @@ def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path
                     ),
                 ),
                 source_kind="app_filing",
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="130",
-                    filing_year=2026,
-                    period="1T",
-                    observations=registry_grounded_observations(
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
                         modelo="130",
                         filing_year=2026,
                         period="1T",
-                        casilla_values={validated_casilla_id("03"): Decimal("1499.98")},
-                    ),
-                ))),
+                        observations=registry_grounded_observations(
+                            modelo="130",
+                            filing_year=2026,
+                            period="1T",
+                            casilla_values={validated_casilla_id("03"): Decimal("1499.98")},
+                        ),
+                    )
+                ),
+            ),
         )
 
         notices = recapture_divergence_notices((_filed_130_observation_for_tests(),), repository=repo)

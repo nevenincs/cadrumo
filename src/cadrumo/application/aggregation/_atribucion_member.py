@@ -62,6 +62,21 @@ class _AtribucionSocioProjection:
     diagnostics: tuple[CalculationSourceDiagnostic, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class _SharedMemberValues:
+    """Values represented identically by the calculation and filing projections."""
+
+    codigo_provincia: str | None
+    dias_miembro: int | None
+    domicilio_fiscal: str | None
+    referencia_catastral: str | None
+    porcentaje_titularidad_inmueble: Decimal | None
+    dias_arrendamiento: int | None
+    reduccion: Decimal | None
+    rendimiento_neto_previo_eo: Decimal | None
+    rendimiento_neto_minorado_agricola_eo: Decimal | None
+
+
 class AtribucionMemberSourceResolver:
     """Resolve M184 member rows from the active attribution-entity profile."""
 
@@ -209,6 +224,7 @@ def _diagnostic(message: str) -> CalculationSourceDiagnostic:
 
 
 def _observation_from_socio(socio: _SocioFacts, *, filing_year: int) -> AtributionMemberObservation:
+    shared = _shared_member_values(socio)
     return AtributionMemberObservation(
         source_id=f"profile:attribution_entity_socios:{socio.index}",
         member_tax_id=tax_id_identity_token(str(socio.values["nif"])),
@@ -218,21 +234,19 @@ def _observation_from_socio(socio: _SocioFacts, *, filing_year: int) -> Atributi
         base_imponible_assigned=_decimal(socio.values["base_imponible_assigned"]),
         clave=str(socio.values["clave"]),
         subclave=_optional_str(socio.values.get("subclave")),
-        codigo_provincia=_optional_str(socio.values.get("codigo_provincia")),
+        codigo_provincia=shared.codigo_provincia,
         miembro_a_31_diciembre=_x_flag(_optional_bool(socio.values.get("miembro_a_31_diciembre"))),
-        dias_miembro=_optional_int(socio.values.get("dias_miembro")),
-        domicilio_fiscal=_optional_str(socio.values.get("domicilio_fiscal")),
+        dias_miembro=shared.dias_miembro,
+        domicilio_fiscal=shared.domicilio_fiscal,
         naturaleza_inmueble=_optional_str(socio.values.get("naturaleza_inmueble")),
         situacion_inmueble=_optional_str(socio.values.get("situacion_inmueble")),
-        referencia_catastral=_optional_str(socio.values.get("referencia_catastral")),
+        referencia_catastral=shared.referencia_catastral,
         clave_declarado=_optional_str(socio.values.get("clave_declarado")),
-        porcentaje_titularidad_inmueble=_optional_decimal(socio.values.get("porcentaje_titularidad_inmueble")),
-        dias_arrendamiento=_optional_int(socio.values.get("dias_arrendamiento")),
-        reduccion=_optional_decimal(socio.values.get("reduccion")),
-        rendimiento_neto_previo_eo=_optional_decimal(socio.values.get("rendimiento_neto_previo_eo")),
-        rendimiento_neto_minorado_agricola_eo=_optional_decimal(
-            socio.values.get("rendimiento_neto_minorado_agricola_eo"),
-        ),
+        porcentaje_titularidad_inmueble=shared.porcentaje_titularidad_inmueble,
+        dias_arrendamiento=shared.dias_arrendamiento,
+        reduccion=shared.reduccion,
+        rendimiento_neto_previo_eo=shared.rendimiento_neto_previo_eo,
+        rendimiento_neto_minorado_agricola_eo=shared.rendimiento_neto_minorado_agricola_eo,
     )
 
 
@@ -242,6 +256,7 @@ def _x_flag(value: bool | None) -> str | None:
 
 
 def _detail_row_from_socio(socio: _SocioFacts) -> Modelo184MemberRow:
+    shared = _shared_member_values(socio)
     return Modelo184MemberRow(
         nif=tax_id_identity_token(str(socio.values["nif"])),
         nombre=str(socio.values["name"]).strip(),
@@ -249,14 +264,29 @@ def _detail_row_from_socio(socio: _SocioFacts) -> Modelo184MemberRow:
         importe=_decimal(socio.values["base_imponible_assigned"]),
         clave=_clave(socio.values["clave"]),
         subclave=_optional_subclave(socio.values.get("subclave")),
-        codigo_provincia=_optional_str(socio.values.get("codigo_provincia")),
+        codigo_provincia=shared.codigo_provincia,
         miembro_a_31_diciembre=_optional_bool(socio.values.get("miembro_a_31_diciembre")),
-        dias_miembro=_optional_int(socio.values.get("dias_miembro")),
-        domicilio_fiscal=_optional_str(socio.values.get("domicilio_fiscal")),
+        dias_miembro=shared.dias_miembro,
+        domicilio_fiscal=shared.domicilio_fiscal,
         naturaleza_inmueble=_optional_naturaleza_inmueble(socio.values.get("naturaleza_inmueble")),
         situacion_inmueble=_optional_situacion_inmueble(socio.values.get("situacion_inmueble")),
-        referencia_catastral=_optional_str(socio.values.get("referencia_catastral")),
+        referencia_catastral=shared.referencia_catastral,
         clave_declarado=_optional_clave_declarado(socio.values.get("clave_declarado")),
+        porcentaje_titularidad_inmueble=shared.porcentaje_titularidad_inmueble,
+        dias_arrendamiento=shared.dias_arrendamiento,
+        reduccion=shared.reduccion,
+        rendimiento_neto_previo_eo=shared.rendimiento_neto_previo_eo,
+        rendimiento_neto_minorado_agricola_eo=shared.rendimiento_neto_minorado_agricola_eo,
+    )
+
+
+def _shared_member_values(socio: _SocioFacts) -> _SharedMemberValues:
+    """Normalize the shared profile facts once for both downstream authorities."""
+    return _SharedMemberValues(
+        codigo_provincia=_optional_str(socio.values.get("codigo_provincia")),
+        dias_miembro=_optional_int(socio.values.get("dias_miembro")),
+        domicilio_fiscal=_optional_str(socio.values.get("domicilio_fiscal")),
+        referencia_catastral=_optional_str(socio.values.get("referencia_catastral")),
         porcentaje_titularidad_inmueble=_optional_decimal(socio.values.get("porcentaje_titularidad_inmueble")),
         dias_arrendamiento=_optional_int(socio.values.get("dias_arrendamiento")),
         reduccion=_optional_decimal(socio.values.get("reduccion")),

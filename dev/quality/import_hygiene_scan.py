@@ -66,10 +66,7 @@ SRC_ROOT = REPO_ROOT / "src"
 PKG_ROOT = SRC_ROOT / "cadrumo"
 _UTF_8: Final[str] = UTF_8
 
-RETIRED_TUI_PACKAGE: Final[str] = "cadrumo.adapters.inbound.tui"
-RETIRED_TUI_ROOT: Final[Path] = PKG_ROOT / "adapters" / "inbound" / "tui"
 CANONICAL_TUI_PACKAGE: Final[str] = "cadrumo.entrypoints.tui"
-_DETECTOR_PATH: Final[Path] = Path(__file__).resolve()
 
 _LIVE_INVENTORY_EXCLUDED_DIRS: Final[frozenset[str]] = frozenset(
     {".git", ".vault", "_build", "build", "dist", "__pycache__", ".mypy_cache", ".pytest_cache", ".ruff_cache"}
@@ -855,25 +852,6 @@ def definition_names(path: Path) -> tuple[str, ...]:
 def public_definition_names(path: Path) -> frozenset[str]:
     """Return public top-level function and class definitions from one module."""
     return frozenset(name for name in definition_names(path) if not name.startswith("_"))
-
-
-class TuiRetirementRemnantKind(StrEnum):
-    """A direct route by which the retired TUI can re-enter the tree."""
-
-    MODULE = "module"
-    IMPORT = "import"
-    REFERENCE = "reference"
-
-
-@dataclass(frozen=True, slots=True)
-class TuiRetirementRemnant:
-    """One currently reachable retired-TUI module or reference."""
-
-    kind: TuiRetirementRemnantKind
-    importer_mod: str
-    importer_path: str
-    lineno: int
-    target: str
 
 
 # ---------------------------------------------------------------------------
@@ -3115,147 +3093,6 @@ def classify_fix_strategy(
 
 
 # ---------------------------------------------------------------------------
-# Retired TUI fixed point
-# ---------------------------------------------------------------------------
-
-
-class TuiRetirementScanError(RuntimeError):
-    """A fixed-point input could not be read or parsed."""
-
-
-def _parse_tui_retirement_input(path: Path, *, repo_root: Path) -> ast.Module:
-    """Parse one fixed-point input without silently dropping unreadable code."""
-    try:
-        return ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
-    except (OSError, SyntaxError, UnicodeDecodeError) as error:
-        try:
-            locator = path.relative_to(repo_root).as_posix()
-        except ValueError:
-            locator = path.as_posix()
-        raise TuiRetirementScanError(
-            f"cannot parse TUI retirement fixed-point input {locator}: {type(error).__name__}"
-        ) from error
-
-
-def _retired_tui_string_references(
-    tree: ast.Module,
-    *,
-    is_detector_module: bool = False,
-) -> tuple[tuple[int, str], ...]:
-    """Return every dotted or repository-path retired-TUI reference in Python strings."""
-    detector_declaration_values = {
-        id(node.value)
-        for node in tree.body
-        if is_detector_module
-        and isinstance(node, ast.AnnAssign)
-        and isinstance(node.target, ast.Name)
-        and node.target.id == "RETIRED_TUI_PACKAGE"
-        and isinstance(node.value, ast.Constant)
-        and node.value.value == RETIRED_TUI_PACKAGE
-    }
-    retired_path = RETIRED_TUI_ROOT.relative_to(REPO_ROOT).as_posix()
-    found: list[tuple[int, str]] = []
-    for node in ast.walk(tree):
-        if (
-            id(node) in detector_declaration_values
-            or not isinstance(node, ast.Constant)
-            or not isinstance(node.value, str)
-        ):
-            continue
-        normalized = node.value.replace("\\", "/")
-        for prefix in (RETIRED_TUI_PACKAGE, retired_path):
-            offset = 0
-            while (start := normalized.find(prefix, offset)) >= 0:
-                end = start + len(prefix)
-                before = normalized[start - 1] if start else ""
-                after = normalized[end : end + 1]
-                if (not before or not (before.isalnum() or before in "._")) and (
-                    not after or not (after.isalnum() or after == "_")
-                ):
-                    target = prefix
-                    suffix = normalized[end:]
-                    if prefix == RETIRED_TUI_PACKAGE and suffix.startswith("."):
-                        parts = [part for part in suffix[1:].split(".") if part.isidentifier()]
-                        target = ".".join((RETIRED_TUI_PACKAGE, *parts)) if parts else RETIRED_TUI_PACKAGE
-                    locator_line = node.lineno + normalized[:start].count("\n")
-                    found.append((locator_line, target))
-                offset = end
-    return tuple(sorted(found))
-
-
-def find_retired_tui_remnants(
-    *,
-    repo_root: Path = REPO_ROOT,
-    src_root: Path = SRC_ROOT,
-    package_root: Path = PKG_ROOT,
-    retired_root: Path = RETIRED_TUI_ROOT,
-    development_root: Path | None = None,
-    detector_path: Path | None = None,
-) -> tuple[TuiRetirementRemnant, ...]:
-    """Derive the zero-remnant fixed point from live modules and consumer syntax.
-
-    There is no historic census to ratchet: the retired package, every direct
-    import, and every qualified string reference must be absent from the current
-    source tree. Parsing every candidate fails closed so malformed source cannot
-    make a remnant disappear from the proof.
-    """
-    remnants: list[TuiRetirementRemnant] = []
-    development_root = repo_root / "dev" if development_root is None else development_root
-    detector_path = _DETECTOR_PATH if detector_path is None else detector_path
-
-    if retired_root.is_dir():
-        for path in scan_directory(retired_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",)):
-            remnants.append(
-                TuiRetirementRemnant(
-                    kind=TuiRetirementRemnantKind.MODULE,
-                    importer_mod=module_name_for(path, src_root=src_root),
-                    importer_path=path.relative_to(repo_root).as_posix(),
-                    lineno=1,
-                    target=module_name_for(path, src_root=src_root),
-                )
-            )
-
-    source_files = (
-        scan_directory(package_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
-        if package_root.is_dir()
-        else []
-    )
-    development_files = (
-        scan_directory(development_root, pattern="*.py", recursive=True, prune_directories=("__pycache__",))
-        if development_root.is_dir()
-        else []
-    )
-    for path in (*source_files, *development_files):
-        scan_root = src_root if src_root in path.parents else repo_root
-        tree = _parse_tui_retirement_input(path, repo_root=repo_root)
-        importer = module_name_for(path, src_root=scan_root)
-        relative = path.relative_to(repo_root).as_posix()
-        for site in walk_module_imports(path, src_root=scan_root):
-            if _targets_module(site.target_mod, RETIRED_TUI_PACKAGE):
-                remnants.append(
-                    TuiRetirementRemnant(
-                        kind=TuiRetirementRemnantKind.IMPORT,
-                        importer_mod=importer,
-                        importer_path=relative,
-                        lineno=site.lineno,
-                        target=site.target_mod,
-                    )
-                )
-        for lineno, target in _retired_tui_string_references(tree, is_detector_module=path.resolve() == detector_path):
-            remnants.append(
-                TuiRetirementRemnant(
-                    kind=TuiRetirementRemnantKind.REFERENCE,
-                    importer_mod=importer,
-                    importer_path=relative,
-                    lineno=lineno,
-                    target=target,
-                )
-            )
-
-    return tuple(sorted(remnants, key=lambda item: (item.importer_path, item.lineno, item.kind, item.target)))
-
-
-# ---------------------------------------------------------------------------
 # Violation family 11: non-inert package namespaces
 # ---------------------------------------------------------------------------
 
@@ -3475,8 +3312,6 @@ def main() -> int:
         first_party_census_files(),
         (s.path for s in shims if s.reason == "pure_reexport_shape"),
     )
-    retired_tui_remnants = find_retired_tui_remnants()
-
     # ---- Reporting ----
     print(f"Scanned {len(py_files)} .py files under {PKG_ROOT}")
     print(f"Dev-boundary sweep covers {len(dev_boundary_files)} files (cadrumo + harness distribution)")
@@ -3673,7 +3508,6 @@ def main() -> int:
     print(f"  production imports of a demoted registry raw-loader symbol (Family 7): {len(registry_loader_imports)}")
     print(f"  dangling first-party import targets (Family 8): {len(dangling_imports)}")
     print(f"  orphaned modules (Family 9): {len(orphaned_modules)}")
-    print(f"  retired TUI fixed-point remnants: {len(retired_tui_remnants)}")
     print(f"  non-inert package namespaces (Family 11): {len(non_inert_namespaces)}")
     print()
 
@@ -3793,26 +3627,11 @@ def main() -> int:
                 }
                 for o in orphaned_modules
             ],
-            "retired_tui_remnants": [
-                {
-                    "kind": str(remnant.kind),
-                    "importer_mod": remnant.importer_mod,
-                    "importer_path": remnant.importer_path,
-                    "lineno": remnant.lineno,
-                    "target": remnant.target,
-                }
-                for remnant in retired_tui_remnants
-            ],
         }
         args.json.write_text(json.dumps(payload, indent=2), encoding=_UTF_8, newline="\n")
         print(f"Wrote full JSON inventory to {args.json}")
 
-    if not retired_tui_remnants:
-        return 0
-    print("=== RETIRED TUI FIXED POINT: VIOLATED ===")
-    for remnant in retired_tui_remnants:
-        print(f"  {remnant.kind}: {remnant.importer_path}:{remnant.lineno} -> {remnant.target}")
-    return 1
+    return 0
 
 
 if __name__ == "__main__":

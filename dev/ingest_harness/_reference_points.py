@@ -20,7 +20,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._caveats import caveats_for_document
 from ._key import CorpusKey
-from ._result import EngineRoute, ModelTier, PipelineStage
+from ._result import EngineRoute, HarnessModelTier, PipelineStage
 
 __all__ = [
     "SONNET_4_6_REC_DOM_IMG_008",
@@ -53,7 +53,7 @@ class ReferencePoint(BaseModel):
     engine_route: EngineRoute
     model_identity: str = Field(min_length=1)
     model_revision: str = Field(min_length=1)
-    model_tier: ModelTier
+    model_tier: HarnessModelTier
     reported_matched: int = Field(ge=0)
     reported_denominator: int = Field(gt=0)
     fabricated: int = Field(ge=0)
@@ -86,7 +86,7 @@ SONNET_4_6_REC_DOM_IMG_008: Final = ReferencePoint(
     engine_route=EngineRoute.GATED_CLOUD,
     model_identity="claude-sonnet-4-6",
     model_revision="unrecorded-at-measurement-time",
-    model_tier=ModelTier.UPPER_REFERENCE,
+    model_tier=HarnessModelTier.UPPER_REFERENCE,
     reported_matched=7,
     reported_denominator=8,
     fabricated=0,

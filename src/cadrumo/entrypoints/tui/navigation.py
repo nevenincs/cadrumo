@@ -11,7 +11,7 @@ import inspect
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Final, Literal, Protocol, Self, cast, get_args, runtime_checkable
+from typing import ClassVar, Final, Literal, Protocol, Self, cast, get_args, runtime_checkable
 
 from pydantic import BaseModel, model_validator
 from textual.screen import Screen
@@ -48,6 +48,11 @@ type TuiDestinationZoneV1 = Literal["primary", "account"]
 
 class NavigationContractError(ValueError):
     """Base error for an invalid or non-admittable navigation contract."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "entrypoint-local TUI navigation contract root; `CadrumoTuiApp.navigate_to` catches "
+        "runtime route failures at the TUI root boundary and renders the fail-closed refusal"
+    )
 
 
 class UnknownDestinationError(NavigationContractError):

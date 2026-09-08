@@ -1,7 +1,6 @@
 """Tests for the changed-path preflight's file selection.
 
-`dev.quality.module_test_reach` listed `dev/quality/changed_paths.py` as
-unreached. It answers "did THIS change leave the paths it touched clean?", and
+It answers "did THIS change leave the paths it touched clean?", and
 what it selects is the whole of that answer: a path it does not return is a path
 no check runs against, and the preflight still exits 0.
 

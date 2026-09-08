@@ -593,6 +593,42 @@ def test_find_unique_run_for_period_refuses_multiple_matches_with_candidate_guid
     assert earlier.run_id in message
 
 
+@pytest.mark.parametrize(
+    ("kwargs", "message"),
+    (
+        ({}, "application.workflow.errors.resume_target_required"),
+        ({"target": "not-an-address"}, "application.workflow.errors.resume_target_invalid"),
+        ({"modelo": "130"}, "application.workflow.errors.resume_visible_target_incomplete"),
+        (
+            {"target": "a" * 16, "modelo": "130"},
+            "application.workflow.errors.resume_target_contradiction",
+        ),
+    ),
+)
+def test_unified_resume_target_refuses_invalid_or_incomplete_addresses(
+    kwargs: dict[str, object],
+    message: str,
+) -> None:
+    with pytest.raises(WorkflowError) as raised:
+        resolve_modelo_workflow_resume_target(**kwargs)
+
+    assert raised.value.translated_message == message
+
+
+def test_unified_resume_target_strips_exact_workflow_run_id() -> None:
+    resolved = resolve_modelo_workflow_resume_target(workflow_run_id=f"  {'b' * 16}  ")
+
+    assert resolved.run_id == "b" * 16
+    assert resolved.source == "workflow_run_id"
+
+
+def test_unified_resume_target_classifies_exact_workflow_run_target() -> None:
+    resolved = resolve_modelo_workflow_resume_target(target="c" * 16)
+
+    assert resolved.run_id == "c" * 16
+    assert resolved.source == "workflow_run_id"
+
+
 def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Path) -> None:
     work_unit = create_work_unit(
         bucket_id=_BUCKET_ID,

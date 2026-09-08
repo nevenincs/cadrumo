@@ -19,6 +19,7 @@ from .._modelo_work_lifecycle_cli import guard_unsupported_work_modelo
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
+
 @dataclass(frozen=True)
 class UnsupportedWorkCase:
     modelo: str

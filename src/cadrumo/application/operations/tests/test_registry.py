@@ -694,6 +694,15 @@ def test_registry_resolvers_hydrate_payload_mutations_through_the_registered_mod
     assert resolved != snapshot()
 
 
+def test_registry_resolver_header_projection_does_not_bypass_full_extra_validation() -> None:
+    registry = OperationRegistry(definitions=(definition(definition_id="profile.sync"),))
+    raw = request().model_dump_json()
+    raw_with_unknown_field = raw[:-1] + ',"unknown":"unexpected"}'
+
+    with pytest.raises(ValidationError, match="extra"):
+        registry.resolve_request_json(raw_with_unknown_field)
+
+
 def test_registry_resolvers_refuse_unknown_definition_identity_and_payload_model_mismatch() -> None:
     registry = OperationRegistry(
         definitions=(definition(definition_id="auth.login"), definition(definition_id="profile.sync")),

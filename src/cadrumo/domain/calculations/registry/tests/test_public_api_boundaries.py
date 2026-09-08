@@ -162,11 +162,6 @@ def test_source_tree_does_not_use_absolute_registry_private_imports() -> None:
     assert offenders == []
 
 
-#: Paths this gate does not read, and why. The benchmark baseline is a frozen
-#: copy of an earlier tree kept for comparison; it is not a consumer of today's
-#: package and rewriting it would destroy the baseline it exists to be.
-_FROZEN_BENCHMARK_SNAPSHOT = REPO_ROOT / "dev" / "benchmarks" / "cli" / ".baseline-source-snapshot"
-
 #: The modules allowed to bind the package namespace, keyed by path with the
 #: reason. Asserting a namespace exports nothing requires binding it, so a module
 #: that PROVES the inertness cannot be read as consuming it.
@@ -196,8 +191,7 @@ def test_project_consumers_do_not_import_the_inert_registry_package_facade() -> 
         f"{path.relative_to(REPO_ROOT)} imports the registry package facade"
         for root in _PROJECT_PYTHON_ROOTS
         for path in scan_directory(root, pattern="*.py", recursive=True)
-        if not path.is_relative_to(_FROZEN_BENCHMARK_SNAPSHOT)
-        and path.relative_to(REPO_ROOT).as_posix() not in _FACADE_BINDING_EXEMPTIONS
+        if path.relative_to(REPO_ROOT).as_posix() not in _FACADE_BINDING_EXEMPTIONS
         and _imports_registry_package_facade(path)
     )
 

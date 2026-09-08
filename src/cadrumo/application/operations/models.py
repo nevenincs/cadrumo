@@ -12,7 +12,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.hex import Hex64Str
+from ...core.hex import HEX_PATTERN_64, Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.time.utc import validate_utc_aware
@@ -37,9 +37,11 @@ type OperationDefinitionId = Annotated[
 type OperationReference = Annotated[str, Field(min_length=1, max_length=256)]
 """Opaque safe reference to an application-owned record or subject."""
 
+_DIAGNOSTIC_REFERENCE_PATTERN = rf"^sha256:(?:[0-9a-f]{{12}}|{HEX_PATTERN_64.removeprefix('^').removesuffix('$')})$"
+
 type OperationDiagnosticReference = Annotated[
     str,
-    Field(pattern=r"^sha256:(?:[0-9a-f]{12}|[0-9a-f]{64})$"),
+    Field(pattern=_DIAGNOSTIC_REFERENCE_PATTERN),
 ]
 """Opaque correlation fingerprint; never diagnostic prose or identity content."""
 
@@ -134,10 +136,16 @@ def validate_terminal_reference_meaning(
             raise ValueError("refused operation requires one refusal reference and forbids a result reference")
     elif refusal_ref is not None:
         raise ValueError("refusal reference is valid only for a refused operation")
-    if condition is not OperationTerminalCondition.FAILED and failure_ref is not None:
-        raise ValueError("failure reference is valid only for a failed operation")
-    if failure_ref is not None and result_ref is not None:
-        raise ValueError("failed operation cannot carry both result and failure references")
+    if condition is not OperationTerminalCondition.FAILED and failure_error_code is not None:
+        raise ValueError("failure error code is valid only for a failed operation")
+    if failure_error_code is not None:
+        from ...core.errors.error_codes import get_registered_error_code_by_code
+
+        get_registered_error_code_by_code(failure_error_code)
+    if failure_error_code is not None:
+        from ...core.errors.error_codes import get_registered_error_code_by_code
+
+        get_registered_error_code_by_code(failure_error_code)
 
 
 class OperationSnapshot[RequestPayloadT: BaseModel](BaseModel):

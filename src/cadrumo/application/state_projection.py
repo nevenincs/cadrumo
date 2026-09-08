@@ -114,14 +114,20 @@ from ._state_projection_readiness import (
 )
 from .auth.credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
 from .auth_credentials import ActiveCertificateCredentials
-from .ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason, preflight_ledger_tax_readiness
+from .ledger.preflight import (
+    LedgerPreflightIssue,
+    LedgerPreflightIssueReason,
+    LedgerPreflightReport,
+    preflight_ledger_tax_readiness,
+)
 from .operator_actions.models import PreconditionVerdict
-from .user_profile.commands import ProfilePreflightRequirement
+from .user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement
 from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_health
 from .workflow.state_models import WorkflowState
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.schema import RegistrySnapshot
+    from ..domain.user_profile.values import UserProfileRecord
 
 _log = get_logger(__name__)
 
@@ -664,6 +670,214 @@ class _ModeloReadinessRegistryResolution:
         return self.snapshot is not None and not self.refusal
 
 
+@dataclass(frozen=True, slots=True)
+class _ModeloReadinessContext:
+    """Profile facts loaded once for a set of readiness requests."""
+
+    bucket_id: str
+    record: UserProfileRecord
+
+
+@dataclass(frozen=True, slots=True)
+class _ModeloReadinessLedgerStage:
+    """Ledger-preflight values projected into one readiness report."""
+
+    required: bool = False
+    ready: bool | None = None
+    period: Period | None = None
+    checked_transaction_count: int = 0
+    issues: tuple[LedgerPreflightIssue, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class _ModeloReadinessEvaluation:
+    """All axes evaluated for one readiness request before final projection."""
+
+    profile_report: ProfilePreflightReport
+    profile_refusal: str
+    registry: _ModeloReadinessRegistryResolution
+    period: Period
+    missing_bindings: tuple[ProjectionModeloBindingRequirement, ...]
+    ledger: _ModeloReadinessLedgerStage
+
+
+def _load_modelo_readiness_context(active_profile_id: str) -> _ModeloReadinessContext | None:
+    """Load the active bucket and profile record for readiness evaluation."""
+    from .user_profile.profile_record_repository import ProfileRecordRepository
+    from .workflow.profile_bucket_scan import read_profile_bucket_by_id
+
+    pointer = read_profile_bucket_by_id(active_profile_id)
+    if pointer is None:
+        return None
+    return _ModeloReadinessContext(
+        bucket_id=pointer.bucket_id,
+        record=ProfileRecordRepository.for_current_session(pointer.bucket_id).load(pointer.bucket_id),
+    )
+
+
+def _modelo_profile_refusal(
+    *,
+    record: UserProfileRecord,
+    bucket_id: str,
+    request: ModeloReadinessRequest,
+    period: Period,
+) -> str:
+    """Return the first profile refusal while evaluating every refusal limb."""
+    from ..core.i18n.render import tr
+    from ..domain.user_profile.values import ProfileSetupState
+    from .modelo.profile_readiness_gate import (
+        modelo_applicability_refusal,
+        pre_activity_period_refusal,
+    )
+
+    profile_refusal = (
+        tr("application.modelo.errors.profile_readiness_setup_incomplete")
+        if record.setup_state is ProfileSetupState.INCOMPLETE
+        else ""
+    )
+    applicability_refusal = modelo_applicability_refusal(
+        record=record,
+        bucket_id=bucket_id,
+        modelo=request.modelo,
+    )
+    pre_activity_refusal = pre_activity_period_refusal(
+        record=record,
+        bucket_id=bucket_id,
+        modelo=request.modelo,
+        filing_year=request.filing_year,
+        period=period,
+    )
+    if profile_refusal:
+        return profile_refusal
+    if applicability_refusal is not None:
+        return applicability_refusal[0]
+    if pre_activity_refusal is not None:
+        return pre_activity_refusal[0]
+    return ""
+
+
+def _build_modelo_profile_stage(
+    request: ModeloReadinessRequest,
+    *,
+    context: _ModeloReadinessContext,
+    period: Period,
+    registry: _ModeloReadinessRegistryResolution,
+) -> tuple[ProfilePreflightReport, str]:
+    """Evaluate profile completeness and target-specific refusal limbs."""
+    from .modelo.profile_readiness_gate import modelo_work_profile_preflight_report
+
+    snapshot = registry.snapshot
+    revision = snapshot.revision if snapshot is not None else None
+    profile_report = modelo_work_profile_preflight_report(
+        record=context.record,
+        modelo=request.modelo,
+        revision_id=revision.id if revision is not None else request.revision_id,
+        filing_year=period.filing_year,
+        period=period,
+        revision=revision,
+        resolve_revision_when_missing=snapshot is not None,
+        authority=bundled_authority(),
+    )
+    return profile_report, _modelo_profile_refusal(
+        record=context.record,
+        bucket_id=context.bucket_id,
+        request=request,
+        period=period,
+    )
+
+
+def _build_modelo_ledger_stage(
+    snapshot: RegistrySnapshot | None,
+    *,
+    bucket_id: str,
+    period: Period,
+) -> _ModeloReadinessLedgerStage:
+    """Evaluate ledger preflight only when the registry declares it."""
+    if snapshot is None or not _snapshot_requires_ledger_preflight(snapshot):
+        return _ModeloReadinessLedgerStage()
+    report: LedgerPreflightReport = preflight_ledger_tax_readiness(
+        bucket_id=bucket_id,
+        period=period,
+    )
+    return _ModeloReadinessLedgerStage(
+        required=True,
+        ready=report.ready,
+        period=report.period,
+        checked_transaction_count=report.checked_transaction_count,
+        issues=tuple(report.issues),
+    )
+
+
+def _evaluate_modelo_readiness(
+    request: ModeloReadinessRequest,
+    *,
+    context: _ModeloReadinessContext,
+) -> _ModeloReadinessEvaluation:
+    """Evaluate profile, registry, binding, and ledger axes for one request."""
+    period = _ledger_period_for_modelo_readiness(request)
+    registry = _resolve_modelo_readiness_registry(request, period=period)
+    profile_report, profile_refusal = _build_modelo_profile_stage(
+        request,
+        context=context,
+        period=period,
+        registry=registry,
+    )
+    ledger = _build_modelo_ledger_stage(registry.snapshot, bucket_id=context.bucket_id, period=period)
+    missing_bindings = (
+        _missing_calculation_bindings_for_readiness(
+            registry.snapshot,
+            bucket_id=context.bucket_id,
+            profile_record=context.record,
+            ledger_sources_ready=ledger.ready is True,
+            modelo=request.modelo,
+            period=period,
+        )
+        if registry.snapshot is not None
+        else ()
+    )
+    return _ModeloReadinessEvaluation(
+        profile_report=profile_report,
+        profile_refusal=profile_refusal,
+        registry=registry,
+        period=period,
+        missing_bindings=missing_bindings,
+        ledger=ledger,
+    )
+
+
+def _project_modelo_readiness(evaluation: _ModeloReadinessEvaluation) -> ProjectionModeloReadiness:
+    """Project one completed readiness evaluation without recomputing axes."""
+    profile_report = evaluation.profile_report
+    profile_ready = profile_report.ready and not evaluation.profile_refusal
+    ledger = evaluation.ledger
+    return ProjectionModeloReadiness(
+        profile_id=profile_report.profile_id,
+        modelo=profile_report.modelo,
+        revision_id=profile_report.revision_id,
+        filing_year=profile_report.filing_year,
+        period=profile_report.period,
+        missing=profile_report.missing,
+        profile_ready=profile_ready,
+        per_operation_requirements_assessed=profile_report.per_operation_requirements_assessed,
+        profile_refusal=evaluation.profile_refusal,
+        registry_ready=evaluation.registry.ready,
+        registry_refusal=evaluation.registry.refusal,
+        binding_ready=not evaluation.missing_bindings,
+        missing_bindings=evaluation.missing_bindings,
+        ledger_preflight_required=ledger.required,
+        ledger_ready=ledger.ready,
+        ledger_period=ledger.period,
+        ledger_checked_transaction_count=ledger.checked_transaction_count,
+        ledger_issues=ledger.issues,
+        ready=(
+            evaluation.registry.ready
+            and profile_ready
+            and not evaluation.missing_bindings
+            and (not ledger.required or ledger.ready is True)
+        ),
+    )
+
+
 def _build_modelo_readiness(
     requests: tuple[ModeloReadinessRequest, ...],
     *,
@@ -678,108 +892,12 @@ def _build_modelo_readiness(
     if not requests or active_profile_id is None:
         return ()
 
-    from ..core.i18n.render import tr
-    from ..domain.user_profile.values import ProfileSetupState
-    from .modelo.profile_readiness_gate import (
-        modelo_applicability_refusal,
-        modelo_work_profile_preflight_report,
-        pre_activity_period_refusal,
-    )
-    from .user_profile.profile_record_repository import ProfileRecordRepository
-    from .workflow.profile_bucket_scan import read_profile_bucket_by_id
-
-    pointer = read_profile_bucket_by_id(active_profile_id)
-    if pointer is None:
+    context = _load_modelo_readiness_context(active_profile_id)
+    if context is None:
         return ()
-    record = ProfileRecordRepository.for_current_session(pointer.bucket_id).load(pointer.bucket_id)
-    reports: list[ProjectionModeloReadiness] = []
-    for request in requests:
-        readiness_period = _ledger_period_for_modelo_readiness(request)
-        registry_resolution = _resolve_modelo_readiness_registry(request, period=readiness_period)
-        revision = registry_resolution.snapshot.revision if registry_resolution.snapshot is not None else None
-        profile_report = modelo_work_profile_preflight_report(
-            record=record,
-            modelo=request.modelo,
-            revision_id=revision.id if revision is not None else request.revision_id,
-            filing_year=readiness_period.filing_year,
-            period=readiness_period,
-            revision=revision,
-            resolve_revision_when_missing=registry_resolution.snapshot is not None,
-            authority=bundled_authority(),
-        )
-        profile_refusal = (
-            tr("application.modelo.errors.profile_readiness_setup_incomplete")
-            if record.setup_state is ProfileSetupState.INCOMPLETE
-            else ""
-        )
-        applicability_refusal = modelo_applicability_refusal(
-            record=record,
-            bucket_id=pointer.bucket_id,
-            modelo=request.modelo,
-        )
-        if not profile_refusal and applicability_refusal is not None:
-            profile_refusal = applicability_refusal[0]
-        pre_activity_refusal = pre_activity_period_refusal(
-            record=record,
-            bucket_id=pointer.bucket_id,
-            modelo=request.modelo,
-            filing_year=request.filing_year,
-            period=readiness_period,
-        )
-        if not profile_refusal and pre_activity_refusal is not None:
-            profile_refusal = pre_activity_refusal[0]
-        profile_ready = profile_report.ready and not profile_refusal
-        ledger_report = None
-        if registry_resolution.snapshot is not None and _snapshot_requires_ledger_preflight(
-            registry_resolution.snapshot
-        ):
-            ledger_report = preflight_ledger_tax_readiness(
-                bucket_id=pointer.bucket_id,
-                period=readiness_period,
-            )
-        missing_bindings = (
-            _missing_calculation_bindings_for_readiness(
-                registry_resolution.snapshot,
-                bucket_id=pointer.bucket_id,
-                profile_record=record,
-                ledger_sources_ready=ledger_report is not None and ledger_report.ready,
-                modelo=request.modelo,
-                period=readiness_period,
-            )
-            if registry_resolution.snapshot is not None
-            else ()
-        )
-        reports.append(
-            ProjectionModeloReadiness(
-                profile_id=profile_report.profile_id,
-                modelo=profile_report.modelo,
-                revision_id=profile_report.revision_id,
-                filing_year=profile_report.filing_year,
-                period=profile_report.period,
-                missing=profile_report.missing,
-                profile_ready=profile_ready,
-                per_operation_requirements_assessed=profile_report.per_operation_requirements_assessed,
-                profile_refusal=profile_refusal,
-                registry_ready=registry_resolution.ready,
-                registry_refusal=registry_resolution.refusal,
-                binding_ready=not missing_bindings,
-                missing_bindings=missing_bindings,
-                ledger_preflight_required=ledger_report is not None,
-                ledger_ready=ledger_report.ready if ledger_report is not None else None,
-                ledger_period=(ledger_report.period if ledger_report is not None else None),
-                ledger_checked_transaction_count=(
-                    ledger_report.checked_transaction_count if ledger_report is not None else 0
-                ),
-                ledger_issues=tuple(ledger_report.issues) if ledger_report is not None else (),
-                ready=(
-                    registry_resolution.ready
-                    and profile_ready
-                    and not missing_bindings
-                    and (ledger_report is None or ledger_report.ready)
-                ),
-            ),
-        )
-    return tuple(reports)
+    return tuple(
+        _project_modelo_readiness(_evaluate_modelo_readiness(request, context=context)) for request in requests
+    )
 
 
 # The ledger-preflight binding source set is single-sourced in

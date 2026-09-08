@@ -277,8 +277,9 @@ class ShippedTreeSpec:
         package: The top-level import name of the shipped package.
         entry_points: The console scripts the walk starts from.
         module_roots: Modules executable as ``python -m <module>``, discovered
-            from the shipped ``__main__.py`` files. They are walk roots too: an
-            installed user can run them without any packaging declaration.
+            from shipped ``__main__.py`` files and exact top-level main guards.
+            They are walk roots too: an installed user can run them without any
+            packaging declaration.
         exclude_globs: Wheel exclude globs; a module they match is unshipped.
         outside: Non-shipped trees whose references label findings.
         data_globs: Shipped non-Python payloads, relative to the package root,
@@ -322,10 +323,11 @@ class ShippedTreeSpec:
         module_roots = tuple(
             sorted(
                 module_name_for(path, src_root=src_root)
-                for path in (src_root / package).rglob("__main__.py")
+                for path in (src_root / package).rglob("*.py")
                 if _SKIPPED_DIRS.isdisjoint(path.parts)
                 and not is_test_path(path, src_root)
                 and is_shipped_module(path, src_root=src_root, exclude_globs=tuple(excludes))
+                and is_module_execution_surface(path)
             ),
         )
         return cls(
@@ -623,6 +625,31 @@ def iter_python_files(root: Path) -> Iterator[Path]:
 def parse_module(path: Path) -> ast.Module:
     """Parse one source file into a module tree."""
     return ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
+
+
+def is_module_execution_surface(path: Path) -> bool:
+    """Return whether an installed user can execute the module with ``python -m``."""
+    if path.name == "__main__.py":
+        return True
+    source = path.read_text(encoding=_UTF_8)
+    if "__main__" not in source:
+        return False
+    tree = ast.parse(source, filename=str(path))
+    for statement in tree.body:
+        if not isinstance(statement, ast.If) or not isinstance(statement.test, ast.Compare):
+            continue
+        comparison = statement.test
+        if len(comparison.ops) != 1 or not isinstance(comparison.ops[0], ast.Eq):
+            continue
+        if len(comparison.comparators) != 1:
+            continue
+        left, right = comparison.left, comparison.comparators[0]
+        operands = (left, right)
+        if any(isinstance(node, ast.Name) and node.id == "__name__" for node in operands) and any(
+            isinstance(node, ast.Constant) and node.value == "__main__" for node in operands
+        ):
+            return True
+    return False
 
 
 def _is_resource_anchor(path: Path, tree: ast.Module, src_root: Path) -> bool:

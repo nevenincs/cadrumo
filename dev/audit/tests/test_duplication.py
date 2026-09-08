@@ -25,6 +25,7 @@ from ..duplication import (
     CloneGroup,
     DuplicationOutcome,
     DuplicationResult,
+    actionable_clone_groups,
     classify_jscpd_output,
     jscpd_command,
     render_console_report,
@@ -145,6 +146,26 @@ def test_clone_output_parses_count_pct_and_groups() -> None:
     assert result.duplicated_pct == "0.41"
     assert len(result.groups) == 1
     assert "src/cadrumo/a.py" in result.groups[0].render(), "clone paths are normalised to POSIX"
+
+
+def test_import_only_and_overlapping_clone_reports_are_not_actionable(tmp_path: Path) -> None:
+    source = "from one import value\nfrom two import other\n\ndef execute():\n    return value + other\n"
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text(source, encoding="utf-8")
+    imports = CloneGroup(("Clone found (python):", " - a.py [1:1 - 2:22]", "   b.py [1:1 - 2:22]"))
+    behavior = CloneGroup(("Clone found (python):", " - a.py [4:1 - 5:24]", "   b.py [4:1 - 5:24]"))
+    overlap = CloneGroup(("Clone found (python):", " - a.py [4:5 - 5:20]", "   b.py [4:5 - 5:20]"))
+
+    assert actionable_clone_groups((imports, behavior, overlap), tmp_path) == (behavior,)
+
+
+def test_import_preamble_that_reaches_a_function_remains_actionable(tmp_path: Path) -> None:
+    source = "from one import value\n\ndef execute():\n    return value\n"
+    for name in ("a.py", "b.py"):
+        (tmp_path / name).write_text(source, encoding="utf-8")
+    group = CloneGroup(("Clone found (python):", " - a.py [1:1 - 4:16]", "   b.py [1:1 - 4:16]"))
+
+    assert actionable_clone_groups((group,), tmp_path) == (group,)
 
 
 def test_console_report_names_unavailability_instead_of_claiming_clean() -> None:

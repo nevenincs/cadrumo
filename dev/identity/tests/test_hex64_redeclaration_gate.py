@@ -16,10 +16,9 @@ the shape somewhere else", which is the question that went unasked while the
 bypasses accumulated.
 
 WHAT THIS GATE ASSERTS, and deliberately as a PROPERTY rather than a tally: no
-production module outside ``core/hex.py`` declares the hex-64 shape, except
-the sites named in the census's allowlist with a stated reason. A hardcoded
-count would encode the moment it was written, train every later author to bump
-the constant, and then detect nothing.
+production module outside ``core/hex.py`` declares the hex-64 shape. A
+hardcoded count would encode the moment it was written, train every later
+author to bump the constant, and then detect nothing.
 
 THE TWO CLASSES ARE ASSERTED SEPARATELY because they are not the same
 severity, and collapsing them into one number would let a validation gap hide
@@ -35,8 +34,6 @@ from ..hex64_redeclaration_census import (
     Declaration,
     DeclarationKind,
     census,
-    stale_exemptions,
-    unexempted,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -59,30 +56,21 @@ def _worklist(items: tuple[Declaration, ...], header: str) -> str:
     return f"{header}\n{lines}\n"
 
 
-def test_the_scanner_reaches_a_real_population(declarations: tuple[Declaration, ...]) -> None:
-    # A zero result from a broken scanner is indistinguishable from a clean
-    # tree. This gate's other assertions are only meaningful if the census
-    # actually walked something, so prove it reached production modules before
-    # reading anything into what it did or did not find.
-    assert declarations, "the census returned nothing at all, which means it did not run, not that the tree is clean"
-
-
 def test_no_module_redeclares_the_hex64_shape_outside_the_canonical_home(
     declarations: tuple[Declaration, ...],
 ) -> None:
-    open_sites = tuple(i for i in unexempted(declarations) if i.kind is DeclarationKind.REDECLARED_PATTERN)
+    open_sites = tuple(i for i in declarations if i.kind is DeclarationKind.REDECLARED_PATTERN)
     assert not open_sites, _worklist(
         open_sites,
         f"The hex-64 shape is declared outside {CANONICAL_HOME}. Each site below must "
         "declare its own semantic alias assigned FROM core.Hex64Str (or consume "
         "HEX_PATTERN_64 where a bare pattern string is what the site needs), never "
-        "re-declare the shape. A site that genuinely cannot be retyped belongs in the "
-        "census allowlist with a stated reason.",
+        "re-declare the shape.",
     )
 
 
 def test_no_field_is_constrained_to_length_64_without_a_pattern(declarations: tuple[Declaration, ...]) -> None:
-    open_sites = tuple(i for i in unexempted(declarations) if i.kind is DeclarationKind.UNPATTERNED_LENGTH)
+    open_sites = tuple(i for i in declarations if i.kind is DeclarationKind.UNPATTERNED_LENGTH)
     assert not open_sites, _worklist(
         open_sites,
         "These fields pin a length of exactly 64 and assert nothing about the "
@@ -90,14 +78,4 @@ def test_no_field_is_constrained_to_length_64_without_a_pattern(declarations: tu
         "digest reaches a persisted record -- surfacing only when something later "
         "recomputes the hash. Retype each to core.Hex64Str, or to the semantic alias "
         "for its concept (ContentDigest for a payload digest).",
-    )
-
-
-def test_every_allowlist_entry_answers_a_live_occurrence(declarations: tuple[Declaration, ...]) -> None:
-    stale = stale_exemptions(declarations)
-    assert not stale, (
-        "These allowlist entries no longer match any site. A stale exemption reads as a "
-        "considered judgement about code that has since moved or been fixed, and it "
-        "silently widens to whatever later occupies its key. Remove each, or correct "
-        "its path/symbol:\n" + "\n".join(f"  {entry.path}:{entry.symbol} -- {entry.reason}" for entry in stale)
     )

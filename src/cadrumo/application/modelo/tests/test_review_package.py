@@ -53,11 +53,15 @@ _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-TEST"
 
 def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:
     period = Period.from_year_and_code(2026, "1T")
-    revision_id = bundled_authority().snapshot(
-        "303",
-        filing_year=2026,
-        period=period.registry_token,
-    ).revision.id
+    revision_id = (
+        bundled_authority()
+        .snapshot(
+            "303",
+            filing_year=2026,
+            period=period.registry_token,
+        )
+        .revision.id
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",

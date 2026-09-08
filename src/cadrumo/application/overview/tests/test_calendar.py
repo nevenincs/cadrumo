@@ -37,7 +37,7 @@ from ..calendar_models import (
     OverviewPeriodState,
     user_state_for,
 )
-from ..calendar_warnings import calendar_applicability_profile_keys_for_modelo, calendar_censo_enrolment_profile_keys
+from ..calendar_warnings import calendar_applicability_profile_keys_for_modelo
 from ..status_report import build_filing_obligation_advisories
 from .calendar_test_support import (
     BUCKET_ID as _BUCKET_ID,
@@ -53,6 +53,23 @@ from .calendar_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_M303_CENSO_ENROLMENT_KEYS = frozenset(
+    {
+        "activities.iae_epigraph",
+        "iva.regime",
+        "taxpayer_type.entity_type",
+        "taxpayer_type.irpf_income_categories",
+    },
+)
+_M202_CENSO_ENROLMENT_KEYS = frozenset(
+    {
+        "taxpayer_type.entity_type",
+        "taxpayer_type.incn_prior_12_months",
+        "taxpayer_type.legal_entity_form",
+        "taxpayer_type.new_entity_first_two_profit_periods",
+    },
+)
 
 
 def _annual_work_unit_without_authored_window(*, modelo: str, filing_year: int) -> WorkUnit:
@@ -106,35 +123,15 @@ def test_calendar_does_not_project_historic_annual_work_into_future_registry_win
     assert all(entry.local_work_unit_id != work_unit.work_unit_id for entry in calendar.entries)
 
 
-def test_calendar_censo_enrolment_profile_keys_are_centralised() -> None:
-    assert calendar_censo_enrolment_profile_keys() == (
-        "activities.iae_epigraph",
-        "iva.regime",
-        "taxpayer_type.entity_type",
-        "taxpayer_type.incn_prior_12_months",
-        "taxpayer_type.irpf_income_categories",
-        "taxpayer_type.legal_entity_form",
-        "taxpayer_type.new_entity_first_two_profit_periods",
-    )
-
-
 def test_calendar_censo_warning_requires_every_modelo_enrolment_key() -> None:
-    required_303 = set(calendar_applicability_profile_keys_for_modelo("303"))
-    if "taxpayer_type.irpf_income_categories" in required_303:
-        required_303.add("activities.iae_epigraph")
-    required_303 &= set(calendar_censo_enrolment_profile_keys())
-    assert required_303 == {
-        "activities.iae_epigraph",
-        "iva.regime",
-        "taxpayer_type.entity_type",
-        "taxpayer_type.irpf_income_categories",
-    }
+    applicability_303 = set(calendar_applicability_profile_keys_for_modelo("303"))
+    assert _M303_CENSO_ENROLMENT_KEYS - {"activities.iae_epigraph"} <= applicability_303
 
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
         today=date(2025, 4, 1),
-        live_censo_verified_profile_keys=tuple(sorted(required_303 - {"iva.regime"})),
+        live_censo_verified_profile_keys=tuple(sorted(_M303_CENSO_ENROLMENT_KEYS - {"iva.regime"})),
     )
 
     assert any(entry.modelo == "303" for entry in calendar.entries)
@@ -145,18 +142,11 @@ def test_calendar_censo_warning_requires_every_modelo_enrolment_key() -> None:
 
 
 def test_calendar_censo_warning_clears_when_every_modelo_enrolment_key_is_verified() -> None:
-    verified_303 = (
-        "activities.iae_epigraph",
-        "iva.regime",
-        "taxpayer_type.entity_type",
-        "taxpayer_type.irpf_income_categories",
-    )
-
     calendar = build_overview_calendar(
         _profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
         today=date(2025, 4, 1),
-        live_censo_verified_profile_keys=verified_303,
+        live_censo_verified_profile_keys=tuple(sorted(_M303_CENSO_ENROLMENT_KEYS)),
     )
 
     assert any(entry.modelo == "303" for entry in calendar.entries)
@@ -220,20 +210,16 @@ def _corporate_profile() -> TaxpayerProfile:
 
 
 def test_calendar_censo_warning_requires_corporate_modelo_202_enrolment_keys() -> None:
-    required_202 = set(calendar_applicability_profile_keys_for_modelo("202"))
-    required_202 &= set(calendar_censo_enrolment_profile_keys())
-    assert required_202 == {
-        "taxpayer_type.entity_type",
-        "taxpayer_type.incn_prior_12_months",
-        "taxpayer_type.legal_entity_form",
-        "taxpayer_type.new_entity_first_two_profit_periods",
-    }
+    applicability_202 = set(calendar_applicability_profile_keys_for_modelo("202"))
+    assert applicability_202 >= _M202_CENSO_ENROLMENT_KEYS
 
     calendar = build_overview_calendar(
         _corporate_profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
         today=date(2025, 4, 1),
-        live_censo_verified_profile_keys=tuple(sorted(required_202 - {"taxpayer_type.incn_prior_12_months"})),
+        live_censo_verified_profile_keys=tuple(
+            sorted(_M202_CENSO_ENROLMENT_KEYS - {"taxpayer_type.incn_prior_12_months"}),
+        ),
     )
 
     assert any(entry.modelo == "202" for entry in calendar.entries)
@@ -242,18 +228,11 @@ def test_calendar_censo_warning_requires_corporate_modelo_202_enrolment_keys() -
 
 
 def test_calendar_censo_warning_clears_for_complete_corporate_modelo_202_provenance() -> None:
-    verified_202 = (
-        "taxpayer_type.entity_type",
-        "taxpayer_type.incn_prior_12_months",
-        "taxpayer_type.legal_entity_form",
-        "taxpayer_type.new_entity_first_two_profit_periods",
-    )
-
     calendar = build_overview_calendar(
         _corporate_profile(),
         OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 20)),
         today=date(2025, 4, 1),
-        live_censo_verified_profile_keys=verified_202,
+        live_censo_verified_profile_keys=tuple(sorted(_M202_CENSO_ENROLMENT_KEYS)),
     )
 
     assert any(entry.modelo == "202" for entry in calendar.entries)

@@ -123,17 +123,20 @@ def _save_observation(
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_CLOCK,
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo=modelo,
-                filing_year=filing_year,
-                period=period,
-                observations=registry_grounded_observations(
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
                     modelo=modelo,
                     filing_year=filing_year,
                     period=period,
-                    casilla_values=casilla_values,
-                ),
-            )))
+                    observations=registry_grounded_observations(
+                        modelo=modelo,
+                        filing_year=filing_year,
+                        period=period,
+                        casilla_values=casilla_values,
+                    ),
+                )
+            ),
+        )
     )
 
 

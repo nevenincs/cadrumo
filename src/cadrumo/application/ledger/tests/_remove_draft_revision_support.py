@@ -44,11 +44,15 @@ def _seed_revision_citing_transaction(
 ) -> str:
     """Seed one real revision in ``state`` that cites ``transaction_id``."""
     period = Period.from_year_and_code(2026, period_code)
-    registry_snapshot_ref = bundled_authority().snapshot(
-        "303",
-        filing_year=period.filing_year,
-        period=period.registry_token,
-    ).snapshot_ref
+    registry_snapshot_ref = (
+        bundled_authority()
+        .snapshot(
+            "303",
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
+        .snapshot_ref
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",

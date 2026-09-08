@@ -25,7 +25,6 @@ from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, TransactionId
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.money.rounding import round_to_cents
 from ...core.parsing import normalise_iso_3166_alpha2_jurisdiction
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.prorrata_exclusions import ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS, Art104TresExclusion
@@ -45,16 +44,10 @@ from ..iva.schema import (
     IvaCategory,
     IvaExemptionArticle,
 )
+from .cash_accounting_validation import validate_cash_accounting_axis
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from .errors import TransactionValidationError
-from .gross_validation import gross_mismatch_detail
-from .irpf_categories import (
-    PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING,
-    RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING,
-    has_activity_irpf_category,
-    has_non_work_irpf_category,
-    has_rent_irpf_category,
-)
+from .gross_validation import validate_gross_reconstitution
 from .lineage_models import (
     ClassificationHistoryEntry,
     DecisionProvenance,
@@ -76,7 +69,6 @@ from .model_validation import (
     validate_non_negative_decimal,
 )
 from .raw_transaction import RawTransaction
-from .retencion_parameters import maximum_supported_activity_retencion_rate
 
 __all__ = ["DecisionProvenance", "derive_split_group_id"]
 
@@ -833,48 +825,15 @@ class Transaction(BaseModel):
         criterio-de-caja-specific, because only that regime settles a cuota
         across several collections.
         """
-        if self.cash_accounting_treatment is IvaCashAccountingTreatment.NONE:
-            if self.cash_accounting_payment_evidence:
-                raise TransactionValidationError(
-                    "cash_accounting_payment_evidence requires a non-NONE cash_accounting_treatment",
-                )
-            return self
-        if self.operation_date is None:
-            raise TransactionValidationError(
-                "operation_date is required when cash_accounting_treatment is not NONE",
-            )
-        if not self.cash_accounting_payment_evidence:
-            raise TransactionValidationError(
-                "cash_accounting_payment_evidence is required for cash-accounting operations; "
-                "wholly unpaid fallback-only operations are not yet represented",
-            )
-        if self.taxable_base is None or self.iva_amount is None:
-            raise TransactionValidationError(
-                "cash-accounting operations require taxable_base and iva_amount facts",
-            )
-        if (
-            self.cash_accounting_treatment is IvaCashAccountingTreatment.SUPPLIER_REGIME
-            and self.direction is not TransactionDirection.OUTGOING
-        ):
-            raise TransactionValidationError(
-                "supplier-regime cash-accounting treatment is only valid on received/purchase rows",
-            )
-        fallback_date = date(self.operation_date.year + 1, 12, 31)
-        total_base = sum((evidence.taxable_base for evidence in self.cash_accounting_payment_evidence), Decimal("0"))
-        total_iva = sum((evidence.iva_amount for evidence in self.cash_accounting_payment_evidence), Decimal("0"))
-        total_recargo = sum(
-            (evidence.recargo_amount for evidence in self.cash_accounting_payment_evidence),
-            Decimal("0"),
+        validate_cash_accounting_axis(
+            treatment=self.cash_accounting_treatment,
+            operation_date=self.operation_date,
+            payment_evidence=self.cash_accounting_payment_evidence,
+            taxable_base=self.taxable_base,
+            iva_amount=self.iva_amount,
+            recargo_amount=self.recargo_amount,
+            direction=self.direction,
         )
-        recargo_amount = self.recargo_amount or Decimal("0")
-        if total_base > self.taxable_base or total_iva > self.iva_amount or total_recargo > recargo_amount:
-            raise TransactionValidationError(
-                "cash_accounting_payment_evidence totals must not exceed taxable_base, iva_amount, or recargo_amount",
-            )
-        if any(evidence.payment_date > fallback_date for evidence in self.cash_accounting_payment_evidence):
-            raise TransactionValidationError(
-                "cash_accounting_payment_evidence cannot fall after the 31 December statutory fallback date",
-            )
         return self
 
     @model_validator(mode="after")
@@ -959,76 +918,17 @@ class Transaction(BaseModel):
         them is therefore unchecked here too, which is the existing
         deliberate shape of this gate rather than a new hole.
         """
-        if self.taxable_base is None or self.iva_amount is None:
-            return self
-        if self.iva_category in {
-            IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-            IvaCategory.DOMESTIC_REVERSE_CHARGE,
-            IvaCategory.IMPORT_THIRD_COUNTRY,
-        }:
-            expected = round_to_cents(abs(self.raw.amount))
-            reconstituted = round_to_cents(self.taxable_base)
-            if reconstituted != expected:
-                raise TransactionValidationError(
-                    "taxable_base must equal the gross to the cent for self-assessed IVA: "
-                    f"{self.taxable_base} != {expected}",
-                )
-            return self
-        recargo = self.recargo_amount or Decimal("0")
-        expected = round_to_cents(abs(self.raw.amount))
-        reconstituted = round_to_cents(self.taxable_base + self.iva_amount + recargo)
-        if reconstituted == expected:
-            return self
-        if (
-            self.direction == TransactionDirection.INCOMING
-            and has_non_work_irpf_category(self.irpf_category, direction=self.direction)
-            and reconstituted > expected
-        ):
-            inferred_withholding = round_to_cents(reconstituted - expected)
-            if has_activity_irpf_category(self.irpf_category, direction=self.direction):
-                maximum_supported_withholding = round_to_cents(
-                    self.taxable_base * maximum_supported_activity_retencion_rate(),
-                )
-                if inferred_withholding > maximum_supported_withholding:
-                    raise TransactionValidationError(
-                        "inferred IRPF withholding exceeds supported activity rate; "
-                        "cash amount may be invoice base without IVA",
-                    )
-            return self
-        if (
-            self.direction == TransactionDirection.OUTGOING
-            and self.category_id in PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING
-            and has_activity_irpf_category(self.irpf_category, direction=self.direction)
-            and reconstituted > expected
-        ):
-            inferred_withholding = round_to_cents(reconstituted - expected)
-            maximum_supported_withholding = round_to_cents(
-                self.taxable_base * maximum_supported_activity_retencion_rate(),
-            )
-            if inferred_withholding > maximum_supported_withholding:
-                raise TransactionValidationError(
-                    "inferred IRPF withholding exceeds supported activity rate; "
-                    "cash amount may be invoice base without IVA",
-                )
-            return self
-        if (
-            self.direction == TransactionDirection.OUTGOING
-            and self.category_id in RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING
-            and has_rent_irpf_category(self.irpf_category, direction=self.direction)
-            and reconstituted > expected
-        ):
-            return self
-        detail = gross_mismatch_detail(
+        validate_gross_reconstitution(
+            raw_amount=self.raw.amount,
+            taxable_base=self.taxable_base,
+            iva_amount=self.iva_amount,
+            recargo_amount=self.recargo_amount,
+            iva_category=self.iva_category,
             direction=self.direction,
             category_id=self.category_id,
-            recargo_amount=self.recargo_amount,
-            reconstituted=reconstituted,
-            expected=expected,
+            irpf_category=self.irpf_category,
         )
-        raise TransactionValidationError(
-            "taxable_base + iva_amount + recargo_amount must equal the gross to the cent: "
-            f"{self.taxable_base} + {self.iva_amount} + {recargo} = {reconstituted} != {expected}.{detail}",
-        )
+        return self
 
 
 class BucketTransactionRef(BaseModel):

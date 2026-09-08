@@ -262,9 +262,12 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     the summary count -- and the two readings must agree, so a reader that
     stopped matching cannot report an empty selection as a successful one.
 
-    ``-n0`` is appended after the recipe's own arguments: marker deselection is
-    a selection-time decision, so the worker count cannot change WHICH tests are
-    collected, and booting a worker pool to collect nothing is pure overhead.
+    ``-q -n0`` is appended after the recipe's own arguments. The final ``-q``
+    keeps collection in the node-id format these independent readers verify even
+    when the executable recipe deliberately uses ``-v`` for live failure
+    identities. Marker deselection is a selection-time decision, so the worker
+    count cannot change WHICH tests are collected, and booting a worker pool to
+    collect nothing is pure overhead.
 
     Args:
         label: Human name for the invocation, used in failure messages.
@@ -273,6 +276,9 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     Returns:
         The node ids the collection selected.
     """
+    collection_arguments = tuple(
+        argument for argument in arguments if argument not in {"-q", "--quiet", "-v", "--verbose"}
+    )
     try:
         completed = subprocess.run(  # noqa: S603 - fixed interpreter argv; arguments come from the tracked justfile.
             [
@@ -282,7 +288,8 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
                 "-p",
                 "no:cacheprovider",
                 "--collect-only",
-                *arguments,
+                *collection_arguments,
+                "-q",
                 "-n0",
             ],
             cwd=_REPO_ROOT,

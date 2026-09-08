@@ -641,8 +641,8 @@ live:
 llm:
   evidence:
     consent:
-      binding_mismatch: 'Elutasítva: a gépen kívüli olvasáshoz adott hozzájárulás egy
-        másik dokumentumra vonatkozott. A hozzájárulás pontosan azokhoz a bájtokhoz
+      binding_mismatch: 'Elutasítva: a gépen kívüli olvasáshoz adott hozzájárulás
+        egy másik dokumentumra vonatkozott. A hozzájárulás pontosan azokhoz a bájtokhoz
         kötődik, amelyekre megadták, ezért nem használható fel ennek elküldésére.'
       dispatch_refused: 'Elutasítva: ez a kérés az adózó egyik dokumentumát olvassa,
         és a gépen kívüli %{provider} szolgáltatóhoz küldené az adott híváshoz tartozó
@@ -724,12 +724,16 @@ operation:
       cancellation_unavailable: A megszakítás most nem érhető el. Próbáld újra hamarosan.
       cancellation_unsupported: Ez a művelet az elindítása után nem szakítható meg.
       operation_terminal: A művelet már befejeződött, nincs mit megszakítani.
-      response_authority_unavailable: A választ most nem sikerült rögzíteni. Próbáld újra hamarosan.
+      response_authority_unavailable: A választ most nem sikerült rögzíteni. Próbáld
+        újra hamarosan.
       response_not_pending: Ez a művelet nem vár választ.
-      stale_operation_revision: A művelet továbblépett, amíg döntöttél. Várd meg a frissítést, és próbáld újra.
+      stale_operation_revision: A művelet továbblépett, amíg döntöttél. Várd meg a
+        frissítést, és próbáld újra.
       unknown_operation: A háttérrendszer már nem ismeri ezt a műveletet.
-      unsupported_cancellation_version: Ez a verzió nem tudja megszakítani azt a műveletet. Frissítsd a Cadrumót.
-      unsupported_response_control_version: Ez a verzió nem tud válaszolni arra a műveletre. Frissítsd a Cadrumót.
+      unsupported_cancellation_version: Ez a verzió nem tudja megszakítani azt a műveletet.
+        Frissítsd a Cadrumót.
+      unsupported_response_control_version: Ez a verzió nem tud válaszolni arra a
+        műveletre. Frissítsd a Cadrumót.
     status:
       running: Folyamatban
 overview:
@@ -1508,6 +1512,8 @@ tui:
       profile: Profil
       sign_out: Kijelentkezés
       unavailable: A fiókvezérlők ebben a munkamenetben nem érhetők el.
+    navigation:
+      unavailable: A kért terület ebben a munkamenetben nem nyitható meg.
     no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
     title: Cadrumo terminálmunkamenet
   search:

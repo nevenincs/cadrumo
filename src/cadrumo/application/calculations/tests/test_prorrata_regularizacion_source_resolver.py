@@ -186,9 +186,7 @@ def _save_prior_observation(
                 provenance_kind="app_filing",
                 provenance_locator="test:prorrata-prior-local-filing:declaration-type",
             ),
-            stamped_revision_id=revision_id_for_observation(
-                observation
-            ),
+            stamped_revision_id=revision_id_for_observation(observation),
         )
     )
 

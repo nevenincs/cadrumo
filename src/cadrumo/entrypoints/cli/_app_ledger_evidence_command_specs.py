@@ -4,6 +4,12 @@
 
 from __future__ import annotations
 
+from ...application.ledger.operator_input_contracts import (
+    INVOICE_CLASS_INPUT,
+    INVOICE_KIND_INPUT,
+    IVA_AMOUNT_INPUT,
+    NOTES_INPUT,
+)
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
@@ -15,6 +21,7 @@ from ._app_ledger_command_spec_policies import (
 from ._app_ledger_command_spec_support import (
     _blank_default_text_option,
     _boolean_flag_option,
+    _option_from_application_contract,
     _optional_text_option,
     _repeatable_text_option,
     _required_text_argument,
@@ -137,22 +144,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.DIRECTORY,
                 transport_role=TransportRole.PRIMARY,
             ),
-            OptionSpec(
-                name="kind",
-                declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
+            _option_from_application_contract(INVOICE_KIND_INPUT, "cli.app.ledger.invoice.kind_help"),
             OptionSpec(
                 name="file",
                 declarations=("--file",),
@@ -192,22 +184,7 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
-            OptionSpec(
-                name="kind",
-                declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
+            _option_from_application_contract(INVOICE_KIND_INPUT, "cli.app.ledger.invoice.kind_help"),
             _optional_text_option(
                 "evidence_id", ("--evidence-id",), "cli.app.ledger.evidence.extract_evidence_id_help"
             ),
@@ -264,21 +241,8 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
-            OptionSpec(
-                name="invoice_class",
-                declarations=("--invoice-class",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.invoices.enums", "InvoiceClass")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.app.ledger.evidence.confirm_invoice_class_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
+            _option_from_application_contract(
+                INVOICE_CLASS_INPUT, "cli.app.ledger.evidence.confirm_invoice_class_help"
             ),
             _optional_text_option("rectifies", ("--rectifies",), "cli.app.ledger.evidence.confirm_rectifies_help"),
             _optional_text_option("series", ("--series",), "cli.app.ledger.evidence.confirm_series_help"),
@@ -497,38 +461,8 @@ LEDGER_EVIDENCE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
-            OptionSpec(
-                name="iva_amount",
-                declarations=("--iva-amount",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=None,
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
-                name="notes",
-                declarations=("--notes",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=None,
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
+            _option_from_application_contract(IVA_AMOUNT_INPUT, None),
+            _option_from_application_contract(NOTES_INPUT, None),
         ),
         policy=_POLICY_4,
         handler=LazyBinding.available(

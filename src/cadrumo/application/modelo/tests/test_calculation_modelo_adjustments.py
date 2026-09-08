@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Literal, get_args
 
 import pytest
 
@@ -13,12 +13,11 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.row_models import Modelo349OperadorRow
+from ....domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .._calculation_modelo_adjustments import (
     _m390_303_reconciliation_targets,
     detail_row_binding_values_for_calculation,
-    uncovered_detail_row_kinds,
     union_detail_rows_by_identity,
 )
 from ..action_errors import ModeloAggregationBindingError
@@ -175,7 +174,9 @@ def test_union_is_a_no_op_for_a_modelo_whose_rows_come_from_one_source_alone() -
 
 def test_every_detail_row_kind_has_an_identity_table_entry() -> None:
     """Gate: a row kind added to the union without an identity entry regresses the double-count fix silently."""
-    assert uncovered_detail_row_kinds() == frozenset()
+    from .. import _calculation_modelo_adjustments as adjustments_module
+
+    assert set(get_args(ModeloDetailRow)) == set(adjustments_module._ROW_IDENTITY_FIELDS)
 
 
 def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> None:
@@ -183,9 +184,10 @@ def test_the_coverage_gate_bites_on_a_kind_missing_from_the_identity_table() -> 
     from ....domain.modelos.row_models import Modelo184MemberRow
     from .. import _calculation_modelo_adjustments as adjustments_module
 
-    real_table = adjustments_module._ROW_IDENTITY_FIELDS
-    incomplete_table = {kind: fields for kind, fields in real_table.items() if kind is not Modelo184MemberRow}
+    row_kinds = set(get_args(ModeloDetailRow))
+    real_table = set(adjustments_module._ROW_IDENTITY_FIELDS)
+    incomplete_table = real_table - {Modelo184MemberRow}
 
-    assert adjustments_module._uncovered_row_kinds(incomplete_table) == frozenset({Modelo184MemberRow})
+    assert row_kinds - incomplete_table == {Modelo184MemberRow}
     # The real table stays fully covered -- this test does not mutate it.
-    assert adjustments_module._uncovered_row_kinds(real_table) == frozenset()
+    assert row_kinds - real_table == set()

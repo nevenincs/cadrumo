@@ -69,6 +69,7 @@ from .formula_runtime_ops import (
 from .formula_runtime_ops import (
     evaluate_args_op as _evaluate_args_op,
 )
+from .formula_runtime_ops import numeric_casilla_value as _numeric_casilla_value
 from .formula_runtime_ops import (
     read_parameter as _read_parameter,
 )
@@ -100,8 +101,9 @@ from .ids import (
     SourceRefId,
 )
 from .runtime_graph import formula_evaluation_order
-from .schema import RegistrySnapshot
+from .schema import FormulaDefinition, ModeloRevision, RegistrySnapshot
 from .schema_formula import FormulaExpression, ParameterDefinition
+from .schema_surfaces import CasillaDefinition
 
 read_parameter = _read_parameter
 
@@ -315,6 +317,133 @@ class RegistryCalculationResult(BaseModel):
         return tuple(entries)
 
 
+@dataclass(frozen=True, slots=True)
+class _ResolvedCalculationInputs:
+    """Validated external channels shared by every formula evaluation stage."""
+
+    revision: ModeloRevision
+    resolved_inputs: Mapping[CasillaId, Decimal]
+    resolved_date_context: Mapping[str, date]
+    supplied_bindings: Mapping[BindingId, Decimal]
+    resolved_bindings: Mapping[BindingId, Decimal]
+    resolved_enum_bindings: Mapping[BindingId, str]
+    resolved_relations: Mapping[RelationId, Decimal]
+    resolved_unresolved_relations: frozenset[RelationId]
+    resolved_unresolved_bindings: frozenset[BindingId]
+    resolved_date_bindings: Mapping[BindingId, date]
+    resolved_text_inputs: Mapping[CasillaId, str]
+
+
+@dataclass(slots=True)
+class _CalculationState:
+    """Mutable formula results accumulated in declared evaluation order."""
+
+    values: dict[CasillaId, Decimal]
+    absent_by_design_casilla_ids: frozenset[CasillaId]
+    formulas: Mapping[CasillaId, FormulaDefinition]
+    parameters: Mapping[str, ParameterDefinition]
+    casillas_by_id: Mapping[CasillaId, CasillaDefinition]
+    resolved_text_inputs: Mapping[CasillaId, str]
+    computed_provenance: dict[CasillaId, CasillaObservation]
+    unresolved_outcomes: list[RegistryCalculationUnresolvedOutcome]
+    unresolved_casilla_ids: set[CasillaId]
+
+
+def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputValue](
+    snapshot: RegistrySnapshot,
+    *,
+    inputs: Mapping[InputKey, InputValue],
+    date_context: Mapping[str, date],
+    binding_values: Mapping[BindingId, Decimal] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    unresolved_relation_ids: tuple[RelationId, ...],
+    unresolved_binding_ids: tuple[BindingId, ...],
+    date_binding_values: Mapping[BindingId, date] | None,
+    text_inputs: Mapping[TextInputKey, TextInputValue] | None,
+) -> _ResolvedCalculationInputs:
+    """Validate and normalize all external channels before formula traversal."""
+    revision = snapshot.revision
+    resolved_inputs = _validated_decimal_input_casilla_ids(
+        inputs,
+        revision=revision,
+    )
+    resolved_date_context = dict(date_context)
+    default_filing_date = (
+        calculation_filing_date(snapshot.filing_period)
+        if snapshot.filing_period is not None
+        else date(snapshot.filing_year, 12, 31)
+    )
+    resolved_date_context.setdefault("filing_period", default_filing_date)
+    supplied_bindings: Mapping[BindingId, Decimal] = binding_values or {}
+    _reject_non_decimal(supplied_bindings, "binding")
+    resolved_bindings = _binding_values_with_absent_by_design_defaults(
+        revision,
+        supplied_bindings,
+        target_period=snapshot.period,
+    )
+    _reject_non_decimal(resolved_bindings, "binding")
+    resolved_enum_bindings = enum_binding_values or {}
+    _reject_non_string(resolved_enum_bindings, "enum_binding")
+    resolved_relations = relation_values or {}
+    _reject_non_decimal(resolved_relations, "relation")
+    resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
+    resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(resolved_bindings)
+    resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
+    resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
+    return _ResolvedCalculationInputs(
+        revision=revision,
+        resolved_inputs=resolved_inputs,
+        resolved_date_context=resolved_date_context,
+        supplied_bindings=supplied_bindings,
+        resolved_bindings=resolved_bindings,
+        resolved_enum_bindings=resolved_enum_bindings,
+        resolved_relations=resolved_relations,
+        resolved_unresolved_relations=resolved_unresolved_relations,
+        resolved_unresolved_bindings=resolved_unresolved_bindings,
+        resolved_date_bindings=resolved_date_bindings,
+        resolved_text_inputs=resolved_text_inputs,
+    )
+
+
+def _prepare_calculation_state(
+    snapshot: RegistrySnapshot,
+    resolved: _ResolvedCalculationInputs,
+) -> _CalculationState:
+    """Build registry maps and mutable accumulators after channel validation."""
+    _validate_external_value_ids(
+        snapshot,
+        resolved_bindings=resolved.resolved_bindings,
+        resolved_relations=resolved.resolved_relations,
+        resolved_unresolved_relations=resolved.resolved_unresolved_relations,
+        resolved_unresolved_bindings=resolved.resolved_unresolved_bindings,
+    )
+    values, absent_by_design_casilla_ids = _initial_values(
+        resolved.revision,
+        resolved.resolved_inputs,
+        binding_values=resolved.supplied_bindings,
+        target_period=snapshot.period,
+    )
+    formulas = {formula.target_casilla_id: formula for formula in resolved.revision.formulas}
+    parameters = {parameter.id: parameter for parameter in resolved.revision.parameters}
+    casillas_by_id = _casillas_by_id(resolved.revision)
+    resolved_text_inputs = _validate_text_input_targets(
+        resolved.resolved_text_inputs,
+        casillas_by_id=casillas_by_id,
+    )
+    return _CalculationState(
+        values=values,
+        absent_by_design_casilla_ids=absent_by_design_casilla_ids,
+        formulas=formulas,
+        parameters=parameters,
+        casillas_by_id=casillas_by_id,
+        resolved_text_inputs=resolved_text_inputs,
+        computed_provenance={},
+        unresolved_outcomes=[],
+        unresolved_casilla_ids=set(),
+    )
+
+
 def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputValue](
     snapshot: RegistrySnapshot,
     *,
@@ -380,158 +509,155 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
         text_inputs: Optional string-valued operator inputs keyed by casilla
             id; consumed by text-routed ops.
     """
-    revision = snapshot.revision
-    resolved_inputs = _validated_decimal_input_casilla_ids(
-        inputs,
-        revision=revision,
-    )
-    resolved_date_context = dict(date_context)
-    default_filing_date = (
-        calculation_filing_date(snapshot.filing_period)
-        if snapshot.filing_period is not None
-        else date(snapshot.filing_year, 12, 31)
-    )
-    resolved_date_context.setdefault("filing_period", default_filing_date)
-    supplied_bindings = binding_values or {}
-    _reject_non_decimal(supplied_bindings, "binding")
-    resolved_bindings = _binding_values_with_absent_by_design_defaults(
-        revision,
-        supplied_bindings,
-        target_period=snapshot.period,
-    )
-    _reject_non_decimal(resolved_bindings, "binding")
-    resolved_enum_bindings = enum_binding_values or {}
-    _reject_non_string(resolved_enum_bindings, "enum_binding")
-    resolved_relations = relation_values or {}
-    _reject_non_decimal(resolved_relations, "relation")
-    resolved_unresolved_relations = frozenset(unresolved_relation_ids).difference(resolved_relations)
-    resolved_unresolved_bindings = frozenset(unresolved_binding_ids).difference(resolved_bindings)
-    resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
-    resolved_text_inputs = _validated_text_input_casilla_ids(text_inputs or {})
-
-    _validate_external_value_ids(
+    resolved = _resolve_calculation_inputs(
         snapshot,
-        resolved_bindings=resolved_bindings,
-        resolved_relations=resolved_relations,
-        resolved_unresolved_relations=resolved_unresolved_relations,
-        resolved_unresolved_bindings=resolved_unresolved_bindings,
+        inputs=inputs,
+        date_context=date_context,
+        binding_values=binding_values,
+        enum_binding_values=enum_binding_values,
+        relation_values=relation_values,
+        unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=unresolved_binding_ids,
+        date_binding_values=date_binding_values,
+        text_inputs=text_inputs,
     )
-    values, absent_by_design_casilla_ids = _initial_values(
-        revision,
-        resolved_inputs,
-        binding_values=supplied_bindings,
-        target_period=snapshot.period,
-    )
-    formulas = {formula.target_casilla_id: formula for formula in revision.formulas}
-    parameters = {parameter.id: parameter for parameter in revision.parameters}
-    casillas_by_id = _casillas_by_id(revision)
-    resolved_text_inputs = _validate_text_input_targets(resolved_text_inputs, casillas_by_id=casillas_by_id)
-    # Per-casilla provenance accumulator. Formula-computed casillas overwrite
-    # the input/bound placeholder with the full operand lineage; non-computed
-    # casillas keep the registry-sourced legal_refs/source_refs.
-    computed_provenance: dict[CasillaId, CasillaObservation] = {}
-    unresolved_outcomes: list[RegistryCalculationUnresolvedOutcome] = []
-    unresolved_casilla_ids: set[CasillaId] = set()
+    state = _prepare_calculation_state(snapshot, resolved)
+    _evaluate_formulas(snapshot, resolved, state)
+    return _materialise_calculation_result(snapshot, resolved, state)
 
+
+def _evaluate_formulas(
+    snapshot: RegistrySnapshot,
+    resolved: _ResolvedCalculationInputs,
+    state: _CalculationState,
+) -> None:
+    """Evaluate each formula in the graph's dependency order at Decimal precision."""
     with localcontext() as ctx:
         ctx.prec = 28
-        for target in formula_evaluation_order(revision):
-            formula = formulas[target]
-            operand_refs: list[str] = []
-            operand_casilla_refs: list[CasillaId] = []
-            operand_values: list[Decimal] = []
-            try:
-                value = _evaluate_expression(
-                    formula.expression,
-                    values=values,
-                    binding_values=resolved_bindings,
-                    parameters=parameters,
-                    date_context=resolved_date_context,
-                    relation_values=resolved_relations,
-                    unresolved_relation_ids=resolved_unresolved_relations,
-                    unresolved_binding_ids=resolved_unresolved_bindings,
-                    unresolved_casilla_ids=unresolved_casilla_ids,
-                    operand_refs=operand_refs,
-                    operand_casilla_refs=operand_casilla_refs,
-                    operand_values=operand_values,
-                    enum_binding_values=resolved_enum_bindings,
-                    date_binding_values=resolved_date_bindings,
-                    filing_year=snapshot.filing_year,
-                    text_values=resolved_text_inputs,
-                    convenio=snapshot.convenio,
-                )
-            except _UnresolvedFormulaOutcomeError as exc:
-                unresolved_casilla_ids.add(target)
-                unresolved_outcomes.append(
-                    RegistryCalculationUnresolvedOutcome(
-                        casilla_id=target,
-                        reason=exc.reason,
-                        formula_id=formula.id,
-                        op=formula.expression.op or "value",
-                        operand_refs=tuple(operand_refs),
-                        operand_casilla_refs=tuple(operand_casilla_refs),
-                        operand_values=tuple(operand_values),
-                        legal_refs=tuple(formula.legal_refs),
-                        source_refs=tuple(formula.source_refs),
-                        # UnresolvedFormulaOutcomeError.context is always a str-keyed,
-                        # str-valued mapping (its constructor only accepts
-                        # Mapping[str, str]); the inherited CadrumoError.context attribute
-                        # is declared dict[str, object] | None for the general error
-                        # hierarchy, so re-stringify here rather than narrowing the
-                        # shared base attribute for every CadrumoError subclass.
-                        context={str(key): str(value) for key, value in (exc.context or {}).items()},
-                    ),
-                )
-                continue
-            except _UnresolvedFormulaDependencyError:
-                unresolved_casilla_ids.add(target)
-                continue
-            value = _apply_rounding(value, formula.rounding)
-            target_casilla_def = casillas_by_id.get(target)
-            if target_casilla_def is not None and target_casilla_def.constraints is not None:
-                violation = target_casilla_def.constraints.violates(value)
-                if violation is not None:
-                    raise CasillaConstraintViolationError(
-                        f"casilla {target_casilla_def.number!r} ({target_casilla_def.label}) "
-                        f"violates declared constraint: {violation}",
-                        translated_message="errors.calc.casilla_constraint_violation",
-                        context={
-                            "casilla_id": target,
-                            "display_number": target_casilla_def.number,
-                            "value": str(value),
-                            "violation": str(violation),
-                            "formula_id": formula.id,
-                            "legal_refs": ",".join(target_casilla_def.constraints.legal_refs),
-                            "source_refs": ",".join(target_casilla_def.constraints.source_refs),
-                        },
-                    )
-            values[target] = value
-            computed_provenance[target] = CasillaObservation(
+        for target in formula_evaluation_order(resolved.revision):
+            _evaluate_formula_target(snapshot, resolved, state, target)
+
+
+def _evaluate_formula_target(
+    snapshot: RegistrySnapshot,
+    resolved: _ResolvedCalculationInputs,
+    state: _CalculationState,
+    target: CasillaId,
+) -> None:
+    """Evaluate and record one formula target, including deferred outcomes."""
+    formula = state.formulas[target]
+    operand_refs: list[str] = []
+    operand_casilla_refs: list[CasillaId] = []
+    operand_values: list[Decimal] = []
+    try:
+        value = _evaluate_expression(
+            formula.expression,
+            values=state.values,
+            binding_values=resolved.resolved_bindings,
+            parameters=state.parameters,
+            date_context=resolved.resolved_date_context,
+            relation_values=resolved.resolved_relations,
+            unresolved_relation_ids=resolved.resolved_unresolved_relations,
+            unresolved_binding_ids=resolved.resolved_unresolved_bindings,
+            unresolved_casilla_ids=state.unresolved_casilla_ids,
+            operand_refs=operand_refs,
+            operand_casilla_refs=operand_casilla_refs,
+            operand_values=operand_values,
+            enum_binding_values=resolved.resolved_enum_bindings,
+            date_binding_values=resolved.resolved_date_bindings,
+            filing_year=snapshot.filing_year,
+            text_values=state.resolved_text_inputs,
+            convenio=snapshot.convenio,
+        )
+    except _UnresolvedFormulaOutcomeError as exc:
+        state.unresolved_casilla_ids.add(target)
+        state.unresolved_outcomes.append(
+            RegistryCalculationUnresolvedOutcome(
                 casilla_id=target,
-                value=value,
+                reason=exc.reason,
                 formula_id=formula.id,
                 op=formula.expression.op or "value",
                 operand_refs=tuple(operand_refs),
                 operand_casilla_refs=tuple(operand_casilla_refs),
                 operand_values=tuple(operand_values),
-                legal_refs=formula.legal_refs,
-                source_refs=formula.source_refs,
-            )
-
-    observations = _materialise_observations(
-        values=values,
-        text_values=resolved_text_inputs,
-        computed_provenance=computed_provenance,
-        casillas_by_id=casillas_by_id,
-        absent_by_design_casilla_ids=absent_by_design_casilla_ids,
+                legal_refs=tuple(formula.legal_refs),
+                source_refs=tuple(formula.source_refs),
+                # UnresolvedFormulaOutcomeError.context is always a str-keyed,
+                # str-valued mapping (its constructor only accepts
+                # Mapping[str, str]); the inherited CadrumoError.context attribute
+                # is declared dict[str, object] | None for the general error
+                # hierarchy, so re-stringify here rather than narrowing the
+                # shared base attribute for every CadrumoError subclass.
+                context={str(key): str(value) for key, value in (exc.context or {}).items()},
+            ),
+        )
+        return
+    except _UnresolvedFormulaDependencyError:
+        state.unresolved_casilla_ids.add(target)
+        return
+    value = _apply_rounding(value, formula.rounding)
+    _validate_formula_target_constraint(target, value, formula, state.casillas_by_id)
+    state.values[target] = value
+    state.computed_provenance[target] = CasillaObservation(
+        casilla_id=target,
+        value=value,
+        formula_id=formula.id,
+        op=formula.expression.op or "value",
+        operand_refs=tuple(operand_refs),
+        operand_casilla_refs=tuple(operand_casilla_refs),
+        operand_values=tuple(operand_values),
+        legal_refs=formula.legal_refs,
+        source_refs=formula.source_refs,
     )
-    _validate_operand_casilla_refs(observations, known_casilla_ids=frozenset(casillas_by_id))
 
+
+def _validate_formula_target_constraint(
+    target: CasillaId,
+    value: Decimal,
+    formula: FormulaDefinition,
+    casillas_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> None:
+    """Refuse a calculated value that violates its registry casilla constraint."""
+    target_casilla_def = casillas_by_id.get(target)
+    if target_casilla_def is None or target_casilla_def.constraints is None:
+        return
+    violation = target_casilla_def.constraints.violates(value)
+    if violation is not None:
+        raise CasillaConstraintViolationError(
+            f"casilla {target_casilla_def.number!r} ({target_casilla_def.label}) "
+            f"violates declared constraint: {violation}",
+            translated_message="errors.calc.casilla_constraint_violation",
+            context={
+                "casilla_id": target,
+                "display_number": target_casilla_def.number,
+                "value": str(value),
+                "violation": str(violation),
+                "formula_id": formula.id,
+                "legal_refs": ",".join(target_casilla_def.constraints.legal_refs),
+                "source_refs": ",".join(target_casilla_def.constraints.source_refs),
+            },
+        )
+
+
+def _materialise_calculation_result(
+    snapshot: RegistrySnapshot,
+    resolved: _ResolvedCalculationInputs,
+    state: _CalculationState,
+) -> RegistryCalculationResult:
+    """Project evaluated state into observations and validate provenance links."""
+    observations = _materialise_observations(
+        values=state.values,
+        text_values=state.resolved_text_inputs,
+        computed_provenance=state.computed_provenance,
+        casillas_by_id=state.casillas_by_id,
+        absent_by_design_casilla_ids=state.absent_by_design_casilla_ids,
+    )
+    _validate_operand_casilla_refs(observations, known_casilla_ids=frozenset(state.casillas_by_id))
     return RegistryCalculationResult(
         modelo=snapshot.modelo.id,
-        revision=revision.id,
+        revision=resolved.revision.id,
         observations=observations,
-        unresolved_outcomes=tuple(unresolved_outcomes),
+        unresolved_outcomes=tuple(state.unresolved_outcomes),
     )
 
 
@@ -944,62 +1070,61 @@ def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: _EvalContext) 
     return age
 
 
+def _evaluate_binding_leaf(binding_id: BindingId, ctx: _EvalContext) -> Decimal:
+    """Resolve one numeric binding leaf and append its provenance reference."""
+    if binding_id not in ctx.binding_values:
+        if binding_id in ctx.unresolved_binding_ids:
+            raise _UnresolvedFormulaDependencyError((binding_id,))
+        raise RegistryValidationError(
+            f"binding {binding_id!r} has no supplied value",
+            translated_message="errors.calc.binding_value_missing",
+            context={"binding_id": binding_id},
+        )
+    value = ctx.binding_values[binding_id]
+    ctx.operand_refs.append(binding_id)
+    ctx.operand_values.append(value)
+    return value
+
+
+def _evaluate_relation_leaf(relation_id: RelationId, ctx: _EvalContext) -> Decimal:
+    """Resolve one numeric relation leaf and append its provenance reference."""
+    if relation_id not in ctx.relation_values:
+        if relation_id in ctx.unresolved_relation_ids:
+            raise _UnresolvedFormulaDependencyError((relation_id,))
+        raise RegistryValidationError(
+            f"relation {relation_id!r} has no supplied value",
+            translated_message="errors.calc.relation_value_missing",
+            context={"relation_id": relation_id},
+        )
+    value = ctx.relation_values[relation_id]
+    ctx.operand_refs.append(relation_id)
+    ctx.operand_values.append(value)
+    return value
+
+
+def _reject_date_binding_leaf(binding_id: BindingId) -> None:
+    """Reject a date channel used without its age operation."""
+    raise RegistryValidationError(
+        f"date_binding {binding_id!r} leaf must be consumed inside an "
+        "'age_at_year_end' op, not used as a standalone Decimal leaf",
+        translated_message="errors.calc.date_binding_used_as_decimal_leaf",
+        context={"binding_id": str(binding_id)},
+    )
+
+
 def _evaluate_leaf(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     if expression.literal is not None:
         return expression.literal
     if expression.casilla_id is not None:
-        if expression.casilla_id not in ctx.values:
-            if expression.casilla_id in ctx.unresolved_casilla_ids:
-                raise _UnresolvedFormulaDependencyError((expression.casilla_id,))
-            raise RegistryValidationError(
-                f"casilla {expression.casilla_id!r} referenced before evaluation",
-                translated_message="errors.calc.casilla_referenced_before_evaluation",
-                context={"casilla_id": expression.casilla_id},
-            )
-        value = ctx.values[expression.casilla_id]
-        ctx.operand_refs.append(expression.casilla_id)
-        ctx.operand_casilla_refs.append(expression.casilla_id)
-        ctx.operand_values.append(value)
-        return value
+        return _numeric_casilla_value(expression.casilla_id, ctx)
     if expression.binding is not None:
-        if expression.binding not in ctx.binding_values:
-            if expression.binding in ctx.unresolved_binding_ids:
-                raise _UnresolvedFormulaDependencyError((expression.binding,))
-            raise RegistryValidationError(
-                f"binding {expression.binding!r} has no supplied value",
-                translated_message="errors.calc.binding_value_missing",
-                context={"binding_id": expression.binding},
-            )
-        value = ctx.binding_values[expression.binding]
-        ctx.operand_refs.append(expression.binding)
-        ctx.operand_values.append(value)
-        return value
+        return _evaluate_binding_leaf(expression.binding, ctx)
     if expression.date_binding is not None:
-        # A date_binding leaf is consumed exclusively by the age_at_year_end op.
-        # As a bare leaf (outside age_at_year_end) it has no Decimal projection;
-        # callers should never reach here for a standalone date_binding leaf
-        # without wrapping it in age_at_year_end.  Raise descriptively.
-        raise RegistryValidationError(
-            f"date_binding {expression.date_binding!r} leaf must be consumed inside an "
-            "'age_at_year_end' op, not used as a standalone Decimal leaf",
-            translated_message="errors.calc.date_binding_used_as_decimal_leaf",
-            context={"binding_id": str(expression.date_binding)},
-        )
+        _reject_date_binding_leaf(expression.date_binding)
     if expression.parameter is not None:
         return _resolve_scalar_parameter(expression.parameter, ctx, op="formula_parameter")
     if expression.relation is not None:
-        if expression.relation not in ctx.relation_values:
-            if expression.relation in ctx.unresolved_relation_ids:
-                raise _UnresolvedFormulaDependencyError((expression.relation,))
-            raise RegistryValidationError(
-                f"relation {expression.relation!r} has no supplied value",
-                translated_message="errors.calc.relation_value_missing",
-                context={"relation_id": expression.relation},
-            )
-        value = ctx.relation_values[expression.relation]
-        ctx.operand_refs.append(expression.relation)
-        ctx.operand_values.append(value)
-        return value
+        return _evaluate_relation_leaf(expression.relation, ctx)
     raise RegistryValidationError(
         "empty formula expression",
         translated_message="errors.calc.empty_expression",

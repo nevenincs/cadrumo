@@ -57,8 +57,6 @@ _MINIMUM_MODULES_BY_ROOT: Final = {
     "src": 4000,
     "dev": 700,
 }
-#: A generated baseline copy of the package tree; its contents are not authored here.
-_EXCLUDED_SEGMENT: Final = ".baseline-source-snapshot"
 
 
 def _names_a_dunder_init_submodule(dotted: str) -> bool:
@@ -92,8 +90,6 @@ def _scan() -> tuple[list[str], dict[str, int]]:
     parsed = dict.fromkeys(_MINIMUM_MODULES_BY_ROOT, 0)
     for root in _MINIMUM_MODULES_BY_ROOT:
         for path in (REPO_ROOT / root).rglob("*.py"):
-            if _EXCLUDED_SEGMENT in path.as_posix():
-                continue
             try:
                 tree = ast.parse(path.read_text(encoding="utf-8"))
             except (OSError, SyntaxError) as refusal:

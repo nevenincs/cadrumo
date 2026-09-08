@@ -468,6 +468,16 @@ def validate_invoice_family_fact_and_aggregation(
     counterpart variant historically omitted them, so the flag preserves that
     behaviour exactly).
     """
+    op = _validate_invoice_fact_and_op(binding, selector, family_label)
+    _validate_invoice_selector_shape(binding, selector, op, strict_scalar_shape)
+
+
+def _validate_invoice_fact_and_op(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    family_label: str,
+) -> BindingAggregationOp:
+    """Validate the fact/op pair and return the binding's aggregation op."""
     if selector.fact not in _INVOICE_FACTS:
         raise RegistryValidationError(
             f"binding {binding.id!r} declares unsupported {family_label} fact {selector.fact!r}",
@@ -481,11 +491,22 @@ def validate_invoice_family_fact_and_aggregation(
         raise RegistryValidationError(
             f"binding {binding.id!r} M347 declarant summary must use operator_count or invoice_total_sum",
         )
+    return op
+
+
+def _validate_invoice_selector_shape(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    op: BindingAggregationOp,
+    strict_scalar_shape: bool,
+) -> None:
+    """Validate row/scalar selector shape after fact/op validation."""
     if selector.fact == "row_field":
         _validate_row_field_invoice_fact(binding, selector, op)
-    elif strict_scalar_shape and (selector.row_field is not None or selector.grouping is not None):
+        return
+    if strict_scalar_shape and (selector.row_field is not None or selector.grouping is not None):
         raise RegistryValidationError(f"binding {binding.id!r} non-row fact must not declare row_field or grouping")
-    if strict_scalar_shape and op == BindingAggregationOp.ROWS and selector.fact != "row_field":
+    if strict_scalar_shape and op == BindingAggregationOp.ROWS:
         raise RegistryValidationError(f"binding {binding.id!r} aggregation op 'rows' requires fact 'row_field'")
 
 
@@ -611,59 +632,99 @@ def resolve_invoice_family_row_values(
     two groupings, which still declare distinct ``payable_invoice`` /
     ``collectible_invoice`` sources per binding, are unaffected.
     """
+    cohorts = _collect_invoice_row_cohorts(
+        revision,
+        source_kinds=source_kinds,
+        validate_selector=validate_selector,
+        cohort_by_source=cohort_by_source,
+    )
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
-    cohorts: dict[
-        tuple[object, InvoiceGrouping, RectificationScope, tuple[str, ...], str | None],
-        list[tuple[DataBindingDefinition, _InvoiceSelector]],
-    ] = {}
+    for members in cohorts.values():
+        resolved.update(_resolve_invoice_row_cohort(members, observations_for_binding))
+    return resolved
+
+
+_InvoiceRowCohortKey = tuple[object, InvoiceGrouping, RectificationScope, tuple[str, ...], str | None]
+_InvoiceRowCohortMembers = list[tuple[DataBindingDefinition, _InvoiceSelector]]
+
+
+def _collect_invoice_row_cohorts(
+    revision: ModeloRevision,
+    *,
+    source_kinds: frozenset[str] | frozenset[object],
+    validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
+    cohort_by_source: bool,
+) -> dict[_InvoiceRowCohortKey, _InvoiceRowCohortMembers]:
+    """Group row-producing bindings by their observation and row semantics."""
+    cohorts: dict[_InvoiceRowCohortKey, _InvoiceRowCohortMembers] = {}
     for binding in revision.bindings:
         if binding.source not in source_kinds:
             continue
         selector = validate_selector(binding)
         if selector.fact != "row_field":
             continue
-        grouping = selector.grouping
-        if grouping is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key",
-            )
-        cohort_source = binding.source if cohort_by_source else None
-        cohort_key = (
-            cohort_source,
-            grouping,
-            selector.rectification_scope,
-            tuple(sorted(selector.claves)),
-            selector.iva_regime,
+        cohort_key = _invoice_row_cohort_key(
+            binding,
+            selector,
+            cohort_by_source=cohort_by_source,
         )
         cohorts.setdefault(cohort_key, []).append((binding, selector))
-    for members in cohorts.values():
-        sample_binding, sample_selector = members[0]
-        grouping = sample_selector.grouping
-        if grouping is None:
+    return cohorts
+
+
+def _invoice_row_cohort_key(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    *,
+    cohort_by_source: bool,
+) -> _InvoiceRowCohortKey:
+    grouping = selector.grouping
+    if grouping is None:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key",
+        )
+    return (
+        binding.source if cohort_by_source else None,
+        grouping,
+        selector.rectification_scope,
+        tuple(sorted(selector.claves)),
+        selector.iva_regime,
+    )
+
+
+def _resolve_invoice_row_cohort(
+    members: _InvoiceRowCohortMembers,
+    observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Materialize one cohort and project each member's requested row field."""
+    sample_binding, sample_selector = members[0]
+    grouping = sample_selector.grouping
+    if grouping is None:
+        raise RegistryValidationError(
+            f"binding {sample_binding.id!r} row cohort carries no 'grouping' selector key",
+        )
+    scope_filtered = tuple(
+        _filter_invoice_observations(observations_for_binding(sample_binding), sample_selector),
+    )
+    rows = build_invoice_rows(
+        grouping,
+        scope_filtered,
+        m347_threshold_filter=_m347_row_family_threshold_filter,
+    )
+    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
+    for binding, selector in members:
+        row_field = selector.row_field
+        if row_field is None:
             raise RegistryValidationError(
-                f"binding {sample_binding.id!r} row cohort carries no 'grouping' selector key",
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
             )
-        scope_filtered = tuple(
-            _filter_invoice_observations(observations_for_binding(sample_binding), sample_selector),
-        )
-        rows = build_invoice_rows(
-            grouping,
-            scope_filtered,
-            m347_threshold_filter=_m347_row_family_threshold_filter,
-        )
-        for binding, selector in members:
-            row_field = selector.row_field
-            if row_field is None:
+        for row_index, row in enumerate(rows, start=1):
+            value = row.get(row_field)
+            if value is None:
                 raise RegistryValidationError(
-                    f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for grouping {grouping!r}",
                 )
-            for row_index, row in enumerate(rows, start=1):
-                value = row.get(row_field)
-                if value is None:
-                    raise RegistryValidationError(
-                        f"binding {binding.id!r} row_field {row_field!r} not produced for grouping {grouping!r}",
-                    )
-                resolved[(binding.id, row_index)] = value
+            resolved[(binding.id, row_index)] = value
     return resolved
 
 
@@ -836,15 +897,129 @@ def _filter_invoice_observations(
     # keeps the established intracommunity_clave filter.
     clave_field = "operation_clave" if selector.grouping == "contraparte_clave" else "intracommunity_clave"
     for observation in observations:
-        if selector.rectification_scope == "only_rectifications" and not observation.is_rectification:
-            continue
-        if selector.rectification_scope == "exclude_rectifications" and observation.is_rectification:
-            continue
-        if clave_filter and getattr(observation, clave_field) not in clave_filter:
-            continue
-        if selector.iva_regime is not None and observation.iva_regime != selector.iva_regime:
-            continue
-        yield observation
+        if _invoice_observation_matches(observation, selector, clave_field, clave_filter):
+            yield observation
+
+
+def _invoice_observation_matches(
+    observation: InvoiceObservation,
+    selector: _InvoiceSelector,
+    clave_field: str,
+    clave_filter: set[str],
+) -> bool:
+    """Return whether one observation satisfies a binding selector's scope."""
+    if selector.rectification_scope == "only_rectifications" and not observation.is_rectification:
+        return False
+    if selector.rectification_scope == "exclude_rectifications" and observation.is_rectification:
+        return False
+    if clave_filter and getattr(observation, clave_field) not in clave_filter:
+        return False
+    return selector.iva_regime is None or observation.iva_regime == selector.iva_regime
+
+
+_InvoiceAggregator = Callable[
+    [DataBindingDefinition, _InvoiceSelector, tuple[InvoiceObservation, ...]],
+    Decimal,
+]
+
+
+def _require_invoice_aggregation_op(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    expected: BindingAggregationOp,
+) -> None:
+    """Require the operation that implements one scalar invoice fact."""
+    if binding_aggregation_op(binding) != expected:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} fact {selector.fact!r} requires aggregation op {expected.value!r}",
+        )
+
+
+def _aggregate_operator_count(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    observations: tuple[InvoiceObservation, ...],
+) -> Decimal:
+    """Count the AEAT operator records represented by selected observations."""
+    _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.COUNT_DISTINCT)
+    if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
+        return Decimal(len({observation.party_tax_id for observation in observations}))
+    # AEAT defines this count as the number of Tipo 2 records (one per
+    # (operator, clave) pair for the operador grouping; one per (operator,
+    # clave, ejercicio, periodo) for the rectificacion grouping). Per
+    # Orden EHA/769/2010 Anexo positions 138-146 and 162-170: "Número de
+    # registros de tipo 2 con clave de operación, posición 133, igual a
+    # 'E', 'M', 'H', 'T', 'A', 'S', 'I', 'R', 'D' o 'C'."
+    keys = {_operator_count_key(observation, selector) for observation in observations}
+    return Decimal(len(keys))
+
+
+def _operator_count_key(
+    observation: InvoiceObservation,
+    selector: _InvoiceSelector,
+) -> tuple[object, ...]:
+    """Return the distinct-record key for an operator-count binding."""
+    if selector.rectification_scope == "only_rectifications":
+        return (
+            observation.party_tax_id,
+            observation.country_code,
+            observation.intracommunity_clave,
+            observation.rectified_year,
+            observation.rectified_period,
+        )
+    return (
+        observation.party_tax_id,
+        observation.country_code,
+        observation.intracommunity_clave,
+    )
+
+
+def _sum_base_amount(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    observations: tuple[InvoiceObservation, ...],
+) -> Decimal:
+    """Sum the taxable base of selected invoice observations."""
+    _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.SUM)
+    return sum((observation.base_amount for observation in observations), Decimal("0"))
+
+
+def _sum_invoice_total_amount(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    observations: tuple[InvoiceObservation, ...],
+) -> Decimal:
+    """Sum the IVA-inclusive total of selected invoice observations."""
+    _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.SUM)
+    return sum((_invoice_total_amount(observation) for observation in observations), Decimal("0"))
+
+
+def _sum_rectified_base_delta(
+    binding: DataBindingDefinition,
+    selector: _InvoiceSelector,
+    observations: tuple[InvoiceObservation, ...],
+) -> Decimal:
+    """Sum each rectification's change from its previously declared base."""
+    _require_invoice_aggregation_op(binding, selector, BindingAggregationOp.SUM)
+    total = Decimal("0")
+    for observation in observations:
+        if not observation.is_rectification:
+            raise RegistryValidationError(f"binding {binding.id!r} requires rectification observations only")
+        previous = observation.rectified_base_previous
+        if previous is None:
+            raise RegistryValidationError(
+                f"binding {binding.id!r} rectification observation declares no rectified base to compare",
+            )
+        total += observation.base_amount - previous
+    return total
+
+
+_INVOICE_AGGREGATORS: Mapping[str, _InvoiceAggregator] = {
+    "operator_count": _aggregate_operator_count,
+    "base_sum": _sum_base_amount,
+    "invoice_total_sum": _sum_invoice_total_amount,
+    "rectified_base_delta_sum": _sum_rectified_base_delta,
+}
 
 
 def _aggregate_invoice_binding(
@@ -852,74 +1027,13 @@ def _aggregate_invoice_binding(
     selector: _InvoiceSelector,
     observations: tuple[InvoiceObservation, ...],
 ) -> Decimal:
-    op = binding_aggregation_op(binding)
-    if selector.fact == "operator_count":
-        if op != BindingAggregationOp.COUNT_DISTINCT:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'operator_count' requires aggregation op 'count_distinct'",
-            )
-        if selector.record == _M347_DECLARANTE_SUMMARY_RECORD:
-            return Decimal(len({observation.party_tax_id for observation in observations}))
-        # AEAT defines this count as the number of Tipo 2 records (one per
-        # (operator, clave) pair for the operador grouping; one per (operator,
-        # clave, ejercicio, periodo) for the rectificacion grouping). Per
-        # Orden EHA/769/2010 Anexo positions 138-146 and 162-170: "Número de
-        # registros de tipo 2 con clave de operación, posición 133, igual a
-        # 'E', 'M', 'H', 'T', 'A', 'S', 'I', 'R', 'D' o 'C'."
-        if selector.rectification_scope == "only_rectifications":
-            return Decimal(
-                len(
-                    {
-                        (
-                            observation.party_tax_id,
-                            observation.country_code,
-                            observation.intracommunity_clave,
-                            observation.rectified_year,
-                            observation.rectified_period,
-                        )
-                        for observation in observations
-                    },
-                ),
-            )
-        return Decimal(
-            len(
-                {
-                    (
-                        observation.party_tax_id,
-                        observation.country_code,
-                        observation.intracommunity_clave,
-                    )
-                    for observation in observations
-                },
-            ),
-        )
-    if selector.fact == "base_sum":
-        if op != BindingAggregationOp.SUM:
-            raise RegistryValidationError(f"binding {binding.id!r} fact 'base_sum' requires aggregation op 'sum'")
-        return sum((observation.base_amount for observation in observations), Decimal("0"))
-    if selector.fact == "invoice_total_sum":
-        if op != BindingAggregationOp.SUM:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'invoice_total_sum' requires aggregation op 'sum'",
-            )
-        return sum((_invoice_total_amount(observation) for observation in observations), Decimal("0"))
-    if selector.fact == "rectified_base_delta_sum":
-        if op != BindingAggregationOp.SUM:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'rectified_base_delta_sum' requires aggregation op 'sum'",
-            )
-        total = Decimal("0")
-        for observation in observations:
-            if not observation.is_rectification:
-                raise RegistryValidationError(f"binding {binding.id!r} requires rectification observations only")
-            previous = observation.rectified_base_previous
-            if previous is None:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} rectification observation declares no rectified base to compare",
-                )
-            total += observation.base_amount - previous
-        return total
-    raise RegistryValidationError(f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}")
+    try:
+        aggregator = _INVOICE_AGGREGATORS[selector.fact]
+    except KeyError as exc:
+        raise RegistryValidationError(
+            f"binding {binding.id!r} declares unsupported invoice fact {selector.fact!r}"
+        ) from exc
+    return aggregator(binding, selector, observations)
 
 
 InvoiceSelector = _InvoiceSelector

@@ -30,6 +30,7 @@ from .account import (
 from .components.theme import BASE_CSS, install_cadrumo_themes, toggle_appearance, tokenised
 from .home import HomeBackRequested, HomeScreen, HomeTarget, HomeTargetSelected
 from .navigation import (
+    NavigationContractError,
     TuiDestinationCatalogueV1,
     TuiFocusIdentityV1,
     TuiNavigationTargetV1,
@@ -62,7 +63,11 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         grid-gutter: $cadrumo-space-0 $cadrumo-control-gap;
     }
     #root-account-actions Button { width: 1fr; min-width: 0; margin: 0; }
-    #root-account-refusal { height: auto; color: $warning; padding: $cadrumo-space-0 $cadrumo-gutter; }
+    #root-account-refusal, #root-navigation-refusal {
+        height: auto;
+        color: $warning;
+        padding: $cadrumo-space-0 $cadrumo-gutter;
+    }
     """
     )
 
@@ -144,6 +149,7 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
                     yield Button(tr("tui.root.account.language"), id="root-language")
                     yield Button(tr("tui.root.account.sign_out"), id="root-sign-out")
             yield Static("", id="root-account-refusal", markup=False)
+            yield Static("", id="root-navigation-refusal", markup=False)
             yield Static(tr("tui.root.no_areas"), id="root-no-areas", markup=False)
         yield Footer()
 
@@ -242,13 +248,21 @@ class CadrumoTuiApp(App[AccountRecomposeRequiredV1 | None]):
         """Expose one localized fail-closed message without exception details."""
         self.query_one("#root-account-refusal", Static).update(tr("tui.root.account.unavailable"))
 
+    def _refuse_navigation(self) -> None:
+        """Expose the localized refusal for an unopenable destination."""
+        self.query_one("#root-navigation-refusal", Static).update(tr("tui.root.navigation.unavailable"))
+
     def navigate_to(self, target: TuiNavigationTargetV1, /) -> None:
         """Mount only the current admitted destination with its semantic focus."""
         catalogue = self.destination_catalogue
         if target.destination == "workbench.home":
             self._show_home(self._home_semantic_focus)
             return
-        screen = catalogue.create_screen(target)
+        try:
+            screen = catalogue.create_screen(target)
+        except NavigationContractError:
+            self._refuse_navigation()
+            return
         self._active_target = target
         self._replace_destination(screen, return_to_home=True)
 

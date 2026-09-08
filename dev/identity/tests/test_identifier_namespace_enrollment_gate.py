@@ -101,9 +101,19 @@ import pytest
 from cadrumo.core import identity
 from cadrumo.core.directory_scan import scan_directory
 
-from ..identifier_noun_census import annotation_text, is_bare_str
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def annotation_text(node: ast.AnnAssign) -> str:
+    """Return a field annotation rendered as source text."""
+    return ast.unparse(node.annotation)
+
+
+def is_bare_str(annotation: str) -> bool:
+    """Report whether an annotation uses only the unaliased string primitive."""
+    stripped = annotation.replace(" ", "")
+    return stripped in {"str", "str|None", "None|str", "list[str]", "tuple[str,...]"}
+
 
 #: Repository root in the CURRENT worktree, used to render stable anchors.
 #: Anchored to this test file rather than the process cwd. Named from the

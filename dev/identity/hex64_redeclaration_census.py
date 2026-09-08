@@ -29,9 +29,8 @@ and the mismatch surfaces only when something later recomputes the hash.
 WHAT IT DOES NOT DO. It does not adjudicate promotability. A site is reported
 because it declares the shape locally, not because it should necessarily be
 retyped: a genuinely different concept may share the digits and diverge in its
-constraint. Those are named in :data:`ALLOWLIST` with a reason each, and the
-gate proves every entry still answers a live occurrence so a stale exemption
-cannot outlive the code it excused.
+constraint. The census reports every such declaration for direct adjudication;
+it carries no exemption mechanism.
 
 Usage::
 
@@ -86,53 +85,13 @@ class DeclarationKind(StrEnum):
 
 
 @dataclass(frozen=True, slots=True)
-class Exemption:
-    """One site excused from the gate, with the reason it is excused.
-
-    Keyed by ``(path, symbol)`` rather than by line, because a line number is
-    invalidated by every edit above it and an exemption that moves silently is
-    an exemption nobody re-reads.
-
-    Attributes:
-        path: Repository-relative module path.
-        symbol: Enclosing dotted symbol -- class, function, or the module-level
-            constant's own name.
-        reason: Why this site is NOT promotable. Required: an exemption whose
-            reason is not stated is indistinguishable from an oversight.
-    """
-
-    path: str
-    symbol: str
-    reason: str
-
-    def key(self) -> tuple[str, str]:
-        """The identity this exemption matches occurrences on."""
-        return (self.path, self.symbol)
-
-
-#: Sites that declare the shape locally and MUST NOT be retyped to the
-#: canonical primitive. Each survives the substitutability pre-filter check in
-#: the opposite direction: the canonical type is NARROWER than what the site
-#: legitimately accepts, so promoting it would refuse a value the site exists
-#: to handle.
-#: Empty, and that is a measured state rather than an oversight. Both entries
-#: this tuple carried named symbols that no longer exist at HEAD - a lookup
-#: alias and a prefixed-reference alias, each removed from the source it
-#: excused - so both had stopped excusing anything while still reading as a
-#: considered judgement. The gate that reports a stale exemption is what
-#: caught them; an entry belongs here only while its (path, symbol) answers a
-#: live occurrence.
-ALLOWLIST: Final[tuple[Exemption, ...]] = ()
-
-
-@dataclass(frozen=True, slots=True)
 class Declaration:
     """One hex-64 shape declaration made outside the canonical home.
 
     Attributes:
         path: Repository-relative module path at the pinned revision.
         line: Line the declaration appears on.
-        symbol: Enclosing dotted symbol used for exemption matching.
+        symbol: Enclosing dotted symbol that owns the declaration.
         field: Field or constant name, where the site names one.
         kind: Which class of declaration this is.
         excerpt: The declaration rendered back to source, for the report.
@@ -144,10 +103,6 @@ class Declaration:
     field: str
     kind: DeclarationKind
     excerpt: str
-
-    def key(self) -> tuple[str, str]:
-        """The identity an :class:`Exemption` matches on."""
-        return (self.path, self.symbol)
 
     def rendered(self) -> str:
         """A single deterministic line for a report or a failure message."""
@@ -236,10 +191,9 @@ class _Hex64Visitor(ast.NodeVisitor):
                     line=node.lineno,
                     # A pattern occurrence is found deep inside an expression and
                     # has no name of its own, so it borrows the binding it is
-                    # being assigned to. Without this it reported an EMPTY
-                    # symbol, and an exemption keyed by (path, symbol) could
-                    # never match one -- an allowlist entry that excuses nothing
-                    # while reading as a considered carve-out.
+                    # being assigned to. Without this it reported an empty
+                    # symbol, leaving the product finding without an actionable
+                    # owner.
                     symbol=self._symbol() or self._bound_name(),
                     field=self._bound_name(),
                     kind=DeclarationKind.REDECLARED_PATTERN,
@@ -347,33 +301,12 @@ def census(revision: str) -> tuple[Declaration, ...]:
     return census_sources(production_sources(revision))
 
 
-def unexempted(declarations: tuple[Declaration, ...]) -> tuple[Declaration, ...]:
-    """Declarations not answered by a named :data:`ALLOWLIST` entry."""
-    excused = {entry.key() for entry in ALLOWLIST}
-    return tuple(item for item in declarations if item.key() not in excused)
-
-
-def stale_exemptions(declarations: tuple[Declaration, ...]) -> tuple[Exemption, ...]:
-    """Allowlist entries that no longer answer any live occurrence.
-
-    A stale exemption is worse than a missing one: it reads as a considered
-    judgement about code that has since moved or been fixed, and it silently
-    widens to whatever later occupies its key.
-    """
-    live = {item.key() for item in declarations}
-    return tuple(entry for entry in ALLOWLIST if entry.key() not in live)
-
-
 def _summarise(declarations: tuple[Declaration, ...]) -> dict[str, int]:
     """Counts a report or a failure message needs, computed once."""
-    open_sites = unexempted(declarations)
     return {
         "declarations": len(declarations),
         "redeclared_pattern": sum(1 for i in declarations if i.kind is DeclarationKind.REDECLARED_PATTERN),
         "unpatterned_length": sum(1 for i in declarations if i.kind is DeclarationKind.UNPATTERNED_LENGTH),
-        "exempted": len(declarations) - len(open_sites),
-        "open": len(open_sites),
-        "stale_exemptions": len(stale_exemptions(declarations)),
     }
 
 

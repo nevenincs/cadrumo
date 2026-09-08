@@ -4,10 +4,12 @@
 
 from __future__ import annotations
 
+from ...application.ledger.operator_input_contracts import INVOICE_KIND_INPUT
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
 from ._app_ledger_command_spec_policies import (
     _POLICY_2,
 )
+from ._app_ledger_command_spec_support import _option_from_application_contract
 from .app_ledger_invoice_common_command_parameters import (
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
@@ -102,22 +104,7 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 transport_shape=TransportShape.FILE,
                 transport_role=TransportRole.PRIMARY,
             ),
-            OptionSpec(
-                name="kind",
-                declarations=("--kind",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.classification", "InvoiceKind")),
-                default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.invoice.kind_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
+            _option_from_application_contract(INVOICE_KIND_INPUT, "cli.app.ledger.invoice.kind_help"),
             OptionSpec(
                 name="country",
                 declarations=("--country",),

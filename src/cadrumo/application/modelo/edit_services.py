@@ -702,11 +702,11 @@ def project_modelo_edit_mutation_capability(
         revision_id=law_selected_revision_id,
         disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
         reconsideration_condition=(
-            "becomes AVAILABLE once a calculate operation is registered and this row can carry "
-            "its operation definition"
+            "becomes AVAILABLE once a calculate operation is registered and this row can carry its operation definition"
         ),
     )
     return ModeloMutationCapabilityProjectionV1(rows=(row,))
+
 
 __all__ = [
     "admit_modelo_edit",

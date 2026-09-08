@@ -48,10 +48,10 @@ __all__ = [
     "CORPUS_ROOT",
     "EXPECTED_KEY_BYTES",
     "EXPECTED_KEY_SHA256",
-    "CorpusDocument",
     "CorpusKey",
     "CorpusKeyError",
     "Denominators",
+    "IngestCorpusDocument",
     "ProvenanceClass",
     "TwinPair",
     "load_corpus_key",
@@ -111,7 +111,7 @@ class ProvenanceClass(StrEnum):
     """Operator-authored entries and standards-body sample records."""
 
 
-class CorpusDocument(BaseModel):
+class IngestCorpusDocument(BaseModel):
     """One corpus document as the harness needs to see it.
 
     A narrow projection of the key's document entry: enough to select, score and
@@ -213,12 +213,12 @@ class CorpusKey(BaseModel):
     sha256: str = Field(min_length=64, max_length=64)
     byte_length: int = Field(gt=0)
     stale_schema_version: str
-    documents: tuple[CorpusDocument, ...]
+    documents: tuple[IngestCorpusDocument, ...]
     twin_pairs: tuple[TwinPair, ...]
     category_scorable_ids: frozenset[str]
     stage1_reference_text_ids: frozenset[str]
 
-    def document(self, doc_id: str) -> CorpusDocument:
+    def document(self, doc_id: str) -> IngestCorpusDocument:
         """Return one document by id, refusing an unknown id rather than ``None``.
 
         A silent ``None`` here becomes a skipped row, and a skipped row shrinks a
@@ -299,9 +299,9 @@ def _provenance_class(entry: Mapping[str, Any]) -> ProvenanceClass:
     return derived
 
 
-def _project_document(entry: Mapping[str, Any]) -> CorpusDocument:
+def _project_document(entry: Mapping[str, Any]) -> IngestCorpusDocument:
     hints = entry["scoring_hints"]
-    return CorpusDocument(
+    return IngestCorpusDocument(
         doc_id=entry["doc_id"],
         path=entry["path"],
         provenance_class=_provenance_class(entry),
@@ -329,7 +329,7 @@ def _category_scorable_ids(entries: tuple[Mapping[str, Any], ...] | list[Mapping
     return frozenset(scorable)
 
 
-def _resolve_twin_pairs(documents: tuple[CorpusDocument, ...]) -> tuple[TwinPair, ...]:
+def _resolve_twin_pairs(documents: tuple[IngestCorpusDocument, ...]) -> tuple[TwinPair, ...]:
     """Resolve vision twins from the prose notes field.
 
     See :data:`TWIN_LINK_IS_PROSE`. The original id is verified to exist, so a

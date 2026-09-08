@@ -29,6 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
+
 def _record() -> UserProfileRecord:
     """A minimal record; the walk is schema-driven so facts are incidental."""
     return UserProfileRecord(

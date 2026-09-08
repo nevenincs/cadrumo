@@ -208,7 +208,8 @@ def _save_member_322_observation(
             observation,
             source_kind="app_filing",
             member_nif=member_nif,
-        stamped_revision_id=revision_id_for_observation(observation))
+            stamped_revision_id=revision_id_for_observation(observation),
+        )
     )
 
 

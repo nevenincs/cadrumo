@@ -627,9 +627,9 @@ def _iva_state(label: str) -> IvaCompensationPeriodState:
         taxpayer_nif="00000000T",
         filing_year=2026,
         period=period_value,
-        registry_snapshot_ref=bundled_authority().snapshot(
-            "303", filing_year=2026, period=period_value.registry_token
-        ).snapshot_ref,
+        registry_snapshot_ref=bundled_authority()
+        .snapshot("303", filing_year=2026, period=period_value.registry_token)
+        .snapshot_ref,
         expediente_id="202610013522456T",
         status="presentada",
         presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),
@@ -790,9 +790,9 @@ def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompens
         taxpayer_nif=_WALLET_SUBJECT_ID,
         target_year=2026,
         target_period=period,
-        target_registry_snapshot_ref=bundled_authority().snapshot(
-            "303", filing_year=2026, period=period.registry_token
-        ).snapshot_ref,
+        target_registry_snapshot_ref=bundled_authority()
+        .snapshot("303", filing_year=2026, period=period.registry_token)
+        .snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),

@@ -375,7 +375,10 @@ def _compute_year_111_totals(
                 _111_observation(filing_year=filing_year, period=period, result=result),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            stamped_revision_id=revision_id_for_observation(_111_observation(filing_year=filing_year, period=period, result=result)))
+                stamped_revision_id=revision_id_for_observation(
+                    _111_observation(filing_year=filing_year, period=period, result=result)
+                ),
+            )
         )
         for cid in totals:
             if cid in result.values:

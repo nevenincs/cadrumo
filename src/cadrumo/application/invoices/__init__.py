@@ -9,8 +9,8 @@ Where the contracts live:
   ``create_catalogue_invoice``, ``catalogue_lifecycle`` for the patch, update and
   remove paths, and ``bulk_import`` for the spreadsheet ingestion surface and its
   column contracts.
-- Catalogue reads -- ``catalogue_reads``, holding the row projections and the
-  repository-backed link verification.
+   - Catalogue consistency -- ``catalogue_reads``, holding the repository-backed
+     link verification.
 - Operator entry -- ``creation_wizard`` for the guided create path and its field
   errors.
 - Calculation-facing surface -- ``source_resolver``, defining

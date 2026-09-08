@@ -17,7 +17,7 @@ See Also:
         Builds the current review fingerprints, including prior observations.
     :func:`~application.filing.approval_stale_reasons`
         Compares the stored basis with the current prior-observation digest.
-    :func:`~application.filing.empty_prior_filing_observations_fingerprint`
+    :func:`~cadrumo.tests.filing.empty_prior_filing_observations_fingerprint`
         Supplies the explicit empty-source fingerprint used by tests and
         overrides.
     :func:`~application.filing.draft_review._prior_filing_observations_fingerprint`

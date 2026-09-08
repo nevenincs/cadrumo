@@ -50,6 +50,7 @@ _KNOWN_DIRECTORY_SUBPATHS: Final[frozenset[str]] = frozenset(
     storage_location(category).subpath for category in StorageCategory
 )
 
+
 def _anchored_definitions() -> list[StoragePathDefinition]:
     """Every filesystem-kind (``<root>``-anchored) definition, any anchor value.
 

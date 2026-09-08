@@ -25,6 +25,10 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
+from cadrumo.domain.calculations.registry.temporal import (
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
 
 from .. import filing_export_proof
 from ..diagnostic_classification import (
@@ -428,9 +432,19 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
         for revision in modelo.revisions.values():
             if revision.authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
+            filing_year, period = revision_selection_coordinates(
+                revision,
+                assessment_horizon=coverage_assessment_horizon(registry.catalogues),
+            )[0]
             coordinate = FilingExportProofCoordinate(
                 modelo=modelo.id,
                 revision=revision.id,
+                snapshot_ref=registry.snapshot(
+                    modelo.id,
+                    filing_year=filing_year,
+                    period=period,
+                    grade=RegistryAuthorityGrade.FILING,
+                ).snapshot_ref,
                 layout_ids=tuple(layout.id for layout in revision.export_layouts),
             )
             selected_coordinates.add((str(coordinate.modelo), str(coordinate.revision)))

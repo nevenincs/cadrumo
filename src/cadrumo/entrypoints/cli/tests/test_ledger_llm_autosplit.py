@@ -187,9 +187,7 @@ def test_the_auto_split_flag_rule_is_answered_before_the_shared_ones() -> None:
         if isinstance(statement, ast.If):
             raised_before_delegation.append(ast.dump(statement.test))
         if any(
-            isinstance(node, ast.Call)
-            and isinstance(node.func, ast.Name)
-            and node.func.id == "_llm_classify_prologue"
+            isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "_llm_classify_prologue"
             for node in ast.walk(statement)
         ):
             break

@@ -55,11 +55,13 @@ def _filed_observation() -> FiledDeclaracionObservation:
                 captured_at=datetime(2024, 4, 15, 10, 5, tzinfo=UTC),
             ),
         ),
-        registry_snapshot_ref=bundled_authority().snapshot(
+        registry_snapshot_ref=bundled_authority()
+        .snapshot(
             "303",
             filing_year=2024,
             period=_PERIOD.registry_token,
-        ).snapshot_ref,
+        )
+        .snapshot_ref,
     )
 
 

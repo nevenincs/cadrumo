@@ -155,6 +155,34 @@ def test_pinned_boe_orden_compiler_refuses_a_real_truncated_copy(
         )
 
 
+def test_pinned_boe_orden_compiler_translates_malformed_html_to_registry_load_error(
+    tmp_path: Path,
+    registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
+) -> None:
+    """A digest-pinned but structurally invalid source remains a typed registry refusal."""
+    _, catalogues = registry_tree
+    original_source = catalogues.sources["boe-orden-hac-1425-2025-iva-authority"]
+    source_bytes = b"<html><body>not an annual Orden</body></html>"
+    source = original_source.model_copy(
+        update={
+            "sha256": sha256(source_bytes).hexdigest(),
+            "bytes": len(source_bytes),
+        },
+    )
+    source_path = tmp_path / source.corpus_path
+    source_path.parent.mkdir(parents=True)
+    source_path.write_bytes(source_bytes)
+
+    with pytest.raises(
+        RegistryLoadError, match="must have exactly one agricultural and one IAE ingreso-a-cuenta table"
+    ):
+        extract_m303_annual_orden_source(
+            ejercicio=2026,
+            source=source,
+            source_root=tmp_path,
+        )
+
+
 def test_pinned_boe_orden_compiler_refuses_a_divergent_markdown_sidecar(
     tmp_path: Path,
     registry_tree: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],

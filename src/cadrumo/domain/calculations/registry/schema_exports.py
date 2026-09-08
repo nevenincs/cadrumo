@@ -21,6 +21,7 @@ from ....core.filing_projection_ref import (
     filing_projection_ref_casilla_id,
     hydrate_filing_projection_ref,
 )
+from ....core.identity import ContentDigest
 from ..export_field_kind import CasillaFieldKind, CasillaFieldKindValue
 from .errors import RegistryValidationError
 from .export_semantics import (
@@ -264,7 +265,7 @@ class FilingEnvelopeDefinition(RegistryModel):
 
     schema_version: Literal[1] = 1
     source_ref: SourceRefId
-    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_sha256: ContentDigest
     record_identity: str = Field(min_length=1)
     prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=1)
     prefix_extent: int = Field(gt=0)
@@ -321,7 +322,7 @@ class AuxiliaryEnvelopeHeaderDefinition(RegistryModel):
 
     schema_version: Literal[1] = AUXILIARY_ENVELOPE_HEADER_SCHEMA_VERSION
     source_ref: SourceRefId
-    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    source_sha256: ContentDigest
     record_identity: str = Field(min_length=1)
     prefix_fields: tuple[FilingEnvelopePrefixFieldDeclaration, ...] = Field(min_length=13, max_length=13)
     prefix_extent: int = Field(gt=0)

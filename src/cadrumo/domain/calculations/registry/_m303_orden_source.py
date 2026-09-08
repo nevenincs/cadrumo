@@ -113,9 +113,11 @@ def extract_m303_annual_orden_source(
         raise RegistryLoadError(
             f"annual Orden source {source.id!r} byte count mismatch: expected {source.bytes}, got {len(source_bytes)}",
         )
-    parsed_authority = extract_orden_anual_iva_authority(source_bytes, source_label=source.id)
-    activities = tuple(_registry_raw_activity(activity) for activity in parsed_authority.non_agricultural_activities)
     try:
+        parsed_authority = extract_orden_anual_iva_authority(source_bytes, source_label=source.id)
+        activities = tuple(
+            _registry_raw_activity(activity) for activity in parsed_authority.non_agricultural_activities
+        )
         validate_m303_annual_orden_table_shape(activities)
         _validate_annual_orden_sidecar(
             source=source,

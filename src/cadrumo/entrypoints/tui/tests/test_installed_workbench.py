@@ -1,4 +1,4 @@
-"""What ``aeat --tui`` actually composes, proven against the production seam.
+"""What ``aeat app tui`` actually composes, proven against the production seam.
 
 The sibling module- and console-execution suites prove a session STARTS. They
 cannot say what it contains, because a started session holding the terminal is

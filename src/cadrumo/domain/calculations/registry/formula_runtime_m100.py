@@ -67,6 +67,45 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
     mixed_use_days = _numeric_casilla_value(args.mixed_use_days_casilla_id, ctx)
     is_revised = _m100_revised_cadastral_value_flag(args.revised_flag_casilla_id, ctx)
 
+    _m100_validate_imputed_rent_non_negative_inputs(
+        args,
+        catastral_value=catastral_value,
+        disposal_days=disposal_days,
+        disposal_percentage=disposal_percentage,
+        mixed_use_days=mixed_use_days,
+    )
+    no_catastral_result = _m100_resolve_no_catastral_imputation(
+        args,
+        catastral_value=catastral_value,
+        disposal_days=disposal_days,
+        mixed_use=mixed_use,
+        disposal_percentage=disposal_percentage,
+        mixed_use_days=mixed_use_days,
+    )
+    if no_catastral_result is not None:
+        return no_catastral_result
+
+    effective_days, year_days, share = _m100_resolve_imputed_rent_period(
+        args,
+        ctx,
+        op=op,
+        disposal_days=disposal_days,
+        mixed_use=mixed_use,
+        disposal_percentage=disposal_percentage,
+        mixed_use_days=mixed_use_days,
+    )
+    rate = _m100_resolve_imputed_rent_rate(args, ctx, op=op, is_revised=is_revised)
+    return catastral_value * rate * (effective_days / year_days) * share
+
+
+def _m100_validate_imputed_rent_non_negative_inputs(
+    args: _M100ResolveImputedRentArgs,
+    *,
+    catastral_value: Decimal,
+    disposal_days: Decimal,
+    disposal_percentage: Decimal,
+    mixed_use_days: Decimal,
+) -> None:
     if catastral_value < ZERO:
         raise RegistryValidationError(
             "M100 Art.85 valor catastral must be non-negative",
@@ -84,20 +123,43 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
                 translated_message="errors.calc.m100_art85_input_negative",
                 context={"casilla_id": casilla_id, "value": str(value)},
             )
-    if catastral_value == ZERO:
-        if disposal_days > ZERO or mixed_use_days > ZERO or mixed_use or disposal_percentage > ZERO:
-            raise RegistryValidationError(
-                "M100 Art.85 no-catastral imputation requires substitute-base casillas that are not "
-                "present in the 0083-0089 registry row",
-                translated_message="errors.calc.m100_art85_no_catastral_base_missing",
-                context={
-                    "catastral_value_casilla_id": args.catastral_value_casilla_id,
-                    "disposal_days_casilla_id": args.disposal_days_casilla_id,
-                    "mixed_use_days_casilla_id": args.mixed_use_days_casilla_id,
-                },
-            )
-        return ZERO
 
+
+def _m100_resolve_no_catastral_imputation(
+    args: _M100ResolveImputedRentArgs,
+    *,
+    catastral_value: Decimal,
+    disposal_days: Decimal,
+    mixed_use: bool,
+    disposal_percentage: Decimal,
+    mixed_use_days: Decimal,
+) -> Decimal | None:
+    if catastral_value != ZERO:
+        return None
+    if disposal_days > ZERO or mixed_use_days > ZERO or mixed_use or disposal_percentage > ZERO:
+        raise RegistryValidationError(
+            "M100 Art.85 no-catastral imputation requires substitute-base casillas that are not "
+            "present in the 0083-0089 registry row",
+            translated_message="errors.calc.m100_art85_no_catastral_base_missing",
+            context={
+                "catastral_value_casilla_id": args.catastral_value_casilla_id,
+                "disposal_days_casilla_id": args.disposal_days_casilla_id,
+                "mixed_use_days_casilla_id": args.mixed_use_days_casilla_id,
+            },
+        )
+    return ZERO
+
+
+def _m100_resolve_imputed_rent_period(
+    args: _M100ResolveImputedRentArgs,
+    ctx: _EvalContext,
+    *,
+    op: str,
+    disposal_days: Decimal,
+    mixed_use: bool,
+    disposal_percentage: Decimal,
+    mixed_use_days: Decimal,
+) -> tuple[Decimal, Decimal, Decimal]:
     effective_days = mixed_use_days if mixed_use else disposal_days
     year_days = _resolve_scalar_parameter(args.year_days_parameter, ctx, op=op)
     _m100_validate_imputation_days(
@@ -106,6 +168,23 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
         max_days=year_days,
         max_days_parameter_id=args.year_days_parameter,
     )
+    _m100_validate_imputed_rent_mixed_use_inputs(
+        args,
+        mixed_use=mixed_use,
+        disposal_percentage=disposal_percentage,
+        mixed_use_days=mixed_use_days,
+    )
+    share = disposal_percentage / Decimal("100") if mixed_use else ONE
+    return effective_days, year_days, share
+
+
+def _m100_validate_imputed_rent_mixed_use_inputs(
+    args: _M100ResolveImputedRentArgs,
+    *,
+    mixed_use: bool,
+    disposal_percentage: Decimal,
+    mixed_use_days: Decimal,
+) -> None:
     if not mixed_use and (mixed_use_days != ZERO or disposal_percentage != ZERO):
         raise RegistryValidationError(
             "M100 Art.85 mixed-use days or percentage require casilla 0086 to be checked",
@@ -116,23 +195,27 @@ def evaluate_m100_resolve_renta_inmobiliaria_imputada(
                 "disposal_percentage_casilla_id": args.disposal_percentage_casilla_id,
             },
         )
-    share = ONE
-    if mixed_use:
-        if disposal_percentage <= ZERO or disposal_percentage > Decimal("100"):
-            raise RegistryValidationError(
-                "M100 Art.85 mixed-use percentage must be in (0, 100]",
-                translated_message="errors.calc.m100_art85_disposal_percentage_invalid",
-                context={
-                    "casilla_id": args.disposal_percentage_casilla_id,
-                    "value": str(disposal_percentage),
-                },
-            )
-        share = disposal_percentage / Decimal("100")
+    if mixed_use and (disposal_percentage <= ZERO or disposal_percentage > Decimal("100")):
+        raise RegistryValidationError(
+            "M100 Art.85 mixed-use percentage must be in (0, 100]",
+            translated_message="errors.calc.m100_art85_disposal_percentage_invalid",
+            context={
+                "casilla_id": args.disposal_percentage_casilla_id,
+                "value": str(disposal_percentage),
+            },
+        )
 
+
+def _m100_resolve_imputed_rent_rate(
+    args: _M100ResolveImputedRentArgs,
+    ctx: _EvalContext,
+    *,
+    op: str,
+    is_revised: bool,
+) -> Decimal:
     recent_rate = _resolve_scalar_parameter(args.recent_rate_parameter, ctx, op=op)
     old_rate = _resolve_scalar_parameter(args.old_rate_parameter, ctx, op=op)
-    rate = recent_rate if is_revised else old_rate
-    return catastral_value * rate * (effective_days / year_days) * share
+    return recent_rate if is_revised else old_rate
 
 
 def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100ResolveImputedRentArgs:
@@ -150,35 +233,31 @@ def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100Resol
         recent_rate_arg,
         old_rate_arg,
     ) = expression.args
-    if catastral_value_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
-    if revised_flag_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf")
-    if disposal_days_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a casilla leaf")
-    if mixed_use_flag_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a casilla leaf")
-    if disposal_percentage_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a casilla leaf")
-    if mixed_use_days_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[5] to be a casilla leaf")
-    if year_days_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[6] to be a parameter leaf")
-    if recent_rate_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[7] to be a parameter leaf")
-    if old_rate_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[8] to be a parameter leaf")
     return _M100ResolveImputedRentArgs(
-        catastral_value_casilla_id=catastral_value_arg.casilla_id,
-        revised_flag_casilla_id=revised_flag_arg.casilla_id,
-        disposal_days_casilla_id=disposal_days_arg.casilla_id,
-        mixed_use_flag_casilla_id=mixed_use_flag_arg.casilla_id,
-        disposal_percentage_casilla_id=disposal_percentage_arg.casilla_id,
-        mixed_use_days_casilla_id=mixed_use_days_arg.casilla_id,
-        recent_rate_parameter=recent_rate_arg.parameter,
-        old_rate_parameter=old_rate_arg.parameter,
-        year_days_parameter=year_days_arg.parameter,
+        catastral_value_casilla_id=_m100_require_casilla_arg(catastral_value_arg, op=op, position=0),
+        revised_flag_casilla_id=_m100_require_casilla_arg(revised_flag_arg, op=op, position=1),
+        disposal_days_casilla_id=_m100_require_casilla_arg(disposal_days_arg, op=op, position=2),
+        mixed_use_flag_casilla_id=_m100_require_casilla_arg(mixed_use_flag_arg, op=op, position=3),
+        disposal_percentage_casilla_id=_m100_require_casilla_arg(disposal_percentage_arg, op=op, position=4),
+        mixed_use_days_casilla_id=_m100_require_casilla_arg(mixed_use_days_arg, op=op, position=5),
+        year_days_parameter=_m100_require_parameter_arg(year_days_arg, op=op, position=6),
+        recent_rate_parameter=_m100_require_parameter_arg(recent_rate_arg, op=op, position=7),
+        old_rate_parameter=_m100_require_parameter_arg(old_rate_arg, op=op, position=8),
     )
+
+
+def _m100_require_casilla_arg(arg: FormulaExpression, *, op: str, position: int) -> CasillaId:
+    casilla_id = arg.casilla_id
+    if casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[{position}] to be a casilla leaf")
+    return casilla_id
+
+
+def _m100_require_parameter_arg(arg: FormulaExpression, *, op: str, position: int) -> ParameterId:
+    parameter_id = arg.parameter
+    if parameter_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[{position}] to be a parameter leaf")
+    return parameter_id
 
 
 def _m100_revised_cadastral_value_flag(casilla_id: CasillaId, ctx: _EvalContext) -> bool:

@@ -619,7 +619,6 @@ def _assert_casilla_metadata_fidelity(
     )
 
 
-did_page_required = _did_page_required
 did_page_suppressed = _did_page_suppressed
 
 
@@ -677,7 +676,6 @@ __all__ = [
     "assert_rate_boxes_account_for_total",
     "assert_xml_declaration_aux_declared",
     "boe_representable_casilla_ids",
-    "did_page_required",
     "did_page_suppressed",
     "rendered_casilla_ids",
     "required_applicable_casilla_ids",

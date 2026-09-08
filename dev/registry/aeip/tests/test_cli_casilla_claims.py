@@ -1,6 +1,5 @@
 """Tests for the AEIP inventory's casilla-claim analysis.
 
-`dev.quality.module_test_reach` listed `dev/registry/aeip/cli.py` as unreached.
 Its inventory verb reports id reuse across the anexo-A continuity family, and
 that report was answering two different questions with one number.
 

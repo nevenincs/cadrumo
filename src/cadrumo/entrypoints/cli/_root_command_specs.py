@@ -21,7 +21,6 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    TuiCapability,
     ValueContract,
 )
 
@@ -44,7 +43,6 @@ _ROOT_STATUS = ExecutionPolicySpec(
 ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="root",
-        tui_capability=TuiCapability.AVAILABLE,
         parent_key=None,
         token="aeat",  # noqa: S106 - CLI operator token, not a credential
         kind=CommandNodeKind.ROOT,
@@ -125,22 +123,6 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 help_key=TranslationKey("cli.root.format_help"),
             ),
             OptionSpec(
-                name="tui",
-                declarations=("--tui",),
-                value=FLAG_VALUE,
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.root.tui_help"),
-                is_flag=True,
-            ),
-            OptionSpec(
-                name="self_test",
-                declarations=("--self-test",),
-                value=FLAG_VALUE,
-                default=ParameterDefault.value(False),
-                help_key=TranslationKey("cli.root.self_test_help"),
-                is_flag=True,
-            ),
-            OptionSpec(
                 name="quiet",
                 declarations=("--quiet",),
                 value=FLAG_VALUE,
@@ -211,6 +193,19 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             target=DeferredTarget("cadrumo.entrypoints.cli._root_payloads", "AppRootResult"),
             identity="root.app",
         ),
+    ),
+    CommandSpec(
+        key="app_tui",
+        parent_key="app",
+        token="tui",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.root.app_help"),
+        short_help_key=None,
+        invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter=None),
+        parameters=(),
+        policy=_STATE_FREE,
+        handler=LazyBinding.available(DeferredTarget("cadrumo.entrypoints.cli.tui_launcher", "launch_tui")),
+        result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
     ),
     CommandSpec(
         key="config",

@@ -258,11 +258,15 @@ def test_calculation_revision_observations_survive_encrypted_storage(
             source_refs=("aeat-iva-2025",),
         )
         work_unit_id = "9" * 64
-        registry_snapshot_ref = bundled_authority().snapshot(
-            "303",
-            filing_year=2025,
-            period="1T",
-        ).snapshot_ref
+        registry_snapshot_ref = (
+            bundled_authority()
+            .snapshot(
+                "303",
+                filing_year=2025,
+                period="1T",
+            )
+            .snapshot_ref
+        )
         casilla_values: dict[CasillaId, Decimal] = {_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("12345.67")}
         revision = CalculationRevision(
             calculation_revision_id=derive_calculation_revision_id(

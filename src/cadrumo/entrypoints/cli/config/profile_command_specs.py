@@ -30,7 +30,6 @@ from ..command_spec import (
     RecoveryHandoffSpec,
     ResultSchemaSpec,
     SchemaState,
-    TuiCapability,
     ValueContract,
 )
 from ..command_spec import translation_key as _key
@@ -164,7 +163,6 @@ def _leaf(
     *,
     recovery_handoff: RecoveryHandoffSpec | None = None,
     profile_target_parameter: str | None = None,
-    tui_capability: TuiCapability = TuiCapability.NOT_IMPLEMENTED,
 ) -> CommandSpec:
     return CommandSpec(
         key,
@@ -181,7 +179,6 @@ def _leaf(
         machine_secret=machine_secret,
         recovery_handoff=recovery_handoff,
         profile_target_parameter=profile_target_parameter,
-        tui_capability=tui_capability,
     )
 
 
@@ -338,7 +335,6 @@ PROFILE_COMMAND_SPECS = (
             "ConfigProfileDescendienteListResult",
             "config.profile.descendiente",
         ),
-        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
     _leaf(
         "config_profile_add_row",
@@ -580,7 +576,6 @@ PROFILE_COMMAND_SPECS = (
             collides_with_parameters=("secrets_fd",),
             windows_handle_bootstrap="cadrumo.entrypoints.cli._windows_profile_secret_bootstrap",
         ),
-        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
     _leaf(
         "config_profile_delete",
@@ -655,7 +650,6 @@ PROFILE_COMMAND_SPECS = (
         "ConfigProfileEditResult",
         ENCRYPTED_WRITE,
         _WIZARD_BASE_PARAMETERS,
-        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
     _leaf(
         "config_profile_history",

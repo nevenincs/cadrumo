@@ -238,22 +238,25 @@ def _seed_prior_m200_closing_stock(*, obs_repo: CalculationObservationRepository
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                modelo=_M200,
-                filing_year=_PRIOR_YEAR,
-                period="0A",
-                observations=registry_grounded_observations(
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
                     modelo=_M200,
                     filing_year=_PRIOR_YEAR,
                     period="0A",
-                    casilla_values={
-                        _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
-                        _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
-                        _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
-                    },
-                    grade=RegistryAuthorityGrade.CALCULATION,
-                ),
-            )))
+                    observations=registry_grounded_observations(
+                        modelo=_M200,
+                        filing_year=_PRIOR_YEAR,
+                        period="0A",
+                        casilla_values={
+                            _PRIOR_BIN_PENDIENTE_FUTUROS: _PRIOR_BIN_STOCK,
+                            _PRIOR_SALDO_FINAL_NO_CUMPLIDO: _PRIOR_DOTACIONES_NO_CUMPLIDO,
+                            _PRIOR_SALDO_FINAL_CUMPLIDO: _PRIOR_DOTACIONES_CUMPLIDO,
+                        },
+                        grade=RegistryAuthorityGrade.CALCULATION,
+                    ),
+                )
+            ),
+        )
     )
 
 
@@ -285,20 +288,23 @@ def _seed_zero_m202_pagos(*, obs_repo: CalculationObservationRepository) -> None
                 ),
                 source_kind=APP_FILING_SOURCE_KIND,
                 captured_at=_T0,
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo=_M202,
-                    filing_year=_FILING_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
                         modelo=_M202,
                         filing_year=_FILING_YEAR,
                         period=period,
-                        casilla_values={
-                            _M202_PAGO_OUTPUT: Decimal("0"),
-                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
-                        },
-                    ),
-                )))
+                        observations=registry_grounded_observations(
+                            modelo=_M202,
+                            filing_year=_FILING_YEAR,
+                            period=period,
+                            casilla_values={
+                                _M202_PAGO_OUTPUT: Decimal("0"),
+                                _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                            },
+                        ),
+                    )
+                ),
+            )
         )
 
 

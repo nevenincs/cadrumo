@@ -323,6 +323,16 @@ def _coerce_text(value: Decimal | str | None, *, default: str = "") -> str:
     return str(value)
 
 
+def _coerce_optional_text(value: Decimal | str | None) -> str | None:
+    """Convert blank text cells to the typed model's absent value."""
+    return _coerce_text(value).strip() or None
+
+
+def _coerce_text_with_default(value: Decimal | str | None, *, default: str) -> str:
+    """Apply a model default to both missing and blank text cells."""
+    return _coerce_text(value, default=default) or default
+
+
 def _coerce_optional_int(value: Decimal | str | None) -> int | None:
     """Read an optional whole-number cell, treating blank as ABSENT, not zero.
 
@@ -392,6 +402,28 @@ def _row_optional_int(fields: Mapping[str, Decimal | str], key: str) -> int | No
     return int(text)
 
 
+def _row_fields_for_assembly(
+    row: Mapping[str, Decimal | str | None],
+    row_field: Mapping[str, str],
+) -> dict[str, Decimal | str]:
+    """Project known binding ids in one row onto their declared row fields.
+
+    The row-set carries binding ids while each observation model consumes the
+    registry-declared ``row_field`` names. Unknown bindings are deliberately
+    ignored: a pull may contain a cell from an older revision, but that cell
+    must not become an input to the active observation model. ``None`` is
+    represented as an empty string so model-specific coercers can preserve the
+    existing absent-value semantics.
+    """
+    fields: dict[str, Decimal | str] = {}
+    for binding_id, value in row.items():
+        field = row_field.get(binding_id)
+        if field is None:
+            continue
+        fields[field] = value if value is not None else ""
+    return fields
+
+
 class _OperationKindCodeKwarg(TypedDict, total=False):
     operation_kind_code: TipoOperacionVinculada
 
@@ -459,6 +491,122 @@ def _optional_transfer_pricing_method_code_kwarg(
             code_set=MetodoValoracion,
         ),
     }
+
+
+class _Withholding296IdentityKwargs(TypedDict, total=False):
+    perceptor_tax_id: str
+    perceptor_legal_name: str
+    representative_tax_id: str | None
+    persona_juridica_flag: str | None
+    codigo_bic: str | None
+    fecha_devengo: str | None
+    naturaleza: str
+    clave: str
+    subclave: str
+    perceptor_mediador_flag: str | None
+    codigo: str | None
+    codigo_emisor: str | None
+    pago: int | None
+    tipo_codigo: str | None
+    codigo_cuenta: str | None
+    pendiente_flag: str | None
+    accrual_year: int | None
+    fecha_inicio_prestamo: str | None
+    fecha_vencimiento_prestamo: str | None
+    direccion_perceptor: str | None
+    nif_pagador_anterior: str | None
+    procedimiento_especial_flag: str | None
+    clave_mercado: str | None
+    codigo_lei: str | None
+    nif_pais_residencia: str | None
+    fecha_nacimiento: str | None
+    ciudad_nacimiento: str | None
+    codigo_pais: str | None
+    pais_residencia_fiscal: str | None
+
+
+class _Withholding296AmountKwargs(TypedDict, total=False):
+    base_retenciones: Decimal
+    porcentaje_retencion: Decimal
+    retencion_practicada: Decimal
+    compensaciones: Decimal
+    garantias: Decimal
+    otros_importes: Decimal
+    ingreso_a_cuenta_repercutido: Decimal
+
+
+def _withholding296_identity_values(fields: Mapping[str, Decimal | str]) -> _Withholding296IdentityKwargs:
+    """Build the non-monetary identity and classification values for one M296 row.
+
+    These values are kept separate from the monetary facts because the former
+    identify the perceptor/renta row while the latter are the amounts that the
+    registry resolver folds. Keeping the conversion in one helper makes it
+    harder to accidentally omit one of the official row's identity slots when
+    the assembler is changed.
+    """
+    return {
+        "perceptor_tax_id": _coerce_text(fields.get("perceptor_tax_id")),
+        "perceptor_legal_name": _coerce_text(fields.get("perceptor_legal_name")),
+        "representative_tax_id": _coerce_optional_text(fields.get("representative_tax_id")),
+        "persona_juridica_flag": _coerce_optional_text(fields.get("persona_juridica_flag")),
+        "codigo_bic": _coerce_optional_text(fields.get("codigo_bic")),
+        "fecha_devengo": _coerce_optional_text(fields.get("fecha_devengo")),
+        "naturaleza": _coerce_text_with_default(fields.get("naturaleza"), default="D"),
+        "clave": _coerce_text_with_default(fields.get("clave"), default="01"),
+        "subclave": _coerce_text(fields.get("subclave")),
+        "perceptor_mediador_flag": _coerce_optional_text(fields.get("perceptor_mediador_flag")),
+        "codigo": _coerce_optional_text(fields.get("codigo")),
+        "codigo_emisor": _coerce_optional_text(fields.get("codigo_emisor")),
+        "pago": _row_optional_int(fields, "pago"),
+        "tipo_codigo": _coerce_optional_text(fields.get("tipo_codigo")),
+        "codigo_cuenta": _coerce_optional_text(fields.get("codigo_cuenta")),
+        "pendiente_flag": _coerce_optional_text(fields.get("pendiente_flag")),
+        "accrual_year": _row_optional_int(fields, "accrual_year"),
+        "fecha_inicio_prestamo": _coerce_optional_text(fields.get("fecha_inicio_prestamo")),
+        "fecha_vencimiento_prestamo": _coerce_optional_text(fields.get("fecha_vencimiento_prestamo")),
+        "direccion_perceptor": _coerce_optional_text(fields.get("direccion_perceptor")),
+        "nif_pagador_anterior": _coerce_optional_text(fields.get("nif_pagador_anterior")),
+        "procedimiento_especial_flag": _coerce_optional_text(fields.get("procedimiento_especial_flag")),
+        "clave_mercado": _coerce_optional_text(fields.get("clave_mercado")),
+        "codigo_lei": _coerce_optional_text(fields.get("codigo_lei")),
+        "nif_pais_residencia": _coerce_optional_text(fields.get("nif_pais_residencia")),
+        "fecha_nacimiento": _coerce_optional_text(fields.get("fecha_nacimiento")),
+        "ciudad_nacimiento": _coerce_optional_text(fields.get("ciudad_nacimiento")),
+        "codigo_pais": _coerce_optional_text(fields.get("codigo_pais")),
+        "pais_residencia_fiscal": _coerce_optional_text(fields.get("pais_residencia_fiscal")),
+    }
+
+
+def _withholding296_amount_values(fields: Mapping[str, Decimal | str]) -> _Withholding296AmountKwargs:
+    """Coerce every monetary fact declared by the M296 observation model."""
+    return _Withholding296AmountKwargs(
+        base_retenciones=coerce_decimal(fields.get("base_retenciones"), default=Decimal("0")),
+        porcentaje_retencion=coerce_decimal(fields.get("porcentaje_retencion"), default=Decimal("0")),
+        retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
+        compensaciones=coerce_decimal(fields.get("compensaciones"), default=Decimal("0")),
+        garantias=coerce_decimal(fields.get("garantias"), default=Decimal("0")),
+        otros_importes=coerce_decimal(fields.get("otros_importes"), default=Decimal("0")),
+        ingreso_a_cuenta_repercutido=coerce_decimal(fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")),
+    )
+
+
+def _assemble_withholding296_row(
+    row_index: int,
+    row: Mapping[str, Decimal | str | None],
+    row_field: Mapping[str, str],
+    default_date: date,
+) -> Withholding296Observation:
+    """Map and validate one M296 row, retaining its row index on refusal."""
+    fields = _row_fields_for_assembly(row, row_field)
+    try:
+        return Withholding296Observation(
+            source_id=f"detalle:per_perceptor_296:row-{row_index}",
+            **_withholding296_identity_values(fields),
+            transaction_date=default_date,
+            **_withholding296_amount_values(fields),
+        )
+    except (ValidationError, ValueError) as exc:
+        raise _row_assembly_refusal(row_index, exc) from exc
 
 
 def _coerce_flag(value: Decimal | str | None) -> bool:
@@ -890,64 +1038,10 @@ def assemble_withholding296_observations(
     by_row = _cells_by_row(cells)
     row_field = _row_field_lookup(revision)
     default_date = date(filing_year, 12, 31)
-
-    observations: list[Withholding296Observation] = []
-    for row_index in sorted(by_row):
-        row = by_row[row_index]
-        fields: dict[str, Decimal | str] = {}
-        for binding_id, value in row.items():
-            field = row_field.get(binding_id)
-            if field is None:
-                continue
-            fields[field] = value if value is not None else ""
-        try:
-            observations.append(
-                Withholding296Observation(
-                    source_id=f"detalle:per_perceptor_296:row-{row_index}",
-                    perceptor_tax_id=_coerce_text(fields.get("perceptor_tax_id")),
-                    perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
-                    representative_tax_id=_coerce_text(fields.get("representative_tax_id")).strip() or None,
-                    persona_juridica_flag=_coerce_text(fields.get("persona_juridica_flag")).strip() or None,
-                    codigo_bic=_coerce_text(fields.get("codigo_bic")).strip() or None,
-                    fecha_devengo=_coerce_text(fields.get("fecha_devengo")).strip() or None,
-                    naturaleza=_coerce_text(fields.get("naturaleza"), default="D") or "D",
-                    clave=_coerce_text(fields.get("clave"), default="01") or "01",
-                    subclave=_coerce_text(fields.get("subclave")),
-                    perceptor_mediador_flag=_coerce_text(fields.get("perceptor_mediador_flag")).strip() or None,
-                    codigo=_coerce_text(fields.get("codigo")).strip() or None,
-                    codigo_emisor=_coerce_text(fields.get("codigo_emisor")).strip() or None,
-                    pago=_row_optional_int(fields, "pago"),
-                    tipo_codigo=_coerce_text(fields.get("tipo_codigo")).strip() or None,
-                    codigo_cuenta=_coerce_text(fields.get("codigo_cuenta")).strip() or None,
-                    pendiente_flag=_coerce_text(fields.get("pendiente_flag")).strip() or None,
-                    accrual_year=_row_optional_int(fields, "accrual_year"),
-                    fecha_inicio_prestamo=_coerce_text(fields.get("fecha_inicio_prestamo")).strip() or None,
-                    fecha_vencimiento_prestamo=_coerce_text(fields.get("fecha_vencimiento_prestamo")).strip() or None,
-                    direccion_perceptor=_coerce_text(fields.get("direccion_perceptor")).strip() or None,
-                    nif_pagador_anterior=_coerce_text(fields.get("nif_pagador_anterior")).strip() or None,
-                    procedimiento_especial_flag=_coerce_text(fields.get("procedimiento_especial_flag")).strip() or None,
-                    clave_mercado=_coerce_text(fields.get("clave_mercado")).strip() or None,
-                    codigo_lei=_coerce_text(fields.get("codigo_lei")).strip() or None,
-                    nif_pais_residencia=_coerce_text(fields.get("nif_pais_residencia")).strip() or None,
-                    fecha_nacimiento=_coerce_text(fields.get("fecha_nacimiento")).strip() or None,
-                    ciudad_nacimiento=_coerce_text(fields.get("ciudad_nacimiento")).strip() or None,
-                    codigo_pais=_coerce_text(fields.get("codigo_pais")).strip() or None,
-                    pais_residencia_fiscal=_coerce_text(fields.get("pais_residencia_fiscal")).strip() or None,
-                    transaction_date=default_date,
-                    base_retenciones=coerce_decimal(fields.get("base_retenciones"), default=Decimal("0")),
-                    porcentaje_retencion=coerce_decimal(fields.get("porcentaje_retencion"), default=Decimal("0")),
-                    retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
-                    compensaciones=coerce_decimal(fields.get("compensaciones"), default=Decimal("0")),
-                    garantias=coerce_decimal(fields.get("garantias"), default=Decimal("0")),
-                    otros_importes=coerce_decimal(fields.get("otros_importes"), default=Decimal("0")),
-                    ingreso_a_cuenta_repercutido=coerce_decimal(
-                        fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")
-                    ),
-                ),
-            )
-        except (ValidationError, ValueError) as exc:
-            raise _row_assembly_refusal(row_index, exc) from exc
-    return tuple(observations)
+    return tuple(
+        _assemble_withholding296_row(row_index, row, row_field, default_date)
+        for row_index, row in sorted(by_row.items())
+    )
 
 
 def assemble_gasto193_observations(

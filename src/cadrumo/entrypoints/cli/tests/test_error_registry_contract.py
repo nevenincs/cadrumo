@@ -17,7 +17,7 @@ import pytest
 from ....adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
 from ....adapters.outbound.aeat.browser.session import BrowserError
 from ....application.operator_actions.catalogue import lookup_action
-from ....application.review.errors import ReviewKindReservedError
+from ....application.review.errors import FilterParseError
 from ....core.access_gate.errors import LiveSubmitForbiddenError
 from ....core.config import override_settings
 from ....core.errors.error_codes import ERROR_REGISTRY, ErrorCategory, ErrorEnvelope, render_error_text
@@ -40,7 +40,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
     [
         (DecimalFormatError, ErrorCategory.ERROR),
         (LiveSubmitForbiddenError, ErrorCategory.LOCKED),
-        (lambda: ReviewKindReservedError("queue", "tracked separately"), ErrorCategory.REFUSED),
+        (lambda: FilterParseError("queue=", reason="empty-value"), ErrorCategory.REFUSED),
         (AeatSessionExpiredError, ErrorCategory.AUTH),
         (PortalIntegrityError, ErrorCategory.INTEGRITY),
         (BrowserError, ErrorCategory.FAIL),

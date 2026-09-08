@@ -25,8 +25,7 @@ _PROD_EXCLUDE = (
     "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,src/cadrumo/tests/*,src/cadrumo/_data/*"
 )
 _TEST_EXCLUDE = (
-    "src/cadrumo/application/*,src/cadrumo/domain/*,src/cadrumo/adapters/*,"
-    "src/cadrumo/core/*,src/cadrumo/_data/*"
+    "src/cadrumo/application/*,src/cadrumo/domain/*,src/cadrumo/adapters/*,src/cadrumo/core/*,src/cadrumo/_data/*"
 )
 _CC_LINE = re.compile(r"^\s+\w \d+:\d+ (?P<name>\S+) - (?P<grade>[A-F]) \((?P<score>\d+)\)")
 _MI_LINE = re.compile(r"^(?P<path>\S+) - (?P<grade>[A-F]) \((?P<score>[\d.]+)\)")
@@ -43,6 +42,7 @@ else:
 @dataclass(frozen=True)
 class CcHit:
     """One function reported by Radon's cyclomatic-complexity threshold."""
+
     path: str
     name: str
     grade: str
@@ -56,6 +56,7 @@ class CcHit:
 @dataclass(frozen=True)
 class MiHit:
     """One file reported by Radon's maintainability-index threshold."""
+
     path: str
     grade: str
     score: float
@@ -68,6 +69,7 @@ class MiHit:
 @dataclass(frozen=True)
 class CogHit:
     """One function reported by Complexipy's cognitive threshold."""
+
     path: str
     name: str
     score: int
@@ -80,6 +82,7 @@ class CogHit:
 @dataclass(frozen=True)
 class ComplexityScan:
     """The three live finding populations from one scan."""
+
     cyclomatic: tuple[CcHit, ...]
     maintainability: tuple[MiHit, ...]
     cognitive: tuple[CogHit, ...]

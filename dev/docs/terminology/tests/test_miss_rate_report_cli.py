@@ -1,7 +1,6 @@
 """Tests for the committed miss-rate report writer.
 
-`dev.quality.module_test_reach` listed `dev/docs/terminology/miss_rate.py` as
-unreached and writing to the tree. Its sibling `_miss_rate.py` - the evaluator -
+Its sibling `_miss_rate.py` - the evaluator -
 is well covered by `test_miss_rate.py`; the writer that turns an evaluation into
 the committed artifact had nothing.
 

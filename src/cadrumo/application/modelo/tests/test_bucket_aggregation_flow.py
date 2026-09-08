@@ -239,9 +239,7 @@ def _wallet_decision(*, period: str, selected_amount: Decimal) -> IvaCompensatio
         taxpayer_nif="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, period),
-        target_registry_snapshot_ref=bundled_authority()
-        .snapshot("303", filing_year=2026, period=period)
-        .snapshot_ref,
+        target_registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=2026, period=period).snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=selected_amount,

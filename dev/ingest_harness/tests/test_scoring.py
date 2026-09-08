@@ -17,7 +17,7 @@ from typing import Any
 
 import pytest
 
-from .._key import CorpusDocument, CorpusKey
+from .._key import CorpusKey, IngestCorpusDocument
 from .._result import HarnessRefusalError
 from .._scoring import FieldVerdict, score_emission
 
@@ -30,12 +30,12 @@ _ANCHOR_DOC_ID = "OP-PUR-COM-2026-0005_layout-minimal"
 
 
 @pytest.fixture
-def anchor(key: CorpusKey) -> CorpusDocument:
+def anchor(key: CorpusKey) -> IngestCorpusDocument:
     """The S2 anchor document."""
     return key.document(_ANCHOR_DOC_ID)
 
 
-def _perfect_emission(document: CorpusDocument) -> dict[str, Any]:
+def _perfect_emission(document: IngestCorpusDocument) -> dict[str, Any]:
     """The emission a flawless model would produce: every truth, no trap answered.
 
     Derived from the document's own truth rather than typed out, so it stays
@@ -49,7 +49,7 @@ def _perfect_emission(document: CorpusDocument) -> dict[str, Any]:
 # ----------------------------------------------------------------------------
 
 
-def test_the_anchor_document_still_carries_both_slot_kinds(anchor: CorpusDocument) -> None:
+def test_the_anchor_document_still_carries_both_slot_kinds(anchor: IngestCorpusDocument) -> None:
     """A rename or a truth edit must fail here rather than make the proofs vacuous.
 
     Every proof below asserts a non-zero count. If the anchor lost its traps, the
@@ -74,7 +74,7 @@ def test_both_com_2026_0005_entries_can_surface_a_finding(key: CorpusKey) -> Non
 # ----------------------------------------------------------------------------
 
 
-def test_a_correct_value_produces_matched(anchor: CorpusDocument) -> None:
+def test_a_correct_value_produces_matched(anchor: IngestCorpusDocument) -> None:
     """PROOF 1: matched is reachable, and reaches the document's full denominator."""
     scoring = score_emission(document=anchor, emitted=_perfect_emission(anchor))
 
@@ -85,7 +85,7 @@ def test_a_correct_value_produces_matched(anchor: CorpusDocument) -> None:
     assert scoring.correctly_abstained == 10
 
 
-def test_a_wrong_value_produces_wrong(anchor: CorpusDocument) -> None:
+def test_a_wrong_value_produces_wrong(anchor: IngestCorpusDocument) -> None:
     """PROOF 2: wrong is reachable, and does not leak into matched."""
     emission = _perfect_emission(anchor)
     emission["invoice_number"] = "NOT-THE-PRINTED-NUMBER"
@@ -99,7 +99,7 @@ def test_a_wrong_value_produces_wrong(anchor: CorpusDocument) -> None:
     assert verdicts["invoice_number"] is FieldVerdict.WRONG
 
 
-def test_a_value_on_a_null_truth_slot_produces_fabricated(anchor: CorpusDocument) -> None:
+def test_a_value_on_a_null_truth_slot_produces_fabricated(anchor: IngestCorpusDocument) -> None:
     """PROOF 3: fabricated is reachable, and is counted apart from wrong."""
     trap = anchor.fabrication_trap_fields[0]
     emission = _perfect_emission(anchor)
@@ -114,7 +114,7 @@ def test_a_value_on_a_null_truth_slot_produces_fabricated(anchor: CorpusDocument
     assert scoring.matched == 19, "fabrication must never reduce the scorable numerator"
 
 
-def test_an_unanswered_scorable_slot_produces_missed(anchor: CorpusDocument) -> None:
+def test_an_unanswered_scorable_slot_produces_missed(anchor: IngestCorpusDocument) -> None:
     """The fourth verdict: truth existed and the model did not find it."""
     emission = _perfect_emission(anchor)
     del emission["base_total"]
@@ -125,7 +125,7 @@ def test_an_unanswered_scorable_slot_produces_missed(anchor: CorpusDocument) -> 
     assert scoring.matched == 18
 
 
-def test_all_three_counters_are_non_zero_in_one_emission(anchor: CorpusDocument) -> None:
+def test_all_three_counters_are_non_zero_in_one_emission(anchor: IngestCorpusDocument) -> None:
     """The counters are independent, not one number rendered three ways.
 
     Each proof above moves one counter alone; a scorer that simply mirrored its
@@ -150,7 +150,7 @@ def test_all_three_counters_are_non_zero_in_one_emission(anchor: CorpusDocument)
 
 
 @pytest.mark.parametrize("sentinel", ["", "  ", "null", "N/A", "none", "-", "Unknown"])
-def test_an_abstention_spelling_on_a_trap_is_not_a_fabrication(anchor: CorpusDocument, sentinel: str) -> None:
+def test_an_abstention_spelling_on_a_trap_is_not_a_fabrication(anchor: IngestCorpusDocument, sentinel: str) -> None:
     """A model that says "not found" must not be scored as one that invented."""
     emission = _perfect_emission(anchor)
     emission[anchor.fabrication_trap_fields[0]] = sentinel
@@ -161,7 +161,7 @@ def test_an_abstention_spelling_on_a_trap_is_not_a_fabrication(anchor: CorpusDoc
     assert scoring.correctly_abstained == 10
 
 
-def test_an_abstention_spelling_on_a_scorable_slot_is_a_miss_not_a_wrong_answer(anchor: CorpusDocument) -> None:
+def test_an_abstention_spelling_on_a_scorable_slot_is_a_miss_not_a_wrong_answer(anchor: IngestCorpusDocument) -> None:
     """The same sentinel means the same thing on the other kind of slot."""
     emission = _perfect_emission(anchor)
     emission["base_total"] = "N/A"
@@ -177,7 +177,7 @@ def test_an_abstention_spelling_on_a_scorable_slot_is_a_miss_not_a_wrong_answer(
 # ----------------------------------------------------------------------------
 
 
-def test_an_amount_matches_within_the_documents_own_tolerance(anchor: CorpusDocument) -> None:
+def test_an_amount_matches_within_the_documents_own_tolerance(anchor: IngestCorpusDocument) -> None:
     """Tolerance comes from the key, and is applied in exact decimal."""
     assert anchor.tolerance_cents == 1
     emission = _perfect_emission(anchor)
@@ -186,7 +186,7 @@ def test_an_amount_matches_within_the_documents_own_tolerance(anchor: CorpusDocu
     assert score_emission(document=anchor, emitted=emission).matched == 19
 
 
-def test_an_amount_outside_the_tolerance_is_wrong(anchor: CorpusDocument) -> None:
+def test_an_amount_outside_the_tolerance_is_wrong(anchor: IngestCorpusDocument) -> None:
     """The tolerance is a cent, not a licence."""
     emission = _perfect_emission(anchor)
     emission["base_total"] = "766.32"
@@ -195,7 +195,7 @@ def test_an_amount_outside_the_tolerance_is_wrong(anchor: CorpusDocument) -> Non
     assert scoring.wrong == 1
 
 
-def test_a_comma_decimal_is_scored_wrong_rather_than_coerced(anchor: CorpusDocument) -> None:
+def test_a_comma_decimal_is_scored_wrong_rather_than_coerced(anchor: IngestCorpusDocument) -> None:
     """The documented strictness, pinned so it cannot soften unreviewed.
 
     This understates a model that reads correctly and formats in the Spanish
@@ -208,7 +208,7 @@ def test_a_comma_decimal_is_scored_wrong_rather_than_coerced(anchor: CorpusDocum
     assert score_emission(document=anchor, emitted=emission).wrong == 1
 
 
-def test_a_composite_field_is_one_slot_compared_structurally(anchor: CorpusDocument) -> None:
+def test_a_composite_field_is_one_slot_compared_structurally(anchor: IngestCorpusDocument) -> None:
     """A nested leaf changing makes the whole declared field wrong, not a fraction."""
     emission = _perfect_emission(anchor)
     issuer = dict(emission["issuer"])
@@ -221,7 +221,7 @@ def test_a_composite_field_is_one_slot_compared_structurally(anchor: CorpusDocum
     assert scoring.matched == 18
 
 
-def test_a_boolean_truth_does_not_match_the_integer_one(anchor: CorpusDocument) -> None:
+def test_a_boolean_truth_does_not_match_the_integer_one(anchor: IngestCorpusDocument) -> None:
     """``True == 1`` in Python; it must not be true in a verdict."""
     assert anchor.ground_truth["line_count_exact"] is True
     emission = _perfect_emission(anchor)
@@ -236,7 +236,7 @@ def test_a_boolean_truth_does_not_match_the_integer_one(anchor: CorpusDocument) 
 
 
 def test_an_undeclared_emitted_field_is_reported_beside_the_counts_not_inside_them(
-    anchor: CorpusDocument,
+    anchor: IngestCorpusDocument,
 ) -> None:
     """The key asserts nothing here, so neither may the scorer."""
     emission = _perfect_emission(anchor)
@@ -263,7 +263,7 @@ def test_scoring_a_document_with_no_authored_truth_is_refused(key: CorpusKey) ->
         score_emission(document=truthless, emitted={"grand_total": "10.00"})
 
 
-def test_the_projection_carries_fabrication_into_the_reportable_outcome(anchor: CorpusDocument) -> None:
+def test_the_projection_carries_fabrication_into_the_reportable_outcome(anchor: IngestCorpusDocument) -> None:
     """``as_scored`` must not drop the count the whole measurement is about."""
     emission = _perfect_emission(anchor)
     emission[anchor.fabrication_trap_fields[0]] = "99.00"

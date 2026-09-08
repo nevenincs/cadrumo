@@ -15,11 +15,13 @@ project in a ready-made container.
 Install the project and its tools in one step:
 
 ```bash
-just bootstrap
+just init
 ```
 
-This installs the Python environment, syncs every dependency group, and runs
-the readiness check at the end.
+This creates the pinned Python environment, installs the project and all
+development dependencies, installs the repository tooling, provisions
+`env/.env`, and runs the readiness check at the end. The command is safe to
+run again; `just bootstrap` remains an alias for existing workflows.
 
 ### Option B: open in a devcontainer
 

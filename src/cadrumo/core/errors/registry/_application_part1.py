@@ -418,16 +418,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.review.errors.ReviewKindReservedError",
-        ErrorCode(
-            code="REFUSED_REVIEW_KIND_RESERVED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_review_kind_reserved",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.review.errors.ReviewSourceLoadError",
         ErrorCode(
             code="FAIL_REVIEW_SOURCE_LOAD",

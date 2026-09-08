@@ -1,7 +1,6 @@
 """Tests for the quiet command wrapper.
 
-`dev.quality.module_test_reach` listed `dev/quality/quiet.py` as unreached. It is
-the primitive every gate in the harness runs through: it swallows a passing
+It is the primitive every gate in the harness runs through: it swallows a passing
 tool's chatter and replays a failing tool's output verbatim, so what it does
 with a failure IS the failure report CI keeps.
 

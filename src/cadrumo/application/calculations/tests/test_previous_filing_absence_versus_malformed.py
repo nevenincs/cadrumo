@@ -95,7 +95,11 @@ def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(t
             casilla_values={validated_casilla_id(_SOURCE_CASILLAS[0], surface="test fixture"): Decimal("1")},
         )
         repository.save(
-            repository.prepare_observation_envelope(incomplete_observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(incomplete_observation)),
+            repository.prepare_observation_envelope(
+                incomplete_observation,
+                source_kind="app_filing",
+                stamped_revision_id=revision_id_for_observation(incomplete_observation),
+            ),
         )
 
         report = resolve_bindings_from_local_store(snapshot, repository=repository)
@@ -114,7 +118,13 @@ def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses
             period="0A",
             casilla_values={validated_casilla_id("0670", surface="test fixture"): Decimal("1")},
         )
-        repository.save(repository.prepare_observation_envelope(unrelated_observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(unrelated_observation)))
+        repository.save(
+            repository.prepare_observation_envelope(
+                unrelated_observation,
+                source_kind="app_filing",
+                stamped_revision_id=revision_id_for_observation(unrelated_observation),
+            )
+        )
 
         with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
             resolve_bindings_from_local_store(snapshot, repository=repository)

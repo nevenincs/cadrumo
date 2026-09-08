@@ -4,9 +4,8 @@ See Also:
     :func:`~application.filing.draft_review._prior_filing_observations_fingerprint`
         Order-independent digest helper under test for bucket-local prior filed
         observations.
-    :func:`~application.filing.empty_prior_filing_observations_fingerprint`
-        Public empty-surface sentinel compared against the prior-observation
-        digest helper.
+    :func:`~cadrumo.tests.filing.empty_prior_filing_observations_fingerprint`
+        Test-support empty digest compared against the prior-observation helper.
     :class:`~domain.calculations.registry.RegistryModeloObservation`
         Typed observation envelope projected into the prior-filing approval
         basis.
@@ -25,8 +24,9 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistrySnapshotError
+from ....tests.filing import empty_prior_filing_observations_fingerprint
 from ...calculations.observations_repository import ObservationEnvelopePayload
-from ..draft_review import _prior_filing_observations_fingerprint, empty_prior_filing_observations_fingerprint
+from ..draft_review import _prior_filing_observations_fingerprint
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

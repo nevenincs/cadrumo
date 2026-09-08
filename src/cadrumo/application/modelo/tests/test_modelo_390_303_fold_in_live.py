@@ -182,17 +182,20 @@ def _seed_m303_quarters(*, obs_repo: CalculationObservationRepository) -> None:
                     provenance_kind="app_filing",
                     provenance_locator=f"test-local-filing:{_YEAR}:{period}",
                 ),
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="303",
-                    filing_year=_YEAR,
-                    period=period,
-                    observations=registry_grounded_observations(
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
                         modelo="303",
                         filing_year=_YEAR,
                         period=period,
-                        casilla_values=casillas,
-                    ),
-                )))
+                        observations=registry_grounded_observations(
+                            modelo="303",
+                            filing_year=_YEAR,
+                            period=period,
+                            casilla_values=casillas,
+                        ),
+                    )
+                ),
+            )
         )
 
 

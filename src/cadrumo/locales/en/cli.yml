@@ -1539,8 +1539,7 @@ cli:
           and --sal-capital-social.
         sal_reserva_not_decimal: '--sal-* values must be decimal amounts; received:
           {value}. Use a dot decimal separator with no thousands grouping, e.g. 1234.56.'
-        select_help: List registered work units and, under --tui, pick one to open
-          its review.
+        select_help: List registered work units.
         selector_ambiguous: 'More than one active work unit matches this modelo, year,
           and period.
 
@@ -2201,8 +2200,6 @@ cli:
       quiet_help: Run non-interactively using only the supplied flag values; required
         flags left unset cause an error. Sufficient on its own; combine with --accept-defaults
         to fill the rest from descriptor defaults.
-      tui_scripted_conflict: --tui cannot be combined with --quiet, --accept-defaults,
-        or profile field options.
     status:
       empty_profile: No profile configured. Run `aeat config profile create NAME`
         to get started.
@@ -3088,7 +3085,6 @@ cli:
           health report.
         section_command_families: Command families
         section_diagnostics: Diagnostics
-        section_frontend_options: Frontend options
         section_profile_authentication_options: Profile authentication options
         section_recovery: Resume or recover
         section_start_resume: Start or resume
@@ -3450,9 +3446,6 @@ cli:
     language_help: Language for output and help text (en, es, ca, hu).
     profile_help: Name of the active profile.
     quiet_help: Show errors only.
-    self_test_help: Start the full-screen interface without a terminal and exit, to
-      prove it runs.
-    tui_help: Request the full-screen interface for the selected command.
     verbose_help: Enable detailed output.
     version_help: Show the version number and exit.
   topic:

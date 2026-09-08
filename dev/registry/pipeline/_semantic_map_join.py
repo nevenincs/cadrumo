@@ -8,11 +8,8 @@ generation boundary; it neither produces nor observes a fragment tree.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
@@ -21,10 +18,6 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
 
-from ..analysis.m200_2024_reviewed_promotions import (
-    M200ReviewedPromotionSnapshot,
-    _receipt_candidate_ids,
-)
 from ._record_design_ir import (
     AnchorKey,
     RecordDesignIntermediate,
@@ -115,7 +108,6 @@ class JoinedRecordDesign(_StrictModel):
     source: RecordDesignIntermediateSource
     authored_semantic_map: SemanticMap | None = None
     compiled_semantic_map: SemanticMap | None = None
-    reviewed_promotion_snapshot: M200ReviewedPromotionSnapshot | None = None
     revision_id: RevisionId | None = None
     records: tuple[JoinedRecordDesignRecord, ...] = Field(min_length=1)
     fields: tuple[JoinedRecordDesignField, ...] = Field(min_length=1)
@@ -133,18 +125,10 @@ class JoinedRecordDesign(_StrictModel):
                 self.compiled_semantic_map
             ):
                 raise ValueError("compiled semantic map may change only casilla tokens")
-            admissions = _issued_qualified_identity_admissions(
-                modelo=self.modelo,
-                revision_id=self.revision_id,
-                reviewed_promotion_snapshot=self.reviewed_promotion_snapshot,
-            )
             if any(
                 not _entry_is_exact_or_compiled_token(
                     authored,
                     compiled,
-                    modelo=self.modelo,
-                    revision_id=self.revision_id,
-                    qualified_identity_admissions=admissions,
                 )
                 for authored, compiled in zip(
                     self.authored_semantic_map.entries,
@@ -152,9 +136,7 @@ class JoinedRecordDesign(_StrictModel):
                     strict=True,
                 )
             ):
-                raise ValueError(
-                    "compiled semantic-map casilla ids must be exact, solely left-zero-padded, or receipt-admitted"
-                )
+                raise ValueError("compiled semantic-map casilla ids must be exact or solely left-zero-padded")
         record_fields = tuple(field for record in self.records for field in record.fields)
         if self.fields != record_fields:
             raise ValueError("joined record-design fields must exactly flatten its records")
@@ -190,10 +172,6 @@ class JoinedRecordDesign(_StrictModel):
 def _entry_is_exact_or_compiled_token(
     authored: SemanticMapEntry,
     compiled: SemanticMapEntry,
-    *,
-    modelo: ModeloId,
-    revision_id: RevisionId | None,
-    qualified_identity_admissions: Mapping[str, CasillaId],
 ) -> bool:
     """Prove validation changed an authored token only through its admitted form."""
     if authored == compiled:
@@ -204,64 +182,13 @@ def _entry_is_exact_or_compiled_token(
         return False
     token = authored.casilla_id
     resolved = compiled.casilla_id
-    if (
+    return (
         token.isdecimal()
         and resolved.isdecimal()
         and len(resolved) > len(token)
         and resolved.endswith(token)
         and set(resolved[: -len(token)]) == {"0"}
-    ):
-        return True
-    if token.isdecimal() and ":" in resolved:
-        _segment, tail = resolved.rsplit(":", 1)
-        return (
-            tail.isdecimal()
-            and tail.lstrip("0") == token.lstrip("0")
-            and bool(tail.lstrip("0"))
-            and _reviewed_qualified_token_admits(
-                modelo=modelo,
-                revision_id=revision_id,
-                export_field_id=str(authored.export_field_id),
-                casilla_id=resolved,
-                qualified_identity_admissions=qualified_identity_admissions,
-            )
-        )
-    return False
-
-
-def _reviewed_qualified_token_admits(
-    *,
-    modelo: ModeloId,
-    revision_id: RevisionId | None,
-    export_field_id: str,
-    casilla_id: CasillaId,
-    qualified_identity_admissions: Mapping[str, CasillaId],
-) -> bool:
-    """Use the single receipt proof created at semantic-map validation."""
-    if str(modelo) != "200" or str(revision_id) != "2024":
-        return False
-    return qualified_identity_admissions.get(export_field_id) == casilla_id
-
-
-def _issued_qualified_identity_admissions(
-    *,
-    modelo: ModeloId,
-    revision_id: RevisionId | None,
-    reviewed_promotion_snapshot: M200ReviewedPromotionSnapshot | None,
-) -> dict[str, CasillaId]:
-    """Derive join admissions from an issuer-bound one-invocation receipt only."""
-    if str(modelo) != "200" or str(revision_id) != "2024":
-        if reviewed_promotion_snapshot is not None:
-            raise ValueError("only M200/2024 may carry a reviewed promotion snapshot")
-        return {}
-    if reviewed_promotion_snapshot is None:
-        return {}
-    _receipt_candidate_ids(reviewed_promotion_snapshot)
-    return {
-        row.export_field_id: row.casilla_id
-        for row in reviewed_promotion_snapshot.unique_authority.adjudications
-        if ":" in row.casilla_id
-    }
+    )
 
 
 def join_record_design_semantics(
@@ -284,7 +211,6 @@ def join_record_design_semantics(
         authored_semantic_map=semantic_map,
         revision_id=inspection.revision_id,
         projection_endpoints=inspection.projection_endpoints,
-        reviewed_promotion_snapshot=validated.reviewed_promotion_snapshot,
     )
 
 
@@ -293,7 +219,6 @@ def _join_record_design_semantics(
     intermediate: RecordDesignIntermediate,
     *,
     authored_semantic_map: SemanticMap | None = None,
-    reviewed_promotion_snapshot: M200ReviewedPromotionSnapshot | None = None,
     revision_id: RevisionId,
     projection_endpoints: tuple[ProjectionEndpointDeclaration, ...],
 ) -> JoinedRecordDesign:
@@ -318,7 +243,6 @@ def _join_record_design_semantics(
         source=intermediate.source,
         authored_semantic_map=authored_semantic_map,
         compiled_semantic_map=semantic_map,
-        reviewed_promotion_snapshot=reviewed_promotion_snapshot,
         revision_id=revision_id,
         records=joined_records,
         fields=tuple(field for record in joined_records for field in record.fields),

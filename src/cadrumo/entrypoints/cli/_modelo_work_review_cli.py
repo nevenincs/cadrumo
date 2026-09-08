@@ -12,35 +12,10 @@ from ...adapters.persistence.profile.modelos_verification_reports import Verific
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...application.modelo.work_review import build_modelo_work_review
 from ...core.external_constants import OutputLanguage
-from ...core.i18n.render import output_language as resolved_output_language
 from ._common import activate_subcommand_output_language, emit_envelope
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_payloads import WorkReviewPayload, WorkReviewResult
 from ._modelo_rendering import verification_findings_notices
-from ._tui_policy import tui_was_requested
-
-
-def _run_review_destination(*, work_unit_id: str, bucket_id: str) -> None:
-    """Open the sole C1 bounded-review destination for one resolved unit.
-
-    Kept as its own seam so a test can substitute a non-blocking stand-in for
-    the real full-screen session without touching the resolution logic above
-    it.
-
-    Only the unit's IDENTIFIERS cross. The destination runs out of process,
-    because a CLI entrypoint may not import the dedicated full-screen
-    frontend, and a built review record cannot cross that boundary as an
-    object; the session re-reads the review from the identifiers it is given.
-    """
-    from ..full_screen_session_protocol import FullScreenDestination
-    from ._tui_session import run_destination_session
-
-    run_destination_session(
-        destination=FullScreenDestination.MODELO_WORK_REVIEW,
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        output_language=resolved_output_language(),
-    )
 
 
 def _review_lines(result: WorkReviewResult) -> list[str]:
@@ -108,8 +83,6 @@ def work_review(
         calculation_repository=calculation_repository,
         verification_repository=VerificationReportCatalogueRepository(),
     )
-    if tui_was_requested(ctx):
-        _run_review_destination(work_unit_id=unit.work_unit_id, bucket_id=unit.bucket_id)
     result = WorkReviewResult(review=WorkReviewPayload.from_review(review))
     emit_envelope(
         ctx,

@@ -211,9 +211,6 @@ def _behavior_wrapper(graph: CommandSpecGraph, spec: CommandSpec) -> Callable[..
             if context is None or not hasattr(context, "find_root"):
                 raise TypeError("command invocation context has an invalid type")
             try:
-                from ._tui_policy import enforce_tui_request
-
-                enforce_tui_request(cast(typer.Context, context), spec=spec)
                 preflight_parsed_leaf(
                     cast(typer.Context, context),
                     graph=graph,

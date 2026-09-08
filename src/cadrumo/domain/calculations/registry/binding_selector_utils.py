@@ -138,6 +138,96 @@ class BindingRowSetSelector(BaseModel):
     record: str | None = Field(default=None, min_length=1, max_length=64)
 
 
+def _non_positioned_export_selector(
+    *,
+    offset: OneBasedExportOffset | None,
+    length: int | None,
+    binding_id: str,
+) -> BindingExportSelector | None:
+    """Handle a projection that does not declare an export record."""
+    if offset is not None or length is not None:
+        raise RegistryValidationError(
+            f"binding {binding_id!r} export selector projection must declare record with offset or length",
+        )
+    return None
+
+
+def _row_field_export_selector(
+    *,
+    record: str,
+    row_field: str,
+    offset: OneBasedExportOffset | None,
+    length: int | None,
+    data_type: BindingExportDataType | None,
+    decimals: int | None,
+    signed: bool | None,
+    binding_id: str,
+) -> BindingRowExportSelector:
+    """Build and validate a row-layout export selector."""
+    if offset is not None or length is not None:
+        raise RegistryValidationError(
+            f"binding {binding_id!r} export selector projection cannot declare row_field "
+            "with offset/length: a row field is positioned by the record's row layout, "
+            "not by an absolute span",
+        )
+    if decimals is not None and data_type != "decimal":
+        raise RegistryValidationError(
+            f"binding {binding_id!r} row export projection declares decimals but its data_type is {str(data_type)!r}",
+        )
+    if signed is not None:
+        raise RegistryValidationError(
+            f"binding {binding_id!r} row export projection cannot declare signed: a row "
+            "field takes its wire shape from the repeated record's row layout",
+        )
+    return BindingRowExportSelector(
+        record=record,
+        row_field=row_field,
+        data_type=data_type,
+    )
+
+
+def _fixed_export_selector(
+    *,
+    record: str,
+    offset: OneBasedExportOffset | None,
+    length: int | None,
+    data_type: BindingExportDataType | None,
+    decimals: int | None,
+    field: str | None,
+    signed: bool | None,
+    binding_id: str,
+) -> BindingFixedExportSelector:
+    """Build and validate an absolute-span export selector."""
+    fixed_values = (offset, length, data_type)
+    fixed_count = sum(value is not None for value in fixed_values)
+    if offset is not None and length is not None and data_type is not None:
+        return BindingFixedExportSelector(
+            record=record,
+            offset=offset,
+            length=length,
+            data_type=data_type,
+            decimals=decimals,
+            field=field,
+            signed=bool(signed),
+        )
+    if fixed_count:
+        missing = [
+            key
+            for key, value in (
+                ("offset", offset),
+                ("length", length),
+                ("data_type", data_type),
+            )
+            if value is None
+        ]
+        raise RegistryValidationError(
+            f"binding {binding_id!r} export selector projection is missing fixed-field keys {missing!r}",
+        )
+    raise RegistryValidationError(
+        f"binding {binding_id!r} export selector projection must declare row_field or offset/length/data_type",
+    )
+
+
 class _BindingExportProjection(BaseModel):
     """Projection model for export-specific keys embedded in source-family selectors."""
 
@@ -167,66 +257,34 @@ class _BindingExportProjection(BaseModel):
         it as a fixed-projection marker is what made a row field declaring its
         own type read as a malformed fixed field.
         """
-        if self.record is None:
-            if self.offset is not None or self.length is not None:
-                raise RegistryValidationError(
-                    f"binding {binding_id!r} export selector projection must declare record with offset or length",
-                )
-            return None
-
-        if self.row_field is not None:
-            if self.offset is not None or self.length is not None:
-                raise RegistryValidationError(
-                    f"binding {binding_id!r} export selector projection cannot declare row_field "
-                    "with offset/length: a row field is positioned by the record's row layout, "
-                    "not by an absolute span",
-                )
-            if self.decimals is not None and self.data_type != "decimal":
-                raise RegistryValidationError(
-                    f"binding {binding_id!r} row export projection declares decimals "
-                    f"but its data_type is {str(self.data_type)!r}",
-                )
-            if self.signed is not None:
-                raise RegistryValidationError(
-                    f"binding {binding_id!r} row export projection cannot declare signed: a row "
-                    "field takes its wire shape from the repeated record's row layout",
-                )
-            return BindingRowExportSelector(
-                record=self.record,
-                row_field=self.row_field,
+        record = self.record
+        if record is None:
+            return _non_positioned_export_selector(
+                offset=self.offset,
+                length=self.length,
+                binding_id=binding_id,
+            )
+        row_field = self.row_field
+        if row_field is not None:
+            return _row_field_export_selector(
+                record=record,
+                row_field=row_field,
+                offset=self.offset,
+                length=self.length,
                 data_type=self.data_type,
-            )
-
-        offset = self.offset
-        length = self.length
-        data_type = self.data_type
-        fixed_values = (offset, length, data_type)
-        fixed_count = sum(value is not None for value in fixed_values)
-        if offset is not None and length is not None and data_type is not None:
-            return BindingFixedExportSelector(
-                record=self.record,
-                offset=offset,
-                length=length,
-                data_type=data_type,
                 decimals=self.decimals,
-                field=self.field,
-                signed=bool(self.signed),
+                signed=self.signed,
+                binding_id=binding_id,
             )
-        if fixed_count:
-            missing = [
-                key
-                for key, value in (
-                    ("offset", self.offset),
-                    ("length", self.length),
-                    ("data_type", self.data_type),
-                )
-                if value is None
-            ]
-            raise RegistryValidationError(
-                f"binding {binding_id!r} export selector projection is missing fixed-field keys {missing!r}",
-            )
-        raise RegistryValidationError(
-            f"binding {binding_id!r} export selector projection must declare row_field or offset/length/data_type",
+        return _fixed_export_selector(
+            record=record,
+            offset=self.offset,
+            length=self.length,
+            data_type=self.data_type,
+            decimals=self.decimals,
+            field=self.field,
+            signed=self.signed,
+            binding_id=binding_id,
         )
 
 

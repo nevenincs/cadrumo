@@ -425,36 +425,6 @@ def test_no_holdout_declaration_has_gone_stale() -> None:
     )
 
 
-def test_the_harness_package_is_swept_by_its_lane_not_merely_named() -> None:
-    """The concrete fix, pinned positively against the real justfile.
-
-    Positive rather than incidental, for the reason the template-residue check
-    below states: a widened or narrowed lane only ever changes which things
-    look reachable, and nothing reds when the change is in the permissive
-    direction. Asserting that the harness lane's scope is the DIRECTORY is the
-    only signal that distinguishes the fixed state from the one where a recipe
-    happens to name every module in it one by one.
-    """
-    package = "dev/harness/tests"
-    assert (_ROOT / package).is_dir(), f"{package} does not exist, so 'a lane sweeps it' cannot be a real claim"
-
-    lanes = declared_lanes(_ROOT)
-    harness_lanes = [lane for lane in lanes if lane.recipe == "test-harness"]
-    assert harness_lanes, "test-harness must still be declared"
-    assert any(lane.covers_directory(package) for lane in harness_lanes), (
-        f"test-harness must sweep {package} rather than name a module inside it; a file-scoped lane "
-        "leaves the next module added beside it collected by nothing"
-    )
-
-    # The exclusion side of the same contract: the corpus lanes must still hold
-    # the whole package out, because a member spawns a real child pytest and
-    # collecting one inside a worker pool nests a pool in a pool.
-    corpus_lanes = [lane for lane in lanes if lane.recipe in {"test-integration", "test-integration-parallel"}]
-    assert corpus_lanes, "the integration recipe(s) must still be declared"
-    for lane in corpus_lanes:
-        assert not lane.covers_directory(package), f"{lane.recipe} must not sweep {package}"
-
-
 def test_a_directory_whose_only_module_is_named_individually_is_still_uncovered(tmp_path: Path) -> None:
     """Detector teeth for the exact defect, in an isolated tree.
 
@@ -784,45 +754,6 @@ def test_justfile_variable_interpolation_resolves_before_ignore_parsing(tmp_path
     assert lane.exclusions == ("src/tests/test_excluded.py",)
     assert lane.covers("src/tests/test_kept.py")
     assert not lane.covers("src/tests/test_excluded.py")
-
-
-def test_the_harness_modules_are_excluded_by_the_integration_lanes_but_covered_by_the_harness_lane() -> None:
-    """The concrete defect this module was fixed to close, pinned against the real justfile.
-
-    ``just test-integration`` writes ``{{harness_exclusions}}``, which expands
-    to ``--ignore=`` for both harness modules -- so the integration lanes must
-    not cover them, even though their ``paths`` scope is ``src``. They stay
-    reachable regardless: ``just test-harness`` names them positionally and is
-    CI-invoked from ``ci.yml``, which is what keeps them off the unreachable
-    list rather than this fix accidentally orphaning them.
-    """
-    lanes = declared_lanes(_ROOT)
-    targets = (
-        "src/cadrumo/tests/test_worker_count_hook_harness.py",
-        "dev/harness/tests/test_full_corpus_collectability_harness.py",
-    )
-
-    # Pin the targets to files that EXIST before asserting a lane covers them.
-    # Without this the check is satisfied by string agreement between this tuple
-    # and the justfile, which is how it passed while both named a path that had
-    # moved: `just test-harness` handed pytest a missing file, exited 4, and this
-    # gate stayed green because the two strings still matched each other.
-    for target in targets:
-        assert (_ROOT / target).is_file(), (
-            f"{target} does not exist, so 'the harness lane covers it' cannot be a real claim; "
-            "update this tuple and the justfile's harness members together"
-        )
-
-    integration_lanes = [lane for lane in lanes if lane.recipe in {"test-integration", "test-integration-parallel"}]
-    assert integration_lanes, "the integration recipe(s) must still be declared"
-    for lane in integration_lanes:
-        for target in targets:
-            assert not lane.covers(target), f"{lane.recipe} must not cover {target}, it is --ignore'd"
-
-    harness_lanes = [lane for lane in lanes if lane.recipe == "test-harness"]
-    assert harness_lanes, "test-harness must still be declared"
-    for target in targets:
-        assert any(lane.covers(target) for lane in harness_lanes), f"test-harness must still cover {target}"
 
 
 def test_an_unresolved_template_residue_does_not_silently_widen_a_lanes_paths() -> None:

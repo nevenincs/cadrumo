@@ -309,11 +309,15 @@ def _persist_verified_revision_citing_transaction(
 ) -> None:
     source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
     period = Period.from_year_and_code(2026, "1T")
-    registry_snapshot_ref = bundled_authority().snapshot(
-        "303",
-        filing_year=period.filing_year,
-        period=period.registry_token,
-    ).snapshot_ref
+    registry_snapshot_ref = (
+        bundled_authority()
+        .snapshot(
+            "303",
+            filing_year=period.filing_year,
+            period=period.registry_token,
+        )
+        .snapshot_ref
+    )
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",

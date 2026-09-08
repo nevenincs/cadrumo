@@ -1,6 +1,5 @@
 """Tests for the distribution smoke check's refusals.
 
-`dev.quality.module_test_reach` listed `dev/smoke/smoke_check.py` as unreached.
 It is the last gate a published wheel passes through: CI runs it against the
 installed artifact to establish the package imports, reports its version, and
 exposes both console scripts.

@@ -49,7 +49,6 @@ from .snapshot_base import (
     enforce_snapshot_state_invariants,
 )
 
-BORRADOR_100_SNAPSHOT_NAMESPACE = BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namespace
 type _BorradorValue = Decimal | str
 
 
@@ -382,7 +381,6 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
 
 
 __all__ = [
-    "BORRADOR_100_SNAPSHOT_NAMESPACE",
     "Borrador100Snapshot",
     "Borrador100SnapshotRepository",
     "Borrador100SnapshotService",

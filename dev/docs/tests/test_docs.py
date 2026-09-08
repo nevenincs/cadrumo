@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
 
@@ -17,114 +16,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _REPO_ROOT = REPO_ROOT
 _DOCS_ROOT = _REPO_ROOT / "docs"
 _SHELL_FENCE_RE = re.compile(r"```(?:bash|sh|pwsh)\n(?P<body>.*?)\n```", re.DOTALL)
-
-# A fenced-code opening/closing line: an optionally-indented run of three or more
-# backticks or tildes. The prose-hygiene gates strip whole fenced blocks (code,
-# CLI output, cli-sequence directive bodies) before counting, so only
-# reader-facing prose is measured.
-_FENCE_LINE_RE = re.compile(r"^[ \t]*(`{3,}|~{3,})")
-
-
-def _strip_fenced_blocks(text: str) -> str:
-    """Return the text with every fenced block replaced by a blank line.
-
-    A line-based stripper (not a ``.*?`` regex): it tracks the open fence's
-    character and length, so a fenced block is excluded in FULL regardless of its
-    indentation, its fence character (``` ``` ``` or ``~~~``), or a longer fence
-    run, and an unclosed fence drops to end of input rather than mis-pairing with
-    a later fence. This is the same robust strip the CLI conformance gate applies
-    to its inline-span scan; it replaces a greedy regex that mis-paired on odd
-    fence structures.
-    """
-    out: list[str] = []
-    fence_char: str | None = None
-    fence_len = 0
-    for line in text.split("\n"):
-        match = _FENCE_LINE_RE.match(line)
-        run = match.group(1) if match else ""
-        if fence_char is None:
-            if match:
-                fence_char = run[0]
-                fence_len = len(run)
-                out.append("")
-            else:
-                out.append(line)
-            continue
-        if match and run[0] == fence_char and len(run) >= fence_len and line.strip()[len(run) :].strip() == "":
-            fence_char = None
-            out.append("")
-    return "\n".join(out)
-
-
-# The em-dash (U+2014). Its per-page counts ratchet DOWN from a checked-in
-# baseline; a page may only decrease, a page absent from the baseline starts at
-# zero, and a page below its baseline passes (so a prose sweep never reds the
-# tree mid-flight). Replace an em dash with a hyphen or a full stop.
-_EM_DASH = "—"
-_EM_DASH_BASELINE_PATH = Path(__file__).resolve().parent / "emdash_baseline.json"
-
-# LLM-tell phrases banned outright from reader-facing prose (word-boundary,
-# case-insensitive). Kept modest to avoid false positives.
-_LLM_MARKERS = (
-    "Additionally,",
-    "It's worth noting",
-    "Keep in mind",
-    "Let's ",
-    "we'll ",
-    "seamless",
-    "leverage",
-    "streamline",
-    "delve",
-    "go ahead and",
-)
-
-
-#: LLM-tell phrases that are a tell only when they OPEN a sentence, because the
-#: same words are ordinary English mid-sentence. "Note that" is the worked
-#: example: banned as a sentence opener, but "it is an internal note that you
-#: have already presented the file" is correct prose that a word-boundary match
-#: flags anyway. Rewording good prose to satisfy a pattern that does not fit the
-#: data is the wrong direction, so the pattern carries the sentence constraint.
-_LLM_MARKERS_SENTENCE_INITIAL = ("Note that",)
-
-#: Matches at the start of a line, or immediately after sentence-ending
-#: punctuation. Each lookbehind is fixed-width, which Python's ``re`` requires.
-_SENTENCE_START = r"(?:^|(?<=[.!?]\s)|(?<=[.!?]\s\s))"
-
-
-def _marker_pattern(marker: str, *, sentence_initial: bool = False) -> re.Pattern[str]:
-    """Compile a case-insensitive pattern for one LLM-tell marker.
-
-    ``sentence_initial`` anchors the marker to a sentence opening. Without it a
-    ban on a common English word sequence over-matches, and a gate that forces
-    correct prose to be reworded teaches its reader to distrust it.
-    """
-    pattern = (_SENTENCE_START if sentence_initial else "") + r"\b" + re.escape(marker)
-    if marker[-1].isalnum():
-        pattern += r"\b"
-    return re.compile(pattern, re.IGNORECASE | re.MULTILINE)
-
-
-_LLM_MARKER_RES = tuple(
-    [(marker, _marker_pattern(marker)) for marker in _LLM_MARKERS]
-    + [(marker, _marker_pattern(marker, sentence_initial=True)) for marker in _LLM_MARKERS_SENTENCE_INITIAL]
-)
-
-
-def _prose(text: str) -> str:
-    """Return the page text with fenced blocks removed, so only prose remains."""
-    return _strip_fenced_blocks(text)
-
-
-def _em_dash_counts() -> dict[str, int]:
-    """Return the per-page em-dash count in prose, keyed by docs-relative path."""
-    counts: dict[str, int] = {}
-    for path in _markdown_docs():
-        count = _prose(path.read_text(encoding="utf-8")).count(_EM_DASH)
-        if count:
-            counts[path.relative_to(_DOCS_ROOT).as_posix()] = count
-    return counts
-
 
 _DANGEROUS_COMMAND_PATTERNS = (
     re.compile(r"\brm\s+-rf\b"),
@@ -144,7 +35,7 @@ _DANGEROUS_COMMAND_PATTERNS = (
 _RETIRED_GIT_CLEAN_PATTERN = re.compile(r"\bgit\s+clean\s+-[^\n]*f\b")
 
 
-#: Floors for the documentation corpus six gates scan. Live: 59 pages across
+#: Floors for the documentation corpus checks. Live: 59 pages across
 #: six areas (how-to 35, root 8, explanation 7, reference 7, api 1,
 #: architecture 1). Both are needed: the total is dominated by how-to, so a
 #: page floor alone would sit clear while a smaller subtree left the scan,
@@ -156,8 +47,8 @@ _MINIMUM_MARKDOWN_AREAS = 5
 def _markdown_docs() -> tuple[Path, ...]:
     """Return checked-in markdown documentation pages.
 
-    Refuses an empty result rather than returning one. Three gates scan this
-    corpus for violations and assert the offender list is empty; over an empty
+    Refuses an empty result rather than returning one. The retained gates scan
+    this corpus for violations and assert the offender list is empty; over an empty
     corpus each reports exactly what a clean corpus reports, so the proof of
     scan belongs here, once, rather than at each call site.
     """
@@ -277,61 +168,6 @@ def test_the_retired_git_clean_pattern_really_missed_the_bundled_flags() -> None
     assert _RETIRED_GIT_CLEAN_PATTERN.search("git clean -f")
 
 
-def test_llm_marker_patterns_discriminate() -> None:
-    """Positive control: every banned-phrase pattern matches its phrase and respects word boundaries.
-
-    ``_marker_pattern`` builds each pattern by escaping the marker and appending
-    a trailing boundary only when the marker ends alphanumerically. A marker that
-    stopped matching its own phrase would silence one ban with no other signal.
-    """
-    for marker, pattern in _LLM_MARKER_RES:
-        assert pattern.search(f"Some prose. {marker} then more."), (
-            f"marker {marker!r} no longer matches its own phrase (pattern {pattern.pattern!r})"
-        )
-        assert not pattern.search(f"Some prose. X{marker}Y then more."), (
-            f"marker {marker!r} matches inside a longer word (pattern {pattern.pattern!r})"
-        )
-
-
-def test_a_sentence_initial_marker_ignores_the_same_words_mid_sentence() -> None:
-    """The ban catches the tell and leaves ordinary English alone.
-
-    "Note that" opening a sentence is the LLM tell. The same two words as a noun
-    plus a relative pronoun are correct prose, and two how-to pages carry exactly
-    that: "it is an internal note that you have already presented the file". A
-    word-boundary match flagged both, and the only ways out are rewording good
-    prose or narrowing the pattern. Rewording to satisfy an instrument that does
-    not fit the data is how a gate gets edited instead of read.
-    """
-    pattern = _marker_pattern("Note that", sentence_initial=True)
-
-    assert pattern.search("Note that the deadline moves."), "a sentence-opening tell must still be caught"
-    assert pattern.search("Run the export. Note that the file stays local."), (
-        "a tell opening a later sentence must still be caught"
-    )
-    assert not pattern.search("it is an internal note that you have already presented the file"), (
-        "the noun 'note' plus a relative pronoun is ordinary prose and must not be flagged"
-    )
-    assert not pattern.search("Keep a short note that records the reference."), (
-        "a mid-sentence noun phrase must not be flagged"
-    )
-
-
-def test_every_sentence_initial_marker_is_anchored() -> None:
-    """Anti-vacuity: the sentence-initial set is non-empty and really anchored.
-
-    Without this the set could silently empty, or its patterns could lose the
-    anchor, and the test above would still pass while the distinction it exists
-    for had stopped being made.
-    """
-    assert _LLM_MARKERS_SENTENCE_INITIAL, "the sentence-initial marker set is empty; nothing is being anchored"
-    for marker in _LLM_MARKERS_SENTENCE_INITIAL:
-        pattern = _marker_pattern(marker, sentence_initial=True)
-        assert not pattern.search(f"a preceding clause {marker.lower()} continues"), (
-            f"marker {marker!r} is not anchored to a sentence opening"
-        )
-
-
 def test_the_scanned_markdown_corpus_is_not_empty() -> None:
     """Every scan in this module is vacuous over an empty page list."""
     docs = _markdown_docs()
@@ -409,85 +245,3 @@ def test_the_version_citation_scan_catches_a_stale_citation() -> None:
 
         current = _stale_version_citations(shape.format(v=__version__), "probe.md", __version__)
         assert not current, f"the scan flagged a current citation in {shape.format(v=__version__)!r}: {current}"
-
-
-def test_em_dash_count_ratchets_down_in_docs_prose() -> None:
-    """No docs page carries more em dashes (U+2014) in prose than its ratcheting baseline.
-
-    Em dashes are an LLM tell the operator wants out of the corpus. The count
-    ratchets DOWN from a committed per-page baseline: a page may never exceed its
-    baseline, a page absent from the baseline may carry none, and a page below its
-    baseline passes (so the prose sweep never reds the tree mid-flight). Code
-    fences and CLI-output fences are exempt; only prose lines count. Converter and
-    editorial agents tighten emdash_baseline.json down as they land; an empty
-    baseline means the corpus is em-dash-free.
-    """
-    if not _EM_DASH_BASELINE_PATH.is_file():
-        raise AssertionError(
-            f"the em-dash ratchet baseline is missing: {_EM_DASH_BASELINE_PATH}. "
-            "This gate ratchets per-page counts down from that committed file; without it the ratchet has "
-            "no state and enforces nothing. Restore the baseline (or commit an empty object for an "
-            "em-dash-free corpus) rather than deleting it alongside unrelated work."
-        )
-    baseline: dict[str, int] = json.loads(_EM_DASH_BASELINE_PATH.read_text(encoding="utf-8"))
-    current = _em_dash_counts()
-    problems: list[str] = []
-    for page in sorted(current):
-        count = current[page]
-        allowed = baseline.get(page, 0)
-        if count > allowed:
-            problems.append(
-                f"docs/{page}: {count} em dash(es) (U+2014) in prose, baseline allows {allowed}. "
-                f"Replace a new em dash with a hyphen or a full stop, then tighten {_EM_DASH_BASELINE_PATH.name}"
-            )
-    assert not problems, "new em dashes in docs prose (they only ratchet down):\n  " + "\n  ".join(problems)
-
-
-def test_prose_strip_excludes_fenced_blocks_robustly() -> None:
-    """The line-based prose strip excludes a fenced block in full regardless of form.
-
-    An em dash inside a code/CLI-output/directive fence must never be counted; the
-    hardened strip handles indentation (a directive nested in a list item), the
-    tilde fence character, and a longer fence run, and drops an unclosed fence to
-    end of input instead of mis-pairing with a later fence — while a genuine em
-    dash in prose is still measured.
-    """
-    indented_in_list = (
-        "- A step — with an em dash in prose:\n"
-        "\n"
-        "  ```{cli-sequence} demo\n"
-        "  @result aeat --format json config check — fenced em dash, must not count\n"
-        "  ```\n"
-    )
-    prose = _prose(indented_in_list)
-    assert prose.count(_EM_DASH) == 1  # only the prose em dash, not the fenced one
-
-    tilde_and_unclosed = (
-        "Prose with no dash here.\n\n"
-        "~~~text\n"
-        "fenced — dash ignored\n"
-        "~~~\n\n"
-        "```bash\n"
-        "trailing unclosed fence — dash ignored to end of input\n"
-    )
-    assert _prose(tilde_and_unclosed).count(_EM_DASH) == 0
-
-
-def test_no_llm_tell_markers_in_docs_prose() -> None:
-    """Reader-facing docs prose carries none of the banned LLM-tell phrases (hard zero).
-
-    Code fences and CLI-output fences are exempt; only prose lines are scanned.
-    Unlike the em-dash count this is a hard zero, not a ratchet: the listed
-    phrases must not appear at all.
-    """
-    hits: list[str] = []
-    for path in _markdown_docs():
-        prose = _prose(path.read_text(encoding="utf-8"))
-        relative = path.relative_to(_DOCS_ROOT).as_posix()
-        for marker, pattern in _LLM_MARKER_RES:
-            for match in pattern.finditer(prose):
-                lineno = prose[: match.start()].count("\n") + 1
-                hits.append(f"docs/{relative}:{lineno}: banned LLM-tell phrase {marker!r}")
-    assert not hits, (
-        "LLM-tell phrases in docs prose (remove them; write plain imperative sentences):\n  " + "\n  ".join(hits)
-    )

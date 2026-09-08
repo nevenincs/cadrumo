@@ -1,7 +1,6 @@
 """Prove every vulture whitelist entry still names a live parameter.
 
-`dev.quality.module_test_reach` listed `dev/audit/vulture_whitelist.py` as
-unreached. It is a SUPPRESSION surface: every name in it is a name vulture stops
+It is a SUPPRESSION surface: every name in it is a name vulture stops
 reporting, so a stale entry does not merely sit there - it goes on hiding a dead
 parameter after the reason for the exemption is gone.
 

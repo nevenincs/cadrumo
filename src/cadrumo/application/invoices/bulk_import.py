@@ -83,6 +83,7 @@ BULK_INVOICE_IMPORT_REQUIRED_COLUMNS: frozenset[str] = frozenset(
     },
 )
 
+
 class BulkImportSourceRow(BaseModel):
     """One source row, its cells already keyed by the importer field they feed.
 

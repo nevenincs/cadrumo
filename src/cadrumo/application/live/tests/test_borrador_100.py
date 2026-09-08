@@ -19,7 +19,6 @@ from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..borrador_100 import (
-    BORRADOR_100_SNAPSHOT_NAMESPACE,
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     Borrador100SnapshotService,
@@ -121,7 +120,7 @@ def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
         payload=payload,
     )
     secure_objects.save(
-        namespace=BORRADOR_100_SNAPSHOT_NAMESPACE,
+        namespace=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.namespace,
         object_key=borrador_100_snapshot_object_key(_BUCKET_ID, "requested-id"),
         classification=SensitivityClass.FINANCIAL,
         schema_version=BORRADOR_100_SNAPSHOT_STORAGE_NAMESPACE.schema_version,

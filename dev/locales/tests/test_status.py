@@ -102,13 +102,7 @@ def test_catalogue_status_partitions_every_required_key(manager: LocaleManager) 
     }
 
     for record in by_file.values():
-        partition = (
-            record.authored
-            + record.key_echo
-            + record.blank
-            + record.unbindable
-            + record.absent
-        )
+        partition = record.authored + record.key_echo + record.blank + record.unbindable + record.absent
         assert partition == record.required
 
 

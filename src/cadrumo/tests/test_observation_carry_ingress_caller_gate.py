@@ -76,10 +76,9 @@ def _production_callers() -> dict[_Caller, ast.Call]:
 def test_every_production_observation_writer_uses_the_canonical_write_door() -> None:
     callers = _production_callers()
     assert set(callers) == _CANONICAL_WRITE_DOOR_CALLERS
-    assert all(
-        all(keyword.arg != "normalize_m303_carry" for keyword in node.keywords)
-        for node in callers.values()
-    ), "the canonical observation write door owns M303 normalization"
+    assert all(all(keyword.arg != "normalize_m303_carry" for keyword in node.keywords) for node in callers.values()), (
+        "the canonical observation write door owns M303 normalization"
+    )
 
 
 def test_production_observation_writer_population_is_exhaustively_adjudicated() -> None:

@@ -19,7 +19,6 @@ from ..command_spec import (
     ResultSchemaSpec,
     SchemaState,
     TranslationKey,
-    TuiCapability,
     ValueContract,
 )
 from ._command_spec_schema import config_payload_schema as _schema
@@ -134,7 +133,6 @@ CONFIG_CUSTODY_COMMAND_SPECS = (
                 ),
             )
         ),
-        tui_capability=TuiCapability.AVAILABLE,
     ),
     CommandSpec(
         key="config_logout",

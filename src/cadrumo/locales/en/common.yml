@@ -632,8 +632,8 @@ llm:
   evidence:
     consent:
       binding_mismatch: 'Refused: the off-host acknowledgement for this invocation
-        was taken for a different document. Consent binds to the exact bytes it
-        was granted for, so it cannot be reused to send this one.'
+        was taken for a different document. Consent binds to the exact bytes it was
+        granted for, so it cannot be reused to send this one.'
       dispatch_refused: 'Refused: this request reads a taxpayer document and would
         send it to the off-host provider %{provider} without a per-invocation consent
         acknowledgement.'
@@ -709,15 +709,21 @@ operation:
       receipt_refusal: Refusal
       receipt_result: Result
     refusal:
-      cancellation_unavailable: Cancellation is not available right now. Try again shortly.
+      cancellation_unavailable: Cancellation is not available right now. Try again
+        shortly.
       cancellation_unsupported: This operation cannot be cancelled once it has started.
-      operation_terminal: The operation has already finished, so there is nothing to cancel.
-      response_authority_unavailable: The response could not be recorded right now. Try again shortly.
+      operation_terminal: The operation has already finished, so there is nothing
+        to cancel.
+      response_authority_unavailable: The response could not be recorded right now.
+        Try again shortly.
       response_not_pending: This operation is not waiting for a response.
-      stale_operation_revision: The operation moved on while you were deciding. Wait for the refresh and try again.
+      stale_operation_revision: The operation moved on while you were deciding. Wait
+        for the refresh and try again.
       unknown_operation: This operation is no longer known to the backend.
-      unsupported_cancellation_version: This build cannot cancel that operation. Update Cadrumo.
-      unsupported_response_control_version: This build cannot answer that operation. Update Cadrumo.
+      unsupported_cancellation_version: This build cannot cancel that operation. Update
+        Cadrumo.
+      unsupported_response_control_version: This build cannot answer that operation.
+        Update Cadrumo.
     status:
       running: Running
 overview:
@@ -1484,6 +1490,8 @@ tui:
       profile: Profile
       sign_out: Sign out
       unavailable: Account controls are unavailable for this session.
+    navigation:
+      unavailable: The requested area cannot be opened in this session.
     no_areas: No area is available in this session yet.
     title: Cadrumo terminal session
   search:

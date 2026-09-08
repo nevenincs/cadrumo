@@ -1,7 +1,6 @@
 """Tests for the private sequence-contract reader and its docname guard.
 
-`dev.quality.module_test_reach` listed `dev/docs/sequences/contracts.py` as
-unreached. It turns a page docname and a sequence id into a path it then reads,
+It turns a page docname and a sequence id into a path it then reads,
 and the guard standing between those inputs and the filesystem had nothing
 proving it holds.
 

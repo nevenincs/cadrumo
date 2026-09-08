@@ -56,14 +56,6 @@ flattened), and below that one directory per session, named for the session's
 UUID and holding that session's ``scratchpad/`` and ``tasks/`` trees.
 """
 
-OBJECT_NAME_REHEARSAL_PREFIX = "cadrumo-object-name-"
-"""Prefix of the rehearsal roots ``dev.quality.object_name_rehearsal`` allocates.
-
-It also matches the ``-post-apply-`` and ``-generator-`` roots the replay module
-allocates. Those remove themselves in a ``finally``, so any the glob does find
-are themselves unreclaimed and belong in the same count.
-"""
-
 SESSION_TRANSCRIPT_ROOT = Path.home() / ".claude" / "projects"
 """Where Claude Code keeps per-session transcripts, under the same project slug.
 
@@ -379,37 +371,8 @@ def _report(verdicts: list[SessionVerdict], *, applying: bool, stream: TextIO) -
     return reclaimable, spared
 
 
-def object_name_rehearsal_roots(temproot: Path | None = None) -> tuple[Path, ...]:
-    """Return the object-name rehearsal roots left under the OS temp directory.
-
-    The third family, and the one this module did not know about. Each root holds
-    a full copy of the repository snapshot a rehearsal ran in, and the receipt
-    hands its path to the replay stage, which reads the proposed payloads back out
-    of it. Retention is therefore deliberate: the root is a handoff artefact, not
-    scratch, and deleting one on the rehearsal's own success breaks replay.
-
-    What nobody owns is the other end. No caller removes a root once replay has
-    consumed it, and no completion signal is recorded anywhere, so the family only
-    grows. Counting it is all this module can honestly do: unlike a pytest numbered
-    directory there is no lock file naming an owner, and unlike a session scratchpad
-    there is no idle signal to infer from, because a finished rehearsal writes
-    nothing further either way. Naming the family is worth more than a guess about
-    which member is safe to remove.
-    """
-    root = Path(gettempdir()) if temproot is None else temproot
-    if not root.is_dir():
-        return ()
-    return tuple(
-        sorted(
-            candidate
-            for candidate in root.glob(f"{OBJECT_NAME_REHEARSAL_PREFIX}*")
-            if candidate.is_dir() and not is_link_like(candidate)
-        )
-    )
-
-
 def main(argv: list[str] | None = None) -> int:
-    """Report both families, and reclaim the session scratchpads under ``--apply``."""
+    """Report temporary test/session data and reclaim abandoned scratchpads under ``--apply``."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument(
         "--apply",
@@ -438,31 +401,6 @@ def main(argv: list[str] | None = None) -> int:
         "  (this family is also reaped at every pytest session start)",
         file=sys.stdout,
     )
-
-    rehearsal_roots = object_name_rehearsal_roots()
-    print(f"\nobject-name rehearsal roots under {gettempdir()}", file=sys.stdout)
-    if not rehearsal_roots:
-        print("  none retained", file=sys.stdout)
-    else:
-        now = time.time()
-        ages: list[float] = []
-        unread = 0
-        for candidate in rehearsal_roots:
-            try:
-                ages.append((now - candidate.stat().st_mtime) / 3600)
-            except OSError:
-                unread += 1
-        span = f"oldest {max(ages):.0f}h, newest {min(ages):.0f}h" if ages else "no age readable"
-        unread_note = f", {unread} unreadable" if unread else ""
-        print(
-            f"  {len(rehearsal_roots)} retained ({span}{unread_note})",
-            file=sys.stdout,
-        )
-        print(
-            "  nothing reclaims these; sizing them means walking every tree, so this"
-            " reports the count and leaves the judgement to you",
-            file=sys.stdout,
-        )
 
     session_root = claude_session_root()
     print(f"\nClaude Code session scratchpads under {session_root}", file=sys.stdout)

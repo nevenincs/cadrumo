@@ -18,13 +18,13 @@ from pydantic import ValidationError
 from .. import _runner as runner_module
 from .._caveats import SPANISH_OPTIMISM_BIAS_CAVEAT
 from .._field_mapping import expand_document_slots, slots_unavailable_at
-from .._key import CorpusDocument, CorpusKey, CorpusKeyError
+from .._key import CorpusKey, CorpusKeyError, IngestCorpusDocument
 from .._reference_points import ReferencePoint
 from .._result import (
     EmittedOnly,
     EngineRoute,
+    HarnessModelTier,
     HarnessRefusalError,
-    ModelTier,
     PipelineStage,
     ResultRow,
     Scored,
@@ -95,7 +95,7 @@ def test_a_result_row_cannot_be_built_without_a_model_tier() -> None:
         engine_route=EngineRoute.GATED_CLOUD,
         model_identity="m",
         model_revision="r",
-        model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+        model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
         outcome=Scored(scorable_field_count=1, matched=1, wrong=0, fabricated=0),
     ), "positive control: a complete row must build, or the refusals below prove nothing"
 
@@ -118,7 +118,7 @@ def test_a_row_arriving_as_data_without_a_tier_is_refused(payload: dict[str, Any
     """
     # Both refusals in this function name the tier and both interpolate the full
     # accepted set, so a pattern matching either cannot say which branch fired:
-    # deleting the absent-value guard leaves ModelTier(None) raising the UNKNOWN
+    # deleting the absent-value guard leaves HarnessModelTier(None) raising the UNKNOWN
     # refusal, and a looser pattern stays green over the missing guard.
     with pytest.raises(HarnessRefusalError, match=r"carries no model_tier"):
         require_model_tier(payload)
@@ -168,7 +168,7 @@ def test_the_three_row_refusals_do_not_answer_for_each_other() -> None:
     has_truth = _key([_entry("HAS-TRUTH")]).document("HAS-TRUTH")
     authored = len(has_truth.scorable_fields)
 
-    def refusal(document: CorpusDocument, outcome: Scored | EmittedOnly) -> str:
+    def refusal(document: IngestCorpusDocument, outcome: Scored | EmittedOnly) -> str:
         with pytest.raises(HarnessRefusalError) as caught:
             build_result_row(
                 document=document,
@@ -177,7 +177,7 @@ def test_the_three_row_refusals_do_not_answer_for_each_other() -> None:
                 engine_route=EngineRoute.GATED_CLOUD,
                 model_identity="m",
                 model_revision="r",
-                model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+                model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
                 outcome=outcome,
             )
         return str(caught.value)
@@ -209,9 +209,9 @@ def test_the_three_row_refusals_do_not_answer_for_each_other() -> None:
 
 def test_only_the_upper_reference_tier_is_barred_from_setting_a_floor() -> None:
     """The tier is not decoration: it decides baseline eligibility."""
-    assert ModelTier.ON_HOST_SMALL.is_baseline_eligible
-    assert ModelTier.CLOUD_DESIGN_PROXY.is_baseline_eligible
-    assert not ModelTier.UPPER_REFERENCE.is_baseline_eligible
+    assert HarnessModelTier.ON_HOST_SMALL.is_baseline_eligible
+    assert HarnessModelTier.CLOUD_DESIGN_PROXY.is_baseline_eligible
+    assert not HarnessModelTier.UPPER_REFERENCE.is_baseline_eligible
 
 
 # ----------------------------------------------------------------------------
@@ -231,7 +231,7 @@ def test_a_scored_outcome_is_refused_over_a_document_with_no_authored_truth() ->
             engine_route=EngineRoute.GATED_CLOUD,
             model_identity="m",
             model_revision="r",
-            model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+            model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
             outcome=Scored(scorable_field_count=8, matched=1, wrong=0, fabricated=0),
         )
 
@@ -256,7 +256,7 @@ def test_an_emitted_only_outcome_is_refused_where_truth_exists() -> None:
             engine_route=EngineRoute.GATED_CLOUD,
             model_identity="m",
             model_revision="r",
-            model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+            model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
             outcome=EmittedOnly(emitted_field_count=1),
         )
 
@@ -273,7 +273,7 @@ def test_a_denominator_that_is_not_the_keys_own_is_refused() -> None:
             engine_route=EngineRoute.GATED_CLOUD,
             model_identity="m",
             model_revision="r",
-            model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+            model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
             outcome=Scored(scorable_field_count=99, matched=1, wrong=0, fabricated=0),
         )
 
@@ -304,7 +304,7 @@ def test_every_spanish_row_carries_the_optimism_bias_caveat_without_being_asked(
             engine_route=EngineRoute.GATED_CLOUD,
             model_identity="m",
             model_revision="r",
-            model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+            model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
             outcome=Scored(scorable_field_count=1, matched=1, wrong=0, fabricated=0),
         )
 
@@ -391,7 +391,7 @@ def test_a_reference_point_recorded_at_a_baseline_tier_is_refused() -> None:
             engine_route=EngineRoute.GATED_CLOUD,
             model_identity="m",
             model_revision="r",
-            model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+            model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
             reported_matched=7,
             reported_denominator=8,
             fabricated=0,
@@ -415,7 +415,7 @@ def test_a_reference_point_matching_more_than_its_denominator_is_refused() -> No
             engine_route=EngineRoute.GATED_CLOUD,
             model_identity="m",
             model_revision="r",
-            model_tier=ModelTier.UPPER_REFERENCE,
+            model_tier=HarnessModelTier.UPPER_REFERENCE,
             reported_matched=9,
             reported_denominator=8,
             fabricated=0,
@@ -434,7 +434,7 @@ def test_a_reference_point_must_state_at_least_one_caveat() -> None:
             engine_route=EngineRoute.GATED_CLOUD,
             model_identity="m",
             model_revision="r",
-            model_tier=ModelTier.UPPER_REFERENCE,
+            model_tier=HarnessModelTier.UPPER_REFERENCE,
             reported_matched=7,
             reported_denominator=8,
             fabricated=0,
@@ -483,7 +483,7 @@ def test_a_report_refuses_rows_measured_against_a_different_key() -> None:
         engine_route=EngineRoute.GATED_CLOUD,
         model_identity="m",
         model_revision="r",
-        model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+        model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
         outcome=Scored(scorable_field_count=1, matched=1, wrong=0, fabricated=0),
     )
 
@@ -527,7 +527,7 @@ def _row_at(key: CorpusKey, stage: PipelineStage, *, scorable: int, matched: int
         engine_route=EngineRoute.GATED_CLOUD,
         model_identity="m",
         model_revision="r",
-        model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+        model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
         outcome=Scored(scorable_field_count=scorable, matched=matched, wrong=0, fabricated=0),
     )
 
@@ -615,7 +615,7 @@ def test_an_emitted_only_row_is_not_subject_to_the_refusal() -> None:
             engine_route=EngineRoute.GATED_CLOUD,
             model_identity="m",
             model_revision="r",
-            model_tier=ModelTier.CLOUD_DESIGN_PROXY,
+            model_tier=HarnessModelTier.CLOUD_DESIGN_PROXY,
             outcome=EmittedOnly(emitted_field_count=2),
         ),
     )
@@ -635,7 +635,7 @@ def test_the_stage_comparison_is_what_causes_the_refusal() -> None:
     key = _key([_entry("DOC-1", ground_truth=_STAGE_LATE_TRUTH)])
     document = key.document("DOC-1")
 
-    def _without_the_ordering_check(_: CorpusDocument, __: PipelineStage) -> tuple[str, ...]:
+    def _without_the_ordering_check(_: IngestCorpusDocument, __: PipelineStage) -> tuple[str, ...]:
         return ()
 
     assert _without_the_ordering_check(document, PipelineStage.S2_EXTRACTION) == ()

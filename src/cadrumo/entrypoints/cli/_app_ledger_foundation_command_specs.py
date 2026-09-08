@@ -4,6 +4,11 @@
 
 from __future__ import annotations
 
+from ...application.ledger.operator_input_contracts import (
+    COUNTERPARTY_IDENTIFICATION_STATE_INPUT,
+    DEDUCTION_FACT_KIND_INPUT,
+    IVA_CATEGORY_INPUT,
+)
 from ._app_ledger_command_spec_policies import (
     _POLICY_1,
     _POLICY_2,
@@ -19,6 +24,7 @@ from ._app_ledger_command_spec_support import (
     _OPTIONAL_YEAR_OPTION,
     _blank_default_text_option,
     _boolean_flag_option,
+    _option_from_application_contract,
     _optional_text_option,
     _repeatable_text_option,
     _required_text_argument,
@@ -120,56 +126,16 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _optional_text_option("taxable_base", ("--taxable-base",), "cli.ledger.add.taxable_base_help"),
             _optional_text_option("iva_rate", ("--iva-rate",), "cli.ledger.add.iva_rate_help"),
             _optional_text_option("iva_amount", ("--iva-amount",), "cli.ledger.add.iva_amount_help"),
-            OptionSpec(
-                name="iva_category",
-                declarations=("--iva-category",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "IvaCategory")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.classify.iva_category_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
-                name="deduction_fact_kind",
-                declarations=("--deduction-kind",),
-                value=ValueContract(DeferredTarget("cadrumo.core.iva_deduction_fact", "IvaDeductionFactKind")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.classify.deduction_fact_kind_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
+            _option_from_application_contract(IVA_CATEGORY_INPUT, "cli.ledger.classify.iva_category_help"),
+            _option_from_application_contract(
+                DEDUCTION_FACT_KIND_INPUT, "cli.ledger.classify.deduction_fact_kind_help"
             ),
             _optional_text_option(
                 "counterparty_country", ("--counterparty-country",), "cli.ledger.classify.counterparty_country_help"
             ),
-            OptionSpec(
-                name="counterparty_identification_state",
-                declarations=("--counterparty-identification-state",),
-                value=ValueContract(DeferredTarget("cadrumo.domain.iva.schema", "EUMemberState")),
-                default=ParameterDefault.value(None),
-                help_key=TranslationKey("cli.ledger.classify.counterparty_identification_state_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
+            _option_from_application_contract(
+                COUNTERPARTY_IDENTIFICATION_STATE_INPUT,
+                "cli.ledger.classify.counterparty_identification_state_help",
             ),
             _optional_text_option("recargo_amount", ("--recargo-amount",), "cli.ledger.add.recargo_amount_help"),
             _optional_text_option("irpf_category", ("--irpf-category",), "cli.ledger.add.irpf_category_help"),

@@ -793,20 +793,23 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
                 member_nif="A00000000",
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="322",
-                    filing_year=2026,
-                    period="12",
-                    observations=registry_grounded_observations(
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
                         modelo="322",
                         filing_year=2026,
                         period="12",
-                        casilla_values={
-                            casilla_id: Decimal(index + 1)
-                            for index, casilla_id in enumerate(requirement.source_casilla_ids)
-                        },
-                    ),
-                )))
+                        observations=registry_grounded_observations(
+                            modelo="322",
+                            filing_year=2026,
+                            period="12",
+                            casilla_values={
+                                casilla_id: Decimal(index + 1)
+                                for index, casilla_id in enumerate(requirement.source_casilla_ids)
+                            },
+                        ),
+                    )
+                ),
+            )
         )
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
@@ -863,20 +866,23 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
                 member_nif="A00000000",
-            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
-                    modelo="322",
-                    filing_year=2026,
-                    period="12",
-                    observations=registry_grounded_observations(
+                stamped_revision_id=revision_id_for_observation(
+                    RegistryModeloObservation(
                         modelo="322",
                         filing_year=2026,
                         period="12",
-                        casilla_values={
-                            casilla_id: Decimal(index + 1)
-                            for index, casilla_id in enumerate(requirement.source_casilla_ids)
-                        },
-                    ),
-                )))
+                        observations=registry_grounded_observations(
+                            modelo="322",
+                            filing_year=2026,
+                            period="12",
+                            casilla_values={
+                                casilla_id: Decimal(index + 1)
+                                for index, casilla_id in enumerate(requirement.source_casilla_ids)
+                            },
+                        ),
+                    )
+                ),
+            )
         )
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,

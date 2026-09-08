@@ -24,9 +24,7 @@ from ...application.modelo.export import (
     export_modelo_revision,
 )
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ...application.modelo.selectors import (
-    ModeloCalculationRevisionSelector,
-)
+from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
@@ -148,24 +146,17 @@ __all__ = ["export_modelo_revision_for_cli", "modelo_export_verb"]
 
 def modelo_export_verb(
     ctx: typer.Context,
-    work_unit_id: str | None = None,
-    modelo: str | None = None,
-    year: int | None = None,
-    period: str | None = None,
-    registry_revision: str | None = None,
-    bucket_id: str | None = None,
-    select: str = ModeloCalculationRevisionSelector.CURRENT.value,
-    output: Path | None = None,
-    revision: str | None = None,
-    actor: str | None = None,
-    refund_election: RefundElection = RefundElection.COMPENSAR,
-    payment_election: PaymentElection = PaymentElection.INGRESO,
-    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
+    **input_values: object,
 ) -> None:
     """Export a verified-complete or filed modelo revision to disk."""
+    operator_input = ModeloExportOperatorInput.model_validate(input_values)
     workflow_state = workflow_state_repository().load()
     workflow_profile = filing_taxpayer_or_refuse(workflow_state)
-    if output is None or not str(output).strip() or str(output).strip() == ".":
+    if (
+        operator_input.output is None
+        or not str(operator_input.output).strip()
+        or str(operator_input.output).strip() == "."
+    ):
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.export.errors.output_required",
@@ -173,23 +164,23 @@ def modelo_export_verb(
             )
         )
     selected_revision = resolve_exportable_revision_for_cli(
-        revision=revision,
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        registry_revision=registry_revision,
-        bucket_id=bucket_id,
-        select=select,
+        revision=operator_input.revision,
+        work_unit_id=operator_input.work_unit_id,
+        modelo=operator_input.modelo,
+        year=operator_input.year,
+        period=operator_input.period,
+        registry_revision=operator_input.registry_revision,
+        bucket_id=operator_input.bucket_id,
+        select=operator_input.select,
     )
     target_revision_id = selected_revision.calculation_revision_id
     result = export_modelo_revision_for_cli(
         calculation_revision_id=target_revision_id,
-        output_path=output,
-        actor=actor or resolve_default_actor(),
-        refund_election=refund_election,
-        payment_election=payment_election,
-        prior_domiciliation_election=prior_domiciliation_election,
+        output_path=operator_input.output,
+        actor=operator_input.actor or resolve_default_actor(),
+        refund_election=operator_input.refund_election,
+        payment_election=operator_input.payment_election,
+        prior_domiciliation_election=operator_input.prior_domiciliation_election,
         workflow_profile=workflow_profile,
     )
     export_result = ModeloExportPayload.from_result(result)
@@ -200,3 +191,6 @@ def modelo_export_verb(
         lines=_export_text_lines(result),
         notices=_export_notices(result),
     )
+
+
+setattr(modelo_export_verb, "__input_model__", ModeloExportOperatorInput)  # noqa: B010

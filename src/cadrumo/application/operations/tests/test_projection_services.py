@@ -47,6 +47,10 @@ from ..frontend_contracts import (
     OperationResponseControlSuccessV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
+    OperationResultProjectionRefusalCode,
+    OperationResultProjectionRefusalV1,
+    OperationResultProjectionRequestV1,
+    OperationResultProjectionSuccessV1,
     OperationReviewProjectionReferenceV1,
     OperationReviewProjectionRefusalCode,
     OperationReviewProjectionRefusalV1,
@@ -82,6 +86,7 @@ from ..projection_services import (
     OperationDetachService,
     OperationResponseAuthorityBroker,
     OperationResponseControlService,
+    OperationResultProjectionService,
     OperationReviewProjectionService,
     OperationWorkspaceRefreshTargetService,
     UnavailableOperationSecureResponseAuthority,
@@ -114,6 +119,11 @@ class ProjectionRequest(BaseModel):
 
 
 class ProjectionResult(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+    result_code: str
+
+
+class PublicProjectionResult(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
     result_code: str
 
@@ -157,6 +167,16 @@ def _project_review(operand: BaseModel, interaction: OperationInteractionRequest
     return SafeReviewProjection(summary_code=ReviewedOperand.model_validate(operand).summary_code)
 
 
+def _project_result(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+    del receipt
+    return PublicProjectionResult(result_code=ProjectionResult.model_validate(result).result_code)
+
+
+def _unsafe_result_projection(result: BaseModel, receipt: OperationTerminalReceipt) -> BaseModel:
+    del result, receipt
+    return SafeReviewProjection(summary_code="wrong-model")
+
+
 def _refresh_target(receipt: OperationTerminalReceipt) -> BaseModel:
     del receipt
     return WorkspaceRefreshTarget(workspace_coordinate="profile:active")
@@ -176,6 +196,8 @@ def _registry(
     *,
     close_policy: OperationClosePolicy = OperationClosePolicy.DETACH_ALLOWED,
     review_projector: Callable[[BaseModel, OperationInteractionRequest], BaseModel] = _project_review,
+    result_projector: Callable[[BaseModel, OperationTerminalReceipt], BaseModel] | None = None,
+    result_schema_type: type[BaseModel] = ProjectionResult,
     refresh_adapter: Callable[[OperationTerminalReceipt], BaseModel] = _refresh_target,
     include_refresh: bool = True,
 ) -> OperationRegistry:
@@ -217,7 +239,7 @@ def _registry(
         result_schema=OperationSchemaBindingV1.bind(
             schema_id="operations.projection.result",
             schema_version=1,
-            model_type=ProjectionResult,
+            model_type=result_schema_type,
         ),
         review_projection_schema=OperationSchemaBindingV1.bind(
             schema_id="operations.projection.review",
@@ -240,6 +262,7 @@ def _registry(
         ),
         reviewed_operand_type=ReviewedOperand,
         review_projector=review_projector,
+        result_projector=result_projector,
         workspace_refresh_adapter=refresh_adapter if include_refresh else None,
     )
     return OperationRegistry(definitions=(definition,), public_registrations=(registration,))
@@ -346,7 +369,11 @@ def _running_snapshot(registry: OperationRegistry) -> OperationPersistedSnapshot
     )
 
 
-def _terminal_snapshot(registry: OperationRegistry) -> OperationPersistedSnapshot:
+def _terminal_snapshot(
+    registry: OperationRegistry,
+    *,
+    result_ref: str = "result:projection-complete",
+) -> OperationPersistedSnapshot:
     running = _running_snapshot(registry)
     receipt = OperationTerminalReceipt(
         identity=running.identity,
@@ -354,7 +381,7 @@ def _terminal_snapshot(registry: OperationRegistry) -> OperationPersistedSnapsho
         condition=OperationTerminalCondition.SUCCEEDED,
         effect=OperationEffect.UPDATED,
         settled_at=_NOW + timedelta(minutes=1),
-        result_ref="result:projection-complete",
+        result_ref=result_ref,
     )
     event = OperationTerminalEvent(
         identity=running.identity,
@@ -475,6 +502,61 @@ def test_review_resolution_uses_encrypted_operand_and_is_read_only(tmp_path: Pat
         assert unsafe_output.code is OperationReviewProjectionRefusalCode.REVIEW_PROJECTION_UNAVAILABLE
         assert journal_path.read_bytes() == before
         assert _TOKEN.encode() not in before and proposal.encode() in before
+        assert "result_ref" not in type(request).model_fields
+
+
+def test_result_resolution_uses_encrypted_operand_and_public_contract(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        root = tmp_path / "result-durable"
+        registry = _registry(result_projector=_project_result, result_schema_type=PublicProjectionResult)
+        repository = OperationJournalRepository(storage_root=root)
+        operands = operation_secure_reference_repository(objects=profile.repository)
+        result_ref = asyncio.run(operands.put(ProjectionResult(result_code="safe.result"), written_at=_NOW))
+        assert asyncio.run(operands.resolve(result_ref, ProjectionResult)) == ProjectionResult(
+            result_code="safe.result"
+        )
+        terminal = _terminal_snapshot(registry, result_ref=result_ref)
+        _write(root, repository, _running_snapshot(registry))
+        asyncio.run(repository.commit(terminal, expected_revision=0, lease=_lease()))
+        contract = registry.lookup_public_contract(_DEFINITION_ID)
+        assert contract.result_schema is not None
+        request = OperationResultProjectionRequestV1(
+            operation_id=_OPERATION_ID,
+            terminal_revision=terminal.revision,
+            definition_contract_digest=contract.definition_contract_digest,
+            result_schema=contract.result_schema,
+        )
+        service = OperationResultProjectionService(reader=repository, registry=registry, operands=operands)
+
+        result = asyncio.run(service.resolve(request))
+        stale = asyncio.run(service.resolve(request.model_copy(update={"terminal_revision": terminal.revision + 1})))
+        digest_mismatch = asyncio.run(
+            service.resolve(request.model_copy(update={"definition_contract_digest": "a" * 64}))
+        )
+        schema_mismatch = asyncio.run(
+            service.resolve(request.model_copy(update={"result_schema": contract.request_schema}))
+        )
+        unsafe_output = asyncio.run(
+            OperationResultProjectionService(
+                reader=repository,
+                registry=_registry(
+                    result_projector=_unsafe_result_projection,
+                    result_schema_type=PublicProjectionResult,
+                ),
+                operands=operands,
+            ).resolve(request)
+        )
+
+        assert isinstance(result, OperationResultProjectionSuccessV1)
+        assert result.projection == PublicProjectionResult(result_code="safe.result")
+        assert isinstance(stale, OperationResultProjectionRefusalV1)
+        assert isinstance(digest_mismatch, OperationResultProjectionRefusalV1)
+        assert isinstance(schema_mismatch, OperationResultProjectionRefusalV1)
+        assert isinstance(unsafe_output, OperationResultProjectionRefusalV1)
+        assert stale.code is OperationResultProjectionRefusalCode.STALE_OPERATION_REVISION
+        assert digest_mismatch.code is OperationResultProjectionRefusalCode.DEFINITION_CONTRACT_MISMATCH
+        assert schema_mismatch.code is OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH
+        assert unsafe_output.code is OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE
         assert "result_ref" not in type(request).model_fields
 
 

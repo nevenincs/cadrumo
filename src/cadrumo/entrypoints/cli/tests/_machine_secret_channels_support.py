@@ -21,7 +21,6 @@ from ....core.config import override_settings
 from ....tests import SRC_CADRUMO
 from ....tests.secure_sql import reap_profile_session_keys
 from ....tests.subprocess_cli import subprocess_cli_env
-from .._windows_profile_secret_bootstrap import bootstrap_interpreter
 
 _PROFILE_SECRET = "s13-profile-passphrase-that-must-never-escape"  # noqa: S105
 _NEW_PROFILE_SECRET = "s13-new-profile-passphrase-that-must-never-escape"  # noqa: S105
@@ -29,6 +28,19 @@ _CERTIFICATE_SECRET = "s13-certificate-passphrase-that-must-never-escape"  # noq
 _REFUSAL_SECRET = "s14-refusal-secret-that-must-never-escape"  # noqa: S105
 _OVERSIZE_SECRET = "s14-oversize-secret-that-must-never-escape"  # noqa: S105
 _ALL_SECRETS = (_PROFILE_SECRET, _NEW_PROFILE_SECRET, _CERTIFICATE_SECRET, _REFUSAL_SECRET)
+
+
+def bootstrap_interpreter() -> str:
+    """Return the base CPython executable that inherits allowlisted HANDLEs."""
+    candidate = getattr(sys, "_base_executable", None)
+    if not isinstance(candidate, str) or not candidate:
+        raise RuntimeError("the base CPython executable is unavailable")
+    resolved = Path(candidate).resolve(strict=True)
+    if resolved.name.lower() not in {"python.exe", "pythonw.exe"}:
+        raise RuntimeError("the base CPython executable is invalid")
+    return str(resolved)
+
+
 _PROMPTS = (
     "profile passphrase:",
     "current profile passphrase:",

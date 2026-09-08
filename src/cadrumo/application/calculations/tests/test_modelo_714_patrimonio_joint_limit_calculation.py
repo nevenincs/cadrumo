@@ -234,8 +234,11 @@ def test_modelo_714_joint_limit_calculates_from_local_m100_observation(tmp_path:
         repo = CalculationObservationRepository()
         repo.save(
             repo.prepare_observation_envelope(
-                _m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT,
-            stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)))
+                _m100_observation(scenario),
+                source_kind="app_filing",
+                captured_at=_CAPTURED_AT,
+                stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)),
+            )
         )
         result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
 
@@ -251,8 +254,11 @@ def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(tmp_path: Pa
             scenario = _SCENARIOS[filing_year]
             repo.save(
                 repo.prepare_observation_envelope(
-                    _m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT,
-                stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)))
+                    _m100_observation(scenario),
+                    source_kind="app_filing",
+                    captured_at=_CAPTURED_AT,
+                    stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)),
+                )
             )
             result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
             _assert_joint_limit_outputs(result, scenario)

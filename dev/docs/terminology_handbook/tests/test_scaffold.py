@@ -417,8 +417,8 @@ def test_real_enrolment_candidates_are_concept_grade_and_bounded() -> None:
     # carries every code the codebase mentions, including the 76 members the
     # codebase itself declares in NON_REGISTRY_MODELOS as having no registry
     # definition. Enrolling those made the Handbook report 118 unenrolled
-    # concepts against a committed 117 and would have tripled the curation
-    # ratchet, entirely as a side effect of a typing change made elsewhere.
+    # concepts instead of the registry-backed set, entirely as a side effect of
+    # a typing change made elsewhere.
     #
     # The assertion this replaces was about GRANULARITY -- modelos are the
     # concept-grade axis, unlike casillas -- and that intent is unchanged here.

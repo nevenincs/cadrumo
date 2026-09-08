@@ -202,6 +202,7 @@ def _projection(
         "pending_interaction": OperationNoPendingInteractionV1(),
         "result_ref": None,
         "refusal_ref": None,
+        "failure_error_code": None,
         "diagnostic_ref": None,
     }
     values.update(changes)

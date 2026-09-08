@@ -998,9 +998,8 @@ class ModeloWorkspaceSnapshotScopeV1(_WorkspaceModel):
     that exists, an "effective" grade could therefore only ever equal
     ``declared_grade`` -- a field that can only restate its neighbour asserts
     a narrowing step the system never performs, and nothing in the codebase
-    ever constructed or read it. Retired outright rather than migrated
-    (``COMPATIBILITY_REGIME`` is ``PRE_RELEASE``; nothing persists this
-    class). Reintroduction condition: if a future revision-selection path
+    ever constructed or read it. Retired outright because nothing persists
+    this class. Reintroduction condition: if a future revision-selection path
     ever TRUNCATES instead of refusing -- admitting a snapshot at a grade
     below the one requested, rather than raising -- then an effective grade
     becomes a real, distinct fact and the field earns its place back with

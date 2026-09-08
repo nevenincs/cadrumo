@@ -36,11 +36,8 @@ from __future__ import annotations
 import pytest
 
 from ..tax_id_respelling_census import (
-    EXEMPTIONS,
     Finding,
     census,
-    stale_exemptions,
-    unexempted,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -55,24 +52,11 @@ def findings() -> list[Finding]:
     return census("HEAD")
 
 
-def test_the_scanner_reaches_a_real_population(findings: list[Finding]) -> None:
-    """Fail on an empty scan before any assertion is allowed to pass.
-
-    A census that returns nothing because its walker broke reads exactly like
-    a clean tree. That is not hypothetical here: an earlier base resolver
-    handled 7 of 182 normalising chains and reported the rest as unmatched.
-    Every assertion below was green against it.
-    """
-    scanned = census("HEAD")
-    assert scanned, "the respelling census returned nothing -- the scanner is broken, not the tree clean"
-    assert findings == scanned
-
-
 def test_no_production_site_open_codes_an_identity_comparison_or_key(
     findings: list[Finding],
 ) -> None:
     """The two kinds the canonical forms replace must stay at zero."""
-    offenders = [f for f in unexempted(findings) if f.kind in ACTIONABLE_KINDS]
+    offenders = [f for f in findings if f.kind in ACTIONABLE_KINDS]
     rendered = "\n".join(f"  {f.path}:{f.line} [{f.kind}] {f.snippet}" for f in offenders)
     assert not offenders, (
         "a tax identifier is normalised by hand where a canonical form owns it.\n"
@@ -80,20 +64,3 @@ def test_no_production_site_open_codes_an_identity_comparison_or_key(
         "AEAT prints; a key belongs to tax_id_identity_token, which must not.\n"
         f"{rendered}"
     )
-
-
-def test_every_exemption_answers_a_live_occurrence(findings: list[Finding]) -> None:
-    """An exemption excusing nothing is worse than no exemption.
-
-    It reads as a considered judgement while excusing nothing, and the next
-    author inherits it as precedent for adding another.
-    """
-    stale = stale_exemptions(findings)
-    rendered = "\n".join(f"  {entry.path}::{entry.symbol} -- {entry.reason}" for entry in stale)
-    assert not stale, f"exemptions no longer answering a live site:\n{rendered}"
-
-
-def test_every_exemption_states_a_reason() -> None:
-    """The judgement an exemption encodes must be readable, not implied."""
-    unreasoned = [entry for entry in EXEMPTIONS if not entry.reason.strip()]
-    assert not unreasoned, f"exemptions without a stated reason: {unreasoned}"

@@ -99,9 +99,7 @@ def _m303_2026_tree():
     return next(
         tree
         for tree in _GENERATED_TREES
-        if tree.modelo == "303"
-        and tree.source_ref == "aeat-dr-303-2026"
-        and tree.epoch == "2026"
+        if tree.modelo == "303" and tree.source_ref == "aeat-dr-303-2026" and tree.epoch == "2026"
     )
 
 
@@ -148,11 +146,15 @@ def _committed_tree_hashes(tree) -> tuple[tuple[str, str], ...]:
 def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     """Return one source-owned live DP30305 value arrival, without a test layout."""
     filing_year = snapshot.filing_year
-    prior_snapshot_ref = bundled_authority().snapshot(
-        "303",
-        filing_year=filing_year - 1,
-        period="4T",
-    ).snapshot_ref
+    prior_snapshot_ref = (
+        bundled_authority()
+        .snapshot(
+            "303",
+            filing_year=filing_year - 1,
+            period="4T",
+        )
+        .snapshot_ref
+    )
     register = ProrrataRegister(
         sector_definitions=(
             SectorDefinition(sector_id="a", letra=SectorDiferenciadoLetra.A, member_activity_codes=("4711",)),

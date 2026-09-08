@@ -53,7 +53,6 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
-from cadrumo.domain.calculations.registry.snapshot_coordinate import registry_snapshot_id_for
 
 from ._workbook_parity_models import (
     SyntheticInputSet,
@@ -827,7 +826,7 @@ def run_registry_workbook_parity(
         expected_workbook_values=workbook_values,
         actual_registry_values=registry_values,
         output_cells=output_cells,
-        registry_snapshot_id=registry_snapshot_id_for(snapshot),
+        registry_snapshot_id=(f"{snapshot.modelo.id}:{snapshot.revision.id}:{snapshot.filing_year}:{snapshot.period}"),
         legal_refs=legal_refs,
         source_refs=source_refs,
         tolerance=tolerance,

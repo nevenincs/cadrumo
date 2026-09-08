@@ -128,7 +128,8 @@ def _save(repo: CalculationObservationRepository) -> ObservationEnvelopePayload:
             member_nif="B12345678",
             source_metadata={"aeat_register_status": "ALTA", "aeat_expediente_id": "202530300000001Z"},
             source_headers=_header_facts(),
-        stamped_revision_id=revision_id_for_observation(_observation()))
+            stamped_revision_id=revision_id_for_observation(_observation()),
+        )
     )
     loaded = repo.load(member_observation_key("303", _PERIOD, "B12345678"))
     assert loaded is not None, "the observation did not come back at all"

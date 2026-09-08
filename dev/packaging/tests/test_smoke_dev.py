@@ -1,6 +1,5 @@
 """Tests for the developer-venv packaging smoke lane's proof discipline.
 
-`dev.quality.module_test_reach` listed `dev/packaging/smoke_dev.py` as unreached.
 The lane builds a clean venv, installs the project non-editable, and proves the
 developer toolchain starts in it. Each proof it records becomes a line in the
 committed smoke manifest.

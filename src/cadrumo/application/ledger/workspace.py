@@ -13,6 +13,7 @@ or exposed in the representation of :class:`LedgerWorkspaceProjectionV1`.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping
 from enum import StrEnum
 from typing import Final, Protocol
@@ -36,7 +37,7 @@ from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.enums import TransactionLifecycleState
-from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..review.filter import LedgerReviewStatus
 from .actions_manual import ledger_transaction_review_payload
 from .models import LedgerReviewQueryResult, LedgerStatusReport, LedgerTransactionReviewPayload
@@ -322,40 +323,48 @@ def project_affected_declaration_reconciliations(
     )
 
 
-def project_ledger_workspace(
+def _assert_workspace_bucket_alignment(
     *,
-    summary: LedgerStatusReport,
+    bucket_id: str,
     preflight: LedgerPreflightReport | None,
     review: LedgerReviewQueryResult,
-    transactions: TransactionCatalogue,
-    invoices: InvoiceCatalogue,
-    revisions: Mapping[str, CalculationRevision],
-    work_units: WorkUnitCatalogue,
-    invoice_reconciliation_reader: LedgerInvoiceReconciliationReaderProtocol = suggest_reconciliations,
-    link_consistency_reader: LedgerLinkConsistencyReaderProtocol = verify_link_consistency,
-    filing_staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
-) -> LedgerWorkspaceProjectionV1:
-    """Build one deterministic, frontend-neutral snapshot from canonical facts."""
-    bucket_id = summary.bucket_id
+) -> None:
+    """Refuse a workspace assembled from facts belonging to different buckets."""
     if review.bucket_id != bucket_id:
         raise LedgerWorkspaceProjectionError("Ledger summary and review facts name different buckets")
     if preflight is not None and preflight.bucket_id != bucket_id:
         raise LedgerWorkspaceProjectionError("Ledger summary and preflight facts name different buckets")
 
-    _validate_workspace_facts(
-        bucket_id=bucket_id,
-        summary=summary,
-        preflight=preflight,
-        review=review,
-        transactions=transactions,
-        invoices=invoices,
-    )
 
+def _project_entries_and_review_ids(
+    *,
+    review: LedgerReviewQueryResult,
+    transactions: TransactionCatalogue,
+) -> tuple[tuple[LedgerWorkspaceEntryRefV1, ...], tuple[TransactionId, ...]]:
+    """Project the ordered entry facts and the review queue's original order."""
     entries = tuple(
         _entry_ref(ledger_transaction_review_payload(transaction))
         for transaction in sorted(transactions.values(), key=lambda item: item.transaction_id)
     )
-    review_ids = tuple(row.id for row in review.rows)
+    return entries, tuple(row.id for row in review.rows)
+
+
+def _project_reconciliation_facts(
+    *,
+    bucket_id: str,
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
+    revisions: Mapping[str, CalculationRevision],
+    work_units: WorkUnitCatalogue,
+    invoice_reconciliation_reader: LedgerInvoiceReconciliationReaderProtocol,
+    link_consistency_reader: LedgerLinkConsistencyReaderProtocol,
+    filing_staleness_reader: LedgerFilingStalenessReaderProtocol,
+) -> tuple[
+    tuple[LedgerInvoiceReconciliationRefV1, ...],
+    tuple[LedgerLinkInconsistencyRefV1, ...],
+    tuple[LedgerAffectedDeclarationRefV1, ...],
+]:
+    """Project each local reconciliation source through its canonical reader."""
     suggestions = tuple(
         LedgerInvoiceReconciliationRefV1(
             invoice_id=row.invoice_id,
@@ -385,11 +394,20 @@ def project_ledger_workspace(
         work_units=work_units,
         staleness_reader=filing_staleness_reader,
     )
-    reconciliation_count = len(suggestions) + len(inconsistencies) + len(affected)
-    pending = summary.pending_review_count
-    readiness_issues = 0 if preflight is None else len(preflight.issues)
+    return suggestions, inconsistencies, affected
 
-    areas = (
+
+def _project_workspace_areas(
+    *,
+    entries: tuple[LedgerWorkspaceEntryRefV1, ...],
+    review_ids: tuple[TransactionId, ...],
+    pending: int,
+    readiness_issues: int,
+    affected: tuple[LedgerAffectedDeclarationRefV1, ...],
+    reconciliation_count: int,
+) -> tuple[LedgerWorkspaceAreaStateV1, ...]:
+    """Build the fixed area catalogue from already-validated projection facts."""
+    return (
         LedgerWorkspaceAreaStateV1(
             area=LedgerWorkspaceArea.OVERVIEW,
             sources=(LedgerWorkspaceSource.LOCAL_LEDGER, LedgerWorkspaceSource.LOCAL_DECLARATIONS),
@@ -443,6 +461,51 @@ def project_ledger_workspace(
             item_count=reconciliation_count,
         ),
     )
+
+
+def project_ledger_workspace(
+    *,
+    summary: LedgerStatusReport,
+    preflight: LedgerPreflightReport | None,
+    review: LedgerReviewQueryResult,
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue,
+    revisions: Mapping[str, CalculationRevision],
+    work_units: WorkUnitCatalogue,
+    invoice_reconciliation_reader: LedgerInvoiceReconciliationReaderProtocol = suggest_reconciliations,
+    link_consistency_reader: LedgerLinkConsistencyReaderProtocol = verify_link_consistency,
+    filing_staleness_reader: LedgerFilingStalenessReaderProtocol = _canonical_filing_staleness_reader,
+) -> LedgerWorkspaceProjectionV1:
+    """Build one deterministic, frontend-neutral snapshot from canonical facts."""
+    bucket_id = summary.bucket_id
+    _assert_workspace_bucket_alignment(bucket_id=bucket_id, preflight=preflight, review=review)
+    _validate_workspace_facts(
+        bucket_id=bucket_id,
+        summary=summary,
+        preflight=preflight,
+        review=review,
+        transactions=transactions,
+        invoices=invoices,
+    )
+    entries, review_ids = _project_entries_and_review_ids(review=review, transactions=transactions)
+    suggestions, inconsistencies, affected = _project_reconciliation_facts(
+        bucket_id=bucket_id,
+        invoices=invoices,
+        transactions=transactions,
+        revisions=revisions,
+        work_units=work_units,
+        invoice_reconciliation_reader=invoice_reconciliation_reader,
+        link_consistency_reader=link_consistency_reader,
+        filing_staleness_reader=filing_staleness_reader,
+    )
+    areas = _project_workspace_areas(
+        entries=entries,
+        review_ids=review_ids,
+        pending=summary.pending_review_count,
+        readiness_issues=0 if preflight is None else len(preflight.issues),
+        affected=affected,
+        reconciliation_count=len(suggestions) + len(inconsistencies) + len(affected),
+    )
     return LedgerWorkspaceProjectionV1(
         bucket_id=bucket_id,
         areas=areas,
@@ -469,6 +532,120 @@ def _entry_ref(payload: LedgerTransactionReviewPayload) -> LedgerWorkspaceEntryR
     )
 
 
+def _assert_local_invoice_catalogue(*, bucket_id: str, invoices: InvoiceCatalogue) -> None:
+    """Refuse invoice facts that are not scoped to the workspace bucket."""
+    if any(invoice.bucket_id != bucket_id for invoice in invoices.values()):
+        raise LedgerWorkspaceProjectionError("invoice catalogue contains a foreign Ledger bucket")
+
+
+def _expected_transaction_summary_counts(transaction_rows: tuple[Transaction, ...]) -> dict[str, int]:
+    """Derive every transaction and active-review count from canonical rows."""
+    lifecycle_counts = Counter(transaction.lifecycle_state for transaction in transaction_rows)
+    active_statuses = tuple(
+        ledger_transaction_review_payload(transaction).review_status
+        for transaction in transaction_rows
+        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+    )
+    return {
+        "total_count": len(transaction_rows),
+        "active_count": lifecycle_counts[TransactionLifecycleState.ACTIVE],
+        "archived_count": lifecycle_counts[TransactionLifecycleState.ARCHIVED],
+        "stashed_count": lifecycle_counts[TransactionLifecycleState.STASHED],
+        "split_count": lifecycle_counts[TransactionLifecycleState.SPLIT],
+        "pending_review_count": active_statuses.count(LedgerReviewStatus.PENDING),
+        "reviewed_count": active_statuses.count(LedgerReviewStatus.REVIEWED),
+        "skipped_count": active_statuses.count(LedgerReviewStatus.SKIPPED),
+    }
+
+
+def _assert_summary_matches_transactions(
+    *,
+    summary: LedgerStatusReport,
+    transaction_rows: tuple[Transaction, ...],
+) -> None:
+    """Refuse aggregate counts that disagree with the transaction catalogue."""
+    expected_counts = _expected_transaction_summary_counts(transaction_rows)
+    if any(getattr(summary, field_name) != expected for field_name, expected in expected_counts.items()):
+        raise LedgerWorkspaceProjectionError("Ledger summary counts contradict the supplied transaction catalogue")
+
+
+def _assert_summary_matches_preflight(
+    *,
+    summary: LedgerStatusReport,
+    preflight: LedgerPreflightReport | None,
+) -> None:
+    """Refuse summary readiness claims that lack or contradict preflight facts."""
+    if preflight is None:
+        if (
+            summary.period is not None
+            or summary.checked_transaction_count != 0
+            or summary.readiness_issue_count != 0
+            or summary.ready is not None
+        ):
+            raise LedgerWorkspaceProjectionError("Ledger summary claims preflight facts that were not supplied")
+        return
+    if (
+        summary.period != preflight.period
+        or summary.checked_transaction_count != preflight.checked_transaction_count
+        or summary.readiness_issue_count != len(preflight.issues)
+        or summary.ready is not preflight.ready
+    ):
+        raise LedgerWorkspaceProjectionError("Ledger summary and preflight counts contradict each other")
+
+
+def _assert_review_matches_transactions(
+    *,
+    review: LedgerReviewQueryResult,
+    preflight: LedgerPreflightReport | None,
+    transaction_rows: tuple[Transaction, ...],
+) -> None:
+    """Refuse review and preflight coordinates absent from the transaction rows."""
+    transaction_by_id = {transaction.transaction_id: transaction for transaction in transaction_rows}
+    review_ids = tuple(row.id for row in review.rows)
+    _assert_review_ids_are_unique(review_ids)
+    _assert_review_ids_are_known(review_ids, transaction_by_id)
+    _assert_review_statuses_match(review, transaction_by_id)
+    _assert_preflight_issue_ids_are_known(preflight, transaction_by_id)
+
+
+def _assert_review_ids_are_unique(review_ids: tuple[TransactionId, ...]) -> None:
+    """Refuse a review queue that repeats a transaction identity."""
+    if len(set(review_ids)) != len(review_ids):
+        raise LedgerWorkspaceProjectionError("Ledger review facts contain duplicate transaction identities")
+
+
+def _assert_review_ids_are_known(
+    review_ids: tuple[TransactionId, ...],
+    transaction_by_id: Mapping[str, Transaction],
+) -> None:
+    """Refuse review rows that name no supplied transaction."""
+    if any(transaction_id not in transaction_by_id for transaction_id in review_ids):
+        raise LedgerWorkspaceProjectionError("Ledger review facts name an absent transaction")
+
+
+def _assert_review_statuses_match(
+    review: LedgerReviewQueryResult,
+    transaction_by_id: Mapping[str, Transaction],
+) -> None:
+    """Refuse review statuses that disagree with canonical transaction facts."""
+    if any(
+        row.status != ledger_transaction_review_payload(transaction_by_id[row.id]).review_status for row in review.rows
+    ):
+        raise LedgerWorkspaceProjectionError("Ledger review status contradicts the supplied transaction catalogue")
+
+
+def _assert_preflight_issue_ids_are_known(
+    preflight: LedgerPreflightReport | None,
+    transaction_by_id: Mapping[str, Transaction],
+) -> None:
+    """Refuse preflight issues that name no supplied transaction."""
+    if preflight is not None and any(
+        issue.transaction_id != "__period__" and issue.transaction_id not in transaction_by_id
+        for issue in preflight.issues
+    ):
+        raise LedgerWorkspaceProjectionError("Ledger preflight facts name an absent transaction")
+
+
 def _validate_workspace_facts(
     *,
     bucket_id: str,
@@ -479,77 +656,15 @@ def _validate_workspace_facts(
     invoices: InvoiceCatalogue,
 ) -> None:
     """Refuse cross-source contradictions before any downstream reader runs."""
-    foreign_invoice_ids = tuple(
-        sorted(invoice.invoice_id for invoice in invoices.values() if invoice.bucket_id != bucket_id)
-    )
-    if foreign_invoice_ids:
-        raise LedgerWorkspaceProjectionError("invoice catalogue contains a foreign Ledger bucket")
-
+    _assert_local_invoice_catalogue(bucket_id=bucket_id, invoices=invoices)
     transaction_rows = tuple(transactions.values())
-    expected_counts = {
-        "total_count": len(transaction_rows),
-        "active_count": sum(
-            transaction.lifecycle_state is TransactionLifecycleState.ACTIVE for transaction in transaction_rows
-        ),
-        "archived_count": sum(
-            transaction.lifecycle_state is TransactionLifecycleState.ARCHIVED for transaction in transaction_rows
-        ),
-        "stashed_count": sum(
-            transaction.lifecycle_state is TransactionLifecycleState.STASHED for transaction in transaction_rows
-        ),
-        "split_count": sum(
-            transaction.lifecycle_state is TransactionLifecycleState.SPLIT for transaction in transaction_rows
-        ),
-    }
-    active_statuses = tuple(
-        ledger_transaction_review_payload(transaction).review_status
-        for transaction in transaction_rows
-        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+    _assert_summary_matches_transactions(summary=summary, transaction_rows=transaction_rows)
+    _assert_summary_matches_preflight(summary=summary, preflight=preflight)
+    _assert_review_matches_transactions(
+        review=review,
+        preflight=preflight,
+        transaction_rows=transaction_rows,
     )
-    expected_counts.update(
-        {
-            "pending_review_count": active_statuses.count(LedgerReviewStatus.PENDING),
-            "reviewed_count": active_statuses.count(LedgerReviewStatus.REVIEWED),
-            "skipped_count": active_statuses.count(LedgerReviewStatus.SKIPPED),
-        }
-    )
-    contradictory_counts = tuple(
-        field_name for field_name, expected in expected_counts.items() if getattr(summary, field_name) != expected
-    )
-    if contradictory_counts:
-        raise LedgerWorkspaceProjectionError("Ledger summary counts contradict the supplied transaction catalogue")
-
-    if preflight is None:
-        if (
-            summary.period is not None
-            or summary.checked_transaction_count != 0
-            or summary.readiness_issue_count != 0
-            or summary.ready is not None
-        ):
-            raise LedgerWorkspaceProjectionError("Ledger summary claims preflight facts that were not supplied")
-    elif (
-        summary.period != preflight.period
-        or summary.checked_transaction_count != preflight.checked_transaction_count
-        or summary.readiness_issue_count != len(preflight.issues)
-        or summary.ready is not preflight.ready
-    ):
-        raise LedgerWorkspaceProjectionError("Ledger summary and preflight counts contradict each other")
-
-    transaction_by_id = {transaction.transaction_id: transaction for transaction in transaction_rows}
-    review_ids = tuple(row.id for row in review.rows)
-    if len(set(review_ids)) != len(review_ids):
-        raise LedgerWorkspaceProjectionError("Ledger review facts contain duplicate transaction identities")
-    if any(transaction_id not in transaction_by_id for transaction_id in review_ids):
-        raise LedgerWorkspaceProjectionError("Ledger review facts name an absent transaction")
-    if any(
-        row.status != ledger_transaction_review_payload(transaction_by_id[row.id]).review_status for row in review.rows
-    ):
-        raise LedgerWorkspaceProjectionError("Ledger review status contradicts the supplied transaction catalogue")
-    if preflight is not None and any(
-        issue.transaction_id != "__period__" and issue.transaction_id not in transaction_by_id
-        for issue in preflight.issues
-    ):
-        raise LedgerWorkspaceProjectionError("Ledger preflight facts name an absent transaction")
 
 
 __all__ = [

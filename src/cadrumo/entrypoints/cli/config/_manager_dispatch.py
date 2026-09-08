@@ -31,7 +31,6 @@ from typing import TYPE_CHECKING, cast
 import typer
 from typer._click.core import Context as _TyperClickContext
 
-from ....core.i18n import tr
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._common import activate_subcommand_output_language
 from ..errors import command_error_boundary as _command_error_boundary
@@ -53,27 +52,9 @@ def with_profile_cli_projection(wizard_command: Callable[..., None], *, mode: Wi
 
     @functools.wraps(wizard_command)
     def _dispatch(*args: object, **kwargs: object) -> None:
-        from ._manager_frontend import has_explicit_profile_fields
-
         context = kwargs.get("ctx")
         if not isinstance(context, _TyperClickContext):
             raise TypeError("profile frontend dispatch requires a Typer context")
-        from .._tui_policy import tui_was_requested
-
-        tui_requested = tui_was_requested(cast("typer.Context", context))
-        explicit_fields = has_explicit_profile_fields(kwargs)
-        scripted = any(
-            (
-                bool(kwargs.get("quiet")),
-                bool(kwargs.get("accept_defaults")),
-                bool(kwargs.get("secrets_stdin")),
-                kwargs.get("secrets_fd") is not None,
-                kwargs.get("recovery_handoff_fd") is not None,
-                kwargs.get("recovery_verification_fd") is not None,
-            )
-        )
-        if tui_requested and (scripted or explicit_fields):
-            raise typer.BadParameter(tr("cli.config.setup.tui_scripted_conflict"))
 
         if mode == "create":
             from ._scripted_registration import register_profile_from_scripted_invocation

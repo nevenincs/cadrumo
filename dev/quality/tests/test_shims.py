@@ -1,7 +1,6 @@
 """Tests for the lazy re-export verification gate.
 
-`dev.quality.module_test_reach` listed `dev/quality/shims.py` as unreached. It
-backs ``just verify-shims`` and answers one question: do the public names a
+It backs ``just verify-shims`` and answers one question: do the public names a
 re-export surface promises actually resolve?
 
 It reported nine modules verified while asserting something about one. Measured

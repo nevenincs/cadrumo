@@ -1,17 +1,10 @@
 """Payload acceptance re-hashes emitted bytes and checks official field positions.
 
-These tests once ran over modelo 200 and over ``LiveFilingExportProofAuthority``.
-Both supports were withdrawn beneath them. The authority now refuses on
-construction, because the single-channel filing proof it implements was replaced
-by the two-channel source-and-custody authority, and modelo 200 lost both its
-filing grade and every one of its export layouts while the tests still probed
-into ``m200-2025.dp200001.f0001``.
-
-What remains here is the part that was never about either: a pure re-hash of
+These tests preserve the product-facing part of the retired single-channel
+proof: a pure re-hash of
 emitted bytes against independently recorded acceptance evidence. That surface is
-live, and while its tests sat red against a withdrawn modelo it was gated by
-nothing. It is re-sited onto modelo 151, whose annual coordinate holds filing
-grade and whose layout carries the filing envelope these checks need.
+exercised on modelo 151, whose annual coordinate holds filing grade and whose
+layout carries the filing envelope these checks need.
 """
 
 from __future__ import annotations

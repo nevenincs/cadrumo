@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-03 05:07+0200\n"
+"POT-Creation-Date: 2026-09-08 09:02+0200\n"
 "PO-Revision-Date: 2026-07-19 09:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -111,113 +111,116 @@ msgid "`aeat` runs as ordinary commands that print their results:"
 msgstr ""
 
 #: ../../download.md:48
-msgid "Add `--tui` to work in a full-screen interface instead:"
+msgid "Start the full-screen workbench separately when that suits the task:"
 msgstr ""
 
 #: ../../download.md:54
-msgid "Both drive the same engine and the same local records."
+msgid ""
+"The command starts the independent workbench; its navigation and "
+"availability are owned inside that interface. Both entrypoints use the "
+"same local records."
 msgstr ""
 
-#: ../../download.md:56
+#: ../../download.md:57
 msgid "Install channels"
 msgstr "Canales de instalación"
 
-#: ../../download.md:58
+#: ../../download.md:59
 msgid ""
 "PyPI is the primary channel; Homebrew and Scoop install the same package "
 "for users without a Python toolchain. Each release is install-tested on "
 "every platform it claims before it is published."
 msgstr ""
 
-#: ../../download.md:69
+#: ../../download.md:70
 msgid "Platform"
 msgstr "Plataforma"
 
-#: ../../download.md:70
+#: ../../download.md:71
 msgid "Channel"
 msgstr "Canal"
 
-#: ../../download.md:71
+#: ../../download.md:72
 msgid "Where it comes from"
 msgstr ""
 
-#: ../../download.md:72
+#: ../../download.md:73
 msgid "Any platform with Python 3.13+"
 msgstr "Cualquier plataforma con Python 3.13+"
 
-#: ../../download.md:73
+#: ../../download.md:74
 msgid "Python package"
 msgstr "Paquete de Python"
 
-#: ../../download.md:74
+#: ../../download.md:75
 msgid "PyPI listing"
 msgstr ""
 
-#: ../../download.md:75
+#: ../../download.md:76
 msgid "macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "macOS (Apple silicon), Linux (x86-64 y arm64)"
 
-#: ../../download.md:76
+#: ../../download.md:77
 msgid "Homebrew formula"
 msgstr "Fórmula de Homebrew"
 
-#: ../../download.md:77
+#: ../../download.md:78
 #, fuzzy
 msgid "Homebrew tap"
 msgstr "Fórmula de Homebrew"
 
-#: ../../download.md:78
+#: ../../download.md:79
 msgid "Windows (x86-64)"
 msgstr "Windows (x86-64)"
 
-#: ../../download.md:79
+#: ../../download.md:80
 msgid "Scoop package"
 msgstr "Paquete de Scoop"
 
-#: ../../download.md:80
+#: ../../download.md:81
 #, fuzzy
 msgid "Scoop bucket"
 msgstr "Paquete de Scoop"
 
-#: ../../download.md:83
+#: ../../download.md:84
 msgid "Per-channel install paths:"
 msgstr "Vías de instalación por canal:"
 
-#: ../../download.md:85
+#: ../../download.md:86
 msgid "**Python package**: Any platform with Python 3.13+"
 msgstr "**Paquete de Python**: Cualquier plataforma con Python 3.13+"
 
-#: ../../download.md:93
+#: ../../download.md:94
 msgid "**Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)"
 msgstr "**Fórmula de Homebrew**: macOS (Apple silicon), Linux (x86-64 y arm64)"
 
-#: ../../download.md:100
+#: ../../download.md:101
 msgid "**Scoop package**: Windows (x86-64)"
 msgstr "**Paquete de Scoop**: Windows (x86-64)"
 
-#: ../../download.md:110
+#: ../../download.md:111
 msgid "Each release's notes in [Updates](updates.md) name what changed."
 msgstr ""
 
-#: ../../download.md:112
+#: ../../download.md:113
 msgid "After you install"
 msgstr "Después de instalar"
 
-#: ../../download.md:118
+#: ../../download.md:119
 msgid "Quickstart"
 msgstr "Guía rápida"
 
-#: ../../download.md:123
+#: ../../download.md:124
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr ""
 "Toma el camino más corto desde un perfil vacío hasta un fichero de modelo"
 " exportado."
 
-#: ../../download.md:126
+#: ../../download.md:127
 msgid "Connect an agent (MCP)"
 msgstr "Conecta un agente (MCP)"
 
-#: ../../download.md:131
+#: ../../download.md:132
 msgid ""
 "Let an AI assistant such as Claude drive Cadrumo with you, on your "
 "machine."
@@ -503,4 +506,10 @@ msgstr ""
 #~ "notas de cada versión en "
 #~ "[Actualizaciones](updates.md) indican qué ha "
 #~ "cambiado."
+
+#~ msgid "Add `--tui` to work in a full-screen interface instead:"
+#~ msgstr ""
+
+#~ msgid "Both drive the same engine and the same local records."
+#~ msgstr ""
 

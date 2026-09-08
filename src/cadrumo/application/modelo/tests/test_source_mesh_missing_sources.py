@@ -91,7 +91,9 @@ def test_row_producing_binding_uses_its_detail_row_channel() -> None:
     """An unknown row source does not need a scalar source-mesh resolver."""
     revision = bundled_authority().snapshot("232", filing_year=2025, period="0A").revision
     row_binding = next(
-        binding for binding in revision.bindings if getattr(binding.aggregation, "op", None) is BindingAggregationOp.ROWS
+        binding
+        for binding in revision.bindings
+        if getattr(binding.aggregation, "op", None) is BindingAggregationOp.ROWS
     )
     synthetic = row_binding.model_copy(update={"source": "synthetic_row_source_qqq"})
     patched = revision.model_copy(update={"bindings": (*revision.bindings, synthetic)})

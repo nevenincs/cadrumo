@@ -192,6 +192,8 @@ _MODELO_KIND_CATALOGUE: dict[str, frozenset[str]] = {
     Modelo.M347.value: _MODELO_347_KINDS,
     Modelo.M349.value: _MODELO_349_KINDS,
 }
+
+
 def _aggregate_for_modelo(
     observations: tuple[CounterpartObservation, ...],
     *,

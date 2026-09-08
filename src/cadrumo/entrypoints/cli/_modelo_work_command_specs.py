@@ -27,7 +27,6 @@ from .command_spec import (
     ResultSchemaSpec,
     SchemaState,
     SideEffect,
-    TuiCapability,
     ValueContract,
 )
 from .command_spec import translation_key as _key
@@ -161,7 +160,6 @@ def _leaf(
     schema_name: str,
     *,
     handler_name: str | None = None,
-    tui_capability: TuiCapability = TuiCapability.NOT_IMPLEMENTED,
 ) -> CommandSpec:
     name = token.replace("-", "_")
     return CommandSpec(
@@ -180,7 +178,6 @@ def _leaf(
             DeferredTarget(schema_module, schema_name),
             identity=f"modelo.work.{name}",
         ),
-        tui_capability=tui_capability,
     )
 
 
@@ -302,7 +299,6 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_payloads",
         "WorkSelectResult",
-        tui_capability=TuiCapability.AVAILABLE,
     ),
     _leaf(
         "rename",
@@ -327,7 +323,6 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _MODEL_READ,
         "cadrumo.entrypoints.cli._modelo_payloads",
         "WorkReviewResult",
-        tui_capability=TuiCapability.AVAILABLE,
     ),
     _leaf(
         "revisions",
@@ -446,7 +441,6 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         _WIZARD,
         "cadrumo.entrypoints.cli._modelo_work_wizard_payloads",
         "WorkWizardResult",
-        tui_capability=TuiCapability.NOT_IMPLEMENTED,
     ),
 )
 

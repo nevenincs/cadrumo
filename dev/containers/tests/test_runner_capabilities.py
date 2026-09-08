@@ -1,7 +1,6 @@
 """Tests for the self-hosted runner capability probe.
 
-`dev.quality.module_test_reach` listed `dev/containers/runner_capabilities.py`
-as unreached. It exists because half the fleet - the macOS and Windows hosts -
+It exists because half the fleet - the macOS and Windows hosts -
 has no image pinning its tools, so a capability gap surfaces mid-lane as a
 command-not-found inside a step that never names the missing tool.
 

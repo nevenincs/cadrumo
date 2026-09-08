@@ -43,10 +43,7 @@ class UnreachableModuleVerdict:
         lines = [
             f"unreachable-module coverage: {len(self.findings)} finding(s); expected zero",
         ]
-        lines.extend(
-            f"  + {finding.module} ({finding.reach.value}; {finding.path})"
-            for finding in self.findings
-        )
+        lines.extend(f"  + {finding.module} ({finding.reach.value}; {finding.path})" for finding in self.findings)
         return "\n".join(lines)
 
 

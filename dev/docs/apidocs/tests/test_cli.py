@@ -1,6 +1,5 @@
 """Tests for the apidocs CLI's drift-reporting contract.
 
-`dev.quality.module_test_reach` listed `dev/docs/apidocs/cli.py` as unreached.
 Its sibling `manager.py` is covered by `test_manager.py`; what had nothing was
 the wiring that turns a drift result into an exit code, which is the only part
 a workflow or a contributor's shell actually reads.
