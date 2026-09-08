@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Annotated, Literal, Protocol, runtime_checkable
 from uuid import UUID
 
@@ -28,15 +25,7 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.filing.schema import ModeloDraft
 from ...domain.submission.models import ModeloDraftStatus
 from ..calculations.revision_carry_gate import revision_carry_outcome
-from .export import export_draft
-from .export_verification import (
-    DeclaracionExportResult,
-    FilingExportConsumedResult,
-    FilingExportPayloadConsumer,
-    FilingExportValidatedPayload,
-)
 from .producer_snapshot import FilingProducerSnapshot
-from .runtime import RegistrySchemaAccessor
 
 _Token = Annotated[str, Field(min_length=1, max_length=200, pattern=r"^[a-z0-9][a-z0-9._:/-]*$")]
 _DictionaryScalar = str | Decimal | date | bool | int
@@ -201,47 +190,6 @@ class FilingExportConformanceReceipt(BaseModel):
         return self
 
 
-@runtime_checkable
-class FilingExportConformanceAuthority(Protocol):
-    """Official-layout authority that adjudicates one non-sensitive render."""
-
-    @property
-    def authority_id(self) -> str:
-        """Return the stable canonical conformance authority identity."""
-        ...
-
-    def resolve_conformance_vector(
-        self,
-        request: FilingExportConformanceRequest,
-    ) -> FilingExportConformanceVectorEvidence | None:
-        """Resolve a repository-owned mechanism vector without caller values."""
-
-    def schema_provider_for_conformance(
-        self,
-        evidence: FilingExportConformanceVectorEvidence,
-    ) -> RegistrySchemaAccessor:
-        """Return the law-selection provider for the resolved vector."""
-        ...
-
-    def materialize_conformance_inputs(
-        self,
-        evidence: FilingExportConformanceVectorEvidence,
-    ) -> FilingExportConformanceRenderInputs:
-        """Build transient writer inputs from the authority-owned public vector."""
-        ...
-
-    def verify_conformance(
-        self,
-        *,
-        request: FilingExportConformanceRequest,
-        evidence: FilingExportConformanceVectorEvidence,
-        export_result: DeclaracionExportResult,
-        payload: bytes,
-    ) -> FilingExportConformanceReceipt:
-        """Verify official source, provenance, extent, and literal spans."""
-        ...
-
-
 class FilingExportSecureReplayRequest(BaseModel):
     """Secret-free request; callers cannot inject a draft or producer snapshot."""
 
@@ -302,30 +250,6 @@ class FilingExportSecureReplayEvidence(BaseModel):
         return self
 
 
-@runtime_checkable
-class FilingExportSecureReplaySourceAuthority(Protocol):
-    """Resolve approved draft inputs only from the source-owned workflow."""
-
-    @property
-    def authority_id(self) -> str:
-        """Return the stable source-owned calculation authority identity."""
-        ...
-
-    def resolve_secure_replay(
-        self,
-        request: FilingExportSecureReplayRequest,
-    ) -> FilingExportSecureReplayEvidence:
-        """Return the exact approved calculation revision and filing inputs."""
-        ...
-
-    def schema_provider_for_secure_replay(
-        self,
-        evidence: FilingExportSecureReplayEvidence,
-    ) -> RegistrySchemaAccessor:
-        """Return the law-selection provider for the resolved source evidence."""
-        ...
-
-
 class FilingExportSecureCustodyRecord(BaseModel):
     """Secret-bearing encrypted custody record returned inside the service."""
 
@@ -357,26 +281,6 @@ class FilingExportSecureCustodyRecord(BaseModel):
         if self.valid_until <= self.attested_at:
             raise ValueError("secure replay validity must end after attestation")
         return self
-
-
-@runtime_checkable
-class FilingExportSecureReplayCustody(Protocol):
-    """Persist replay acceptance only in encrypted operator custody."""
-
-    @property
-    def authority_id(self) -> str:
-        """Return the stable encrypted operator-custody authority identity."""
-        ...
-
-    def persist_secure_replay(
-        self,
-        *,
-        request: FilingExportSecureReplayRequest,
-        evidence: FilingExportSecureReplayEvidence,
-        payload: FilingExportValidatedPayload,
-    ) -> FilingExportSecureCustodyRecord:
-        """Seal secret-bearing result and independently check source-pinned probes."""
-        ...
 
 
 class FilingExportSecureReplayReceipt(BaseModel):
@@ -493,133 +397,6 @@ class FilingExportProofAuthority(Protocol):
         ...
 
 
-def prove_export_conformance(
-    request: FilingExportConformanceRequest,
-    *,
-    authority: FilingExportConformanceAuthority,
-) -> FilingExportConformanceReceipt:
-    """Resolve and run a non-sensitive vector through the canonical writer."""
-    evidence = authority.resolve_conformance_vector(request)
-    if evidence is None:
-        raise ValueError("conformance authority has no mechanism vector for the requested coordinate")
-    if evidence.coordinate != request.coordinate or evidence.authority_id != authority.authority_id:
-        raise ValueError("conformance authority returned evidence for another request")
-    schema_provider = authority.schema_provider_for_conformance(evidence)
-    render_inputs = authority.materialize_conformance_inputs(evidence)
-    if (
-        render_inputs.coordinate != evidence.coordinate
-        or render_inputs.filing_year != evidence.filing_year
-        or render_inputs.period != evidence.period
-    ):
-        raise ValueError("conformance vector builder returned inputs for another coordinate")
-    with TemporaryDirectory(prefix="cadrumo-export-conformance-") as temporary:
-        output_path = Path(temporary) / "proof-output"
-        result = _export(render_inputs, output_path=output_path, schema_provider=schema_provider)
-        payload = output_path.read_bytes()
-        receipt = authority.verify_conformance(
-            request=request,
-            evidence=evidence,
-            export_result=result,
-            payload=payload,
-        )
-        _require_conformance_receipt(request, evidence, result, receipt, authority_id=authority.authority_id)
-    return receipt
-
-
-def prove_secure_export_replay(
-    request: FilingExportSecureReplayRequest,
-    *,
-    source_authority: FilingExportSecureReplaySourceAuthority,
-    custody: FilingExportSecureReplayCustody,
-) -> FilingExportSecureReplayReceipt:
-    """Resolve source-owned inputs, export, seal evidence, then publish no secrets."""
-    if request.source_authority_id != source_authority.authority_id:
-        raise ValueError("secure replay request names another source authority")
-    if request.custody_authority_id != custody.authority_id:
-        raise ValueError("secure replay request names another custody authority")
-    evidence = source_authority.resolve_secure_replay(request)
-    _require_source_evidence(request, evidence)
-    schema_provider = source_authority.schema_provider_for_secure_replay(evidence)
-    consumer = _SecureReplayConsumer(request=request, evidence=evidence, custody=custody)
-    result = _export_to_consumer(evidence, payload_consumer=consumer, schema_provider=schema_provider)
-    record = consumer.record
-    if record is None:
-        raise ValueError("secure replay custody did not persist the canonical writer payload")
-    _require_custody_record(request, evidence, result, record)
-    return FilingExportSecureReplayReceipt(
-        receipt_id=record.receipt_id,
-        coordinate=request.coordinate,
-        provenance=evidence.provenance,
-        source_authority_id=request.source_authority_id,
-        custody_authority_id=request.custody_authority_id,
-        attested_at=record.attested_at,
-        valid_until=record.valid_until,
-    )
-
-
-class _SecureReplayConsumer:
-    """Bind one secret-bearing canonical payload directly to encrypted custody."""
-
-    def __init__(
-        self,
-        *,
-        request: FilingExportSecureReplayRequest,
-        evidence: FilingExportSecureReplayEvidence,
-        custody: FilingExportSecureReplayCustody,
-    ) -> None:
-        self._request = request
-        self._evidence = evidence
-        self._custody = custody
-        self.record: FilingExportSecureCustodyRecord | None = None
-
-    def consume_validated_payload(self, payload: FilingExportValidatedPayload) -> None:
-        if self.record is not None:
-            raise ValueError("secure replay custody consumer accepts exactly one payload")
-        self.record = self._custody.persist_secure_replay(
-            request=self._request,
-            evidence=self._evidence,
-            payload=payload,
-        )
-
-
-def _export(
-    proof_input: FilingExportConformanceRenderInputs | FilingExportSecureReplayEvidence,
-    *,
-    output_path: Path,
-    schema_provider: RegistrySchemaAccessor,
-) -> DeclaracionExportResult:
-    return export_draft(
-        proof_input.draft,
-        output_path=output_path,
-        producer_snapshot=proof_input.producer_snapshot,
-        dictionary_values=_dictionary_mapping(proof_input.dictionary_values),
-        prior_domiciliation_election=proof_input.prior_domiciliation_election,
-        product_software_identity=proof_input.product_software_identity,
-        schema_provider=schema_provider,
-    )
-
-
-def _export_to_consumer(
-    proof_input: FilingExportSecureReplayEvidence,
-    *,
-    payload_consumer: FilingExportPayloadConsumer,
-    schema_provider: RegistrySchemaAccessor,
-) -> FilingExportConsumedResult:
-    return export_draft(
-        proof_input.draft,
-        payload_consumer=payload_consumer,
-        producer_snapshot=proof_input.producer_snapshot,
-        dictionary_values=_dictionary_mapping(proof_input.dictionary_values),
-        prior_domiciliation_election=proof_input.prior_domiciliation_election,
-        product_software_identity=proof_input.product_software_identity,
-        schema_provider=schema_provider,
-    )
-
-
-def _dictionary_mapping(values: tuple[FilingExportDictionaryValue, ...]) -> Mapping[str, object] | None:
-    return {item.field_id: item.value for item in values} or None
-
-
 def _require_export_inputs_match(
     coordinate: FilingExportProofCoordinate,
     draft: ModeloDraft,
@@ -650,69 +427,7 @@ def _require_unique_dictionary_fields(values: tuple[FilingExportDictionaryValue,
         raise ValueError("proof dictionary field identities must be unique")
 
 
-def _require_conformance_receipt(
-    request: FilingExportConformanceRequest,
-    evidence: FilingExportConformanceVectorEvidence,
-    result: DeclaracionExportResult,
-    receipt: FilingExportConformanceReceipt,
-    *,
-    authority_id: str,
-) -> None:
-    if (
-        receipt.coordinate != request.coordinate
-        or receipt.provenance != evidence.provenance
-        or receipt.authority_id != authority_id
-    ):
-        raise ValueError("conformance authority receipt conflicts with the requested official identity")
-    if result.modelo != request.coordinate.modelo or result.period != evidence.period:
-        raise ValueError("canonical export receipt conflicts with the conformance coordinate")
-    if receipt.emitted_bytes != result.byte_size:
-        raise ValueError("conformance extent must match the canonical export receipt")
-
-
-def _require_source_evidence(
-    request: FilingExportSecureReplayRequest,
-    evidence: FilingExportSecureReplayEvidence,
-) -> None:
-    if evidence.coordinate != request.coordinate or evidence.source_authority_id != request.source_authority_id:
-        raise ValueError("secure replay source authority returned evidence for another request")
-
-
-def _require_custody_record(
-    request: FilingExportSecureReplayRequest,
-    evidence: FilingExportSecureReplayEvidence,
-    result: FilingExportConsumedResult,
-    record: FilingExportSecureCustodyRecord,
-) -> None:
-    outcome = revision_carry_outcome(record.coordinate.snapshot_ref)
-    if outcome.refused:
-        raise ValueError(f"custody registry coordinate cannot be re-confirmed: {outcome.detail}")
-    expected = (
-        request.coordinate,
-        request.source_authority_id,
-        request.custody_authority_id,
-        evidence.evidence_id,
-        evidence.calculation_revision_id,
-        evidence.draft.draft_id,
-    )
-    actual = (
-        record.coordinate,
-        record.source_authority_id,
-        record.custody_authority_id,
-        record.evidence_id,
-        record.calculation_revision_id,
-        record.draft_id,
-    )
-    if actual != expected:
-        raise ValueError("secure replay custody record conflicts with its source-owned evidence")
-    if record.payload_sha256 != result.file_sha256:
-        raise ValueError("secure replay custody digest does not bind the canonical writer payload")
-    if record.emitted_bytes != result.byte_size:
-        raise ValueError("secure replay custody extent does not bind the canonical writer payload")
-
-
 __all__ = [
-    "FilingExportConformanceAuthority",
     "FilingExportConformanceReceipt",
     "FilingExportConformanceRenderInputs",
     "FilingExportConformanceRequest",
@@ -729,12 +444,8 @@ __all__ = [
     "FilingExportProofRefusalReason",
     "FilingExportPublicProvenance",
     "FilingExportSecureCustodyRecord",
-    "FilingExportSecureReplayCustody",
     "FilingExportSecureReplayEvidence",
     "FilingExportSecureReplayReceipt",
     "FilingExportSecureReplayRequest",
-    "FilingExportSecureReplaySourceAuthority",
     "FilingExportSourcePinnedProbeExpectation",
-    "prove_export_conformance",
-    "prove_secure_export_replay",
 ]
