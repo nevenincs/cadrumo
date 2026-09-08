@@ -1,6 +1,6 @@
 """Prove the built devcontainer image is actually usable, from inside it.
 
-Run by ``just devcontainer-test`` as::
+Run by ``just test-devcontainer`` as::
 
     docker run --rm cadrumo-devcontainer bash -lc "python dev/containers/devcontainer_smoke.py"
 
@@ -18,7 +18,7 @@ The checks map one-to-one onto defects that shipped in this image:
   which resets ``PATH`` and discarded the virtualenv, so ``python`` resolved to
   the system interpreter. Broke the VS Code integrated terminal too.
 * ``just`` on ``PATH`` — the devcontainer ``postCreateCommand`` is
-  ``just install && just env-setup``; without it the image builds and then
+  ``just setup-install && just setup-env``; without it the image builds and then
   fails at container creation.
 * unit-test collection — the pre-warmed editable install resolves.
 * a real headless Chromium LAUNCH — ``playwright install --dry-run`` only prints
@@ -86,7 +86,7 @@ def _check_just() -> None:
     except RuntimeError as error:
         raise SystemExit(
             "FAIL: `just` is not on PATH in the image, but devcontainer.json's "
-            "postCreateCommand is `just install && just env-setup` — the image would "
+            "postCreateCommand is `just setup-install && just setup-env` — the image would "
             "build and then fail at container creation."
         ) from error
     completed = subprocess.run(  # noqa: S603 - `shutil.which`-resolved executable, fixed argv, no caller input

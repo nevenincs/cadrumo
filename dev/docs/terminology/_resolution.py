@@ -812,7 +812,7 @@ def _read_casilla_source_sections(project_relpath: str) -> tuple[_CasillaSourceS
 
 
 #: The generated CLI-reference tree the CLI resolution rule reads. It is a
-#: BUILD PRODUCT, gitignored and written by the docs build (``just docs``,
+#: BUILD PRODUCT, gitignored and written by the docs build (``just docs-build``,
 #: which runs ``generate_cli_reference`` from the Sphinx builder-inited hook),
 #: so a clean checkout does not have it at all.
 _CLI_REFERENCE_ROOT: Final[str] = "docs/cli"
@@ -848,7 +848,7 @@ def _require_built_cli_reference(repo_root: Path) -> None:
     """
     root = repo_root / _CLI_REFERENCE_ROOT
     remedy = (
-        "run `just docs` (or any full docs build) to write it; it is a gitignored "
+        "run `just docs-build` (or any full docs build) to write it; it is a gitignored "
         "build product, not a committed source tree"
     )
     if not root.is_dir():

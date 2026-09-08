@@ -57,6 +57,7 @@ from pathlib import Path
 from typing import Final
 
 from .._paths import REPO_ROOT, UTF_8
+from ..exit_codes import OK
 from ..test_runs.paths import allocate_run_directory
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
 from .report import DimensionReport, Status, audit_complexity, audit_duplication
@@ -348,9 +349,12 @@ def allocate_run_dir(repository: Path, *, now: datetime | None = None) -> Path:
 def main() -> int:
     """Run every advisory-audit dimension, print the dashboard, persist the full result.
 
-    Always exits 0 -- `audit-all` has always been "tolerant of individual
-    findings" (the old recipe chained every step with `-@just ...` for
-    exactly that reason); this preserves that contract.
+    ADVISORY: exits 0 when every dimension RAN, whatever it found. `audit` is
+    advisory across this fleet except for the dependency audit, which gates --
+    see ``dev/EXIT-CODES.md``. This is not the `; exit 0` the contract forbids:
+    a scanner that crashes or is absent raises out of its dimension and this
+    function never returns, so "could not run" stays distinguishable from "ran
+    and found nothing".
     """
     import argparse
 
@@ -373,7 +377,7 @@ def main() -> int:
     if not args.json:
         print(f"\nfull report persisted to {run_dir / 'summary.json'} and {run_dir / 'summary.md'}")
 
-    return 0
+    return OK
 
 
 if __name__ == "__main__":

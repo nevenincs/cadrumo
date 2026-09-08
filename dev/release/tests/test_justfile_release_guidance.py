@@ -129,7 +129,7 @@ def test_release_apply_is_absent_from_the_justfile() -> None:
 
 
 def test_release_survives_as_the_read_only_dry_run_preview() -> None:
-    """`just release` still runs, previews only, and points at nothing deleted."""
+    """`just release-publish` still runs, previews only, and points at nothing deleted."""
     recipes = _recipe_summary()
     assert "release" in recipes
 

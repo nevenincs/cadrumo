@@ -55,7 +55,7 @@ def _assert_quick_single_runtime(document: dict[str, Any]) -> None:
         assert "strategy" not in job, f"{job_name}: the quick profile must not grow a flavor matrix"
         assert "python_runtime_compatibility" not in _run_surface({"jobs": {job_name: job}})
         commands = [str(step.get("run", "")).strip() for step in job["steps"] if "run" in step]
-        assert "just packaging-quick" in commands, job_name
+        assert "just test-packaging-quick" in commands, job_name
 
 
 def test_quick_workflow_is_exactly_three_probe_jobs() -> None:

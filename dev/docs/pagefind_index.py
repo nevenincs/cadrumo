@@ -9,7 +9,7 @@ like the generated CLI reference, and never committed.
 This pass is deliberately a STANDALONE step, not a Sphinx ``setup()`` hook:
 it must run after the build, and wiring it into ``conf.py`` would couple it
 to every Sphinx invocation - including the nitpicky ``-n -W`` gate, which
-this pass must leave untouched. The docs build driver (or ``just docs``)
+this pass must leave untouched. The docs build driver (or ``just docs-build``)
 calls :func:`build_search_index` after a successful Sphinx build.
 
 The Pagefind binary is vendored as a pinned wheel (``pagefind[extended]`` -

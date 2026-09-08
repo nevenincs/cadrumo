@@ -168,7 +168,7 @@ ssh <macos-build-host> '
 `uv run --no-sync python -m dev.containers.runner_capabilities` checks that a
 runner carries what the workflows assume. The `host-capabilities` job of
 `.github/workflows/runner-fleet-health.yml` runs it on every host-install runner;
-the container runners are covered instead by `just runner-image-test`.
+the container runners are covered instead by `just test-runner-image`.
 
 What counts as "assumed" is measured, not guessed. Parsing the `run:` blocks of
 every workflow shows `uv`, `just`, and `node` are each installed by a pinned
@@ -201,8 +201,8 @@ stage each, one base image declaration each.
 
 | Surface | Declared as | Base | Built by |
 | ------- | ----------- | ---- | -------- |
-| Self-hosted Linux runner | `--target runner` | `ARG RUNNER_BASE_IMAGE` (`ghcr.io/actions/actions-runner`, pinned) | `just runner-image-build` |
-| Contributor devcontainer | `--target dev` | `ARG PYTHON_BASE_IMAGE` (`python:3.13-slim-trixie`) | `just devcontainer-build` |
+| Self-hosted Linux runner | `--target runner` | `ARG RUNNER_BASE_IMAGE` (`ghcr.io/actions/actions-runner`, pinned) | `just build-runner-image` |
+| Contributor devcontainer | `--target dev` | `ARG PYTHON_BASE_IMAGE` (`python:3.13-slim-trixie`) | `just build-devcontainer` |
 | Base-image reader | `dev/packaging/_base_image.py` | reads `ARG PYTHON_BASE_IMAGE` back from the Dockerfile | consumed by the packaging gates |
 
 The chain at CI time runs top to bottom: a workflow job labelled
@@ -329,8 +329,8 @@ drift the image removes.
 ### Building the image
 
 ```bash
-just runner-image-build   # docker build --target runner -t cadrumo-runner-linux .
-just runner-image-test    # gh, just, canonical-prefix brew, cache placement,
+just build-runner-image   # docker build --target runner -t cadrumo-runner-linux .
+just test-runner-image    # gh, just, canonical-prefix brew, cache placement,
                           # pre-warmed ruby, entrypoint, agent, volume-shadowing
 ```
 
@@ -347,7 +347,7 @@ once for both; the ARM host builds its own natively. `--target runner` means the
 Python-based `dev` stage is never built, so neither build pulls the multi-gigabyte
 dependency set.
 
-- **Linux X64 host:** `just runner-image-build`, or the `runner-image` job of
+- **Linux X64 host:** `just build-runner-image`, or the `runner-image` job of
   `.github/workflows/runner-fleet-health.yml`, which also reclaims the tagged
   image afterwards (the hygiene hook prunes only DANGLING images, so a tagged
   build would otherwise leave gigabytes behind on a space-constrained box).

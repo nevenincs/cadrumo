@@ -43,8 +43,8 @@ def _workflow() -> dict[str, Any]:
             "workflow_dispatch": {"inputs": {"include_dev_image": {"type": "boolean", "default": False}}},
         },
         "jobs": {
-            "runner-image": {"steps": [{"run": "just runner-image-test"}]},
-            "dev-image": {"if": _DEV_IMAGE_GUARD, "steps": [{"run": "just devcontainer-test"}]},
+            "runner-image": {"steps": [{"run": "just test-runner-image"}]},
+            "dev-image": {"if": _DEV_IMAGE_GUARD, "steps": [{"run": "just test-devcontainer"}]},
             "guarded": {"if": _FORK_GUARD, "steps": [{"run": "just test-unit"}]},
         },
     }
@@ -119,7 +119,7 @@ def test_a_job_the_document_does_not_declare_reaches_nothing() -> None:
 def test_the_live_devcontainer_lane_is_manual_only_and_opt_in() -> None:
     """The finding this module was written for, asserted against the real tree.
 
-    ``just devcontainer-test`` is the only thing that builds and probes the
+    ``just test-devcontainer`` is the only thing that builds and probes the
     contributor image, it is invoked exactly once, and both weakenings on that
     one route are individually documented in the workflow. Their product is that
     no automatic event and no ordinary dispatch runs it.

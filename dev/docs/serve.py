@@ -3,7 +3,7 @@
 Wrap ``sphinx-autobuild`` to serve the rendered handbook and rebuild
 incrementally whenever the narrative corpus (``docs/``) or the autodoc source
 tree (``src/cadrumo/``) changes. The Sphinx application stays warm between
-rebuilds, so edit-to-refresh is a fraction of a cold ``just docs`` build.
+rebuilds, so edit-to-refresh is a fraction of a cold ``just docs-build`` build.
 
 The server binds every interface (``0.0.0.0``) on the docs' OWNED canonical
 port so a container, VM, or peer device on the LAN can reach the preview at a

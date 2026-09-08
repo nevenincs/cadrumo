@@ -71,8 +71,13 @@ jobs:
       - name: Install Python
         run: uv python install
 
-      - name: Sync the checked-in lock
-        run: uv sync --frozen
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
+
+      - name: Initialize the worktree
+        run: just init
 
       # The stable rows are the complete support matrix, including runtimes
       # whose classifier promotion is still waiting on binary/artifact proof.

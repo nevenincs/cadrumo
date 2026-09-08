@@ -502,7 +502,7 @@ def _recipes_invoked_by(text: str) -> set[str]:
     Executed, because this reads justfile recipe BODIES as well as workflow
     ``run:`` blocks, and a body is a script with prose in it. Six comment lines
     in this justfile name a real recipe inside an explanatory sentence --
-    "Verify the result with `just playwright-doctor`" -- and harvesting the raw
+    "Verify the result with `just doctor-playwright`" -- and harvesting the raw
     text counted every one of them as an invocation. Five were also invoked for
     real, so they cost nothing; ``check-rag`` was reached by nothing else and
     was reported CI-invoked on the strength of a sentence mentioning it.
@@ -692,7 +692,7 @@ def ci_invoked_recipe_triggers(root: Path) -> Mapping[str, tuple[str, ...]]:
     counts as automatic when EITHER route is -- the union is what keeps a lane
     that a dispatch-only workflow merely also names from reading as manual. But
     the union must be taken over what reaches each invoking JOB, not over the
-    workflow's whole ``on:`` block: ``just devcontainer-test`` is invoked once,
+    workflow's whole ``on:`` block: ``just test-devcontainer`` is invoked once,
     from a job guarded to ``workflow_dispatch`` inside a workflow that also
     fires on push, and attributing the workflow's events to it reported the only
     build-and-probe of the contributor image as push-triggered when no push has

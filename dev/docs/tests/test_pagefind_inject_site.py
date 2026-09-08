@@ -190,7 +190,7 @@ def test_compile_search_index_wires_the_real_injector_over_built_html(
     Proves the ``dev.docs.build.compile_search_index`` wiring end to end: it
     runs the Pagefind directory pass over the built HTML and injects the unified
     search records, writing a per-language index alongside the pages. This is
-    the seam ``just docs`` invokes after a full Sphinx build; without it the
+    the seam ``just docs-build`` invokes after a full Sphinx build; without it the
     bundled Ctrl-K corpus never compiles. A real concept-subset injector is
     supplied so the wiring is exercised without the multi-minute full
     casilla/CLI materialisation (production uses the default full injector).

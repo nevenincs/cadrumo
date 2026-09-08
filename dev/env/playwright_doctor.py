@@ -1,6 +1,6 @@
 """Probe whether the workstation satisfies the CONFIGURED Playwright browser channel.
 
-This is the ``just playwright-doctor`` recipe: the health check the anti-bot
+This is the ``just doctor-playwright`` recipe: the health check the anti-bot
 channel pinning decision requires but the justfile never built. AEAT browser
 automation is pinned to ``channel: "chrome"`` in New Headless mode for anti-bot
 fingerprint reasons; bundled Chromium is the explicit fallback only if system
@@ -13,7 +13,7 @@ Unlike ``cadrumo.application.provisioning.probe_playwright_browser`` (a fast
 filesystem-cache check used inside the interactive CLI process, where the
 Playwright sync driver can hang), this script performs a REAL headless launch and
 immediate close of the configured channel: it is a standalone dev/CI process, so a
-hang surfaces as a ``just playwright-doctor`` timeout rather than a hung CLI
+hang surfaces as a ``just doctor-playwright`` timeout rather than a hung CLI
 session.
 
 Exit codes:
@@ -46,9 +46,9 @@ def remediation_for_channel(channel: str) -> str:
             "Google Chrome, not a bundled download; on Linux it shells out to the "
             "OS package manager and typically needs root/apt access — pre-install "
             "'google-chrome-stable' yourself first if 'playwright install chrome' "
-            "cannot elevate) or run 'just env-playwright' to provision both channels"
+            "cannot elevate) or run 'just setup-playwright' to provision both channels"
         )
-    return f"run 'playwright install {channel}' (or 'just env-playwright') to install the browser binary"
+    return f"run 'playwright install {channel}' (or 'just setup-playwright') to install the browser binary"
 
 
 async def _probe_channel(channel: str, *, headless: bool) -> None:

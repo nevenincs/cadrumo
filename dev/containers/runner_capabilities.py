@@ -2,7 +2,7 @@
 
 The Linux X64 runners are containers, so their capabilities are pinned by the
 ``runner`` stage of the repository-root ``Dockerfile`` and proven by
-``just runner-image-test``. The macOS and Windows runners are HOST installs
+``just test-runner-image``. The macOS and Windows runners are HOST installs
 with no image and, until this probe, no equivalent check at all — half the
 fleet was unmodelled.
 

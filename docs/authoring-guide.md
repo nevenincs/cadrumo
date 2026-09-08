@@ -22,7 +22,7 @@ To rebuild the generated surfaces and verify them, run:
 
 ```bash
 python -m dev.docs.apidocs scaffold  # writes the API stub pages
-just docs                        # builds the full documentation site
+just docs-build                        # builds the full documentation site
 just docs-serve                  # serves the site with live reload (auto-picks a free port)
 just docs-check                  # validates cross-references, stubs, and CLI output
 ```
