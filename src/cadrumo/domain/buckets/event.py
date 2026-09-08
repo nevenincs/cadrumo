@@ -312,7 +312,6 @@ class BucketEventType(StrEnum):
     COLLAB_RECIPIENT_REMOVED = "collab_event.recipient.removed"
     COLLAB_PACKAGE_ENCRYPTED_FOR_RECIPIENT = "collab_event.package.encrypted_for_recipient"
     COLLAB_PACKAGE_DECRYPTED = "privacy_event.package.decrypted"
-    COLLAB_REVIEW_ONLY_WORKSPACE_OPENED = "privacy_event.review_only_workspace.opened"
     COLLAB_PACKAGE_COUNTER_SIGNED = "collab_event.package.counter_signed"
 
 

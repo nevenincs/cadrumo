@@ -146,6 +146,12 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: int | pytest.ExitC
     _run_logging.finish(session.config, exitstatus)
 
 
+@pytest.hookimpl(trylast=True)
+def pytest_unconfigure(config: pytest.Config) -> None:
+    """Restate the run-log location beneath the terminal reporter's last word."""
+    _run_logging.restate(config)
+
+
 @pytest.fixture(scope="session")
 def _resident_service_environment() -> Iterator[None]:
     """Give resident-service child processes one isolated singleton scope."""

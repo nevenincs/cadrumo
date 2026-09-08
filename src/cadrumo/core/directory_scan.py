@@ -280,19 +280,55 @@ def _walk(
     """
     stack: list[Iterator[os.DirEntry[str]]] = [iter(root_entries)]
     while stack:
-        entry = next(stack[-1], None)
+        entry = _next_walk_entry(stack)
         if entry is None:
-            stack.pop()
             continue
         is_directory = entry.is_dir(follow_symlinks=False)
-        if is_directory and entry.name in pruned:
+        if _is_pruned_entry(entry, is_directory=is_directory, pruned=pruned):
             continue
-        if _is_selected(is_directory, select) and (matches is None or matches(entry.name)):
+        if _matches_walk_entry(entry, is_directory=is_directory, select=select, matches=matches):
             yield Path(entry.path)
-        if is_directory and recursive:
-            child_entries = _read_entries(entry.path, propagate=False, ordered=ordered)
-            if child_entries is not None:
-                stack.append(iter(child_entries))
+        _descend_into_entry(stack, entry, is_directory=is_directory, recursive=recursive, ordered=ordered)
+
+
+def _next_walk_entry(stack: list[Iterator[os.DirEntry[str]]]) -> os.DirEntry[str] | None:
+    """Advance the top listing, popping it once all of its entries are read."""
+    entry = next(stack[-1], None)
+    if entry is None:
+        stack.pop()
+    return entry
+
+
+def _is_pruned_entry(entry: os.DirEntry[str], *, is_directory: bool, pruned: frozenset[str]) -> bool:
+    """Whether a directory entry is excluded before it can be yielded or entered."""
+    return is_directory and entry.name in pruned
+
+
+def _matches_walk_entry(
+    entry: os.DirEntry[str],
+    *,
+    is_directory: bool,
+    select: DirectoryEntryKind,
+    matches: Callable[[str], bool] | None,
+) -> bool:
+    """Whether an entry passes selection and the optional bare-name matcher."""
+    return _is_selected(is_directory, select) and (matches is None or matches(entry.name))
+
+
+def _descend_into_entry(
+    stack: list[Iterator[os.DirEntry[str]]],
+    entry: os.DirEntry[str],
+    *,
+    is_directory: bool,
+    recursive: bool,
+    ordered: bool,
+) -> None:
+    """Push a readable child listing while keeping directory handles closed."""
+    if not is_directory or not recursive:
+        return
+    child_entries = _read_entries(entry.path, propagate=False, ordered=ordered)
+    if child_entries is not None:
+        stack.append(iter(child_entries))
 
 
 def _is_selected(is_directory: bool, select: DirectoryEntryKind) -> bool:

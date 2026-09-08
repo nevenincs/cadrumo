@@ -578,6 +578,17 @@ def _stringify_context_value(value: object) -> str:
     stable ``<type-name>`` placeholder so the operator never sees a raw
     object dump regardless of which error class produced the context.
     """
+    scalar = _stringify_scalar_context_value(value)
+    if scalar is not None:
+        return scalar
+    collection = _stringify_collection_context_value(value)
+    if collection is not None:
+        return collection
+    return f"<{type(value).__name__}>"
+
+
+def _stringify_scalar_context_value(value: object) -> str | None:
+    """Render one supported non-collection context value, if applicable."""
     if value is None:
         return "null"
     if isinstance(value, bool):
@@ -592,6 +603,11 @@ def _stringify_context_value(value: object) -> str:
         return str(value)
     if isinstance(value, PurePath):
         return str(value)
+    return None
+
+
+def _stringify_collection_context_value(value: object) -> str | None:
+    """Render one supported collection, preserving its native iteration order."""
     if isinstance(value, (list, tuple, frozenset, set)):
         return ", ".join(_stringify_context_value(item) for item in cast("Iterable[object]", value))
     if isinstance(value, Mapping):
@@ -599,7 +615,7 @@ def _stringify_context_value(value: object) -> str:
         return ", ".join(
             f"{_stringify_context_value(key)}={_stringify_context_value(item)}" for key, item in mapping.items()
         )
-    return f"<{type(value).__name__}>"
+    return None
 
 
 __all__ = [

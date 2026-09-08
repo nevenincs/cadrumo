@@ -17,6 +17,7 @@ flags the invoice as multi-component
 from __future__ import annotations
 
 from collections.abc import Callable
+from decimal import Decimal
 from typing import TypedDict
 
 import typer
@@ -51,6 +52,7 @@ from ...llm.suggestions import (
     LLMSplitApplyResult,
     LLMSplitSuggestion,
     LLMSuggestionRejectionResult,
+    OperatorIvaDerivationResult,
 )
 from ._common import bad, current_workflow_state, emit_envelope, transaction_catalogue_repo
 from ._ledger_support import (
@@ -830,28 +832,14 @@ def ledger_saturate_llm(
     )
 
 
-def ledger_operator_iva_derive(
-    ctx: typer.Context,
+def _validate_operator_iva_request(
     *,
     transaction_id: str | None,
     classification: str | None,
     file: str | None,
     iva_category: IvaCategory | None,
-    actor: str | None,
-) -> None:
-    """Derive the IVA substrate from an OPERATOR-chosen category (no LLM).
-
-    The fallback for ``classify --saturate`` without ``--llm``: when the model
-    declines (returns ``unknown``) or the operator already knows the category,
-    pick it with ``--iva-category`` and the system derives the base, rate, and
-    amount from the registry — the same grounded
-    :func:`derive_operator_iva_substrate` path the LLM
-    saturate uses, but operator-initiated and stamped with ``derived:``
-    provenance. Only the IVA substrate is touched; the business classification
-    and its provenance are left intact.
-    """
-    from ._ledger_payloads import LedgerClassifySingleResult
-
+) -> tuple[str, IvaCategory]:
+    """Validate the operator-only saturation route and return its required inputs."""
     if file is not None or classification is not None:
         raise bad(
             "--saturate without --llm derives the IVA substrate from --iva-category alone; "
@@ -866,14 +854,22 @@ def ledger_operator_iva_derive(
         raise bad(
             tr("cli.ledger.classify.saturate_requires_llm"),
         )
+    return transaction_id, iva_category
 
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    resolved_id = resolve_id(transaction_repository, transaction_id)
+
+def _derive_operator_iva(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    iva_category: IvaCategory,
+    actor: str | None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+) -> OperatorIvaDerivationResult:
+    """Run the canonical application derivation and translate its refusals."""
     try:
-        derivation = derive_operator_iva_substrate(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
+        return derive_operator_iva_substrate(
+            bucket_id=bucket_id,
+            transaction_id=transaction_id,
             iva_category=iva_category,
             actor=actor or resolve_active_bucket_id() or "operator",
             source_command=LlmReviewInvocationOrigin.CLASSIFY_IVA_CATEGORY_SATURATE.source_command,
@@ -884,6 +880,13 @@ def ledger_operator_iva_derive(
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
 
+
+def _require_complete_operator_derivation(
+    derivation: OperatorIvaDerivationResult,
+    *,
+    iva_category: IvaCategory,
+) -> tuple[ManualLedgerTransactionResult, Decimal, Decimal, Decimal]:
+    """Narrow the model's derivability coupling before projecting its substrate."""
     if not derivation.derivable:
         raise bad(
             tr(
@@ -897,16 +900,24 @@ def ledger_operator_iva_derive(
     taxable_base = derivation.taxable_base
     iva_rate = derivation.iva_rate
     iva_amount = derivation.iva_amount
-    # Narrowing, not a second opinion. `OperatorIvaDerivationResult` couples
-    # `derivable` to its whole substrate, so a derivable result reaching here
-    # without one is a broken contract rather than an operator mistake -- and
-    # the model refuses to be built that way. The branch stays because the
-    # fields are typed optional for the non-derivable case, and it is worded
-    # rather than left as an English f-string so no locale can leak one.
     if result is None or taxable_base is None or iva_rate is None or iva_amount is None:
         raise bad(
             tr("cli.ledger.classify.derive_substrate_incomplete", category=iva_category.value),
         )
+    return result, taxable_base, iva_rate, iva_amount
+
+
+def _emit_operator_iva_result(
+    ctx: typer.Context,
+    *,
+    derivation: OperatorIvaDerivationResult,
+    result: ManualLedgerTransactionResult,
+    taxable_base: Decimal,
+    iva_rate: Decimal,
+    iva_amount: Decimal,
+) -> None:
+    """Emit the canonical single-result envelope for operator IVA derivation."""
+    from ._ledger_payloads import LedgerClassifySingleResult
 
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
@@ -929,3 +940,54 @@ def ledger_operator_iva_derive(
         f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
     ]
     emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+
+
+def ledger_operator_iva_derive(
+    ctx: typer.Context,
+    *,
+    transaction_id: str | None,
+    classification: str | None,
+    file: str | None,
+    iva_category: IvaCategory | None,
+    actor: str | None,
+) -> None:
+    """Derive the IVA substrate from an OPERATOR-chosen category (no LLM).
+
+    The fallback for ``classify --saturate`` without ``--llm``: when the model
+    declines (returns ``unknown``) or the operator already knows the category,
+    pick it with ``--iva-category`` and the system derives the base, rate, and
+    amount from the registry — the same grounded
+    :func:`derive_operator_iva_substrate` path the LLM
+    saturate uses, but operator-initiated and stamped with ``derived:``
+    provenance. Only the IVA substrate is touched; the business classification
+    and its provenance are left intact.
+    """
+    transaction_id, iva_category = _validate_operator_iva_request(
+        transaction_id=transaction_id,
+        classification=classification,
+        file=file,
+        iva_category=iva_category,
+    )
+
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
+    derivation = _derive_operator_iva(
+        bucket_id=transaction_repository.bucket_id,
+        transaction_id=resolved_id,
+        iva_category=iva_category,
+        actor=actor,
+        transaction_repository=transaction_repository,
+    )
+    result, taxable_base, iva_rate, iva_amount = _require_complete_operator_derivation(
+        derivation,
+        iva_category=iva_category,
+    )
+    _emit_operator_iva_result(
+        ctx,
+        derivation=derivation,
+        result=result,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+    )

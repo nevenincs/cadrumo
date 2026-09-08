@@ -73,8 +73,6 @@ from ..review_package_recipient_encryption import (
     decrypt_review_package_for_recipient,
     encrypt_review_package_for_recipient,
     ensure_recipient_encryption_keypair,
-    load_recipient_encryption_keypair,
-    recipient_encryption_public_key,
 )
 from ..review_package_recipient_registry import RecipientFingerprintRegistryRepository, public_key_hex_from_raw_bytes
 from ._review_package_bytes_support import build_package_bytes
@@ -602,16 +600,11 @@ def test_ensure_recipient_encryption_keypair_mints_once_and_reuses(tmp_path: Pat
         assert reused.private_key_hex == minted.private_key_hex
         assert reused.public_key_hex == minted.public_key_hex
 
-        loaded = load_recipient_encryption_keypair(
+        loaded = ensure_recipient_encryption_keypair(
             bucket_id="cec6b9b7-f07d-45c0-a1ee-46064972a1df",
             repository=profile.repository,
         )
         assert loaded.private_key_hex == minted.private_key_hex
-
-        public = recipient_encryption_public_key(minted)
-        assert public.public_key_hex == minted.public_key_hex
-        # The public projection never carries the private key.
-        assert not hasattr(public, "private_key_hex")
 
 
 @pytest.mark.parametrize(
@@ -634,19 +627,6 @@ def test_ensure_recipient_encryption_keypair_refuses_a_naive_or_non_utc_generate
             bucket_id="ff063716-086e-4576-9d53-3f44ab646d21",
             repository=profile.repository,
             generated_at=generated_at,
-        )
-
-
-def test_load_recipient_encryption_keypair_refuses_before_mint(tmp_path: Path) -> None:
-    from ..review_package_recipient_encryption import RecipientEncryptionKeyNotFoundError
-
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="df232797-fe0c-4e0f-9f80-c608b60391e7") as profile,
-        pytest.raises(RecipientEncryptionKeyNotFoundError),
-    ):
-        load_recipient_encryption_keypair(
-            bucket_id="df232797-fe0c-4e0f-9f80-c608b60391e7",
-            repository=profile.repository,
         )
 
 
@@ -711,8 +691,6 @@ def test_recipient_encryption_keypair_refuses_foreign_or_whitespace_payload_buck
         )
 
         with pytest.raises(RecipientEncryptionError, match="does not belong"):
-            load_recipient_encryption_keypair(bucket_id=target_bucket_id, repository=profile.repository)
-        with pytest.raises(RecipientEncryptionError, match="does not belong"):
             ensure_recipient_encryption_keypair(bucket_id=target_bucket_id, repository=profile.repository)
 
         unchanged = profile.repository.load(
@@ -762,7 +740,7 @@ def test_concurrent_recipient_encryption_keypair_mint_reuses_one_encrypted_key_a
         assert errors == [], f"concurrent keypair mint failures: {errors}"
         assert len(minted) == worker_count
 
-        loaded = load_recipient_encryption_keypair(bucket_id=bucket_id, repository=profile.repository)
+        loaded = ensure_recipient_encryption_keypair(bucket_id=bucket_id, repository=profile.repository)
         assert {keypair.private_key_hex for keypair in minted} == {loaded.private_key_hex}
         assert {keypair.public_key_hex for keypair in minted} == {loaded.public_key_hex}
 

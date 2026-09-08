@@ -96,46 +96,16 @@ class Modelo100ObservedV2025Extractor:
         pages = extract_pages_text(pdf_path)
         text = "\n".join(pages)
 
-        tax_id = _require_match(_NIF_RE, text, "tax_id (NIF)")
-        ejercicio = _require_match(_EJERCICIO_RE, text, "ejercicio")
-
-        csv_match = _CSV_RE.search(text)
-        csv_value = normalise_aeat_csv(csv_match.group(1)) if csv_match else None
-        if artefact_kind is ArtefactKind.DECLARACION and csv_value is None:
-            raise BorradorParseError("DECLARACION artefact must carry a CSV stamp but none was found")
-        if artefact_kind is not ArtefactKind.DECLARACION:
-            csv_value = None
+        tax_id, ejercicio, csv_value = _extract_header_values(text, artefact_kind)
 
         observed, warnings = _observed_values(text)
-        target_casilla_ids = {t.casilla_id for t in extraction_profile.target_casillas} if extraction_profile else None
-        values: list[ExtractedCasilla] = []
-        matched_targets: set[CasillaId] = set()
-        for casilla_id, value in sorted(observed.items()):
-            if target_casilla_ids is not None and casilla_id not in target_casilla_ids:
-                continue
-            matched_targets.add(casilla_id)
-            values.append(
-                ExtractedCasilla(
-                    casilla_id=casilla_id,
-                    printed_value=value,
-                    source_page=1,
-                    source_bbox=None,
-                    extraction_confidence=1.0,
-                ),
-            )
-
-        coverage: Decimal | None = None
-        if extraction_profile is not None:
-            coverage = Decimal(len(matched_targets)) / Decimal(len(extraction_profile.target_casillas))
-            if coverage < extraction_profile.min_coverage:
-                missing_ids = tuple(sorted(target_casilla_ids - matched_targets if target_casilla_ids else set()))
-                raise BorradorParseError(
-                    "registry extraction profile coverage below minimum: "
-                    f"profile={extraction_profile.id!r} coverage={coverage} "
-                    f"minimum={extraction_profile.min_coverage} missing={list(missing_ids)!r}",
-                    missing=missing_ids,
-                    coverage=coverage,
-                )
+        target_casilla_ids = _profile_target_casilla_ids(extraction_profile)
+        values, matched_targets = _observed_extracted_values(observed, target_casilla_ids)
+        coverage = _profile_coverage(
+            extraction_profile,
+            target_casilla_ids=target_casilla_ids,
+            matched_targets=matched_targets,
+        )
 
         source_pdf_sha256 = sha256_file(pdf_path)
         return InboundBorradorObservation(
@@ -152,6 +122,72 @@ class Modelo100ObservedV2025Extractor:
             csv=csv_value,
             warnings=tuple(warnings),
         )
+
+
+def _extract_header_values(
+    text: str,
+    artefact_kind: ArtefactKind,
+) -> tuple[str, str, str | None]:
+    tax_id = _require_match(_NIF_RE, text, "tax_id (NIF)")
+    ejercicio = _require_match(_EJERCICIO_RE, text, "ejercicio")
+    csv_match = _CSV_RE.search(text)
+    csv_value = normalise_aeat_csv(csv_match.group(1)) if csv_match else None
+    if artefact_kind is ArtefactKind.DECLARACION and csv_value is None:
+        raise BorradorParseError("DECLARACION artefact must carry a CSV stamp but none was found")
+    if artefact_kind is not ArtefactKind.DECLARACION:
+        csv_value = None
+    return tax_id, ejercicio, csv_value
+
+
+def _profile_target_casilla_ids(
+    extraction_profile: BorradorExtractionProfile | None,
+) -> set[CasillaId] | None:
+    if extraction_profile is None:
+        return None
+    return {target.casilla_id for target in extraction_profile.target_casillas}
+
+
+def _observed_extracted_values(
+    observed: dict[CasillaId, Decimal],
+    target_casilla_ids: set[CasillaId] | None,
+) -> tuple[tuple[ExtractedCasilla, ...], set[CasillaId]]:
+    values: list[ExtractedCasilla] = []
+    matched_targets: set[CasillaId] = set()
+    for casilla_id, value in sorted(observed.items()):
+        if target_casilla_ids is not None and casilla_id not in target_casilla_ids:
+            continue
+        matched_targets.add(casilla_id)
+        values.append(
+            ExtractedCasilla(
+                casilla_id=casilla_id,
+                printed_value=value,
+                source_page=1,
+                source_bbox=None,
+                extraction_confidence=1.0,
+            ),
+        )
+    return tuple(values), matched_targets
+
+
+def _profile_coverage(
+    extraction_profile: BorradorExtractionProfile | None,
+    *,
+    target_casilla_ids: set[CasillaId] | None,
+    matched_targets: set[CasillaId],
+) -> Decimal | None:
+    if extraction_profile is None:
+        return None
+    coverage = Decimal(len(matched_targets)) / Decimal(len(extraction_profile.target_casillas))
+    if coverage < extraction_profile.min_coverage:
+        missing_ids = tuple(sorted(target_casilla_ids - matched_targets if target_casilla_ids else set()))
+        raise BorradorParseError(
+            "registry extraction profile coverage below minimum: "
+            f"profile={extraction_profile.id!r} coverage={coverage} "
+            f"minimum={extraction_profile.min_coverage} missing={list(missing_ids)!r}",
+            missing=missing_ids,
+            coverage=coverage,
+        )
+    return coverage
 
 
 def _observed_values(text: str) -> tuple[dict[CasillaId, Decimal], list[str]]:

@@ -7,6 +7,7 @@ from typing import cast, override
 from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Static
 
+from ....application.ledger.workspace import LedgerInvoiceReconciliationRefV1
 from ....core.identity import InvoiceId, TransactionId
 from ....core.invoice_link import LinkInconsistencyDirection
 from ..components.widgets import ContentDataTable
@@ -78,84 +79,118 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         """Populate all three local authorities without joining remote AEAT state."""
         self.populate_navigation()
         suggestions = cast("DataTable[str]", self.query_one("#ledger-suggestions", DataTable))
-        suggestions.add_column(ledger_copy("tui.ledger.reconciliation.entry"), key="entry", width=12)
-        suggestions.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), key="invoice", width=12)
-        suggestions.add_column(ledger_copy("tui.ledger.reconciliation.match_evidence"), key="evidence", width=38)
+        self._populate_suggestion_table(suggestions)
+        inconsistencies = cast("DataTable[str]", self.query_one("#ledger-inconsistencies", DataTable))
+        self._populate_inconsistency_table(inconsistencies)
+        affected = cast("DataTable[str]", self.query_one("#ledger-affected", DataTable))
+        self._populate_affected_declaration_table(affected)
+        self._show_empty_state_if_needed()
+        self._hide_submission_controls_if_unavailable()
+        self._restore_suggestion_focus(suggestions)
+        self._focus_first_populated_table(suggestions, inconsistencies, affected)
+
+    def _populate_suggestion_table(self, table: DataTable[str]) -> None:
+        """Render canonical match evidence and retain each semantic pair as its row key."""
+        table.add_column(ledger_copy("tui.ledger.reconciliation.entry"), key="entry", width=12)
+        table.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), key="invoice", width=12)
+        table.add_column(ledger_copy("tui.ledger.reconciliation.match_evidence"), key="evidence", width=38)
         for row in self.controller.projection.invoice_reconciliations:
-            key = f"{row.transaction_id}:{row.invoice_id}"
-            yes = ledger_copy("tui.ledger.reconciliation.yes")
-            no = ledger_copy("tui.ledger.reconciliation.no")
-            evidence = "\n".join(
-                (
-                    f"{ledger_copy('tui.ledger.reconciliation.score')}: {row.score}",
-                    # The verdict AND the two values it was reached on. A bare
-                    # yes/no asks the operator to confirm a link while hiding
-                    # what was compared, and a bare "no" reports a
-                    # disagreement without saying between what and what.
-                    f"{ledger_copy('tui.ledger.reconciliation.amount_match')}: "
-                    f"{yes if row.amount_match else no} "
-                    f"({row.transaction_amount} / {row.invoice_total})",
-                    f"{ledger_copy('tui.ledger.reconciliation.counterparty_match')}: "
-                    f"{yes if row.counterparty_match else no} "
-                    f"({row.transaction_counterparty} / {row.invoice_counterparty})",
-                )
-            )
-            suggestions.add_row(
+            table.add_row(
                 str(row.transaction_id)[:12],
                 str(row.invoice_id)[:12],
-                evidence,
-                key=key,
+                self._match_evidence(row),
+                key=f"{row.transaction_id}:{row.invoice_id}",
                 height=3,
             )
-        inconsistencies = cast("DataTable[str]", self.query_one("#ledger-inconsistencies", DataTable))
-        inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.entry"), width=12)
-        inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), width=12)
-        inconsistencies.add_column(ledger_copy("tui.ledger.reconciliation.direction"), width=30)
+
+    @staticmethod
+    def _match_evidence(row: LedgerInvoiceReconciliationRefV1) -> str:
+        """Show both values behind each canonical match verdict."""
+        yes = ledger_copy("tui.ledger.reconciliation.yes")
+        no = ledger_copy("tui.ledger.reconciliation.no")
+        return "\n".join(
+            (
+                f"{ledger_copy('tui.ledger.reconciliation.score')}: {row.score}",
+                # The verdict AND the two values it was reached on. A bare
+                # yes/no asks the operator to confirm a link while hiding
+                # what was compared, and a bare "no" reports a
+                # disagreement without saying between what and what.
+                f"{ledger_copy('tui.ledger.reconciliation.amount_match')}: "
+                f"{yes if row.amount_match else no} "
+                f"({row.transaction_amount} / {row.invoice_total})",
+                f"{ledger_copy('tui.ledger.reconciliation.counterparty_match')}: "
+                f"{yes if row.counterparty_match else no} "
+                f"({row.transaction_counterparty} / {row.invoice_counterparty})",
+            )
+        )
+
+    def _populate_inconsistency_table(self, table: DataTable[str]) -> None:
+        """Render each one-sided link with its canonical direction label."""
+        table.add_column(ledger_copy("tui.ledger.reconciliation.entry"), width=12)
+        table.add_column(ledger_copy("tui.ledger.reconciliation.invoice"), width=12)
+        table.add_column(ledger_copy("tui.ledger.reconciliation.direction"), width=30)
         for row in self.controller.projection.link_inconsistencies:
             direction_key = DIRECTION_STATE_COPY_KEYS.get(row.direction)
             if direction_key is None:
                 raise ValueError("unsupported canonical link inconsistency direction")
-            inconsistencies.add_row(
+            table.add_row(
                 str(row.transaction_id)[:12],
                 str(row.invoice_id)[:12],
                 ledger_copy(direction_key),
                 key=f"{row.transaction_id}:{row.invoice_id}",
             )
-        affected = cast("DataTable[str]", self.query_one("#ledger-affected", DataTable))
-        affected.add_columns(
+
+    def _populate_affected_declaration_table(self, table: DataTable[str]) -> None:
+        """Render affected declaration coordinates and their change counts."""
+        table.add_columns(
             ledger_copy("tui.ledger.reconciliation.modelo"),
             ledger_copy("tui.ledger.reconciliation.period"),
             ledger_copy("tui.ledger.reconciliation.changes"),
         )
         for row in self.controller.projection.affected_declarations:
-            affected.add_row(
+            table.add_row(
                 str(row.modelo),
                 str(row.period),
                 f"{row.changed_count}/{row.removed_count}",
                 key=str(row.calculation_revision_id),
             )
+
+    def _show_empty_state_if_needed(self) -> None:
+        """Tell the operator when all three reconciliation projections are empty."""
+        projection = self.controller.projection
         if not (
-            self.controller.projection.invoice_reconciliations
-            or self.controller.projection.link_inconsistencies
-            or self.controller.projection.affected_declarations
+            projection.invoice_reconciliations
+            or projection.link_inconsistencies
+            or projection.affected_declarations
         ):
             self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.empty"))
+
+    def _hide_submission_controls_if_unavailable(self) -> None:
+        """Keep mutation controls absent when the authorized link door is missing."""
         if not self.controller.can_submit_links():
             self.query_one("#ledger-reconciliation-confirm", Button).display = False
             self.query_one("#ledger-reconciliation-cancel", Button).display = False
+
+    def _restore_suggestion_focus(self, table: DataTable[str]) -> None:
+        """Restore the semantic transaction focus when its suggestion is visible."""
         restored = self.controller.restored_transaction_id()
-        if restored is not None:
-            index = next(
-                (
-                    index
-                    for index, row in enumerate(self.controller.projection.invoice_reconciliations)
-                    if row.transaction_id == restored
-                ),
-                None,
-            )
-            if index is not None:
-                suggestions.move_cursor(row=index)
-        next((table for table in (suggestions, inconsistencies, affected) if table.row_count), suggestions).focus()
+        if restored is None:
+            return
+        index = next(
+            (
+                index
+                for index, row in enumerate(self.controller.projection.invoice_reconciliations)
+                if row.transaction_id == restored
+            ),
+            None,
+        )
+        if index is not None:
+            table.move_cursor(row=index)
+
+    @staticmethod
+    def _focus_first_populated_table(*tables: DataTable[str]) -> None:
+        """Focus suggestions first, otherwise the first table containing rows."""
+        next((table for table in tables if table.row_count), tables[0]).focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Admit only a semantic pair supplied by the visible suggestion projection."""

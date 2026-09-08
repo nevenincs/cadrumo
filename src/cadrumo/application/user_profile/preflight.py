@@ -33,6 +33,47 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import ModeloRevision
 
 
+def _profile_requirement_address(path: str) -> tuple[str, str, str]:
+    """Return the reduced path and its canonical section/field coordinates."""
+    reduced = section_field_key(path) if "." in path else path
+    section_key, _, field_key = reduced.partition(".")
+    if not field_key:
+        section_key, field_key = "profile", section_key
+    return reduced, section_key, field_key
+
+
+def _profile_requirement_schema_projection(
+    reduced: str,
+    *,
+    section_key: str,
+    schema: ProfileSchemaDefinition,
+    fallback_label: str,
+) -> tuple[str, tuple[str, ...]]:
+    """Resolve the operator label and schema legal references for a reduced path."""
+    if "." not in reduced:
+        return fallback_label, ()
+    try:
+        field = schema.field(reduced)
+    except UserProfileNotFoundError:
+        return fallback_label, ()
+    return profile_field_label(section_key, field), field.legal_refs
+
+
+def _profile_requirement_grounding_projection(
+    reduced: str,
+    *,
+    legal_refs: tuple[str, ...],
+    grounding_index: Mapping[str, ProfileKeyGrounding] | None,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """Union registry grounding into legal references and return grounded modelos."""
+    grounding = grounding_index.get(reduced) if grounding_index is not None else None
+    if grounding is None:
+        return legal_refs, ()
+    grounded_refs = tuple(sorted({*legal_refs, *grounding.legal_refs}))
+    modelos = tuple(sorted({model.value for model in grounding.modelos}))
+    return grounded_refs, modelos
+
+
 def build_profile_preflight_requirement(
     path: str,
     *,
@@ -66,24 +107,18 @@ def build_profile_preflight_requirement(
     caller happens to be checking - the two are different facts and must
     not be conflated under one field.
     """
-    reduced = section_field_key(path) if "." in path else path
-    section_key, _, field_key = reduced.partition(".")
-    if not field_key:
-        section_key, field_key = "profile", section_key
-    label = selector or path
-    legal_refs: tuple[str, ...] = ()
-    if "." in reduced:
-        try:
-            field = schema.field(reduced)
-        except UserProfileNotFoundError:
-            pass
-        else:
-            label = profile_field_label(section_key, field)
-            legal_refs = field.legal_refs
-    grounding = grounding_index.get(reduced) if grounding_index is not None else None
-    if grounding:
-        legal_refs = tuple(sorted({*legal_refs, *grounding.legal_refs}))
-    modelos = tuple(sorted({m.value for m in grounding.modelos})) if grounding else ()
+    reduced, section_key, field_key = _profile_requirement_address(path)
+    label, legal_refs = _profile_requirement_schema_projection(
+        reduced,
+        section_key=section_key,
+        schema=schema,
+        fallback_label=selector or path,
+    )
+    legal_refs, modelos = _profile_requirement_grounding_projection(
+        reduced,
+        legal_refs=legal_refs,
+        grounding_index=grounding_index,
+    )
     return ProfilePreflightRequirement(
         selector=selector or path,
         section_key=section_key,

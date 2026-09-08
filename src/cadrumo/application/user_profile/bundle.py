@@ -1,4 +1,4 @@
-"""Portable profile-bundle serialisation for bucket export/import.
+"""Portable profile-bundle serialisation and payload validation.
 
 This module composes
 :class:`~cadrumo.domain.user_profile.portable_export.UserProfilePortableExport` payloads at
@@ -14,9 +14,7 @@ application-owned repository port.
 
 Bundles carry typed domain-model payloads, not encrypted blobs, key
 material, or raw secure-storage rows. Export reads domain records from
-their owning repositories; import saves those records through the target
-bucket's repository save paths so the target bucket re-encrypts them
-under its own data-encryption key.
+their owning repositories.
 
 The bundle version gate is a ceiling with a durability floor: a version
 above :data:`BUNDLE_SCHEMA_VERSION` was written by a newer application
@@ -24,10 +22,8 @@ and is refused; a version at or above :data:`BUNDLE_DURABILITY_FLOOR` is
 readable exactly when the per-hop chain in
 :data:`BUNDLE_PAYLOAD_UPGRADERS` reaches the current version. The floor
 starts at the current version (no released bundles exist below it) and
-only ever moves forward, never back. Callers must provision and
-collision-check the target bucket and hold the appropriate bucket
-session before deserialising; this module performs schema-version
-validation and typed repository writes.
+only ever moves forward, never back. This module owns schema-version
+validation of serialized bundle payloads.
 """
 
 from __future__ import annotations
@@ -43,7 +39,6 @@ from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 __all__ = [
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "UnsupportedBundleSchemaVersionError",
-    "deserialize_profile_bundle",
     "serialize_profile_bundle",
     "validate_bundle_payload",
 ]
@@ -240,128 +235,6 @@ def serialize_profile_bundle(
         carried_objects=carried_objects,
         coverage_manifest=coverage_manifest,
     )
-
-
-# ---------------------------------------------------------------------------
-# Deserialiser
-# ---------------------------------------------------------------------------
-
-
-def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    """Import financial-history objects from ``bundle`` into ``target_bucket_id``.
-
-    Validates ``bundle.bundle_schema_version`` against
-    ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes; only the
-    current v3 shape is accepted.
-
-    Saves work units, ledger transactions, calculation revisions, and
-    filing records into the target bucket via the standard repository
-    save paths. Each domain object is re-encrypted under the target
-    bucket's own data-encryption key. No ``dict[str, Any]`` intermediate
-    is used; pydantic models flow directly into typed catalogue saves.
-
-    The caller is responsible for:
-
-      - Provisioning the target bucket before calling this function.
-      - Ensuring a live bucket session is active for ``target_bucket_id``.
-      - Running the two-tier collision guard before provisioning.
-
-    Args:
-        bundle: The validated export bundle.
-        target_bucket_id: The bucket id under which to write the objects.
-
-    Raises:
-        UnsupportedBundleSchemaVersionError: When
-            ``bundle.bundle_schema_version`` is not in
-            ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS``.
-    """
-    if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
-        raise UnsupportedBundleSchemaVersionError(
-            translated_message="errors.refused.refused_application_registry_input",
-            context={
-                "bundle_schema_version": str(bundle.bundle_schema_version),
-                "supported_versions": ", ".join(str(v) for v in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)),
-            },
-        )
-
-    # The five typed financial-history categories restore through their typed
-    # catalogue save paths; every other durable secure-object store restores
-    # generically through the raw substrate, re-keyed and re-encrypted under the
-    # recipient bucket DEK.
-    _import_work_units(bundle, target_bucket_id=target_bucket_id)
-    _import_ledger_transactions(bundle, target_bucket_id=target_bucket_id)
-    _import_calculation_revisions(bundle, target_bucket_id=target_bucket_id)
-    _import_filing_records(bundle, target_bucket_id=target_bucket_id)
-
-    from .custody_carry import restore_carried_objects
-
-    restore_carried_objects(bundle.carried_objects, target_bucket_id=target_bucket_id)
-    _rebuild_participation_index(target_bucket_id=target_bucket_id)
-
-
-def _rebuild_participation_index(*, target_bucket_id: str) -> None:
-    """Rebuild the derived transaction-revision participation index after import.
-
-    The index is a derived, rebuildable read-cache (excluded from the carry per
-    ``aeat-ledger-contract``); it is regenerated from
-    the restored revision, work-unit, and filing catalogues.
-    """
-    from ..modelo.participation_index_rebuild import rebuild_participation_index
-
-    rebuild_participation_index(bucket_id=target_bucket_id)
-
-
-def _import_work_units(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos.repository import upsert_work_unit
-    from ..modelo.work_unit_repository import work_unit_catalogue_repository
-
-    if not bundle.work_units:
-        return
-    repo = work_unit_catalogue_repository(bucket_id=target_bucket_id)
-    catalogue = repo.load()
-    for unit in bundle.work_units:
-        catalogue = upsert_work_unit(catalogue, unit)
-    repo.save(catalogue)
-
-
-def _import_ledger_transactions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.transactions.models import Transaction, TransactionCatalogue
-    from ..ledger.transaction_repository import transaction_catalogue_repository
-
-    if not bundle.ledger_transactions:
-        return
-    repo = transaction_catalogue_repository(bucket_id=target_bucket_id)
-    existing = repo.load()
-    merged: dict[str, Transaction] = dict(existing.transactions)
-    for txn in bundle.ledger_transactions:
-        merged[txn.transaction_id] = txn
-    repo.save(TransactionCatalogue(transactions=merged))
-
-
-def _import_calculation_revisions(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos.calculation_repository import upsert_calculation_revision
-    from ..modelo.calculation_repository import calculation_revision_catalogue_repository
-
-    if not bundle.calculation_revisions:
-        return
-    repo = calculation_revision_catalogue_repository(bucket_id=target_bucket_id)
-    catalogue = repo.load()
-    for revision in bundle.calculation_revisions:
-        catalogue = upsert_calculation_revision(catalogue, revision)
-    repo.save(catalogue)
-
-
-def _import_filing_records(bundle: UserProfilePortableExport, *, target_bucket_id: str) -> None:
-    from ...domain.modelos.filing_repository import upsert_filing_record
-    from ..modelo.filing_repository import modelo_record_catalogue_repository
-
-    if not bundle.filing_records:
-        return
-    repo = modelo_record_catalogue_repository(bucket_id=target_bucket_id)
-    catalogue = repo.load()
-    for record in bundle.filing_records:
-        catalogue = upsert_filing_record(catalogue, record)
-    repo.save(catalogue)
 
 
 class UnsupportedBundleSchemaVersionError(CadrumoError):

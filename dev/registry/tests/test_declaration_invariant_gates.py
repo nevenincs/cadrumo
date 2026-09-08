@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import ast
 import collections
+import dataclasses
 import importlib
 import pathlib
 from collections.abc import Iterable
@@ -1637,4 +1638,81 @@ def test_every_declared_condition_has_a_live_member_or_a_written_proof(
     assert declared_total > 20, f"only {declared_total} conditions declared; the gate is near-vacuous"
     assert not unproven, "declared conditions with no live member and no test naming them: " + ", ".join(
         sorted(unproven)
+    )
+
+
+def test_no_field_both_anchors_a_reviewed_rule_and_is_reported_as_needing_one(
+    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+) -> None:
+    """A field cannot owe a reviewed rule it already anchors.
+
+    Two declarations about the same tree, read from the same registry: the
+    reviewed render profile anchors the fields whose wire representation has
+    been authored, and the grounding census reports the fields that still owe
+    one. A field in both is a contradiction, deducible with no evidence beyond
+    what the tree already carries, and its census row is work somebody would do
+    a second time.
+
+    This is the general form of a defect that has recurred three times in this
+    campaign, each time by a different route: a mechanism lands and its
+    consumers keep reporting the population it already covers. Gating the
+    CONTRADICTION rather than any one route is what makes the next instance
+    visible without anyone having guessed how it would arrive.
+
+    Anchors are read off the render profile the revision's own render inputs
+    resolve, which is the profile the generator uses, so this compares the
+    census against the reviewed rules that actually ship rather than against a
+    directory listing of profile files.
+    """
+    from ..analysis.rule_grounding_coverage import reviewed_rule_contradictions
+    from ..analysis.rule_grounding_coverage import screen_authority as grounding_screen
+    from ..pipeline.render_check import revision_render_inputs
+
+    findings = grounding_screen(authority, modelo_ids)
+    # A gate comparing two populations must prove it read one. Without this the
+    # assertion below is satisfied by a census that returned nothing at all,
+    # which is the one failure a green result cannot show.
+    assert findings, "the grounding census reported no field, so this gate compared nothing"
+
+    anchored: set[tuple[str, str, str]] = set()
+    for modelo_id, revision_id in sorted({(item.modelo, item.revision) for item in findings}):
+        profile = revision_render_inputs(authority, modelo=modelo_id, revision=revision_id).render_profile
+        anchors = tuple(anchor for rule in profile.width_17_rules for anchor in rule.anchors) + tuple(
+            rule.anchor for rule in profile.singleton_rules
+        )
+        anchored.update(
+            (modelo_id, revision_id, f"{anchor.sheet}!{anchor.source_cell}")
+            for anchor in anchors
+            if anchor.source_cell is not None
+        )
+    assert anchored, "no reviewed rule anchored a workbook cell, so the comparison had nothing to contradict"
+
+    keys = frozenset(anchored)
+    contradictions = reviewed_rule_contradictions(findings, anchored=keys)
+
+    # Teeth, on the real inputs. The pure comparison is exercised on written
+    # input in the census's own test module, which proves it can fire; it cannot
+    # prove that the key this gate BUILDS from a render-profile anchor has the
+    # same shape as the key a census row carries. If those two shapes disagree
+    # the sets can never intersect, both floors above still pass, and the gate
+    # is green forever while detecting nothing. So one real anchored field is
+    # planted on the census side and must come back.
+    planted_modelo, planted_revision, planted_cell = sorted(keys)[0]
+    planted = dataclasses.replace(findings[0], modelo=planted_modelo, revision=planted_revision, cell=planted_cell)
+    planted_contradictions = reviewed_rule_contradictions((*findings, planted), anchored=keys)
+    assert [(item.modelo, item.revision, item.cell) for item in planted_contradictions] == [
+        (planted_modelo, planted_revision, planted_cell)
+    ], (
+        "a census row naming a field a shipped reviewed rule anchors was not reported as a "
+        "contradiction, so the anchor key and the census key do not meet and this gate "
+        "cannot detect the condition it asserts"
+    )
+
+    assert not contradictions, (
+        "these fields anchor a reviewed render-profile rule AND are reported as still needing one; "
+        "the rule exists, so the census row is work already done: "
+        + "; ".join(
+            f"modelo {item.modelo} revision {item.revision} field {item.cell}"
+            for item in sorted(contradictions, key=lambda item: (item.modelo, item.revision, item.cell))
+        )
     )

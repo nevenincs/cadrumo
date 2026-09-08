@@ -31,6 +31,7 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core.decimal.constants import ZERO
 from ...core.modelo import Modelo
 from ...core.period import Period
+from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
@@ -181,34 +182,16 @@ def derive_art109_activity_income_coverage(
     numerator = ZERO
     denominator = ZERO
     for transaction in catalogue.values():
-        row = _classify_current_period_row(transaction, period=period)
-        if row is _RowKind.IGNORE:
+        computable_income, insufficient_reason = _current_period_income_contribution(
+            transaction,
+            period=period,
+            exempt_activities=exempt_activities,
+            net_of_subvenciones_activities=net_of_subvenciones_activities,
+        )
+        if insufficient_reason is not None:
+            return _insufficient(insufficient_reason)
+        if computable_income is None:
             continue
-        if row is _RowKind.INSUFFICIENT:
-            return _insufficient("current_period_activity_income_unresolved")
-        activity = transaction.tipo_actividad
-        if activity is None:
-            # Art. 109 exempts an activity CLASS, so a row that does not say which
-            # activity it belongs to cannot be placed on either side of the rule.
-            # Guessing would either invent an exemption or deny a real one, and this
-            # module's contract is to fail closed rather than fabricate a ratio.
-            return _insufficient("current_period_activity_class_undeclared")
-        if activity not in exempt_activities:
-            # A different activity of the same taxpayer. The exemption is granted
-            # "en relacion con las mismas", so an empresarial row neither claims it
-            # nor dilutes the class that does.
-            continue
-        if activity in net_of_subvenciones_activities and not counts_toward_art_109_activity_income(
-            transaction.concepto_ingreso,
-        ):
-            # Apartados 3 and 4 measure the 70 per cent net of subvenciones and
-            # indemnizaciones. A subsidy carries no retencion, so leaving it in the
-            # base depresses the ratio and denies an exemption the reglamento grants.
-            continue
-
-        computable_income = _proved_computable_income(transaction)
-        if computable_income is None or computable_income <= ZERO:
-            return _insufficient("current_period_activity_income_substrate_incomplete")
         denominator += computable_income
         if _proved_withheld_income(transaction):
             numerator += computable_income
@@ -231,15 +214,20 @@ class _RowKind(StrEnum):
     INSUFFICIENT = "insufficient"
 
 
-def _classify_current_period_row(transaction: Transaction, *, period: Period) -> _RowKind:
+def _is_current_period_candidate(transaction: Transaction, *, period: Period) -> bool:
+    """Return whether lifecycle, direction, and filing date admit a row."""
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-        return _RowKind.IGNORE
+        return False
     if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
-        return _RowKind.IGNORE
+        return False
     if transaction.direction is not TransactionDirection.INCOMING:
-        return _RowKind.IGNORE
+        return False
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
-    if not period.contains(filing_date):
+    return period.contains(filing_date)
+
+
+def _classify_current_period_row(transaction: Transaction, *, period: Period) -> _RowKind:
+    if not _is_current_period_candidate(transaction, period=period):
         return _RowKind.IGNORE
     if transaction.irpf_category == IRPF_CATEGORY_TRABAJO:
         return _RowKind.IGNORE
@@ -252,6 +240,45 @@ def _classify_current_period_row(transaction: Transaction, *, period: Period) ->
     if transaction.business_classification in _UNRESOLVED_ACTIVITY_STATES:
         return _RowKind.INSUFFICIENT
     return _RowKind.INSUFFICIENT
+
+
+def _current_period_income_contribution(
+    transaction: Transaction,
+    *,
+    period: Period,
+    exempt_activities: frozenset[TipoActividad],
+    net_of_subvenciones_activities: frozenset[TipoActividad],
+) -> tuple[Decimal | None, str | None]:
+    """Return one row's computable income or its fail-closed reason."""
+    row = _classify_current_period_row(transaction, period=period)
+    if row is _RowKind.IGNORE:
+        return None, None
+    if row is _RowKind.INSUFFICIENT:
+        return None, "current_period_activity_income_unresolved"
+    activity = transaction.tipo_actividad
+    if activity is None:
+        # Art. 109 exempts an activity CLASS, so a row that does not say which
+        # activity it belongs to cannot be placed on either side of the rule.
+        # Guessing would either invent an exemption or deny a real one, and this
+        # module's contract is to fail closed rather than fabricate a ratio.
+        return None, "current_period_activity_class_undeclared"
+    if activity not in exempt_activities:
+        # A different activity of the same taxpayer. The exemption is granted
+        # "en relacion con las mismas", so an empresarial row neither claims it
+        # nor dilutes the class that does.
+        return None, None
+    if activity in net_of_subvenciones_activities and not counts_toward_art_109_activity_income(
+        transaction.concepto_ingreso,
+    ):
+        # Apartados 3 and 4 measure the 70 per cent net of subvenciones and
+        # indemnizaciones. A subsidy carries no retencion, so leaving it in the
+        # base depresses the ratio and denies an exemption the reglamento grants.
+        return None, None
+
+    computable_income = _proved_computable_income(transaction)
+    if computable_income is None or computable_income <= ZERO:
+        return None, "current_period_activity_income_substrate_incomplete"
+    return computable_income, None
 
 
 def _proved_computable_income(transaction: Transaction) -> Decimal | None:

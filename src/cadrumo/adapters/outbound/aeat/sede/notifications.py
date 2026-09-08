@@ -357,6 +357,41 @@ def _row_from_cells(
     if not _CERT_RE.match(certificado_id):
         return None
 
+    (
+        concepto_raw,
+        titular_raw,
+        destinatario_raw,
+        tipo_raw,
+        modo_raw,
+        leida_raw,
+        emision_raw,
+        notif_raw,
+    ) = _notification_cell_values(cells, header_index)
+
+    fecha_emision = _parse_date_local(emision_raw)
+    if fecha_emision is None:
+        return None
+    fecha_notificacion = _parse_date_local(notif_raw)
+
+    return _build_remote_notification(
+        certificado_id=certificado_id,
+        concepto_raw=concepto_raw,
+        titular_raw=titular_raw,
+        destinatario_raw=destinatario_raw,
+        tipo_raw=tipo_raw,
+        modo_raw=modo_raw,
+        leida_raw=leida_raw,
+        fecha_emision=fecha_emision,
+        fecha_notificacion=fecha_notificacion,
+        source_url=source_url,
+    )
+
+
+def _notification_cell_values(
+    cells: list[str],
+    header_index: Mapping[str, int],
+) -> tuple[str, str, str, str, str | None, str | None, str | None, str | None]:
+    """Read notification fields in the established source-column order."""
     concepto_raw = cell_text(cells, header_index.get("concepto")) or ""
     titular_raw = cell_text(cells, header_index.get("titular")) or ""
     destinatario_raw = cell_text(cells, header_index.get("destinatario")) or ""
@@ -365,12 +400,23 @@ def _row_from_cells(
     leida_raw = cell_text(cells, header_index.get("leida"))
     emision_raw = cell_text(cells, header_index.get("fecha_emision"))
     notif_raw = cell_text(cells, header_index.get("fecha_notificacion"))
+    return concepto_raw, titular_raw, destinatario_raw, tipo_raw, modo_raw, leida_raw, emision_raw, notif_raw
 
-    fecha_emision = _parse_date_local(emision_raw)
-    if fecha_emision is None:
-        return None
-    fecha_notificacion = _parse_date_local(notif_raw)
 
+def _build_remote_notification(
+    *,
+    certificado_id: str,
+    concepto_raw: str,
+    titular_raw: str,
+    destinatario_raw: str,
+    tipo_raw: str,
+    modo_raw: str | None,
+    leida_raw: str | None,
+    fecha_emision: date,
+    fecha_notificacion: date | None,
+    source_url: str,
+) -> RemoteNotification | None:
+    """Build one typed notification after its required date has been parsed."""
     titular_nif, titular_nombre = _split_nif_name(titular_raw)
     destinatario_nif, destinatario_nombre = _split_nif_name(destinatario_raw)
 

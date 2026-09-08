@@ -34,7 +34,10 @@ from ...application.modelo.filing_actions import (
     list_filing_records,
     list_verification_reports,
 )
-from ...application.modelo.local_observation_actions import record_operator_local_observation
+from ...application.modelo.local_observation_actions import (
+    ModeloLocalObservationResult,
+    record_operator_local_observation,
+)
 from ...application.modelo.local_observation_spreadsheet import (
     parse_casilla_lexical_spreadsheet,
     parse_casilla_value_spreadsheet,
@@ -46,7 +49,7 @@ from ...core.i18n.render import tr
 from ...core.period import Period, PeriodError
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.errors import ModeloValidationError
-from ...domain.modelos.filing_record import ExternalEvidenceKind
+from ...domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecord
 from ._common import declared_tax_id, emit_envelope
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -112,6 +115,66 @@ def _filing_period(year: int, token: str) -> Period:
     try:
         return Period.from_year_and_code(year, token)
     except PeriodError as exc:
+        raise _bad_from_error(exc) from exc
+
+
+def _import_input_values(
+    set_overrides: list[str] | None,
+    file: Path | None,
+) -> dict[CasillaId, Decimal]:
+    """Validate the import transport choice and parse any ``--set`` values."""
+    if file is not None and set_overrides:
+        raise typer.BadParameter("filing-record import accepts either --file or --set, not both")
+    casilla_values: dict[CasillaId, Decimal] = {}
+    for spec in set_overrides or ():
+        key, value = _casilla_value(spec)
+        casilla_values[key] = value
+    if not casilla_values and file is None:
+        raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
+    return casilla_values
+
+
+def _import_record(
+    *,
+    work_unit_id: str,
+    casilla_values: dict[CasillaId, Decimal],
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    actor: str,
+    file: Path | None,
+) -> ModeloRecord:
+    """Load profile identity and delegate one external-evidence import path."""
+    try:
+        from ...application.workflow.persistence import workflow_state_repository
+
+        expected_tax_id = declared_tax_id(workflow_state_repository().load().active_profile_record())
+        if file is not None:
+            work_unit = get_work_unit(work_unit_id)
+            return import_external_filing_source(
+                ExternalFilingBaselineSource(
+                    modelo=str(work_unit.modelo),
+                    filing_year=work_unit.filing_year,
+                    period=work_unit.period,
+                    registry_revision_id=work_unit.revision_id,
+                    evidence_kind=evidence_kind,
+                    evidence_reference_id=evidence_reference_id,
+                    tax_id=expected_tax_id or "",
+                    casilla_lexicals=parse_casilla_lexical_spreadsheet(file),
+                ),
+                bucket_id=work_unit.bucket_id,
+                actor=actor or _actor(),
+            )
+        return import_external_filing_evidence(
+            work_unit_id=work_unit_id,
+            casilla_values=casilla_values,
+            evidence_kind=evidence_kind,
+            evidence_reference_id=evidence_reference_id,
+            actor=actor or _actor(),
+            expected_tax_id=expected_tax_id,
+        )
+    except WorkUnitMutationRefusedError:
+        raise
+    except (WorkUnitNotFoundError, ExternalModeloImportError, ModeloLocalObservationError) as exc:
         raise _bad_from_error(exc) from exc
 
 
@@ -185,47 +248,15 @@ def filing_record_import(
     this application.
     """
     validated_work_unit_id = _work_unit_id(work_unit_id)
-    if file is not None and set_overrides:
-        raise typer.BadParameter("filing-record import accepts either --file or --set, not both")
-    casilla_values: dict[CasillaId, Decimal] = {}
-    for spec in set_overrides or ():
-        key, value = _casilla_value(spec)
-        casilla_values[key] = value
-    if not casilla_values and file is None:
-        raise typer.BadParameter(tr("cli.app.modelo.filing_record.import_set_required"))
-    try:
-        from ...application.workflow.persistence import workflow_state_repository
-
-        expected_tax_id = declared_tax_id(workflow_state_repository().load().active_profile_record())
-        if file is not None:
-            work_unit = get_work_unit(validated_work_unit_id)
-            record = import_external_filing_source(
-                ExternalFilingBaselineSource(
-                    modelo=str(work_unit.modelo),
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period,
-                    registry_revision_id=work_unit.revision_id,
-                    evidence_kind=evidence_kind,
-                    evidence_reference_id=evidence_reference_id,
-                    tax_id=expected_tax_id or "",
-                    casilla_lexicals=parse_casilla_lexical_spreadsheet(file),
-                ),
-                bucket_id=work_unit.bucket_id,
-                actor=actor or _actor(),
-            )
-        else:
-            record = import_external_filing_evidence(
-                work_unit_id=validated_work_unit_id,
-                casilla_values=casilla_values,
-                evidence_kind=evidence_kind,
-                evidence_reference_id=evidence_reference_id,
-                actor=actor or _actor(),
-                expected_tax_id=expected_tax_id,
-            )
-    except WorkUnitMutationRefusedError:
-        raise
-    except (WorkUnitNotFoundError, ExternalModeloImportError, ModeloLocalObservationError) as exc:
-        raise _bad_from_error(exc) from exc
+    casilla_values = _import_input_values(set_overrides, file)
+    record = _import_record(
+        work_unit_id=validated_work_unit_id,
+        casilla_values=casilla_values,
+        evidence_kind=evidence_kind,
+        evidence_reference_id=evidence_reference_id,
+        actor=actor,
+        file=file,
+    )
     result = FilingRecordImportResult.model_validate(
         {
             "evidence_kind": evidence_kind,
@@ -241,6 +272,56 @@ def filing_record_import(
     ]
     lines.append("filing_disambiguation\t(imported AEAT-attested baseline)")
     emit_envelope(ctx, command="modelo.filing_record.import", result=result, lines=lines)
+
+
+def _local_observation_values(
+    file: Path | None,
+    set_overrides: list[str] | None,
+) -> dict[CasillaId, Decimal]:
+    """Parse spreadsheet values first, then apply later ``--set`` overrides."""
+    casilla_values: dict[CasillaId, Decimal] = {}
+    if file is not None:
+        try:
+            spreadsheet_values = parse_casilla_value_spreadsheet(file)
+        except ModeloLocalObservationError as exc:
+            raise _bad_from_error(exc) from exc
+        for raw_code, value in spreadsheet_values.items():
+            try:
+                casilla_id = validated_casilla_id(raw_code, surface="--file casilla_code column")
+            except ValueError as exc:
+                raise typer.BadParameter(f"--file row casilla_code {raw_code!r} is not a valid CasillaId") from exc
+            casilla_values[casilla_id] = value
+    for spec in set_overrides or ():
+        key, value = _casilla_value(spec)
+        casilla_values[key] = value
+    if not casilla_values:
+        raise typer.BadParameter(
+            "observe-local requires at least one --set CASILLA=DECIMAL value or a --file spreadsheet"
+        )
+    return casilla_values
+
+
+def _record_local_observation(
+    *,
+    modelo: str,
+    year: int,
+    period: Period,
+    casilla_values: dict[CasillaId, Decimal],
+    actor: str | None,
+    replace_official_evidence: bool,
+) -> ModeloLocalObservationResult:
+    """Delegate the validated local observation to its application owner."""
+    try:
+        return record_operator_local_observation(
+            modelo=modelo,
+            filing_year=year,
+            period=period,
+            casilla_values=casilla_values,
+            actor=actor or _actor(),
+            replace_official_evidence=replace_official_evidence,
+        )
+    except ModeloLocalObservationError as exc:
+        raise _bad_from_error(exc) from exc
 
 
 def filing_record_observe_local(
@@ -267,36 +348,15 @@ def filing_record_observe_local(
     """
     modelo_code = _modelo_code(modelo)
     filing_period = _filing_period(year, period)
-    casilla_values: dict[CasillaId, Decimal] = {}
-    if file is not None:
-        try:
-            spreadsheet_values = parse_casilla_value_spreadsheet(file)
-        except ModeloLocalObservationError as exc:
-            raise _bad_from_error(exc) from exc
-        for raw_code, value in spreadsheet_values.items():
-            try:
-                casilla_id = validated_casilla_id(raw_code, surface="--file casilla_code column")
-            except ValueError as exc:
-                raise typer.BadParameter(f"--file row casilla_code {raw_code!r} is not a valid CasillaId") from exc
-            casilla_values[casilla_id] = value
-    for spec in set_overrides or ():
-        key, value = _casilla_value(spec)
-        casilla_values[key] = value
-    if not casilla_values:
-        raise typer.BadParameter(
-            "observe-local requires at least one --set CASILLA=DECIMAL value or a --file spreadsheet"
-        )
-    try:
-        local_observation = record_operator_local_observation(
-            modelo=str(modelo_code),
-            filing_year=year,
-            period=filing_period,
-            casilla_values=casilla_values,
-            actor=actor or _actor(),
-            replace_official_evidence=replace_official_evidence,
-        )
-    except ModeloLocalObservationError as exc:
-        raise _bad_from_error(exc) from exc
+    casilla_values = _local_observation_values(file, set_overrides)
+    local_observation = _record_local_observation(
+        modelo=str(modelo_code),
+        year=year,
+        period=filing_period,
+        casilla_values=casilla_values,
+        actor=actor,
+        replace_official_evidence=replace_official_evidence,
+    )
     result = FilingRecordLocalObservationResult(
         modelo=local_observation.modelo,
         filing_year=local_observation.filing_year,

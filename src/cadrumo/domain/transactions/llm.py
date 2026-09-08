@@ -580,6 +580,87 @@ def _evidence_block(evidence_text: str | None, evidence_image_present: bool) -> 
     return []
 
 
+def _append_category_prompt(
+    sections: list[str],
+    schema_fields: list[str],
+    spec: PromptSpec,
+) -> None:
+    """Append the optional spending-category selection and schema field."""
+    if not spec.categories:
+        return
+    category_block = _render_choices((choice.value.value, choice.hint) for choice in spec.categories)
+    sections.extend(
+        [
+            "",
+            "When classification is BUSINESS or MIXED, also pick exactly one SpendingCategory:",
+            category_block,
+        ],
+    )
+    schema_fields.append('"category": "<one SpendingCategory or null>"')
+
+
+def _append_iva_prompt(
+    sections: list[str],
+    schema_fields: list[str],
+    spec: PromptSpec,
+) -> None:
+    """Append the optional IVA-category selection and schema fields."""
+    if not spec.iva_categories:
+        return
+    iva_block = _render_choices((choice.value.value, choice.hint) for choice in spec.iva_categories)
+    sections.extend(
+        [
+            "",
+            "Also pick exactly one iva_category — the IVA situation that fits this transaction. "
+            "Pick the category only; do NOT compute or output any rate, base, or IVA amount.",
+            iva_block,
+        ],
+    )
+    schema_fields.append('"iva_category": "<one IvaCategory or null>"')
+    schema_fields.append('"business_pct": <0.0-1.0 when MIXED, else null>')
+
+
+def _append_evidence_prompt(
+    sections: list[str],
+    schema_fields: list[str],
+    *,
+    evidence_present: bool,
+) -> None:
+    """Append the optional evidence multiplicity instruction and field."""
+    if not evidence_present:
+        return
+    sections.extend(
+        [
+            "",
+            "Also judge whether the attached invoice carries MULTIPLE distinct lines at "
+            "different IVA rates or expense categories that should be split into separate "
+            "entries (so each line's deductible IVA and base-rate expense file independently). "
+            "Set multiple_components true only when two or more distinct rate/category lines are "
+            "present; set it false for a single-line, single-rate invoice.",
+        ],
+    )
+    schema_fields.append('"multiple_components": <true|false>')
+
+
+def _render_prompt_footer(spec: PromptSpec, schema_fields: list[str]) -> list[str]:
+    """Return the schema/example footer for a rendered classification prompt."""
+    schema_line = "{" + ", ".join(schema_fields) + "}"
+    example_confidence = "0.85"
+    example_reason = "restaurante meal with a named client strongly suggests business meal"
+    example = f'{{"classification": "BUSINESS", "confidence": {example_confidence}, "reason": "{example_reason}"'
+    if spec.categories:
+        example += ', "category": "manutencion_dietas_nacional"'
+    if spec.iva_categories:
+        example += ', "iva_category": "domestic_general", "business_pct": null'
+    example += "}"
+    return [
+        "",
+        "Respond ONLY with a single JSON object. No prose before or after. No markdown fences.",
+        f"Schema: {schema_line}",
+        f"Example response format: {example}",
+    ]
+
+
 def _render_prompt(
     spec: PromptSpec,
     transaction: Transaction,
@@ -618,64 +699,98 @@ def _render_prompt(
         '"confidence": <0.0-1.0>',
         '"reason": "<one sentence>"',
     ]
-    if spec.categories:
-        category_block = _render_choices((choice.value.value, choice.hint) for choice in spec.categories)
-        sections.extend(
-            [
-                "",
-                "When classification is BUSINESS or MIXED, also pick exactly one SpendingCategory:",
-                category_block,
-            ],
-        )
-        schema_fields.append('"category": "<one SpendingCategory or null>"')
-    if spec.iva_categories:
-        iva_block = _render_choices((choice.value.value, choice.hint) for choice in spec.iva_categories)
-        sections.extend(
-            [
-                "",
-                "Also pick exactly one iva_category — the IVA situation that fits this transaction. "
-                "Pick the category only; do NOT compute or output any rate, base, or IVA amount.",
-                iva_block,
-            ],
-        )
-        schema_fields.append('"iva_category": "<one IvaCategory or null>"')
-        schema_fields.append('"business_pct": <0.0-1.0 when MIXED, else null>')
+    _append_category_prompt(sections, schema_fields, spec)
+    _append_iva_prompt(sections, schema_fields, spec)
     evidence_present = bool(evidence_text) or evidence_image_present
-    if evidence_present:
-        sections.extend(
-            [
-                "",
-                "Also judge whether the attached invoice carries MULTIPLE distinct lines at "
-                "different IVA rates or expense categories that should be split into separate "
-                "entries (so each line's deductible IVA and base-rate expense file independently). "
-                "Set multiple_components true only when two or more distinct rate/category lines are "
-                "present; set it false for a single-line, single-rate invoice.",
-            ],
-        )
-        schema_fields.append('"multiple_components": <true|false>')
-    schema_line = "{" + ", ".join(schema_fields) + "}"
-    example_confidence = "0.85"
-    example_reason = "restaurante meal with a named client strongly suggests business meal"
-    example = f'{{"classification": "BUSINESS", "confidence": {example_confidence}, "reason": "{example_reason}"'
-    if spec.categories:
-        example += ', "category": "manutencion_dietas_nacional"'
-    if spec.iva_categories:
-        example += ', "iva_category": "domestic_general", "business_pct": null'
-    example += "}"
-    sections.extend(
-        [
-            "",
-            "Respond ONLY with a single JSON object. No prose before or after. No markdown fences.",
-            f"Schema: {schema_line}",
-            f"Example response format: {example}",
-        ],
-    )
+    _append_evidence_prompt(sections, schema_fields, evidence_present=evidence_present)
+    sections.extend(_render_prompt_footer(spec, schema_fields))
     return "\n".join(sections)
 
 
 # ── response parsing ──────────────────────────────────────────────
 
 _JSON_OBJECT_RE = re.compile(r"\{[^{}]*\}")
+
+
+def _classification_failure(
+    response: LLMClassificationResponse,
+    payload: str,
+    allowed_classifications: frozenset[BusinessClassification],
+) -> str | None:
+    """Return the allow-list failure for the classification field, if any."""
+    if response.classification not in allowed_classifications:
+        return f"disallowed classification {response.classification.value!r} (payload {payload[:100]!r})"
+    return None
+
+
+def _category_failure(
+    response: LLMClassificationResponse,
+    payload: str,
+    allowed_categories: frozenset[SpendingCategory],
+) -> str | None:
+    """Return the allow-list failure for an optional spending category, if any."""
+    if response.category is None:
+        return None
+    if not allowed_categories:
+        return f"unexpected category {response.category.value!r} (payload {payload[:100]!r})"
+    if response.category not in allowed_categories:
+        return f"disallowed category {response.category.value!r} (payload {payload[:100]!r})"
+    return None
+
+
+def _iva_category_failure(
+    response: LLMClassificationResponse,
+    payload: str,
+    allowed_iva_categories: frozenset[IvaCategory],
+) -> str | None:
+    """Return the allow-list failure for an optional IVA category, if any."""
+    if response.iva_category is None:
+        return None
+    if not allowed_iva_categories:
+        return f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:100]!r})"
+    if response.iva_category not in allowed_iva_categories:
+        return f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:100]!r})"
+    return None
+
+
+def _classification_response_failure(
+    response: LLMClassificationResponse,
+    payload: str,
+    *,
+    allowed_classifications: frozenset[BusinessClassification],
+    allowed_categories: frozenset[SpendingCategory],
+    allowed_iva_categories: frozenset[IvaCategory],
+) -> str | None:
+    """Return the first allow-list failure in the parser's field order."""
+    failure = _classification_failure(response, payload, allowed_classifications)
+    if failure is not None:
+        return failure
+    failure = _category_failure(response, payload, allowed_categories)
+    if failure is not None:
+        return failure
+    return _iva_category_failure(response, payload, allowed_iva_categories)
+
+
+def _parse_classification_candidate(
+    payload: str,
+    *,
+    allowed_classifications: frozenset[BusinessClassification],
+    allowed_categories: frozenset[SpendingCategory],
+    allowed_iva_categories: frozenset[IvaCategory],
+) -> LLMClassificationResponse | str:
+    """Validate one candidate and return either its response or its failure text."""
+    try:
+        response = LLMClassificationResponse.model_validate_json(payload)
+    except ValueError as exc:
+        return f"schema: {str(exc)[:160]} (payload {payload[:100]!r})"
+    failure = _classification_response_failure(
+        response,
+        payload,
+        allowed_classifications=allowed_classifications,
+        allowed_categories=allowed_categories,
+        allowed_iva_categories=allowed_iva_categories,
+    )
+    return response if failure is None else failure
 
 
 def parse_response(
@@ -714,29 +829,15 @@ def parse_response(
     for match in _JSON_OBJECT_RE.finditer(stdout):
         any_candidate_seen = True
         payload = match.group(0)
-        try:
-            response = LLMClassificationResponse.model_validate_json(payload)
-        except ValueError as exc:
-            failures.append(f"schema: {str(exc)[:160]} (payload {payload[:100]!r})")
-            continue
-        if response.classification not in allowed_classifications:
-            failures.append(f"disallowed classification {response.classification.value!r} (payload {payload[:100]!r})")
-            continue
-        if response.category is not None:
-            if not allowed_categories:
-                failures.append(f"unexpected category {response.category.value!r} (payload {payload[:100]!r})")
-                continue
-            if response.category not in allowed_categories:
-                failures.append(f"disallowed category {response.category.value!r} (payload {payload[:100]!r})")
-                continue
-        if response.iva_category is not None:
-            if not allowed_iva_categories:
-                failures.append(f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:100]!r})")
-                continue
-            if response.iva_category not in allowed_iva_categories:
-                failures.append(f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:100]!r})")
-                continue
-        return response
+        candidate = _parse_classification_candidate(
+            payload,
+            allowed_classifications=allowed_classifications,
+            allowed_categories=allowed_categories,
+            allowed_iva_categories=allowed_iva_categories,
+        )
+        if isinstance(candidate, LLMClassificationResponse):
+            return candidate
+        failures.append(candidate)
 
     if not any_candidate_seen:
         raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:400]!r}")
@@ -798,6 +899,26 @@ def build_split_prompt(
     return "\n".join(sections)
 
 
+def _advance_json_string_state(char: str, escaped: bool) -> tuple[bool, bool]:
+    """Consume one character while scanning a JSON string."""
+    if escaped:
+        return True, False
+    if char == "\\":
+        return True, True
+    return char != '"', False
+
+
+def _advance_json_structure_state(char: str, depth: int) -> tuple[int, bool, bool]:
+    """Consume one non-string character and report a completed object."""
+    if char == '"':
+        return depth, True, False
+    if char == "{":
+        return depth + 1, False, False
+    if char == "}":
+        return depth - 1, False, depth == 1
+    return depth, False, False
+
+
 def _extract_json_object(text: str) -> str | None:
     """Return the first balanced top-level JSON object substring, or ``None``.
 
@@ -814,22 +935,35 @@ def _extract_json_object(text: str) -> str | None:
     for index in range(start, len(text)):
         char = text[index]
         if in_string:
-            if escaped:
-                escaped = False
-            elif char == "\\":
-                escaped = True
-            elif char == '"':
-                in_string = False
+            in_string, escaped = _advance_json_string_state(char, escaped)
             continue
-        if char == '"':
-            in_string = True
-        elif char == "{":
-            depth += 1
-        elif char == "}":
-            depth -= 1
-            if depth == 0:
-                return text[start : index + 1]
+        depth, in_string, complete = _advance_json_structure_state(char, depth)
+        if complete:
+            return text[start : index + 1]
     return None
+
+
+def _split_child_failure(
+    child: LLMSplitChild,
+    allowed_categories: frozenset[SpendingCategory],
+    allowed_iva_categories: frozenset[IvaCategory],
+) -> str | None:
+    """Return the first split-child allow-list failure, if any."""
+    if child.category is not None and (not allowed_categories or child.category not in allowed_categories):
+        return f"disallowed split child category {child.category.value!r}"
+    if child.iva_category is not None and (
+        not allowed_iva_categories or child.iva_category not in allowed_iva_categories
+    ):
+        return f"disallowed split child iva_category {child.iva_category.value!r}"
+    return None
+
+
+def _parse_split_payload(payload: str) -> LLMSplitResponse:
+    """Validate the schema portion of one split-response JSON payload."""
+    try:
+        return LLMSplitResponse.model_validate_json(payload)
+    except ValueError as exc:
+        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:200]}") from exc
 
 
 def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMSplitResponse:
@@ -857,17 +991,11 @@ def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMS
     payload = _extract_json_object(stdout)
     if payload is None:
         raise LLMClassifierError(f"no JSON object in LLM split output: {stdout[:400]!r}")
-    try:
-        response = LLMSplitResponse.model_validate_json(payload)
-    except ValueError as exc:
-        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:200]}") from exc
+    response = _parse_split_payload(payload)
     for child in response.children:
-        if child.category is not None and (not allowed_categories or child.category not in allowed_categories):
-            raise LLMClassifierError(f"disallowed split child category {child.category.value!r}")
-        if child.iva_category is not None and (
-            not allowed_iva_categories or child.iva_category not in allowed_iva_categories
-        ):
-            raise LLMClassifierError(f"disallowed split child iva_category {child.iva_category.value!r}")
+        failure = _split_child_failure(child, allowed_categories, allowed_iva_categories)
+        if failure is not None:
+            raise LLMClassifierError(failure)
     return response
 
 

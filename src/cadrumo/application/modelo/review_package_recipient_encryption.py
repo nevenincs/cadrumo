@@ -86,10 +86,9 @@ it -- private key included -- ONLY as ciphertext through a
 :class:`~adapters.persistence.storage.SensitivityClass` ``SECRET``
 (:data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE`),
 exactly as the Ed25519 signing keypair is minted and stored. It is never
-logged, never written to a plaintext file, and never leaves this module as raw
-bytes except transiently in process memory to decrypt. The exportable public
-half (:func:`recipient_encryption_public_key`) is what a taxpayer registers via
-the fingerprint registry -- never the private key.
+logged or written to a plaintext file. Callers register the keypair's
+``public_key_hex`` through the fingerprint registry; the private half remains
+inside the encrypted keypair owner.
 
 See Also:
     :mod:`~application.modelo._review_package_recipient_registry`
@@ -169,14 +168,6 @@ class RecipientDecryptionError(RecipientEncryptionError):
     """
 
 
-class RecipientEncryptionKeyNotFoundError(RecipientEncryptionError):
-    """Raised when no encryption keypair has been minted for a bucket yet.
-
-    Callers should mint one via :func:`ensure_recipient_encryption_keypair`
-    before loading it explicitly.
-    """
-
-
 class RecipientEncryptionKeypair(BaseModel):
     """A bucket's X25519 encryption keypair, private key included.
 
@@ -206,23 +197,6 @@ class RecipientEncryptionKeypair(BaseModel):
         return X25519PublicKey.from_public_bytes(bytes.fromhex(self.public_key_hex))
 
 
-class RecipientEncryptionPublicKey(BaseModel):
-    """The exportable, non-secret half of a bucket's encryption keypair.
-
-    Safe to hand to a taxpayer so they can register it via
-    :class:`~application.modelo.RecipientFingerprintRegistryRepository`.
-    Carries no secrecy requirement -- unlike :class:`RecipientEncryptionKeypair`,
-    this model is fine to print, write to a plaintext file, or read aloud for
-    out-of-band fingerprint verification.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: BucketId
-    public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
-    created_at: UtcInstant
-
-
 def _recipient_encryption_key_object_key(bucket_id: str) -> str:
     """Return the natural :class:`~adapters.persistence.storage.SecureObjectRepository` key for ``bucket_id``'s keypair.
 
@@ -230,24 +204,6 @@ def _recipient_encryption_key_object_key(bucket_id: str) -> str:
     ``object_key_grammar="review-package-recipient-encryption-key:{bucket_id}"``.
     """
     return f"review-package-recipient-encryption-key:{canonical_bucket_id(bucket_id)}"
-
-
-def _keypair_from_repository_payload(payload: bytes, *, bucket_id: str) -> RecipientEncryptionKeypair:
-    """Load a keypair only when its encrypted payload agrees with its storage key.
-
-    The natural object key binds the record to ``bucket_id``.  The encrypted
-    payload repeats that identity so a foreign keypair re-keyed under this
-    bucket cannot silently become this recipient's private key.  Exact rather
-    than normalized equality also refuses legacy whitespace spellings: those
-    would otherwise address the canonical key while preserving a second,
-    ambiguous payload identity.
-    """
-    keypair = RecipientEncryptionKeypair.model_validate_json(payload)
-    if keypair.bucket_id != bucket_id:
-        raise RecipientEncryptionError(
-            "stored recipient encryption keypair does not belong to the bucket it was read from",
-        )
-    return keypair
 
 
 def ensure_recipient_encryption_keypair(
@@ -306,54 +262,6 @@ def ensure_recipient_encryption_keypair(
         expected_bucket_id=normalised_bucket_id,
         mismatch_error=_mismatch_error,
         write_provenance="application.modelo.review_package_recipient_encryption.ensure_keypair",
-    )
-
-
-def load_recipient_encryption_keypair(
-    *,
-    bucket_id: str,
-    repository: SecureObjectRepository,
-) -> RecipientEncryptionKeypair:
-    """Load the bucket's existing X25519 encryption keypair.
-
-    Args:
-        bucket_id: The bucket this keypair is scoped to.
-        repository: The bucket's
-            :class:`~adapters.persistence.storage.SecureObjectRepository`.
-
-    Raises:
-        RecipientEncryptionKeyNotFoundError: If no keypair has been minted yet
-            for ``bucket_id``. Call :func:`ensure_recipient_encryption_keypair`
-            first.
-    """
-    normalised_bucket_id = canonical_bucket_id(bucket_id)
-    object_key = _recipient_encryption_key_object_key(normalised_bucket_id)
-    record = repository.load(
-        _NAMESPACE.namespace,
-        object_key,
-        expected_class=_NAMESPACE.sensitivity,
-        max_supported_version=_NAMESPACE.schema_version,
-    )
-    if record is None:
-        raise RecipientEncryptionKeyNotFoundError(
-            translated_message="application.modelo.errors.recipient_encryption_key_not_found",
-            context={"bucket_id": normalised_bucket_id},
-        )
-    return _keypair_from_repository_payload(record.payload, bucket_id=normalised_bucket_id)
-
-
-def recipient_encryption_public_key(
-    keypair: RecipientEncryptionKeypair,
-) -> RecipientEncryptionPublicKey:
-    """Project the exportable public half out of a full keypair.
-
-    The projection never touches ``private_key_hex``; the returned model is
-    safe to hand to a taxpayer to register via the fingerprint registry.
-    """
-    return RecipientEncryptionPublicKey(
-        bucket_id=keypair.bucket_id,
-        public_key_hex=keypair.public_key_hex,
-        created_at=keypair.created_at,
     )
 
 
@@ -632,13 +540,9 @@ __all__ = [
     "RecipientDecryptionError",
     "RecipientEncryptedPackage",
     "RecipientEncryptionError",
-    "RecipientEncryptionKeyNotFoundError",
     "RecipientEncryptionKeypair",
-    "RecipientEncryptionPublicKey",
     "RecipientPackageExpiredError",
     "decrypt_review_package_for_recipient",
     "encrypt_review_package_for_recipient",
     "ensure_recipient_encryption_keypair",
-    "load_recipient_encryption_keypair",
-    "recipient_encryption_public_key",
 ]

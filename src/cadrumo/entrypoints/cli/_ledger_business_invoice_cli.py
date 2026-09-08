@@ -21,7 +21,12 @@ from pathlib import Path
 import typer
 from pydantic import ValidationError
 
-from ...application.invoices.bulk_import import import_invoices_from_rows, read_bulk_invoice_import_source
+from ...application.invoices.bulk_import import (
+    BulkInvoiceImportResult,
+    BulkInvoiceImportSource,
+    import_invoices_from_rows,
+    read_bulk_invoice_import_source,
+)
 from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ...application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
@@ -400,6 +405,122 @@ def invoice_wizard(
     )
 
 
+def _run_invoice_import(
+    file: Path,
+    *,
+    bucket_id: str,
+    kind: InvoiceKind,
+    country: str | None,
+) -> tuple[BulkInvoiceImportSource, BulkInvoiceImportResult, list[str]]:
+    """Read and apply one invoice book through the application bulk service."""
+    try:
+        mapper, mapping_reasons = _invoice_column_role_mapper()
+        source = read_bulk_invoice_import_source(file, mapper=mapper)
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=bucket_id,
+            kind=kind,
+            declared_country=country.strip().upper() if country else None,
+        )
+    except (InvoiceValidationError, ValidationError) as exc:
+        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
+            raise refusal from None
+        raise
+    return source, result, mapping_reasons
+
+
+def _invoice_import_summary_lines(bucket_id: str, result: BulkInvoiceImportResult) -> list[str]:
+    return [
+        f"bucket\t{bucket_id}",
+        f"rows\t{result.rows}",
+        f"created\t{result.created}",
+        f"skipped_duplicate\t{result.skipped_duplicate}",
+        f"refused\t{len(result.refused)}",
+    ]
+
+
+def _invoice_import_refusal_lines(result: BulkInvoiceImportResult) -> list[str]:
+    return [
+        f"  refused\trow={failure.row_number}\tfield={failure.field}\treason={failure.reason}"
+        for failure in result.refused
+    ]
+
+
+def _invoice_import_unmapped_report(
+    source: BulkInvoiceImportSource,
+) -> tuple[str, Notice] | None:
+    if not source.resolution.unmapped_columns:
+        return None
+    headers = ", ".join(column.header for column in source.resolution.unmapped_columns)
+    message = tr(
+        "cli.app.ledger.invoice.import_unmapped_columns",
+        columns=headers,
+    )
+    return (
+        f"unmapped_columns\t{headers}",
+        Notice(
+            severity=NoticeSeverity.INFO,
+            code="ledger.invoice.catalogue.import.unmapped_columns",
+            message=message,
+            context={"columns": headers, "count": str(len(source.resolution.unmapped_columns))},
+        ),
+    )
+
+
+def _invoice_import_mapping_reports(mapping_reasons: Sequence[str]) -> tuple[list[str], list[Notice]]:
+    lines: list[str] = []
+    notices: list[Notice] = []
+    for index, reason in enumerate(mapping_reasons):
+        # The positional mapping carries roles only, so a token the allow-list
+        # refused would otherwise reach the operator as nothing more than
+        # "column not imported". The reason is the difference between an
+        # unrecognised column and a mapping that named a role which does not
+        # exist, and only one of those is worth an operator's attention.
+        lines.append(f"mapping_note\t{reason}")
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.invoice.catalogue.import.column_role_not_applied",
+                message=tr(
+                    "cli.app.ledger.invoice.import_column_role_not_applied",
+                    detail=reason,
+                ),
+                context={"detail": reason, "index": str(index)},
+            ),
+        )
+    return lines, notices
+
+
+def _invoice_import_all_refused_report(
+    result: BulkInvoiceImportResult,
+) -> tuple[str, Notice] | None:
+    if not (result.rows > 0 and result.created == 0 and bool(result.refused)):
+        return None
+    message = tr(
+        "cli.app.ledger.invoice.import_all_refused",
+    )
+    return (
+        message,
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="ledger.invoice.catalogue.import.all_refused",
+            message=message,
+            context={"rows": str(result.rows), "refused": str(len(result.refused))},
+        ),
+    )
+
+
+def _invoice_import_payload(bucket_id: str, result: BulkInvoiceImportResult) -> dict[str, object]:
+    return {
+        "bucket_id": bucket_id,
+        "rows": result.rows,
+        "created": result.created,
+        "skipped_duplicate": result.skipped_duplicate,
+        "refused": [failure.model_dump(mode="json") for failure in result.refused],
+        "created_invoice_ids": list(result.created_invoice_ids),
+    }
+
+
 def invoice_import(
     ctx: typer.Context,
     file: Path,
@@ -423,93 +544,31 @@ def invoice_import(
         raise bad(
             tr("cli.app.ledger.invoice.import_file_not_found", path=str(file)),
         )
-    try:
-        mapper, mapping_reasons = _invoice_column_role_mapper()
-        source = read_bulk_invoice_import_source(file, mapper=mapper)
-        result = import_invoices_from_rows(
-            source,
-            bucket_id=bucket_id,
-            kind=kind,
-            declared_country=country.strip().upper() if country else None,
-        )
-    except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
-            raise refusal from None
-        raise
-
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"rows\t{result.rows}",
-        f"created\t{result.created}",
-        f"skipped_duplicate\t{result.skipped_duplicate}",
-        f"refused\t{len(result.refused)}",
-    ]
+    source, result, mapping_reasons = _run_invoice_import(
+        file,
+        bucket_id=bucket_id,
+        kind=kind,
+        country=country,
+    )
+    lines = _invoice_import_summary_lines(bucket_id, result)
+    lines.extend(_invoice_import_refusal_lines(result))
     notices: list[Notice] = []
-    for failure in result.refused:
-        lines.append(f"  refused\trow={failure.row_number}\tfield={failure.field}\treason={failure.reason}")
-    unmapped = source.resolution.unmapped_columns
-    if unmapped:
-        # Reported, never a refusal: a book carrying a column the importer has
-        # no slot for still imports every row, and the operator is told which
-        # columns went unused rather than handed back a rejected file.
-        headers = ", ".join(column.header for column in unmapped)
-        message = tr(
-            "cli.app.ledger.invoice.import_unmapped_columns",
-            columns=headers,
-        )
-        lines.append(f"unmapped_columns\t{headers}")
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="ledger.invoice.catalogue.import.unmapped_columns",
-                message=message,
-                context={"columns": headers, "count": str(len(unmapped))},
-            ),
-        )
-    for index, reason in enumerate(mapping_reasons):
-        # The positional mapping carries roles only, so a token the allow-list
-        # refused would otherwise reach the operator as nothing more than
-        # "column not imported". The reason is the difference between an
-        # unrecognised column and a mapping that named a role which does not
-        # exist, and only one of those is worth an operator's attention.
-        lines.append(f"mapping_note\t{reason}")
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="ledger.invoice.catalogue.import.column_role_not_applied",
-                message=tr(
-                    "cli.app.ledger.invoice.import_column_role_not_applied",
-                    detail=reason,
-                ),
-                context={"detail": reason, "index": str(index)},
-            ),
-        )
-    every_row_refused = result.rows > 0 and result.created == 0 and bool(result.refused)
-    if every_row_refused:
-        message = tr(
-            "cli.app.ledger.invoice.import_all_refused",
-        )
-        lines.insert(1, message)
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code="ledger.invoice.catalogue.import.all_refused",
-                message=message,
-                context={"rows": str(result.rows), "refused": str(len(result.refused))},
-            ),
-        )
-    payload = {
-        "bucket_id": bucket_id,
-        "rows": result.rows,
-        "created": result.created,
-        "skipped_duplicate": result.skipped_duplicate,
-        "refused": [f.model_dump(mode="json") for f in result.refused],
-        "created_invoice_ids": list(result.created_invoice_ids),
-    }
+    if unmapped_report := _invoice_import_unmapped_report(source):
+        unmapped_line, unmapped_notice = unmapped_report
+        lines.append(unmapped_line)
+        notices.append(unmapped_notice)
+    mapping_lines, mapping_notices = _invoice_import_mapping_reports(mapping_reasons)
+    lines.extend(mapping_lines)
+    notices.extend(mapping_notices)
+    all_refused_report = _invoice_import_all_refused_report(result)
+    if all_refused_report:
+        all_refused_message, all_refused_notice = all_refused_report
+        lines.insert(1, all_refused_message)
+        notices.append(all_refused_notice)
     emit_envelope(
         ctx,
         command="ledger.invoice.import",
-        result=CatalogueInvoiceImportResult.model_validate(payload),
+        result=CatalogueInvoiceImportResult.model_validate(_invoice_import_payload(bucket_id, result)),
         lines=lines,
         notices=notices,
     )
@@ -517,7 +576,7 @@ def invoice_import(
     # observation about a SUCCESSFUL import, so keying the exit on "any notice"
     # would turn every book carrying an extra column into a failure -- exactly
     # the refuse-whole behaviour this path exists to remove.
-    if every_row_refused:
+    if all_refused_report:
         raise typer.Exit(code=1)
 
 

@@ -480,15 +480,15 @@ def _review_view_advisories(draft: InvoiceDraft) -> tuple[list[Notice], list[str
     return notices, lines
 
 
-def review_view(ctx: typer.Context, reference: str) -> None:
-    """Show every reviewable field of one pending draft, with its blocking findings."""
-    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
-    document = load_extraction_drafts(bucket_id, load_settings())
-    stored = _stored_draft_for_reference(document, reference)
-    draft = stored.draft
-    blockers = confirmation_blockers(draft)
-    fields = _field_payloads(draft)
-    payload = {
+def _review_view_payload(
+    bucket_id: str,
+    stored: StoredExtractionDraft,
+    draft: InvoiceDraft,
+    fields: list[EvidenceReviewFieldPayload],
+    blockers: tuple[ConfirmationBlocker, ...],
+) -> dict[str, object]:
+    """Project one stored draft into the review view's JSON result shape."""
+    return {
         "bucket_id": bucket_id,
         "evidence_reference": stored.evidence_reference,
         "extractor": stored.extractor,
@@ -500,6 +500,16 @@ def review_view(ctx: typer.Context, reference: str) -> None:
         "discrepancies": [finding.model_dump(mode="json") for finding in draft.discrepancies],
         "blockers": [_blocker_payload(blocker).model_dump(mode="json") for blocker in blockers],
     }
+
+
+def _review_view_lines(
+    bucket_id: str,
+    stored: StoredExtractionDraft,
+    draft: InvoiceDraft,
+    fields: list[EvidenceReviewFieldPayload],
+    blockers: tuple[ConfirmationBlocker, ...],
+) -> list[str]:
+    """Render the review view's tab-separated text rows in contract order."""
     lines = [
         f"bucket_id\t{bucket_id}",
         f"evidence_reference\t{stored.evidence_reference}",
@@ -515,8 +525,15 @@ def review_view(ctx: typer.Context, reference: str) -> None:
     lines.extend(
         f"blocker\t{blocker.blocker_id}\t{blocker.reason.value}\t{blocker.field or '-'}" for blocker in blockers
     )
-    notices, advisory_lines = _review_view_advisories(draft)
-    lines.extend(advisory_lines)
+    return lines
+
+
+def _review_view_notices(
+    draft: InvoiceDraft,
+    blockers: tuple[ConfirmationBlocker, ...],
+) -> tuple[list[Notice], list[str]]:
+    """Return advisory notices/lines followed by the blocking notice, if any."""
+    notices, lines = _review_view_advisories(draft)
     if blockers:
         notices.append(
             Notice(
@@ -526,6 +543,21 @@ def review_view(ctx: typer.Context, reference: str) -> None:
                 context={"blocker_ids": ",".join(blocker.blocker_id for blocker in blockers)},
             )
         )
+    return notices, lines
+
+
+def review_view(ctx: typer.Context, reference: str) -> None:
+    """Show every reviewable field of one pending draft, with its blocking findings."""
+    bucket_id = transaction_catalogue_repo(current_workflow_state()).bucket_id
+    document = load_extraction_drafts(bucket_id, load_settings())
+    stored = _stored_draft_for_reference(document, reference)
+    draft = stored.draft
+    blockers = confirmation_blockers(draft)
+    fields = _field_payloads(draft)
+    payload = _review_view_payload(bucket_id, stored, draft, fields, blockers)
+    lines = _review_view_lines(bucket_id, stored, draft, fields, blockers)
+    notices, advisory_lines = _review_view_notices(draft, blockers)
+    lines.extend(advisory_lines)
     emit_envelope(
         ctx,
         command="ledger.evidence.review.show",

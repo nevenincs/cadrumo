@@ -408,6 +408,26 @@ class SecretStore:
         with exclusive_file_lock(self._lock_target()):
             return self._put_locked(record, overwrite=overwrite)
 
+    @staticmethod
+    def _validate_retention_for_put(record: SecretRecord) -> None:
+        """Refuse a persisted class whose policy requires an expiry."""
+        policy = default_policy_for(record.classification)
+        if policy.retention.require_explicit_expiry and record.expires_at is None:
+            raise RetentionPolicyError(
+                f"class {record.classification} requires explicit expires_at; "
+                "set the field to a timezone-aware datetime.",
+            )
+
+    def _publish_record_blob(self, record: SecretRecord) -> BlobReference:
+        """Encrypt and publish the record before its index takes ownership."""
+        envelope = self._build_envelope(record)
+        wire = self._envelope_bytes(envelope)
+        return self._blob_store.put(
+            wire,
+            classification=record.classification,
+            content_type="application/json+secret-record",
+        )
+
     def _put_locked(
         self,
         record: SecretRecord,
@@ -421,24 +441,24 @@ class SecretStore:
         :meth:`put` (which wraps in a fresh lock) and :meth:`rotate`
         (which holds the lock across get and put for atomicity).
         """
-        policy = default_policy_for(record.classification)
-        if policy.retention.require_explicit_expiry and record.expires_at is None:
-            raise RetentionPolicyError(
-                f"class {record.classification} requires explicit expires_at; "
-                "set the field to a timezone-aware datetime.",
-            )
+        self._validate_retention_for_put(record)
         digest = self._digest(record.key)
         index = self._read_index()
         existing = index.entries.get(digest)
         if existing is not None and not overwrite:
             raise SecretAlreadyExistsError("secret already exists; pass overwrite=True to replace.")
-        envelope = self._build_envelope(record)
-        wire = self._envelope_bytes(envelope)
-        blob_ref = self._blob_store.put(
-            wire,
-            classification=record.classification,
-            content_type="application/json+secret-record",
-        )
+        blob_ref = self._publish_record_blob(record)
+        return self._commit_put_index(index, digest, record, blob_ref, existing)
+
+    def _commit_put_index(
+        self,
+        index: _SecretIndex,
+        digest: str,
+        record: SecretRecord,
+        blob_ref: BlobReference,
+        existing: _SecretIndexEntry | None,
+    ) -> BlobReference:
+        """Commit index ownership and compensate if that commit fails."""
         index.entries[digest] = _SecretIndexEntry(
             digest_hex=digest,
             blob_sha256_plaintext_hex=blob_ref.sha256_plaintext_hex,
@@ -464,22 +484,31 @@ class SecretStore:
                 self._discard_unreferenced_blob(blob_ref)
             raise
 
-        if existing is not None and existing.blob_sha256_plaintext_hex != blob_ref.sha256_plaintext_hex:
-            # Drop the previous payload to keep the store tidy. Only
-            # the benign "blob already gone" case is silently absorbed;
-            # anything else (integrity mismatch, OS error) is logged
-            # as a WARNING so the operator can investigate.
-            old_ref = BlobReference(
-                sha256_plaintext_hex=existing.blob_sha256_plaintext_hex,
-                classification=existing.classification,
-            )
-            try:
-                self._blob_store.delete(old_ref)
-            except BlobNotFoundError:
-                _log.debug("stale secret-store blob cleanup skipped because blob is already absent")
-            except (BlobIntegrityError, OSError):
-                _log.warning("stale secret-store blob cleanup failed", exc_info=True)
+        self._retire_replaced_blob(existing, blob_ref)
         return blob_ref
+
+    def _retire_replaced_blob(
+        self,
+        existing: _SecretIndexEntry | None,
+        blob_ref: BlobReference,
+    ) -> None:
+        """Remove the old payload after the replacement index is durable."""
+        if existing is None or existing.blob_sha256_plaintext_hex == blob_ref.sha256_plaintext_hex:
+            return
+        # Drop the previous payload to keep the store tidy. Only
+        # the benign "blob already gone" case is silently absorbed;
+        # anything else (integrity mismatch, OS error) is logged
+        # as a WARNING so the operator can investigate.
+        old_ref = BlobReference(
+            sha256_plaintext_hex=existing.blob_sha256_plaintext_hex,
+            classification=existing.classification,
+        )
+        try:
+            self._blob_store.delete(old_ref)
+        except BlobNotFoundError:
+            _log.debug("stale secret-store blob cleanup skipped because blob is already absent")
+        except (BlobIntegrityError, OSError):
+            _log.warning("stale secret-store blob cleanup failed", exc_info=True)
 
     def _discard_unreferenced_blob(self, blob_ref: BlobReference) -> None:
         """Best-effort removal of a blob no index entry owns.

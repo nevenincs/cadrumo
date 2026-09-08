@@ -156,6 +156,167 @@ def build_cli_version_report(
     )
 
 
+def _logging_repair_check(log_parent_exists: bool) -> _DiagnosticCheck:
+    """Build the read-only log-path diagnostic row."""
+    return _DiagnosticCheck(
+        name="logging.file",
+        status=_DiagnosticStatus.OK if log_parent_exists else _DiagnosticStatus.WARN,
+        summary=str(default_log_file_path()),
+        precondition_verdict=(
+            None
+            if log_parent_exists
+            else diagnostic_no_recovery_verdict(
+                condition_id="diagnostics.logging.file_parent.available",
+                evidence_id="diagnostics.logging.file_parent.observation",
+                values={
+                    "log_file": str(default_log_file_path()),
+                    "parent_exists": False,
+                },
+                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+            )
+        ),
+    )
+
+
+def _registry_repair_check(registry: _RegistryVersionSummary) -> _DiagnosticCheck:
+    """Build the read-only registry availability diagnostic row."""
+    return _DiagnosticCheck(
+        name="registry.load",
+        status=_DiagnosticStatus.OK if registry.available else _DiagnosticStatus.FAIL,
+        summary=(
+            tr(
+                "cli.diagnostics.summary.registry_counts",
+                modelos=registry.modelo_count,
+                casillas=registry.casilla_count,
+            )
+            if registry.available
+            else tr("cli.diagnostics.summary.registry_unavailable")
+        ),
+        detail=registry.error,
+        precondition_verdict=(
+            None
+            if registry.available
+            else diagnostic_no_recovery_verdict(
+                condition_id="diagnostics.registry.load.available",
+                evidence_id="diagnostics.registry.load.observation",
+                values={"available": False, "registry_root": registry.registry_root},
+                outcome=NoRecoveryOutcome.TERMINAL,
+            )
+        ),
+        audience=_DiagnosticAudience.OPERATOR if registry.available else _DiagnosticAudience.INTERNAL,
+    )
+
+
+def _initial_config_repair_checks(registry: _RegistryVersionSummary) -> list[_DiagnosticCheck]:
+    """Build the environment, package, logging, and registry check rows."""
+    log_parent_exists = default_log_file_path().parent.exists()
+    return [
+        _DiagnosticCheck(
+            name="environment.python",
+            status=_DiagnosticStatus.OK,
+            summary=sys.version.split()[0],
+        ),
+        _DiagnosticCheck(
+            name="package.version",
+            status=_DiagnosticStatus.OK,
+            summary=__version__,
+        ),
+        _logging_repair_check(log_parent_exists),
+        _registry_repair_check(registry),
+    ]
+
+
+def _readable_secure_state_repair_checks() -> tuple[list[_DiagnosticCheck], WizardStatusReport]:
+    """Read secure workflow state and build its healthy diagnostic rows."""
+    from .wizard.status import build_wizard_status
+    from .workflow.persistence import workflow_state_repository
+    from .workflow.profile_health import assess_active_profile_health
+
+    # Read the secure state through whatever session the operator already
+    # holds. This probe deliberately opens none of its own: it used to enter
+    # the shared-master provider whenever no per-profile session served the
+    # active bucket, which unlocked a taxpayer's bucket with no password so
+    # a health report could be printed. The locked case is a diagnostic
+    # verdict, not an obstacle -- the handler below already renders it as a
+    # warn with the profile-health verdict that tells the operator to log in.
+    state = workflow_state_repository().load()
+    checks = [
+        _DiagnosticCheck(
+            name="secure_state.load",
+            status=_DiagnosticStatus.OK,
+            summary=tr("cli.diagnostics.summary.state_backend_readable"),
+        ),
+    ]
+    profile_health = assess_active_profile_health(state)
+    checks.append(_active_profile_storage_check(profile_health))
+    setup_report = _repair_safe_wizard_status(
+        build_wizard_status(state),
+        active_profile_label=profile_health.active_profile_label,
+    )
+    checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
+    checks.append(_auth_check(setup_report))
+    return checks, setup_report
+
+
+def _secure_state_failure_check(
+    exc: Exception,
+    *,
+    profile_health: ActiveProfileHealth,
+    missing_active_bucket_session: bool,
+) -> _DiagnosticCheck:
+    """Build the secure-state refusal row without exposing internal errors."""
+    return _DiagnosticCheck(
+        name="secure_state.load",
+        status=_DiagnosticStatus.WARN if missing_active_bucket_session else _DiagnosticStatus.FAIL,
+        summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
+        # A missing bucket session on a cold start is an
+        # expected diagnostic verdict, not a fault to report
+        # verbatim. Surfacing the raw NoActiveBucketSession
+        # exception text leaks internal plumbing; the
+        # summary + typed profile verdict already guide the operator.
+        detail=None if missing_active_bucket_session else _compact_exception(exc),
+        precondition_verdict=(
+            _required_profile_health_verdict(profile_health)
+            if missing_active_bucket_session
+            else diagnostic_action_verdict(
+                condition_id="diagnostics.secure_state.load.readable",
+                evidence_id="diagnostics.secure_state.load.observation",
+                values={"readable": False},
+                action_id="operator.diagnostics.workflow.reset_progress",
+                argument_bindings=(resolved_verdict_binding("yes", True),),
+            )
+        ),
+    )
+
+
+def _unreadable_secure_state_repair_checks(exc: Exception) -> list[_DiagnosticCheck]:
+    """Build the redacted secure-state, profile, and auth fallback rows."""
+    from .workflow.profile_health import assess_active_profile_health
+
+    _log.debug("config repair secure state probe failed", exc_info=True)
+    profile_health = assess_active_profile_health()
+    missing_active_bucket_session = _is_missing_active_bucket_session(exc)
+    return [
+        _secure_state_failure_check(
+            exc,
+            profile_health=profile_health,
+            missing_active_bucket_session=missing_active_bucket_session,
+        ),
+        _active_profile_storage_check(profile_health),
+        _profile_unavailable_check(profile_health),
+        _auth_unavailable_check(profile_health),
+    ]
+
+
+def _secure_state_repair_checks() -> tuple[list[_DiagnosticCheck], WizardStatusReport | None]:
+    """Read secure workflow state, falling back to redacted health rows."""
+    try:
+        checks, setup_report = _readable_secure_state_repair_checks()
+    except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
+        return _unreadable_secure_state_repair_checks(exc), None
+    return checks, setup_report
+
+
 def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepairReport:
     """Return local diagnostics for the ``aeat config repair`` surface.
 
@@ -176,125 +337,9 @@ def build_config_repair_report(registry_root: Path | None = None) -> _ConfigRepa
     _ensure_models_rebuilt()
     root = registry_root or bundled_path("registry", "aeat")
     registry = _build_registry_version_summary(root)
-    log_parent_exists = default_log_file_path().parent.exists()
-    checks: list[_DiagnosticCheck] = [
-        _DiagnosticCheck(
-            name="environment.python",
-            status=_DiagnosticStatus.OK,
-            summary=sys.version.split()[0],
-        ),
-        _DiagnosticCheck(
-            name="package.version",
-            status=_DiagnosticStatus.OK,
-            summary=__version__,
-        ),
-        _DiagnosticCheck(
-            name="logging.file",
-            status=_DiagnosticStatus.OK if log_parent_exists else _DiagnosticStatus.WARN,
-            summary=str(default_log_file_path()),
-            precondition_verdict=(
-                None
-                if log_parent_exists
-                else diagnostic_no_recovery_verdict(
-                    condition_id="diagnostics.logging.file_parent.available",
-                    evidence_id="diagnostics.logging.file_parent.observation",
-                    values={
-                        "log_file": str(default_log_file_path()),
-                        "parent_exists": False,
-                    },
-                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-                )
-            ),
-        ),
-        _DiagnosticCheck(
-            name="registry.load",
-            status=_DiagnosticStatus.OK if registry.available else _DiagnosticStatus.FAIL,
-            summary=(
-                tr(
-                    "cli.diagnostics.summary.registry_counts",
-                    modelos=registry.modelo_count,
-                    casillas=registry.casilla_count,
-                )
-                if registry.available
-                else tr("cli.diagnostics.summary.registry_unavailable")
-            ),
-            detail=registry.error,
-            precondition_verdict=(
-                None
-                if registry.available
-                else diagnostic_no_recovery_verdict(
-                    condition_id="diagnostics.registry.load.available",
-                    evidence_id="diagnostics.registry.load.observation",
-                    values={"available": False, "registry_root": registry.registry_root},
-                    outcome=NoRecoveryOutcome.TERMINAL,
-                )
-            ),
-            audience=_DiagnosticAudience.OPERATOR if registry.available else _DiagnosticAudience.INTERNAL,
-        ),
-    ]
-
-    setup_report: WizardStatusReport | None = None
-    try:
-        from .wizard.status import build_wizard_status
-        from .workflow.persistence import workflow_state_repository
-        from .workflow.profile_health import assess_active_profile_health
-
-        # Read the secure state through whatever session the operator already
-        # holds. This probe deliberately opens none of its own: it used to enter
-        # the shared-master provider whenever no per-profile session served the
-        # active bucket, which unlocked a taxpayer's bucket with no password so
-        # a health report could be printed. The locked case is a diagnostic
-        # verdict, not an obstacle -- the handler below already renders it as a
-        # warn with the profile-health verdict that tells the operator to log in.
-        state = workflow_state_repository().load()
-        checks.append(
-            _DiagnosticCheck(
-                name="secure_state.load",
-                status=_DiagnosticStatus.OK,
-                summary=tr("cli.diagnostics.summary.state_backend_readable"),
-            ),
-        )
-        profile_health = assess_active_profile_health(state)
-        checks.append(_active_profile_storage_check(profile_health))
-        setup_report = _repair_safe_wizard_status(
-            build_wizard_status(state),
-            active_profile_label=profile_health.active_profile_label,
-        )
-        checks.append(_profile_check(setup_report, profile_health=profile_health, state=state))
-        checks.append(_auth_check(setup_report))
-    except Exception as exc:  # pragma: no cover - concrete failure mode depends on local secure backend.
-        from .workflow.profile_health import assess_active_profile_health
-
-        _log.debug("config repair secure state probe failed", exc_info=True)
-        profile_health = assess_active_profile_health()
-        missing_active_bucket_session = _is_missing_active_bucket_session(exc)
-        checks.append(
-            _DiagnosticCheck(
-                name="secure_state.load",
-                status=_DiagnosticStatus.WARN if missing_active_bucket_session else _DiagnosticStatus.FAIL,
-                summary=tr("cli.diagnostics.summary.state_backend_unreadable"),
-                # A missing bucket session on a cold start is an
-                # expected diagnostic verdict, not a fault to report
-                # verbatim. Surfacing the raw NoActiveBucketSession
-                # exception text leaks internal plumbing; the
-                # summary + typed profile verdict already guide the operator.
-                detail=None if missing_active_bucket_session else _compact_exception(exc),
-                precondition_verdict=(
-                    _required_profile_health_verdict(profile_health)
-                    if missing_active_bucket_session
-                    else diagnostic_action_verdict(
-                        condition_id="diagnostics.secure_state.load.readable",
-                        evidence_id="diagnostics.secure_state.load.observation",
-                        values={"readable": False},
-                        action_id="operator.diagnostics.workflow.reset_progress",
-                        argument_bindings=(resolved_verdict_binding("yes", True),),
-                    )
-                ),
-            ),
-        )
-        checks.append(_active_profile_storage_check(profile_health))
-        checks.append(_profile_unavailable_check(profile_health))
-        checks.append(_auth_unavailable_check(profile_health))
+    checks = _initial_config_repair_checks(registry)
+    secure_state_checks, setup_report = _secure_state_repair_checks()
+    checks.extend(secure_state_checks)
 
     secure_objects = _probe_secure_objects_integrity()
     checks.append(_secure_objects_integrity_check(secure_objects))

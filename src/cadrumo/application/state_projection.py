@@ -126,7 +126,7 @@ from .workflow.profile_health import ActiveProfileHealth, assess_active_profile_
 from .workflow.state_models import WorkflowState
 
 if TYPE_CHECKING:
-    from ..domain.calculations.registry.schema import RegistrySnapshot
+    from ..domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
     from ..domain.user_profile.values import UserProfileRecord
 
 _log = get_logger(__name__)
@@ -1070,6 +1070,26 @@ def _missing_calculation_bindings_for_readiness(
     else:
         profile_resolved = {str(binding_id) for binding_id in profile_resolved_binding_ids(profile_resolution)}
 
+    return _build_missing_binding_requirements(
+        revision,
+        enum_consumed=enum_consumed,
+        date_consumed=date_consumed,
+        period_zero_defaulted=period_zero_defaulted,
+        profile_resolved=profile_resolved,
+        ledger_sources_ready=ledger_sources_ready,
+    )
+
+
+def _build_missing_binding_requirements(
+    revision: ModeloRevision,
+    *,
+    enum_consumed: set[str],
+    date_consumed: set[str],
+    period_zero_defaulted: set[str],
+    profile_resolved: set[str],
+    ledger_sources_ready: bool,
+) -> tuple[ProjectionModeloBindingRequirement, ...]:
+    """Project unresolved registry bindings in their canonical ID order."""
     missing: list[ProjectionModeloBindingRequirement] = []
     for binding in sorted(revision.bindings, key=lambda item: str(item.id)):
         binding_id = str(binding.id)

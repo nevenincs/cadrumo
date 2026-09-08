@@ -41,8 +41,7 @@ from ....application.modelo.m145_communication_records import (
 from ....application.user_profile.custody_ports import ProfileCustodyCarryMaterial
 from ....application.user_profile.repository import user_profile_snapshot_object_key
 from ....core.external_constants import UTF_8_ENCODING as _UTF_8
-from ....core.hashing import canonical_json_bytes, sha256_hex
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.hashing import sha256_hex
 from ....core.storage_taxonomy import StorageCustodyProfile
 from ....domain.evidence_consent.record import EvidenceConsentLedgerEntry, evidence_consent_ledger_entry_object_key
 from ....domain.transactions.classification_rule import LedgerClassificationRule
@@ -64,7 +63,6 @@ from .envelope.secure_bound_repository import SecureBoundRepository
 from .namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from .runtime_repository import secure_object_repository_for_bucket
 from .secure_object_namespaces import (
-    ATTACHMENT_MANIFEST_NAMESPACE,
     MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
     MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
@@ -493,33 +491,4 @@ def collect_profile_custody_carry(
     )
 
 
-def restore_profile_custody_carry(
-    carried_objects: tuple[CarriedSecureObject, ...],
-    *,
-    target_bucket_id: str,
-) -> None:
-    """Atomically re-key and persist every carried row in the target bucket."""
-    writes = tuple(
-        SecureObjectWrite(
-            namespace=carried.namespace,
-            object_key=carried.object_key,
-            classification=carried.classification,
-            schema_version=carried.schema_version,
-            written_at=carried.written_at,
-            payload=_rebound_payload(carried, target_bucket_id=target_bucket_id),
-        )
-        for carried in carried_objects
-    )
-    if writes:
-        secure_object_repository_for_bucket(target_bucket_id).save_many(writes)
-
-
-def _rebound_payload(carried: CarriedSecureObject, *, target_bucket_id: str) -> bytes:
-    if carried.namespace != ATTACHMENT_MANIFEST_NAMESPACE.namespace:
-        return carried.payload
-    envelope = json.loads(carried.payload.decode(_UTF_8))
-    envelope["payload"]["bucket_id"] = target_bucket_id
-    return canonical_json_bytes(envelope)
-
-
-__all__ = ["collect_profile_custody_carry", "restore_profile_custody_carry"]
+__all__ = ["collect_profile_custody_carry"]

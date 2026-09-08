@@ -1139,15 +1139,6 @@ class ProfileCustodyPort(Protocol):
         """Project portable rows and namespace coverage through persistence."""
         ...
 
-    def restore_profile_custody_carry(
-        self,
-        carried_objects: tuple[CarriedSecureObject, ...],
-        *,
-        target_bucket_id: str,
-    ) -> None:
-        """Atomically restore portable rows under the recipient bucket key."""
-        ...
-
     def profile_snapshot_persistence(
         self,
         bucket_id: str,

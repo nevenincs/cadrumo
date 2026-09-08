@@ -19,6 +19,7 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from typing import NoReturn
 
+from ...core.auth_provider import AuthProviderDescription
 from ...core.config import Settings
 from ...core.errors.hierarchy import SiteHealthError
 from ...core.errors.severity import BaseSeverity
@@ -43,6 +44,7 @@ from ..operator_actions.models import ActionArgumentBinding, ActionReference, Co
 from ..operator_actions.preconditions import no_action_precondition_verdict
 from ._deadline_stage import abort_missing_deadline_obligation, resolve_deadline_stage_obligation
 from .engine_helpers import (
+    CertificateSeverityValue,
     DeadlineRole,
     FilingWindowState,
 )
@@ -343,69 +345,15 @@ class WorkflowEngine:
         self._run_obligation = None
 
         steps: list[WorkflowStep] = []
-        obligation: WorkflowDeadlineTarget | None = None
-        draft: RegistryModeloDraftProtocol | None = None
-        final_stage: WorkflowStage = WorkflowStage.ABORTED
-        aborted_reason: WorkflowAbortReason | None = None
-
-        try:
-            self._stage_loading_profile(profile, steps)
-            obligation = self._stage_computing_deadlines(
-                profile=profile,
-                target_modelo=target_modelo,
-                target_period=target_period,
-                today=reference_today,
-                steps=steps,
-                purpose=purpose,
-            )
-            self._run_obligation = obligation
-            await self._stage_checking_inbox(
-                profile=profile,
-                obligation=obligation,
-                steps=steps,
-            )
-            draft = await self._stage_building_draft(
-                profile=profile,
-                obligation=obligation,
-                fail_on_warning=fail_on_warning,
-                steps=steps,
-            )
-            self._stage_validating_draft(draft=draft, steps=steps)
-            self._stage_running_preflight(
-                draft=draft,
-                today=reference_today,
-                steps=steps,
-                purpose=purpose,
-            )
-            final_stage = WorkflowStage.DONE
-        except WorkflowAbortSignalError as abort:
-            aborted_reason = abort.reason
-            _abort_stage = steps[-1].stage if steps else "?"
-            if abort.reason is WorkflowAbortReason.UNHANDLED_EXCEPTION:
-                _logger.error(
-                    "workflow: aborted at stage=%s reason=%s",
-                    _abort_stage,
-                    abort.reason,
-                    exc_info=True,
-                )
-            elif abort.reason in (
-                WorkflowAbortReason.SITE_UNAVAILABLE,
-                WorkflowAbortReason.CERT_INVALID,
-                WorkflowAbortReason.PREFLIGHT_FAILED,
-                WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO,
-                WorkflowAbortReason.DRAFT_HAS_ERRORS,
-            ):
-                _logger.warning(
-                    "workflow: aborted at stage=%s reason=%s",
-                    _abort_stage,
-                    abort.reason,
-                )
-            else:
-                _logger.info(
-                    "workflow: aborted at stage=%s reason=%s",
-                    _abort_stage,
-                    abort.reason,
-                )
+        obligation, draft, final_stage, aborted_reason = await self._run_ordered_stages(
+            profile=profile,
+            target_modelo=target_modelo,
+            target_period=target_period,
+            fail_on_warning=fail_on_warning,
+            today=reference_today,
+            steps=steps,
+            purpose=purpose,
+        )
 
         ended_at = _utcnow()
         self._run_tax_id = None
@@ -443,6 +391,90 @@ class WorkflowEngine:
             summary_details=summary_details,
             resumed_from=resumed_from,
         )
+
+    async def _run_ordered_stages(
+        self,
+        *,
+        profile: TaxpayerProfile,
+        target_modelo: str | None,
+        target_period: Period | None,
+        fail_on_warning: bool,
+        today: date,
+        steps: list[WorkflowStep],
+        purpose: WorkflowPurpose,
+    ) -> tuple[
+        WorkflowDeadlineTarget | None,
+        RegistryModeloDraftProtocol | None,
+        WorkflowStage,
+        WorkflowAbortReason | None,
+    ]:
+        obligation: WorkflowDeadlineTarget | None = None
+        draft: RegistryModeloDraftProtocol | None = None
+        final_stage = WorkflowStage.ABORTED
+        aborted_reason: WorkflowAbortReason | None = None
+        try:
+            self._stage_loading_profile(profile, steps)
+            obligation = self._stage_computing_deadlines(
+                profile=profile,
+                target_modelo=target_modelo,
+                target_period=target_period,
+                today=today,
+                steps=steps,
+                purpose=purpose,
+            )
+            self._run_obligation = obligation
+            await self._stage_checking_inbox(
+                profile=profile,
+                obligation=obligation,
+                steps=steps,
+            )
+            draft = await self._stage_building_draft(
+                profile=profile,
+                obligation=obligation,
+                fail_on_warning=fail_on_warning,
+                steps=steps,
+            )
+            self._stage_validating_draft(draft=draft, steps=steps)
+            self._stage_running_preflight(
+                draft=draft,
+                today=today,
+                steps=steps,
+                purpose=purpose,
+            )
+            final_stage = WorkflowStage.DONE
+        except WorkflowAbortSignalError as abort:
+            aborted_reason = abort.reason
+            self._log_abort(reason=abort.reason, steps=steps)
+        return obligation, draft, final_stage, aborted_reason
+
+    @staticmethod
+    def _log_abort(*, reason: WorkflowAbortReason, steps: list[WorkflowStep]) -> None:
+        abort_stage = steps[-1].stage if steps else "?"
+        if reason is WorkflowAbortReason.UNHANDLED_EXCEPTION:
+            _logger.error(
+                "workflow: aborted at stage=%s reason=%s",
+                abort_stage,
+                reason,
+                exc_info=True,
+            )
+        elif reason in (
+            WorkflowAbortReason.SITE_UNAVAILABLE,
+            WorkflowAbortReason.CERT_INVALID,
+            WorkflowAbortReason.PREFLIGHT_FAILED,
+            WorkflowAbortReason.INBOX_BLOCKING_REQUERIMIENTO,
+            WorkflowAbortReason.DRAFT_HAS_ERRORS,
+        ):
+            _logger.warning(
+                "workflow: aborted at stage=%s reason=%s",
+                abort_stage,
+                reason,
+            )
+        else:
+            _logger.info(
+                "workflow: aborted at stage=%s reason=%s",
+                abort_stage,
+                reason,
+            )
 
     # ------------------------------------------------------------------ stages
 
@@ -1167,135 +1199,214 @@ class WorkflowEngine:
         refused.
         """
         started = _utcnow()
-        cert_details: WorkflowAuthCheckDetails
-        if self._certificate_bundle is not None:
-            try:
-                certificate = self._certificate_bundle.describe()
-            except Exception as exc:
-                steps.append(
-                    WorkflowStep(
-                        stage=WorkflowStage.RUNNING_PREFLIGHT,
-                        started_at=started,
-                        ended_at=_utcnow(),
-                        success=False,
-                        summary_locale_key="application.workflow.steps.auth_certificate_load_failed",
-                        details=WorkflowFailureDetails(
-                            kind="workflow_failure",
-                            error_code="workflow.auth.certificate_load_failed",
-                        ),
-                        precondition_verdict=_no_recovery_verdict(
-                            condition_id="workflow.execution.completed",
-                            evidence_id="workflow.execution.error_code",
-                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                            values={
-                                "completed": False,
-                                "error_code": "workflow.auth.certificate_load_failed",
-                            },
-                            outcome=NoRecoveryOutcome.TERMINAL,
-                        ),
-                    ),
-                )
-                raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID) from exc
-            cert_details = WorkflowAuthCheckDetails(
-                kind="auth_check",
-                provider_kind=certificate.kind,
-            )
-            if not certificate.configured or not certificate.available:
-                steps.append(
-                    WorkflowStep(
-                        stage=WorkflowStage.RUNNING_PREFLIGHT,
-                        started_at=started,
-                        ended_at=_utcnow(),
-                        success=False,
-                        summary_locale_key="application.workflow.steps.auth_provider_unavailable",
-                        details=cert_details,
-                        precondition_verdict=_no_recovery_verdict(
-                            condition_id="workflow.auth.provider_available",
-                            evidence_id="workflow.auth.provider_state",
-                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                            values={
-                                "available": certificate.available,
-                                "configured": certificate.configured,
-                                "provider_kind": certificate.kind.value,
-                            },
-                            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-                        ),
-                    ),
-                )
-                raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID)
-            if certificate.expires_on is not None:
-                cert_severity, days_until_expiry = _classify_cert_expiry(
-                    not_after=certificate.expires_on,
-                    today=today,
-                    warn_days=self._settings.cadrumo_cert_warn_days,
-                    critical_days=self._settings.cadrumo_cert_critical_days,
-                )
-                cert_details = WorkflowAuthCheckDetails(
-                    kind="auth_check",
-                    provider_kind=certificate.kind,
-                    cert_not_after=certificate.expires_on,
-                    cert_severity=cert_severity,
-                    cert_days_until_expiry=days_until_expiry,
-                )
-            else:
-                cert_severity = None
-                days_until_expiry = None
-            if cert_severity in (
-                "EXPIRED",
-                "CRITICAL",
-            ):
-                steps.append(
-                    WorkflowStep(
-                        stage=WorkflowStage.RUNNING_PREFLIGHT,
-                        started_at=started,
-                        ended_at=_utcnow(),
-                        success=False,
-                        summary_locale_key="application.workflow.steps.auth_certificate_invalid",
-                        details=cert_details,
-                        precondition_verdict=_no_recovery_verdict(
-                            condition_id="workflow.auth.certificate_valid",
-                            evidence_id="workflow.auth.certificate_state",
-                            provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-                            values={
-                                "certificate_valid": False,
-                                "cert_severity": cert_severity,
-                                "provider_kind": certificate.kind.value,
-                            },
-                            outcome=NoRecoveryOutcome.SAFETY,
-                        ),
-                    ),
-                )
-                raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID)
-            if cert_severity == "WARN":
-                _logger.warning(
-                    "workflow: certificate nearing expiry kind=%s days=%d",
-                    certificate.kind.value,
-                    days_until_expiry,
-                )
-        else:
-            cert_details = WorkflowAuthCheckDetails(
+        cert_details = self._resolve_certificate_preflight(today=today, started=started, steps=steps)
+        self._run_submission_preflight(
+            draft=draft,
+            today=today,
+            steps=steps,
+            purpose=purpose,
+            started=started,
+            cert_details=cert_details,
+        )
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.RUNNING_PREFLIGHT,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=True,
+                summary_locale_key="application.workflow.steps.preflight_completed",
+                details=cert_details,
+            ),
+        )
+
+    def _resolve_certificate_preflight(
+        self,
+        *,
+        today: date,
+        started: datetime,
+        steps: list[WorkflowStep],
+    ) -> WorkflowAuthCheckDetails:
+        certificate_bundle = self._certificate_bundle
+        if certificate_bundle is None:
+            return WorkflowAuthCheckDetails(
                 kind="auth_check",
                 provider_check_skipped=True,
                 skip_reason=WorkflowDiagnosticSkipReason.NOT_WIRED,
             )
 
         try:
-            # The AEAT filing-window preflight gate is skipped for BOTH local
-            # purposes. VERIFY is calendar-independent. FILE is a LOCAL
-            # mark-as-filed that contacts AEAT zero times: its obligation
-            # existence is already enforced at the
-            # deadline stage (NO_PENDING_OBLIGATION still refuses a never-existing
-            # obligation; an existing-but-overdue one is admitted late, con
-            # recargo). Re-applying the submission filing-window gate here would
-            # contradict that and re-block the legitimate late local filing that
-            # seeds the next period's cross-period carry. The window gate binds
-            # only an actual AEAT submission, which this app never performs.
+            certificate = certificate_bundle.describe()
+        except Exception as exc:
+            self._append_certificate_load_failure(started=started, steps=steps)
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID) from exc
+
+        cert_details = WorkflowAuthCheckDetails(
+            kind="auth_check",
+            provider_kind=certificate.kind,
+        )
+        if not certificate.configured or not certificate.available:
+            self._append_auth_provider_unavailable(
+                started=started,
+                steps=steps,
+                certificate=certificate,
+                cert_details=cert_details,
+            )
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID)
+
+        cert_details, cert_severity, days_until_expiry = self._classify_certificate(
+            certificate=certificate,
+            cert_details=cert_details,
+            today=today,
+        )
+        if cert_severity in ("EXPIRED", "CRITICAL"):
+            self._append_invalid_certificate(
+                started=started,
+                steps=steps,
+                certificate=certificate,
+                cert_details=cert_details,
+                cert_severity=cert_severity,
+            )
+            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.CERT_INVALID)
+        if cert_severity == "WARN":
+            _logger.warning(
+                "workflow: certificate nearing expiry kind=%s days=%d",
+                certificate.kind.value,
+                days_until_expiry,
+            )
+        return cert_details
+
+    def _classify_certificate(
+        self,
+        *,
+        certificate: AuthProviderDescription,
+        cert_details: WorkflowAuthCheckDetails,
+        today: date,
+    ) -> tuple[WorkflowAuthCheckDetails, CertificateSeverityValue | None, int | None]:
+        if certificate.expires_on is None:
+            return cert_details, None, None
+        cert_severity, days_until_expiry = _classify_cert_expiry(
+            not_after=certificate.expires_on,
+            today=today,
+            warn_days=self._settings.cadrumo_cert_warn_days,
+            critical_days=self._settings.cadrumo_cert_critical_days,
+        )
+        return (
+            WorkflowAuthCheckDetails(
+                kind="auth_check",
+                provider_kind=certificate.kind,
+                cert_not_after=certificate.expires_on,
+                cert_severity=cert_severity,
+                cert_days_until_expiry=days_until_expiry,
+            ),
+            cert_severity,
+            days_until_expiry,
+        )
+
+    @staticmethod
+    def _append_certificate_load_failure(*, started: datetime, steps: list[WorkflowStep]) -> None:
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.RUNNING_PREFLIGHT,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=False,
+                summary_locale_key="application.workflow.steps.auth_certificate_load_failed",
+                details=WorkflowFailureDetails(
+                    kind="workflow_failure",
+                    error_code="workflow.auth.certificate_load_failed",
+                ),
+                precondition_verdict=_no_recovery_verdict(
+                    condition_id="workflow.execution.completed",
+                    evidence_id="workflow.execution.error_code",
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    values={
+                        "completed": False,
+                        "error_code": "workflow.auth.certificate_load_failed",
+                    },
+                    outcome=NoRecoveryOutcome.TERMINAL,
+                ),
+            ),
+        )
+
+    @staticmethod
+    def _append_auth_provider_unavailable(
+        *,
+        started: datetime,
+        steps: list[WorkflowStep],
+        certificate: AuthProviderDescription,
+        cert_details: WorkflowAuthCheckDetails,
+    ) -> None:
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.RUNNING_PREFLIGHT,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=False,
+                summary_locale_key="application.workflow.steps.auth_provider_unavailable",
+                details=cert_details,
+                precondition_verdict=_no_recovery_verdict(
+                    condition_id="workflow.auth.provider_available",
+                    evidence_id="workflow.auth.provider_state",
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    values={
+                        "available": certificate.available,
+                        "configured": certificate.configured,
+                        "provider_kind": certificate.kind.value,
+                    },
+                    outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+                ),
+            ),
+        )
+
+    @staticmethod
+    def _append_invalid_certificate(
+        *,
+        started: datetime,
+        steps: list[WorkflowStep],
+        certificate: AuthProviderDescription,
+        cert_details: WorkflowAuthCheckDetails,
+        cert_severity: CertificateSeverityValue,
+    ) -> None:
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.RUNNING_PREFLIGHT,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=False,
+                summary_locale_key="application.workflow.steps.auth_certificate_invalid",
+                details=cert_details,
+                precondition_verdict=_no_recovery_verdict(
+                    condition_id="workflow.auth.certificate_valid",
+                    evidence_id="workflow.auth.certificate_state",
+                    provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+                    values={
+                        "certificate_valid": False,
+                        "cert_severity": cert_severity,
+                        "provider_kind": certificate.kind.value,
+                    },
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
+            ),
+        )
+
+    def _run_submission_preflight(
+        self,
+        *,
+        draft: RegistryModeloDraftProtocol,
+        today: date,
+        steps: list[WorkflowStep],
+        purpose: WorkflowPurpose,
+        started: datetime,
+        cert_details: WorkflowAuthCheckDetails,
+    ) -> None:
+        """Run the local workflow's submission checks after auth probing.
+
+        VERIFY and FILE are local workflows, so both skip the AEAT filing
+        window and auth-readiness gates. The submission engine still checks
+        draft soundness; an unsound calculation remains a refusal.
+        """
+        try:
             skip_window = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)
-            # Auth-provider readiness (gate 4) binds only live/AEAT-touching
-            # purposes. Both workflow purposes are local (the app performs no
-            # actual AEAT submission), so auth is not required to complete the
-            # local build/verify/file/export flow; a taxpayer with no provider
-            # configured uploads at the AEAT portal themselves (operator ruling).
             skip_auth = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)
             self._submission_engine.preflight(
                 draft,
@@ -1311,28 +1422,12 @@ class WorkflowEngine:
                 steps=steps,
             )
         except SubmissionPreflightError as exc:
-            steps.append(
-                WorkflowStep(
-                    stage=WorkflowStage.RUNNING_PREFLIGHT,
-                    started_at=started,
-                    ended_at=_utcnow(),
-                    success=False,
-                    summary_locale_key="application.workflow.steps.preflight_failed",
-                    details=WorkflowPreflightFailedDetails(
-                        kind="preflight_failed",
-                        error_code="workflow.submission.preflight_refused",
-                        auth_check=cert_details,
-                    ),
-                    precondition_verdict=_no_recovery_verdict(
-                        condition_id="workflow.submission.safe",
-                        evidence_id="workflow.submission.safety_state",
-                        provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-                        values={"submission_safe": False},
-                        outcome=NoRecoveryOutcome.SAFETY,
-                    ),
-                ),
+            self._append_submission_preflight_failure(
+                started=started,
+                steps=steps,
+                cert_details=cert_details,
+                cause=exc,
             )
-            raise WorkflowAbortSignalError(reason=WorkflowAbortReason.PREFLIGHT_FAILED) from exc
         except Exception as exc:
             self._record_unhandled(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
@@ -1341,16 +1436,36 @@ class WorkflowEngine:
                 steps=steps,
             )
 
+    @staticmethod
+    def _append_submission_preflight_failure(
+        *,
+        started: datetime,
+        steps: list[WorkflowStep],
+        cert_details: WorkflowAuthCheckDetails,
+        cause: SubmissionPreflightError,
+    ) -> NoReturn:
         steps.append(
             WorkflowStep(
                 stage=WorkflowStage.RUNNING_PREFLIGHT,
                 started_at=started,
                 ended_at=_utcnow(),
-                success=True,
-                summary_locale_key="application.workflow.steps.preflight_completed",
-                details=cert_details,
+                success=False,
+                summary_locale_key="application.workflow.steps.preflight_failed",
+                details=WorkflowPreflightFailedDetails(
+                    kind="preflight_failed",
+                    error_code="workflow.submission.preflight_refused",
+                    auth_check=cert_details,
+                ),
+                precondition_verdict=_no_recovery_verdict(
+                    condition_id="workflow.submission.safe",
+                    evidence_id="workflow.submission.safety_state",
+                    provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+                    values={"submission_safe": False},
+                    outcome=NoRecoveryOutcome.SAFETY,
+                ),
             ),
         )
+        raise WorkflowAbortSignalError(reason=WorkflowAbortReason.PREFLIGHT_FAILED) from cause
 
     # ---------------------------------------------------------------- helpers
 

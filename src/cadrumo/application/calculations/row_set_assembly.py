@@ -122,6 +122,37 @@ AssembledObservations = (
 )
 
 
+def _assemble_grouping_kind(
+    source_kind: RowSetGroupingKind,
+    cells: Iterable[_RowCellShape],
+    revision: ModeloRevision,
+    *,
+    filing_year: int,
+) -> AssembledObservations:
+    """Run the assembler selected by an already validated grouping kind."""
+    if source_kind == RowSetGroupingKind.WITHHOLDING:
+        return (source_kind, assemble_withholding_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.RELATED_PARTY:
+        return (source_kind, assemble_related_party_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.FOREIGN_ASSET:
+        return (source_kind, assemble_foreign_asset_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.ATRIBUCION:
+        return (source_kind, assemble_atribucion_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.REFUND:
+        return (source_kind, assemble_refund_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.DONATIVO:
+        return (source_kind, assemble_donativo_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.GASTO193:
+        return (source_kind, assemble_gasto193_observations(cells, revision, filing_year=filing_year))
+    if source_kind == RowSetGroupingKind.WITHHOLDING296:
+        return (source_kind, assemble_withholding296_observations(cells, revision, filing_year=filing_year))
+    # Unreachable: dispatch table is exhaustive.
+    raise RegistryValidationError(
+        translated_message="application.calculations.row_set.errors.grouping_dispatch_fell_through",
+        context={"grouping": str(source_kind)},
+    )
+
+
 def assemble_observations_for_grouping(
     grouping: str,
     cells: Iterable[_RowCellShape],
@@ -167,26 +198,11 @@ def assemble_observations_for_grouping(
                 "unassemblable_groupings": sorted(str(item) for item in set(_GROUPING_DISPATCH) ^ {grouping}),
             },
         )
-    if source_kind == RowSetGroupingKind.WITHHOLDING:
-        return (source_kind, assemble_withholding_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.RELATED_PARTY:
-        return (source_kind, assemble_related_party_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.FOREIGN_ASSET:
-        return (source_kind, assemble_foreign_asset_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.ATRIBUCION:
-        return (source_kind, assemble_atribucion_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.REFUND:
-        return (source_kind, assemble_refund_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.DONATIVO:
-        return (source_kind, assemble_donativo_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.GASTO193:
-        return (source_kind, assemble_gasto193_observations(cells, revision, filing_year=filing_year))
-    if source_kind == RowSetGroupingKind.WITHHOLDING296:
-        return (source_kind, assemble_withholding296_observations(cells, revision, filing_year=filing_year))
-    # Unreachable: dispatch table is exhaustive.
-    raise RegistryValidationError(
-        translated_message="application.calculations.row_set.errors.grouping_dispatch_fell_through",
-        context={"grouping": str(grouping)},
+    return _assemble_grouping_kind(
+        source_kind,
+        cells,
+        revision,
+        filing_year=filing_year,
     )
 
 
@@ -625,6 +641,134 @@ def _coerce_flag(value: Decimal | str | None) -> bool:
     return value.strip() == "1"
 
 
+def _assemble_withholding_row(
+    row_index: int,
+    row: Mapping[str, Decimal | str | None],
+    row_field: Mapping[str, str],
+    default_date: date,
+) -> WithholdingObservation:
+    """Project, validate, and construct one Modelo 190/193 withholding row."""
+    fields = _row_fields_for_assembly(row, row_field)
+
+    # A percepción is keyed by its AEAT clave/subclave ("número de registros de
+    # tipo 2" per perceptor + clave, Modelo 190/193 Diseño de Registros). Refuse
+    # a row that carries no clave rather than silently defaulting it to "A": a
+    # defaulted clave mis-buckets the percepción and corrupts the
+    # distinct-(perceptor, clave) count. The source must supply the real clave.
+    clave_value = _coerce_text(fields.get("clave"))
+    if not clave_value:
+        raise RegistryValidationError(
+            translated_message="application.calculations.row_set.errors.percepcion_clave_missing",
+            context={"row_index": row_index},
+        )
+    try:
+        clave = RetencionClave(clave_value)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            translated_message="application.calculations.row_set.errors.percepcion_clave_unsupported",
+            context={"row_index": row_index, "clave": clave_value},
+        ) from exc
+
+    try:
+        return WithholdingObservation(
+            source_id=f"detalle:per_perceptor_clave:row-{row_index}",
+            perceptor_tax_id=_coerce_text(fields.get("perceptor_tax_id")),
+            perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
+            # Blank is ABSENT, not an empty country. The coercer returns the
+            # value itself for an empty string, so without this a blank field
+            # reaches the model as "" -- which is neither a country nor the
+            # honest "not stated" this row exists to make representable.
+            transaction_date=default_date,
+            clave=clave,
+            subclave=_coerce_text(fields.get("subclave")),
+            perceptor_birth_year=_coerce_optional_int(fields.get("perceptor_birth_year")),
+            perceptor_situacion_familiar=_coerce_optional_int(fields.get("perceptor_situacion_familiar")),
+            province_code=_coerce_text(fields.get("province_code")) or None,
+            territorial_deduction_clave=_coerce_optional_int(fields.get("territorial_deduction_clave")),
+            percibido_dinerario=coerce_decimal(fields.get("percibido_dinerario"), default=Decimal("0")),
+            percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
+            retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
+            ingreso_a_cuenta=coerce_decimal(fields.get("ingreso_a_cuenta"), default=Decimal("0")),
+            ingreso_a_cuenta_repercutido=coerce_decimal(
+                fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")
+            ),
+            reducciones_aplicables=coerce_decimal(fields.get("reducciones_aplicables"), default=Decimal("0")),
+            gastos_deducibles=coerce_decimal(fields.get("gastos_deducibles"), default=Decimal("0")),
+            pension_compensatoria=coerce_decimal(fields.get("pension_compensatoria"), default=Decimal("0")),
+            anualidades_alimentos=coerce_decimal(fields.get("anualidades_alimentos"), default=Decimal("0")),
+            incapacity_cash_perception=coerce_decimal(
+                fields.get("incapacity_cash_perception"), default=Decimal("0")
+            ),
+            incapacity_cash_withholding=coerce_decimal(
+                fields.get("incapacity_cash_withholding"), default=Decimal("0")
+            ),
+            incapacity_kind_value=coerce_decimal(fields.get("incapacity_kind_value"), default=Decimal("0")),
+            incapacity_kind_ingreso_a_cuenta=coerce_decimal(
+                fields.get("incapacity_kind_ingreso_a_cuenta"), default=Decimal("0")
+            ),
+            incapacity_kind_repercutido=coerce_decimal(
+                fields.get("incapacity_kind_repercutido"), default=Decimal("0")
+            ),
+            foral_retention_estatal=coerce_decimal(fields.get("foral_retention_estatal"), default=Decimal("0")),
+            foral_retention_navarra=coerce_decimal(fields.get("foral_retention_navarra"), default=Decimal("0")),
+            foral_retention_araba=coerce_decimal(fields.get("foral_retention_araba"), default=Decimal("0")),
+            foral_retention_gipuzkoa=coerce_decimal(
+                fields.get("foral_retention_gipuzkoa"), default=Decimal("0")
+            ),
+            foral_retention_bizkaia=coerce_decimal(fields.get("foral_retention_bizkaia"), default=Decimal("0")),
+            # The design's optional identity facts: forwarded verbatim
+            # when the row carries them, left to the observation model's
+            # None defaults otherwise -- the resolver applies the design's
+            # per-clave completion rules at resolve time.
+            representative_tax_id=_coerce_text(fields.get("representative_tax_id")).strip() or None,
+            spouse_or_unit_titular_tax_id=_coerce_text(fields.get("spouse_or_unit_titular_tax_id")).strip()
+            or None,
+            disability_clave=_row_optional_int(fields, "disability_clave"),
+            contract_relation_clave=_row_optional_int(fields, "contract_relation_clave"),
+            unit_convivencia_titular_clave=_row_optional_int(fields, "unit_convivencia_titular_clave"),
+            geographic_mobility_clave=_row_optional_int(fields, "geographic_mobility_clave"),
+            accrual_year=_row_optional_int(fields, "accrual_year"),
+            descendants_under_3_total=_row_optional_int(fields, "descendants_under_3_total"),
+            descendants_under_3_whole=_row_optional_int(fields, "descendants_under_3_whole"),
+            descendants_rest_total=_row_optional_int(fields, "descendants_rest_total"),
+            descendants_rest_whole=_row_optional_int(fields, "descendants_rest_whole"),
+            descendants_disabled_33_65_total=_row_optional_int(fields, "descendants_disabled_33_65_total"),
+            descendants_disabled_33_65_whole=_row_optional_int(fields, "descendants_disabled_33_65_whole"),
+            descendants_disabled_mobility_total=_row_optional_int(
+                fields, "descendants_disabled_mobility_total"
+            ),
+            descendants_disabled_mobility_whole=_row_optional_int(
+                fields, "descendants_disabled_mobility_whole"
+            ),
+            descendants_disabled_65_plus_total=_row_optional_int(fields, "descendants_disabled_65_plus_total"),
+            descendants_disabled_65_plus_whole=_row_optional_int(fields, "descendants_disabled_65_plus_whole"),
+            ascendants_under_75_total=_row_optional_int(fields, "ascendants_under_75_total"),
+            ascendants_under_75_whole=_row_optional_int(fields, "ascendants_under_75_whole"),
+            ascendants_75_plus_total=_row_optional_int(fields, "ascendants_75_plus_total"),
+            ascendants_75_plus_whole=_row_optional_int(fields, "ascendants_75_plus_whole"),
+            ascendants_disabled_33_65_total=_row_optional_int(fields, "ascendants_disabled_33_65_total"),
+            ascendants_disabled_33_65_whole=_row_optional_int(fields, "ascendants_disabled_33_65_whole"),
+            ascendants_disabled_mobility_total=_row_optional_int(fields, "ascendants_disabled_mobility_total"),
+            ascendants_disabled_mobility_whole=_row_optional_int(fields, "ascendants_disabled_mobility_whole"),
+            ascendants_disabled_65_plus_total=_row_optional_int(fields, "ascendants_disabled_65_plus_total"),
+            ascendants_disabled_65_plus_whole=_row_optional_int(fields, "ascendants_disabled_65_plus_whole"),
+            first_child_compute=_row_optional_int(fields, "first_child_compute"),
+            second_child_compute=_row_optional_int(fields, "second_child_compute"),
+            third_child_compute=_row_optional_int(fields, "third_child_compute"),
+            housing_loan_communication_clave=_row_optional_int(fields, "housing_loan_communication_clave"),
+            complemento_infancia_clave=_row_optional_int(fields, "complemento_infancia_clave"),
+            emerging_stock_excess_clave=_row_optional_int(fields, "emerging_stock_excess_clave"),
+            startup_fund_rendimientos_clave=_row_optional_int(fields, "startup_fund_rendimientos_clave"),
+            pension_prestacion_jubilacion=_row_optional_int(fields, "pension_prestacion_jubilacion"),
+            pension_prestacion_viudedad=_row_optional_int(fields, "pension_prestacion_viudedad"),
+            pension_prestacion_incapacidad=_row_optional_int(fields, "pension_prestacion_incapacidad"),
+            pension_prestacion_no_contributiva=_row_optional_int(fields, "pension_prestacion_no_contributiva"),
+            pension_prestacion_resto=_row_optional_int(fields, "pension_prestacion_resto"),
+        )
+    except (ValidationError, ValueError) as exc:
+        raise _row_assembly_refusal(row_index, exc) from exc
+
+
 def assemble_withholding_observations(
     cells: Iterable[_RowCellShape],
     revision: ModeloRevision,
@@ -659,136 +803,10 @@ def assemble_withholding_observations(
     row_field = _row_field_lookup(revision)
     default_date = date(filing_year, 12, 31)
 
-    observations: list[WithholdingObservation] = []
-    for row_index in sorted(by_row):
-        row = by_row[row_index]
-        fields: dict[str, Decimal | str] = {}
-        for binding_id, value in row.items():
-            field = row_field.get(binding_id)
-            if field is None:
-                continue
-            fields[field] = value if value is not None else ""
-
-        # A percepción is keyed by its AEAT clave/subclave ("número de registros de
-        # tipo 2" per perceptor + clave, Modelo 190/193 Diseño de Registros). Refuse
-        # a row that carries no clave rather than silently defaulting it to "A": a
-        # defaulted clave mis-buckets the percepción and corrupts the
-        # distinct-(perceptor, clave) count. The source must supply the real clave.
-        clave_value = _coerce_text(fields.get("clave"))
-        if not clave_value:
-            raise RegistryValidationError(
-                translated_message="application.calculations.row_set.errors.percepcion_clave_missing",
-                context={"row_index": row_index},
-            )
-        try:
-            clave = RetencionClave(clave_value)
-        except ValueError as exc:
-            raise RegistryValidationError(
-                translated_message="application.calculations.row_set.errors.percepcion_clave_unsupported",
-                context={"row_index": row_index, "clave": clave_value},
-            ) from exc
-
-        try:
-            observations.append(
-                WithholdingObservation(
-                    source_id=f"detalle:per_perceptor_clave:row-{row_index}",
-                    perceptor_tax_id=_coerce_text(fields.get("perceptor_tax_id")),
-                    perceptor_legal_name=_coerce_text(fields.get("perceptor_legal_name")),
-                    # Blank is ABSENT, not an empty country. The coercer returns the
-                    # value itself for an empty string, so without this a blank field
-                    # reaches the model as "" -- which is neither a country nor the
-                    # honest "not stated" this row exists to make representable.
-                    transaction_date=default_date,
-                    clave=clave,
-                    subclave=_coerce_text(fields.get("subclave")),
-                    perceptor_birth_year=_coerce_optional_int(fields.get("perceptor_birth_year")),
-                    perceptor_situacion_familiar=_coerce_optional_int(fields.get("perceptor_situacion_familiar")),
-                    province_code=_coerce_text(fields.get("province_code")) or None,
-                    territorial_deduction_clave=_coerce_optional_int(fields.get("territorial_deduction_clave")),
-                    percibido_dinerario=coerce_decimal(fields.get("percibido_dinerario"), default=Decimal("0")),
-                    percibido_especie=coerce_decimal(fields.get("percibido_especie"), default=Decimal("0")),
-                    retencion_practicada=coerce_decimal(fields.get("retencion_practicada"), default=Decimal("0")),
-                    ingreso_a_cuenta=coerce_decimal(fields.get("ingreso_a_cuenta"), default=Decimal("0")),
-                    ingreso_a_cuenta_repercutido=coerce_decimal(
-                        fields.get("ingreso_a_cuenta_repercutido"), default=Decimal("0")
-                    ),
-                    reducciones_aplicables=coerce_decimal(fields.get("reducciones_aplicables"), default=Decimal("0")),
-                    gastos_deducibles=coerce_decimal(fields.get("gastos_deducibles"), default=Decimal("0")),
-                    pension_compensatoria=coerce_decimal(fields.get("pension_compensatoria"), default=Decimal("0")),
-                    anualidades_alimentos=coerce_decimal(fields.get("anualidades_alimentos"), default=Decimal("0")),
-                    incapacity_cash_perception=coerce_decimal(
-                        fields.get("incapacity_cash_perception"), default=Decimal("0")
-                    ),
-                    incapacity_cash_withholding=coerce_decimal(
-                        fields.get("incapacity_cash_withholding"), default=Decimal("0")
-                    ),
-                    incapacity_kind_value=coerce_decimal(fields.get("incapacity_kind_value"), default=Decimal("0")),
-                    incapacity_kind_ingreso_a_cuenta=coerce_decimal(
-                        fields.get("incapacity_kind_ingreso_a_cuenta"), default=Decimal("0")
-                    ),
-                    incapacity_kind_repercutido=coerce_decimal(
-                        fields.get("incapacity_kind_repercutido"), default=Decimal("0")
-                    ),
-                    foral_retention_estatal=coerce_decimal(fields.get("foral_retention_estatal"), default=Decimal("0")),
-                    foral_retention_navarra=coerce_decimal(fields.get("foral_retention_navarra"), default=Decimal("0")),
-                    foral_retention_araba=coerce_decimal(fields.get("foral_retention_araba"), default=Decimal("0")),
-                    foral_retention_gipuzkoa=coerce_decimal(
-                        fields.get("foral_retention_gipuzkoa"), default=Decimal("0")
-                    ),
-                    foral_retention_bizkaia=coerce_decimal(fields.get("foral_retention_bizkaia"), default=Decimal("0")),
-                    # The design's optional identity facts: forwarded verbatim
-                    # when the row carries them, left to the observation model's
-                    # None defaults otherwise -- the resolver applies the design's
-                    # per-clave completion rules at resolve time.
-                    representative_tax_id=_coerce_text(fields.get("representative_tax_id")).strip() or None,
-                    spouse_or_unit_titular_tax_id=_coerce_text(fields.get("spouse_or_unit_titular_tax_id")).strip()
-                    or None,
-                    disability_clave=_row_optional_int(fields, "disability_clave"),
-                    contract_relation_clave=_row_optional_int(fields, "contract_relation_clave"),
-                    unit_convivencia_titular_clave=_row_optional_int(fields, "unit_convivencia_titular_clave"),
-                    geographic_mobility_clave=_row_optional_int(fields, "geographic_mobility_clave"),
-                    accrual_year=_row_optional_int(fields, "accrual_year"),
-                    descendants_under_3_total=_row_optional_int(fields, "descendants_under_3_total"),
-                    descendants_under_3_whole=_row_optional_int(fields, "descendants_under_3_whole"),
-                    descendants_rest_total=_row_optional_int(fields, "descendants_rest_total"),
-                    descendants_rest_whole=_row_optional_int(fields, "descendants_rest_whole"),
-                    descendants_disabled_33_65_total=_row_optional_int(fields, "descendants_disabled_33_65_total"),
-                    descendants_disabled_33_65_whole=_row_optional_int(fields, "descendants_disabled_33_65_whole"),
-                    descendants_disabled_mobility_total=_row_optional_int(
-                        fields, "descendants_disabled_mobility_total"
-                    ),
-                    descendants_disabled_mobility_whole=_row_optional_int(
-                        fields, "descendants_disabled_mobility_whole"
-                    ),
-                    descendants_disabled_65_plus_total=_row_optional_int(fields, "descendants_disabled_65_plus_total"),
-                    descendants_disabled_65_plus_whole=_row_optional_int(fields, "descendants_disabled_65_plus_whole"),
-                    ascendants_under_75_total=_row_optional_int(fields, "ascendants_under_75_total"),
-                    ascendants_under_75_whole=_row_optional_int(fields, "ascendants_under_75_whole"),
-                    ascendants_75_plus_total=_row_optional_int(fields, "ascendants_75_plus_total"),
-                    ascendants_75_plus_whole=_row_optional_int(fields, "ascendants_75_plus_whole"),
-                    ascendants_disabled_33_65_total=_row_optional_int(fields, "ascendants_disabled_33_65_total"),
-                    ascendants_disabled_33_65_whole=_row_optional_int(fields, "ascendants_disabled_33_65_whole"),
-                    ascendants_disabled_mobility_total=_row_optional_int(fields, "ascendants_disabled_mobility_total"),
-                    ascendants_disabled_mobility_whole=_row_optional_int(fields, "ascendants_disabled_mobility_whole"),
-                    ascendants_disabled_65_plus_total=_row_optional_int(fields, "ascendants_disabled_65_plus_total"),
-                    ascendants_disabled_65_plus_whole=_row_optional_int(fields, "ascendants_disabled_65_plus_whole"),
-                    first_child_compute=_row_optional_int(fields, "first_child_compute"),
-                    second_child_compute=_row_optional_int(fields, "second_child_compute"),
-                    third_child_compute=_row_optional_int(fields, "third_child_compute"),
-                    housing_loan_communication_clave=_row_optional_int(fields, "housing_loan_communication_clave"),
-                    complemento_infancia_clave=_row_optional_int(fields, "complemento_infancia_clave"),
-                    emerging_stock_excess_clave=_row_optional_int(fields, "emerging_stock_excess_clave"),
-                    startup_fund_rendimientos_clave=_row_optional_int(fields, "startup_fund_rendimientos_clave"),
-                    pension_prestacion_jubilacion=_row_optional_int(fields, "pension_prestacion_jubilacion"),
-                    pension_prestacion_viudedad=_row_optional_int(fields, "pension_prestacion_viudedad"),
-                    pension_prestacion_incapacidad=_row_optional_int(fields, "pension_prestacion_incapacidad"),
-                    pension_prestacion_no_contributiva=_row_optional_int(fields, "pension_prestacion_no_contributiva"),
-                    pension_prestacion_resto=_row_optional_int(fields, "pension_prestacion_resto"),
-                ),
-            )
-        except (ValidationError, ValueError) as exc:
-            raise _row_assembly_refusal(row_index, exc) from exc
-    return tuple(observations)
+    return tuple(
+        _assemble_withholding_row(row_index, row, row_field, default_date)
+        for row_index, row in sorted(by_row.items())
+    )
 
 
 def assemble_related_party_observations(

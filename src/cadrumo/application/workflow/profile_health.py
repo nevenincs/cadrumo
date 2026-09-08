@@ -27,7 +27,7 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from pydantic import BaseModel, PrivateAttr, ValidationError
 
@@ -51,8 +51,9 @@ from ..user_profile.keys_validation import list_profile_key_records, validate_pr
 from ..user_profile.profile_pointer import active_profile_pointer_transaction
 from ..user_profile.profile_record_repository import profile_record_session_if_authenticated
 from ..user_profile.projections import record_to_path_values
-from .active_profile import resolve_active_profile_record
+from .active_profile import ActiveProfileRecordResolution, resolve_active_profile_record
 from .persistence import workflow_state_repository
+from .profile_bucket_models import ProfileBucketPointer
 from .profile_bucket_scan import list_profile_buckets, resolve_profile_bucket
 from .state_models import WorkflowState
 
@@ -256,35 +257,52 @@ def _health_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVer
     if health.status == "ready":
         return None
     if health.status == "none":
-        verdict = inspect_active_profile_precondition(
-            active_profile_present=False,
-            registered_profile_count=len(list_profile_buckets()),
-        )
-        if verdict is None:
-            raise RuntimeError("inactive-profile health did not produce a precondition verdict")
-        return verdict
+        return _inactive_profile_precondition_verdict()
     if health.status == "profile_locked":
-        # A locked profile is not broken, so it takes the ordinary logged-out
-        # session verdict rather than a record-repair one: the remedy is
-        # logging in, and the capsule label the assessment already resolved
-        # names WHICH profile to log into.
-        label = health.active_profile_label
-        if label is None:
-            raise RuntimeError("a locked active profile has no committed-capsule label to route its login")
-        return profile_session_failure_verdict(ProfileSessionRefusalReason.ABSENT, profile_name=label)
-    if health.status == "missing_profile_record":
-        return unavailable_profile_record_verdict(
-            status=health.status,
-            source=health.source,
-            repairable_by_clearing_pointer=health.repairable_by_clearing_pointer,
-        )
-    if health.status == "profile_record_unreadable":
-        return unavailable_profile_record_verdict(
-            status=health.status,
-            source=health.source,
-            repairable_by_clearing_pointer=health.repairable_by_clearing_pointer,
-        )
+        return _locked_profile_precondition_verdict(health)
+    if health.status in {"missing_profile_record", "profile_record_unreadable"}:
+        return _unavailable_profile_precondition_verdict(health)
 
+    return _degraded_profile_precondition_verdict(health)
+
+
+def _inactive_profile_precondition_verdict() -> PreconditionVerdict:
+    """Build the registration/login outcome for an unselected profile."""
+    verdict = inspect_active_profile_precondition(
+        active_profile_present=False,
+        registered_profile_count=len(list_profile_buckets()),
+    )
+    if verdict is None:
+        raise RuntimeError("inactive-profile health did not produce a precondition verdict")
+    return verdict
+
+
+def _locked_profile_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVerdict:
+    """Route a benign locked capsule to login using its committed label."""
+    label = health.active_profile_label
+    if label is None:
+        raise RuntimeError("a locked active profile has no committed-capsule label to route its login")
+    return profile_session_failure_verdict(ProfileSessionRefusalReason.ABSENT, profile_name=label)
+
+
+def _unavailable_profile_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVerdict:
+    """Build the typed outcome for one of the two unavailable-record statuses."""
+    status = cast(
+        Literal[
+            ProfileHealthStatus.MISSING_PROFILE_RECORD,
+            ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
+        ],
+        health.status,
+    )
+    return unavailable_profile_record_verdict(
+        status=status,
+        source=health.source,
+        repairable_by_clearing_pointer=health.repairable_by_clearing_pointer,
+    )
+
+
+def _degraded_profile_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVerdict:
+    """Build evidence and recovery policy for a degraded active-profile health state."""
     condition_id = _HEALTH_CONDITIONS[health.status]
     evidence = _health_evidence(
         condition_id=condition_id,
@@ -299,34 +317,54 @@ def _health_precondition_verdict(health: ActiveProfileHealth) -> PreconditionVer
         missing_required_count=len(health.missing_required),
     )
     if health.status in {"dangling_pointer", "capsule_unreadable"}:
-        if health.repairable_by_clearing_pointer:
-            return active_profile_pointer_repair_verdict(
-                condition_id=condition_id,
-                evidence_id=evidence.evidence_id,
-                facts=evidence.values,
-                provenance=evidence.provenance,
-            )
-        return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
+        return _pointer_health_precondition_verdict(health, condition_id=condition_id, evidence=evidence)
     if health.status == "incomplete":
-        profile_name = health.active_profile_label
-        if profile_name is None:
-            return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
-        return PreconditionVerdict(
-            failed_condition_id=condition_id,
-            evidence=(evidence,),
-            action=ActionReference(action_id="operator.profile.edit"),
-            argument_bindings=(
-                ActionArgumentBinding(
-                    argument_name="profile_name",
-                    status=ActionArgumentStatus.RESOLVED,
-                    value=profile_name,
-                    source=ActionArgumentSource.VERDICT_CONTEXT,
-                    source_key="profile_name",
-                ),
-            ),
-            conditionality=ActionConditionality.IMMEDIATE,
-        )
+        return _incomplete_profile_precondition_verdict(health, condition_id=condition_id, evidence=evidence)
     raise RuntimeError(f"unsupported profile health status: {health.status}")
+
+
+def _pointer_health_precondition_verdict(
+    health: ActiveProfileHealth,
+    *,
+    condition_id: str,
+    evidence: ConditionEvidence,
+) -> PreconditionVerdict:
+    """Choose pointer repair or operator decision for a degraded capsule."""
+    if not health.repairable_by_clearing_pointer:
+        return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
+    return active_profile_pointer_repair_verdict(
+        condition_id=condition_id,
+        evidence_id=evidence.evidence_id,
+        facts=evidence.values,
+        provenance=evidence.provenance,
+    )
+
+
+def _incomplete_profile_precondition_verdict(
+    health: ActiveProfileHealth,
+    *,
+    condition_id: str,
+    evidence: ConditionEvidence,
+) -> PreconditionVerdict:
+    """Offer profile editing only when the committed label can be addressed."""
+    profile_name = health.active_profile_label
+    if profile_name is None:
+        return _operator_decision_verdict(condition_id=condition_id, evidence=evidence)
+    return PreconditionVerdict(
+        failed_condition_id=condition_id,
+        evidence=(evidence,),
+        action=ActionReference(action_id="operator.profile.edit"),
+        argument_bindings=(
+            ActionArgumentBinding(
+                argument_name="profile_name",
+                status=ActionArgumentStatus.RESOLVED,
+                value=profile_name,
+                source=ActionArgumentSource.VERDICT_CONTEXT,
+                source_key="profile_name",
+            ),
+        ),
+        conditionality=ActionConditionality.IMMEDIATE,
+    )
 
 
 def _health_evidence(
@@ -377,6 +415,236 @@ def _finalise_health(health: ActiveProfileHealth, *, label: str | None) -> Activ
     return labelled.model_copy(update={"precondition_verdict": _health_precondition_verdict(labelled)})
 
 
+def _capsule_unreadable_health(
+    *,
+    active_profile: str | None,
+    source: ProfileSource,
+    total_keys: int,
+    error: Exception,
+    registered_bucket: bool = False,
+    repairable_by_clearing_pointer: bool = False,
+    label: str | None = None,
+) -> ActiveProfileHealth:
+    """Project a capsule-discovery failure without opening secure state."""
+    return _finalise_health(
+        ActiveProfileHealth(
+            active_profile=active_profile,
+            source=source,
+            status=ProfileHealthStatus.CAPSULE_UNREADABLE,
+            registered_bucket=registered_bucket,
+            profile_record_error=_compact_error(error),
+            profile_total_keys=total_keys,
+            repairable_by_clearing_pointer=repairable_by_clearing_pointer,
+        ),
+        label=label,
+    )
+
+
+def _profile_record_unreadable_health(
+    *,
+    active_profile: str,
+    source: ProfileSource,
+    total_keys: int,
+    label: str,
+    error: Exception,
+) -> ActiveProfileHealth:
+    """Project a secure workflow/profile-record read failure as unreadable."""
+    return _finalise_health(
+        ActiveProfileHealth(
+            active_profile=active_profile,
+            source=source,
+            status=ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
+            registered_bucket=True,
+            profile_record_error=_compact_error(error),
+            profile_total_keys=total_keys,
+            repairable_by_clearing_pointer=source == "pointer",
+        ),
+        label=label,
+    )
+
+
+def _assess_without_active_profile(source: ProfileSource, total_keys: int) -> ActiveProfileHealth:
+    """Assess current capsule discovery when no profile selector is active."""
+    try:
+        len(list_profile_buckets())
+    except _CAPSULE_DISCOVERY_EXCEPTIONS as exc:
+        _log.debug("current capsule discovery unreadable without an active pointer", exc_info=exc)
+        return _capsule_unreadable_health(
+            active_profile=None,
+            source=source,
+            total_keys=total_keys,
+            error=exc,
+        )
+    return _finalise_health(
+        ActiveProfileHealth(
+            active_profile=None,
+            source=source,
+            status=ProfileHealthStatus.NONE,
+            profile_total_keys=total_keys,
+        ),
+        label=None,
+    )
+
+
+def _assess_selected_profile(
+    identifier: str,
+    source: ProfileSource,
+    total_keys: int,
+    state: WorkflowState | None,
+) -> ActiveProfileHealth:
+    """Resolve one selected profile through its committed capsule and record."""
+    try:
+        registered_pointer = resolve_profile_bucket(identifier)
+    except _CAPSULE_DISCOVERY_EXCEPTIONS as exc:
+        _log.debug(
+            "active profile current capsule unreadable bucket_id=%s",
+            identifier,
+            exc_info=exc,
+        )
+        return _capsule_unreadable_health(
+            active_profile=identifier,
+            source=source,
+            total_keys=total_keys,
+            error=exc,
+            registered_bucket=True,
+            repairable_by_clearing_pointer=source == "pointer",
+        )
+    if registered_pointer is None:
+        return _finalise_health(
+            ActiveProfileHealth(
+                active_profile=identifier,
+                source=source,
+                status=ProfileHealthStatus.DANGLING_POINTER,
+                registered_bucket=False,
+                profile_total_keys=total_keys,
+                repairable_by_clearing_pointer=source == "pointer",
+            ),
+            label=None,
+        )
+    return _assess_registered_profile(registered_pointer, source, total_keys, state)
+
+
+def _profile_record_session_is_missing(bucket_id: str) -> bool:
+    """Probe custody before encrypted workflow access so locked stays benign."""
+    with override_settings(cadrumo_active_profile=bucket_id):
+        return profile_record_session_if_authenticated(bucket_id) is None
+
+
+def _load_workflow_state_for_health(bucket_id: str, state: WorkflowState | None) -> None:
+    """Open workflow state only when the caller did not already supply it."""
+    if state is not None:
+        return
+    # Asked BEFORE the encrypted workflow state is opened. That store is locked
+    # by the very session this is probing for, so loading it first refuses with
+    # a storage error and reports a benign locked profile as an unreadable one
+    # -- the same lie in a different spelling.
+    with override_settings(cadrumo_active_profile=bucket_id):
+        workflow_state_repository().load()
+
+
+def _health_from_record_resolution(
+    resolution: ActiveProfileRecordResolution,
+    *,
+    active_profile: str,
+    source: ProfileSource,
+    total_keys: int,
+    label: str,
+) -> ActiveProfileHealth:
+    """Translate a resolved profile record or its typed unavailability reason."""
+    record = resolution.record
+    if record is None:
+        # The reason travels with the absence, so each one reaches the operator
+        # as itself. A session that vanished between the probe above and this
+        # read lands here as a lock rather than as a missing record, and a lock
+        # is not a broken pointer, so it offers no pointer repair.
+        unavailability = resolution.unavailability
+        if unavailability is None:
+            raise RuntimeError("an absent profile record must carry the reason it is unavailable")
+        locked = unavailability is ProfileRecordUnavailability.SESSION_REQUIRED
+        return _finalise_health(
+            ActiveProfileHealth(
+                active_profile=active_profile,
+                source=source,
+                status=_UNAVAILABILITY_STATUSES[unavailability],
+                registered_bucket=True,
+                profile_total_keys=total_keys,
+                repairable_by_clearing_pointer=source == "pointer" and not locked,
+            ),
+            label=label,
+        )
+
+    values = record_to_path_values(record)
+    validation = validate_profile_values(values)
+    status: ProfileHealthStatusValue = ProfileHealthStatus.READY if validation.valid else ProfileHealthStatus.INCOMPLETE
+    return _finalise_health(
+        ActiveProfileHealth(
+            active_profile=active_profile,
+            source=source,
+            status=status,
+            registered_bucket=True,
+            profile_record_present=True,
+            profile_present_keys=validation.present_keys,
+            profile_total_keys=validation.total_keys,
+            missing_required=validation.missing_required,
+        ),
+        label=label,
+    )
+
+
+def _assess_registered_profile(
+    pointer: ProfileBucketPointer,
+    source: ProfileSource,
+    total_keys: int,
+    state: WorkflowState | None,
+) -> ActiveProfileHealth:
+    """Assess the committed profile after discovery has established its identity."""
+    active_profile = pointer.bucket_id
+    if _profile_record_session_is_missing(active_profile):
+        return _finalise_health(
+            ActiveProfileHealth(
+                active_profile=active_profile,
+                source=source,
+                status=ProfileHealthStatus.PROFILE_LOCKED,
+                registered_bucket=True,
+                profile_total_keys=total_keys,
+            ),
+            label=pointer.label,
+        )
+
+    try:
+        _load_workflow_state_for_health(active_profile, state)
+    except (CadrumoError, OSError) as exc:
+        # CadrumoError: decryption, session, or domain failures loading the workflow state row.
+        # OSError: filesystem I/O failure reading the encrypted database file.
+        return _profile_record_unreadable_health(
+            active_profile=active_profile,
+            source=source,
+            total_keys=total_keys,
+            label=pointer.label,
+            error=exc,
+        )
+    try:
+        with override_settings(cadrumo_active_profile=active_profile):
+            resolution = resolve_active_profile_record()
+    except (CadrumoError, ValueError) as exc:
+        # CadrumoError: domain or registry failures resolving the profile record.
+        # ValueError (including pydantic ValidationError): stored record fails strict validation.
+        return _profile_record_unreadable_health(
+            active_profile=active_profile,
+            source=source,
+            total_keys=total_keys,
+            label=pointer.label,
+            error=exc,
+        )
+    return _health_from_record_resolution(
+        resolution,
+        active_profile=active_profile,
+        source=source,
+        total_keys=total_keys,
+        label=pointer.label,
+    )
+
+
 def assess_active_profile_health(state: WorkflowState | None = None) -> ActiveProfileHealth:
     """Return a redacted, non-secret projection from current authenticated state.
 
@@ -399,158 +667,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     source: ProfileSource = "env_override" if override else ("pointer" if active_profile is not None else "none")
     total_keys = len(list_profile_key_records())
     if active_profile is None:
-        try:
-            len(list_profile_buckets())
-        except _CAPSULE_DISCOVERY_EXCEPTIONS as exc:
-            _log.debug("current capsule discovery unreadable without an active pointer", exc_info=exc)
-            return _finalise_health(
-                ActiveProfileHealth(
-                    active_profile=None,
-                    source=source,
-                    status=ProfileHealthStatus.CAPSULE_UNREADABLE,
-                    profile_record_error=_compact_error(exc),
-                    profile_total_keys=total_keys,
-                ),
-                label=None,
-            )
-        return _finalise_health(
-            ActiveProfileHealth(
-                active_profile=None,
-                source=source,
-                status=ProfileHealthStatus.NONE,
-                profile_total_keys=total_keys,
-            ),
-            label=None,
-        )
-
-    try:
-        registered_pointer = resolve_profile_bucket(active_profile)
-    except _CAPSULE_DISCOVERY_EXCEPTIONS as exc:
-        _log.debug(
-            "active profile current capsule unreadable bucket_id=%s",
-            active_profile,
-            exc_info=exc,
-        )
-        return _finalise_health(
-            ActiveProfileHealth(
-                active_profile=active_profile,
-                source=source,
-                status=ProfileHealthStatus.CAPSULE_UNREADABLE,
-                registered_bucket=True,
-                profile_record_error=_compact_error(exc),
-                profile_total_keys=total_keys,
-                repairable_by_clearing_pointer=source == "pointer",
-            ),
-            label=None,
-        )
-    registered = registered_pointer is not None
-    if not registered:
-        return _finalise_health(
-            ActiveProfileHealth(
-                active_profile=active_profile,
-                source=source,
-                status=ProfileHealthStatus.DANGLING_POINTER,
-                registered_bucket=False,
-                profile_total_keys=total_keys,
-                repairable_by_clearing_pointer=source == "pointer",
-            ),
-            label=None,
-        )
-    active_profile = registered_pointer.bucket_id
-
-    # Asked BEFORE the encrypted workflow state is opened. That store is locked
-    # by the very session this is probing for, so loading it first refuses with
-    # a storage error and reports a benign locked profile as an unreadable one
-    # -- the same lie in a different spelling.
-    with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
-        locked = profile_record_session_if_authenticated(registered_pointer.bucket_id) is None
-    if locked:
-        return _finalise_health(
-            ActiveProfileHealth(
-                active_profile=active_profile,
-                source=source,
-                status=ProfileHealthStatus.PROFILE_LOCKED,
-                registered_bucket=True,
-                profile_total_keys=total_keys,
-            ),
-            label=registered_pointer.label,
-        )
-
-    try:
-        if state is None:
-            with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
-                workflow_state_repository().load()
-    except (CadrumoError, OSError) as exc:
-        # CadrumoError: decryption, session, or domain failures loading the workflow state row.
-        # OSError: filesystem I/O failure reading the encrypted database file.
-        return _finalise_health(
-            ActiveProfileHealth(
-                active_profile=active_profile,
-                source=source,
-                status=ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
-                registered_bucket=True,
-                profile_record_error=_compact_error(exc),
-                profile_total_keys=total_keys,
-                repairable_by_clearing_pointer=source == "pointer",
-            ),
-            label=registered_pointer.label,
-        )
-    try:
-        with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
-            resolution = resolve_active_profile_record()
-    except (CadrumoError, ValueError) as exc:
-        # CadrumoError: domain or registry failures resolving the profile record.
-        # ValueError (including pydantic ValidationError): stored record fails strict validation.
-        return _finalise_health(
-            ActiveProfileHealth(
-                active_profile=active_profile,
-                source=source,
-                status=ProfileHealthStatus.PROFILE_RECORD_UNREADABLE,
-                registered_bucket=True,
-                profile_record_error=_compact_error(exc),
-                profile_total_keys=total_keys,
-                repairable_by_clearing_pointer=source == "pointer",
-            ),
-            label=registered_pointer.label,
-        )
-    record = resolution.record
-    if record is None:
-        # The reason travels with the absence, so each one reaches the operator
-        # as itself. A session that vanished between the probe above and this
-        # read lands here as a lock rather than as a missing record, and a lock
-        # is not a broken pointer, so it offers no pointer repair.
-        unavailability = resolution.unavailability
-        if unavailability is None:
-            raise RuntimeError("an absent profile record must carry the reason it is unavailable")
-        locked = unavailability is ProfileRecordUnavailability.SESSION_REQUIRED
-        return _finalise_health(
-            ActiveProfileHealth(
-                active_profile=active_profile,
-                source=source,
-                status=_UNAVAILABILITY_STATUSES[unavailability],
-                registered_bucket=True,
-                profile_total_keys=total_keys,
-                repairable_by_clearing_pointer=source == "pointer" and not locked,
-            ),
-            label=registered_pointer.label,
-        )
-
-    values = record_to_path_values(record)
-    validation = validate_profile_values(values)
-    status: ProfileHealthStatusValue = ProfileHealthStatus.READY if validation.valid else ProfileHealthStatus.INCOMPLETE
-    return _finalise_health(
-        ActiveProfileHealth(
-            active_profile=active_profile,
-            source=source,
-            status=status,
-            registered_bucket=True,
-            profile_record_present=True,
-            profile_present_keys=validation.present_keys,
-            profile_total_keys=validation.total_keys,
-            missing_required=validation.missing_required,
-        ),
-        label=registered_pointer.label,
-    )
+        return _assess_without_active_profile(source, total_keys)
+    return _assess_selected_profile(active_profile, source, total_keys, state)
 
 
 def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> ActiveProfileRepairResult:

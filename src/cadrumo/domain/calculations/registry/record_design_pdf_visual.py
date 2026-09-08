@@ -297,25 +297,42 @@ def _visual_chart_rules_for_number_row(
     candidate_rules = tuple(rule for rule in horizontal_rules if 0 < number_top - rule.top <= 30)
     if not candidate_rules:
         return ()
+    nearest = max(candidate_rules, key=lambda rule: rule.top)
+    return _visual_chart_rule_band(candidate_rules, nearest)
+
+
+def _visual_chart_rule_band(
+    candidate_rules: tuple[_PdfRect, ...],
+    nearest: _PdfRect,
+) -> tuple[_PdfRect, ...]:
+    """Expand the nearest rule into its complete overlapping physical band."""
     # A single printed rule band may arrive as adjacent PDF shapes whose
     # vertical bounds overlap without sharing an identical ``top`` coordinate.
     # Select the physical band nearest the number ruler by overlap, rather than
     # rounding coordinates and silently dropping the offset segments that a
     # producer represented a few tenths of a point differently.
-    nearest = max(candidate_rules, key=lambda rule: rule.top)
     band_top = nearest.top
     band_bottom = nearest.bottom
-    band: list[_PdfRect] = []
     while True:
-        expanded = tuple(rule for rule in candidate_rules if rule.bottom >= band_top and rule.top <= band_bottom)
-        expanded_top = min(rule.top for rule in expanded)
-        expanded_bottom = max(rule.bottom for rule in expanded)
+        expanded, expanded_top, expanded_bottom = _visual_chart_rule_band_step(
+            candidate_rules,
+            band_top,
+            band_bottom,
+        )
         if expanded_top == band_top and expanded_bottom == band_bottom:
-            band = list(expanded)
-            break
+            return tuple(sorted(expanded, key=lambda rule: rule.x0))
         band_top = expanded_top
         band_bottom = expanded_bottom
-    return tuple(sorted(band, key=lambda rule: rule.x0))
+
+
+def _visual_chart_rule_band_step(
+    candidate_rules: tuple[_PdfRect, ...],
+    band_top: float,
+    band_bottom: float,
+) -> tuple[tuple[_PdfRect, ...], float, float]:
+    """Return the overlapping rules and their expanded vertical bounds."""
+    expanded = tuple(rule for rule in candidate_rules if rule.bottom >= band_top and rule.top <= band_bottom)
+    return expanded, min(rule.top for rule in expanded), max(rule.bottom for rule in expanded)
 
 
 def _visual_chart_description(

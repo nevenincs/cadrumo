@@ -57,8 +57,30 @@ POINTER = re.compile(r"^(?:v[eé]ase\s+)?notas?\s*[\d\s,y]*$", re.IGNORECASE)
 #: modelo 202 invisible, including the two that state how numeric and
 #: alphanumeric fields are aligned and padded - the plainest wire wording in
 #: the corpus, unreadable because of a separator.
-_DEFINITION = re.compile(r"^\s*\|?\s*(nota\s*\d+)\s*[:.|]\s*(.*)$", re.IGNORECASE)
+_DEFINITION = re.compile(r"^\s*\|?\s*(?P<label>nota\s*\d+)\s*[:.|]\s*(?P<wording>.*)$", re.IGNORECASE)
+#: A note definition whose row carries the LABEL ALONE, its wording printed on
+#: the rows beneath. The corpus carries this shape beside the separated one in
+#: the very same design - modelo 222 writes `Nota 12. La opcion "0A"...` and,
+#: eleven rows later, `Nota 16` with its wording on the next two rows - which is
+#: what proves this is transcription-shape variance and not a missing note.
+#: Requiring a separator reported three notes as never defined by their design,
+#: in modelos 200, 202 and 222, and the remedy that condition asks for is a
+#: transcription: an evidence gap was being reported where the evidence was
+#: present and merely laid out differently.
+#:
+#: Anchored to the whole row, so it claims only a row that carries nothing else.
+#: A row naming a note beside other cells is already a definition or a table
+#: row, and reading it as a label-alone opening would gather that other content
+#: as the note's wording.
+_LABEL_ONLY = re.compile(r"^\s*\|?\s*(?P<label>nota\s*\d+)\s*\|*(?P<wording>\s*)$", re.IGNORECASE)
 _ROW = re.compile(r"^\s*\|?\s*(nota\s*\d+)\b", re.IGNORECASE)
+#: The totals footer that closes a design's record table. It ends a note's
+#: wording, because a footer is table structure and never note prose. Without
+#: it modelo 202's label-alone `Nota 12` gathered `TOTAL: | -1 | | POSICIONES`
+#: into the note text a rule author would read as the design's own words.
+#: Matched against the row with its leading empty cells removed, since the
+#: footer is printed indented in one design and flush in another.
+_TABLE_FOOTER = re.compile(r"^total\s*:", re.IGNORECASE)
 #: A sheet heading in the extracted transcription. A workbook design prints one
 #: sheet per page and numbers each page's notes from one, so note labels are
 #: scoped to the sheet this matches and never to the design.
@@ -106,9 +128,18 @@ def sheet_note_definitions(extracted: str) -> dict[str, dict[str, str]]:
     filling rule in one blob. Reading text belonging to another page is worse
     than reading none, because it looks like evidence.
 
-    A definition is a row whose first cell is ``Nota N:``. The wording may sit on
-    that row or on the rows beneath it, so continuation lines are gathered until
-    the next note, a blank row, or the heading that starts the next sheet.
+    A definition is a row whose first cell names the label - ``Nota N:``,
+    ``Nota N.``, ``Nota N |``, or the label ALONE with nothing beside it. The
+    wording may sit on that row or on the rows beneath it, so continuation lines
+    are gathered until the next note, a blank row, the totals footer that closes
+    a record table, or the heading that starts the next sheet.
+
+    The label-alone shape is not a lenient reading of a missing note. The same
+    design prints both shapes: modelo 222's ``Nota 12`` carries its wording after
+    a full stop and its ``Nota 16``, eleven rows later, carries the label alone
+    with the wording beneath. Refusing that row reported three notes across
+    modelos 200, 202 and 222 as never defined by their designs, which asks for a
+    transcription that was never owed.
     """
     sheets: dict[str, dict[str, list[str]]] = {}
     sheet = ""
@@ -119,17 +150,21 @@ def sheet_note_definitions(extracted: str) -> dict[str, dict[str, str]]:
             sheet = heading.group(1)
             current = None
             continue
-        match = _DEFINITION.match(line)
-        if match is not None:
-            current = _normalise(match.group(1))
+        # Both openings carry the same two named groups, so the branch below
+        # reads one shape. A label-alone row's wording group is empty by
+        # construction: its wording is on the rows that follow.
+        opening = _DEFINITION.match(line) or _LABEL_ONLY.match(line)
+        if opening is not None:
+            current = _normalise(opening.group("label"))
             sheets.setdefault(sheet, {}).setdefault(current, [])
-            if match.group(2).strip():
-                sheets[sheet][current].append(match.group(2).strip())
+            wording = opening.group("wording").strip()
+            if wording:
+                sheets[sheet][current].append(wording)
             continue
         if current is None:
             continue
         stripped = line.strip().lstrip("|").strip()
-        if not stripped or stripped.startswith("#") or _ROW.match(line):
+        if not stripped or stripped.startswith("#") or _ROW.match(line) or _TABLE_FOOTER.match(stripped):
             current = None
             continue
         sheets[sheet][current].append(stripped)
@@ -287,7 +322,18 @@ def pointer_evidence_for_design(
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Print each pointer in one design's extracted text with the note it resolves to."""
+    """Print every note one design defines, each under the sheet that prints it.
+
+    Reported by SHEET, through :func:`sheet_note_definitions`, because that is
+    what a note label identifies: a design numbers each page's notes from one,
+    so ``Nota 1`` names a different note on every sheet and a design-wide flat
+    listing prints several notes under one label. That ambiguity is why
+    :func:`note_definitions` requires a sheet rather than defaulting to the
+    design - and this entry point called it without one, so it raised on every
+    invocation and printed nothing at all. Taking one sheet as an argument would
+    only move the problem: the caller has a file, not a sheet name, and would
+    have to guess which page to ask for.
+    """
     argv = sys.argv[1:] if argv is None else argv
     if not argv:
         sys.stdout.write("usage: python -m dev.registry.analysis.footnote_pointer_notes <extracted.md>\n")
@@ -297,10 +343,13 @@ def main(argv: list[str] | None = None) -> int:
     # that an author is about to rely on - a note that quietly lost a word is
     # worse evidence than a note that failed to load.
     extracted = Path(argv[0]).read_text(encoding="utf-8")
-    definitions = note_definitions(extracted)
-    for label, text in sorted(definitions.items()):
-        sys.stdout.write(f"note_definition label={label!r} text={text!r}\n")
-    sys.stdout.write(f"summary definitions={len(definitions)}\n")
+    sheets = sheet_note_definitions(extracted)
+    defined = 0
+    for sheet, definitions in sorted(sheets.items()):
+        for label, text in sorted(definitions.items()):
+            defined += 1
+            sys.stdout.write(f"note_definition sheet={sheet!r} label={label!r} text={text!r}\n")
+    sys.stdout.write(f"summary sheets={len(sheets)} definitions={defined}\n")
     return 0
 
 

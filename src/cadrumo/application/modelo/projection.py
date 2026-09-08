@@ -56,7 +56,7 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos.work_unit import WorkUnitState
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ._registry_helpers import validate_casilla_input_ids
 from .calculate_input import ModeloCalculateBindingInputError
 from .calculate_input import decimal_binding_value as _decimal_binding_value
@@ -757,9 +757,7 @@ def _best_revision_for_compare(
     modelo: str,
     filing_year: int,
 ) -> tuple[CalculationRevision, bool, str]:
-    units_for_year = [
-        unit for unit in list_work_units() if str(unit.modelo) == modelo and unit.filing_year == filing_year
-    ]
+    units_for_year = _comparison_work_units(modelo=modelo, filing_year=filing_year)
     if not units_for_year:
         raise ModeloCompareNoWorkUnitsError(
             context={"modelo": modelo, "filing_year": filing_year},
@@ -767,9 +765,7 @@ def _best_revision_for_compare(
         )
 
     period_by_unit = {unit.work_unit_id: unit.period.registry_token for unit in units_for_year}
-    all_revisions: list[CalculationRevision] = []
-    for unit in units_for_year:
-        all_revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id))
+    all_revisions = _comparison_revisions_for_units(units_for_year)
 
     if not all_revisions:
         raise ModeloCompareNoRevisionsError(
@@ -777,22 +773,148 @@ def _best_revision_for_compare(
             translated_message="cli.app.modelo.compare.no_revisions",
         )
 
-    verified = [
-        revision for revision in all_revisions if revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    ]
-    if verified:
-        best = max(verified, key=lambda revision: revision.created_at)
+    best = _latest_comparison_revision(all_revisions, state=CalculationRevisionState.VERIFICADO_COMPLETO)
+    if best is not None:
         return best, False, period_by_unit.get(best.work_unit_id, "0A")
 
-    borradores = [revision for revision in all_revisions if revision.state is CalculationRevisionState.BORRADOR]
-    if borradores:
-        best = max(borradores, key=lambda revision: revision.created_at)
+    best = _latest_comparison_revision(all_revisions, state=CalculationRevisionState.BORRADOR)
+    if best is not None:
         return best, True, period_by_unit.get(best.work_unit_id, "0A")
 
     raise ModeloCompareNoUsableRevisionsError(
         context={"modelo": modelo, "filing_year": filing_year},
         translated_message="cli.app.modelo.compare.no_usable_revisions",
     )
+
+
+def _comparison_work_units(*, modelo: str, filing_year: int) -> list[WorkUnit]:
+    """Return persisted work units matching one comparison coordinate."""
+    return [unit for unit in list_work_units() if str(unit.modelo) == modelo and unit.filing_year == filing_year]
+
+
+def _comparison_revisions_for_units(units: Iterable[WorkUnit]) -> list[CalculationRevision]:
+    """Flatten the revisions belonging to comparison work units in unit order."""
+    revisions: list[CalculationRevision] = []
+    for unit in units:
+        revisions.extend(list_calculation_revisions(work_unit_id=unit.work_unit_id))
+    return revisions
+
+
+def _latest_comparison_revision(
+    revisions: Iterable[CalculationRevision],
+    *,
+    state: CalculationRevisionState,
+) -> CalculationRevision | None:
+    """Return the newest revision in one state, or ``None`` when absent."""
+    candidates = [revision for revision in revisions if revision.state is state]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda revision: revision.created_at)
+
+
+def _comparison_year_pair(years: Iterable[int]) -> tuple[int, int]:
+    """Validate and order the two filing years addressed by a comparison."""
+    requested_years = list(years)
+    if len(requested_years) != 2:
+        raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")
+    return tuple(sorted(requested_years))  # type: ignore[return-value]
+
+
+def _comparison_static_revisions(
+    *,
+    modelo: str,
+    year_a: int,
+    year_b: int,
+    period_a: str,
+    period_b: str,
+) -> tuple[ModeloRevision, ModeloRevision]:
+    """Resolve both law-version revisions in the historical comparison order."""
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    rev_b_static = select_revision(modelo_definition, filing_year=year_b, period=period_b)
+    rev_a_static = select_revision(modelo_definition, filing_year=year_a, period=period_a)
+    return rev_a_static, rev_b_static
+
+
+def _comparison_casilla_metadata(
+    rev_a_static: ModeloRevision,
+    rev_b_static: ModeloRevision,
+) -> dict[CasillaId, CasillaDefinition]:
+    """Index casilla metadata in the same A-then-B overwrite order."""
+    casilla_meta: dict[CasillaId, CasillaDefinition] = {}
+    for static_revision in (rev_a_static, rev_b_static):
+        for cdef in static_revision.casillas:
+            casilla_meta[cdef.id] = cdef
+    return casilla_meta
+
+
+def _comparison_casilla_label_section(
+    casilla_id: CasillaId,
+    casilla_meta: Mapping[CasillaId, CasillaDefinition],
+) -> tuple[str, str]:
+    """Return the static label and first section for one comparison row."""
+    cdef = casilla_meta.get(casilla_id)
+    if cdef is None:
+        return casilla_id, ""
+    sections = cdef.section
+    return cdef.label, sections[0] if sections else ""
+
+
+def _comparison_delta_rows(
+    rev_a: CalculationRevision,
+    rev_b: CalculationRevision,
+    *,
+    modelo: str,
+    year_a: int,
+    year_b: int,
+    casilla_meta: Mapping[CasillaId, CasillaDefinition],
+) -> list[ModeloCompareDeltaRow]:
+    """Build exact own-arithmetic deltas and retain registry provenance."""
+    obs_by_id = {obs.casilla_id: obs for revision in (rev_a, rev_b) for obs in revision.observations}
+    delta_rows: list[ModeloCompareDeltaRow] = []
+    for casilla_id in sorted(set(rev_a.casilla_values) | set(rev_b.casilla_values)):
+        value_a = rev_a.casilla_values.get(casilla_id, Decimal("0"))
+        value_b = rev_b.casilla_values.get(casilla_id, Decimal("0"))
+        delta = value_b - value_a
+        label, section = _comparison_casilla_label_section(casilla_id, casilla_meta)
+        pct_change = (delta / value_a * Decimal("100")).quantize(Decimal("0.01")) if value_a != Decimal("0") else None
+        formula_id, legal_refs, source_refs = _compare_row_provenance(
+            modelo=modelo,
+            year_a=year_a,
+            year_b=year_b,
+            casilla_id=casilla_id,
+            casilla_meta=casilla_meta,
+            observation=obs_by_id.get(casilla_id),
+        )
+        delta_rows.append(
+            ModeloCompareDeltaRow(
+                casilla_id=casilla_id,
+                label=label,
+                section=section,
+                year_a_value=value_a,
+                year_b_value=value_b,
+                delta=delta,
+                pct_change=pct_change,
+                formula_id=formula_id,
+                legal_refs=legal_refs,
+                source_refs=source_refs,
+            ),
+        )
+    return delta_rows
+
+
+def _comparison_sections(
+    delta_rows: Iterable[ModeloCompareDeltaRow],
+) -> tuple[list[str], dict[str, list[ModeloCompareDeltaRow]]]:
+    """Group comparison rows while preserving their first-seen section order."""
+    sections_seen: list[str] = []
+    by_section: dict[str, list[ModeloCompareDeltaRow]] = {}
+    for row in delta_rows:
+        if row.section not in by_section:
+            sections_seen.append(row.section)
+            by_section[row.section] = []
+        by_section[row.section].append(row)
+    return sections_seen, by_section
 
 
 def compare_modelo_years(
@@ -809,32 +931,19 @@ def compare_modelo_years(
     returned; comparing two already-persisted revisions is not itself a
     filing act, so the registry side is read structurally.
     """
-    requested_years = list(years)
-    if len(requested_years) != 2:
-        raise ModeloCompareNeedTwoYearsError(translated_message="cli.app.modelo.compare.need_two_years")
-    year_a, year_b = sorted(requested_years)
+    year_a, year_b = _comparison_year_pair(years)
 
     rev_a, draft_a, period_a = _best_revision_for_compare(modelo=modelo, filing_year=year_a)
     rev_b, draft_b, period_b = _best_revision_for_compare(modelo=modelo, filing_year=year_b)
 
-    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
-    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
-    rev_b_static = select_revision(modelo_definition, filing_year=year_b, period=period_b)
-    rev_a_static = select_revision(modelo_definition, filing_year=year_a, period=period_a)
-
-    casilla_meta: dict[CasillaId, CasillaDefinition] = {}
-    for static_revision in (rev_a_static, rev_b_static):
-        for cdef in static_revision.casillas:
-            casilla_meta[cdef.id] = cdef
-
-    def _meta(casilla_id: CasillaId) -> tuple[str, str]:
-        cdef = casilla_meta.get(casilla_id)
-        if cdef is None:
-            return casilla_id, ""
-        label = cdef.label
-        sections = cdef.section
-        primary_section = sections[0] if sections else ""
-        return label, primary_section
+    rev_a_static, rev_b_static = _comparison_static_revisions(
+        modelo=modelo,
+        year_a=year_a,
+        year_b=year_b,
+        period_a=period_a,
+        period_b=period_b,
+    )
+    casilla_meta = _comparison_casilla_metadata(rev_a_static, rev_b_static)
 
     # Both sides are the application's OWN arithmetic, which is what separates
     # this from the tree's other per-casilla comparators. A money tolerance
@@ -845,45 +954,15 @@ def compare_modelo_years(
     # ``detect_casilla_divergences`` and ``compare_calculation_to_filed_observation``
     # both compare against AEAT, where rounding IS an artefact, and
     # ``casillas_a_recapture_would_change`` skips absence entirely.
-    obs_by_id = {obs.casilla_id: obs for revision in (rev_a, rev_b) for obs in revision.observations}
-    delta_rows: list[ModeloCompareDeltaRow] = []
-    for casilla_id in sorted(set(rev_a.casilla_values) | set(rev_b.casilla_values)):
-        value_a = rev_a.casilla_values.get(casilla_id, Decimal("0"))
-        value_b = rev_b.casilla_values.get(casilla_id, Decimal("0"))
-        delta = value_b - value_a
-        label, section = _meta(casilla_id)
-        pct_change = (delta / value_a * Decimal("100")).quantize(Decimal("0.01")) if value_a != Decimal("0") else None
-        observation = obs_by_id.get(casilla_id)
-        formula_id, legal_refs, source_refs = _compare_row_provenance(
-            modelo=modelo,
-            year_a=year_a,
-            year_b=year_b,
-            casilla_id=casilla_id,
-            casilla_meta=casilla_meta,
-            observation=observation,
-        )
-        delta_rows.append(
-            ModeloCompareDeltaRow(
-                casilla_id=casilla_id,
-                label=label,
-                section=section,
-                year_a_value=value_a,
-                year_b_value=value_b,
-                delta=delta,
-                pct_change=pct_change,
-                formula_id=formula_id,
-                legal_refs=legal_refs,
-                source_refs=source_refs,
-            ),
-        )
-
-    sections_seen: list[str] = []
-    by_section: dict[str, list[ModeloCompareDeltaRow]] = {}
-    for row in delta_rows:
-        if row.section not in by_section:
-            sections_seen.append(row.section)
-            by_section[row.section] = []
-        by_section[row.section].append(row)
+    delta_rows = _comparison_delta_rows(
+        rev_a,
+        rev_b,
+        modelo=modelo,
+        year_a=year_a,
+        year_b=year_b,
+        casilla_meta=casilla_meta,
+    )
+    sections_seen, by_section = _comparison_sections(delta_rows)
 
     return ModeloCompareServiceResult(
         modelo=modelo,

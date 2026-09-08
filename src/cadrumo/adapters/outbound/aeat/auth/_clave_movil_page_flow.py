@@ -211,6 +211,31 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         await click(surface.continue_button_selector)
         await self._raise_if_pending_request_error(page)
 
+    async def _push_wait_state_signals(
+        self,
+        page: BrowserPagePort,
+        *,
+        current_url: str,
+        surface: AeatClaveMovilSurface,
+    ) -> tuple[bool, bool]:
+        content = getattr(page, "content", None)
+        html = ""
+        if content is not None:
+            try:
+                html = await content()
+            except PlaywrightError:
+                html = ""
+        normalized = " ".join(html.replace("\xa0", " ").split()).lower()
+        wait_markers = tuple(marker.lower() for marker in surface.wait_text_markers)
+        url_markers = (
+            surface.obtener_clave_movil_path_marker,
+            surface.obtener_clave_movil_qr_path_marker,
+        )
+        return (
+            any(marker in normalized for marker in wait_markers),
+            any(marker in current_url for marker in url_markers),
+        )
+
     async def _assert_push_wait_state(
         self,
         page: BrowserPagePort,
@@ -234,21 +259,11 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
         if verification_code:
             return
 
-        content = getattr(page, "content", None)
-        html = ""
-        if content is not None:
-            try:
-                html = await content()
-            except PlaywrightError:
-                html = ""
-        normalized = " ".join(html.replace("\xa0", " ").split()).lower()
-        wait_markers = tuple(marker.lower() for marker in surface.wait_text_markers)
-        url_markers = (
-            surface.obtener_clave_movil_path_marker,
-            surface.obtener_clave_movil_qr_path_marker,
+        has_wait_marker, has_wait_url = await self._push_wait_state_signals(
+            page,
+            current_url=current_url,
+            surface=surface,
         )
-        has_wait_marker = any(marker in normalized for marker in wait_markers)
-        has_wait_url = any(marker in current_url for marker in url_markers)
         if has_wait_marker or has_wait_url:
             log.info(
                 "ClaveMovilAuthProvider: detected Cl@ve wait state url=%s non_qr=%s verification_code_present=%s",

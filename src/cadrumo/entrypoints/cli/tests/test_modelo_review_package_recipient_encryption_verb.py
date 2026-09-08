@@ -52,7 +52,6 @@ from click.testing import Result
 
 from ....application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
-    recipient_encryption_public_key,
 )
 from ....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -134,7 +133,7 @@ def test_encrypt_for_recipient_then_decrypt_recovers_original_bytes(tmp_path: Pa
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
-    public_key = recipient_encryption_public_key(keypair)
+    public_key = keypair
     _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"
@@ -204,7 +203,7 @@ def test_encrypt_for_recipient_review_only_and_expiry_round_trip(tmp_path: Path)
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
-    public_key = recipient_encryption_public_key(keypair)
+    public_key = keypair
     _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"
@@ -256,7 +255,7 @@ def test_decrypt_refuses_on_replayed_envelope(tmp_path: Path) -> None:
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
-    public_key = recipient_encryption_public_key(keypair)
+    public_key = keypair
     _register_recipient("my-accountant", public_key_hex=public_key.public_key_hex)
 
     envelope_path = tmp_path / "envelope.json"

@@ -298,6 +298,82 @@ def confirmation_blockers(draft: InvoiceDraft) -> tuple[ConfirmationBlocker, ...
     return tuple(blockers)
 
 
+def _answer_confirmation_blockers(
+    by_id: Mapping[str, ConfirmationBlocker],
+    resolutions: Sequence[FindingResolution],
+) -> dict[str, FindingResolution]:
+    """Index one resolution per known blocker, refusing unknown or duplicate ids."""
+    answered: dict[str, FindingResolution] = {}
+    for resolution in resolutions:
+        if resolution.blocker_id not in by_id:
+            known = ", ".join(sorted(by_id)) or "none"
+            raise ConfirmationBlockedError(
+                translated_message="errors.refused.refused_ledger_confirmation_blocked",
+                context={"blocker_id": resolution.blocker_id, "known_blocker_ids": known},
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
+                    facts={"resolution_addresses_known_blocker": False},
+                ),
+            )
+        if resolution.blocker_id in answered:
+            raise ConfirmationBlockedError(
+                translated_message="errors.refused.refused_ledger_confirmation_blocked",
+                context={"blocker_id": resolution.blocker_id, "resolution_count": 2},
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
+                    facts={"one_resolution_per_blocker": False},
+                ),
+            )
+        answered[resolution.blocker_id] = resolution
+    return answered
+
+
+def _validate_candidate_resolutions(
+    by_id: Mapping[str, ConfirmationBlocker],
+    answered: Mapping[str, FindingResolution],
+) -> None:
+    """Refuse a candidate choice that was not offered by the reviewed draft."""
+    for blocker_id, resolution in answered.items():
+        if resolution.action is not FindingResolutionAction.CHOOSE_CANDIDATE:
+            continue
+        blocker = by_id[blocker_id]
+        if resolution.value is None or not blocker.names_a_candidate(resolution.value):
+            # The refusal enumerates the DIGESTS, not the values. They are what
+            # the review surface showed, so they are what the operator can check
+            # their answer against -- and naming the raw values here would put
+            # the identity this blocker exists to protect into a refusal message.
+            offered = ", ".join(blocker.candidate_digests) or "none"
+            raise ConfirmationBlockedError(
+                translated_message="errors.refused.refused_ledger_confirmation_blocked",
+                context={"blocker_id": blocker_id, "offered_candidate_digests": offered},
+                precondition_verdict=ledger_no_recovery_verdict(
+                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
+                    facts={"chosen_candidate_offered_by_document": False},
+                ),
+            )
+
+
+def _require_all_confirmation_blockers_resolved(
+    blockers: tuple[ConfirmationBlocker, ...],
+    answered: Mapping[str, FindingResolution],
+) -> None:
+    """Refuse the confirmation when any draft blocker has no explicit answer."""
+    unresolved = tuple(blocker for blocker in blockers if blocker.blocker_id not in answered)
+    if unresolved:
+        named = "; ".join(f"{blocker.blocker_id} ({blocker.reason.value}): {blocker.detail}" for blocker in unresolved)
+        raise ConfirmationBlockedError(
+            translated_message="errors.refused.refused_ledger_confirmation_blocked",
+            context={
+                "unresolved_blocker_ids": ",".join(blocker.blocker_id for blocker in unresolved),
+                "unresolved_blockers": named,
+            },
+            precondition_verdict=ledger_no_recovery_verdict(
+                LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
+                facts={"all_blockers_resolved": False},
+            ),
+        )
+
+
 def resolved_blockers(
     *,
     draft: InvoiceDraft,
@@ -339,62 +415,7 @@ def resolved_blockers(
     """
     blockers = confirmation_blockers(draft)
     by_id = {blocker.blocker_id: blocker for blocker in blockers}
-
-    answered: dict[str, FindingResolution] = {}
-    for resolution in resolutions:
-        if resolution.blocker_id not in by_id:
-            known = ", ".join(sorted(by_id)) or "none"
-            raise ConfirmationBlockedError(
-                translated_message="errors.refused.refused_ledger_confirmation_blocked",
-                context={"blocker_id": resolution.blocker_id, "known_blocker_ids": known},
-                precondition_verdict=ledger_no_recovery_verdict(
-                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
-                    facts={"resolution_addresses_known_blocker": False},
-                ),
-            )
-        if resolution.blocker_id in answered:
-            raise ConfirmationBlockedError(
-                translated_message="errors.refused.refused_ledger_confirmation_blocked",
-                context={"blocker_id": resolution.blocker_id, "resolution_count": 2},
-                precondition_verdict=ledger_no_recovery_verdict(
-                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
-                    facts={"one_resolution_per_blocker": False},
-                ),
-            )
-        answered[resolution.blocker_id] = resolution
-
-    for blocker_id, resolution in answered.items():
-        if resolution.action is not FindingResolutionAction.CHOOSE_CANDIDATE:
-            continue
-        blocker = by_id[blocker_id]
-        if resolution.value is None or not blocker.names_a_candidate(resolution.value):
-            # The refusal enumerates the DIGESTS, not the values. They are what
-            # the review surface showed, so they are what the operator can check
-            # their answer against -- and naming the raw values here would put
-            # the identity this blocker exists to protect into a refusal message.
-            offered = ", ".join(blocker.candidate_digests) or "none"
-            raise ConfirmationBlockedError(
-                translated_message="errors.refused.refused_ledger_confirmation_blocked",
-                context={"blocker_id": blocker_id, "offered_candidate_digests": offered},
-                precondition_verdict=ledger_no_recovery_verdict(
-                    LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
-                    facts={"chosen_candidate_offered_by_document": False},
-                ),
-            )
-
-    unresolved = tuple(blocker for blocker in blockers if blocker.blocker_id not in answered)
-    if unresolved:
-        named = "; ".join(f"{blocker.blocker_id} ({blocker.reason.value}): {blocker.detail}" for blocker in unresolved)
-        raise ConfirmationBlockedError(
-            translated_message="errors.refused.refused_ledger_confirmation_blocked",
-            context={
-                "unresolved_blocker_ids": ",".join(blocker.blocker_id for blocker in unresolved),
-                "unresolved_blockers": named,
-            },
-            precondition_verdict=ledger_no_recovery_verdict(
-                LedgerPreconditionCondition.CONFIRMATION_BLOCKERS_RESOLVED,
-                facts={"all_blockers_resolved": False},
-            ),
-        )
-
+    answered = _answer_confirmation_blockers(by_id, resolutions)
+    _validate_candidate_resolutions(by_id, answered)
+    _require_all_confirmation_blockers_resolved(blockers, answered)
     return blockers

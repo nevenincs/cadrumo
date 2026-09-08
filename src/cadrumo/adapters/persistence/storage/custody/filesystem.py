@@ -272,56 +272,76 @@ def write_profile_custody_local_record(path: Path, payload: bytes, *, publish_on
     read through the paired no-follow primitive and then atomically replaced.
     """
     if os.name != "nt":
-        with _posix_directory_fd(path.parent) as parent_fd:
-            temporary_name = f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp"
-            descriptor = _posix_open_exclusive_file(parent_fd, temporary_name)
-            try:
-                _write_descriptor_fsynced(descriptor, payload)
-                if publish_once:
-                    os.link(temporary_name, path.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
-                    os.unlink(temporary_name, dir_fd=parent_fd)
-                else:
-                    os.replace(temporary_name, path.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
-                os.fsync(parent_fd)
-            except OSError as exc:
-                with suppress(FileNotFoundError):
-                    os.unlink(temporary_name, dir_fd=parent_fd)
-                raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
-            finally:
-                os.close(descriptor)
+        _write_posix_profile_custody_local_record(path, payload, publish_once=publish_once)
         return
+    _write_windows_profile_custody_local_record(path, payload, publish_once=publish_once)
+
+
+def _write_posix_profile_custody_local_record(path: Path, payload: bytes, *, publish_once: bool) -> None:
+    """Write one local record below the pinned POSIX parent directory."""
+    with _posix_directory_fd(path.parent) as parent_fd:
+        temporary_name = f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp"
+        descriptor = _posix_open_exclusive_file(parent_fd, temporary_name)
+        try:
+            _write_descriptor_fsynced(descriptor, payload)
+            if publish_once:
+                os.link(temporary_name, path.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+                os.unlink(temporary_name, dir_fd=parent_fd)
+            else:
+                os.replace(temporary_name, path.name, src_dir_fd=parent_fd, dst_dir_fd=parent_fd)
+            os.fsync(parent_fd)
+        except OSError as exc:
+            with suppress(FileNotFoundError):
+                os.unlink(temporary_name, dir_fd=parent_fd)
+            raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
+        finally:
+            os.close(descriptor)
+
+
+def _write_windows_profile_custody_local_record(path: Path, payload: bytes, *, publish_once: bool) -> None:
+    """Write one local record below the pinned Windows parent directory."""
     with ExitStack() as anchors:
         _anchor_directory(anchors, path.parent, final_access=0x80000000)
         if publish_once:
-            try:
-                descriptor = os.open(
-                    path,
-                    os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0),
-                    0o600,
-                )
-            except FileExistsError as exc:
-                raise ProfileCustodyRecordError("local custody record destination already exists") from exc
-            except OSError as exc:
-                raise ProfileCustodyRecordError("local custody record cannot be exclusively created") from exc
-            try:
-                _write_descriptor_fsynced(descriptor, payload)
-            finally:
-                os.close(descriptor)
+            _write_windows_local_record_once(path, payload)
             return
-        from .....core.atomic_write import atomic_write_hardened_bytes
+        _replace_windows_local_record(path, payload)
 
-        deadline = time.monotonic() + _LOCAL_RECORD_REPLACE_BUDGET_SECONDS
-        while True:
-            try:
-                atomic_write_hardened_bytes(path, payload, mode=0o600)
-            except PermissionError as exc:
-                if time.monotonic() >= deadline:
-                    raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
-                time.sleep(_LOCAL_RECORD_REPLACE_POLL_SECONDS)
-            except OSError as exc:
+
+def _write_windows_local_record_once(path: Path, payload: bytes) -> None:
+    """Publish a Windows local record only when its destination is absent."""
+    try:
+        descriptor = os.open(
+            path,
+            os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_BINARY", 0),
+            0o600,
+        )
+    except FileExistsError as exc:
+        raise ProfileCustodyRecordError("local custody record destination already exists") from exc
+    except OSError as exc:
+        raise ProfileCustodyRecordError("local custody record cannot be exclusively created") from exc
+    try:
+        _write_descriptor_fsynced(descriptor, payload)
+    finally:
+        os.close(descriptor)
+
+
+def _replace_windows_local_record(path: Path, payload: bytes) -> None:
+    """Atomically replace a Windows local record, waiting out active readers."""
+    from .....core.atomic_write import atomic_write_hardened_bytes
+
+    deadline = time.monotonic() + _LOCAL_RECORD_REPLACE_BUDGET_SECONDS
+    while True:
+        try:
+            atomic_write_hardened_bytes(path, payload, mode=0o600)
+        except PermissionError as exc:
+            if time.monotonic() >= deadline:
                 raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
-            else:
-                return
+            time.sleep(_LOCAL_RECORD_REPLACE_POLL_SECONDS)
+        except OSError as exc:
+            raise ProfileCustodyRecordError("local custody record cannot be atomically written") from exc
+        else:
+            return
 
 
 def compare_and_replace_profile_custody_local_record(
@@ -867,31 +887,53 @@ def clear_profile_custody_local_record(path: Path) -> None:
     during this operation.
     """
     if os.name != "nt":
-        with _posix_directory_fd(path.parent) as parent_fd:
-            try:
-                descriptor = os.open(
-                    path.name,
-                    os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
-                    dir_fd=parent_fd,
-                )
-            except FileNotFoundError:
-                return
-            except OSError as exc:
-                raise ProfileCustodyRecordError("local custody record cannot be no-follow opened for clear") from exc
-            try:
-                metadata = os.fstat(descriptor)
-                if not stat.S_ISREG(metadata.st_mode):
-                    raise ProfileCustodyRecordError("local custody record is not a regular file")
-                current = os.stat(path.name, dir_fd=parent_fd, follow_symlinks=False)
-                if (current.st_dev, current.st_ino) != (metadata.st_dev, metadata.st_ino):
-                    raise ProfileCustodyRecordError("local custody record identity changed before clear")
-                os.unlink(path.name, dir_fd=parent_fd)
-                os.fsync(parent_fd)
-            except OSError as exc:
-                raise ProfileCustodyRecordError("local custody record cannot be safely cleared") from exc
-            finally:
-                os.close(descriptor)
+        _clear_posix_profile_custody_local_record(path)
         return
+    _clear_windows_profile_custody_local_record(path)
+
+
+def _clear_posix_profile_custody_local_record(path: Path) -> None:
+    """Clear one local record after verifying its identity below a POSIX parent."""
+    with _posix_directory_fd(path.parent) as parent_fd:
+        descriptor = _open_posix_record_for_clear(path, parent_fd=parent_fd)
+        if descriptor is None:
+            return
+        try:
+            _verify_posix_record_for_clear(path, parent_fd=parent_fd, descriptor=descriptor)
+            os.unlink(path.name, dir_fd=parent_fd)
+            os.fsync(parent_fd)
+        except OSError as exc:
+            raise ProfileCustodyRecordError("local custody record cannot be safely cleared") from exc
+        finally:
+            os.close(descriptor)
+
+
+def _open_posix_record_for_clear(path: Path, *, parent_fd: int) -> int | None:
+    """Open the POSIX leaf without following a final symlink, if it exists."""
+    try:
+        return os.open(
+            path.name,
+            os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
+            dir_fd=parent_fd,
+        )
+    except FileNotFoundError:
+        return None
+    except OSError as exc:
+        raise ProfileCustodyRecordError("local custody record cannot be no-follow opened for clear") from exc
+
+
+def _verify_posix_record_for_clear(path: Path, *, parent_fd: int, descriptor: int) -> None:
+    """Verify that the named POSIX leaf is the regular file held by ``descriptor``."""
+    metadata = os.fstat(descriptor)
+    if not stat.S_ISREG(metadata.st_mode):
+        raise ProfileCustodyRecordError("local custody record is not a regular file")
+    current = os.stat(path.name, dir_fd=parent_fd, follow_symlinks=False)
+    if (current.st_dev, current.st_ino) != (metadata.st_dev, metadata.st_ino):
+        raise ProfileCustodyRecordError("local custody record identity changed before clear")
+
+
+def _clear_windows_profile_custody_local_record(path: Path) -> None:
+    """Clear one local record through a verified Windows leaf handle."""
     with ExitStack() as anchors:
         _anchor_directory(anchors, path.parent, final_access=0x80000000)
         ctypes, wintypes, kernel32, create_file = _windows_create_file_api()
@@ -942,6 +984,33 @@ def _write_descriptor_fsynced(descriptor: int, payload: bytes) -> None:
     os.fsync(descriptor)
 
 
+def _open_regular_file_descriptor(path: Path, *, parent_fd: int | None) -> int:
+    """Open a regular-file candidate with no-follow flags and optional parent anchoring."""
+    flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+    if parent_fd is None:
+        return os.open(path, flags)
+    return os.open(path.name, flags, dir_fd=parent_fd)
+
+
+def _read_regular_file_contents(
+    descriptor: int,
+    *,
+    path: Path,
+    maximum_bytes: int,
+    trace: list[ProfileCustodyPasswordReadOperation] | None,
+) -> bytes:
+    """Read and bound-check the already-open regular-file descriptor."""
+    _record_read_operation(trace, "stat", path)
+    metadata = os.fstat(descriptor)
+    if not stat.S_ISREG(metadata.st_mode) or metadata.st_size < 1 or metadata.st_size > maximum_bytes:
+        raise ProfileCustodyRecordError("profile capsule record is not a bounded regular file")
+    _record_read_operation(trace, "read", path)
+    payload = os.read(descriptor, maximum_bytes + 1)
+    if len(payload) != metadata.st_size or len(payload) > maximum_bytes:
+        raise ProfileCustodyRecordError("profile capsule record changed during its bounded read")
+    return payload
+
+
 def _read_regular_file_open(
     path: Path,
     *,
@@ -951,14 +1020,7 @@ def _read_regular_file_open(
     missing_ok: bool = False,
 ) -> bytes | None:
     try:
-        if parent_fd is None:
-            descriptor = os.open(path, os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0))
-        else:
-            descriptor = os.open(
-                path.name,
-                os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0),
-                dir_fd=parent_fd,
-            )
+        descriptor = _open_regular_file_descriptor(path, parent_fd=parent_fd)
     except FileNotFoundError:
         if missing_ok:
             return None
@@ -966,15 +1028,12 @@ def _read_regular_file_open(
     except OSError as exc:
         raise ProfileCustodyRecordError("profile capsule record is unavailable") from exc
     try:
-        _record_read_operation(trace, "stat", path)
-        metadata = os.fstat(descriptor)
-        if not stat.S_ISREG(metadata.st_mode) or metadata.st_size < 1 or metadata.st_size > maximum_bytes:
-            raise ProfileCustodyRecordError("profile capsule record is not a bounded regular file")
-        _record_read_operation(trace, "read", path)
-        payload = os.read(descriptor, maximum_bytes + 1)
-        if len(payload) != metadata.st_size or len(payload) > maximum_bytes:
-            raise ProfileCustodyRecordError("profile capsule record changed during its bounded read")
-        return payload
+        return _read_regular_file_contents(
+            descriptor,
+            path=path,
+            maximum_bytes=maximum_bytes,
+            trace=trace,
+        )
     except OSError as exc:
         raise ProfileCustodyRecordError("profile capsule record cannot be read") from exc
     finally:

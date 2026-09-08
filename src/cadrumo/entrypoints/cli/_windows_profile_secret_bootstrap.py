@@ -15,6 +15,7 @@ import os
 import sys
 from collections.abc import Sequence
 from contextlib import suppress
+from typing import NamedTuple
 
 
 def descriptor_from_inherited_handle(handle: int, *, writable: bool = False) -> int:
@@ -27,6 +28,83 @@ def descriptor_from_inherited_handle(handle: int, *, writable: bool = False) -> 
 
     access = os.O_WRONLY if writable else os.O_RDONLY
     return msvcrt.open_osfhandle(handle, access | os.O_BINARY)
+
+
+class _BootstrapDescriptors(NamedTuple):
+    profile: int | None
+    leaf: int | None
+    recovery_handoff: int | None
+    recovery_verification: int | None
+
+
+def _close_descriptors(descriptors: Sequence[int | None]) -> None:
+    """Close every descriptor that was opened before a later conversion failed."""
+    for descriptor in descriptors:
+        if descriptor is not None:
+            with suppress(OSError):
+                os.close(descriptor)
+
+
+def _open_inherited_descriptor(handle: int | None, *, writable: bool = False) -> int | None:
+    """Convert one optional allowlisted HANDLE, preserving absent channels."""
+    if handle is None:
+        return None
+    return descriptor_from_inherited_handle(handle, writable=writable)
+
+
+def _open_leaf_descriptor(
+    profile_handle: int | None,
+    secrets_handle: int | None,
+    profile_descriptor: int | None,
+) -> int | None:
+    """Open the leaf channel, aliasing a HANDLE already owned at root scope."""
+    if secrets_handle is None:
+        return None
+    if profile_handle is not None and secrets_handle == profile_handle:
+        return profile_descriptor
+    return descriptor_from_inherited_handle(secrets_handle)
+
+
+def _open_bootstrap_descriptors(
+    *,
+    profile_handle: int | None,
+    secrets_handle: int | None,
+    recovery_handoff_handle: int | None,
+    recovery_verification_handle: int | None,
+) -> _BootstrapDescriptors:
+    """Take ownership of requested HANDLEs and clean up on partial failure."""
+    profile_descriptor: int | None = None
+    leaf_descriptor: int | None = None
+    recovery_handoff_descriptor: int | None = None
+    recovery_verification_descriptor: int | None = None
+    try:
+        profile_descriptor = _open_inherited_descriptor(profile_handle)
+        leaf_descriptor = _open_leaf_descriptor(profile_handle, secrets_handle, profile_descriptor)
+        recovery_handoff_descriptor = _open_inherited_descriptor(recovery_handoff_handle, writable=True)
+        recovery_verification_descriptor = _open_inherited_descriptor(recovery_verification_handle)
+    except Exception:
+        _close_descriptors(
+            (
+                profile_descriptor,
+                leaf_descriptor,
+                recovery_handoff_descriptor,
+                recovery_verification_descriptor,
+            ),
+        )
+        raise
+    return _BootstrapDescriptors(
+        profile=profile_descriptor,
+        leaf=leaf_descriptor,
+        recovery_handoff=recovery_handoff_descriptor,
+        recovery_verification=recovery_verification_descriptor,
+    )
+
+
+def _descriptor_option(option: str, descriptor: int | None) -> tuple[str, ...]:
+    """Return one canonical CLI option pair when its descriptor is present."""
+    if descriptor is None:
+        return ()
+    return option, str(descriptor)
 
 
 def bootstrap_argv(
@@ -43,49 +121,16 @@ def bootstrap_argv(
         for handle in (profile_handle, secrets_handle, recovery_handoff_handle, recovery_verification_handle)
     ):
         raise ValueError("at least one inherited secret HANDLE is required")
-    profile_descriptor: int | None = None
-    leaf_descriptor: int | None = None
-    recovery_handoff_descriptor: int | None = None
-    recovery_verification_descriptor: int | None = None
-    try:
-        if profile_handle is not None:
-            profile_descriptor = descriptor_from_inherited_handle(profile_handle)
-        if secrets_handle is not None:
-            # One HANDLE named at both scopes represents one selected backing
-            # channel. Convert it exactly once so parsed dispatch sees the same
-            # CRT descriptor number and can refuse the cross-scope collision
-            # before either scope reads it. Opening ownership over the same
-            # HANDLE twice produces two descriptor numbers and is also an
-            # invalid double-ownership relationship.
-            leaf_descriptor = (
-                profile_descriptor
-                if profile_handle is not None and secrets_handle == profile_handle
-                else descriptor_from_inherited_handle(secrets_handle)
-            )
-        if recovery_handoff_handle is not None:
-            recovery_handoff_descriptor = descriptor_from_inherited_handle(recovery_handoff_handle, writable=True)
-        if recovery_verification_handle is not None:
-            recovery_verification_descriptor = descriptor_from_inherited_handle(recovery_verification_handle)
-    except Exception:
-        for descriptor in (
-            profile_descriptor,
-            leaf_descriptor,
-            recovery_handoff_descriptor,
-            recovery_verification_descriptor,
-        ):
-            if descriptor is not None:
-                with suppress(OSError):
-                    os.close(descriptor)
-        raise
-
-    root = () if profile_descriptor is None else ("--profile-secrets-fd", str(profile_descriptor))
-    leaf = () if leaf_descriptor is None else ("--secrets-fd", str(leaf_descriptor))
-    handoff = () if recovery_handoff_descriptor is None else ("--recovery-handoff-fd", str(recovery_handoff_descriptor))
-    verification = (
-        ()
-        if recovery_verification_descriptor is None
-        else ("--recovery-verification-fd", str(recovery_verification_descriptor))
+    descriptors = _open_bootstrap_descriptors(
+        profile_handle=profile_handle,
+        secrets_handle=secrets_handle,
+        recovery_handoff_handle=recovery_handoff_handle,
+        recovery_verification_handle=recovery_verification_handle,
     )
+    root = _descriptor_option("--profile-secrets-fd", descriptors.profile)
+    leaf = _descriptor_option("--secrets-fd", descriptors.leaf)
+    handoff = _descriptor_option("--recovery-handoff-fd", descriptors.recovery_handoff)
+    verification = _descriptor_option("--recovery-verification-fd", descriptors.recovery_verification)
     return ("aeat", *root, *command, *leaf, *handoff, *verification)
 
 

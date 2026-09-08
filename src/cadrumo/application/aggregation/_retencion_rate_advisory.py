@@ -124,7 +124,7 @@ from collections.abc import Iterable
 from decimal import Decimal
 from enum import Enum, auto
 from functools import cache
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import (
     LedgerWithholdingDerivation,
@@ -143,6 +143,9 @@ from ...domain.transactions.retencion_parameters import (
 from ._renta_income_ledger import RentaIncomeObservation
 from ._retenciones import RetencionObservation
 from ._source_mesh import CalculationSourceDiagnostic
+
+if TYPE_CHECKING:
+    from ...domain.deadlines.models import TaxpayerProfile
 
 #: Diagnostic ``source_kind`` for an administrador/consejero retención whose
 #: withheld amount matches neither statutory art. 101.2 fixed rate.
@@ -290,6 +293,56 @@ def administrador_retencion_rate_advisory_observations(
     return tuple(diagnostics)
 
 
+def _load_profile_for_bucket(bucket_id: str) -> TaxpayerProfile | None:
+    """Load and project the active profile, treating unavailable state as unknown."""
+    from ...domain.user_profile.errors import ProfileNotFoundError
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import projection_for_taxpayer
+
+    try:
+        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+    except ProfileNotFoundError:
+        return None
+    except (OSError, ValueError):
+        # A degraded profile read must not take down a calculation that has
+        # already produced its figures; the advisory simply loses its hint.
+        return None
+    # The repository raises on every failure path and never returns None, so the
+    # former ``else {}`` fallback was unreachable. Failures arrive through the
+    # except clause above, which is where the degraded-read handling lives.
+    return projection_for_taxpayer(record)
+
+
+def _declared_activity_hint(profile: TaxpayerProfile) -> bool | None:
+    """Resolve the explicit activity axis before considering weaker surrogates."""
+    from ...domain.deadlines.models import IrpfActivityKind
+
+    if profile.irpf_activity_kind is IrpfActivityKind.SECTORIAL:
+        return True
+    if profile.irpf_activity_kind is IrpfActivityKind.PROFESIONAL:
+        return False
+    return None
+
+
+def _profile_regime_hint(profile: TaxpayerProfile) -> bool | None:
+    """Resolve the profile's weaker regime and prior-year activity signals."""
+    from ...domain.deadlines.models import IrpfEstimationRegime, IVARegime
+
+    if profile.iva_regime is IVARegime.REAGP:
+        return True
+    if profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA:
+        return True
+    agri_gross = profile.objective_estimation_prior_year_agri_livestock_forest_gross_eur
+    if agri_gross is not None and agri_gross > Decimal("0"):
+        return True
+    if profile.irpf_estimation_regime in {
+        IrpfEstimationRegime.DIRECTA_NORMAL,
+        IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
+    }:
+        return False
+    return None
+
+
 def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     """Return whether the active profile hints at a sectoral activity.
 
@@ -323,44 +376,13 @@ def _profile_suggests_sectoral_activity(bucket_id: str | None) -> bool | None:
     """
     if bucket_id is None:
         return None
-    # Function-local for the cycle reason the sibling profile-backed advisories
-    # document: the profile package reaches back into this layer.
-    from ...domain.deadlines.models import IrpfActivityKind, IrpfEstimationRegime, IVARegime
-    from ...domain.user_profile.errors import ProfileNotFoundError
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
-    from ..user_profile.projections import projection_for_taxpayer
-
-    try:
-        record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-    except ProfileNotFoundError:
+    profile = _load_profile_for_bucket(bucket_id)
+    if profile is None:
         return None
-    except (OSError, ValueError):
-        # A degraded profile read must not take down a calculation that has
-        # already produced its figures; the advisory simply loses its hint.
-        return None
-    # The repository raises on every failure path and never returns None, so the
-    # former ``else {}`` fallback was unreachable. Failures arrive through the
-    # except clause above, which is where the degraded-read handling lives.
-    profile = projection_for_taxpayer(record)
-    # The declared activity axis answers the question directly, so it outranks
-    # every surrogate below and short-circuits both ways.
-    if profile.irpf_activity_kind is IrpfActivityKind.SECTORIAL:
-        return True
-    if profile.irpf_activity_kind is IrpfActivityKind.PROFESIONAL:
-        return False
-    if profile.iva_regime is IVARegime.REAGP:
-        return True
-    if profile.irpf_estimation_regime is IrpfEstimationRegime.OBJETIVA:
-        return True
-    agri_gross = profile.objective_estimation_prior_year_agri_livestock_forest_gross_eur
-    if agri_gross is not None and agri_gross > Decimal("0"):
-        return True
-    if profile.irpf_estimation_regime in {
-        IrpfEstimationRegime.DIRECTA_NORMAL,
-        IrpfEstimationRegime.DIRECTA_SIMPLIFICADA,
-    }:
-        return False
-    return None
+    declared_hint = _declared_activity_hint(profile)
+    if declared_hint is not None:
+        return declared_hint
+    return _profile_regime_hint(profile)
 
 
 def _sectoral_match_message(
@@ -394,6 +416,88 @@ def _sectoral_match_message(
     return opening + (
         "Your profile does not say whether you carry on an agricultural, forestry or módulos "
         "activity, so whether this rate can apply to you could not be checked."
+    )
+
+
+def _inferred_rate_matches(
+    observation: RentaIncomeObservation,
+    *,
+    rates: frozenset[Decimal],
+    professional: frozenset[Decimal],
+) -> tuple[Decimal, frozenset[Decimal]] | None:
+    """Classify one inferred row by its grounded rate products.
+
+    ``None`` means the row is outside the advisory or already matches a strong
+    professional rate. An empty set is meaningful: it is the unmatched-rate
+    finding and must remain distinct from a skipped row.
+    """
+    if observation.withheld_derivation not in _INFERRED_WITHHOLDING_MARKERS:
+        return None
+    base = observation.taxable_base_amount
+    if base is None or base <= Decimal("0"):
+        return None
+    matched = frozenset(rate for rate in rates if _conforms_to_fixed_rate(base, observation.withheld_amount, rate))
+    if matched & professional:
+        # A 15 % or 7 % match is a strong claim: those figures are too large
+        # for a fee or rounding gap to reach by accident. Nothing to say.
+        return None
+    return base, matched
+
+
+def _sectoral_rate_diagnostic(
+    observation: RentaIncomeObservation,
+    *,
+    base: Decimal,
+    matched: frozenset[Decimal],
+    sectoral_hint: bool | None,
+    resolver_id: str | None,
+) -> CalculationSourceDiagnostic:
+    """Build the weaker advisory for a sectoral-only rate product."""
+    return CalculationSourceDiagnostic(
+        reason="inferred_retencion_sectoral_rate_unconfirmed",
+        resolver_id=resolver_id,
+        source_kind=INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND,
+        message=_sectoral_match_message(
+            transaction_id=observation.transaction_id,
+            amount=observation.withheld_amount,
+            base=base,
+            matched=", ".join(str(rate) for rate in sorted(matched)),
+            sectoral_hint=sectoral_hint,
+        ),
+        legal_refs=_art95_refs(),
+        remedy=(
+            "Confirm with the payer whether this was retención or a fee, then record "
+            "the true figure by classifying that transaction in the ledger."
+        ),
+    )
+
+
+def _unmatched_rate_diagnostic(
+    observation: RentaIncomeObservation,
+    *,
+    base: Decimal,
+    rendered_rates: str,
+    resolver_id: str | None,
+) -> CalculationSourceDiagnostic:
+    """Build the strong advisory for a shortfall matching no grounded rate."""
+    amount = observation.withheld_amount
+    return CalculationSourceDiagnostic(
+        reason="inferred_retencion_rate_unmatched",
+        resolver_id=resolver_id,
+        source_kind=INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
+        message=(
+            f"Transaction {observation.transaction_id!r} was paid {amount} EUR short of its "
+            f"invoice total, which was credited as retención practicada on a base of {base}. "
+            f"That figure matches no RIRPF art. 95 retención rate ({rendered_rates}), so the "
+            f"shortfall may be a bank fee, a discount, or a disputed amount rather than tax "
+            f"withheld on your behalf."
+        ),
+        legal_refs=_art95_refs(),
+        remedy=(
+            "Claiming a pago a cuenta nobody withheld over-declares it. Confirm the shortfall "
+            "with the payer, then record the true figure by classifying that transaction in "
+            "the ledger."
+        ),
     )
 
 
@@ -458,17 +562,10 @@ def inferred_actividad_retencion_rate_advisory_observations(
     sectoral_hint = _UNRESOLVED_HINT
     diagnostics: list[CalculationSourceDiagnostic] = []
     for observation in observations:
-        if observation.withheld_derivation not in _INFERRED_WITHHOLDING_MARKERS:
+        assessment = _inferred_rate_matches(observation, rates=rates, professional=professional)
+        if assessment is None:
             continue
-        base = observation.taxable_base_amount
-        if base is None or base <= Decimal("0"):
-            continue
-        amount = observation.withheld_amount
-        matched = frozenset(rate for rate in rates if _conforms_to_fixed_rate(base, amount, rate))
-        if matched & professional:
-            # A 15 % or 7 % match is a strong claim: those figures are too large
-            # for a fee or rounding gap to reach by accident. Nothing to say.
-            continue
+        base, matched = assessment
         if matched:
             # Sectoral-only. The FIRE is decided here, by arithmetic alone --
             # the profile is read below purely to word the message, never to
@@ -477,43 +574,21 @@ def inferred_actividad_retencion_rate_advisory_observations(
             if sectoral_hint is _UNRESOLVED_HINT:
                 sectoral_hint = _profile_suggests_sectoral_activity(bucket_id)
             diagnostics.append(
-                CalculationSourceDiagnostic(
-                    reason="inferred_retencion_sectoral_rate_unconfirmed",
+                _sectoral_rate_diagnostic(
+                    observation,
+                    base=base,
+                    matched=matched,
+                    sectoral_hint=sectoral_hint,
                     resolver_id=resolver_id,
-                    source_kind=INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND,
-                    message=_sectoral_match_message(
-                        transaction_id=observation.transaction_id,
-                        amount=amount,
-                        base=base,
-                        matched=", ".join(str(rate) for rate in sorted(matched)),
-                        sectoral_hint=sectoral_hint,
-                    ),
-                    legal_refs=_art95_refs(),
-                    remedy=(
-                        "Confirm with the payer whether this was retención or a fee, then record "
-                        "the true figure by classifying that transaction in the ledger."
-                    ),
                 ),
             )
             continue
         diagnostics.append(
-            CalculationSourceDiagnostic(
-                reason="inferred_retencion_rate_unmatched",
+            _unmatched_rate_diagnostic(
+                observation,
+                base=base,
+                rendered_rates=rendered_rates,
                 resolver_id=resolver_id,
-                source_kind=INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND,
-                message=(
-                    f"Transaction {observation.transaction_id!r} was paid {amount} EUR short of its "
-                    f"invoice total, which was credited as retención practicada on a base of {base}. "
-                    f"That figure matches no RIRPF art. 95 retención rate ({rendered_rates}), so the "
-                    f"shortfall may be a bank fee, a discount, or a disputed amount rather than tax "
-                    f"withheld on your behalf."
-                ),
-                legal_refs=_art95_refs(),
-                remedy=(
-                    "Claiming a pago a cuenta nobody withheld over-declares it. Confirm the shortfall "
-                    "with the payer, then record the true figure by classifying that transaction in "
-                    "the ledger."
-                ),
             ),
         )
     return tuple(diagnostics)

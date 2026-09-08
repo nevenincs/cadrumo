@@ -184,9 +184,7 @@ def encrypt_feedback_package_for_originator(
     ECIES construction used for the forward (originator-to-recipient)
     direction -- no new cryptographic primitive is introduced for this
     reverse direction. The "recipient" of this call is the originator's own
-    encryption public key (see
-    :func:`~application.modelo.recipient_encryption_public_key`, minted
-    for the originator via
+    encryption public key, minted for the originator via
     :func:`~application.modelo.ensure_recipient_encryption_keypair`,
     exactly as it is minted for an accountant in the forward direction).
 
@@ -234,8 +232,8 @@ def decrypt_feedback_package_from_originator_envelope(
     Args:
         envelope: The :class:`~application.modelo.RecipientEncryptedPackage`
             produced by :func:`encrypt_feedback_package_for_originator`.
-        originator_private_key: The originator's own X25519 private key (see
-            :func:`~application.modelo.load_recipient_encryption_keypair`).
+        originator_private_key: The originator's own X25519 private key from
+            :func:`~application.modelo.ensure_recipient_encryption_keypair`.
         now: The instant to evaluate the envelope's expiry against; defaults
             to the current UTC time (tests inject an explicit value).
 

@@ -15,11 +15,18 @@ with the registered ledger payload contracts.
 
 from __future__ import annotations
 
+from decimal import Decimal
+from typing import cast
+
 import typer
 from pydantic import ValidationError
 
 from ...application.ledger.actions_manual import create_manual_transaction, update_manual_transaction_fields
-from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
+from ...application.ledger.models import (
+    ManualLedgerTransactionCommand,
+    ManualLedgerTransactionPatch,
+    ManualLedgerTransactionResult,
+)
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.i18n.render import tr
@@ -38,6 +45,7 @@ from ...domain.transactions.enums import (
 )
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.model_validation import classification_for_business_share
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ._common import bad, current_workflow_state, emit_envelope, profile_to_taxpayer, transaction_catalogue_repo
 from ._date_parsing import _parse_iso_date
 from ._ledger_classify_cli import ledger_classify_bulk_csv, require_single_ledger_classification_request
@@ -92,6 +100,166 @@ def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
     return ManualLedgerTransactionPatch.model_validate(
         {key: value for key, value in values.items() if value is not None},
     )
+
+
+def _require_add_assignable_classification(business_classification: BusinessClassification) -> None:
+    """Refuse pipeline-owned states before constructing a manual add command."""
+    if is_classified(business_classification) or business_classification is BusinessClassification.NOT_YET_PROCESSED:
+        return
+    raise bad(
+        tr("cli.ledger.add.system_state_not_assignable", value=business_classification.value),
+    )
+
+
+def _resolve_add_business_pct(
+    *,
+    bucket_id: str,
+    category_id: str | None,
+    business_pct: str | None,
+    booked_date: str,
+) -> Decimal | None:
+    """Resolve an operator share through the existing censo-backed service."""
+    return resolve_business_pct_with_censo(
+        bucket_id=bucket_id,
+        active_profile=resolve_active_bucket_id(),
+        category_id=category_id,
+        operator_supplied=validate_business_pct_range(parse_decimal_option(business_pct, label="business-pct")),
+        year=_parse_iso_date(booked_date, label="date").year,
+    )
+
+
+def _build_manual_add_command(
+    *,
+    bucket_id: str,
+    booked_date: str,
+    amount: str,
+    direction: TransactionDirection,
+    description: str,
+    value_date: str | None,
+    currency: str,
+    counterparty: str | None,
+    business_classification: BusinessClassification,
+    business_pct: Decimal | None,
+    category_id: str | None,
+    taxable_base: str | None,
+    iva_rate: str | None,
+    iva_amount: str | None,
+    iva_category: IvaCategory | None,
+    deduction_fact_kind: IvaDeductionFactKind | None,
+    counterparty_country: str | None,
+    counterparty_identification_state: EUMemberState | None,
+    recargo_amount: str | None,
+    irpf_category: str | None,
+    usage_ratio_id: str | None,
+    prorrata_reference: str | None,
+    art_104_tres_exclusion: Art104TresExclusion | None,
+    input_classification: InputClassification | None,
+    prorrata_sector: str | None,
+    purchase_invoice_evidence_id: str | None,
+    attachment_ids: tuple[str, ...],
+    notes: str,
+    actor: str | None,
+    idempotency_key: str | None,
+    source_jurisdiction: str | None,
+) -> ManualLedgerTransactionCommand:
+    """Translate CLI fields into the canonical manual-ledger command model."""
+    return ManualLedgerTransactionCommand(
+        bucket_id=bucket_id,
+        booked_date=_parse_iso_date(booked_date, label="date"),
+        value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
+        amount=parse_amount_magnitude(amount),
+        currency=currency,
+        direction=direction,
+        counterparty=counterparty,
+        description=description,
+        business_classification=business_classification,
+        business_pct=business_pct,
+        category_id=category_id,
+        taxable_base=parse_decimal_option(taxable_base, label="taxable-base"),
+        iva_rate=parse_decimal_option(iva_rate, label="iva-rate"),
+        iva_amount=parse_decimal_option(iva_amount, label="iva-amount"),
+        iva_category=iva_category,
+        deduction_fact_kind=deduction_fact_kind,
+        counterparty_country=counterparty_country,
+        counterparty_identification_state=counterparty_identification_state,
+        recargo_amount=parse_decimal_option(recargo_amount, label="recargo-amount"),
+        irpf_category=irpf_category,
+        usage_ratio_id=usage_ratio_id,
+        prorrata_reference=prorrata_reference,
+        art_104_tres_exclusion=art_104_tres_exclusion,
+        input_classification=input_classification,
+        prorrata_sector_id=prorrata_sector,
+        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+        attachment_ids=tuple(attachment_ids),
+        notes=notes,
+        actor=actor or resolve_active_bucket_id() or "operator",
+        source_command="aeat app ledger add",
+        idempotency_key=idempotency_key,
+        source_jurisdiction=source_jurisdiction,
+    )
+
+
+def _create_manual_add_transaction(
+    command: ManualLedgerTransactionCommand,
+    *,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+) -> ManualLedgerTransactionResult:
+    """Persist the canonical add command with the configured FX provider."""
+    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
+    from ...domain.currency.service import CurrencyNormalizationService
+
+    try:
+        return create_manual_transaction(
+            command,
+            transaction_repository=transaction_repository,
+            currency_normalizer=CurrencyNormalizationService(rate_provider=default_ecb_rate_provider()),
+        )
+    except ValidationError as exc:
+        raise ledger_validation_bad(exc) from exc
+
+
+def _manual_add_notices(
+    *,
+    command: ManualLedgerTransactionCommand,
+    result: ManualLedgerTransactionResult,
+) -> tuple[list[Notice], list[str]]:
+    """Project add advisories into the shared notice and text channels."""
+    notices: list[Notice] = []
+    extra_lines: list[str] = []
+    if not result.bucket_event_ids:
+        noop_message = tr(
+            "cli.ledger.add.idempotent_noop",
+            transaction_id=result.ref.transaction_id,
+        )
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.INFO,
+                code="ledger.add.idempotent_noop",
+                message=noop_message,
+                context={
+                    "transaction_id": result.ref.transaction_id,
+                    "idempotency_key": command.idempotency_key or "",
+                },
+            )
+        )
+        extra_lines.append(noop_message)
+    especial_notice = _prorrata_especial_inert_notice(
+        bucket_id=result.ref.bucket_id,
+        ejercicio=command.booked_date.year,
+        input_classification=command.input_classification,
+        sector_id=command.prorrata_sector_id,
+    )
+    if especial_notice is not None:
+        notices.append(especial_notice)
+        extra_lines.append(especial_notice.message)
+    sector_notice = _prorrata_sector_unmatched_notice(
+        bucket_id=result.ref.bucket_id,
+        sector_id=command.prorrata_sector_id,
+    )
+    if sector_notice is not None:
+        notices.append(sector_notice)
+        extra_lines.append(sector_notice.message)
+    return notices, extra_lines
 
 
 def _prorrata_especial_inert_notice(
@@ -208,26 +376,15 @@ def ledger_add(
     source_jurisdiction: str | None = None,
 ) -> None:
     """Create one manual ledger transaction through the bucket-scoped backend."""
-    operator_assignable_on_add = (
-        is_classified(business_classification) or business_classification is BusinessClassification.NOT_YET_PROCESSED
-    )
-    if not operator_assignable_on_add:
-        # PROCESSED_UNCLASSIFIED / SKIPPED_BY_RULE / FAILED_VALIDATION are
-        # produced by the classification pipeline, never assigned by hand. A new
-        # row is BUSINESS, PERSONAL, MIXED, or left at the NOT_YET_PROCESSED
-        # default; refuse the internal states instructively.
-        raise bad(
-            tr("cli.ledger.add.system_state_not_assignable", value=business_classification.value),
-        )
+    _require_add_assignable_classification(business_classification)
     current_state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(current_state)
     validated_category_id = validate_category_id(category_id)
-    resolved_business_pct = resolve_business_pct_with_censo(
+    resolved_business_pct = _resolve_add_business_pct(
         bucket_id=transaction_repository.bucket_id,
-        active_profile=resolve_active_bucket_id(),
         category_id=validated_category_id,
-        operator_supplied=validate_business_pct_range(parse_decimal_option(business_pct, label="business-pct")),
-        year=_parse_iso_date(booked_date, label="date").year,
+        business_pct=business_pct,
+        booked_date=booked_date,
     )
     active_taxpayer = profile_to_taxpayer(current_state)
     resolved_source_jurisdiction = resolve_source_jurisdiction(
@@ -236,37 +393,36 @@ def ledger_add(
         irpf_special_regime=active_taxpayer.irpf_special_regime,
     )
     try:
-        command = ManualLedgerTransactionCommand(
+        command = _build_manual_add_command(
             bucket_id=transaction_repository.bucket_id,
-            booked_date=_parse_iso_date(booked_date, label="date"),
-            value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
-            amount=parse_amount_magnitude(amount),
-            currency=currency,
+            booked_date=booked_date,
+            amount=amount,
             direction=direction,
-            counterparty=counterparty,
             description=description,
+            value_date=value_date,
+            currency=currency,
+            counterparty=counterparty,
             business_classification=business_classification,
             business_pct=resolved_business_pct,
             category_id=validated_category_id,
-            taxable_base=parse_decimal_option(taxable_base, label="taxable-base"),
-            iva_rate=parse_decimal_option(iva_rate, label="iva-rate"),
-            iva_amount=parse_decimal_option(iva_amount, label="iva-amount"),
+            taxable_base=taxable_base,
+            iva_rate=iva_rate,
+            iva_amount=iva_amount,
             iva_category=iva_category,
             deduction_fact_kind=deduction_fact_kind,
             counterparty_country=counterparty_country,
             counterparty_identification_state=counterparty_identification_state,
-            recargo_amount=parse_decimal_option(recargo_amount, label="recargo-amount"),
+            recargo_amount=recargo_amount,
             irpf_category=irpf_category,
             usage_ratio_id=usage_ratio_id,
             prorrata_reference=prorrata_reference,
             art_104_tres_exclusion=art_104_tres_exclusion,
             input_classification=input_classification,
-            prorrata_sector_id=prorrata_sector,
+            prorrata_sector=prorrata_sector,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            attachment_ids=tuple(attachment_ids),
+            attachment_ids=attachment_ids,
             notes=notes,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger add",
+            actor=actor,
             idempotency_key=idempotency_key,
             source_jurisdiction=resolved_source_jurisdiction,
         )
@@ -284,17 +440,7 @@ def ledger_add(
     # Same ECB-backed normalizer the file-import path wires in: a manually
     # entered foreign-currency row must convert at entry, or it persists with no
     # value_in_eur and every aggregation gate withholds it from the modelo.
-    from ...adapters.outbound.fx.ecb_provider import default_ecb_rate_provider
-    from ...domain.currency.service import CurrencyNormalizationService
-
-    try:
-        result = create_manual_transaction(
-            command,
-            transaction_repository=transaction_repository,
-            currency_normalizer=CurrencyNormalizationService(rate_provider=default_ecb_rate_provider()),
-        )
-    except ValidationError as exc:
-        raise ledger_validation_bad(exc) from exc
+    result = _create_manual_add_transaction(command, transaction_repository=transaction_repository)
     from ._ledger_payloads import LedgerAddResult
 
     # An empty bucket_event_ids tuple is the guarded-idempotent no-op signal
@@ -302,41 +448,7 @@ def ledger_add(
     # row and wrote nothing. Surface it as an info Notice on the typed channel
     # (never a bespoke result field) and fold the same text into the lines so
     # JSON and text output cannot drift.
-    notices: list[Notice] = []
-    noop_lines: list[str] = []
-    if not result.bucket_event_ids:
-        noop_message = tr(
-            "cli.ledger.add.idempotent_noop",
-            transaction_id=result.ref.transaction_id,
-        )
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code="ledger.add.idempotent_noop",
-                message=noop_message,
-                context={
-                    "transaction_id": result.ref.transaction_id,
-                    "idempotency_key": command.idempotency_key or "",
-                },
-            )
-        )
-        noop_lines.append(noop_message)
-    especial_notice = _prorrata_especial_inert_notice(
-        bucket_id=result.ref.bucket_id,
-        ejercicio=command.booked_date.year,
-        input_classification=command.input_classification,
-        sector_id=command.prorrata_sector_id,
-    )
-    if especial_notice is not None:
-        notices.append(especial_notice)
-        noop_lines.append(especial_notice.message)
-    sector_notice = _prorrata_sector_unmatched_notice(
-        bucket_id=result.ref.bucket_id,
-        sector_id=command.prorrata_sector_id,
-    )
-    if sector_notice is not None:
-        notices.append(sector_notice)
-        noop_lines.append(sector_notice.message)
+    notices, extra_lines = _manual_add_notices(command=command, result=result)
     emit_update_result(
         ctx,
         result.transaction,
@@ -345,7 +457,7 @@ def ledger_add(
         command="ledger.add",
         result_cls=LedgerAddResult,
         notices=notices or None,
-        extra_lines=noop_lines,
+        extra_lines=extra_lines,
     )
 
 
@@ -412,6 +524,133 @@ def ledger_update(
     )
 
 
+def _build_m210_classify_options(
+    *,
+    tipo_renta_code: str | None,
+    gross_income_amount: str | None,
+    applicable_rate: str | None,
+    payer_mode: M210PayerMode | None,
+    payer_id: str | None,
+    asset_or_right_id: str | None,
+) -> M210LedgerClassifyOptions:
+    """Build the existing M210 option contract from the command arguments."""
+    return M210LedgerClassifyOptions(
+        tipo_renta_code=tipo_renta_code,
+        gross_income_amount=gross_income_amount,
+        applicable_rate=applicable_rate,
+        payer_mode=payer_mode,
+        payer_id=payer_id,
+        asset_or_right_id=asset_or_right_id,
+    )
+
+
+def _dispatch_non_direct_classification_route(
+    ctx: typer.Context,
+    *,
+    m210_options: M210LedgerClassifyOptions,
+    transaction_id: str | None,
+    classification: BusinessClassification | None,
+    file: str | None,
+    business_pct: str | None,
+    apply: bool,
+    actor: str | None,
+    llm: bool,
+    read_evidence: bool,
+    saturate: bool,
+    iva_category: IvaCategory | None,
+    vision_model: str | None,
+    auto_split: bool,
+    reject: bool,
+    reason: str,
+) -> bool:
+    """Route LLM, evidence, autosplit, and M210-incompatible modes as one gate."""
+    m210_options.refuse_non_direct_routes(
+        llm_requested=llm,
+        read_evidence=read_evidence,
+        saturate=saturate,
+        file=file,
+        auto_split=auto_split,
+    )
+    if auto_split:
+        dispatch_autosplit(
+            ctx,
+            transaction_id=transaction_id,
+            classification=classification,
+            file=file,
+            apply=apply,
+            actor=actor,
+            read_evidence=read_evidence,
+            vision_model=vision_model,
+            reject=reject,
+            reason=reason,
+        )
+        return True
+    if llm or read_evidence:
+        route_arguments: LedgerLlmRouteArguments = {
+            "ctx": ctx,
+            "transaction_id": transaction_id,
+            "classification": classification,
+            "file": file,
+            "business_pct": business_pct,
+            "apply": apply,
+            "actor": actor,
+            "read_evidence": read_evidence,
+            "vision_model": vision_model,
+            "reject": reject,
+            "reason": reason,
+        }
+        if saturate:
+            ledger_saturate_llm(**route_arguments)
+            return True
+        ledger_classify_llm(**route_arguments)
+        return True
+    if saturate:
+        ledger_operator_iva_derive(
+            ctx,
+            transaction_id=transaction_id,
+            classification=classification,
+            file=file,
+            iva_category=iva_category,
+            actor=actor,
+        )
+        return True
+    return False
+
+
+def _dispatch_bulk_classification_route(
+    ctx: typer.Context,
+    *,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    transaction_id: str | None,
+    classification: BusinessClassification | None,
+    file: str | None,
+    actor: str | None,
+) -> bool:
+    """Run the existing CSV classifier when ``--file`` owns the request."""
+    if file is None:
+        return False
+    ledger_classify_bulk_csv(
+        ctx,
+        transaction_repository=transaction_repository,
+        transaction_id=transaction_id,
+        classification=classification,
+        file=file,
+        actor=actor,
+    )
+    return True
+
+
+def _require_classification_business_pct(
+    classification: BusinessClassification,
+    business_pct: str | None,
+) -> None:
+    """Enforce the domain classification/share coupling before patch validation."""
+    if takes_business_share(classification) and business_pct is None:
+        raise bad(tr("cli.ledger.classify.mixed_requires_business_pct"))
+    if not takes_business_share(classification) and business_pct is not None:
+        raise bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
+
+
 def ledger_classify(
     ctx: typer.Context,
     transaction_id: str | None = None,
@@ -445,7 +684,7 @@ def ledger_classify(
     reason: str | None = None,
 ) -> None:
     """Classify one ledger transaction (positional id), via LLM (--llm), or in bulk (--file)."""
-    m210_options = M210LedgerClassifyOptions(
+    m210_options = _build_m210_classify_options(
         tipo_renta_code=m210_tipo_renta_code,
         gross_income_amount=m210_gross_income_amount,
         applicable_rate=m210_applicable_rate,
@@ -453,68 +692,36 @@ def ledger_classify(
         payer_id=m210_payer_id,
         asset_or_right_id=m210_asset_or_right_id,
     )
-    m210_options.refuse_non_direct_routes(
-        llm_requested=llm,
+    if _dispatch_non_direct_classification_route(
+        ctx,
+        m210_options=m210_options,
+        transaction_id=transaction_id,
+        classification=classification,
+        file=file,
+        business_pct=business_pct,
+        apply=apply,
+        actor=actor,
+        llm=llm,
         read_evidence=read_evidence,
         saturate=saturate,
-        file=file,
+        iva_category=iva_category,
+        vision_model=vision_model,
         auto_split=auto_split,
-    )
-    if auto_split:
-        dispatch_autosplit(
-            ctx,
-            transaction_id=transaction_id,
-            classification=classification,
-            file=file,
-            apply=apply,
-            actor=actor,
-            read_evidence=read_evidence,
-            vision_model=vision_model,
-            reject=reject,
-            reason=reason or "",
-        )
-        return
-    if llm or read_evidence:
-        saturate_kwargs: LedgerLlmRouteArguments = {
-            "ctx": ctx,
-            "transaction_id": transaction_id,
-            "classification": classification,
-            "file": file,
-            "business_pct": business_pct,
-            "apply": apply,
-            "actor": actor,
-            "read_evidence": read_evidence,
-            "vision_model": vision_model,
-            "reject": reject,
-            "reason": reason or "",
-        }
-        if saturate:
-            ledger_saturate_llm(**saturate_kwargs)
-            return
-        ledger_classify_llm(**saturate_kwargs)
-        return
-    if saturate:
-        ledger_operator_iva_derive(
-            ctx,
-            transaction_id=transaction_id,
-            classification=classification,
-            file=file,
-            iva_category=iva_category,
-            actor=actor,
-        )
+        reject=reject,
+        reason=reason or "",
+    ):
         return
     state = current_workflow_state()
     transaction_repository = transaction_catalogue_repo(state)
 
-    if file is not None:
-        ledger_classify_bulk_csv(
-            ctx,
-            transaction_repository=transaction_repository,
-            transaction_id=transaction_id,
-            classification=classification,
-            file=file,
-            actor=actor,
-        )
+    if _dispatch_bulk_classification_route(
+        ctx,
+        transaction_repository=transaction_repository,
+        transaction_id=transaction_id,
+        classification=classification,
+        file=file,
+        actor=actor,
+    ):
         return
 
     transaction_id, classification = require_single_ledger_classification_request(
@@ -528,19 +735,7 @@ def ledger_classify(
         transaction_repository=transaction_repository,
         transaction_id=resolved_id,
     )
-    # WHICH classifications carry a share is the domain's answer, read rather
-    # than repeated: spelling `is MIXED` here made the same rule a second
-    # declaration, free to disagree with the coupling every write path checks.
-    # What stays here is the wording — naming `--business-pct` directly, rather
-    # than letting the patch validator's generic message route through the
-    # opaque CLI boundary.
-    if takes_business_share(classification) and business_pct is None:
-        raise bad(tr("cli.ledger.classify.mixed_requires_business_pct"))
-    if not takes_business_share(classification) and business_pct is not None:
-        # A share on a wholly-business or wholly-personal row is a
-        # contradiction rather than a refinement. Refuse rather than silently
-        # dropping it.
-        raise bad(tr("cli.ledger.classify.business_pct_requires_mixed"))
+    _require_classification_business_pct(classification, business_pct)
     # A leaked `pydantic.ValidationError` (negative `--taxable-base`,
     # an illegal field combination) is otherwise wrapped by the generic
     # CLI boundary into "command input failed validation. Run config
@@ -657,7 +852,7 @@ def _link_refusal(exc: Exception) -> typer.BadParameter:
     message. Matching on ``invoice_id`` alone would be wrong: three unrelated
     raise sites carry it.
     """
-    context = getattr(exc, "context", None) or {}
+    context = cast("dict[str, object]", getattr(exc, "context", None) or {})
     if "invoice_bucket_id" in context:
         return bad(tr("cli.ledger.link.errors.cross_bucket_invoice"))
     if "bucket_id" in context:

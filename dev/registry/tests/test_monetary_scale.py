@@ -263,3 +263,133 @@ def test_the_sibling_comparison_fires_on_a_constructed_unscaled_field(
     assert findings[0].kind == "sibling_scale_disagrees"
     assert "unscaled" in findings[0].detail
     assert "cents" in findings[0].detail
+
+
+def _cents_amount_predicate(revision):
+    """Return a predicate matching a width-17 field that emits cents via a money casilla."""
+    declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
+
+    def is_cents_amount(field: ExportFieldDefinition) -> bool:
+        return bool(
+            field.casilla_id is not None
+            and declared.get(field.casilla_id) == "money"
+            and field.length == _WIDTH_17
+            and str(field.data_type) == "decimal"
+            and field.decimals == CENTS_SCALE,
+        )
+
+    return is_cents_amount
+
+
+def _amount_run(revision):
+    """Return the layout, record and one cents amount of a real width-17 run."""
+    is_cents_amount = _cents_amount_predicate(revision)
+    layout = revision.export_layouts[0]
+    record = next(item for item in layout.records if any(is_cents_amount(field) for field in item.fields))
+    return layout, record, next(field for field in record.fields if is_cents_amount(field))
+
+
+def _revision_with(revision, layout, record, victim, replacement):
+    """Return a copy of ``revision`` with exactly ``victim`` replaced."""
+    return revision.model_copy(
+        update={
+            "export_layouts": (
+                layout.model_copy(
+                    update={
+                        "records": tuple(
+                            item.model_copy(
+                                update={
+                                    "fields": tuple(
+                                        replacement if field.id == victim.id else field for field in item.fields
+                                    ),
+                                },
+                            )
+                            if item.id == record.id
+                            else item
+                            for item in layout.records
+                        ),
+                    },
+                ),
+                *revision.export_layouts[1:],
+            ),
+        },
+    )
+
+
+def _unhomed(record, victim):
+    """Return ``victim`` re-homed to a producer key, carrying no casilla.
+
+    The producer key is borrowed from a header field of the same record rather
+    than invented, so the copy keeps a shape this record really publishes.
+    """
+    donor = next(field for field in record.fields if str(getattr(field.kind, "value", field.kind)) == "header")
+    return victim.model_copy(
+        update={"casilla_id": None, "kind": "header", "producer_key": donor.producer_key},
+    )
+
+
+def test_an_unscaled_amount_carrying_no_casilla_is_reported(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A width-matched amount is compared whether or not it reaches a casilla.
+
+    This is the gap the screen actually had. An endpoint exists only where a
+    field names a casilla, so a filing-grade amount homed to a producer key
+    instead - which is how the official designs carry several rectificativa
+    importes - yielded no endpoint and was never compared with anything. Modelo
+    200's DP200014B carried two such fields unscaled beside twenty-three scaled
+    siblings while this screen reported that modelo clean.
+
+    The defect is constructed rather than taken from the corpus, because the
+    corpus no longer holds one: the victim is stripped of its casilla AND
+    re-declared unscaled, so it reproduces both halves of the real condition at
+    once. Stripping the casilla alone must not silence the run either, which is
+    what the intermediate assertion pins - without it this test could pass
+    because the field went invisible rather than because it was caught.
+    """
+    from ..analysis.monetary_scale import sibling_findings
+
+    revision = authority.modelo("353").revisions["2026-desde-02"]
+    assert sibling_findings(revision, modelo_id="353") == (), "the constructed defect must be the only one"
+
+    layout, record, victim = _amount_run(revision)
+    unhomed = _unhomed(record, victim)
+
+    assert sibling_findings(_revision_with(revision, layout, record, victim, unhomed), modelo_id="353") == ()
+
+    unscaled = unhomed.model_copy(update={"data_type": "integer", "decimals": None})
+    findings = sibling_findings(_revision_with(revision, layout, record, victim, unscaled), modelo_id="353")
+
+    assert [item.field_id for item in findings] == [str(victim.id)]
+    assert findings[0].kind == "sibling_scale_disagrees"
+    assert findings[0].casilla_id is None, "the field carries no casilla; the finding must not invent one"
+    assert "unscaled" in findings[0].detail
+    assert "cents" in findings[0].detail
+
+
+def test_a_casilla_less_non_amount_is_not_admitted_to_an_amount_run(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Widening the walk must not start reporting counts, codes, years or enumerations.
+
+    A casilla-less field joins a proven amount run only on its shape. A closed
+    value domain, a value policy or a date format each state that the slot is
+    NOT an amount, and each must keep it out of the comparison even though its
+    width matches the run beside it. Asserted against the same field so the only
+    thing separating the admitted case from the refused ones is the statement
+    under test.
+    """
+    from ..analysis.monetary_scale import amount_shaped_without_casilla, sibling_findings
+
+    revision = authority.modelo("353").revisions["2026-desde-02"]
+    _layout, record, victim = _amount_run(revision)
+    admitted = _unhomed(record, victim).model_copy(update={"data_type": "integer", "decimals": None})
+
+    assert amount_shaped_without_casilla(admitted), "the unscaled casilla-less amount is the case that IS reported"
+    assert not amount_shaped_without_casilla(admitted.model_copy(update={"allowed_values": ("0", "1")}))
+    assert not amount_shaped_without_casilla(admitted.model_copy(update={"date_format": "aaaammdd"}))
+    assert not amount_shaped_without_casilla(admitted.model_copy(update={"kind": "literal"}))
+    assert not amount_shaped_without_casilla(admitted.model_copy(update={"kind": "filler"}))
+    assert not amount_shaped_without_casilla(admitted.model_copy(update={"data_type": "text"}))
+
+    assert sibling_findings(revision, modelo_id="353") == ()

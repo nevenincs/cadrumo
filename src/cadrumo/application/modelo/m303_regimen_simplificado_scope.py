@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.deadlines.models import M303RegimeComposition, TaxpayerProfile
 from ...domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
@@ -50,15 +49,6 @@ def active_taxpayer_profile(work_unit: WorkUnit) -> TaxpayerProfile:
             ),
         )
     return projection_for_taxpayer(record)
-
-
-def resolve_m303_regimen_simplificado_scope(
-    work_unit: WorkUnit,
-) -> M303RegimenSimplificadoScopeDecision | None:
-    """Derive the closed scope from the active secure profile's IVA composition only."""
-    if work_unit.modelo != Modelo.M303:
-        return None
-    return m303_regimen_simplificado_scope_for_profile(active_taxpayer_profile(work_unit))
 
 
 def m303_regimen_simplificado_scope_for_profile(
@@ -115,5 +105,4 @@ __all__ = [
     "m303_regimen_simplificado_annual_summary_applies",
     "m303_regimen_simplificado_scope_for_composition",
     "m303_regimen_simplificado_scope_for_profile",
-    "resolve_m303_regimen_simplificado_scope",
 ]

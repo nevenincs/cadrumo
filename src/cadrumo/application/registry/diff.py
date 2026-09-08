@@ -220,31 +220,26 @@ def _binding_diff_projection(binding: _DataBindingDefinition) -> BindingDiff:
     return BindingDiff(id=binding.id, source=binding.source.value)
 
 
-def _diff_casillas(
-    from_casillas: tuple[_CasillaDefinition, ...],
-    to_casillas: tuple[_CasillaDefinition, ...],
-) -> tuple[
-    tuple[CasillaDiff, ...],
-    tuple[CasillaDiff, ...],
-    tuple[RenumberedCasilla, ...],
-    tuple[_CasillaId, ...],
-]:
-    from_by_id = {casilla.id: casilla for casilla in from_casillas}
-    to_by_id = {casilla.id: casilla for casilla in to_casillas}
-    from_ids = set(from_by_id)
-    to_ids = set(to_by_id)
+def _casillas_by_id(casillas: tuple[_CasillaDefinition, ...]) -> dict[_CasillaId, _CasillaDefinition]:
+    """Index casillas by their revision-local canonical identity."""
+    return {casilla.id: casilla for casilla in casillas}
 
-    from_by_continuidad = {
-        casilla.continuidad_id: casilla for casilla in from_casillas if casilla.continuidad_id is not None
-    }
-    to_by_continuidad = {
-        casilla.continuidad_id: casilla for casilla in to_casillas if casilla.continuidad_id is not None
-    }
 
+def _casillas_by_continuidad(casillas: tuple[_CasillaDefinition, ...]) -> dict[str, _CasillaDefinition]:
+    """Index casillas carrying a cross-revision continuity identity."""
+    return {casilla.continuidad_id: casilla for casilla in casillas if casilla.continuidad_id is not None}
+
+
+def _find_casilla_renumberings(
+    from_by_continuidad: dict[str, _CasillaDefinition],
+    to_by_continuidad: dict[str, _CasillaDefinition],
+) -> tuple[tuple[RenumberedCasilla, ...], set[_CasillaId], set[_CasillaId]]:
+    """Classify continuity-preserving casilla id/number changes."""
     renumbered: list[RenumberedCasilla] = []
     renumbered_from_ids: set[_CasillaId] = set()
     renumbered_to_ids: set[_CasillaId] = set()
-    for continuidad_id in sorted(set(from_by_continuidad) & set(to_by_continuidad)):
+    shared_continuity_ids = sorted(set(from_by_continuidad) & set(to_by_continuidad))
+    for continuidad_id in shared_continuity_ids:
         from_casilla = from_by_continuidad[continuidad_id]
         to_casilla = to_by_continuidad[continuidad_id]
         if from_casilla.id == to_casilla.id and from_casilla.number == to_casilla.number:
@@ -260,18 +255,75 @@ def _diff_casillas(
         )
         renumbered_from_ids.add(from_casilla.id)
         renumbered_to_ids.add(to_casilla.id)
+    return tuple(renumbered), renumbered_from_ids, renumbered_to_ids
 
-    added_ids = sorted((to_ids - from_ids) - renumbered_to_ids)
-    removed_ids = sorted((from_ids - to_ids) - renumbered_from_ids)
-    added = tuple(_casilla_diff_projection(to_by_id[cid]) for cid in added_ids)
-    removed = tuple(_casilla_diff_projection(from_by_id[cid]) for cid in removed_ids)
 
+def _added_and_removed_casilla_ids(
+    from_ids: set[_CasillaId],
+    to_ids: set[_CasillaId],
+    renumbered_from_ids: set[_CasillaId],
+    renumbered_to_ids: set[_CasillaId],
+) -> tuple[tuple[_CasillaId, ...], tuple[_CasillaId, ...]]:
+    """Return added and removed ids after excluding continuity renumberings."""
+    added_ids = tuple(sorted((to_ids - from_ids) - renumbered_to_ids))
+    removed_ids = tuple(sorted((from_ids - to_ids) - renumbered_from_ids))
+    return added_ids, removed_ids
+
+
+def _changed_casilla_legal_ref_ids(
+    from_by_id: dict[_CasillaId, _CasillaDefinition],
+    to_by_id: dict[_CasillaId, _CasillaDefinition],
+    from_ids: set[_CasillaId],
+    to_ids: set[_CasillaId],
+    renumbered_from_ids: set[_CasillaId],
+    renumbered_to_ids: set[_CasillaId],
+) -> tuple[_CasillaId, ...]:
+    """Return common, non-renumbered ids whose legal-ref sets changed."""
     common_ids = (from_ids & to_ids) - renumbered_from_ids - renumbered_to_ids
-    changed_legal_refs = tuple(
+    return tuple(
         sorted(cid for cid in common_ids if _casilla_legal_refs_changed(from_by_id[cid], to_by_id[cid])),
     )
 
-    return added, removed, tuple(renumbered), changed_legal_refs
+
+def _diff_casillas(
+    from_casillas: tuple[_CasillaDefinition, ...],
+    to_casillas: tuple[_CasillaDefinition, ...],
+) -> tuple[
+    tuple[CasillaDiff, ...],
+    tuple[CasillaDiff, ...],
+    tuple[RenumberedCasilla, ...],
+    tuple[_CasillaId, ...],
+]:
+    from_by_id = _casillas_by_id(from_casillas)
+    to_by_id = _casillas_by_id(to_casillas)
+    from_ids = set(from_by_id)
+    to_ids = set(to_by_id)
+
+    from_by_continuidad = _casillas_by_continuidad(from_casillas)
+    to_by_continuidad = _casillas_by_continuidad(to_casillas)
+    renumbered, renumbered_from_ids, renumbered_to_ids = _find_casilla_renumberings(
+        from_by_continuidad,
+        to_by_continuidad,
+    )
+    added_ids, removed_ids = _added_and_removed_casilla_ids(
+        from_ids,
+        to_ids,
+        renumbered_from_ids,
+        renumbered_to_ids,
+    )
+    added = tuple(_casilla_diff_projection(to_by_id[cid]) for cid in added_ids)
+    removed = tuple(_casilla_diff_projection(from_by_id[cid]) for cid in removed_ids)
+
+    changed_legal_refs = _changed_casilla_legal_ref_ids(
+        from_by_id,
+        to_by_id,
+        from_ids,
+        to_ids,
+        renumbered_from_ids,
+        renumbered_to_ids,
+    )
+
+    return added, removed, renumbered, changed_legal_refs
 
 
 def _diff_formulas(

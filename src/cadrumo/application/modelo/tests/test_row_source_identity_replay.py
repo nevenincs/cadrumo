@@ -24,7 +24,6 @@ from ....domain.modelos.errors import ModeloValidationError
 from ....domain.submission.models import ModeloDraftStatus
 from .._row_source_identity_replay import (
     attach_revision_row_source_identities,
-    row_source_fingerprints_for_review,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -103,7 +102,7 @@ def _revision(
     )
 
 
-def test_replay_attaches_exact_coordinate_and_exposes_only_safe_fingerprint() -> None:
+def test_replay_attaches_exact_coordinate_without_exposing_raw_identity() -> None:
     draft = _draft((_binding("inventory-0181", row_index=1),))
     revision = _revision(
         rows={"inventory-0181": {"1": "100"}},
@@ -114,16 +113,7 @@ def test_replay_attaches_exact_coordinate_and_exposes_only_safe_fingerprint() ->
 
     assert replayed.binding_values[0].row_source_identity == _identity()
     assert replayed.draft_id != draft.draft_id
-    fingerprints = row_source_fingerprints_for_review(replayed)
-    assert [row.model_dump(mode="json") for row in fingerprints] == [
-        {
-            "binding_id": "inventory-0181",
-            "row_index": 1,
-            "source_kind": "inventory",
-            "fingerprint": _DIGEST,
-        },
-    ]
-    public = f"{replayed.model_dump()!r} {replayed.model_dump_json()} {fingerprints!r}"
+    public = f"{replayed.model_dump()!r} {replayed.model_dump_json()}"
     assert _RAW_IDENTITY not in public
 
 
@@ -139,7 +129,6 @@ def test_replay_preserves_unidentified_m720_rows() -> None:
     )
 
     assert replayed.binding_values[0].row_source_identity is None
-    assert row_source_fingerprints_for_review(replayed) == ()
 
 
 def test_replay_refuses_missing_and_orphan_coordinates() -> None:
@@ -226,5 +215,4 @@ def test_replay_order_and_hash_are_deterministic_and_identity_sensitive() -> Non
     )
 
     assert first.draft_id == second.draft_id
-    assert row_source_fingerprints_for_review(first) == row_source_fingerprints_for_review(second)
     assert changed.draft_id != first.draft_id

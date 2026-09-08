@@ -99,6 +99,21 @@ class _ImportRowPlan(NamedTuple):
     likely_duplicate_refs: tuple[BucketTransactionRef, ...]
 
 
+class _PreparedSourceImport(NamedTuple):
+    """Validated source rows and the reports produced before persistence."""
+
+    parsed_rows: tuple[ParsedLedgerRow, ...]
+    validation: ProviderValidation
+    source_verification: LedgerSourceVerificationReport
+
+
+class _LoadedSourceCatalogue(NamedTuple):
+    """The optional repository and catalogue used for import previewing."""
+
+    repository: TransactionCatalogueRepositoryProtocol | None
+    catalogue: TransactionCatalogue
+
+
 def _source_jurisdiction_from_raw_fields(raw_fields: Mapping[str, str]) -> str | None:
     """Read canonical source-jurisdiction provenance from provider raw fields."""
     for header, value in raw_fields.items():
@@ -227,6 +242,151 @@ def _evaluate_import_rows(
     )
 
 
+def _prepare_source_import(command: LedgerSourceImportCommand) -> _PreparedSourceImport:
+    """Validate, resolve, and ingest one source before touching a repository."""
+    _require_readable_source(command.path)
+    provider = _resolve_financial_provider(command.provider, command.path)
+    validation = _validate_import_source(provider, command.path)
+    source_verification = _build_source_verification(source=command.source, verify=command.verify)
+    from ...adapters.inbound.financial.providers.base import FinancialProviderError
+
+    try:
+        parsed_rows = tuple(provider.ingest(command.path))
+    except FinancialProviderError as exc:
+        raise TransactionValidationError(
+            translated_message="errors.transaction.ledger_import_failed",
+            context={"reason": resolve_error_message(exc)},
+        ) from exc
+    return _PreparedSourceImport(
+        parsed_rows=parsed_rows,
+        validation=validation,
+        source_verification=source_verification,
+    )
+
+
+def _load_source_catalogue(
+    command: LedgerSourceImportCommand,
+    repository: TransactionCatalogueRepositoryProtocol | None,
+) -> _LoadedSourceCatalogue:
+    """Load the existing bucket catalogue when this invocation has one."""
+    resolved_repository = (
+        resolve_transaction_repository(bucket_id=command.bucket_id, repository=repository)
+        if command.bucket_id is not None
+        else repository
+    )
+    catalogue = resolved_repository.load() if resolved_repository is not None else TransactionCatalogue()
+    return _LoadedSourceCatalogue(repository=resolved_repository, catalogue=catalogue)
+
+
+def _source_import_diagnostics(
+    *,
+    command: LedgerSourceImportCommand,
+    parsed_rows: tuple[ParsedLedgerRow, ...],
+    existing_catalogue: TransactionCatalogue,
+) -> tuple[tuple[LedgerImportDiagnostic, ...], tuple[LedgerImportDiagnosticReport, ...]]:
+    """Run optional verification and return raw facts plus safe report rows."""
+    if not command.verify:
+        return (), ()
+    result = import_ledger_with_diagnostics(
+        command.path,
+        tuple(parsed.raw for parsed in parsed_rows),
+        existing_catalogue,
+        original_source_path=command.source,
+        import_fingerprints=tuple(
+            derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows
+        ),
+    )
+    raw_diagnostics = result.diagnostics
+    return raw_diagnostics, tuple(_diagnostic_report(diagnostic) for diagnostic in raw_diagnostics)
+
+
+def _build_dry_run_source_result(
+    *,
+    command: LedgerSourceImportCommand,
+    parsed_rows: tuple[ParsedLedgerRow, ...],
+    existing_catalogue: TransactionCatalogue,
+    currency_normalizer: CurrencyNormalizationService | None,
+    validation: ProviderValidation,
+    source_verification: LedgerSourceVerificationReport,
+    diagnostics: tuple[LedgerImportDiagnosticReport, ...],
+) -> LedgerSourceImportResult:
+    """Project the real deduplication outcome without persisting any row."""
+    dry_run_plan = _evaluate_import_rows(
+        bucket_id=command.bucket_id or "preview",
+        catalogue=existing_catalogue,
+        parsed_rows=parsed_rows,
+        currency_normalizer=currency_normalizer,
+    )
+    return LedgerSourceImportResult(
+        rows=len(parsed_rows),
+        imported=len(dry_run_plan.imported),
+        skipped=len(dry_run_plan.skipped_refs),
+        likely_duplicates=len(dry_run_plan.likely_duplicate_refs),
+        dry_run=True,
+        verify=command.verify,
+        period=command.period,
+        bucket_id=command.bucket_id,
+        likely_duplicate_transaction_refs=dry_run_plan.likely_duplicate_refs,
+        validations=(_validation_report(validation),),
+        sources=(source_verification,),
+        diagnostics=diagnostics,
+    )
+
+
+def _persist_source_import(
+    *,
+    command: LedgerSourceImportCommand,
+    bucket_id: str,
+    parsed_rows: tuple[ParsedLedgerRow, ...],
+    repository: TransactionCatalogueRepositoryProtocol,
+    event_repository: BucketEventHistoryRepositoryProtocol,
+    currency_normalizer: CurrencyNormalizationService | None,
+    raw_diagnostics: tuple[LedgerImportDiagnostic, ...],
+    validation: ProviderValidation,
+    source_verification: LedgerSourceVerificationReport,
+    diagnostics: tuple[LedgerImportDiagnosticReport, ...],
+) -> LedgerSourceImportResult:
+    """Persist imported rows, then append verification diagnostics as events."""
+    result = import_ledger_transactions(
+        bucket_id=bucket_id,
+        parsed_rows=parsed_rows,
+        transaction_repository=repository,
+        bucket_event_repository=event_repository,
+        actor=command.actor,
+        source_command=command.source_command,
+        currency_normalizer=currency_normalizer,
+    )
+    summary = result.summary
+    diagnostic_events = _diagnostic_events(
+        bucket_id=bucket_id,
+        import_batch_id=result.import_batch_id,
+        diagnostics=raw_diagnostics,
+        transaction_ids=tuple(derive_transaction_id(parsed.raw) for parsed in parsed_rows),
+        actor=command.actor,
+        source_command=command.source_command,
+    )
+    if diagnostic_events:
+        emit_bucket_events(repository=event_repository, events=diagnostic_events)
+    return LedgerSourceImportResult(
+        rows=len(parsed_rows),
+        imported=summary.imported,
+        skipped=summary.skipped,
+        likely_duplicates=len(summary.likely_duplicate_refs),
+        dry_run=False,
+        verify=command.verify,
+        period=command.period,
+        bucket_id=summary.bucket_id,
+        import_batch_id=result.import_batch_id,
+        bucket_event_ids=result.bucket_event_ids + tuple(event.event_id for event in diagnostic_events),
+        imported_transaction_refs=summary.imported_refs,
+        skipped_transaction_refs=summary.skipped_refs,
+        likely_duplicate_transaction_refs=summary.likely_duplicate_refs,
+        validations=(_validation_report(validation),),
+        sources=(source_verification,),
+        diagnostics=diagnostics,
+    )
+
+
 def import_ledger_transactions(
     *,
     bucket_id: str,
@@ -331,116 +491,39 @@ def import_ledger_source(
 
     Returns a :class:`~cadrumo.application.ledger.models.LedgerSourceImportResult`.
     """
-    # Refuse a missing/unreadable source up front, before provider
-    # resolution. With ``--provider auto`` resolution runs the detection
-    # probe loop, which would otherwise open a non-existent path through
-    # every candidate provider and surface raw parse tracebacks instead of
-    # one clean, path-naming refusal.
-    _require_readable_source(command.path)
-    provider = _resolve_financial_provider(command.provider, command.path)
-    validation = _validate_import_source(provider, command.path)
-    source_verification = _build_source_verification(source=command.source, verify=command.verify)
-    from ...adapters.inbound.financial.providers.base import FinancialProviderError
-
-    try:
-        parsed_rows = tuple(provider.ingest(command.path))
-    except FinancialProviderError as exc:
-        raise TransactionValidationError(
-            translated_message="errors.transaction.ledger_import_failed",
-            context={"reason": resolve_error_message(exc)},
-        ) from exc
-    repository = (
-        resolve_transaction_repository(bucket_id=command.bucket_id, repository=transaction_repository)
-        if command.bucket_id is not None
-        else transaction_repository
-    )
-    existing_catalogue = repository.load() if repository is not None else TransactionCatalogue()
-    diagnostic_result = (
-        import_ledger_with_diagnostics(
-            command.path,
-            tuple(parsed.raw for parsed in parsed_rows),
-            existing_catalogue,
-            original_source_path=command.source,
-            import_fingerprints=tuple(
-                derive_import_fingerprint(parsed.raw, direction=parsed.direction) for parsed in parsed_rows
-            ),
-        )
-        if command.verify
-        else None
-    )
-    diagnostics = (
-        tuple(_diagnostic_report(diagnostic) for diagnostic in diagnostic_result.diagnostics)
-        if diagnostic_result is not None
-        else ()
+    prepared = _prepare_source_import(command)
+    loaded = _load_source_catalogue(command, transaction_repository)
+    raw_diagnostics, diagnostics = _source_import_diagnostics(
+        command=command,
+        parsed_rows=prepared.parsed_rows,
+        existing_catalogue=loaded.catalogue,
     )
     if command.dry_run:
-        # A dry run must preview the *real* outcome: how many rows would
-        # be imported and how many skipped as duplicates against the
-        # already-stored catalogue. Reporting a flat zero made the
-        # preview useless and misleading. The classification reuses the
-        # exact persisting-path dedup logic, then discards every row.
-        dry_run_plan = _evaluate_import_rows(
-            bucket_id=command.bucket_id or "preview",
-            catalogue=existing_catalogue,
-            parsed_rows=parsed_rows,
+        return _build_dry_run_source_result(
+            command=command,
+            parsed_rows=prepared.parsed_rows,
+            existing_catalogue=loaded.catalogue,
             currency_normalizer=currency_normalizer,
-        )
-        return LedgerSourceImportResult(
-            rows=len(parsed_rows),
-            imported=len(dry_run_plan.imported),
-            skipped=len(dry_run_plan.skipped_refs),
-            likely_duplicates=len(dry_run_plan.likely_duplicate_refs),
-            dry_run=True,
-            verify=command.verify,
-            period=command.period,
-            bucket_id=command.bucket_id,
-            likely_duplicate_transaction_refs=dry_run_plan.likely_duplicate_refs,
-            validations=(_validation_report(validation),),
-            sources=(source_verification,),
+            validation=prepared.validation,
+            source_verification=prepared.source_verification,
             diagnostics=diagnostics,
         )
     if command.bucket_id is None:
         raise TransactionValidationError(
             translated_message="errors.transaction.ledger_import_requires_bucket",
         )
-    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=repository)
+    repository = resolve_transaction_repository(bucket_id=command.bucket_id, repository=loaded.repository)
     event_repository = resolve_bucket_event_repository(bucket_id=command.bucket_id, repository=bucket_event_repository)
-    result = import_ledger_transactions(
+    return _persist_source_import(
+        command=command,
         bucket_id=command.bucket_id,
-        parsed_rows=parsed_rows,
-        transaction_repository=repository,
-        bucket_event_repository=event_repository,
-        actor=command.actor,
-        source_command=command.source_command,
+        parsed_rows=prepared.parsed_rows,
+        repository=repository,
+        event_repository=event_repository,
         currency_normalizer=currency_normalizer,
-    )
-    summary = result.summary
-    diagnostic_events = _diagnostic_events(
-        bucket_id=command.bucket_id,
-        import_batch_id=result.import_batch_id,
-        diagnostics=diagnostic_result.diagnostics if diagnostic_result is not None else (),
-        transaction_ids=tuple(derive_transaction_id(parsed.raw) for parsed in parsed_rows),
-        actor=command.actor,
-        source_command=command.source_command,
-    )
-    if diagnostic_events:
-        emit_bucket_events(repository=event_repository, events=diagnostic_events)
-    return LedgerSourceImportResult(
-        rows=len(parsed_rows),
-        imported=summary.imported,
-        skipped=summary.skipped,
-        likely_duplicates=len(summary.likely_duplicate_refs),
-        dry_run=False,
-        verify=command.verify,
-        period=command.period,
-        bucket_id=summary.bucket_id,
-        import_batch_id=result.import_batch_id,
-        bucket_event_ids=result.bucket_event_ids + tuple(event.event_id for event in diagnostic_events),
-        imported_transaction_refs=summary.imported_refs,
-        skipped_transaction_refs=summary.skipped_refs,
-        likely_duplicate_transaction_refs=summary.likely_duplicate_refs,
-        validations=(_validation_report(validation),),
-        sources=(source_verification,),
+        raw_diagnostics=raw_diagnostics,
+        validation=prepared.validation,
+        source_verification=prepared.source_verification,
         diagnostics=diagnostics,
     )
 

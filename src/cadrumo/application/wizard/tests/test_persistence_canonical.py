@@ -10,7 +10,7 @@ storage:
   project (values entry vs. descriptor default).
 
 Currently exercised only indirectly through the
-``test_persist_answers_round_trip_via_project_answers`` integration
+``test_serialised_answers_round_trip_via_project_answers`` integration
 test. A regression in any branch (swapping bool ``"true"`` ↔
 ``"false"`` renderings, returning ``Path("")`` instead of ``Path()``,
 or skipping the descriptor-default fallback in `_resolve_canonical`)

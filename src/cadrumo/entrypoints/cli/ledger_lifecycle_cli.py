@@ -44,7 +44,8 @@ from ._ledger_support import (
 )
 
 if TYPE_CHECKING:
-    from ...application.ledger.models import ManualLedgerTransactionResult
+    from ...application.ledger.models import ManualLedgerTransactionResult, SplitTransactionResult
+    from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ...llm.suggestions import LLMSplitSuggestion
     from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
@@ -644,43 +645,32 @@ def ledger_reset(
     )
 
 
-def ledger_split(
-    ctx: typer.Context,
-    transaction_id: str,
-    child_amount: tuple[str, ...] = (),
-    child_description: tuple[str, ...] = (),
-    llm: bool = False,
-    apply: bool = False,
-    read_evidence: bool = False,
-    vision_model: str | None = None,
-    reason: str = "",
-    yes: bool = False,
-    actor: str | None = None,
+def _validate_manual_split_options(
+    *,
+    child_amount: tuple[str, ...],
+    child_description: tuple[str, ...],
+    yes: bool,
 ) -> None:
-    """Redistribute one parent transaction into N child transactions (manual or --llm)."""
-    if llm or read_evidence:
-        _ledger_split_llm(
-            ctx,
-            transaction_id=transaction_id,
-            child_amount=list(child_amount),
-            child_description=list(child_description),
-            apply=apply,
-            read_evidence=read_evidence,
-            vision_model=vision_model,
-            reason=reason,
-            yes=yes,
-            actor=actor,
-        )
-        return
+    """Validate the confirmation and cardinality contract for a manual split."""
     if not yes:
         raise bad(tr("cli.ledger.errors.confirm_required"))
     if len(child_amount) != len(child_description):
         raise bad(tr("cli.ledger.split.errors.child_args_mismatch"))
     if len(child_amount) < 2:
         raise bad(tr("cli.ledger.split.errors.min_two_children"))
-    state = current_workflow_state()
-    transaction_repository = transaction_catalogue_repo(state)
-    resolved_id = resolve_id(transaction_repository, transaction_id)
+
+
+def _run_manual_split(
+    *,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    bucket_id: str,
+    resolved_id: str,
+    child_amount: tuple[str, ...],
+    child_description: tuple[str, ...],
+    reason: str,
+    actor: str | None,
+) -> SplitTransactionResult:
+    """Parse manual children and invoke the single-writer split mutation."""
     try:
         children = tuple(
             SplitChildCommand(
@@ -690,7 +680,7 @@ def ledger_split(
             for amount_raw, description_raw in zip(child_amount, child_description, strict=True)
         )
         result = split_transaction(
-            bucket_id=transaction_repository.bucket_id,
+            bucket_id=bucket_id,
             transaction_id=resolved_id,
             children=children,
             actor=actor or resolve_active_bucket_id() or "operator",
@@ -700,6 +690,11 @@ def ledger_split(
         )
     except ValidationError as exc:
         raise ledger_validation_bad(exc) from exc
+    return result
+
+
+def _emit_manual_split_result(ctx: typer.Context, result: SplitTransactionResult) -> None:
+    """Project the persisted split result and its classification advisory."""
     from ._ledger_payloads import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(result.child_transaction_ids)
@@ -729,6 +724,54 @@ def ledger_split(
         lines=lines,
         notices=notices or None,
     )
+
+
+def ledger_split(
+    ctx: typer.Context,
+    transaction_id: str,
+    child_amount: tuple[str, ...] = (),
+    child_description: tuple[str, ...] = (),
+    llm: bool = False,
+    apply: bool = False,
+    read_evidence: bool = False,
+    vision_model: str | None = None,
+    reason: str = "",
+    yes: bool = False,
+    actor: str | None = None,
+) -> None:
+    """Redistribute one parent transaction into N child transactions (manual or --llm)."""
+    if llm or read_evidence:
+        _ledger_split_llm(
+            ctx,
+            transaction_id=transaction_id,
+            child_amount=list(child_amount),
+            child_description=list(child_description),
+            apply=apply,
+            read_evidence=read_evidence,
+            vision_model=vision_model,
+            reason=reason,
+            yes=yes,
+            actor=actor,
+        )
+        return
+    _validate_manual_split_options(
+        child_amount=child_amount,
+        child_description=child_description,
+        yes=yes,
+    )
+    state = current_workflow_state()
+    transaction_repository = transaction_catalogue_repo(state)
+    resolved_id = resolve_id(transaction_repository, transaction_id)
+    result = _run_manual_split(
+        transaction_repository=transaction_repository,
+        bucket_id=transaction_repository.bucket_id,
+        resolved_id=resolved_id,
+        child_amount=child_amount,
+        child_description=child_description,
+        reason=reason,
+        actor=actor,
+    )
+    _emit_manual_split_result(ctx, result)
 
 
 def _split_child_id_rows(child_transaction_ids: tuple[str, ...]) -> list[LedgerSplitChildIdPayload]:

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field
 
 from ....core.config import (
     Settings,
+    StorageRouteClassification,
     StorageRouteKind,
     classify_storage_route,
     load_settings,
@@ -122,6 +123,46 @@ class StorageRuntime(BaseModel):
         return active, bucket_id
 
 
+def _active_session_projection(
+    active: BucketSession | None,
+    checked_at: datetime,
+) -> tuple[StorageRuntimeSession | None, list[StorageRuntimeReadinessIssue]]:
+    """Project the active session and its readiness issues in contract order."""
+    if active is None:
+        return None, [readiness_issue(code=StorageRuntimeReadinessCode.NO_ACTIVE_SESSION)]
+
+    expired = active.is_expired(checked_at)
+    session = StorageRuntimeSession(
+        active=True,
+        idle_deadline=active.idle_deadline,
+        sealed=active.sealed,
+        expired=expired,
+        unsecured_backend=active.unsecured_backend,
+    )
+    issues: list[StorageRuntimeReadinessIssue] = []
+    if active.sealed:
+        issues.append(readiness_issue(code=StorageRuntimeReadinessCode.SESSION_SEALED))
+    elif expired:
+        issues.append(readiness_issue(code=StorageRuntimeReadinessCode.SESSION_EXPIRED))
+    elif active.unsecured_backend:
+        issues.append(readiness_issue(code=StorageRuntimeReadinessCode.UNSECURED_BACKEND))
+    return session, issues
+
+
+def _route_readiness_issues(
+    route: StorageRouteClassification,
+    active: BucketSession | None,
+) -> list[StorageRuntimeReadinessIssue]:
+    """Return route issues after the active-session issues have been evaluated."""
+    if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
+        return [readiness_issue(code=StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET)]
+    if active is None or active.bucket_id in _SYNTHETIC_SESSION_BUCKET_IDS:
+        return []
+    if route.bucket_id != active.bucket_id:
+        return [readiness_issue(code=StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH)]
+    return []
+
+
 def inspect_storage_runtime(
     settings: Settings | None = None,
     *,
@@ -132,59 +173,8 @@ def inspect_storage_runtime(
     route = classify_storage_route(resolved)
     checked_at = now or _utc_now()
     active = current_active_bucket_session()
-    session = None
-    issues: list[StorageRuntimeReadinessIssue] = []
-
-    if active is None:
-        issues.append(
-            readiness_issue(
-                code=StorageRuntimeReadinessCode.NO_ACTIVE_SESSION,
-            ),
-        )
-    else:
-        expired = active.is_expired(checked_at)
-        session = StorageRuntimeSession(
-            active=True,
-            idle_deadline=active.idle_deadline,
-            sealed=active.sealed,
-            expired=expired,
-            unsecured_backend=active.unsecured_backend,
-        )
-        if active.sealed:
-            issues.append(
-                readiness_issue(
-                    code=StorageRuntimeReadinessCode.SESSION_SEALED,
-                ),
-            )
-        elif expired:
-            issues.append(
-                readiness_issue(
-                    code=StorageRuntimeReadinessCode.SESSION_EXPIRED,
-                ),
-            )
-        elif active.unsecured_backend:
-            issues.append(
-                readiness_issue(
-                    code=StorageRuntimeReadinessCode.UNSECURED_BACKEND,
-                ),
-            )
-
-    if route.kind is not StorageRouteKind.ACTIVE_BUCKET_DATABASE:
-        issues.append(
-            readiness_issue(
-                code=StorageRuntimeReadinessCode.ROUTE_NOT_ACTIVE_BUCKET,
-            ),
-        )
-    elif (
-        active is not None
-        and active.bucket_id not in _SYNTHETIC_SESSION_BUCKET_IDS
-        and route.bucket_id != active.bucket_id
-    ):
-        issues.append(
-            readiness_issue(
-                code=StorageRuntimeReadinessCode.ROUTE_BUCKET_MISMATCH,
-            ),
-        )
+    session, session_issues = _active_session_projection(active, checked_at)
+    issues = [*session_issues, *_route_readiness_issues(route, active)]
 
     ready = not issues
     readiness_code = StorageRuntimeReadinessCode.READY if ready else issues[0].code

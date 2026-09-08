@@ -353,6 +353,49 @@ def reclaim_storage_area(
     )
 
 
+def _reclaim_root_members(
+    settings: Settings,
+) -> tuple[tuple[StorageCategory, StorageLocation, Path], ...]:
+    """Resolve all root-scoped declarations used for protected-descendant checks."""
+    return tuple(
+        (category, location, storage_path(category, settings=settings))
+        for category, location in STORAGE_TAXONOMY.items()
+        if location.scope is StorageScope.ROOT
+    )
+
+
+def _preflight_reclaim_candidate(
+    area: StorageArea,
+    candidate: tuple[StorageCategory, StorageLocation, Path],
+    root_members: tuple[tuple[StorageCategory, StorageLocation, Path], ...],
+    storage_root: Path,
+) -> None:
+    """Prove one reclaim candidate and its declared descendants are safe."""
+    category, location, target = candidate
+    if location.scope is not StorageScope.ROOT:
+        raise StorageReclaimRefusedError(
+            area,
+            entry_count=0,
+            reason="a selected target is not root-scoped",
+        )
+    if not storage_lifecycle_permits_reclaim(location.lifecycle):
+        raise StorageReclaimRefusedError(
+            area,
+            entry_count=0,
+            reason="a selected target has a durable lifecycle",
+        )
+    _validate_reclaim_target(area, target, storage_root)
+    for other, other_location, other_path in root_members:
+        if other is category or not other_path.is_relative_to(target):
+            continue
+        if not storage_lifecycle_permits_reclaim(other_location.lifecycle):
+            raise StorageReclaimRefusedError(
+                area,
+                entry_count=_immediate_entry_count(target),
+                reason="a selected target contains protected declared data",
+            )
+
+
 def _preflight_reclaim_targets(
     area: StorageArea,
     candidates: tuple[tuple[StorageCategory, StorageLocation, Path], ...],
@@ -366,35 +409,10 @@ def _preflight_reclaim_targets(
             reason="the taxonomy declares no reclaimable targets",
         )
 
-    root_members = tuple(
-        (category, location, storage_path(category, settings=settings))
-        for category, location in STORAGE_TAXONOMY.items()
-        if location.scope is StorageScope.ROOT
-    )
+    root_members = _reclaim_root_members(settings)
     storage_root = Path(settings.cadrumo_local_storage_root).resolve(strict=False)
     for category, location, target in candidates:
-        if location.scope is not StorageScope.ROOT:
-            raise StorageReclaimRefusedError(
-                area,
-                entry_count=0,
-                reason="a selected target is not root-scoped",
-            )
-        if not storage_lifecycle_permits_reclaim(location.lifecycle):
-            raise StorageReclaimRefusedError(
-                area,
-                entry_count=0,
-                reason="a selected target has a durable lifecycle",
-            )
-        _validate_reclaim_target(area, target, storage_root)
-        for other, other_location, other_path in root_members:
-            if other is category or not other_path.is_relative_to(target):
-                continue
-            if not storage_lifecycle_permits_reclaim(other_location.lifecycle):
-                raise StorageReclaimRefusedError(
-                    area,
-                    entry_count=_immediate_entry_count(target),
-                    reason="a selected target contains protected declared data",
-                )
+        _preflight_reclaim_candidate(area, (category, location, target), root_members, storage_root)
 
 
 def _validate_reclaim_target(area: StorageArea, target: Path, storage_root: Path) -> None:
@@ -438,6 +456,28 @@ def _remove_reclaim_entry(entry: Path) -> None:
         shutil.rmtree(entry)
 
 
+def _area_inventory_occupancy(rows: tuple[StorageInventoryRow, ...]) -> StorageOccupancy:
+    """Apply the public occupancy precedence to one area's internal rows."""
+    occupancies = {row.occupancy for row in rows}
+    if StorageOccupancy.POPULATED in occupancies:
+        return StorageOccupancy.POPULATED
+    if StorageOccupancy.EMPTY in occupancies:
+        return StorageOccupancy.EMPTY
+    if StorageOccupancy.ABSENT in occupancies:
+        return StorageOccupancy.ABSENT
+    return StorageOccupancy.UNRESOLVED
+
+
+def _area_inventory_disposition(rows: tuple[StorageInventoryRow, ...]) -> StorageAreaDisposition:
+    """Classify whether an area's selected rows are durable, mixed, or reclaimable."""
+    permitted = [row.reclaimable for row in rows]
+    if permitted and all(permitted):
+        return StorageAreaDisposition.RECLAIMABLE
+    if any(permitted):
+        return StorageAreaDisposition.MIXED
+    return StorageAreaDisposition.DURABLE
+
+
 def _area_inventory_row(
     area: StorageArea,
     rows: tuple[StorageInventoryRow, ...],
@@ -445,29 +485,12 @@ def _area_inventory_row(
     """Aggregate internal rows without projecting internal nouns to callers."""
     selected = tuple(row for row in rows if row.grouping.value == area.value)
     paths = _minimal_paths(row.path for row in selected if row.path is not None)
-    occupancies = {row.occupancy for row in selected}
-    if StorageOccupancy.POPULATED in occupancies:
-        occupancy = StorageOccupancy.POPULATED
-    elif StorageOccupancy.EMPTY in occupancies:
-        occupancy = StorageOccupancy.EMPTY
-    elif StorageOccupancy.ABSENT in occupancies:
-        occupancy = StorageOccupancy.ABSENT
-    else:
-        occupancy = StorageOccupancy.UNRESOLVED
-
-    permitted = [row.reclaimable for row in selected]
-    if permitted and all(permitted):
-        disposition = StorageAreaDisposition.RECLAIMABLE
-    elif any(permitted):
-        disposition = StorageAreaDisposition.MIXED
-    else:
-        disposition = StorageAreaDisposition.DURABLE
 
     return StorageAreaInventoryRow(
         area=area,
-        occupancy=occupancy,
-        disposition=disposition,
-        reclaimable=area in {StorageArea.LOGS, StorageArea.CACHE} and any(permitted),
+        occupancy=_area_inventory_occupancy(selected),
+        disposition=_area_inventory_disposition(selected),
+        reclaimable=area in {StorageArea.LOGS, StorageArea.CACHE} and any(row.reclaimable for row in selected),
         resolved_paths=len(paths),
         entry_count=sum(_immediate_entry_count(path) for path in paths),
         footprint_bytes=sum(_path_size(path) for path in paths),

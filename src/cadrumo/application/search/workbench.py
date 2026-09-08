@@ -299,12 +299,34 @@ def _validate_projection(
     identity_basis: SecretStr | None = None,
     validate_identity_basis: bool = False,
 ) -> None:
+    _validate_projection_vocabulary(kind, source, status, label_key)
+    _validate_projection_address(kind, address)
+    if admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE and action_candidate_id is not None:
+        raise ValueError("a non-available destination cannot carry an action candidate")
+    if validate_identity_basis:
+        _validate_projection_identity_basis(kind, identity_basis)
+
+
+def _validate_projection_vocabulary(
+    kind: WorkbenchSearchKind,
+    source: WorkbenchSearchSource,
+    status: WorkbenchSearchStatus,
+    label_key: WorkbenchSearchLabelKey,
+) -> None:
+    """Require a projection's source, status, and label to share one family."""
     if source is not _SOURCE_BY_KIND[kind]:
         raise ValueError(f"{kind.value} requires source {_SOURCE_BY_KIND[kind].value!r}")
     if status not in _STATUSES_BY_SOURCE[source]:
         raise ValueError(f"status {status.value!r} is not declared by source {source.value!r}")
     if label_key is not _LABEL_BY_KIND[kind]:
         raise ValueError(f"{kind.value} requires label_key {_LABEL_BY_KIND[kind].value!r}")
+
+
+def _validate_projection_address(
+    kind: WorkbenchSearchKind,
+    address: WorkbenchNaturalAddress | None,
+) -> None:
+    """Require the exact natural-address variant admitted by a projection kind."""
     expected_address_type: type[BaseModel] | None = {
         WorkbenchSearchKind.DECLARATION: WorkbenchModeloAddress,
         WorkbenchSearchKind.MODELO: WorkbenchModeloAddress,
@@ -316,13 +338,17 @@ def _validate_projection(
         raise ValueError(f"{kind.value} cannot carry a Modelo natural address")
     if expected_address_type is not None and type(address) is not expected_address_type:
         raise ValueError(f"{kind.value} requires exact {expected_address_type.__name__}")
-    if admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE and action_candidate_id is not None:
-        raise ValueError("a non-available destination cannot carry an action candidate")
-    if validate_identity_basis:
-        if kind in _OPAQUE_IDENTITY_KINDS and identity_basis is None:
-            raise ValueError(f"{kind.value} requires a private opaque identity basis")
-        if kind not in _OPAQUE_IDENTITY_KINDS and identity_basis is not None:
-            raise ValueError(f"{kind.value} derives identity from its natural address")
+
+
+def _validate_projection_identity_basis(
+    kind: WorkbenchSearchKind,
+    identity_basis: SecretStr | None,
+) -> None:
+    """Require an opaque basis only for projection families without natural IDs."""
+    if kind in _OPAQUE_IDENTITY_KINDS and identity_basis is None:
+        raise ValueError(f"{kind.value} requires a private opaque identity basis")
+    if kind not in _OPAQUE_IDENTITY_KINDS and identity_basis is not None:
+        raise ValueError(f"{kind.value} derives identity from its natural address")
 
 
 class WorkbenchSearchDocument(BaseModel):

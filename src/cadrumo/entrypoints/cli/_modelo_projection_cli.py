@@ -24,6 +24,7 @@ from ...application.modelo.projection import (
     ModeloCompareNoRevisionsError,
     ModeloCompareNoUsableRevisionsError,
     ModeloCompareNoWorkUnitsError,
+    ModeloCompareServiceResult,
     ModeloProjectInvalidDecimalOverrideError,
     ModeloProjectNoM130RevisionsError,
     ModeloProjectNoM130UnitsError,
@@ -165,16 +166,10 @@ def modelo_project(
     emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 
 
-def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: str = Modelo.M100.value) -> None:
-    """Emit :class:`ModeloCompareResult` with grounded delta rows.
-
-    Each service row arrives as :class:`ModeloCompareDeltaRow`; the CLI
-    schema preserves ``formula_id``, ``legal_refs``, and ``source_refs`` for
-    every compared :class:`CasillaId`.
-    """
-    require_active_profile()
+def _load_compare_service_result(*, modelo: str, years: list[int]) -> ModeloCompareServiceResult:
+    """Read the backend comparison result and translate its typed refusals."""
     try:
-        service_result = compare_modelo_years(modelo=modelo, years=list(year or ()))
+        return compare_modelo_years(modelo=modelo, years=years)
     except (
         ModeloCompareNeedTwoYearsError,
         ModeloCompareNoWorkUnitsError,
@@ -184,12 +179,16 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
         raise bad_parameter_from_localized_context(exc) from exc
     except RegistrySnapshotError as exc:
         raise bad_parameter_from_error(exc) from exc
+
+
+def _compare_result_payload(service_result: ModeloCompareServiceResult) -> ModeloCompareResult:
+    """Project typed backend rows and sections into the CLI result contract."""
     typed_delta_rows = [_delta_row_payload(row) for row in service_result.delta_rows]
     typed_sections = [
         CompareSectionPayload(section=section.section, rows=[_delta_row_payload(row) for row in section.rows])
         for section in service_result.sections
     ]
-    compare_result = ModeloCompareResult(
+    return ModeloCompareResult(
         modelo=service_result.modelo,
         year_a=service_result.year_a,
         year_b=service_result.year_b,
@@ -200,6 +199,10 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
         sections=typed_sections,
         delta_rows=typed_delta_rows,
     )
+
+
+def _compare_lines(service_result: ModeloCompareServiceResult) -> list[str]:
+    """Render the comparison table while retaining the existing zero-row omission."""
     draft_note_a = " (BORRADOR)" if service_result.year_a_is_draft else ""
     draft_note_b = " (BORRADOR)" if service_result.year_b_is_draft else ""
     lines = [
@@ -217,4 +220,18 @@ def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: st
         lines.append(
             f"{row.casilla_id}\t{row.label}\t{row.section}\t{row.year_a_value}\t{row.year_b_value}\t{row.delta}\t{pct}"
         )
+    return lines
+
+
+def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: str = Modelo.M100.value) -> None:
+    """Emit :class:`ModeloCompareResult` with grounded delta rows.
+
+    Each service row arrives as :class:`ModeloCompareDeltaRow`; the CLI
+    schema preserves ``formula_id``, ``legal_refs``, and ``source_refs`` for
+    every compared :class:`CasillaId`.
+    """
+    require_active_profile()
+    service_result = _load_compare_service_result(modelo=modelo, years=list(year or ()))
+    compare_result = _compare_result_payload(service_result)
+    lines = _compare_lines(service_result)
     emit_envelope(ctx, command="modelo.compare", result=compare_result, lines=lines)

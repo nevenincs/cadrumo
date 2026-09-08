@@ -1114,8 +1114,6 @@ application:
         destinatari; la clau no coincideix o el paquet ha estat manipulat.
       recipient_encryption_invalid_key: La clau pública del destinatari no és una
         clau pública X25519 vàlida.
-      recipient_encryption_key_not_found: Encara no s'ha generat cap parell de claus
-        de xifratge de destinatari per a aquest bucket.
       recipient_registry_already_exists: El destinatari %{recipient_id} ja està registrat.
       recipient_registry_generic: S'ha produït un error en el registre d'empremtes
         digitals de destinataris.
@@ -1458,9 +1456,6 @@ application:
       edit_missing_filing_baseline: 'Aquesta edició deixaria incompletes les dades
         d''identitat per presentar models. Afegeix aquests flags a la mateixa ordre
         i torna-la a executar: %{missing_flags}.'
-      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
-        requereix supplied_question_ids - l'edició és un pedaç, no una reescriptura
-        completa.
       persist_patch_unknown_question_id: El pedaç de l'assistent referència un id
         de pregunta desconegut.
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per

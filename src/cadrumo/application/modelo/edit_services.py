@@ -14,7 +14,8 @@ copied from a Workspace read.
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
+from decimal import Decimal
 
 from ...core.decimal.coercion import normalize_decimal_separators
 from ...core.decimal.grammar import european_thousands_reading_is_ambiguous, try_parse_canonical_decimal
@@ -74,9 +75,6 @@ from .edit_models import (
     ModeloEditWritableDetailRowSurfaceEntryV1,
     ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
-    ModeloMutationCapabilityProjectionV1,
-    ModeloMutationCapabilityRequestV1,
-    ModeloMutationCapabilityRowV1,
 )
 from .work_addressing import (
     ModeloWorkAddressNotFoundError,
@@ -86,7 +84,6 @@ from .work_addressing import (
     resolve_modelo_work_address_unit,
     work_address_for_modelo_target,
 )
-from .workspace_models import ModeloWorkspaceCapabilityDisposition
 
 _BASELINE_VALIDITY_WINDOW = timedelta(minutes=15)
 RESPONSIBLE_OWNER = "modelo.edit"
@@ -516,6 +513,42 @@ def _disallowed_intent_refusal(address: ModeloEditAddressV1) -> ModeloEditRefusa
     )
 
 
+def _parse_numeric_lexeme(*, data_type: str, text: str) -> Decimal:
+    """Decode a registry numeric type while keeping its precision contract."""
+    if european_thousands_reading_is_ambiguous(text):
+        raise ValueError("ambiguous thousands reading")
+    candidate = normalize_decimal_separators(text, strip_thousands="." in text) if "," in text else text
+    max_fraction_digits = 2 if data_type == "money" else None
+    parsed = try_parse_canonical_decimal(candidate, max_fraction_digits=max_fraction_digits)
+    if parsed is None:
+        raise ValueError("does not conform to the canonical decimal grammar")
+    return parsed
+
+
+def _parse_integer_lexeme(text: str) -> int:
+    """Decode an integer or year with the edit contract's refusal message."""
+    try:
+        return int(text)
+    except ValueError as error:
+        raise ValueError("does not conform to the integer grammar") from error
+
+
+def _parse_boolean_lexeme(text: str) -> bool:
+    """Decode the shared boolean vocabulary, refusing unknown tokens."""
+    parsed_bool = parse_bool(text)
+    if parsed_bool is None:
+        raise ValueError("does not conform to the boolean grammar")
+    return parsed_bool
+
+
+def _parse_date_lexeme(text: str) -> date:
+    """Decode the strict ISO date grammar used by date-valued casillas."""
+    parsed_date = parse_iso8601_date(text)
+    if parsed_date is None:
+        raise ValueError("does not conform to the ISO date grammar")
+    return parsed_date
+
+
 def _parse_scalar_lexeme(*, data_type: str, raw_lexeme: str) -> ModeloScalar:
     """Parse one raw lexeme per its registry-declared data type, or raise.
 
@@ -528,29 +561,13 @@ def _parse_scalar_lexeme(*, data_type: str, raw_lexeme: str) -> ModeloScalar:
     if not text:
         raise ValueError("empty lexeme")
     if data_type in {"decimal", "money", "ratio"}:
-        if european_thousands_reading_is_ambiguous(text):
-            raise ValueError("ambiguous thousands reading")
-        candidate = normalize_decimal_separators(text, strip_thousands="." in text) if "," in text else text
-        max_fraction_digits = 2 if data_type == "money" else None
-        parsed = try_parse_canonical_decimal(candidate, max_fraction_digits=max_fraction_digits)
-        if parsed is None:
-            raise ValueError("does not conform to the canonical decimal grammar")
-        return parsed
+        return _parse_numeric_lexeme(data_type=data_type, text=text)
     if data_type in {"integer", "year"}:
-        try:
-            return int(text)
-        except ValueError as error:
-            raise ValueError("does not conform to the integer grammar") from error
+        return _parse_integer_lexeme(text)
     if data_type == "boolean":
-        parsed_bool = parse_bool(text)
-        if parsed_bool is None:
-            raise ValueError("does not conform to the boolean grammar")
-        return parsed_bool
+        return _parse_boolean_lexeme(text)
     if data_type == "date":
-        parsed_date = parse_iso8601_date(text)
-        if parsed_date is None:
-            raise ValueError("does not conform to the ISO date grammar")
-        return parsed_date
+        return _parse_date_lexeme(text)
     return text
 
 
@@ -650,62 +667,6 @@ def preflight_modelo_edit(
         if refusal is not None:
             return ModeloEditRefusedV1(refusal=refusal)
     return ModeloEditPreflightEvaluatedV1(baseline_id=baseline.baseline_id, findings=tuple(findings))
-
-
-# The capability projection lives here rather than in a module of its own.
-# It is the read-only half of the edit contract -- it re-resolves a target and
-# projects a closed row for it -- which is exactly what this module owns, and
-# a public symbol may not sit in a leading-underscore module that no consumer
-# outside this package is allowed to import.
-#
-# Every row is UNMEASURED: the mutation projected here has no registered
-# operation definition, and the row model refuses an AVAILABLE row carrying
-# none, so availability follows from registration rather than from anything
-# asserted here. The condition this projection once waited on was a dependency
-# receipt from a retired family whose module was deleted, so it could never be
-# satisfied and the row read as pending while being permanently stuck.
-
-
-def project_modelo_edit_mutation_capability(
-    request: ModeloMutationCapabilityRequestV1,
-    *,
-    bucket_id: str,
-    work_catalogue: WorkUnitCatalogue,
-) -> ModeloMutationCapabilityProjectionV1:
-    """Project the closed CALCULATE mutation-capability row for one edit target.
-
-    Independently re-resolves the target exactly as
-    :func:`~._edit_services.admit_modelo_edit` does; an unresolved target
-    projects an empty capability set rather than a fabricated row. A
-    resolved target always projects ``UNMEASURED`` in this V1 -- see the
-    module docstring.
-    """
-    domain_target = request.target.target
-    try:
-        work_unit = resolve_modelo_work_address_unit(
-            work_address_for_modelo_target(domain_target),
-            catalogue=work_catalogue,
-            bucket_id=bucket_id,
-        )
-    except (ModeloWorkAddressNotFoundError, ModeloWorkUnitNotFoundError):
-        return ModeloMutationCapabilityProjectionV1(rows=())
-
-    law_selected_revision_id = law_selected_revision_for_work_target(
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        stored_revision_id=work_unit.revision_id,
-    )
-    row = ModeloMutationCapabilityRowV1(
-        mutation_id="calculate",
-        owning_producer=RESPONSIBLE_OWNER,
-        revision_id=law_selected_revision_id,
-        disposition=ModeloWorkspaceCapabilityDisposition.UNMEASURED,
-        reconsideration_condition=(
-            "becomes AVAILABLE once a calculate operation is registered and this row can carry its operation definition"
-        ),
-    )
-    return ModeloMutationCapabilityProjectionV1(rows=(row,))
 
 
 __all__ = [

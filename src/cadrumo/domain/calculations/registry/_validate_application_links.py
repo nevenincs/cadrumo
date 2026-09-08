@@ -30,7 +30,7 @@ _SIMPLE_APPLICATION_LINK_RULES: tuple[tuple[str, str, str], ...] = (
     # Each rule fires when the revision declares the listed records but
     # the application-link bundle does not declare the matching surface.
     # Rules that require composite conditions (casillas, modelo-145
-    # communication) stay inline in _application_link_surface_failures.
+    # communication) are handled by the composite checks below.
     ("formulas", "calculation", "formulas require a calculation application link"),
     ("extraction_profiles", "extractor", "extraction profiles require an extractor application link"),
     ("export_layouts", "export", "export layouts require an export application link"),
@@ -81,22 +81,88 @@ def _application_link_surface_failures(
     communication_surfaces: AbstractSet[str],
     modelo_requires_communication: bool,
 ) -> list[str]:
+    failures = _simple_application_link_failures(scope, revision, surfaces)
+    failures.extend(
+        _casilla_application_link_failures(
+            scope,
+            revision,
+            surfaces=surfaces,
+            communication_surfaces=communication_surfaces,
+            modelo_requires_communication=modelo_requires_communication,
+        ),
+    )
+    failures.extend(
+        _communication_model_failures(
+            scope,
+            communication_surfaces=communication_surfaces,
+            modelo_requires_communication=modelo_requires_communication,
+        ),
+    )
+    return failures
+
+
+def _simple_application_link_failures(
+    scope: str,
+    revision: ModeloRevision,
+    surfaces: AbstractSet[str],
+) -> list[str]:
     failures: list[str] = []
     for revision_attribute, required_surface, message in _SIMPLE_APPLICATION_LINK_RULES:
         if getattr(revision, revision_attribute) and required_surface not in surfaces:
             failures.append(f"{scope}: {message}")
-    extractor_owns_observation_casillas = (
+    return failures
+
+
+def _casilla_application_link_failures(
+    scope: str,
+    revision: ModeloRevision,
+    *,
+    surfaces: AbstractSet[str],
+    communication_surfaces: AbstractSet[str],
+    modelo_requires_communication: bool,
+) -> list[str]:
+    if revision.casillas and not _casillas_have_lifecycle_link(
+        revision,
+        surfaces=surfaces,
+        communication_surfaces=communication_surfaces,
+        modelo_requires_communication=modelo_requires_communication,
+    ):
+        return [f"{scope}: casillas require a filing or communication application link"]
+    return []
+
+
+def _casillas_have_lifecycle_link(
+    revision: ModeloRevision,
+    *,
+    surfaces: AbstractSet[str],
+    communication_surfaces: AbstractSet[str],
+    modelo_requires_communication: bool,
+) -> bool:
+    return (
+        "filing" in surfaces
+        or (modelo_requires_communication and bool(communication_surfaces))
+        or _extractor_owns_observation_casillas(revision, surfaces)
+    )
+
+
+def _extractor_owns_observation_casillas(
+    revision: ModeloRevision,
+    surfaces: AbstractSet[str],
+) -> bool:
+    return (
         revision.authority_grade is RegistryAuthorityGrade.APPLICABILITY
         and bool(revision.extraction_profiles)
         and "extractor" in surfaces
     )
-    casillas_have_lifecycle_link = (
-        "filing" in surfaces
-        or (modelo_requires_communication and bool(communication_surfaces))
-        or extractor_owns_observation_casillas
-    )
-    if revision.casillas and not casillas_have_lifecycle_link:
-        failures.append(f"{scope}: casillas require a filing or communication application link")
+
+
+def _communication_model_failures(
+    scope: str,
+    *,
+    communication_surfaces: AbstractSet[str],
+    modelo_requires_communication: bool,
+) -> list[str]:
+    failures: list[str] = []
     if communication_surfaces and not modelo_requires_communication:
         failures.append(f"{scope}: communication application links are only valid for Modelo 145")
     if modelo_requires_communication and not communication_surfaces:

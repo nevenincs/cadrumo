@@ -1057,8 +1057,6 @@ application:
         megfejteni; a kulcs nem megfelelő, vagy a csomagot módosították.
       recipient_encryption_invalid_key: A címzett nyilvános kulcsa nem egy érvényes
         X25519 nyilvános kulcs.
-      recipient_encryption_key_not_found: Ehhez a bucket-hez még nem készült címzetti
-        titkosítási kulcspár.
       recipient_registry_already_exists: A(z) %{recipient_id} címzett már regisztrálva
         van.
       recipient_registry_generic: Hiba történt a címzetti ujjlenyomat-nyilvántartásban.
@@ -1398,9 +1396,6 @@ application:
       edit_missing_filing_baseline: 'Ez a profilszerkesztés hiányos bevallási azonosító
         adatokkal hagyná a profilt. Adja hozzá ezeket a kapcsolókat ugyanahhoz a parancshoz,
         és futtassa újra: %{missing_flags}'
-      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
-        supplied_question_ids paramétert igényel - a szerkesztés egy folt (patch),
-        nem teljes újraírás.
       persist_patch_unknown_question_id: A varázsló javítása ismeretlen kérdésazonosítóra
         hivatkozik.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit

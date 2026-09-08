@@ -16,6 +16,12 @@ The public services return
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
@@ -51,6 +57,7 @@ from .actions_common import (
 )
 from .models import (
     LedgerCatalogueResetReport,
+    LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
     ManualLedgerTransactionResult,
 )
@@ -424,6 +431,158 @@ def remove_manual_transaction(
     )
 
 
+def _reset_invoice_context(
+    *,
+    bucket_id: str,
+    catalogue: TransactionCatalogue,
+    removed_ids: tuple[str, ...],
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None,
+) -> tuple[
+    InvoiceCatalogueRepository | None,
+    InvoiceCatalogue,
+    tuple[str, ...],
+    InvoiceCatalogue | None,
+]:
+    """Resolve and inspect invoice evidence needed by a catalogue reset."""
+    invoices: InvoiceCatalogueRepository | None = None
+    invoice_catalogue = InvoiceCatalogue()
+    purchase_evidence_ids: tuple[str, ...] = ()
+    updated_invoice_catalogue: InvoiceCatalogue | None = None
+    if invoice_repository is not None or any(
+        transaction.purchase_invoice_evidence_id is not None for transaction in catalogue.values()
+    ):
+        invoices = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+        invoice_catalogue = invoices.load()
+        purchase_evidence_ids, updated_invoice_catalogue = _detach_transactions_from_purchase_evidence(
+            invoice_catalogue,
+            bucket_id=bucket_id,
+            transaction_ids=removed_ids,
+        )
+    return invoices, invoice_catalogue, purchase_evidence_ids, updated_invoice_catalogue
+
+
+def _reset_attachment_ids(catalogue: TransactionCatalogue) -> tuple[str, ...]:
+    """Collect every attachment id that a reset removes, in stable order."""
+    return tuple(
+        sorted({attachment_id for transaction in catalogue.values() for attachment_id in transaction.attachment_ids}),
+    )
+
+
+def _reset_removal_events(
+    catalogue: TransactionCatalogue,
+    invoice_catalogue: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    actor: str,
+    reason: str,
+    source_command: str,
+    occurred_at: datetime,
+) -> tuple[BucketEvent, ...]:
+    """Build deterministic cascade and row-removal events for every transaction."""
+    events: list[BucketEvent] = []
+    for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id):
+        purchase_evidence_ids = tuple(
+            invoice_id
+            for invoice_id, invoice in invoice_catalogue.invoices.items()
+            if invoice.bucket_id == bucket_id and transaction.transaction_id in invoice.linked_transaction_ids
+        )
+        events.extend(
+            _removal_events(
+                bucket_id=bucket_id,
+                transaction=transaction,
+                actor=actor,
+                reason=reason,
+                source_command=source_command,
+                purchase_evidence_ids=purchase_evidence_ids,
+                attachment_ids=tuple(sorted(transaction.attachment_ids)),
+                occurred_at=occurred_at,
+            ),
+        )
+    return tuple(events)
+
+
+def _build_catalogue_reset_event(
+    *,
+    bucket_id: str,
+    actor: str,
+    reason: str,
+    source_command: str,
+    removed_count: int,
+    occurred_at: datetime,
+) -> BucketEvent:
+    """Build the summary event emitted after all row-removal events."""
+    return build_ledger_bucket_event(
+        bucket_id=bucket_id,
+        event_type=BucketEventType.LEDGER_CATALOGUE_RESET,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.LEDGER_CATALOGUE,
+        object_id=transaction_catalogue_object_id(bucket_id),
+        payload={
+            "source_command": source_command,
+            "reason": reason,
+            "removed_transaction_count": str(removed_count),
+        },
+    )
+
+
+def _persist_catalogue_reset(
+    *,
+    repository: TransactionCatalogueRepository,
+    event_repository: BucketEventHistoryRepository,
+    invoices: InvoiceCatalogueRepository | None,
+    updated_invoice_catalogue: InvoiceCatalogue | None,
+    events: tuple[BucketEvent, ...],
+) -> None:
+    """Persist the reset through the matching atomic catalogue writer."""
+    if invoices is None or updated_invoice_catalogue is None:
+        save_transaction_catalogue_and_events(
+            transaction_repository=repository,
+            event_repository=event_repository,
+            catalogue=TransactionCatalogue(),
+            events=events,
+        )
+    else:
+        save_transaction_catalogue_invoices_and_events(
+            transaction_repository=repository,
+            invoice_repository=invoices,
+            event_repository=event_repository,
+            transaction_catalogue=TransactionCatalogue(),
+            invoice_catalogue=updated_invoice_catalogue,
+            events=events,
+        )
+
+
+def _catalogue_reset_report(
+    *,
+    bucket_id: str,
+    removed_ids: tuple[str, ...],
+    dry_run: bool,
+    actor: str,
+    reason: str,
+    purchase_evidence_ids: tuple[str, ...],
+    attachment_ids: tuple[str, ...],
+    blockers: tuple[LedgerRemovalBlocker, ...] = (),
+    draft_advisories: tuple[LedgerRemovalBlocker, ...] = (),
+    reset: bool = False,
+    event_ids: tuple[str, ...] = (),
+) -> LedgerCatalogueResetReport:
+    """Project one reset disposition without duplicating report field wiring."""
+    return LedgerCatalogueResetReport(
+        bucket_id=bucket_id,
+        removed_transaction_ids=removed_ids,
+        reset=reset,
+        dry_run=dry_run,
+        actor=actor,
+        reason=reason,
+        cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
+        cascaded_attachment_ids=attachment_ids,
+        blocking_modelo_references=blockers,
+        stale_draft_revision_references=draft_advisories,
+        bucket_event_ids=event_ids,
+    )
+
+
 def reset_ledger_catalogue(
     *,
     bucket_id: str,
@@ -462,23 +621,13 @@ def reset_ledger_catalogue(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
     )
-    invoices = None
-    invoice_catalogue = InvoiceCatalogue()
-    purchase_evidence_ids: tuple[str, ...] = ()
-    updated_invoice_catalogue: InvoiceCatalogue | None = None
-    if invoice_repository is not None or any(
-        transaction.purchase_invoice_evidence_id is not None for transaction in catalogue.values()
-    ):
-        invoices = resolve_invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
-        invoice_catalogue = invoices.load()
-        purchase_evidence_ids, updated_invoice_catalogue = _detach_transactions_from_purchase_evidence(
-            invoice_catalogue,
-            bucket_id=bucket_id,
-            transaction_ids=removed_ids,
-        )
-    attachment_ids = tuple(
-        sorted({attachment_id for transaction in catalogue.values() for attachment_id in transaction.attachment_ids}),
+    invoices, invoice_catalogue, purchase_evidence_ids, updated_invoice_catalogue = _reset_invoice_context(
+        bucket_id=bucket_id,
+        catalogue=catalogue,
+        removed_ids=removed_ids,
+        invoice_repository=invoice_repository,
     )
+    attachment_ids = _reset_attachment_ids(catalogue)
     if blockers:
         if not dry_run:
             raise_finalized_modelo_blocked(
@@ -486,85 +635,64 @@ def reset_ledger_catalogue(
                 transaction_ids=guard_ids,
                 blockers=blockers,
             )
-        return LedgerCatalogueResetReport(
+        return _catalogue_reset_report(
             bucket_id=bucket_id,
-            removed_transaction_ids=removed_ids,
+            removed_ids=removed_ids,
             dry_run=dry_run,
             actor=trimmed_actor,
             reason=reason.strip(),
-            cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
-            cascaded_attachment_ids=attachment_ids,
-            blocking_modelo_references=blockers,
-            stale_draft_revision_references=draft_advisories,
+            purchase_evidence_ids=purchase_evidence_ids,
+            attachment_ids=attachment_ids,
+            blockers=blockers,
+            draft_advisories=draft_advisories,
         )
     if dry_run:
-        return LedgerCatalogueResetReport(
+        return _catalogue_reset_report(
             bucket_id=bucket_id,
-            removed_transaction_ids=removed_ids,
+            removed_ids=removed_ids,
             dry_run=True,
             actor=trimmed_actor,
             reason=reason.strip(),
-            cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
-            cascaded_attachment_ids=attachment_ids,
-            stale_draft_revision_references=draft_advisories,
+            purchase_evidence_ids=purchase_evidence_ids,
+            attachment_ids=attachment_ids,
+            draft_advisories=draft_advisories,
         )
-    removal_events = tuple(
-        event
-        for transaction in sorted(catalogue.values(), key=lambda item: item.transaction_id)
-        for event in _removal_events(
-            bucket_id=bucket_id,
-            transaction=transaction,
-            actor=trimmed_actor,
-            reason=reason.strip(),
-            source_command=trimmed_source_command,
-            purchase_evidence_ids=tuple(
-                invoice_id
-                for invoice_id, invoice in invoice_catalogue.invoices.items()
-                if invoice.bucket_id == bucket_id and transaction.transaction_id in invoice.linked_transaction_ids
-            ),
-            attachment_ids=tuple(sorted(transaction.attachment_ids)),
-            occurred_at=now,
-        )
-    )
-    reset_event = build_ledger_bucket_event(
+    removal_events = _reset_removal_events(
+        catalogue,
+        invoice_catalogue,
         bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_CATALOGUE_RESET,
-        occurred_at=now,
-        actor=trimmed_actor,
-        object_type=BucketEventObjectType.LEDGER_CATALOGUE,
-        object_id=transaction_catalogue_object_id(bucket_id),
-        payload={
-            "source_command": trimmed_source_command,
-            "reason": reason.strip(),
-            "removed_transaction_count": str(len(removed_ids)),
-        },
-    )
-    if invoices is None or updated_invoice_catalogue is None:
-        save_transaction_catalogue_and_events(
-            transaction_repository=repository,
-            event_repository=event_repository,
-            catalogue=TransactionCatalogue(),
-            events=(*removal_events, reset_event),
-        )
-    else:
-        save_transaction_catalogue_invoices_and_events(
-            transaction_repository=repository,
-            invoice_repository=invoices,
-            event_repository=event_repository,
-            transaction_catalogue=TransactionCatalogue(),
-            invoice_catalogue=updated_invoice_catalogue,
-            events=(*removal_events, reset_event),
-        )
-    return LedgerCatalogueResetReport(
-        bucket_id=bucket_id,
-        removed_transaction_ids=removed_ids,
-        reset=True,
         actor=trimmed_actor,
         reason=reason.strip(),
-        cascaded_purchase_invoice_evidence_ids=purchase_evidence_ids,
-        cascaded_attachment_ids=attachment_ids,
-        stale_draft_revision_references=draft_advisories,
-        bucket_event_ids=tuple(event.event_id for event in (*removal_events, reset_event)),
+        source_command=trimmed_source_command,
+        occurred_at=now,
+    )
+    reset_event = _build_catalogue_reset_event(
+        bucket_id=bucket_id,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        source_command=trimmed_source_command,
+        removed_count=len(removed_ids),
+        occurred_at=now,
+    )
+    events = (*removal_events, reset_event)
+    _persist_catalogue_reset(
+        repository=repository,
+        event_repository=event_repository,
+        invoices=invoices,
+        updated_invoice_catalogue=updated_invoice_catalogue,
+        events=events,
+    )
+    return _catalogue_reset_report(
+        bucket_id=bucket_id,
+        removed_ids=removed_ids,
+        dry_run=False,
+        actor=trimmed_actor,
+        reason=reason.strip(),
+        purchase_evidence_ids=purchase_evidence_ids,
+        attachment_ids=attachment_ids,
+        draft_advisories=draft_advisories,
+        reset=True,
+        event_ids=tuple(event.event_id for event in events),
     )
 
 

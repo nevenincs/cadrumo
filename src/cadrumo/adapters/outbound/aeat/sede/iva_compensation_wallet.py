@@ -129,15 +129,12 @@ _WALLET_READ_PATH_PREFIXES: tuple[str, ...] = (
 )
 
 
-async def fetch_iva_compensation_wallet(
+def _validate_wallet_fetch_request(
     session: AeatSession,
     *,
     target_year: int,
     target_period: Period,
-    taxpayer_nif: str | None = None,
-    settings: Settings | None = None,
-) -> IvaCompensationWalletObservation:
-    """Fetch and parse AEAT's read-only IVA compensation wallet as a :class:`IvaCompensationWalletObservation`."""
+) -> None:
     if session.storage_state_path is None:
         raise SedeNavigationError(
             "AeatSession has no persisted auth session; run `aeat config auth status` first",
@@ -149,6 +146,126 @@ async def fetch_iva_compensation_wallet(
             failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             context={"target_year": target_year, "target_period_year": target_period.filing_year},
         )
+
+
+def _raise_if_wallet_auth_gate(
+    page: Page,
+    *,
+    message: str,
+    expected_url: str,
+    surface: str,
+) -> None:
+    if is_aeat_auth_gate_redirect(page.url):
+        raise SedeNavigationError(
+            message,
+            failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+            context={
+                "landing_url": redacted_url(page.url),
+                "expected_url": redacted_url(expected_url),
+                "surface": surface,
+            },
+        )
+
+
+async def _open_wallet_for_fetch(
+    page: Page,
+    *,
+    browser_session: DefaultBrowserSession,
+    settings: Settings,
+    target_period: Period,
+) -> bool:
+    try:
+        await _open_authenticated_surface(
+            page,
+            browser_session=browser_session,
+            settings=settings,
+            selector_url=_PRE303_SELECTOR_URL,
+            target_path=PRE303.presentation_service_path,
+            expected_url=_PRE303_PRESENTATION_URL,
+            surface="pre303_presentation_service",
+            target_year=target_period.filing_year,
+            target_period=target_period,
+        )
+        _raise_if_wallet_auth_gate(
+            page,
+            message="AEAT Pre303 presentation surface rejected the authenticated session with 4033",
+            expected_url=_PRE303_PRESENTATION_URL,
+            surface="pre303_presentation_service",
+        )
+        pre303_html = await page.content()
+        discovered_wallet_url = discover_iva_compensation_wallet_entrypoint(
+            pre303_html,
+            base_url=getattr(page, "url", "") or _PRE303_PRESENTATION_URL,
+        )
+        if discovered_wallet_url is not None:
+            return await _open_discovered_wallet_entrypoint(
+                page,
+                browser_session=browser_session,
+                settings=settings,
+                discovered_url=discovered_wallet_url,
+                target_year=target_period.filing_year,
+                target_period=target_period,
+            )
+        return await _open_authenticated_surface(
+            page,
+            browser_session=browser_session,
+            settings=settings,
+            selector_url=_WALLET_SELECTOR_URL,
+            target_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+            expected_url=WALLET_URL,
+            surface="iva_compensation_wallet",
+            target_year=target_period.filing_year,
+            target_period=target_period,
+        )
+    except PlaywrightError as exc:
+        raise SedeNavigationError(
+            f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {WALLET_URL!r}: {exc}",
+        ) from exc
+
+
+async def _read_wallet_observation(
+    page: Page,
+    *,
+    session: AeatSession,
+    taxpayer_nif: str | None,
+    target_period: Period,
+    settings: Settings,
+    wallet_execute_submitted: bool,
+) -> IvaCompensationWalletObservation:
+    _assert_read_landing(page)
+    html = await page.content()
+    final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
+    if final_dump_dir is not None:
+        await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
+    try:
+        return parse_iva_compensation_wallet_html(
+            html,
+            taxpayer_nif=taxpayer_nif or session.identity_nif,
+            authenticated_identity=session.identity_nif,
+            target_year=target_period.filing_year,
+            target_period=target_period,
+            source_url=_landed_wallet_url(page),
+            captured_at=now(),
+            allow_empty_wallet_shell=wallet_execute_submitted,
+        )
+    except SedeParseError as exc:
+        raise SedeParseError(
+            str(exc),
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context=wallet_page_shape_context(html, landing_url=page.url),
+        ) from exc
+
+
+async def fetch_iva_compensation_wallet(
+    session: AeatSession,
+    *,
+    target_year: int,
+    target_period: Period,
+    taxpayer_nif: str | None = None,
+    settings: Settings | None = None,
+) -> IvaCompensationWalletObservation:
+    """Fetch and parse AEAT's read-only IVA compensation wallet as a :class:`IvaCompensationWalletObservation`."""
+    _validate_wallet_fetch_request(session, target_year=target_year, target_period=target_period)
     _assert_read_http("GET", _PRE303_PRESENTATION_URL)
     _assert_read_http("GET", WALLET_URL)
     settings = settings or Settings()
@@ -158,103 +275,26 @@ async def fetch_iva_compensation_wallet(
     try:
         context = await browser_session.create_context(storage_state=storage_state)
         page = await context.new_page()
-        try:
-            await _open_authenticated_surface(
-                page,
-                browser_session=browser_session,
-                settings=settings,
-                selector_url=_PRE303_SELECTOR_URL,
-                target_path=PRE303.presentation_service_path,
-                expected_url=_PRE303_PRESENTATION_URL,
-                surface="pre303_presentation_service",
-                target_year=target_period.filing_year,
-                target_period=target_period,
-            )
-            if is_aeat_auth_gate_redirect(page.url):
-                raise SedeNavigationError(
-                    "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
-                    failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
-                    context={
-                        "landing_url": redacted_url(page.url),
-                        "expected_url": redacted_url(_PRE303_PRESENTATION_URL),
-                        "surface": "pre303_presentation_service",
-                    },
-                )
-            pre303_html = await page.content()
-            discovered_wallet_url = discover_iva_compensation_wallet_entrypoint(
-                pre303_html,
-                base_url=getattr(page, "url", "") or _PRE303_PRESENTATION_URL,
-            )
-            if discovered_wallet_url is not None:
-                wallet_execute_submitted = await _open_discovered_wallet_entrypoint(
-                    page,
-                    browser_session=browser_session,
-                    settings=settings,
-                    discovered_url=discovered_wallet_url,
-                    target_year=target_period.filing_year,
-                    target_period=target_period,
-                )
-            else:
-                wallet_execute_submitted = await _open_authenticated_surface(
-                    page,
-                    browser_session=browser_session,
-                    settings=settings,
-                    selector_url=_WALLET_SELECTOR_URL,
-                    target_path=EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
-                    expected_url=WALLET_URL,
-                    surface="iva_compensation_wallet",
-                    target_year=target_period.filing_year,
-                    target_period=target_period,
-                )
-        except PlaywrightError as exc:
-            raise SedeNavigationError(
-                f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {WALLET_URL!r}: {exc}",
-            ) from exc
-        if is_aeat_auth_gate_redirect(page.url):
-            raise SedeNavigationError(
-                "AEAT IVA compensation wallet rejected the authenticated session with 4033",
-                failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
-                context={
-                    "landing_url": redacted_url(page.url),
-                    "expected_url": redacted_url(WALLET_URL),
-                    "surface": "iva_compensation_wallet",
-                },
-            )
-        # The terminal read, and the one that had no landing rule. The two
-        # rules above sit on branches -- after the representation gate, and
-        # after the ejecutar submit -- so a wallet that was ALREADY executed
-        # takes neither, and this parse ran with only the 4033 auth-gate
-        # check between it and whatever AEAT served.
-        #
-        # It matters more here than on either branch, because
-        # _landed_wallet_url CONSTRUCTS the recorded source_url as
-        # origin + the wallet path. It refuses an unreadable origin but
-        # never checks the path, so a readable landing on the wrong page
-        # produced evidence asserting the wallet path for a page that was
-        # not the wallet. Asserting the landing first is what makes that
-        # construction truthful.
-        _assert_read_landing(page)
-        html = await page.content()
-        final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
-        if final_dump_dir is not None:
-            await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
-        try:
-            return parse_iva_compensation_wallet_html(
-                html,
-                taxpayer_nif=taxpayer_nif or session.identity_nif,
-                authenticated_identity=session.identity_nif,
-                target_year=target_period.filing_year,
-                target_period=target_period,
-                source_url=_landed_wallet_url(page),
-                captured_at=now(),
-                allow_empty_wallet_shell=wallet_execute_submitted,
-            )
-        except SedeParseError as exc:
-            raise SedeParseError(
-                str(exc),
-                failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                context=wallet_page_shape_context(html, landing_url=page.url),
-            ) from exc
+        wallet_execute_submitted = await _open_wallet_for_fetch(
+            page,
+            browser_session=browser_session,
+            settings=settings,
+            target_period=target_period,
+        )
+        _raise_if_wallet_auth_gate(
+            page,
+            message="AEAT IVA compensation wallet rejected the authenticated session with 4033",
+            expected_url=WALLET_URL,
+            surface="iva_compensation_wallet",
+        )
+        return await _read_wallet_observation(
+            page,
+            session=session,
+            taxpayer_nif=taxpayer_nif,
+            target_period=target_period,
+            settings=settings,
+            wallet_execute_submitted=wallet_execute_submitted,
+        )
     finally:
         await close_async_resources(
             context,
@@ -770,6 +810,66 @@ async def _read_wallet_html(content: Callable[[], Awaitable[object]]) -> str:
     return html
 
 
+async def _wallet_diagnostic_frame_lines(
+    frame: Page,
+    *,
+    page_index: int,
+    frame_index: int,
+) -> list[str]:
+    try:
+        frame_url = getattr(frame, "url", "") or ""
+        frame_html = await frame.content()
+        frame_shape = wallet_page_shape_context(frame_html, landing_url=frame_url)
+        return [
+            f"page[{page_index}].frame[{frame_index}] url={frame_shape['landing_url']} "
+            f"tables={frame_shape['table_count']} forms={frame_shape['form_count']} "
+            f"raw_sha256={frame_shape['raw_sha256']}",
+        ]
+    except (PlaywrightError, OSError) as exc:
+        log.debug("wallet diagnostic: frame dump failed: %s", exc, exc_info=True)
+        return []
+
+
+async def _wallet_diagnostic_page_lines(candidate: Page, *, page_index: int) -> list[str]:
+    summary: list[str] = []
+    try:
+        url = getattr(candidate, "url", "") or ""
+        html = await candidate.content()
+        shape = wallet_page_shape_context(html, landing_url=url)
+        summary.append(
+            f"page[{page_index}] url={shape['landing_url']} tables={shape['table_count']} "
+            f"forms={shape['form_count']} wallet_entrypoints={shape['wallet_entrypoint_count']} "
+            f"raw_sha256={shape['raw_sha256']}",
+        )
+        for form_index, form in enumerate(shape["forms"]):
+            summary.append(f"page[{page_index}].form[{form_index}] {form}")
+        for input_index, input_shape in enumerate(shape["inputs"]):
+            summary.append(f"page[{page_index}].input[{input_index}] {input_shape}")
+    except (PlaywrightError, OSError) as exc:
+        summary.append(f"page[{page_index}] content_error={type(exc).__name__}")
+        log.debug("wallet diagnostic: page content dump failed idx=%s: %s", page_index, exc, exc_info=True)
+    for frame_index, frame in enumerate(getattr(candidate, "frames", None) or []):
+        summary.extend(
+            await _wallet_diagnostic_frame_lines(
+                frame,
+                page_index=page_index,
+                frame_index=frame_index,
+            ),
+        )
+    return summary
+
+
+def _write_wallet_diagnostic_summary(dump_dir: Path, *, label: str, summary: list[str]) -> None:
+    try:
+        (dump_dir / f"{label}-summary.txt").write_text(
+            "\n".join(summary) + "\n",
+            encoding=UTF_8_ENCODING,
+            newline="\n",
+        )
+    except OSError as exc:
+        log.debug("wallet diagnostic: summary write failed: %s", exc, exc_info=True)
+
+
 async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> None:
     """Best-effort capture of redacted page-shape metadata for wallet DOM-drift diagnosis.
 
@@ -788,38 +888,8 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
     pages = list(getattr(context, "pages", None) or [page])
     summary: list[str] = [f"label={label}", f"page_count={len(pages)}"]
     for page_index, candidate in enumerate(pages):
-        try:
-            url = getattr(candidate, "url", "") or ""
-            html = await candidate.content()
-            shape = wallet_page_shape_context(html, landing_url=url)
-            summary.append(
-                f"page[{page_index}] url={shape['landing_url']} tables={shape['table_count']} "
-                f"forms={shape['form_count']} wallet_entrypoints={shape['wallet_entrypoint_count']} "
-                f"raw_sha256={shape['raw_sha256']}",
-            )
-            for form_index, form in enumerate(shape["forms"]):
-                summary.append(f"page[{page_index}].form[{form_index}] {form}")
-            for input_index, input_shape in enumerate(shape["inputs"]):
-                summary.append(f"page[{page_index}].input[{input_index}] {input_shape}")
-        except (PlaywrightError, OSError) as exc:
-            summary.append(f"page[{page_index}] content_error={type(exc).__name__}")
-            log.debug("wallet diagnostic: page content dump failed idx=%s: %s", page_index, exc, exc_info=True)
-        for frame_index, frame in enumerate(getattr(candidate, "frames", None) or []):
-            try:
-                frame_url = getattr(frame, "url", "") or ""
-                frame_html = await frame.content()
-                frame_shape = wallet_page_shape_context(frame_html, landing_url=frame_url)
-                summary.append(
-                    f"page[{page_index}].frame[{frame_index}] url={frame_shape['landing_url']} "
-                    f"tables={frame_shape['table_count']} forms={frame_shape['form_count']} "
-                    f"raw_sha256={frame_shape['raw_sha256']}",
-                )
-            except (PlaywrightError, OSError) as exc:
-                log.debug("wallet diagnostic: frame dump failed: %s", exc, exc_info=True)
-    try:
-        (dump_dir / f"{label}-summary.txt").write_text("\n".join(summary) + "\n", encoding=UTF_8_ENCODING, newline="\n")
-    except OSError as exc:
-        log.debug("wallet diagnostic: summary write failed: %s", exc, exc_info=True)
+        summary.extend(await _wallet_diagnostic_page_lines(candidate, page_index=page_index))
+    _write_wallet_diagnostic_summary(dump_dir, label=label, summary=summary)
     log.info("wallet diagnostic captured label=%s pages=%s dir=%s", label, len(pages), dump_dir)
     prune_wallet_diagnostic_dumps(dump_dir)
 

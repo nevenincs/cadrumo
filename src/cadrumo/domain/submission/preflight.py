@@ -40,6 +40,119 @@ _PREFLIGHT_AUTH_DESCRIBE_FAILED_LOCALE_KEY = "errors.refused.submission_prefligh
 _PREFLIGHT_AUTH_NOT_READY_LOCALE_KEY = "errors.refused.submission_preflight_auth_not_ready"
 
 
+def _check_draft_approval(draft: ModeloDraftLike) -> None:
+    """Enforce the first gate: only an approved draft may be submitted."""
+    status_value = _enum_value(draft.status)
+    if status_value != ModeloDraftStatus.APROBADO.value:
+        _logger.debug("preflight gate-1 fail: draft status=%s", draft.status)
+        if status_value == ModeloDraftStatus.APROBACION_CADUCADA.value:
+            raise SubmissionPreflightError(
+                "draft approval is stale",
+                translated_message=_PREFLIGHT_DRAFT_STALE_LOCALE_KEY,
+                context={"status": status_value},
+            )
+        raise SubmissionPreflightError(
+            "draft not approved for submission",
+            translated_message=_PREFLIGHT_DRAFT_NOT_APPROVED_LOCALE_KEY,
+            context={"status": status_value},
+        )
+    _logger.debug("preflight gate-1 ok: draft is approved")
+
+
+def _check_error_findings(draft: ModeloDraftLike) -> None:
+    """Enforce the second gate without hiding malformed finding objects."""
+    # Read through the typed ``ModeloFindingLike`` port (``.severity`` is
+    # a REQUIRED field on both real implementations) rather than
+    # ``getattr(f, "severity", None)``: a future rename of the field
+    # must fail loud here, not silently exclude every finding -- error
+    # severity included -- from the gate whose entire job is blocking
+    # submission on them.
+    error_findings = tuple(f for f in draft.findings if f.severity == BaseSeverity.ERROR)
+    if error_findings:
+        _logger.debug(
+            "preflight gate-2 fail: %d error-severity findings",
+            len(error_findings),
+        )
+        raise SubmissionPreflightError(
+            "draft has error-severity findings",
+            translated_message=_PREFLIGHT_ERROR_FINDINGS_LOCALE_KEY,
+            context={"finding_count": len(error_findings)},
+        )
+    _logger.debug("preflight gate-2 ok: no error findings")
+
+
+def _check_deadline_window(
+    deadline_checker: DeadlineWindowChecker,
+    draft: ModeloDraftLike,
+    today: date,
+    *,
+    skip: bool,
+) -> None:
+    """Enforce the third gate unless the caller explicitly skipped it."""
+    if skip:
+        _logger.debug("preflight gate-3 skipped: verification is independent of the filing window")
+    elif not deadline_checker.is_window_open(draft.modelo, draft.period, today):
+        _logger.debug(
+            "preflight gate-3 fail: deadline window closed for %s %s on %s",
+            draft.modelo,
+            draft.period,
+            today,
+        )
+        raise SubmissionPreflightError(
+            "deadline window is closed",
+            translated_message=_PREFLIGHT_DEADLINE_CLOSED_LOCALE_KEY,
+            context={"modelo": draft.modelo, "period": str(draft.period), "today": today.isoformat()},
+        )
+    else:
+        _logger.debug("preflight gate-3 ok: deadline window is open")
+
+
+def _check_auth_readiness(
+    auth_provider: AuthProviderProbe,
+    *,
+    skip: bool,
+) -> None:
+    """Enforce the fourth gate unless the workflow has no live AEAT call."""
+    if skip:
+        _logger.debug(
+            "preflight gate-4 skipped: auth-provider readiness binds only "
+            "live/AEAT-touching purposes, not the local build/verify/file/export flow",
+        )
+        return
+
+    try:
+        description = auth_provider.describe()
+    except CadrumoError as exc:
+        _logger.warning("preflight gate-4 fail: auth provider describe raised", exc_info=True)
+        raise SubmissionPreflightError(
+            "auth provider failed to describe itself",
+            translated_message=_PREFLIGHT_AUTH_DESCRIBE_FAILED_LOCALE_KEY,
+            context={"cause_type": type(exc).__name__},
+        ) from exc
+    if not description.configured or not description.available:
+        _logger.debug(
+            "preflight gate-4 fail: auth provider unavailable kind=%s configured=%s available=%s",
+            description.kind,
+            description.configured,
+            description.available,
+        )
+        raise SubmissionPreflightError(
+            "auth provider is not ready",
+            translated_message=_PREFLIGHT_AUTH_NOT_READY_LOCALE_KEY,
+            context={
+                "kind": _enum_value(description.kind),
+                "configured": description.configured,
+                "available": description.available,
+                "operator_impact": describe_auth_provider_operator_impact(description),
+            },
+        )
+    _logger.debug(
+        "preflight gate-4 ok: auth provider ready (kind=%s expires_on=%s)",
+        description.kind,
+        description.expires_on,
+    )
+
+
 class Preflight:
     """Four-gate validator for a :class:`ModeloDraftLike`.
 
@@ -111,94 +224,12 @@ class Preflight:
             draft.modelo,
             draft.period,
         )
-
-        status_value = _enum_value(draft.status)
-        if status_value != ModeloDraftStatus.APROBADO.value:
-            _logger.debug("preflight gate-1 fail: draft status=%s", draft.status)
-            if status_value == ModeloDraftStatus.APROBACION_CADUCADA.value:
-                raise SubmissionPreflightError(
-                    "draft approval is stale",
-                    translated_message=_PREFLIGHT_DRAFT_STALE_LOCALE_KEY,
-                    context={"status": status_value},
-                )
-            raise SubmissionPreflightError(
-                "draft not approved for submission",
-                translated_message=_PREFLIGHT_DRAFT_NOT_APPROVED_LOCALE_KEY,
-                context={"status": status_value},
-            )
-        _logger.debug("preflight gate-1 ok: draft is approved")
-
-        # Read through the typed ``ModeloFindingLike`` port (``.severity`` is
-        # a REQUIRED field on both real implementations) rather than
-        # ``getattr(f, "severity", None)``: a future rename of the field
-        # must fail loud here, not silently exclude every finding -- error
-        # severity included -- from the gate whose entire job is blocking
-        # submission on them.
-        error_findings = tuple(f for f in draft.findings if f.severity == BaseSeverity.ERROR)
-        if error_findings:
-            _logger.debug(
-                "preflight gate-2 fail: %d error-severity findings",
-                len(error_findings),
-            )
-            raise SubmissionPreflightError(
-                "draft has error-severity findings",
-                translated_message=_PREFLIGHT_ERROR_FINDINGS_LOCALE_KEY,
-                context={"finding_count": len(error_findings)},
-            )
-        _logger.debug("preflight gate-2 ok: no error findings")
-
-        if skip_deadline_window:
-            _logger.debug("preflight gate-3 skipped: verification is independent of the filing window")
-        elif not self.deadline_checker.is_window_open(draft.modelo, draft.period, today):
-            _logger.debug(
-                "preflight gate-3 fail: deadline window closed for %s %s on %s",
-                draft.modelo,
-                draft.period,
-                today,
-            )
-            raise SubmissionPreflightError(
-                "deadline window is closed",
-                translated_message=_PREFLIGHT_DEADLINE_CLOSED_LOCALE_KEY,
-                context={"modelo": draft.modelo, "period": str(draft.period), "today": today.isoformat()},
-            )
-        else:
-            _logger.debug("preflight gate-3 ok: deadline window is open")
-
-        if skip_auth_readiness:
-            _logger.debug(
-                "preflight gate-4 skipped: auth-provider readiness binds only "
-                "live/AEAT-touching purposes, not the local build/verify/file/export flow",
-            )
-            return
-
-        try:
-            description = self.auth_provider.describe()
-        except CadrumoError as exc:
-            _logger.warning("preflight gate-4 fail: auth provider describe raised", exc_info=True)
-            raise SubmissionPreflightError(
-                "auth provider failed to describe itself",
-                translated_message=_PREFLIGHT_AUTH_DESCRIBE_FAILED_LOCALE_KEY,
-                context={"cause_type": type(exc).__name__},
-            ) from exc
-        if not description.configured or not description.available:
-            _logger.debug(
-                "preflight gate-4 fail: auth provider unavailable kind=%s configured=%s available=%s",
-                description.kind,
-                description.configured,
-                description.available,
-            )
-            raise SubmissionPreflightError(
-                "auth provider is not ready",
-                translated_message=_PREFLIGHT_AUTH_NOT_READY_LOCALE_KEY,
-                context={
-                    "kind": _enum_value(description.kind),
-                    "configured": description.configured,
-                    "available": description.available,
-                    "operator_impact": describe_auth_provider_operator_impact(description),
-                },
-            )
-        _logger.debug(
-            "preflight gate-4 ok: auth provider ready (kind=%s expires_on=%s)",
-            description.kind,
-            description.expires_on,
+        _check_draft_approval(draft)
+        _check_error_findings(draft)
+        _check_deadline_window(
+            self.deadline_checker,
+            draft,
+            today,
+            skip=skip_deadline_window,
         )
+        _check_auth_readiness(self.auth_provider, skip=skip_auth_readiness)

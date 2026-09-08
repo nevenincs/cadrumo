@@ -38,11 +38,10 @@ ordinal = "127"
 record_identity = "35301"
 
 [width_17_rules.evidence]
-authority_kind = "official_source"
-source_sheet = "35301"
-source_cell = "B145"
-expected_normalized_statement = "3. Los campos numéricos (Num) sólo admiten números. Los datos numéricos deberán estar alineados a la derecha rellenando con ceros por la izquierda."
-justification = "The design states the sign contract for this numeric type in its own Nota 1 block; every width-17 amount slot on this modelo is an importe, so the reviewed membership carries the standard fifteen-position amount representation under that stated sign rule."
+authority_kind = "reviewed_policy"
+decision_id = "m353-2026-width17-num-amount-representation"
+decision_statement = "Every width-17 Num amount slot of this design is rendered as a fifteen-position integer part followed by two decimal positions, unsigned, right-aligned and left-padded with zeros."
+justification = "The exact official design states, for Num fields, only that they admit digits and are right-aligned with left zero padding, and it leaves Contenido blank at every width-17 amount slot; it states no integer/decimal split, and no such split is stated anywhere in this modelo's designs. The fifteen-plus-two split is therefore a reviewed project decision, not a quotation of official text, applied uniformly to every anchor this rule enumerates because each is a seventeen-position importe of that same type."
 
 [design_identity]
 modelo = "353"

@@ -65,8 +65,12 @@ from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
+from cadrumo.domain.calculations.registry.export import (
+    resolved_export_endpoints,
+    resolved_export_fields,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 
 from .corpus import bundled_modelo_ids
 
@@ -90,14 +94,28 @@ _MONETARY = "money"
 #: A monetary casilla rendered by either is not under-declared.
 _SELF_SCALING_WIRE_TYPES = frozenset({"money", "decimal"})
 
+#: Field kinds that carry no produced value, so no scale question arises: a
+#: literal emits its declared text and a filler emits spaces.
+_NON_VALUE_FIELD_KINDS = frozenset({"literal", "filler"})
+
+#: The wire types an amount can be written in. ``text``, ``date`` and
+#: ``boolean`` are not amounts under any reading, so a field declaring one is
+#: never admitted to a sibling comparison on the strength of its width alone.
+_AMOUNT_WIRE_TYPES = frozenset({"money", "decimal", "integer"})
+
 
 @dataclass(frozen=True, slots=True)
 class MonetaryScaleFinding:
-    """One export field whose declared scale does not account for its casilla."""
+    """One export field whose declared scale does not account for its casilla.
+
+    ``casilla_id`` is ``None`` for a field that carries no casilla of its own.
+    Such a field is reachable only by the sibling comparison, which identifies
+    an amount by the run it sits in rather than by a casilla declaration.
+    """
 
     modelo: str
     revision: str
-    casilla_id: CasillaId
+    casilla_id: CasillaId | None
     field_id: str
     kind: str
     detail: str
@@ -164,6 +182,46 @@ def scale_outcome(wire_type: str, decimals: int | None) -> str:
     return "unscaled"
 
 
+def amount_shaped_without_casilla(field: ExportFieldDefinition) -> bool:
+    """Report whether a casilla-less field could be an amount at all.
+
+    A field carrying no casilla has no declared data type to prove it monetary,
+    so admitting it to an amount comparison needs a different kind of evidence.
+    Two things supply it together, and neither is sufficient alone: this shape
+    test, and the caller's requirement that the run it joins is already proven
+    monetary by casilla-linked members of the same record and width.
+
+    The shape test excludes what a fixed-width design actually puts in a numeric
+    slot besides money. A ``value_policy`` names the slot as an ejercicio, an
+    enumeration, or an identifier digit string, and a ``date_format`` makes it a
+    date; each is a positive statement that the slot is not an amount.
+
+    ``allowed_values`` is refused on narrower ground, and the wider ground it
+    once rested on is gone. A closed domain is no longer proof that a slot is
+    not an amount: the registry now admits a scaled-amount value domain, and
+    eighty modelo 390 fields carry ``['0']`` while being unambiguously amounts.
+    What survives is this. A field reaching this predicate carries NO casilla,
+    so nothing states its meaning and it is being admitted to a comparison on
+    its width alone; a closed domain is a statement narrowing what the slot may
+    hold, and on a field that names no casilla the likeliest reading of that is
+    a code or an enumeration. The corpus agrees: of thirteen thousand six
+    hundred and eighty-one casilla-less fields, one hundred and twenty-one
+    declare a domain, and they are the flag, clave and tipo digits.
+
+    The scaled-amount domain does not reach here at all, which is why the
+    refusal costs nothing today: it is declared on casilla-bearing fields, whose
+    casilla data type settles the question without this predicate being asked.
+    Should a casilla-less scaled amount ever be authored, this refuses it and
+    the screen under-reports rather than compares a code as an amount - the safe
+    direction for an admission made on width.
+    """
+    if str(getattr(field.kind, "value", field.kind)) in _NON_VALUE_FIELD_KINDS:
+        return False
+    if str(field.data_type) not in _AMOUNT_WIRE_TYPES:
+        return False
+    return field.value_policy is None and not field.allowed_values and field.date_format is None
+
+
 def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[MonetaryScaleFinding, ...]:
     """Report monetary fields of one record and width whose siblings scale differently.
 
@@ -172,22 +230,53 @@ def sibling_findings(revision: ModeloRevision, *, modelo_id: str) -> tuple[Monet
     them scales differently from the others, the design gives no reason for it
     and one of them is wrong. This comparison is between declarations rather
     than against a rule, which is why no per-field gate can make it.
+
+    The run is read through the resolved FIELD accessor rather than the resolved
+    endpoints, because an endpoint is a casilla and exists only where a field
+    reaches one. A filing-grade amount that carries no casilla -- a ``header``
+    field homed to a producer key, which is how the official designs carry
+    several rectificativa importes -- yields no endpoint at all and was
+    therefore invisible to exactly the comparison that exists to catch an
+    unscaled amount. Two such fields sat unscaled beside twenty-three scaled
+    siblings on modelo 200's DP200014B page while this screen reported that
+    modelo clean.
+
+    Both accessors resolve the same surface and neither is reassembled here.
+    Rebuilding the surface from the binding derivation is how four published
+    figures came out wrong, each missing a linkage path the local walk did not
+    know about, so the field-level question got its own accessor rather than its
+    own walk.
+
+    Widening the walk cannot make the screen invent an amount, because a group
+    is compared only when a casilla-linked member has ALREADY proven it
+    monetary. A casilla-less field joins a proven run on
+    :func:`amount_shaped_without_casilla`; it can never form a run of its own,
+    so a record of counts, codes or years is never compared with itself.
     """
     declared = {casilla.id: str(casilla.data_type) for casilla in revision.casillas}
-    groups: dict[tuple[str, int], list[tuple[str, str, CasillaId]]] = collections.defaultdict(list)
-    for endpoint in resolved_export_endpoints(revision):
-        field = endpoint.field
-        if field is None or declared.get(endpoint.casilla_id) != _MONETARY:
-            continue
+    groups: dict[tuple[str, int], list[tuple[str, str, CasillaId | None]]] = collections.defaultdict(list)
+    #: Groups a casilla declared monetary has vouched for. Nothing else is compared.
+    monetary_runs: set[tuple[str, int]] = set()
+    for resolved in resolved_export_fields(revision):
+        field = resolved.field
         if field.length is None:
-            # A field with no declared width cannot be compared against siblings
-            # by width; it is reported by the per-field checks instead.
+            # A field with no declared width cannot be compared against
+            # siblings by width; the per-field checks report it instead.
+            continue
+        casilla_id = resolved.casilla_id
+        if casilla_id is not None:
+            if declared.get(casilla_id) != _MONETARY:
+                continue
+            monetary_runs.add((resolved.record_id, field.length))
+        elif not amount_shaped_without_casilla(field):
             continue
         outcome = scale_outcome(str(field.data_type), getattr(field, "decimals", None))
-        groups[(endpoint.record_id, field.length)].append((outcome, str(field.id), endpoint.casilla_id))
+        groups[(resolved.record_id, field.length)].append((outcome, str(field.id), casilla_id))
 
     findings: list[MonetaryScaleFinding] = []
     for (record_id, length), members in sorted(groups.items()):
+        if (record_id, length) not in monetary_runs:
+            continue
         if len(members) < 2:
             continue
         outcomes = {outcome for outcome, _, _ in members}

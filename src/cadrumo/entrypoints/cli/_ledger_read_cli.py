@@ -214,8 +214,7 @@ def _irpf_purpose_label(purpose: str) -> str:
     return purpose
 
 
-def ledger_categories(ctx: typer.Context) -> None:
-    """List the recognised `--category-id` spending-category catalogue."""
+def _spending_category_projection() -> tuple[list[dict[str, object]], list[str], list[str]]:
     families: list[dict[str, object]] = []
     lines: list[str] = [
         tr("cli.ledger.categories.header"),
@@ -235,7 +234,11 @@ def ledger_categories(ctx: typer.Context) -> None:
     if first_category_id is not None:
         lines.append(tr("cli.ledger.categories.usage_example", example=first_category_id))
     lines.append(tr("cli.ledger.categories.income_note"))
-    irpf_categories = [
+    return families, [category.value for category in SpendingCategory], lines
+
+
+def _irpf_category_projection() -> tuple[list[dict[str, object]], list[str]]:
+    irpf_categories: list[dict[str, object]] = [
         {
             "id": category.id,
             "purpose": category.purpose,
@@ -245,13 +248,11 @@ def ledger_categories(ctx: typer.Context) -> None:
         }
         for category in ledger_irpf_category_catalogue()
     ]
-    lines.extend(
-        [
-            "",
-            tr("cli.ledger.categories.irpf_header"),
-            f"{tr('cli.ledger.categories.irpf_id_column')}\t{tr('cli.ledger.categories.irpf_use_column')}",
-        ]
-    )
+    lines = [
+        "",
+        tr("cli.ledger.categories.irpf_header"),
+        f"{tr('cli.ledger.categories.irpf_id_column')}\t{tr('cli.ledger.categories.irpf_use_column')}",
+    ]
     for category in irpf_categories:
         lines.append(f"{category['id']}\t{_irpf_purpose_label(str(category['purpose']))}")
     lines.append(
@@ -262,22 +263,38 @@ def ledger_categories(ctx: typer.Context) -> None:
             activity_category="actividad_economica",
         )
     )
+    return irpf_categories, lines
+
+
+def _ledger_categories_payload(
+    families: list[dict[str, object]],
+    category_ids: list[str],
+    irpf_categories: list[dict[str, object]],
+) -> dict[str, object]:
+    return {
+        "families": families,
+        "category_ids": category_ids,
+        "irpf_categories": irpf_categories,
+        "irpf_category_ids": [category["id"] for category in irpf_categories],
+        "net_paid_withholding_irpf_category_ids": [
+            category["id"] for category in irpf_categories if category["net_paid_invoice"]
+        ],
+        "income_requires_category": False,
+    }
+
+
+def ledger_categories(ctx: typer.Context) -> None:
+    """List the recognised `--category-id` spending-category catalogue."""
+    families, category_ids, spending_lines = _spending_category_projection()
+    irpf_categories, irpf_lines = _irpf_category_projection()
+    lines = [*spending_lines, *irpf_lines]
     from ._ledger_payloads import LedgerCategoriesResult
 
     emit_envelope(
         ctx,
         command="ledger.categories",
         result=LedgerCategoriesResult.model_validate(
-            {
-                "families": families,
-                "category_ids": [category.value for category in SpendingCategory],
-                "irpf_categories": irpf_categories,
-                "irpf_category_ids": [category["id"] for category in irpf_categories],
-                "net_paid_withholding_irpf_category_ids": [
-                    category["id"] for category in irpf_categories if category["net_paid_invoice"]
-                ],
-                "income_requires_category": False,
-            }
+            _ledger_categories_payload(families, category_ids, irpf_categories),
         ),
         lines=lines,
     )

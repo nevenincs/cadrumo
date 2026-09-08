@@ -114,6 +114,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -135,6 +136,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -156,6 +158,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -219,6 +222,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -240,6 +244,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -261,6 +266,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -282,6 +288,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -410,6 +417,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -433,6 +441,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -456,6 +465,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -525,6 +535,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -548,6 +559,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -571,6 +583,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -594,6 +607,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -732,6 +746,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -755,6 +770,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -778,6 +794,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -847,6 +864,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -870,6 +888,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -893,6 +912,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -916,6 +936,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -1052,6 +1073,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1073,6 +1095,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1094,6 +1117,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1157,6 +1181,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1178,6 +1203,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1199,6 +1225,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1220,6 +1247,7 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+allowed_values = ['0']
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1352,28 +1380,6 @@ legal_refs = [
     'ley-37-1992:art-91',
     'orden-eha-3111-2009:art-1',
     'rd-1624-1992:art-71',
-]
-source_refs = ['aeat-dr-390-2025']
-
-[[revisions.2025.export_layouts.records.fields]]
-id = 'modelo-390-page-02-casilla-aic-bienes-tipo-0-base'
-offset = 999
-length = 17
-kind = 'casilla'
-casilla_id = 'iva.anual.aic.bienes.tipo-0.base'
-data_type = 'decimal'
-required = false
-padding = 'left_zero'
-justification = 'right'
-decimals = 2
-signed = false
-legal_refs = [
-    'ley-37-1992:art-13',
-    'ley-37-1992:art-69',
-    'ley-37-1992:art-70',
-    'ley-37-1992:art-85',
-    'rd-1624-1992:art-71',
-    'orden-eha-3111-2009:art-1',
 ]
 source_refs = ['aeat-dr-390-2025']
 

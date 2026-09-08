@@ -192,35 +192,123 @@ def test_a_pointer_naming_a_note_its_own_sheet_omits_stays_unresolved() -> None:
     note printed elsewhere in the design. Resolving to the wrong text is worse
     than not resolving, because an unresolved pointer is reported and a wrong
     one reads as evidence.
+
+    Written from a constructed transcription. It was once asserted of modelo
+    200's ``DP200020B``, which contributed no definitions at all - not because it
+    omits the label but because it prints it ALONE on its row, a shape the
+    definition grammar refused. That made the sheet an accidental subject: the
+    property held for a reason the assertion never stated, and the sheet stopped
+    exhibiting it the moment the grammar was corrected. The scoping rule is
+    stated over input written here instead, where the omission is deliberate.
     """
     from ..analysis.footnote_pointer_notes import sheet_note_definitions
 
+    by_sheet = sheet_note_definitions(
+        _extracted(
+            "# DEFINES IT",
+            "Nota 1: Importes en euros con dos decimales.",
+            "",
+            "# OMITS IT",
+            "1 | 1 | 17 | Num | Importe [01] | Nota 1",
+        )
+    )
+
+    assert by_sheet["DEFINES IT"]["nota 1"] == "Importes en euros con dos decimales."
+    assert "nota 1" not in by_sheet.get("OMITS IT", {})
+    # The pointer on the omitting sheet resolves against ITS OWN sheet and finds
+    # nothing, which is what the screen reports as an undefined note. Asserted
+    # here so the condition keeps a proof independent of what the corpus happens
+    # to leave undefined on any given day.
+    unresolved = resolve_pointer_notes("Nota 1", by_sheet.get("OMITS IT", {}))
+    assert [item.note for item in unresolved] == ["nota 1"]
+    assert not unresolved[0].resolved
+
+
+def test_a_note_printed_as_a_bare_label_is_defined_by_the_rows_beneath_it() -> None:
+    """The label-alone shape is a definition, and its wording follows on later rows.
+
+    Three designs print it - modelo 200's ``DP200020B``, modelo 202's
+    ``Nota 12``, modelo 222's ``Nota 16`` - and a grammar demanding a separator
+    after the label reported all three notes as never defined. That is a
+    transcription defect the designs do not owe: modelo 222 prints ``Nota 12.``
+    with its wording attached and ``Nota 16`` with its wording beneath, eleven
+    rows apart on one sheet, so the two shapes are the same design writing the
+    same kind of thing two ways.
+
+    Asserted on the shipped design as well as on constructed input: the variance
+    is a fact about the corpus, and a fixture alone would prove only that the
+    regex can match a line somebody wrote for it.
+    """
+    from ..analysis.footnote_pointer_notes import sheet_note_definitions
+
+    both_shapes = sheet_note_definitions(
+        _extracted(
+            "# A",
+            "Nota 12. La opcion 0A solo para normativa foral.",
+            "Nota 16",
+            " | Ejercicio 2025: CNAE-2009",
+            " | Ejercicio 2026 y ss: CNAE-2025",
+            "",
+        )
+    )
+    assert both_shapes["A"]["nota 12"] == "La opcion 0A solo para normativa foral."
+    assert both_shapes["A"]["nota 16"] == "Ejercicio 2025: CNAE-2009 Ejercicio 2026 y ss: CNAE-2025"
+
     design = (
-        pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/files")
-        / "01-200-ejercicio-2025-10-9-mb-xls.xls.extracted.md"
+        pathlib.Path("src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_222/files")
+        / "01-222-ejercicio-2025-y-siguientes.xlsx.extracted.md"
     )
-    text = design.read_text(encoding=_UTF_8)
-    by_sheet = sheet_note_definitions(text)
+    live = sheet_note_definitions(design.read_text(encoding=_UTF_8))["DR22201"]
+    assert live["nota 16"].startswith("Ejercicio 2025"), (
+        "modelo 222's bare-label note no longer reads back; the design may have been "
+        f"re-transcribed, in which case re-state this against its current shape: {live.get('nota 16')!r}"
+    )
+    assert live["nota 12"].startswith('La opción "0A"'), "the separated shape stopped being read"
 
-    assert "DP200020B" in text, (
-        "the design no longer names this sheet, so the pointer this case is about is gone; "
-        "pick a sheet the design still carries"
-    )
 
-    # The claim was written as `not in by_sheet.get("DP200020B", {})`, which
-    # cannot tell a sheet that OMITS the label from one the parser never
-    # emitted - and it is the second: this sheet contributes no note
-    # definitions at all, so the pointer is unresolved for a reason the
-    # assertion never stated. Pinned explicitly, so a parser that starts
-    # emitting the sheet forces this claim to be re-stated against its labels.
-    assert "DP200020B" not in by_sheet, (
-        "this sheet now contributes note definitions; re-state the claim against its "
-        f"labels rather than its absence: {sorted(by_sheet['DP200020B'])}"
+def test_a_bare_label_note_stops_at_the_totals_footer_that_closes_its_table() -> None:
+    """A record table's totals row is structure, and never the note's own words.
+
+    A label-alone note has no separator to bound it, so it gathers the rows
+    beneath. Modelo 202 prints its ``TOTAL:`` footer two rows under ``Nota 12``,
+    and gathering it would hand a rule author ``TOTAL: | -1 | | POSICIONES`` as
+    part of what the design says about a CNAE code. Absorbing a neighbour
+    produces text that reads as authoritative and is not, which this module
+    refuses everywhere it reads a note.
+    """
+    from ..analysis.footnote_pointer_notes import sheet_note_definitions
+
+    by_sheet = sheet_note_definitions(
+        _extracted(
+            "# A",
+            "Nota 12",
+            " | Ejercicio 2025: CNAE-2009",
+            " | TOTAL: | -1 |  | POSICIONES",
+            "",
+        )
     )
-    assert any("nota 1" in labels for labels in by_sheet.values()), (
-        "no sheet defines nota 1, so the label this pointer names is absent everywhere and "
-        "the scoping this case proves would be untestable"
+    assert by_sheet["A"]["nota 12"] == "Ejercicio 2025: CNAE-2009"
+
+
+def test_a_row_naming_a_note_beside_other_cells_does_not_open_a_bare_label_note() -> None:
+    """The label-alone form claims only a row carrying nothing else.
+
+    A design table's ``Contenido`` cell holds the POINTER ``Nota 4``, and a row
+    read as a definition because it mentions a label would take the rows beneath
+    it - other fields of the record - as that note's wording. The bare-label
+    grammar is anchored to the whole row for exactly this reason.
+    """
+    from ..analysis.footnote_pointer_notes import sheet_note_definitions
+
+    by_sheet = sheet_note_definitions(
+        _extracted(
+            "# A",
+            "1 | 1 | 17 | Num | Importe [01] | Nota 4",
+            "2 | 18 | 17 | Num | Importe [02] | 15 enteros + 2 decimales",
+            "",
+        )
     )
+    assert by_sheet.get("A", {}) == {}
 
 
 def _extracted(*lines: str) -> str:
@@ -291,3 +379,54 @@ def test_an_unnumbered_note_can_never_answer_a_pointer() -> None:
     extracted = _extracted("# A", "NOTA: Los importes son de 15 enteros.")
     assert sheet_unnumbered_notes(extracted) == {"A": "Los importes son de 15 enteros."}
     assert note_definitions(extracted, sheet="A") == {}
+
+
+def test_the_module_entry_point_runs_and_reports_each_note_under_its_sheet(
+    tmp_path: pathlib.Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The CLI is exercised, not merely imported.
+
+    It had been dead for its whole life: ``main`` called the sheet-scoped note
+    reader with no sheet, so every invocation raised ``TypeError`` before
+    printing a line. Nothing failed, because nothing ran it - an entry point is
+    exactly the surface that hides, since no other module imports it and the
+    import-time checks a package has cannot see inside a function body.
+
+    The transcription is written here rather than taken from the corpus, so the
+    assertion is on the notes this test states and not on whatever a shipped
+    design happens to define. Two sheets, each numbering its notes from one, is
+    the case a design-wide listing gets wrong.
+    """
+    from ..analysis.footnote_pointer_notes import main
+
+    transcription = tmp_path / "design.xlsx.extracted.md"
+    transcription.write_text(
+        _extracted(
+            "# Pag. 1",
+            "Nota 1: Se rellenara con dos decimales.",
+            "",
+            "# Pag. 2",
+            "Nota 1: Solo para periodos 02 y siguientes.",
+        ),
+        encoding=_UTF_8,
+    )
+
+    assert main([str(transcription)]) == 0
+
+    out = capsys.readouterr().out
+    assert "note_definition sheet='Pag. 1' label='nota 1' text='Se rellenara con dos decimales.'" in out
+    assert "note_definition sheet='Pag. 2' label='nota 1' text='Solo para periodos 02 y siguientes.'" in out
+    # Both notes are reported, each under its own sheet. A design-wide listing
+    # would key them on the same label and print one, which is the ambiguity the
+    # sheet-scoped reader exists to refuse.
+    assert "summary sheets=2 definitions=2" in out
+
+
+def test_the_entry_point_refuses_with_a_usage_line_and_no_argument(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The other half of the contract: a caller giving nothing is told what to give."""
+    from ..analysis.footnote_pointer_notes import main
+
+    assert main([]) == 2
+    assert "usage: python -m dev.registry.analysis.footnote_pointer_notes" in capsys.readouterr().out

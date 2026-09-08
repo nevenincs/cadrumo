@@ -33,6 +33,8 @@ from typing import TYPE_CHECKING, Any, Final
 import typer
 
 from ...adapters.persistence.profile.sync_runs import SyncRunRecordRepository
+from ...application.live.capture_mode import LiveCaptureMode
+from ...application.live.errors import LiveIvaAcquisitionFailureMode
 from ...application.live.filed_data import FiledDataListingRow
 from ...application.live.filed_data_capture import (
     FiledHistoryDiscoveryReport,
@@ -108,40 +110,15 @@ def _required_live_period_option(period: str, *, year: int) -> Period:
 
 def _live_iva_outcome_label(value: object) -> str:
     token = getattr(value, "value", value)
-    normalized = str(token or "unknown")
-    if normalized == "aeat_403":
-        return tr("cli.app.live.iva_wallet.acquisition.outcome.aeat_403", default="AEAT 403/auth gate")
-    if normalized == "authenticated":
-        return tr("cli.app.live.iva_wallet.acquisition.outcome.authenticated", default="authenticated")
-    if normalized == "certificate_required":
-        return tr(
-            "cli.app.live.iva_wallet.acquisition.outcome.certificate_required",
-            default="certificate required",
-        )
-    if normalized == "dom_drift":
-        return tr("cli.app.live.iva_wallet.acquisition.outcome.dom_drift", default="AEAT page shape changed")
-    if normalized == "live_navigation_failed":
-        return tr(
-            "cli.app.live.iva_wallet.acquisition.outcome.live_navigation_failed",
-            default="live navigation failed",
-        )
-    if normalized == "no_clave_prompt":
-        return tr("cli.app.live.iva_wallet.acquisition.outcome.no_clave_prompt", default="no Cl@ve prompt")
-    if normalized == "operator_timeout":
-        return tr(
-            "cli.app.live.iva_wallet.acquisition.outcome.operator_timeout",
-            default="operator approval timed out",
-        )
-    if normalized == "pending_clave_request":
-        return tr(
-            "cli.app.live.iva_wallet.acquisition.outcome.pending_clave_request",
-            default="pending Cl@ve request",
-        )
-    if normalized == "qr_required":
-        return tr("cli.app.live.iva_wallet.acquisition.outcome.qr_required", default="QR approval required")
-    if normalized == "wrong_identity":
-        return tr("cli.app.live.iva_wallet.acquisition.outcome.wrong_identity", default="wrong identity")
-    return tr("cli.app.live.iva_wallet.acquisition.outcome.unknown", default=normalized.replace("_", " "))
+    normalized = str(token or LiveIvaAcquisitionFailureMode.UNKNOWN.value)
+    try:
+        outcome_mode = LiveIvaAcquisitionFailureMode(normalized)
+    except ValueError:
+        outcome_mode = LiveIvaAcquisitionFailureMode.UNKNOWN
+    return tr(
+        f"cli.app.live.iva_wallet.acquisition.outcome.{outcome_mode.value}",
+        default=normalized.replace("_", " "),
+    )
 
 
 _IVA_WALLET_LIVE_SAFETY_LINES = (
@@ -750,45 +727,63 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
     """
     try:
         if platform.system() == "Windows":
-            powershell = shutil.which("powershell") or shutil.which("pwsh")
-            if powershell is None:
-                return None
-            script = "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
-            completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
-                [powershell, "-NoProfile", "-Command", script],
-                check=True,
-                capture_output=True,
-                timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
-            )
-            payload = completed.stdout.decode("utf-8", errors="replace").strip()
-            if not payload:
-                # Win32_Process can never legitimately be empty -- there is always
-                # at least this process -- so empty output means the query failed.
-                return None
-            # ANY-RETURN-RATIONALE-JSON-PROCESS-INVENTORY: json.loads returns Any;
-            # payload is a Win32_Process PowerShell JSON array or single-object response.
-            decoded: Any = json.loads(payload)
-            win_rows: list[Any] = [decoded] if isinstance(decoded, dict) else decoded
-            return tuple(
-                _ProcessCommand(pid=int(row["ProcessId"]), command_line=str(row.get("CommandLine") or ""))
-                for row in win_rows
-            )
-
-        ps = shutil.which("ps")
-        if ps is None:
-            return None
-        completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
-            [ps, "-axo", "pid=,args="],
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
-        )
+            return _windows_process_command_inventory()
+        return _posix_process_command_inventory()
     except (OSError, subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError, ValueError):
         return None
 
+
+def _windows_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
+    """Read the Windows process table through the available PowerShell host."""
+    powershell = shutil.which("powershell") or shutil.which("pwsh")
+    if powershell is None:
+        return None
+    script = "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
+    completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
+        [powershell, "-NoProfile", "-Command", script],
+        check=True,
+        capture_output=True,
+        timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
+    )
+    return _parse_windows_process_inventory(completed.stdout)
+
+
+def _parse_windows_process_inventory(payload: bytes) -> tuple[_ProcessCommand, ...] | None:
+    """Parse the JSON shape emitted by ``Get-CimInstance Win32_Process``."""
+    decoded_payload = payload.decode("utf-8", errors="replace").strip()
+    if not decoded_payload:
+        # Win32_Process can never legitimately be empty -- there is always
+        # at least this process -- so empty output means the query failed.
+        return None
+    # ANY-RETURN-RATIONALE-JSON-PROCESS-INVENTORY: json.loads returns Any;
+    # payload is a Win32_Process PowerShell JSON array or single-object response.
+    decoded: Any = json.loads(decoded_payload)
+    win_rows: list[Any] = [decoded] if isinstance(decoded, dict) else decoded
+    return tuple(
+        _ProcessCommand(pid=int(row["ProcessId"]), command_line=str(row.get("CommandLine") or ""))
+        for row in win_rows
+    )
+
+
+def _posix_process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
+    """Read and parse the POSIX process table used by the local watchdog."""
+    ps = shutil.which("ps")
+    if ps is None:
+        return None
+    completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
+        [ps, "-axo", "pid=,args="],
+        check=True,
+        capture_output=True,
+        text=True,
+        timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
+    )
+    return _parse_posix_process_inventory(completed.stdout)
+
+
+def _parse_posix_process_inventory(output: str) -> tuple[_ProcessCommand, ...]:
+    """Parse ``ps -axo pid=,args=`` rows into watchdog process records."""
     rows: list[_ProcessCommand] = []
-    for raw_line in completed.stdout.splitlines():
+    for raw_line in output.splitlines():
         line = raw_line.strip()
         if not line:
             continue
@@ -1353,7 +1348,7 @@ def _emit_single_filed_pull(
             limit=limit,
         ),
     )
-    lines = _filed_capture_lines(report, mode="single", modelo=report.modelo, year=report.year)
+    lines = _filed_capture_lines(report, mode=LiveCaptureMode.SINGLE, modelo=report.modelo, year=report.year)
     result = FiledCaptureResult(
         output_root=report.output_root,
         modelo=report.modelo,
@@ -1410,14 +1405,14 @@ def _emit_bulk_filed_pull(
     )
     lines = _filed_capture_lines(
         report,
-        mode="bulk",
+        mode=LiveCaptureMode.BULK,
         modelos=report.modelos,
         year_from=report.year_from,
         year_to=report.year_to,
         failures=report.failures,
     )
     result = FiledCaptureResult(
-        mode="bulk",
+        mode=LiveCaptureMode.BULK,
         dry_run=report.dry_run,
         output_root=report.output_root,
         modelos=list(report.modelos),

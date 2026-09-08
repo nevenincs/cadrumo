@@ -1015,8 +1015,6 @@ application:
         the key does not match or the package was tampered with.
       recipient_encryption_invalid_key: The recipient's public key is not a well-formed
         X25519 public key.
-      recipient_encryption_key_not_found: No recipient encryption keypair has been
-        minted yet for this bucket.
       recipient_registry_already_exists: Recipient %{recipient_id} is already registered.
       recipient_registry_generic: An error occurred with the recipient fingerprint
         registry.
@@ -1342,8 +1340,6 @@ application:
       edit_missing_filing_baseline: 'This profile edit would leave filing identity
         details incomplete. Add these flags to the same command and run it again:
         %{missing_flags}.'
-      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
-        requires supplied_question_ids - edit is a patch, not a full rewrite.
       persist_patch_unknown_question_id: Wizard patch references an unknown question
         id.
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'

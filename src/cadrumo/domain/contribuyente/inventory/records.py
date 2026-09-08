@@ -661,8 +661,7 @@ class InventoryClosingResolution(BaseModel):
 
 def _validate_resolution_physical_state(resolution: InventoryClosingResolution) -> bool:
     has_physical = (
-        resolution.physical_observed_value is not None
-        and resolution.physical_observation_fingerprint is not None
+        resolution.physical_observed_value is not None and resolution.physical_observation_fingerprint is not None
     )
     if (resolution.physical_observed_value is None) != (resolution.physical_observation_fingerprint is None):
         raise InventoryValidationError("physical observed value and fingerprint must travel together")

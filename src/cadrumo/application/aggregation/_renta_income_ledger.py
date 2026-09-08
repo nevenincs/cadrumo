@@ -801,21 +801,55 @@ def _classify_income_transaction(
     (:mod:`~._renta_gasto_ledger`), so the income pass skips them silently
     rather than emitting a misleading "expense dropped" advisory.
     """
-    transaction_id = transaction.transaction_id
+    if _income_transaction_is_out_of_scope(transaction):
+        return None
+    gate_issue = _income_gate_issue(transaction)
+    if gate_issue is not None:
+        return gate_issue
+    proportion_or_issue = _income_business_proportion_or_issue(transaction)
+    if isinstance(proportion_or_issue, RentaIncomeLedgerAggregationIssue):
+        return proportion_or_issue
+    proportion = proportion_or_issue
+    # Use the EUR projection after rejecting unconverted non-EUR rows above, so a
+    # converted foreign-currency receipt contributes its EUR equivalent while a
+    # domestic row retains its raw amount (mirrors the expense pipeline's
+    # ``effective_eur_amount`` usage in ``_renta_ledger.py``).
+    gross_amount = effective_eur_amount(transaction) * proportion
 
-    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
-        # Operator reviewed and deliberately excluded this row from filing (a
-        # final disposition): omit it silently. This short-circuits before the
-        # ``irpf_category=actividad_economica`` business override in
-        # ``_income_business_proportion`` so an excluded row can never slip back into
-        # aggregation through the category tag.
-        return None
-    if transaction.direction is not TransactionDirection.INCOMING:
-        # OUTGOING (and any non-income) rows are out of scope for the income
-        # pass. Deductible business expenses are owned by the gasto pipeline;
-        # they are no longer surfaced here as a drop (no-silent-under-declaration
-        # is upheld by that pipeline aggregating them into casilla 02).
-        return None
+    filing_date_or_issue = _income_filing_date_or_issue(
+        transaction,
+        cumulative_start=cumulative_start,
+        cumulative_end=cumulative_end,
+    )
+    if isinstance(filing_date_or_issue, RentaIncomeLedgerAggregationIssue):
+        return filing_date_or_issue
+    filing_date = filing_date_or_issue
+
+    return _income_observation(
+        transaction,
+        invoices=invoices,
+        bucket_id=bucket_id,
+        proportion=proportion,
+        gross_amount=gross_amount,
+        filing_date=filing_date,
+    )
+
+
+def _income_transaction_is_out_of_scope(transaction: Transaction) -> bool:
+    """Return whether the income pass must silently skip this transaction."""
+    # Operator reviewed and deliberately excluded this row from filing (a final
+    # disposition): omit it before the actividad-económica category override can
+    # re-admit it. OUTGOING rows belong to the gasto pipeline and are skipped
+    # rather than reported as income exclusions.
+    return (
+        transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
+        or transaction.direction is not TransactionDirection.INCOMING
+    )
+
+
+def _income_gate_issue(transaction: Transaction) -> RentaIncomeLedgerAggregationIssue | None:
+    """Return the first currency or IRPF-category issue for an income row."""
+    transaction_id = transaction.transaction_id
     if is_non_eur_without_conversion(transaction):
         return RentaIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -834,32 +868,56 @@ def _classify_income_transaction(
                 "not actividad económica; excluded from M130"
             ),
         )
+    return None
 
+
+def _income_business_proportion_or_issue(
+    transaction: Transaction,
+) -> Decimal | RentaIncomeLedgerAggregationIssue:
+    """Return the business share or the precise classification issue."""
     proportion = _income_business_proportion(transaction)
-    if proportion is None:
-        reason = (
-            RentaIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-            if transaction.business_classification is BusinessClassification.PERSONAL
-            else RentaIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
-        )
-        return RentaIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=reason,
-            detail=(f"business classification {transaction.business_classification.value!r} cannot feed Renta income"),
-        )
-    # Use the EUR projection after rejecting unconverted non-EUR rows above, so a
-    # converted foreign-currency receipt contributes its EUR equivalent while a
-    # domestic row retains its raw amount (mirrors the expense pipeline's
-    # ``effective_eur_amount`` usage in ``_renta_ledger.py``).
-    gross_amount = effective_eur_amount(transaction) * proportion
+    if proportion is not None:
+        return proportion
+    reason = (
+        RentaIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
+        if transaction.business_classification is BusinessClassification.PERSONAL
+        else RentaIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    )
+    return RentaIncomeLedgerAggregationIssue(
+        transaction_id=transaction.transaction_id,
+        reason=reason,
+        detail=f"business classification {transaction.business_classification.value!r} cannot feed Renta income",
+    )
 
+
+def _income_filing_date_or_issue(
+    transaction: Transaction,
+    *,
+    cumulative_start: date,
+    cumulative_end: date,
+) -> date | RentaIncomeLedgerAggregationIssue:
+    """Return the transaction filing date or its cumulative-window issue."""
     filing_date = transaction.raw.value_date or transaction.raw.booked_date
-    if not (cumulative_start <= filing_date <= cumulative_end):
-        return RentaIncomeLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            reason=RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            detail=f"filing date {filing_date} is outside the cumulative income window",
-        )
+    if cumulative_start <= filing_date <= cumulative_end:
+        return filing_date
+    return RentaIncomeLedgerAggregationIssue(
+        transaction_id=transaction.transaction_id,
+        reason=RentaIncomeLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+        detail=f"filing date {filing_date} is outside the cumulative income window",
+    )
+
+
+def _income_observation(
+    transaction: Transaction,
+    *,
+    invoices: InvoiceCatalogue,
+    bucket_id: str,
+    proportion: Decimal,
+    gross_amount: Decimal,
+    filing_date: date,
+) -> RentaIncomeObservation:
+    """Enrich an eligible income row with invoice evidence and withholding."""
+    transaction_id = transaction.transaction_id
 
     # taxable_base carries the IVA-exclusive base imponible when set; it
     # feeds the taxable_base_sum fact path for the rendimiento-neto binding.

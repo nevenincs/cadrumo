@@ -38,9 +38,7 @@ from ._record_design_ir import RecordDesignIntermediateField
 from ._semantic_map_join import JoinedRecordDesign
 from .source_defects import (
     NoteStatedApplicabilityDeclaration,
-    note_stated_applicability_for,
     note_states_only_applicability,
-    validate_note_stated_applicability_declarations,
 )
 
 __all__ = [
@@ -157,11 +155,18 @@ class OfficialSourceEvidence(_StrictModel):
 
 
 class ReviewedPolicyDecision(_StrictModel):
-    """An exact-anchor policy decision that makes no claim about source text."""
+    """A reviewed policy decision that makes no claim about official source text."""
 
     authority_kind: Literal["reviewed_policy"]
     decision_id: str = Field(min_length=1, pattern=r"^[a-z0-9][a-z0-9-]*$")
-    governed_anchor: RenderProfileAnchor
+    #: The single anchor a SINGLETON decision governs, and omitted entirely on a
+    #: width-17 membership decision, whose governed set is the rule's own
+    #: ``anchors`` enumeration. Restating that enumeration here would duplicate
+    #: the one authority the coverage gate already checks and could drift from
+    #: it. Which shape is required is decided by the owning rule, both ways, so
+    #: neither a singleton without its anchor nor a membership with a stray one
+    #: can be authored.
+    governed_anchor: RenderProfileAnchor | None = None
     decision_statement: str = Field(min_length=1)
     justification: str = Field(min_length=1)
 
@@ -228,8 +233,16 @@ class Width17MembershipRule(_StrictModel):
 
     @model_validator(mode="after")
     def _require_explicit_type_specific_representation(self) -> Width17MembershipRule:
-        if not isinstance(self.evidence, OfficialSourceEvidence):
-            raise ValueError("width-17 membership requires verified official-source evidence")
+        # A membership rule may rest on either authority kind, exactly as a
+        # singleton may. Demanding official-source evidence here did not make the
+        # membership better grounded: an official design that states the amount
+        # type, alignment and sign but never its integer/decimal split cannot
+        # ground the split, so the requirement only forced the split's reviewed
+        # inference to be labelled as quoted official text. The label then
+        # asserted an authority the quoted statement does not carry, which is the
+        # under-declaration this authority kind exists to make visible.
+        if isinstance(self.evidence, ReviewedPolicyDecision) and self.evidence.governed_anchor is not None:
+            raise ValueError("width-17 membership policy governs its anchor enumeration, not one named anchor")
         expected = (15, "unsigned") if self.aeat_type == "Num" else (14, "n-prefix-negative-blank-nonnegative")
         if (self.integer_digits, self.sign_policy) != expected:
             raise ValueError(f"{self.aeat_type} width-17 representation conflicts with its explicit sign policy")
@@ -347,7 +360,9 @@ class SingletonNumericRule(_StrictModel):
             raise ValueError(f"{self.semantic_kind} requires exactly {expected_shape!r} integer/decimal digits")
         if self.semantic_kind == "checkbox" and self.allowed_values != ("0", "1"):
             raise ValueError("checkbox requires allowed_values ('0', '1')")
-        if isinstance(self.evidence, ReviewedPolicyDecision) and self.evidence.governed_anchor != self.anchor:
+        if isinstance(self.evidence, ReviewedPolicyDecision) and (
+            self.evidence.governed_anchor is None or self.evidence.governed_anchor != self.anchor
+        ):
             raise ValueError("reviewed policy must name the exact governed anchor")
         return self
 
@@ -566,16 +581,16 @@ def validate_render_profile(
         source_ref=joined.source.source_ref,
         source_sha256=joined.source.source_sha256,
     )
-    # Resolved from the parser-read source rather than accepted from the caller,
-    # for the same reason ``render_complete_export_tree`` resolves the
-    # note-governed amounts there: every consumer of this validation -- the
-    # generator, the drift check, a test -- must read ONE declaration set for one
-    # pinned design and cannot disagree about which cells have been read.
-    applicability_notes = note_stated_applicability_for(joined.source.source_ref)
-    validate_note_stated_applicability_declarations(applicability_notes, joined.source)
-    eligibility = project_render_profile_eligibility(
+    # Imported at call time, not at module scope. The eligibility contract is
+    # shared beyond this package, so it has a public defining module of its own;
+    # that module reads this one's projection, and a module-level import back
+    # would close the cycle. There is one definition either way -- this
+    # validator and every screen ask that one function.
+    from .render_profile_eligibility import resolve_render_profile_eligibility
+
+    eligibility = resolve_render_profile_eligibility(
         (joined_field.parser_field for joined_field in joined.fields),
-        applicability_notes=applicability_notes,
+        joined.source,
     )
     validate_render_profile_authority(profile, expected_identity, eligibility, source_evidence)
 
@@ -871,6 +886,13 @@ def project_render_profile_eligibility(
     is threaded rather than resolved here so that this projection stays a pure
     function of the fields it is given, and so that eligibility and the
     renderer's own routing ask ONE predicate with ONE input set.
+
+    A caller holding a parser-read source wants
+    :func:`~dev.registry.pipeline.render_profile_eligibility.resolve_render_profile_eligibility`
+    instead, which resolves and validates that source's declarations before
+    projecting.  Calling this
+    directly with a hand-assembled argument is how a consumer comes to answer a
+    different question from the renderer.
     """
     eligible = tuple(
         field

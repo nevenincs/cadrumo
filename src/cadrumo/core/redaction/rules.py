@@ -946,6 +946,36 @@ def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
     return redacted
 
 
+def _redact_cli_mapping(value: dict[object, object], *, reveal_identifiers: bool) -> dict[object, object]:
+    """Redact mapping keys and values while retaining insertion order."""
+    redacted: dict[object, object] = {}
+    for item_key, item_value in value.items():
+        redacted_key = (
+            _redact_cli_string(item_key, reveal_identifiers=reveal_identifiers)
+            if isinstance(item_key, str)
+            else item_key
+        )
+        unique_key = _unique_mapping_key(redacted_key, redacted)
+        redacted[unique_key] = _redact_structured_for_cli_output(
+            item_value,
+            key=item_key,
+            reveal_identifiers=reveal_identifiers,
+        )
+    return redacted
+
+
+def _redact_cli_list(value: list[object], *, key: object | None, reveal_identifiers: bool) -> list[object]:
+    """Redact list members under their containing field."""
+    return [_redact_structured_for_cli_output(item, key=key, reveal_identifiers=reveal_identifiers) for item in value]
+
+
+def _redact_cli_tuple(value: tuple[object, ...], *, key: object | None, reveal_identifiers: bool) -> tuple[object, ...]:
+    """Redact tuple members under their containing field."""
+    return tuple(
+        _redact_structured_for_cli_output(item, key=key, reveal_identifiers=reveal_identifiers) for item in value
+    )
+
+
 def _redact_structured_for_cli_output(
     value: object,
     *,
@@ -968,28 +998,11 @@ def _redact_structured_for_cli_output(
     if isinstance(value, str):
         return _redact_cli_string(value, reveal_identifiers=reveal_identifiers)
     if is_object_dict(value):
-        redacted: dict[object, object] = {}
-        for item_key, item_value in value.items():
-            redacted_key = (
-                _redact_cli_string(item_key, reveal_identifiers=reveal_identifiers)
-                if isinstance(item_key, str)
-                else item_key
-            )
-            unique_key = _unique_mapping_key(redacted_key, redacted)
-            redacted[unique_key] = _redact_structured_for_cli_output(
-                item_value,
-                key=item_key,
-                reveal_identifiers=reveal_identifiers,
-            )
-        return redacted
+        return _redact_cli_mapping(value, reveal_identifiers=reveal_identifiers)
     if is_object_list(value):
-        return [
-            _redact_structured_for_cli_output(item, key=key, reveal_identifiers=reveal_identifiers) for item in value
-        ]
+        return _redact_cli_list(value, key=key, reveal_identifiers=reveal_identifiers)
     if is_object_tuple(value):
-        return tuple(
-            _redact_structured_for_cli_output(item, key=key, reveal_identifiers=reveal_identifiers) for item in value
-        )
+        return _redact_cli_tuple(value, key=key, reveal_identifiers=reveal_identifiers)
     return value
 
 

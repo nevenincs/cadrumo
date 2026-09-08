@@ -22,6 +22,7 @@ declaration's own shape would reveal the difference.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 from typing import Final
 
@@ -31,7 +32,11 @@ from pydantic import ValidationError
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.fixed_width_codec import (
+    ExportEncoding,
+    parse_fixed_width_export_field,
+    render_fixed_width_export_field,
+)
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
@@ -78,6 +83,11 @@ _M390_2025_SOURCE_REF: Final = "aeat-dr-390-2025"
 _SHA: Final = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
 _SHA_2023: Final = "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7"
 _OTHER_SHA: Final = "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7"
+
+#: The slot width every adjudicated amount run of these designs declares. Both
+#: paired forms of modelo 200's DP200001!A121 fill it: fifteen digits and two
+#: decimals unsigned, or a sign position with fourteen and two.
+_WIDTH_17: Final = 17
 
 #: The cell content EXACTLY as the production parser hands it to the renderer.
 #: Read from the hash-pinned workbook rather than composed here. The wrapper is
@@ -357,6 +367,11 @@ class TestNoteGovernedAmountAdjudication:
             "note_statement": "Nota 2: estas casillas deben estar rellenas a 0",
             "integer_digits": 15,
             "decimal_digits": 2,
+            # This design pairs Tipo 'N' with an UNSIGNED fifteen-digit form:
+            # its surviving rate rows spell '15 enteros 2 decimales', which
+            # fills all seventeen bytes and leaves no room for a sign marker.
+            "sign_policy": "unsigned",
+            "mandated_values": ("0",),
             "evidence": "the surviving rates on the same sheet state 15 enteros 2 decimales at the same width",
         }
         fields.update(overrides)
@@ -404,6 +419,10 @@ class TestNoteGovernedAmountAdjudication:
             assert declaration.source_sha256 == self._M390_2025_SHA
             assert declaration.published_content == self._POINTER
             assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
+            # The note states two things, and both are recorded: the run's
+            # representation, and the value it mandates.
+            assert declaration.mandated_values == ("0",)
+            assert "rellenas a 0" in declaration.note_statement
 
     def test_an_adjudicated_pointer_renders_the_scale_its_run_states(self) -> None:
         derived = _numeric_derivation(
@@ -415,6 +434,69 @@ class TestNoteGovernedAmountAdjudication:
         assert derived.derivation_code == "numeric-note-governed-amount-v1"
         assert str(derived.field.data_type) == "decimal"
         assert derived.field.decimals == 2
+
+    def test_the_mandated_value_reaches_the_field_and_closes_its_domain(self) -> None:
+        """The note mandates zero, so the layout refuses anything else at the boundary.
+
+        Scale alone left the mandate unenforced: a nonzero would have been
+        emitted at the right scale, which is a silent under-declaration of what
+        the design states. The domain travels from the declaration onto the
+        field and the codec settles every value against it, in both directions.
+        """
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(self._declaration(),),
+        )
+
+        assert derived.field.allowed_values == ("0",)
+        # Zero renders as the seventeen zero bytes the mandate describes, which
+        # is byte-identical to the blank fill an absent numeric slot takes.
+        assert render_fixed_width_export_field(derived.field, Decimal("0.00")) == "0" * 17
+        assert render_fixed_width_export_field(derived.field, None) == "0" * 17
+        with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+            render_fixed_width_export_field(derived.field, Decimal("1.00"))
+        with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+            parse_fixed_width_export_field(derived.field, "0" * 14 + "100")
+
+    def test_a_run_whose_note_mandates_no_value_leaves_the_domain_open(self) -> None:
+        """Absence of a mandate is declared, never defaulted, and stays open.
+
+        A declaration is the record of what a person read in one note. Reading
+        390's Nota 2 must not close the domain of a run whose own note says
+        nothing about values.
+        """
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(self._declaration(mandated_values=None),),
+        )
+
+        assert derived.field.allowed_values is None
+        assert render_fixed_width_export_field(derived.field, Decimal("1.00")) == "0" * 14 + "100"
+
+    def test_a_mandated_value_the_export_schema_cannot_carry_is_refused(self) -> None:
+        """Teeth on the declaration itself, in the three ways it can be wrong."""
+        with pytest.raises(ValidationError, match="zero-canonical unsigned unit values"):
+            self._declaration(mandated_values=("00",))
+        with pytest.raises(ValidationError, match="zero-canonical unsigned unit values"):
+            self._declaration(mandated_values=("0", "1234567890123456"))
+        with pytest.raises(ValidationError, match="non-empty and unique"):
+            self._declaration(mandated_values=())
+
+    def test_a_signed_run_cannot_declare_a_mandated_value(self) -> None:
+        """``money`` declares no scale on the field and carries no reviewed domain.
+
+        Admitting one here would let a mandate be declared and then dropped on
+        the way to the layout, which is the failure mode this whole declaration
+        exists to prevent.
+        """
+        with pytest.raises(ValidationError, match="carries no value domain"):
+            self._declaration(
+                sign_policy="n-prefix-negative-blank-nonnegative",
+                integer_digits=14,
+                mandated_values=("0",),
+            )
 
     def test_an_unadjudicated_pointer_keeps_the_reading_it_always_had(self) -> None:
         """The correction is opt-in per design; it never re-scales a document nobody read."""
@@ -475,19 +557,27 @@ class TestModelo200NoteGovernedAmounts:
     _POINTER: Final = "Nota 1"
 
     @staticmethod
-    def _joined_amount_field(*, sheet: str, length: int = 17) -> JoinedRecordDesignField:
+    def _joined_amount_field(*, sheet: str, length: int = 17, content: str | None = None) -> JoinedRecordDesignField:
+        # DP200014B's two pointer rows are Tipo 'N'; the DP200019 run this
+        # helper was written for is Tipo 'Num'. The type travels with the sheet
+        # so each case exercises the row shape its own design publishes.
+        signed_sheet = sheet == "DP200014B"
         parser_field = RecordDesignIntermediateField.model_validate(
             {
                 "sheet": sheet,
                 "record_identity": sheet,
-                "source_row": 119,
-                "source_cell": "A119",
-                "ordinal": "114",
-                "offset": 1849,
+                "source_row": 94 if signed_sheet else 119,
+                "source_cell": "A94" if signed_sheet else "A119",
+                "ordinal": "89" if signed_sheet else "114",
+                "offset": 1408 if signed_sheet else 1849,
                 "length": length,
-                "aeat_type": "Num",
-                "normalized_description": "Deducciones I+D+i excluidas de límite - Deducción resto del grupo",
-                "content": TestModelo200NoteGovernedAmounts._POINTER,
+                "aeat_type": "N" if signed_sheet else "Num",
+                "normalized_description": (
+                    "Resultado a ingresar correspondiente a la anterior autoliquidación (A)"
+                    if signed_sheet
+                    else "Deducciones I+D+i excluidas de límite - Deducción resto del grupo"
+                ),
+                "content": content if content is not None else TestModelo200NoteGovernedAmounts._POINTER,
             }
         )
         entry = SemanticMapEntry.model_validate(
@@ -508,16 +598,28 @@ class TestModelo200NoteGovernedAmounts:
         )
         return JoinedRecordDesignField(parser_field=parser_field, semantic_entry=entry)
 
-    def test_the_live_catalogue_pins_both_pointer_runs_to_the_read_design(self) -> None:
+    def test_the_live_catalogue_pins_every_pointer_run_to_the_read_design(self) -> None:
         declarations = note_governed_amounts_for("aeat-dr-200-2025")
 
-        assert {item.sheet for item in declarations} == {"DP200019", "DP200020B"}
+        assert {item.sheet for item in declarations} == {"DP200019", "DP200020B", "DP200014B"}
         for declaration in declarations:
             assert declaration.source_sha256 == self._M200_2025_SHA
-            assert declaration.published_content == self._POINTER
-            assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
             assert declaration.note_statement.strip() == declaration.note_statement
             assert declaration.note_statement
+            # Every run of this design fills the same seventeen-byte slot, by
+            # one of the two paired forms DP200001!A121 states.
+            assert declaration.wire_length == _WIDTH_17
+            assert declaration.decimal_digits == 2
+
+    def test_the_unsigned_runs_spend_every_byte_on_digits(self) -> None:
+        by_sheet = {item.sheet: item for item in note_governed_amounts_for("aeat-dr-200-2025")}
+
+        for sheet in ("DP200019", "DP200020B"):
+            declaration = by_sheet[sheet]
+            assert declaration.published_content == self._POINTER
+            assert declaration.sign_policy == "unsigned"
+            assert declaration.signed is False
+            assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
 
     def test_each_declaration_quotes_the_note_its_own_sheet_defines(self) -> None:
         by_sheet = {item.sheet: item for item in note_governed_amounts_for("aeat-dr-200-2025")}
@@ -540,14 +642,97 @@ class TestModelo200NoteGovernedAmounts:
 
     def test_the_same_label_on_an_undeclared_sheet_keeps_the_unscaled_reading(self) -> None:
         derived = _numeric_derivation(
-            self._joined_amount_field(sheet="DP200014B"),
-            export_record_id="m200-2025-dp200014b",
+            self._joined_amount_field(sheet="DP200015"),
+            export_record_id="m200-2025-dp200015",
             note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
         )
 
         assert derived.field.data_type == "integer"
         assert derived.field.decimals is None
         assert derived.derivation_code == "numeric-integer-v1"
+
+    def test_the_signed_rectificativa_run_renders_the_paired_form_its_design_states(self) -> None:
+        """``DP200001!A121`` states two forms; a Tipo 'N' slot takes ``N + 14``.
+
+        The unsigned reading is not merely differently spelled here: it drops
+        the sign the rectificativa subtraction Nota 2 describes needs, and reads
+        fourteen integer positions as fifteen, which is a magnitude error of ten
+        on top of the hundredfold one the unscaled reading makes.
+        """
+        for pointer in ("Nota 1", "Nota 2"):
+            derived = _numeric_derivation(
+                self._joined_amount_field(sheet="DP200014B", content=pointer),
+                export_record_id="m200-2025-dp200014b",
+                note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+            )
+
+            assert derived.derivation_code == "numeric-note-governed-amount-v1"
+            assert derived.field.data_type == "money", pointer
+            assert derived.field.signed is True, pointer
+            # `money` carries its scale inside the codec, and the schema refuses
+            # a field declaring decimals beside any other data_type.
+            assert derived.field.decimals is None, pointer
+
+    def test_each_signed_declaration_quotes_the_note_its_own_row_points_at(self) -> None:
+        by_pointer = {
+            item.published_content: item
+            for item in note_governed_amounts_for("aeat-dr-200-2025")
+            if item.sheet == "DP200014B"
+        }
+
+        assert set(by_pointer) == {"Nota 1", "Nota 2"}
+        for declaration in by_pointer.values():
+            assert declaration.sign_policy == "n-prefix-negative-blank-nonnegative"
+            assert declaration.signed is True
+            assert (declaration.integer_digits, declaration.decimal_digits) == (14, 2)
+        assert by_pointer["Nota 1"].note_cell == "A102"
+        assert "solo pueden tener contenido" in by_pointer["Nota 1"].note_statement
+        assert by_pointer["Nota 2"].note_cell == "A106"
+        assert "01578" in by_pointer["Nota 2"].note_statement
+
+    def test_the_signed_width_check_counts_the_sign_position(self) -> None:
+        """Sixteen digits and a marker fill seventeen bytes; sixteen bytes do not.
+
+        Without the sign position in the count, this declaration would appear to
+        need sixteen bytes and would silently pass in a sixteen-byte slot.
+        """
+        with pytest.raises(RegistryValidationError, match="content declares 17"):
+            _numeric_derivation(
+                self._joined_amount_field(sheet="DP200014B", content="Nota 1", length=16),
+                export_record_id="m200-2025-dp200014b",
+                note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+            )
+
+    def test_a_signed_declaration_cannot_carry_a_scale_the_money_codec_refuses(self) -> None:
+        """The signed wire type fixes two decimals, so no other count may be declared.
+
+        Admitting one would publish a field whose declared scale and emitted
+        scale disagree, with nothing downstream positioned to notice.
+        """
+        signed = next(item for item in note_governed_amounts_for("aeat-dr-200-2025") if item.sheet == "DP200014B")
+
+        with pytest.raises(ValidationError, match="fixes 2 decimals"):
+            NoteGovernedAmountDeclaration.model_validate({**signed.model_dump(), "decimal_digits": 4})
+
+    def test_the_sign_is_declared_per_run_and_never_inferred_from_the_aeat_type(self) -> None:
+        """Modelo 390 pairs Tipo 'N' with an UNSIGNED fifteen-digit representation.
+
+        Both designs print 'N' in the Tipo column on width-17 amount rows, and
+        they mean different wire forms by it: modelo 200's own DP200001!A121
+        spells 'N + 14' beside the unsigned '15', while modelo 390's 2025 rows
+        carry sibling Contenido cells reading '15 enteros 2 decimales', which
+        fills all seventeen bytes and leaves no room for a marker. A rule
+        mapping the type to a sign would be right for one and wrong for the
+        other, so this holds the two live declarations apart.
+        """
+        m200 = next(item for item in note_governed_amounts_for("aeat-dr-200-2025") if item.sheet == "DP200014B")
+        m390 = next(iter(note_governed_amounts_for("aeat-dr-390-2025")))
+
+        assert m200.signed is True
+        assert (m200.integer_digits, m200.decimal_digits) == (14, 2)
+        assert m390.signed is False
+        assert (m390.integer_digits, m390.decimal_digits) == (15, 2)
+        assert m200.wire_length == m390.wire_length == _WIDTH_17
 
     def test_the_declared_scale_cannot_contradict_the_slots_own_width(self) -> None:
         with pytest.raises(RegistryValidationError, match="content declares 17"):
@@ -660,6 +845,10 @@ class TestNoteGovernedAmountsReachTheRenderer:
             assert derivation.parser_field.content == "Nota 2"
             assert str(derivation.field.data_type) == "decimal"
             assert derivation.field.decimals == 2
+            # The note mandates a value as well as implying a scale, and both
+            # halves reach the layout: every one of the eighty slots is closed
+            # to the quantity zero.
+            assert derivation.field.allowed_values == ("0",)
         assert not any(
             derivation.derivation_code == "numeric-integer-v1" and derivation.parser_field.length == 17
             for derivation in rendered.field_derivations

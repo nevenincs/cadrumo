@@ -3,7 +3,7 @@
 These tests verify that the scripted intent driver walks the projected
 setup definition in the declared order, skips conditional questions when
 ``visible_when`` is not satisfied, builds a typed answers model that
-validates, and that ``persist_answers`` + ``project_answers`` round-trip
+validates, and that ``serialise_answers`` + ``project_answers`` round-trip
 the canonical-token representation back to the same typed model.
 """
 
@@ -227,7 +227,7 @@ def test_scripted_driver_rejects_unconsumed_tokens() -> None:
     assert "orphan" not in str(excinfo.value.context)
 
 
-def test_persist_answers_round_trip_via_project_answers() -> None:
+def test_serialised_answers_round_trip_via_project_answers() -> None:
     answers, _committed = _drive_scripted(_individual_declaration_canonical())
     canonical = serialise_answers(SETUP_FLOW, answers)
     rebuilt = project_answers(SETUP_FLOW, canonical)

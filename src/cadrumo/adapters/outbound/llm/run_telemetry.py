@@ -111,6 +111,39 @@ class LLMRunTelemetrySummary(BaseModel):
     mean_duration_ms: Decimal | None = Field(default=None, description="Mean recorded run duration.")
 
 
+def _records_for_provider(
+    records: tuple[LLMRunRecord, ...],
+    provider: str | None,
+) -> tuple[LLMRunRecord, ...]:
+    if provider is None:
+        return records
+    return tuple(item for item in records if item.provider == provider)
+
+
+def _summarize_records(records: tuple[LLMRunRecord, ...]) -> LLMRunTelemetrySummary:
+    if not records:
+        return LLMRunTelemetrySummary(entries=0, succeeded=0, failed=0)
+    durations: list[Decimal] = []
+    duration_values: list[int] = []
+    succeeded = 0
+    failed = 0
+    for item in records:
+        durations.append(Decimal(item.duration_ms))
+        duration_values.append(item.duration_ms)
+        if item.succeeded:
+            succeeded += 1
+        else:
+            failed += 1
+    return LLMRunTelemetrySummary(
+        entries=len(records),
+        succeeded=succeeded,
+        failed=failed,
+        min_duration_ms=min(duration_values),
+        max_duration_ms=max(duration_values),
+        mean_duration_ms=(sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(Decimal("0.01")),
+    )
+
+
 class LLMRunTelemetryRecorder:
     """Append local LLM run-timing records to encrypted secure-object storage.
 
@@ -250,19 +283,7 @@ class LLMRunTelemetryRecorder:
             Aggregate run-timing summary.
         """
         records = self.load_records(since=since, until=until)
-        if provider is not None:
-            records = tuple(item for item in records if item.provider == provider)
-        if not records:
-            return LLMRunTelemetrySummary(entries=0, succeeded=0, failed=0)
-        durations = [Decimal(item.duration_ms) for item in records]
-        return LLMRunTelemetrySummary(
-            entries=len(records),
-            succeeded=sum(1 for item in records if item.succeeded),
-            failed=sum(1 for item in records if not item.succeeded),
-            min_duration_ms=min(item.duration_ms for item in records),
-            max_duration_ms=max(item.duration_ms for item in records),
-            mean_duration_ms=(sum(durations, start=Decimal("0")) / Decimal(len(durations))).quantize(Decimal("0.01")),
-        )
+        return _summarize_records(_records_for_provider(records, provider))
 
     def prune(
         self,

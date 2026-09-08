@@ -170,18 +170,36 @@ def project_table(table: NormalizedTable, mapping: ColumnRoleMapping) -> Project
         The projected table, with unmapped and contested columns reported.
     """
     headers = table.headers
-    unmapped = tuple(
+    unmapped = _unmapped_columns(headers, mapping)
+    ambiguous = _ambiguous_roles(headers, mapping)
+    rows = _projected_rows(table, headers, mapping)
+
+    return ProjectedTable(rows=rows, unmapped_columns=unmapped, ambiguous_roles=ambiguous)
+
+
+def _unmapped_columns(
+    headers: tuple[str, ...],
+    mapping: ColumnRoleMapping,
+) -> tuple[UnmappedColumn, ...]:
+    """Report columns whose confirmed role is ``UNMAPPED`` in source order."""
+    return tuple(
         UnmappedColumn(column_index=index, header=headers[index])
         for index in range(len(headers))
         if mapping.role_for(index) is FieldRole.UNMAPPED
     )
 
+
+def _ambiguous_roles(
+    headers: tuple[str, ...],
+    mapping: ColumnRoleMapping,
+) -> tuple[AmbiguousRole, ...]:
+    """Report single-occupancy roles claimed by more than one column."""
     claims: dict[FieldRole, list[int]] = {}
     for index in range(len(headers)):
         role = mapping.role_for(index)
         if role in _SINGLE_OCCUPANCY_ROLES:
             claims.setdefault(role, []).append(index)
-    ambiguous = tuple(
+    return tuple(
         AmbiguousRole(
             role=role,
             column_indexes=tuple(indexes),
@@ -191,7 +209,14 @@ def project_table(table: NormalizedTable, mapping: ColumnRoleMapping) -> Project
         if len(indexes) > 1
     )
 
-    rows = tuple(
+
+def _projected_rows(
+    table: NormalizedTable,
+    headers: tuple[str, ...],
+    mapping: ColumnRoleMapping,
+) -> tuple[ProjectedRow, ...]:
+    """Copy each row's mapped cells while retaining source order and spelling."""
+    return tuple(
         ProjectedRow(
             source_line_number=row.source_line_number,
             cells=tuple(
@@ -207,5 +232,3 @@ def project_table(table: NormalizedTable, mapping: ColumnRoleMapping) -> Project
         )
         for row in table.rows
     )
-
-    return ProjectedTable(rows=rows, unmapped_columns=unmapped, ambiguous_roles=ambiguous)

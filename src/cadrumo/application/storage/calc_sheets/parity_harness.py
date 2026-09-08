@@ -66,9 +66,10 @@ from ....domain.calculations.registry.ids import (
     RelationId,
     RevisionId,
 )
-from ....domain.calculations.registry.relations import relation_source_requirements
+from ....domain.calculations.registry.relations import RegistryFoldRequirement, relation_source_requirements
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_surfaces import RelationDefinition
 from ....domain.period import calculation_filing_date
 from ._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
 from .engine import build_export_plan
@@ -173,9 +174,11 @@ def _reject_unknown_scenario_casilla_ids(
         )
 
 
-def _build_relation_values(snapshot: RegistrySnapshot, scenario: OperatorInputScenario) -> RelationValues:
-    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
-    requirements_by_relation = {
+def _relation_requirements_by_id(
+    snapshot: RegistrySnapshot,
+) -> dict[RelationId, RegistryFoldRequirement]:
+    """Index registry-derived relation requirements by each relation id they cover."""
+    return {
         relation_id: requirement
         for requirement in relation_source_requirements(
             snapshot.revision,
@@ -184,6 +187,41 @@ def _build_relation_values(snapshot: RegistrySnapshot, scenario: OperatorInputSc
         )
         for relation_id in requirement.relation_ids
     }
+
+
+def _build_relation_value(
+    relation_id: RelationId,
+    value: Decimal,
+    definition: RelationDefinition,
+    requirement: RegistryFoldRequirement | None,
+) -> RelationValue:
+    """Build one parity relation value from the registry relation or its requirement."""
+    if requirement is None:
+        return RelationValue(
+            relation=relation_id,
+            value=value,
+            source_modelo=definition.source_modelo,
+            source_filing_year=None,
+            source_periods=definition.source_periods,
+            source_casilla_ids=(definition.source_casilla_id,),
+            legal_refs=definition.legal_refs,
+            source_refs=definition.source_refs,
+        )
+    return RelationValue(
+        relation=relation_id,
+        value=value,
+        source_modelo=requirement.source_modelo,
+        source_filing_year=requirement.filing_year,
+        source_periods=requirement.periods,
+        source_casilla_ids=requirement.source_casilla_ids,
+        legal_refs=requirement.legal_refs,
+        source_refs=requirement.source_refs,
+    )
+
+
+def _build_relation_values(snapshot: RegistrySnapshot, scenario: OperatorInputScenario) -> RelationValues:
+    relations_by_id = {relation.id: relation for relation in snapshot.revision.relations}
+    requirements_by_relation = _relation_requirements_by_id(snapshot)
     unknown_relation_ids = sorted(set(scenario.relation_values).difference(relations_by_id))
     if unknown_relation_ids:
         raise CalcSheetsParityError(
@@ -192,39 +230,11 @@ def _build_relation_values(snapshot: RegistrySnapshot, scenario: OperatorInputSc
         )
     return RelationValues(
         values=tuple(
-            RelationValue(
-                relation=relation_id,
+            _build_relation_value(
+                relation_id=relation_id,
                 value=value,
-                source_modelo=(
-                    requirements_by_relation[relation_id].source_modelo
-                    if relation_id in requirements_by_relation
-                    else relations_by_id[relation_id].source_modelo
-                ),
-                source_filing_year=(
-                    requirements_by_relation[relation_id].filing_year
-                    if relation_id in requirements_by_relation
-                    else None
-                ),
-                source_periods=(
-                    requirements_by_relation[relation_id].periods
-                    if relation_id in requirements_by_relation
-                    else relations_by_id[relation_id].source_periods
-                ),
-                source_casilla_ids=(
-                    requirements_by_relation[relation_id].source_casilla_ids
-                    if relation_id in requirements_by_relation
-                    else (relations_by_id[relation_id].source_casilla_id,)
-                ),
-                legal_refs=(
-                    requirements_by_relation[relation_id].legal_refs
-                    if relation_id in requirements_by_relation
-                    else relations_by_id[relation_id].legal_refs
-                ),
-                source_refs=(
-                    requirements_by_relation[relation_id].source_refs
-                    if relation_id in requirements_by_relation
-                    else relations_by_id[relation_id].source_refs
-                ),
+                definition=relations_by_id[relation_id],
+                requirement=requirements_by_relation.get(relation_id),
             )
             for relation_id, value in scenario.relation_values.items()
         ),

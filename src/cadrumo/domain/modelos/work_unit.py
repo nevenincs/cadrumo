@@ -118,6 +118,51 @@ def derive_work_unit_id(
     return content_hash_hex(payload)
 
 
+def _validate_work_unit_identity(unit: WorkUnit) -> None:
+    """Validate the filing-year binding and content-addressed work-unit id."""
+    if unit.period.filing_year != unit.filing_year:
+        raise ModeloValidationError(
+            f"filing_year {unit.filing_year!r} does not match period year {unit.period.filing_year!r}",
+        )
+    derived = derive_work_unit_id(
+        bucket_id=unit.bucket_id,
+        modelo=unit.modelo,
+        filing_year=unit.filing_year,
+        period=unit.period,
+        revision_id=unit.revision_id,
+    )
+    if derived != unit.work_unit_id:
+        raise ModeloValidationError(
+            f"work_unit_id {unit.work_unit_id!r} does not match the derived id "
+            f"{derived!r} for (bucket={unit.bucket_id!r}, modelo={unit.modelo!r}, "
+            f"year={unit.filing_year}, period={unit.period!r}, revision={unit.revision_id!r})",
+        )
+
+
+def _validate_work_unit_timestamps(unit: WorkUnit) -> None:
+    """Validate that the latest update is not before creation."""
+    if unit.updated_at < unit.created_at:
+        raise ModeloValidationError(
+            f"updated_at {unit.updated_at.isoformat()} precedes created_at {unit.created_at.isoformat()}",
+        )
+
+
+def _validate_work_unit_state(unit: WorkUnit) -> None:
+    """Validate discard metadata against the work-unit lifecycle state."""
+    if unit.state is WorkUnitState.BORRADOR:
+        if unit.discarded_at is not None or unit.discarded_by is not None or unit.discard_reason is not None:
+            raise ModeloValidationError(
+                "draft work unit must not carry discard metadata (discarded_at / discarded_by / discard_reason)",
+            )
+    elif unit.state is WorkUnitState.DESCARTADO:
+        if unit.discarded_at is None or unit.discarded_by is None:
+            raise ModeloValidationError("discarded work unit must carry discarded_at and discarded_by")
+        if unit.discarded_at < unit.created_at:
+            raise ModeloValidationError(
+                f"discarded_at {unit.discarded_at.isoformat()} precedes created_at {unit.created_at.isoformat()}",
+            )
+
+
 class WorkUnit(BaseModel):
     """One operator-facing modelo calculation work unit.
 
@@ -201,39 +246,9 @@ class WorkUnit(BaseModel):
         editing), reads will refuse the record. This keeps the
         catalogue's content-addressing invariant intact.
         """
-        if self.period.filing_year != self.filing_year:
-            raise ModeloValidationError(
-                f"filing_year {self.filing_year!r} does not match period year {self.period.filing_year!r}",
-            )
-        derived = derive_work_unit_id(
-            bucket_id=self.bucket_id,
-            modelo=self.modelo,
-            filing_year=self.filing_year,
-            period=self.period,
-            revision_id=self.revision_id,
-        )
-        if derived != self.work_unit_id:
-            raise ModeloValidationError(
-                f"work_unit_id {self.work_unit_id!r} does not match the derived id "
-                f"{derived!r} for (bucket={self.bucket_id!r}, modelo={self.modelo!r}, "
-                f"year={self.filing_year}, period={self.period!r}, revision={self.revision_id!r})",
-            )
-        if self.updated_at < self.created_at:
-            raise ModeloValidationError(
-                f"updated_at {self.updated_at.isoformat()} precedes created_at {self.created_at.isoformat()}",
-            )
-        if self.state is WorkUnitState.BORRADOR:
-            if self.discarded_at is not None or self.discarded_by is not None or self.discard_reason is not None:
-                raise ModeloValidationError(
-                    "draft work unit must not carry discard metadata (discarded_at / discarded_by / discard_reason)",
-                )
-        elif self.state is WorkUnitState.DESCARTADO:
-            if self.discarded_at is None or self.discarded_by is None:
-                raise ModeloValidationError("discarded work unit must carry discarded_at and discarded_by")
-            if self.discarded_at < self.created_at:
-                raise ModeloValidationError(
-                    f"discarded_at {self.discarded_at.isoformat()} precedes created_at {self.created_at.isoformat()}",
-                )
+        _validate_work_unit_identity(self)
+        _validate_work_unit_timestamps(self)
+        _validate_work_unit_state(self)
         return self
 
 

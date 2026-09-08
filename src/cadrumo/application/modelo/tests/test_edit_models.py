@@ -40,16 +40,11 @@ from ..edit_models import (
     ModeloEditSchemaIdentityV1,
     ModeloEditStaleBaselineRefusalV1,
     ModeloEditSubmissionV1,
-    ModeloEditVersionHeader,
     ModeloEditWritableRowGroupSurfaceEntryV1,
     ModeloEditWritableScalarSurfaceEntryV1,
-    ModeloMutationCapabilityProjectionV1,
-    ModeloMutationCapabilityRowV1,
     ModeloRowEditIntentV1,
     ModeloScalarEditIntentV1,
-    read_modelo_edit_version_header,
 )
-from ..workspace_models import ModeloWorkspaceCapabilityDisposition
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -128,14 +123,6 @@ def _baseline(
         expires_at=now + timedelta(minutes=5),
         baseline_id=_BASELINE_ID,
     )
-
-
-def test_version_header_reads_only_the_version() -> None:
-    """The exact version dispatcher reads the header without touching anything else."""
-    header = read_modelo_edit_version_header({"edit_contract_version": 1, "target": object()})
-    assert header == ModeloEditVersionHeader(edit_contract_version=1)
-    assert read_modelo_edit_version_header({}) is None
-    assert read_modelo_edit_version_header({"edit_contract_version": "1"}) is None
 
 
 def test_compatibility_tuple_requires_review_axis_together() -> None:
@@ -283,28 +270,6 @@ def test_domain_refusal_rejects_the_typed_stale_baseline_code() -> None:
             responsible_owner="modelo.edit",
             reconsideration_condition="retry with a freshly admitted baseline",
         )
-
-
-def test_mutation_capability_row_requires_definition_when_available() -> None:
-    """AVAILABLE composes with a registered operation definition, never without one."""
-    with pytest.raises(ValidationError, match="requires its registered operation definition"):
-        ModeloMutationCapabilityRowV1(
-            mutation_id="calculate",
-            owning_producer="modelo.calculation",
-            revision_id=_REVISION_ID,
-            disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-        )
-    row = ModeloMutationCapabilityRowV1(
-        mutation_id="calculate",
-        owning_producer="modelo.calculation",
-        revision_id=_REVISION_ID,
-        disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-        operation_definition_id="modelo.calculate",
-    )
-    projection = ModeloMutationCapabilityProjectionV1(rows=(row,))
-    with pytest.raises(ValidationError, match="unique mutation ids"):
-        ModeloMutationCapabilityProjectionV1(rows=(row, row))
-    assert projection.rows[0].mutation_id == "calculate"
 
 
 def test_execution_result_discriminates_on_effect() -> None:

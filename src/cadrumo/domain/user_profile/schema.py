@@ -183,18 +183,33 @@ class ProfileFieldDefinition(BaseModel):
 
     @model_validator(mode="after")
     def _validate_enum_values(self) -> Self:
-        if self.type is ProfileFieldType.ENUM and not self.enum_values:
-            raise UserProfileValidationError(f"field {self.key!r}: enum fields must declare enum_values")
-        if self.type is not ProfileFieldType.ENUM and self.enum_values:
-            raise UserProfileValidationError(f"field {self.key!r}: enum_values are only valid for enum fields")
-        if len(set(self.enum_values)) != len(self.enum_values):
-            raise UserProfileValidationError(f"field {self.key!r}: duplicate enum_values are not allowed")
-        numeric_types = {ProfileFieldType.INTEGER, ProfileFieldType.DECIMAL, ProfileFieldType.MONEY}
-        if (self.minimum is not None or self.maximum is not None) and self.type not in numeric_types:
-            raise UserProfileValidationError(f"field {self.key!r}: numeric bounds are only valid for numeric fields")
-        if self.minimum is not None and self.maximum is not None and self.minimum > self.maximum:
-            raise UserProfileValidationError(f"field {self.key!r}: minimum must be less than or equal to maximum")
+        _validate_enum_declaration(self)
+        _validate_unique_enum_values(self)
+        _validate_numeric_bounds(self)
         return self
+
+
+def _validate_enum_declaration(field: ProfileFieldDefinition) -> None:
+    """Enforce the bidirectional relationship between enum type and values."""
+    if field.type is ProfileFieldType.ENUM and not field.enum_values:
+        raise UserProfileValidationError(f"field {field.key!r}: enum fields must declare enum_values")
+    if field.type is not ProfileFieldType.ENUM and field.enum_values:
+        raise UserProfileValidationError(f"field {field.key!r}: enum_values are only valid for enum fields")
+
+
+def _validate_unique_enum_values(field: ProfileFieldDefinition) -> None:
+    """Reject duplicate enum tokens without changing their declared order."""
+    if len(set(field.enum_values)) != len(field.enum_values):
+        raise UserProfileValidationError(f"field {field.key!r}: duplicate enum_values are not allowed")
+
+
+def _validate_numeric_bounds(field: ProfileFieldDefinition) -> None:
+    """Enforce numeric-only bounds and their inclusive ordering."""
+    numeric_types = {ProfileFieldType.INTEGER, ProfileFieldType.DECIMAL, ProfileFieldType.MONEY}
+    if (field.minimum is not None or field.maximum is not None) and field.type not in numeric_types:
+        raise UserProfileValidationError(f"field {field.key!r}: numeric bounds are only valid for numeric fields")
+    if field.minimum is not None and field.maximum is not None and field.minimum > field.maximum:
+        raise UserProfileValidationError(f"field {field.key!r}: minimum must be less than or equal to maximum")
 
 
 class ProfileSectionDefinition(BaseModel):

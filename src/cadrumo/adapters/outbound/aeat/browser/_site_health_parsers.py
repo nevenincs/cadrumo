@@ -332,35 +332,80 @@ def parse_rate_limit_response(
     if http_status not in {429, 503}:
         return None
     lowered = _lowered if _lowered is not None else html.lower()
-    if http_status == 503:
-        title = _extract_title(html, lowered)
-        if _matches_mantenimiento(lowered, title):
-            return None
-    normalised = _normalise_headers(headers)
-    raw_retry_after = normalised.get("retry-after")
-    retry_after: int = rate_limit_retry_after_default
-    marker_value: str
-    if raw_retry_after is not None:
-        stripped = raw_retry_after.strip()
-        try:
-            parsed = int(stripped)
-        except ValueError:
-            parsed_seconds = _parse_http_date_retry_after(stripped, now=now)
-            if parsed_seconds is None:
-                marker_value = f"retry-after:invalid:{raw_retry_after[:32]}"
-            elif parsed_seconds >= 1:
-                retry_after = parsed_seconds
-                marker_value = f"retry-after:http-date:{parsed_seconds}"
-            else:
-                marker_value = f"retry-after:http-date-non-positive:{parsed_seconds}"
-        else:
-            if parsed >= 1:
-                retry_after = parsed
-                marker_value = f"retry-after:{parsed}"
-            else:
-                marker_value = f"retry-after:non-positive:{parsed}"
-    else:
-        marker_value = f"retry-after:default:{rate_limit_retry_after_default}"
+    if _is_mantenimiento_rate_limit(http_status, html, lowered):
+        return None
+    retry_after, marker_value = _retry_after_details(
+        headers,
+        default=rate_limit_retry_after_default,
+        now=now,
+    )
+    return _rate_limit_status(
+        url,
+        http_status,
+        html,
+        retry_after=retry_after,
+        marker_value=marker_value,
+    )
+
+
+def _is_mantenimiento_rate_limit(http_status: int, html: str, lowered: str) -> bool:
+    """Return whether a 503 should yield to the mantenimiento parser."""
+    if http_status != 503:
+        return False
+    title = _extract_title(html, lowered)
+    return bool(_matches_mantenimiento(lowered, title))
+
+
+def _retry_after_details(
+    headers: Mapping[str, str],
+    *,
+    default: int,
+    now: datetime | None,
+) -> tuple[int, str]:
+    """Resolve the retry delay and its bounded diagnostic marker."""
+    raw_retry_after = _normalise_headers(headers).get("retry-after")
+    if raw_retry_after is None:
+        return default, f"retry-after:default:{default}"
+    stripped = raw_retry_after.strip()
+    try:
+        parsed = int(stripped)
+    except ValueError:
+        return _retry_after_http_date_details(raw_retry_after, stripped, default=default, now=now)
+    return _retry_after_integer_details(parsed, default=default)
+
+
+def _retry_after_integer_details(parsed: int, *, default: int) -> tuple[int, str]:
+    """Resolve integer ``Retry-After`` values without accepting zero or negatives."""
+    if parsed >= 1:
+        return parsed, f"retry-after:{parsed}"
+    return default, f"retry-after:non-positive:{parsed}"
+
+
+def _retry_after_http_date_details(
+    raw_value: str,
+    stripped_value: str,
+    *,
+    default: int,
+    now: datetime | None,
+) -> tuple[int, str]:
+    """Resolve an HTTP-date ``Retry-After`` value and its diagnostic marker."""
+    parsed_seconds = _parse_http_date_retry_after(stripped_value, now=now)
+    if parsed_seconds is None:
+        return default, f"retry-after:invalid:{raw_value[:32]}"
+    if parsed_seconds >= 1:
+        return parsed_seconds, f"retry-after:http-date:{parsed_seconds}"
+    return default, f"retry-after:http-date-non-positive:{parsed_seconds}"
+
+
+def _rate_limit_status(
+    url: str,
+    http_status: int,
+    html: str,
+    *,
+    retry_after: int,
+    marker_value: str,
+) -> SiteHealthStatus:
+    """Build the rate-limit record from already-decoded evidence."""
     return SiteHealthStatus(
         state=SiteHealthState.RATE_LIMITED,
         evidence=SiteHealthEvidence(

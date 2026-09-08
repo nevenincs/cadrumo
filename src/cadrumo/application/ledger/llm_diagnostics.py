@@ -188,31 +188,54 @@ def build_llm_diagnostics_report(
         The populated :class:`LlmDiagnosticsReport`.
     """
     recorder = usage_recorder or UsageRecorder()
-    usage_records = recorder.load_records(since=since, until=until)
-    usage_providers = _aggregate_usage(usage_records)
-
-    resolved_transactions = tuple(transactions) if transactions is not None else _load_bucket_transactions(bucket_id)
+    usage_providers = _aggregate_usage(recorder.load_records(since=since, until=until))
+    resolved_transactions = _resolve_transactions(transactions, bucket_id)
     confidence_providers = _aggregate_confidence(resolved_transactions, low_confidence_threshold)
-
-    return LlmDiagnosticsReport(
+    return _build_diagnostics_report(
         since=since,
         until=until,
         low_confidence_threshold=low_confidence_threshold,
         usage_providers=usage_providers,
+        confidence_providers=confidence_providers,
+    )
+
+
+def _resolve_transactions(
+    transactions: Iterable[Transaction] | None,
+    bucket_id: str | None,
+) -> tuple[Transaction, ...]:
+    return tuple(transactions) if transactions is not None else _load_bucket_transactions(bucket_id)
+
+
+def _build_diagnostics_report(
+    *,
+    since: date | None,
+    until: date | None,
+    low_confidence_threshold: Decimal,
+    usage_providers: Sequence[LlmUsageCostProviderMetrics],
+    confidence_providers: Sequence[LlmConfidenceProviderMetrics],
+) -> LlmDiagnosticsReport:
+    return LlmDiagnosticsReport(
+        since=since,
+        until=until,
+        low_confidence_threshold=low_confidence_threshold,
+        usage_providers=tuple(usage_providers),
         total_calls=sum(row.calls for row in usage_providers),
         total_cache_hits=sum(row.cache_hits for row in usage_providers),
         total_input_tokens=sum(row.input_tokens for row in usage_providers),
         total_output_tokens=sum(row.output_tokens for row in usage_providers),
-        total_cost_estimate_usd=(
-            None
-            if any(row.cost_estimate_usd is None for row in usage_providers)
-            else sum((row.cost_estimate_usd or Decimal("0") for row in usage_providers), start=Decimal("0"))
-        ),
+        total_cost_estimate_usd=_total_usage_cost(usage_providers),
         total_unpriced_calls=sum(row.unpriced_calls for row in usage_providers),
-        confidence_providers=confidence_providers,
+        confidence_providers=tuple(confidence_providers),
         total_classified=sum(row.classified_count for row in confidence_providers),
         total_low_confidence=sum(row.low_confidence_count for row in confidence_providers),
     )
+
+
+def _total_usage_cost(usage_providers: Sequence[LlmUsageCostProviderMetrics]) -> Decimal | None:
+    if any(row.cost_estimate_usd is None for row in usage_providers):
+        return None
+    return sum((row.cost_estimate_usd or Decimal("0") for row in usage_providers), start=Decimal("0"))
 
 
 def _load_bucket_transactions(bucket_id: str | None) -> tuple[Transaction, ...]:

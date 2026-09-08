@@ -120,22 +120,49 @@ class OperationTerminalReceipt(BaseModel):
         return self
 
 
-def validate_terminal_reference_meaning(
+def _validate_terminal_reference_relationship(
     *,
     condition: OperationTerminalCondition,
     result_ref: OperationReference | None,
     refusal_ref: OperationReference | None,
-    failure_error_code: str | None = None,
+    failure_error_code: str | None,
 ) -> None:
-    """Enforce the canonical terminal result/refusal relationship."""
     if condition is OperationTerminalCondition.SUCCEEDED:
-        if result_ref is None or refusal_ref is not None:
-            raise ValueError("succeeded operation requires one result reference and forbids a refusal reference")
+        _validate_succeeded_terminal_references(result_ref=result_ref, refusal_ref=refusal_ref)
     elif condition is OperationTerminalCondition.REFUSED:
-        if refusal_ref is None or result_ref is not None or failure_error_code is not None:
-            raise ValueError("refused operation requires one refusal reference and forbids a result reference")
+        _validate_refused_terminal_references(
+            result_ref=result_ref,
+            refusal_ref=refusal_ref,
+            failure_error_code=failure_error_code,
+        )
     elif refusal_ref is not None:
         raise ValueError("refusal reference is valid only for a refused operation")
+
+
+def _validate_succeeded_terminal_references(
+    *,
+    result_ref: OperationReference | None,
+    refusal_ref: OperationReference | None,
+) -> None:
+    if result_ref is None or refusal_ref is not None:
+        raise ValueError("succeeded operation requires one result reference and forbids a refusal reference")
+
+
+def _validate_refused_terminal_references(
+    *,
+    result_ref: OperationReference | None,
+    refusal_ref: OperationReference | None,
+    failure_error_code: str | None,
+) -> None:
+    if refusal_ref is None or result_ref is not None or failure_error_code is not None:
+        raise ValueError("refused operation requires one refusal reference and forbids a result reference")
+
+
+def _validate_terminal_failure_code(
+    *,
+    condition: OperationTerminalCondition,
+    failure_error_code: str | None,
+) -> None:
     if condition is not OperationTerminalCondition.FAILED and failure_error_code is not None:
         raise ValueError("failure error code is valid only for a failed operation")
     if failure_error_code is not None:
@@ -146,6 +173,23 @@ def validate_terminal_reference_meaning(
         from ...core.errors.error_codes import get_registered_error_code_by_code
 
         get_registered_error_code_by_code(failure_error_code)
+
+
+def validate_terminal_reference_meaning(
+    *,
+    condition: OperationTerminalCondition,
+    result_ref: OperationReference | None,
+    refusal_ref: OperationReference | None,
+    failure_error_code: str | None = None,
+) -> None:
+    """Enforce the canonical terminal result/refusal relationship."""
+    _validate_terminal_reference_relationship(
+        condition=condition,
+        result_ref=result_ref,
+        refusal_ref=refusal_ref,
+        failure_error_code=failure_error_code,
+    )
+    _validate_terminal_failure_code(condition=condition, failure_error_code=failure_error_code)
 
 
 class OperationSnapshot[RequestPayloadT: BaseModel](BaseModel):

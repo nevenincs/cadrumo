@@ -260,25 +260,28 @@ def _m349_detail_row_replay_inputs(
     rectification_rows = tuple(row for row in revision.detail_rows if isinstance(row, Modelo349RectificacionRow))
     if not operador_rows and not rectification_rows:
         return {}
+    return {
+        **_m349_row_binding_replay_inputs(operador_rows, _M349_OPERADOR_ROW_BINDINGS),
+        **_m349_row_binding_replay_inputs(rectification_rows, _M349_RECTIFICACION_ROW_BINDINGS),
+    }
+
+
+def _m349_row_binding_value(
+    row: Modelo349OperadorRow | Modelo349RectificacionRow,
+    attr: str,
+) -> ModeloInputScalar:
+    if attr == "nif_comunitario":
+        return m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
+    return getattr(row, attr)
+
+
+def _m349_row_binding_replay_inputs(
+    rows: tuple[Modelo349OperadorRow | Modelo349RectificacionRow, ...],
+    binding_attributes: dict[BindingId, str],
+) -> dict[BindingId, dict[str, ModeloInputScalar]]:
     replay_inputs: dict[BindingId, dict[str, ModeloInputScalar]] = {}
-    for binding_id, attr in _M349_OPERADOR_ROW_BINDINGS.items():
-        values: dict[str, ModeloInputScalar] = {}
-        for index, row in enumerate(operador_rows, start=1):
-            if attr == "nif_comunitario":
-                value = m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
-            else:
-                value = getattr(row, attr)
-            values[str(index)] = value
-        if values:
-            replay_inputs[binding_id] = values
-    for binding_id, attr in _M349_RECTIFICACION_ROW_BINDINGS.items():
-        values = {}
-        for index, row in enumerate(rectification_rows, start=1):
-            if attr == "nif_comunitario":
-                value = m349_nif_number_for_export(row.nif_comunitario, row.codigo_pais)
-            else:
-                value = getattr(row, attr)
-            values[str(index)] = value
+    for binding_id, attr in binding_attributes.items():
+        values = {str(index): _m349_row_binding_value(row, attr) for index, row in enumerate(rows, start=1)}
         if values:
             replay_inputs[binding_id] = values
     return replay_inputs
@@ -365,26 +368,52 @@ def _not_applicable_relation_zero_inputs(
     """
     if snapshot is None or workflow_profile is None:
         return {}
-    active_relation_ids = frozenset(
+    active_relation_ids = _active_relation_ids(snapshot)
+    values = {
+        relation_id: _ZERO_DECIMAL_TEXT
+        for classification in snapshot.revision.dependency_classifications
+        for relation_id in _not_applicable_relation_zero_ids(
+            conditional_on_economic_activity=classification.conditional_on_economic_activity,
+            source_modelo=classification.source_modelo,
+            relation_refs=classification.relation_refs,
+            workflow_profile=workflow_profile,
+            active_relation_ids=active_relation_ids,
+            existing_relation_ids=existing_relation_ids,
+        )
+    }
+    return dict(sorted(values.items()))
+
+
+def _active_relation_ids(snapshot: RegistrySnapshot) -> frozenset[RelationId]:
+    return frozenset(
         relation.id
         for relation in snapshot.revision.relations
         if not relation.target_periods or snapshot.period in relation.target_periods
     )
-    values: dict[RelationId, str] = {}
-    for classification in snapshot.revision.dependency_classifications:
-        if not classification.conditional_on_economic_activity:
-            continue
-        try:
-            applicability = derive_modelo_applicability(workflow_profile, classification.source_modelo)
-        except (TypeError, ValueError):
-            continue
-        if applicability.verdict is not ApplicabilityVerdict.NOT_APPLICABLE:
-            continue
-        for relation_id in classification.relation_refs:
-            if relation_id in existing_relation_ids or relation_id not in active_relation_ids:
-                continue
-            values[relation_id] = _ZERO_DECIMAL_TEXT
-    return dict(sorted(values.items()))
+
+
+def _not_applicable_relation_zero_ids(
+    *,
+    conditional_on_economic_activity: bool,
+    source_modelo: str,
+    relation_refs: tuple[RelationId, ...],
+    workflow_profile: TaxpayerProfile,
+    active_relation_ids: frozenset[RelationId],
+    existing_relation_ids: frozenset[RelationId],
+) -> tuple[RelationId, ...]:
+    if not conditional_on_economic_activity:
+        return ()
+    try:
+        applicability = derive_modelo_applicability(workflow_profile, source_modelo)
+    except (TypeError, ValueError):
+        return ()
+    if applicability.verdict is not ApplicabilityVerdict.NOT_APPLICABLE:
+        return ()
+    return tuple(
+        relation_id
+        for relation_id in relation_refs
+        if relation_id not in existing_relation_ids and relation_id in active_relation_ids
+    )
 
 
 __all__ = ["revision_filing_replay_inputs"]

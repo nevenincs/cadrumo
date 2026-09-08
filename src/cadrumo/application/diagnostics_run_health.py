@@ -662,6 +662,42 @@ def _usage_model_metrics(items: list[LLMRunRecord]) -> LlmUsageModelMetrics:
     )
 
 
+def _group_usage_records(
+    records: tuple[LLMRunRecord, ...],
+) -> dict[str, dict[str, list[LLMRunRecord]]]:
+    """Group usage records by provider, then by model, retaining record order."""
+    grouped: dict[str, dict[str, list[LLMRunRecord]]] = {}
+    for record in records:
+        grouped.setdefault(record.provider, {}).setdefault(record.model, []).append(record)
+    return grouped
+
+
+def _usage_provider_metrics(
+    provider: str,
+    model_groups: dict[str, list[LLMRunRecord]],
+) -> LlmRunHealthProviderMetrics:
+    """Fold one provider's model groups into its aggregate usage row."""
+    model_rows = tuple(_usage_model_metrics(model_groups[model]) for model in sorted(model_groups))
+    provider_items = [item for items in model_groups.values() for item in items]
+    return LlmRunHealthProviderMetrics(
+        provider=provider,
+        **_run_timing_metrics(provider_items),
+        total_duration_ms=sum((item.duration_ms for item in provider_items), start=0),
+        models=model_rows,
+    )
+
+
+def _usage_provider_rows(
+    records: tuple[LLMRunRecord, ...],
+) -> tuple[LlmRunHealthProviderMetrics, ...]:
+    """Return provider-sorted usage rows with each provider's model breakdown."""
+    grouped = _group_usage_records(records)
+    return tuple(
+        _usage_provider_metrics(provider, grouped[provider])
+        for provider in sorted(grouped)
+    )
+
+
 def build_llm_usage_report(
     *,
     since: date | None = None,
@@ -696,28 +732,10 @@ def build_llm_usage_report(
     if provider is not None:
         records = tuple(item for item in records if item.provider == provider)
 
-    by_provider_model: dict[str, dict[str, list[LLMRunRecord]]] = {}
-    for record in records:
-        by_provider_model.setdefault(record.provider, {}).setdefault(record.model, []).append(record)
-
-    provider_rows: list[LlmRunHealthProviderMetrics] = []
-    for provider_name in sorted(by_provider_model):
-        model_groups = by_provider_model[provider_name]
-        model_rows = tuple(_usage_model_metrics(model_groups[model_name]) for model_name in sorted(model_groups))
-        provider_items = [item for items in model_groups.values() for item in items]
-        provider_rows.append(
-            LlmRunHealthProviderMetrics(
-                provider=provider_name,
-                **_run_timing_metrics(provider_items),
-                total_duration_ms=sum((item.duration_ms for item in provider_items), start=0),
-                models=model_rows,
-            ),
-        )
-
     return LlmUsageReport(
         since=since,
         until=until,
-        by_provider=tuple(provider_rows),
+        by_provider=_usage_provider_rows(records),
         total_runs=len(records),
         total_succeeded=sum(1 for item in records if item.succeeded),
         total_failed=sum(1 for item in records if not item.succeeded),

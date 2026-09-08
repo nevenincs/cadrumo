@@ -22,7 +22,9 @@ from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 from .records import (
     InventoryAnexoDResult,
     InventoryClosingAuthority,
+    InventoryClosingAuthorityRecord,
     InventoryClosingConflictDiagnostic,
+    InventoryClosingResolution,
     InventoryLedger,
     InventoryLedgerError,
     InventoryValidationError,
@@ -114,8 +116,8 @@ def _inventory_projection_source_fingerprint(ledger: InventoryLedger) -> Content
     )
 
 
-def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoDDerivation:
-    """Derive every public projection field from one retained canonical source."""
+def _validate_anexo_d_ledger(ledger: InventoryLedger) -> InventoryLedger:
+    """Validate the grounded year/source envelope and canonicalize movement order."""
     if ledger.year != 2025:
         raise InventoryLedgerError(
             "inventory Anexo D projection is grounded only for filing year 2025",
@@ -137,17 +139,30 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoD
         validated = InventoryLedger.model_validate(ledger.model_dump())
     except ValidationError as exc:
         raise InventoryLedgerError("inventory projection source is incomplete or unreadable") from exc
-    validated = validated.model_copy(update={"period_movements": _sorted_movements(validated)})
-    record = validated.closing_authority_record
+    return validated.model_copy(update={"period_movements": _sorted_movements(validated)})
+
+
+def _resolve_anexo_d_closing(
+    ledger: InventoryLedger,
+) -> tuple[InventoryClosingAuthorityRecord, InventoryClosingResolution]:
+    """Resolve the retained closing-authority record for a validated ledger."""
+    record = ledger.closing_authority_record
     if record is None:
         raise InventoryLedgerError("inventory projection requires a complete closing-authority record")
     resolution = resolve_inventory_authoritative_closing(
-        validated,
+        ledger,
         decision=record.decision,
         physical_observation=record.physical_observation,
         prior_closing_link=record.prior_closing_link,
     )
-    purchases = tuple(movement for movement in _sorted_movements(validated) if movement.kind is MovementKind.PURCHASE)
+    return record, resolution
+
+
+def _complete_acquisition_summary(
+    ledger: InventoryLedger,
+) -> tuple[Decimal, tuple[ContentDigest, ...]]:
+    """Collect complete purchase rows and their canonical acquisition totals."""
+    purchases = tuple(movement for movement in _sorted_movements(ledger) if movement.kind is MovementKind.PURCHASE)
     if any(movement.acquisition_cost is None for movement in purchases):
         raise InventoryLedgerError("inventory projection requires complete acquisition cost for every purchase")
     acquisition_total = _quantize(
@@ -157,6 +172,14 @@ def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoD
         ),
     )
     acquisition_fingerprints = tuple(inventory_acquisition_fingerprint(movement) for movement in purchases)
+    return acquisition_total, acquisition_fingerprints
+
+
+def derive_inventory_anexo_d_values(ledger: InventoryLedger) -> _InventoryAnexoDDerivation:
+    """Derive every public projection field from one retained canonical source."""
+    validated = _validate_anexo_d_ledger(ledger)
+    record, resolution = _resolve_anexo_d_closing(validated)
+    acquisition_total, acquisition_fingerprints = _complete_acquisition_summary(validated)
     valuation = compute_inventory_valuation(validated)
     if acquisition_total != valuation.purchase_value:
         raise InventoryLedgerError("complete acquisition totals do not match inventory valuation purchase authority")

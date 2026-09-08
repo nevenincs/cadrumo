@@ -37,9 +37,11 @@ _log = _get_logger(__name__)
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
+    from ....application.user_profile.commands import ProfileValidationIssue as _ProfileValidationIssue
     from ....application.user_profile.commands import ProfileValidationReport as _ProfileValidationReport
     from ....application.workflow.profile_bucket_models import ProfileBucketPointer as _ProfileBucketPointer
     from ....domain.user_profile.values import UserProfileRecord as _UserProfileRecord
+    from ..config_payloads import ConfigProfileValidateResult as _ConfigProfileValidateResult
 
 
 def _resolve_show_pointer(
@@ -195,39 +197,30 @@ def _resolve_validate_target_pointer(
     return pointer
 
 
-def config_profile_validate(
-    ctx: typer.Context,
-    name: str | None = None,
-    output_language: _OutputLanguage | None = None,
-) -> None:
-    from ._profile_support import resolve_active_profile_pointer
-
-    """Validate a profile against the loaded schema (defaults to the active profile).
-
-        Exits with code ``2`` when blocking issues surface so operators discover
-        schema-conformance failures via the shell exit status. Report-only
-        companion to ``config_profile_view`` — same validator, narrower
-        payload (no fact dump).
-        """
-    _activate_subcommand_output_language(ctx, output_language)
-    from ....application.modelo.profile_readiness_gate import modelo_work_profile_baseline_validation_issues
-    from ....application.user_profile.validation import ProfileValidationService
+def _read_record_for_validate(
+    pointer: _ProfileBucketPointer,
+    *,
+    name: str | None,
+) -> _UserProfileRecord:
+    """Read the validation target, preserving the typed missing-profile refusal."""
     from ....domain.user_profile.errors import ProfileNotFoundError
-    from ....domain.user_profile.loader import load_user_profile_schema
 
-    pointer = _resolve_validate_target_pointer(
-        name,
-        ctx=ctx,
-        resolve_active_profile_pointer=resolve_active_profile_pointer,
-    )
     try:
-        record = _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
+        return _read_profile_record(profile_id=pointer.bucket_id, bucket_id=pointer.bucket_id)
     except ProfileNotFoundError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.unknown_profile",
             context={"name": name or pointer.label or pointer.bucket_id},
         ) from exc
-    from ..config_payloads import ConfigProfileValidateResult, ProfileIssuePayload
+
+
+def _profile_validation_issues(
+    record: _UserProfileRecord,
+) -> tuple[_ProfileValidationReport, tuple[_ProfileValidationIssue, ...]]:
+    """Run canonical schema validation and append distinct filing-baseline issues."""
+    from ....application.modelo.profile_readiness_gate import modelo_work_profile_baseline_validation_issues
+    from ....application.user_profile.validation import ProfileValidationService
+    from ....domain.user_profile.loader import load_user_profile_schema
 
     report = ProfileValidationService(schema=load_user_profile_schema()).validate_record(record)
     issues = list(report.issues)
@@ -238,6 +231,19 @@ def config_profile_validate(
             continue
         seen_issues.add(key)
         issues.append(issue)
+    return report, tuple(issues)
+
+
+def _profile_validate_projection(
+    *,
+    record: _UserProfileRecord,
+    pointer: _ProfileBucketPointer,
+    report: _ProfileValidationReport,
+    issues: tuple[_ProfileValidationIssue, ...],
+) -> tuple[_ConfigProfileValidateResult, list[str], bool]:
+    """Build the validation payload and text rows from one ordered issue stream."""
+    from ..config_payloads import ConfigProfileValidateResult, ProfileIssuePayload
+
     blocking = [issue for issue in issues if issue.severity.value == "error"]
     result = ConfigProfileValidateResult(
         profile_id=record.profile_id,
@@ -263,10 +269,41 @@ def config_profile_validate(
         f"schema_version\t{report.schema_version}",
         f"valid\t{not blocking}",
     ]
-    for issue in issues:
-        lines.append(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}")
+    lines.extend(f"{issue.severity.value}\t{issue.code}\t{issue.path or '-'}\t{issue.message}" for issue in issues)
+    return result, lines, bool(blocking)
+
+
+def config_profile_validate(
+    ctx: typer.Context,
+    name: str | None = None,
+    output_language: _OutputLanguage | None = None,
+) -> None:
+    from ._profile_support import resolve_active_profile_pointer
+
+    """Validate a profile against the loaded schema (defaults to the active profile).
+
+        Exits with code ``2`` when blocking issues surface so operators discover
+        schema-conformance failures via the shell exit status. Report-only
+        companion to ``config_profile_view`` — same validator, narrower
+        payload (no fact dump).
+        """
+    _activate_subcommand_output_language(ctx, output_language)
+
+    pointer = _resolve_validate_target_pointer(
+        name,
+        ctx=ctx,
+        resolve_active_profile_pointer=resolve_active_profile_pointer,
+    )
+    record = _read_record_for_validate(pointer, name=name)
+    report, issues = _profile_validation_issues(record)
+    result, lines, blocked = _profile_validate_projection(
+        record=record,
+        pointer=pointer,
+        report=report,
+        issues=issues,
+    )
     emit_envelope(ctx, command="config.profile.validate", result=result, lines=lines)
-    if blocking:
+    if blocked:
         raise typer.Exit(code=2)
 
 

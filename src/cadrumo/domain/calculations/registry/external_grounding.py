@@ -841,6 +841,55 @@ def _attribution_from_payload_name(payload_path: Path) -> tuple[ModeloId | None,
     return (parts[1], int(parts[2]))
 
 
+def _validate_oracle_payload_name_matches(
+    payload: OraclePayload,
+    payload_path: Path,
+    name_modelo_id: ModeloId | None,
+    name_filing_year: int | None,
+) -> None:
+    """Refuse a payload whose declared attribution contradicts its name."""
+    if payload.modelo is not None and name_modelo_id is not None and payload.modelo != name_modelo_id:
+        raise RegistryValidationError(
+            f"{payload_path.name}: payload modelo {payload.modelo!r} does not match filename modelo {name_modelo_id!r}",
+        )
+    if payload.filing_year is not None and name_filing_year is not None and payload.filing_year != name_filing_year:
+        raise RegistryValidationError(
+            f"{payload_path.name}: payload filing_year {payload.filing_year!r} does not match filename year "
+            f"{name_filing_year!r}",
+        )
+
+
+def _attribute_oracle_payload(
+    corpus: ExternalOracleCorpus,
+    payload_path: Path,
+    payload: OraclePayload,
+    name_modelo_id: ModeloId | None,
+    name_filing_year: int | None,
+) -> ExternalOracleEvidence | UnattributedOraclePayload:
+    """Build attributed evidence, or retain an explicit attribution gap."""
+    modelo_id = payload.modelo if payload.modelo is not None else name_modelo_id
+    filing_year = payload.filing_year if payload.filing_year is not None else name_filing_year
+    if modelo_id is None or filing_year is None:
+        return UnattributedOraclePayload(
+            corpus=corpus,
+            payload_name=payload_path.name,
+            gap="payload_name_lacks_modelo_and_filing_year",
+            detail=(
+                f"{payload_path.name}: the payload declares no modelo and filing year and its name does not "
+                "encode modelo-<id>-<filing-year>, so its expected values cannot be attributed to a modelo "
+                "revision"
+            ),
+        )
+    return ExternalOracleEvidence(
+        corpus=corpus,
+        payload_name=payload_path.name,
+        modelo=modelo_id,
+        filing_year=filing_year,
+        period=payload.period,
+        casilla_ids=tuple(sorted(payload.expected_by_casilla_id)),
+    )
+
+
 def _read_oracle_payload(
     corpus: ExternalOracleCorpus,
     payload_path: Path,
@@ -871,33 +920,5 @@ def _read_oracle_payload(
     """
     payload = _parse_oracle_payload(corpus, payload_path)
     name_modelo_id, name_filing_year = _attribution_from_payload_name(payload_path)
-    if payload.modelo is not None and name_modelo_id is not None and payload.modelo != name_modelo_id:
-        raise RegistryValidationError(
-            f"{payload_path.name}: payload modelo {payload.modelo!r} does not match filename modelo {name_modelo_id!r}",
-        )
-    if payload.filing_year is not None and name_filing_year is not None and payload.filing_year != name_filing_year:
-        raise RegistryValidationError(
-            f"{payload_path.name}: payload filing_year {payload.filing_year!r} does not match filename year "
-            f"{name_filing_year!r}",
-        )
-    modelo_id = payload.modelo if payload.modelo is not None else name_modelo_id
-    filing_year = payload.filing_year if payload.filing_year is not None else name_filing_year
-    if modelo_id is None or filing_year is None:
-        return UnattributedOraclePayload(
-            corpus=corpus,
-            payload_name=payload_path.name,
-            gap="payload_name_lacks_modelo_and_filing_year",
-            detail=(
-                f"{payload_path.name}: the payload declares no modelo and filing year and its name does not "
-                "encode modelo-<id>-<filing-year>, so its expected values cannot be attributed to a modelo "
-                "revision"
-            ),
-        )
-    return ExternalOracleEvidence(
-        corpus=corpus,
-        payload_name=payload_path.name,
-        modelo=modelo_id,
-        filing_year=filing_year,
-        period=payload.period,
-        casilla_ids=tuple(sorted(payload.expected_by_casilla_id)),
-    )
+    _validate_oracle_payload_name_matches(payload, payload_path, name_modelo_id, name_filing_year)
+    return _attribute_oracle_payload(corpus, payload_path, payload, name_modelo_id, name_filing_year)

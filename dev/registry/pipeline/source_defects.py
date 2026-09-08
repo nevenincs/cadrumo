@@ -34,9 +34,9 @@ own travels with the declaration itself, in its digest, coordinate and literal.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
@@ -195,6 +195,27 @@ def adjudicated_literal_for(
     return None
 
 
+#: The two sign policies an adjudicated amount run can carry, named exactly as
+#: ``Width17MembershipRule.sign_policy`` names them so one vocabulary describes
+#: the sign wherever a width-17 amount is settled.
+#:
+#: ``unsigned`` spends every declared byte on digits. ``n-prefix`` spends the
+#: leading byte on the marker the fixed-width codec writes there -- ``N`` for a
+#: negative value, a space otherwise -- so the digits occupy one byte less than
+#: the slot. That difference is the whole reason the sign has to be DECLARED
+#: rather than left implicit: the same seventeen-byte slot holds fifteen integer
+#: digits unsigned and fourteen signed, and reading the wrong one emits a value
+#: ten times its true magnitude.
+_UNSIGNED_SIGN_POLICY: Final = "unsigned"
+_N_PREFIX_SIGN_POLICY: Final = "n-prefix-negative-blank-nonnegative"
+
+#: The decimal count the ``money`` wire type fixes inside its codec. A signed
+#: declaration renders through that type and therefore cannot carry any other
+#: count; the validator below refuses the combination rather than letting the
+#: codec silently overrule a declared scale.
+_MONEY_CODEC_DECIMALS: Final = 2
+
+
 class NoteGovernedAmountDeclaration(BaseModel):
     """One amount run whose ``Contenido`` cells carry only a footnote pointer.
 
@@ -237,8 +258,101 @@ class NoteGovernedAmountDeclaration(BaseModel):
     integer_digits: int = Field(gt=0)
     decimal_digits: int = Field(gt=0)
     """Positive: a run adjudicated to carry no decimals states that in its cells."""
+    sign_policy: Literal["unsigned", "n-prefix-negative-blank-nonnegative"]
+    """Whether the slot spends a byte on a sign marker, READ per declaration.
+
+    Deliberately not derived from the design's ``Tipo`` column. The AEAT type
+    and the sign are paired by the individual design, not by the corpus:
+    modelo 200's 2025 design pairs ``N`` with a sign position, spelling it
+    ``N + 14`` beside the unsigned ``15`` in ``DP200001!A121``, while modelo
+    390's 2025 design prints ``Tipo`` ``N`` on width-17 rows whose own
+    ``Contenido`` says ``15 enteros 2 decimales`` -- fifteen digits and two
+    decimals filling all seventeen bytes with no room for a marker. A rule
+    mapping ``N`` to signed would be right for one design and wrong for the
+    other, so the pairing is declared and reviewed here, once per run.
+    """
+    mandated_values: tuple[str, ...] | None
+    """The closed value domain the note MANDATES, or ``None`` when it mandates none.
+
+    A note can withhold more than a representation. Modelo 390's 2025 Nota 2 --
+    "estas casillas deben estar rellenas a 0" -- states the VALUE the expired
+    temporary-rate slots may carry, and a slot whose only admissible value is
+    zero is under-declared while the pipeline emits a nonzero one at the right
+    scale. This field is how that mandate is recorded, and it is required rather
+    than defaulted so a declaration that asserts no domain says so explicitly
+    instead of inheriting silence.
+
+    Members are spelled in WHOLE UNITS, unsigned and zero-canonical, because
+    that is the value the fixed-width codec settles against before it applies
+    the scale: ``"0"`` on a fifteen-and-two slot is the quantity zero, whose
+    wire form is the seventeen zero bytes the scale produces. A wire digit run
+    would read as minor units on a scaled slot and as units on an unscaled one,
+    so the two spellings would disagree by ``10 ** decimal_digits`` while
+    looking identical.
+
+    Deliberately NOT parsed out of ``note_statement``: the mandate is read by a
+    person and recorded here, so a note whose Spanish a matcher would misread
+    cannot quietly acquire or lose a domain.
+    """
     evidence: str = Field(min_length=1)
     """How the reading was established, in terms a later reviewer can re-check."""
+
+    @property
+    def signed(self) -> bool:
+        """Whether the slot carries the codec's sign marker in its leading byte."""
+        return self.sign_policy == _N_PREFIX_SIGN_POLICY
+
+    @property
+    def wire_length(self) -> int:
+        """The bytes this representation occupies, sign position included.
+
+        This is what the slot-width check compares against, so an adjudication
+        that does not fill the slot the design declares is refused exactly as an
+        unsigned one is -- the sign position is accounted for rather than
+        excused.
+        """
+        return self.integer_digits + self.decimal_digits + (1 if self.signed else 0)
+
+    @model_validator(mode="after")
+    def _require_a_scale_the_signed_codec_can_carry(self) -> NoteGovernedAmountDeclaration:
+        # A signed amount renders through the `money` wire type, which fixes its
+        # scale at two decimals inside the codec and accepts no declared count.
+        # Admitting any other count here would publish a field whose declared
+        # scale and emitted scale disagree, with nothing downstream to catch it.
+        if self.signed and self.decimal_digits != _MONEY_CODEC_DECIMALS:
+            raise ValueError(
+                f"{self.sign_policy} renders through the money wire type, which fixes "
+                f"{_MONEY_CODEC_DECIMALS} decimals; {self.decimal_digits} cannot be carried",
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _require_a_domain_the_export_schema_can_carry(self) -> NoteGovernedAmountDeclaration:
+        # The schema admits a closed domain on the unsigned scaled-amount shape
+        # only. A signed run renders through `money`, which declares no scale on
+        # the field and carries no reviewed domain, so a mandate declared beside
+        # one would be dropped on the way to the layout with nothing to notice.
+        if self.mandated_values is None:
+            return self
+        if self.signed:
+            raise ValueError(
+                f"{self.sign_policy} renders through the money wire type, which carries no value domain; "
+                "a mandated value cannot be declared on it",
+            )
+        if not self.mandated_values or len(set(self.mandated_values)) != len(self.mandated_values):
+            raise ValueError("mandated_values must be non-empty and unique")
+        invalid = tuple(
+            value
+            for value in self.mandated_values
+            if not (value.isascii() and value.isdigit() and str(int(value)) == value)
+            or len(value) > self.integer_digits
+        )
+        if invalid:
+            raise ValueError(
+                f"mandated_values must be zero-canonical unsigned unit values of at most "
+                f"{self.integer_digits} digits; {invalid!r} are not",
+            )
+        return self
 
 
 _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
@@ -254,6 +368,8 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
             ),
             integer_digits=15,
             decimal_digits=2,
+            sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=None,
             evidence=(
                 "Twenty-six 'Deducción resto del grupo' slots on DP200019 carry the bare pointer 'Nota 1' where "
                 "their four siblings in each I+D+i year block -- 'Deducción pendiente/generada', 'Deducción "
@@ -279,6 +395,8 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
             note_statement="Sólo se admitirán valores hasta un máximo de 99999,99 (00000000009999999)",
             integer_digits=15,
             decimal_digits=2,
+            sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=None,
             evidence=(
                 "The single slot on DP200020B carrying the bare pointer 'Nota 1' is the 'Incremento porcentual "
                 "de la plantilla media total' row, aeat_type 'Num' at length 17 as read from the workbook. The "
@@ -293,6 +411,66 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
                 "this declaration, and is deliberately left unasserted here rather than approximated."
             ),
         ),
+        *(
+            NoteGovernedAmountDeclaration(
+                source_ref="aeat-dr-200-2025",
+                source_sha256="92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
+                sheet="DP200014B",
+                published_content=pointer,
+                note_cell=note_cell,
+                note_statement=note_statement,
+                integer_digits=14,
+                decimal_digits=2,
+                sign_policy=_N_PREFIX_SIGN_POLICY,
+                mandated_values=None,
+                evidence=(
+                    "Rows A94 and A95 of DP200014B are the two 'Rectificativa' slots the 2025 design added for "
+                    "the anterior autoliquidación: ordinales 89 and 90, positions 1408 and 1425, length 17, "
+                    "Tipo 'N', described as 'Resultado a ingresar correspondiente a la anterior autoliquidación "
+                    "... previos a la rectificación (A)' and '... que se anula con la presentación de esta "
+                    "autoliquidación rectificativa (B)'. They are the only two rows of this record whose "
+                    "Contenido cell holds anything at all besides a Constante: every one of the twenty-three "
+                    "other Tipo 'N' width-17 amounts of the same record leaves it empty and takes the reviewed "
+                    "width-17 render profile, which assigns them the signed money form. Both notes were read "
+                    "from the sheet that defines them. Nota 1 (A101/A102) states WHEN the two casillas may "
+                    "carry content, conditioning them on the página 1 domiciliación-baja field; Nota 2 "
+                    "(A105/A106) states a CONSISTENCY relation, that casilla 01578 must equal A - B computed "
+                    "from these very campos 89 and 90. Neither states a representation: no scale, no decimal "
+                    "count, no sign, no alignment. So the representation is the one this design states for "
+                    "itself in DP200001!A121 -- 'NOTA: Los importes son de 15 enteros (o N + 14) y 2 "
+                    "decimales' -- the same cell the two DP200019 and DP200020B declarations above already "
+                    "cite. That cell states TWO paired forms, not one, and the pairing is what settles these "
+                    "rows: '15 enteros' for an unsigned importe, and 'N + 14' for one carrying the sign "
+                    "marker, both with 2 decimales, both filling seventeen bytes. These slots are Tipo 'N' and "
+                    "hold a resultado a ingresar that the rectificativa arithmetic subtracts, so they take the "
+                    "signed form the same design gives their twenty-three siblings: one sign position, "
+                    "fourteen integer digits, two decimals. Reading the pointer as an unscaled integer instead "
+                    "emits euros into a run whose every other member emits cents, and drops the sign a "
+                    "subtraction needs."
+                ),
+            )
+            for pointer, note_cell, note_statement in (
+                (
+                    "Nota 1",
+                    "A102",
+                    (
+                        'Estas casillas solo pueden tener contenido si el campo "Autoliquidación rectificativa '
+                        "- Como consecuencia de la presentación de la autoliquidación rectificativa solicito dar "
+                        'de baja la domiciliación efectuada" de la página 1 tiene valor 1 (opción Sí).'
+                    ),
+                ),
+                (
+                    "Nota 2",
+                    "A106",
+                    (
+                        'Si el campo "Autoliquidación rectificativa - Como consecuencia de la presentación de la '
+                        'autoliquidación rectificativa solicito dar de baja la domiciliación efectuada" de la '
+                        "página 1 tiene valor 1 (opción Sí), el valor de la casilla 01578 debe coincidir con el "
+                        "resultado de calcular A - B (campos 89 y 90 de esta misma página)."
+                    ),
+                ),
+            )
+        ),
     ),
     "aeat-dr-390-2025": tuple(
         NoteGovernedAmountDeclaration(
@@ -304,6 +482,8 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
             note_statement="Nota 2: estas casillas deben estar rellenas a 0",
             integer_digits=15,
             decimal_digits=2,
+            sign_policy=_UNSIGNED_SIGN_POLICY,
+            mandated_values=("0",),
             evidence=(
                 "The 2025 design replaced the Contenido clause of the expired temporary-rate slots -- the "
                 "0%, 2%, 5% and 7,5% rows and the 0%, 0,26%, 0,62% and 1% recargo rows -- with the pointer "
@@ -313,7 +493,18 @@ _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ..
                 "written. The representation therefore stands unchanged from the surrounding run, which the "
                 "same sheet still states outright on every 17-position amount whose rate survives into 2025 "
                 "(4%, 10% and 21% bases and cuotas), and which the 2024 design states on these very rows. "
-                "Reading the pointer as an unscaled integer instead would emit euros into a cents field."
+                "Reading the pointer as an unscaled integer instead would emit euros into a cents field. "
+                "The note's OTHER half is the value: 'deben estar rellenas a 0' is a mandate, not guidance, "
+                "and it closes these slots to the single quantity zero, which is what mandated_values ('0') "
+                "records. Zero is the whole domain because the rates the slots priced -- 0%, 2%, 5%, 7,5% "
+                "and the 0%, 0,26%, 0,62% and 1% recargos -- expired before the 2025 ejercicio, so no base "
+                "or cuota can accrue against them; the slots survive only to hold the record layout's "
+                "positions. The unit spelling is what the fixed-width codec settles against, and on this "
+                "fifteen-and-two slot the quantity zero reaches the wire as seventeen zero bytes, which is "
+                "also the fill AEAT prescribes for an empty numeric slot -- so the mandate and the blank "
+                "fill agree byte for byte and the constraint adds refusal without changing any emitted "
+                "record. A cents reading of '0' would be the same bytes here and a hundredfold error on any "
+                "nonzero member, which is why the domain is declared in units."
             ),
         )
         for sheet, note_cell in (
@@ -367,8 +558,17 @@ def note_governed_amount_scale_for(
     *,
     sheet: str,
     published_content: str,
-) -> tuple[int, int] | None:
-    """Return the adjudicated whole/decimal digit pair, or ``None`` to derive normally.
+) -> NoteGovernedAmountDeclaration | None:
+    """Return the adjudication covering this cell, or ``None`` to derive normally.
+
+    The whole declaration is returned rather than its digit pair alone, because
+    the digit pair does not determine the wire form on its own: the same counts
+    mean different bytes depending on whether a sign position is spent, and a
+    caller handed only ``(integer, decimal)`` would have to guess the rest.
+
+    This is the one matcher a cell is admitted by. The renderer and the
+    footnote census both take their verdict from it, which is what keeps the
+    two from disagreeing about which cells are covered.
 
     ``published_content`` is the cell's whitespace-normalised content, which is
     what the numeric derivation reads. Anything the declaration does not name
@@ -378,7 +578,7 @@ def note_governed_amount_scale_for(
     for declaration in declarations:
         if declaration.sheet != sheet or declaration.published_content != published_content:
             continue
-        return declaration.integer_digits, declaration.decimal_digits
+        return declaration
     return None
 
 

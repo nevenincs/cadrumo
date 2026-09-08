@@ -42,7 +42,7 @@ from .....core.parsing import normalise_iso_4217_currency
 from .....core.tabular import NormalizedTable, TabularSourceError, normalize_tabular_bytes
 from .....domain.transactions.raw_transaction import SourceFormat
 from ._constants import CSV_EXTENSIONS
-from ._tabular_projection import ColumnRoleMapping, ProjectedRow, project_table
+from ._tabular_projection import ColumnRoleMapping, ProjectedRow, ProjectedTable, project_table
 from .base import (
     FinancialProvider,
     FinancialProviderError,
@@ -178,28 +178,22 @@ class MappedTabularProvider(FinancialProvider):
             mapping_resolver if mapping_resolver is not None else default_tabular_mapping_resolver()
         )
 
-    @override
-    def validate_source(self, path: Path) -> ProviderValidation:
-        """Report whether the source normalizes and maps, and what was not understood.
-
-        Validation is a full dry projection: every column the mapping did not
-        establish and every row that will not parse is reported here, so the
-        operator sees the whole picture before ingest rather than one row at a
-        time. The source stays valid as long as at least one row parses.
-        """
-        try:
-            table = normalize_tabular_bytes(self._read_source_bytes(path))
-        except (FinancialProviderError, TabularSourceError) as exc:
-            return ProviderValidation(is_valid=False, warnings=(str(exc),))
-        dialect_note = f"delimiter={table.dialect.delimiter!r},decimal={table.dialect.decimal_separator!r}"
-        if self.mapping_resolver is None:
+    def _mapping_validation(
+        self,
+        table: NormalizedTable,
+        *,
+        dialect_note: str,
+    ) -> ColumnRoleMapping | ProviderValidation:
+        """Resolve and validate the table mapping, retaining typed failure rows."""
+        resolver = self.mapping_resolver
+        if resolver is None:
             return ProviderValidation(
                 is_valid=False,
                 warnings=("no column-role mapping resolver is installed for the tabular mapping lane",),
                 detected_encoding=table.dialect.encoding,
                 detected_dialect=dialect_note,
             )
-        mapping = self.mapping_resolver(table)
+        mapping = resolver(table)
         if mapping is None:
             return ProviderValidation(
                 is_valid=False,
@@ -218,7 +212,14 @@ class MappedTabularProvider(FinancialProvider):
                 detected_encoding=table.dialect.encoding,
                 detected_dialect=dialect_note,
             )
-        projected = project_table(table, mapping)
+        return mapping
+
+    def _projected_validation(
+        self,
+        projected: ProjectedTable,
+        table: NormalizedTable,
+    ) -> tuple[list[str], int]:
+        """Collect projection and row diagnostics in their established order."""
         warnings = [
             f"column {column.column_index} {column.header!r} was not mapped to a role and is not imported"
             for column in projected.unmapped_columns
@@ -239,6 +240,27 @@ class MappedTabularProvider(FinancialProvider):
                 )
                 continue
             parsed_count += 1
+        return warnings, parsed_count
+
+    @override
+    def validate_source(self, path: Path) -> ProviderValidation:
+        """Report whether the source normalizes and maps, and what was not understood.
+
+        Validation is a full dry projection: every column the mapping did not
+        establish and every row that will not parse is reported here, so the
+        operator sees the whole picture before ingest rather than one row at a
+        time. The source stays valid as long as at least one row parses.
+        """
+        try:
+            table = normalize_tabular_bytes(self._read_source_bytes(path))
+        except (FinancialProviderError, TabularSourceError) as exc:
+            return ProviderValidation(is_valid=False, warnings=(str(exc),))
+        dialect_note = f"delimiter={table.dialect.delimiter!r},decimal={table.dialect.decimal_separator!r}"
+        mapping = self._mapping_validation(table, dialect_note=dialect_note)
+        if isinstance(mapping, ProviderValidation):
+            return mapping
+        projected = project_table(table, mapping)
+        warnings, parsed_count = self._projected_validation(projected, table)
         if parsed_count == 0:
             warnings.append("no row of the mapped table could be parsed")
         return ProviderValidation(

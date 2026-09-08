@@ -494,6 +494,48 @@ def assert_rate_boxes_account_for_total(
     )
 
 
+def _declared_records_for_filing(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: Mapping[FilingProducerKey, object],
+    prior_domiciliation_election: PriorDomiciliationElection,
+) -> tuple[ExportRecordDefinition, ...]:
+    """Return layout records that reach this filing's disposition."""
+    return tuple(
+        record
+        for record in layout.records
+        if not _did_page_suppressed(
+            record,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=prior_domiciliation_election,
+        )
+    )
+
+
+def _duplicate_record_orders(records: Sequence[ExportRecordDefinition]) -> tuple[int, ...]:
+    """Return each duplicated record order once, in diagnostic order."""
+    orders = [record.order for record in records]
+    return tuple(sorted({order for order in orders if orders.count(order) > 1}))
+
+
+def _record_order_drifts(
+    declared: Sequence[ExportRecordDefinition],
+    emitted: Sequence[ExportRecordDefinition],
+) -> tuple[dict[str, object], ...]:
+    """Describe each position whose emitted record differs from the declaration."""
+    return tuple(
+        {
+            "position": index,
+            "registry_record_id": declared[index].id,
+            "emitted_record_id": emitted[index].id,
+        }
+        for index in range(len(declared))
+        if declared[index].id != emitted[index].id
+    )
+
+
 def _assert_record_order_fidelity(
     *,
     modelo: str,
@@ -516,18 +558,13 @@ def _assert_record_order_fidelity(
     :class:`FilingExportError` -- the ``.boe`` record/section sequence must mirror
     the official modelo-revision structure.
     """
-    declared = tuple(
-        record
-        for record in layout.records
-        if not _did_page_suppressed(
-            record,
-            draft=draft,
-            headers=headers,
-            prior_domiciliation_election=prior_domiciliation_election,
-        )
+    declared = _declared_records_for_filing(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
     )
-    orders = [record.order for record in declared]
-    duplicate_orders = sorted({order for order in orders if orders.count(order) > 1})
+    duplicate_orders = _duplicate_record_orders(declared)
     if duplicate_orders:
         raise FilingExportError(
             translated_message="application.filing.export_parity.errors.record_emit_order_duplicated",
@@ -539,14 +576,9 @@ def _assert_record_order_fidelity(
         )
     emitted = tuple(sorted(declared, key=lambda record: record.order))
     if [record.id for record in emitted] != [record.id for record in declared]:
-        order_drifts = tuple(
-            {
-                "position": index,
-                "registry_record_id": declared[index].id,
-                "emitted_record_id": emitted[index].id,
-            }
-            for index in range(len(declared))
-            if declared[index].id != emitted[index].id
+        order_drifts = _record_order_drifts(
+            declared,
+            emitted,
         )
         raise FilingExportError(
             translated_message="application.filing.export_parity.errors.record_emit_order_drift",

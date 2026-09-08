@@ -115,6 +115,52 @@ _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
 _CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
 
 
+def _active_profile_context_defaults(
+    bucket_id: str | None,
+    *,
+    profile_label_present: bool,
+    profile_registered: bool,
+) -> dict[str, object]:
+    """Build the redacted context shared by every profile-read outcome."""
+    return {
+        "active_profile_id": "",
+        "active_profile_ref": _diagnostic_fingerprint(bucket_id),
+        "active_profile_label": "",
+        "active_profile_label_present": profile_label_present,
+        "active_profile_registered": profile_registered,
+        "profile_record_present": False,
+        "profile_tax_id_present": False,
+        "profile_tax_id_fingerprint": "",
+        "identity_alignment": "profile_tax_id_missing",
+    }
+
+
+def _unavailable_active_profile_context() -> dict[str, object]:
+    """Return the fail-closed context when profile diagnostics cannot be read."""
+    return {
+        "active_profile_id": "",
+        "active_profile_ref": "",
+        "active_profile_label": "",
+        "active_profile_label_present": False,
+        "active_profile_registered": False,
+        "profile_record_present": False,
+        "profile_tax_id_present": False,
+        "profile_tax_id_fingerprint": "",
+        "identity_alignment": "profile_context_unavailable",
+    }
+
+
+def _profile_identity_alignment(provider_identity: str, profile_identity: str) -> str:
+    """Classify the redacted provider/profile identity relationship."""
+    if not provider_identity:
+        return "clave_identity_missing"
+    if not profile_identity:
+        return "profile_tax_id_missing"
+    if same_tax_identifier(profile_identity, provider_identity):
+        return "matches"
+    return "mismatch"
+
+
 class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvageMixin):
     """Cl@ve Móvil implementation of the :class:`AuthProvider` protocol.
 
@@ -625,78 +671,59 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
     def _active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
         try:
-            from .....application.user_profile.profile_record_repository import ProfileRecordRepository
-            from .....application.user_profile.projections import record_to_path_values, record_to_values
-            from .....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-            from .....core.bucket_pointer import resolve_active_bucket_id
-            from .....domain.user_profile.errors import ProfileNotFoundError
-            from ....persistence.storage.master_key.active_session import active_bucket_session_serves
-
-            bucket_id = resolve_active_bucket_id()
-            pointer = read_profile_bucket_by_id(bucket_id) if bucket_id else None
-            context: dict[str, object] = {
-                "active_profile_id": "",
-                "active_profile_ref": _diagnostic_fingerprint(bucket_id),
-                "active_profile_label": "",
-                "active_profile_label_present": bool(pointer is not None and pointer.label),
-                "active_profile_registered": pointer is not None,
-                "profile_record_present": False,
-                "profile_tax_id_present": False,
-                "profile_tax_id_fingerprint": "",
-                "identity_alignment": "profile_tax_id_missing",
-            }
-            if bucket_id is None:
-                context["identity_alignment"] = "no_active_profile"
-                return context
-            # Only this bucket's own session may serve the read; a foreign
-            # session would decrypt under the wrong key.  Without one the record
-            # stays sealed: it is encrypted under the profile's own DEK, which
-            # exists only inside the session its password envelope unwrapped.
-            #
-            # The locked case reports itself rather than borrowing the
-            # absent-identity token.  This context is read by an operator
-            # debugging a Cl@ve identity mismatch, and "the profile carries no
-            # tax id" and "the profile's tax id could not be read" call for
-            # opposite next steps -- re-enrol the identity, or unlock the
-            # profile and re-run.
-            if not active_bucket_session_serves(bucket_id):
-                context["identity_alignment"] = "profile_record_locked"
-                return context
-            try:
-                record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
-            except ProfileNotFoundError:
-                return context
-
-            path_values = record_to_path_values(record)
-            profile_identity = tax_id_identity_token(str(path_values.get("identity.tax_id") or ""))
-            if not profile_identity:
-                selector_values = record_to_values(record)
-                profile_identity = str(selector_values.get("tax.id") or "").strip().upper()
-            context["profile_record_present"] = True
-            context["profile_tax_id_present"] = bool(profile_identity)
-            context["profile_tax_id_fingerprint"] = _diagnostic_fingerprint(profile_identity)
-            if not provider_identity:
-                context["identity_alignment"] = "clave_identity_missing"
-            elif not profile_identity:
-                context["identity_alignment"] = "profile_tax_id_missing"
-            elif same_tax_identifier(profile_identity, provider_identity):
-                context["identity_alignment"] = "matches"
-            else:
-                context["identity_alignment"] = "mismatch"
-            return context
+            return self._build_active_profile_diagnostic_context(provider_identity)
         except (ImportError, KeyError, AttributeError, UserProfileError) as exc:
             log.debug("ClaveMovilAuthProvider: profile diagnostic context unavailable: %s", exc, exc_info=True)
-            return {
-                "active_profile_id": "",
-                "active_profile_ref": "",
-                "active_profile_label": "",
-                "active_profile_label_present": False,
-                "active_profile_registered": False,
-                "profile_record_present": False,
-                "profile_tax_id_present": False,
-                "profile_tax_id_fingerprint": "",
-                "identity_alignment": "profile_context_unavailable",
-            }
+            return _unavailable_active_profile_context()
+
+    def _build_active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
+        """Read the current profile only through its own live session."""
+        from .....application.user_profile.profile_record_repository import ProfileRecordRepository
+        from .....application.user_profile.projections import record_to_path_values, record_to_values
+        from .....application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+        from .....core.bucket_pointer import resolve_active_bucket_id
+        from .....domain.user_profile.errors import ProfileNotFoundError
+        from ....persistence.storage.master_key.active_session import active_bucket_session_serves
+
+        bucket_id = resolve_active_bucket_id()
+        pointer = read_profile_bucket_by_id(bucket_id) if bucket_id else None
+        context = _active_profile_context_defaults(
+            bucket_id,
+            profile_label_present=bool(pointer is not None and pointer.label),
+            profile_registered=pointer is not None,
+        )
+        if bucket_id is None:
+            context["identity_alignment"] = "no_active_profile"
+            return context
+        # Only this bucket's own session may serve the read; a foreign
+        # session would decrypt under the wrong key.  Without one the record
+        # stays sealed: it is encrypted under the profile's own DEK, which
+        # exists only inside the session its password envelope unwrapped.
+        #
+        # The locked case reports itself rather than borrowing the
+        # absent-identity token.  This context is read by an operator
+        # debugging a Cl@ve identity mismatch, and "the profile carries no
+        # tax id" and "the profile's tax id could not be read" call for
+        # opposite next steps -- re-enrol the identity, or unlock the
+        # profile and re-run.
+        if not active_bucket_session_serves(bucket_id):
+            context["identity_alignment"] = "profile_record_locked"
+            return context
+        try:
+            record = ProfileRecordRepository.for_current_session(bucket_id).load(bucket_id)
+        except ProfileNotFoundError:
+            return context
+
+        path_values = record_to_path_values(record)
+        profile_identity = tax_id_identity_token(str(path_values.get("identity.tax_id") or ""))
+        if not profile_identity:
+            selector_values = record_to_values(record)
+            profile_identity = str(selector_values.get("tax.id") or "").strip().upper()
+        context["profile_record_present"] = True
+        context["profile_tax_id_present"] = bool(profile_identity)
+        context["profile_tax_id_fingerprint"] = _diagnostic_fingerprint(profile_identity)
+        context["identity_alignment"] = _profile_identity_alignment(provider_identity, profile_identity)
+        return context
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────
 

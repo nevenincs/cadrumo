@@ -5,16 +5,15 @@ persists profile facts through canonical user-profile orchestration.
 The reverse projection (``project_answers``) builds the typed answers
 model from a raw canonical-token dict.
 
-``persist_answers`` distinguishes the two wizard verbs. ``create``
-registers a fresh profile from the full answer set. ``edit`` is a true
-patch: only the questions the operator explicitly supplied on the
-command line are written, so editing one field never reverts the rest
-of a populated profile to its descriptor defaults.
+Command ownership for create and edit lives in :mod:`commands`; this
+module provides only the canonical projections and the explicit patch
+writer those commands consume.
 """
 
 from __future__ import annotations
 
 from collections.abc import Collection, Mapping
+from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, TypedDict
 
@@ -105,60 +104,6 @@ def serialise_answers(
             continue
         result[question.profile_key] = _canonicalise(question, value)
     return result
-
-
-def persist_answers(
-    flow: WizardFlow,
-    answers: BaseModel,
-    *,
-    state: WorkflowState,
-    profile_name: str,
-    profile_id: str,
-    mode: WizardPersistMode,
-    supplied_question_ids: Collection[str] | None = None,
-    routing_profile_id: str | None = None,
-) -> WorkflowState:
-    """Persist ``answers`` into the profile bucket and return updated state.
-
-    ``profile_id`` is the immutable UUID profile identity; ``profile_name``
-    is the operator-chosen display label.
-
-    ``mode`` is the command discriminator. ``"create"`` is deliberately
-    unavailable: credential registration is the only creation door.
-    ``"edit"`` publishes an explicit fact replacement through the active
-    session-bound record repository.
-
-    ``supplied_question_ids`` names the questions the operator
-    explicitly supplied on the command line. On the ``"edit"`` path it
-    scopes the write to exactly those questions: ``edit`` is a patch,
-    so a field the operator did not name is left untouched. It must be
-    supplied for ``"edit"``, which is the only mode that reaches the
-    write; the ``"create"`` arm refuses above it and consumes nothing.
-
-    Returns the updated :class:`WorkflowState` after persisting the answers.
-    """
-    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-
-    if mode == "create":
-        del flow, answers, profile_name, routing_profile_id
-        from ..user_profile.registration import ProfileRegistrationError
-
-        raise ProfileRegistrationError(
-            "wizard profile creation is unavailable; register with credentials before setup",
-        )
-
-    if supplied_question_ids is None:
-        raise WorkflowInputMismatchError(
-            translated_message="application.wizard.errors.persist_answers_edit_requires_supplied_question_ids",
-        )
-    canonical = serialise_answers(flow, answers, only_question_ids=supplied_question_ids)
-    facts = tuple(UserProfileFact(path=path, value=value) for path, value in canonical.items() if value)
-    apply_profile_fact_changes(
-        profile_id=profile_id,
-        changes=facts,
-        door=ProfileFactWriteDoor.ANSWERS,
-    )
-    return state
 
 
 def profile_values_from_patch(flow: WizardFlow, supplied: Mapping[str, str]) -> dict[str, str]:
@@ -366,19 +311,16 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     """
     from ...domain.contribuyente.descendant import DescendantInfo
     from ...domain.contribuyente.descendant_facts import relacion_kwarg
-    from ...domain.contribuyente.meses_trabajo import parse_meses_trabajo
 
     meses = row.get("meses-madre-trabajo") or ""
-    birth_date = parse_iso8601_date(row["birth-date"])
-    if birth_date is None:
-        raise WorkflowInputMismatchError("a stored descendant row must carry a readable birth date")
+    birth_date = _required_descendant_birth_date(row)
     rentas = row.get("rentas-anuales", "").strip()
     prorrata = row.get("prorrata-minimo", "").strip()
     dependencia_raw = row.get("dependencia-economica", "").strip()
     # Tri-state: a blank answer stays UNSET rather than collapsing to a no,
     # because only an explicit yes assimilates and only an unset value may
     # later be answered.
-    dependencia = parse_bool(dependencia_raw) if dependencia_raw else None
+    dependencia = _optional_bool_token(dependencia_raw)
     relacion, inscripcion_date, acogimiento_date = _safe_relacion_and_entry_dates(row)
     # Operator-typed euros, so the strict grammar with the money cap: a bare
     # Decimal() admitted '1e3', '+100', 'NaN' and 'Infinity', and read the
@@ -395,11 +337,7 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
     # `signed` stays at its permissive default: a negative figure has its own
     # upstream verdict and the record's own ge=0 constraint, both of which say
     # "cannot be negative" far more usefully than this refusal would.
-    rentas_anuales_euros = try_parse_canonical_decimal(rentas, max_fraction_digits=2) if rentas else None
-    if rentas and rentas_anuales_euros is None:
-        raise WorkflowInputMismatchError(
-            translated_message="application.wizard.errors.descendant_rentas_not_a_valid_amount",
-        )
+    rentas_anuales_euros = _rentas_anuales_euros(rentas)
     # Read as a named pair rather than a second ** unpack: the call already
     # carries one (relacion_kwarg, whose whole purpose is to render zero or
     # one keyword), and two unpacks in one constructor leave a checker unable
@@ -430,8 +368,8 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         # is the value the widget PRE-FILLS for an operator who is present to
         # accept or change it; it is not a licence to assert the same answer
         # for one who never saw the question.
-        convive_con_contribuyente=parse_bool(row.get("convivencia", "")) is True,
-        custodia_compartida=parse_bool(row.get("custodia-compartida", "")) is True,
+        convive_con_contribuyente=_claimed_bool(row, "convivencia"),
+        custodia_compartida=_claimed_bool(row, "custodia-compartida"),
         # An unanswered rentas figure stays UNDECLARED (None) rather than
         # collapsing to zero. Zero is a positive claim that the descendant
         # earned nothing, and asserting it for an operator who skipped the
@@ -440,16 +378,52 @@ def _descendant_from_row(row: Mapping[str, str]) -> DescendantInfo:
         rentas_anuales_euros=rentas_anuales_euros,
         # Both remaining flags resolve an unanswered question to the
         # non-claiming direction, as convivencia and custodia above do.
-        presenta_declaracion_propia=parse_bool(row.get("declaracion-propia", "")) is True,
-        prorrata_minimo=parse_bool(prorrata) if prorrata else None,
-        meses_madre_trabajo=parse_meses_trabajo(meses, field="meses-madre-trabajo") if meses else (),
-        alta_posterior_nacimiento_mes=(
-            int(row["alta-posterior-nacimiento-mes"]) if row.get("alta-posterior-nacimiento-mes") else None
-        ),
+        presenta_declaracion_propia=_claimed_bool(row, "declaracion-propia"),
+        prorrata_minimo=_optional_bool_token(prorrata),
+        meses_madre_trabajo=_meses_madre_trabajo(meses),
+        alta_posterior_nacimiento_mes=_optional_int(row.get("alta-posterior-nacimiento-mes")),
         gastos_guarderia_euros=guarderia["gastos_guarderia_euros"],
         gastos_guarderia_mensuales=guarderia["gastos_guarderia_mensuales"],
         nif=row.get("nif") or None,
     )
+
+
+def _required_descendant_birth_date(row: Mapping[str, str]) -> date:
+    birth_date = parse_iso8601_date(row["birth-date"])
+    if birth_date is None:
+        raise WorkflowInputMismatchError("a stored descendant row must carry a readable birth date")
+    return birth_date
+
+
+def _optional_bool_token(raw: str) -> bool | None:
+    return parse_bool(raw) if raw else None
+
+
+def _rentas_anuales_euros(raw: str) -> Decimal | None:
+    if not raw:
+        return None
+    value = try_parse_canonical_decimal(raw, max_fraction_digits=2)
+    if value is None:
+        raise WorkflowInputMismatchError(
+            translated_message="application.wizard.errors.descendant_rentas_not_a_valid_amount",
+        )
+    return value
+
+
+def _claimed_bool(row: Mapping[str, str], key: str) -> bool:
+    return parse_bool(row.get(key, "")) is True
+
+
+def _meses_madre_trabajo(raw: str) -> tuple[int, ...]:
+    if not raw:
+        return ()
+    from ...domain.contribuyente.meses_trabajo import parse_meses_trabajo
+
+    return parse_meses_trabajo(raw, field="meses-madre-trabajo")
+
+
+def _optional_int(raw: str | None) -> int | None:
+    return int(raw) if raw else None
 
 
 class _GuarderiaSpend(TypedDict):
@@ -575,16 +549,30 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
     An absent optional field emits NO answer rather than a stored default,
     which keeps a facts-to-answers re-projection identical on both legs.
     """
-    from ...domain.contribuyente.guarderia_mensual import serialise_guarderia_mensual
-    from ...domain.contribuyente.meses_trabajo import serialise_meses_trabajo
-
     answers = {
         f"{prefix}.birth-date": descendant.birth_date.isoformat(),
         f"{prefix}.convivencia": "true" if descendant.convive_con_contribuyente else "false",
         f"{prefix}.custodia-compartida": "true" if descendant.custodia_compartida else "false",
         f"{prefix}.declaracion-propia": "true" if descendant.presenta_declaracion_propia else "false",
     }
-    optional: tuple[tuple[str, object | None], ...] = (
+    answers.update(_prefixed_optional_answers(prefix, _descendant_identity_answers(descendant)))
+    answers.update(_prefixed_optional_answers(prefix, _descendant_guarderia_answers(descendant)))
+    answers.update(_prefixed_optional_answers(prefix, _descendant_declaration_answers(descendant)))
+    return answers
+
+
+def _prefixed_optional_answers(
+    prefix: str,
+    optional: tuple[tuple[str, object | None], ...],
+) -> dict[str, str]:
+    return {f"{prefix}.{page_id}": str(value) for page_id, value in optional if value is not None}
+
+
+def _descendant_identity_answers(
+    descendant: DescendantInfo,
+) -> tuple[tuple[str, object | None], ...]:
+    """Return the relation and civil-identity answers in page order."""
+    return (
         # The ordinary relación emits no answer: it is the record's own default,
         # so re-emitting it would commit an answer on a resume walk that the
         # original walk never gave, and the two legs would stop matching.
@@ -592,20 +580,21 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
             "relacion",
             descendant.relacion.value if descendant.relacion is not DescendantRelacion.DESCENDIENTE else None,
         ),
-        (
-            "inscripcion-registro-civil",
-            descendant.inscripcion_registro_civil_date.isoformat()
-            if descendant.inscripcion_registro_civil_date is not None
-            else None,
-        ),
-        (
-            "acogimiento-resolucion",
-            descendant.acogimiento_resolucion_date.isoformat()
-            if descendant.acogimiento_resolucion_date is not None
-            else None,
-        ),
-        ("fallecimiento", descendant.death_date.isoformat() if descendant.death_date is not None else None),
+        ("inscripcion-registro-civil", _optional_isoformat(descendant.inscripcion_registro_civil_date)),
+        ("acogimiento-resolucion", _optional_isoformat(descendant.acogimiento_resolucion_date)),
+        ("fallecimiento", _optional_isoformat(descendant.death_date)),
         ("discapacidad", descendant.discapacidad_grado),
+    )
+
+
+def _descendant_guarderia_answers(
+    descendant: DescendantInfo,
+) -> tuple[tuple[str, object | None], ...]:
+    """Return the maternity and guardería answers in page order."""
+    from ...domain.contribuyente.guarderia_mensual import serialise_guarderia_mensual
+    from ...domain.contribuyente.meses_trabajo import serialise_meses_trabajo
+
+    return (
         # An empty set means "none recorded", so it emits no answer at all
         # rather than a literal empty string the resume walk would commit.
         # Re-emitted in the CANONICAL expanded form for the same reason the
@@ -625,19 +614,30 @@ def _descendant_instance_answers(descendant: DescendantInfo, *, prefix: str) -> 
             "gastos-guarderia-mensuales",
             serialise_guarderia_mensual(descendant.gastos_guarderia_mensuales) or None,
         ),
+    )
+
+
+def _descendant_declaration_answers(
+    descendant: DescendantInfo,
+) -> tuple[tuple[str, object | None], ...]:
+    """Return the declaration and economic answers in page order."""
+    return (
         # Unlike the counts above, zero rentas is a MEANINGFUL declaration
         # ("this child earned nothing"), distinct from never having been
         # asked, so a zero emits its answer rather than being dropped.
         ("rentas-anuales", descendant.rentas_anuales_euros),
-        ("prorrata-minimo", None if descendant.prorrata_minimo is None else str(descendant.prorrata_minimo).lower()),
-        (
-            "dependencia-economica",
-            None if descendant.dependencia_economica is None else str(descendant.dependencia_economica).lower(),
-        ),
+        ("prorrata-minimo", _optional_bool_answer(descendant.prorrata_minimo)),
+        ("dependencia-economica", _optional_bool_answer(descendant.dependencia_economica)),
         ("nif", descendant.nif),
     )
-    answers.update({f"{prefix}.{page_id}": str(value) for page_id, value in optional if value is not None})
-    return answers
+
+
+def _optional_isoformat(value: date | None) -> str | None:
+    return value.isoformat() if value is not None else None
+
+
+def _optional_bool_answer(value: bool | None) -> str | None:
+    return None if value is None else str(value).lower()
 
 
 _register_project_answers(project_answers)
@@ -647,7 +647,6 @@ __all__ = [
     "descendant_answers_from_record",
     "descendant_facts_from_answers",
     "parse_canonical",
-    "persist_answers",
     "persist_patch",
     "profile_values_from_patch",
     "project_answers",

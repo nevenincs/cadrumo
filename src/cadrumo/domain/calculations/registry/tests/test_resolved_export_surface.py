@@ -21,7 +21,12 @@ from .....core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from ...export_field_kind import CasillaFieldKind
-from ..export import derive_export_layouts_from_bindings, resolved_export_casillas, resolved_export_endpoints
+from ..export import (
+    derive_export_layouts_from_bindings,
+    resolved_export_casillas,
+    resolved_export_endpoints,
+    resolved_export_fields,
+)
 from ..fixed_width_codec import ExportEncoding
 from ..schema import DataBindingDefinition, ModeloRevision
 from ..schema_base import CasillaDataType
@@ -199,3 +204,57 @@ def test_reading_the_authored_surface_misclassifies_the_row_casilla() -> None:
     assert _ROW_CASILLA in authored_field_casillas
     assert resolved_paths[_ROW_CASILLA] == "row_field"
     assert all(e.field is None for e in resolved_export_endpoints(revision) if e.path == "row_field")
+
+
+def test_the_field_accessor_carries_a_field_the_endpoint_walk_cannot_represent() -> None:
+    """An endpoint IS a casilla, so a field reaching none is unrepresentable there.
+
+    That is a type, not a filter: ``ResolvedExportEndpoint.casilla_id`` is
+    non-optional, so a field carrying neither a direct nor a projected casilla
+    simply has no endpoint form. The fixture's derived binding-kind field is
+    exactly that shape, and it is a real one - a filing-grade amount homed to a
+    producer key is how the official designs carry several rectificativa
+    importes, and two such fields on modelo 200 sat unscaled beside their scaled
+    siblings while a screen keyed on endpoints reported the modelo clean.
+
+    Both accessors are asserted over the same revision, so the claim is that one
+    surface is read two ways and not that two surfaces disagree.
+    """
+    revision = _three_path_revision()
+
+    fields = resolved_export_fields(revision)
+    casilla_less = tuple(item for item in fields if item.casilla_id is None)
+
+    assert [item.field.id for item in casilla_less] == ["retencion.template"]
+    assert casilla_less[0].record_id == "perceptor"
+    assert casilla_less[0].layout_id == "layout"
+    # The same field reaches no endpoint at all, which is the gap.
+    assert all(
+        endpoint.field is None or endpoint.field.id != "retencion.template"
+        for endpoint in resolved_export_endpoints(revision)
+    )
+
+
+def test_the_field_accessor_returns_the_resolved_fields_and_not_the_authored_ones() -> None:
+    """Every field of every resolved record, in record order, after derivation.
+
+    The authored row record carries a template field naming casilla ``02``;
+    derivation rewrites it into a binding-kind field naming the binding. An
+    accessor reading the authored layouts would report the first, which is the
+    first of the four wrong figures this surface exists to prevent.
+    """
+    revision = _three_path_revision()
+
+    resolved = resolved_export_fields(revision)
+
+    assert [(item.record_id, item.field.id, item.casilla_id) for item in resolved] == [
+        ("declaracion", "importe", _FIELD_CASILLA),
+        ("declaracion", "cnae.projection", _PROJECTION_CASILLA),
+        ("perceptor", "retencion.template", None),
+    ]
+    assert [item.field for item in resolved] == [
+        field
+        for layout in derive_export_layouts_from_bindings(revision)
+        for record in layout.records
+        for field in record.fields
+    ]

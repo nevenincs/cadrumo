@@ -234,6 +234,31 @@ def build_verb_input_schemas(command_keys: tuple[str, ...]) -> dict[str, VerbInp
     return schemas
 
 
+def _argument_tokens(parameter: VerbParameter, value: object) -> list[str]:
+    """Encode one positional parameter from its schema declaration."""
+    if parameter.multiple and isinstance(value, list | tuple):
+        return [str(item) for item in cast(Sequence[object], value)]
+    return [str(value)]
+
+
+def _flag_tokens(parameter: VerbParameter, value: object) -> list[str]:
+    """Encode a boolean option, including its schema-declared negative flag."""
+    if value:
+        return [parameter.cli_flag]
+    if parameter.off_flag:
+        return [parameter.off_flag]
+    return []
+
+
+def _option_tokens(parameter: VerbParameter, value: object) -> list[str]:
+    """Encode one option value, preserving repeatable option order."""
+    if parameter.is_flag:
+        return _flag_tokens(parameter, value)
+    if parameter.multiple and isinstance(value, list | tuple):
+        return [token for item in cast(Sequence[object], value) for token in (parameter.cli_flag, str(item))]
+    return [parameter.cli_flag, str(value)]
+
+
 def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[str]:
     positional: list[str] = []
     options: list[str] = []
@@ -242,19 +267,9 @@ def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[
             continue
         value = arguments[parameter.name]
         if parameter.kind is ParameterKind.ARGUMENT:
-            positional.extend(str(item) for item in cast(Sequence[object], value)) if parameter.multiple and isinstance(
-                value, list | tuple
-            ) else positional.append(str(value))
-        elif parameter.is_flag:
-            if value:
-                options.append(parameter.cli_flag)
-            elif parameter.off_flag:
-                options.append(parameter.off_flag)
-        elif parameter.multiple and isinstance(value, list | tuple):
-            for item in cast(Sequence[object], value):
-                options.extend((parameter.cli_flag, str(item)))
+            positional.extend(_argument_tokens(parameter, value))
         else:
-            options.extend((parameter.cli_flag, str(value)))
+            options.extend(_option_tokens(parameter, value))
     return ["--format", "json", *schema.cli_path, *positional, *options]
 
 

@@ -126,6 +126,38 @@ def _normalise_required_text(text: str) -> str:
     return normalise_corpus_text(text)
 
 
+def _resolve_source_path(source: SourceReference, source_root: Path) -> Path:
+    """Resolve a source path and retain the mirrored-binary fallback."""
+    resolved_root = source_root.expanduser().resolve()
+    source_path = (resolved_root / source.corpus_path).expanduser().resolve()
+    if resolved_root not in source_path.parents and source_path != resolved_root:
+        raise OSError(f"source {source.id!r} escapes source root")
+    if not source_path.is_file():
+        # The command-bearing wheel sheds corpus source binaries; the
+        # mandatory cadrumo_data namespace supplies the same bytes at the
+        # mirrored relative path, keeping required_text verification
+        # byte-identical to a full checkout.
+        companion_path = resolve_companion_binary(*source.corpus_path.split("/"))
+        if companion_path is not None:
+            source_path = companion_path
+    return source_path
+
+
+def _read_source_text(source: SourceReference, source_path: Path) -> str:
+    """Read and normalise a source, using the shipped PDF text when present."""
+    if source.kind is RegistrySourceKind.MANUAL_PDF:
+        # Try the shipped content-keyed sidecar first; verify sha256 before
+        # using it so a modified source PDF never serves stale text.  The
+        # sidecar is generated once at build time by the corpus extraction
+        # tooling and shipped with the cadrumo wheel — end-user machines
+        # should never reach the fallback.
+        sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path)
+        if sidecar_text is not None:
+            return sidecar_text
+        return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+    return normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
+
+
 _disk_cache: dict[str, str] | None = None
 _disk_cache_dirty: bool = False
 # Disk-cache writes since reset; observability for the validation-verdict pin.
@@ -309,35 +341,42 @@ class EvidenceValidator:
         if not citations_tuple:
             return [f"{scope}: {owner} requires source citations"]
         for citation in citations_tuple:
-            if citation.source_ref not in refs_set:
-                failures.append(
-                    f"{scope}: {owner} source citation {citation.source_ref!r} is not listed in source_refs",
-                )
-                continue
-            source = self._sources.get(citation.source_ref)
-            if source is None:
-                continue
-            if source.evidence_tier != required_tier:
-                failures.append(
-                    f"{scope}: {owner} source citation {citation.source_ref!r} is not {required_tier} evidence",
-                )
-                continue
-            if self._source_root is None:
-                continue
-            try:
-                source_text = self._source_text(source)
-            except FileNotFoundError as exc:
-                failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
-                continue
-            except OSError as exc:
-                failures.append(f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}")
-                continue
-            for required in citation.required_text:
-                if _normalise_required_text(required) not in source_text:
-                    failures.append(
-                        f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}",
-                    )
+            failures.extend(self._validate_source_citation(scope, owner, refs_set, citation, required_tier))
         return failures
+
+    def _validate_source_citation(
+        self,
+        scope: str,
+        owner: str,
+        refs: set[str],
+        citation: SourceCitation,
+        required_tier: str,
+    ) -> list[str]:
+        """Validate one citation while retaining the gate's refusal order."""
+        if citation.source_ref not in refs:
+            return [
+                f"{scope}: {owner} source citation {citation.source_ref!r} is not listed in source_refs",
+            ]
+        source = self._sources.get(citation.source_ref)
+        if source is None:
+            return []
+        if source.evidence_tier != required_tier:
+            return [
+                f"{scope}: {owner} source citation {citation.source_ref!r} is not {required_tier} evidence",
+            ]
+        if self._source_root is None:
+            return []
+        try:
+            source_text = self._source_text(source)
+        except FileNotFoundError as exc:
+            return [f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}"]
+        except OSError as exc:
+            return [f"{scope}: {owner} source citation {citation.source_ref!r} cannot be read: {exc}"]
+        return [
+            f"{scope}: {owner} source citation {citation.source_ref!r} missing text {required!r}"
+            for required in citation.required_text
+            if _normalise_required_text(required) not in source_text
+        ]
 
     def source_text(self, source: SourceReference) -> str | None:
         """Return ``source``'s normalised bundled text, or ``None`` when unreachable.
@@ -363,20 +402,10 @@ class EvidenceValidator:
         cached = self._source_text_cache.get(source.id)
         if cached is not None:
             return cached
-        if self._source_root is None:
+        source_root = self._source_root
+        if source_root is None:
             return ""
-        source_root = self._source_root.expanduser().resolve()
-        source_path = (source_root / source.corpus_path).expanduser().resolve()
-        if source_root not in source_path.parents and source_path != source_root:
-            raise OSError(f"source {source.id!r} escapes source root")
-        if not source_path.is_file():
-            # The command-bearing wheel sheds corpus source binaries; the
-            # mandatory cadrumo_data namespace supplies the same bytes at the
-            # mirrored relative path, keeping required_text verification
-            # byte-identical to a full checkout.
-            companion_path = resolve_companion_binary(*source.corpus_path.split("/"))
-            if companion_path is not None:
-                source_path = companion_path
+        source_path = _resolve_source_path(source, source_root)
         stat = source_path.stat()
         source_key = (source.kind, str(source_path), stat.st_size, stat.st_mtime_ns)
         global_cached = _NORMALISED_SOURCE_TEXT_CACHE.get(source_key)
@@ -393,19 +422,7 @@ class EvidenceValidator:
             self._source_text_cache[source.id] = normalised
             return normalised
 
-        if source.kind is RegistrySourceKind.MANUAL_PDF:
-            # Try the shipped content-keyed sidecar first; verify sha256 before
-            # using it so a modified source PDF never serves stale text.  The
-            # sidecar is generated once at build time by
-            # the corpus extraction tooling and shipped with the
-            # cadrumo wheel — end-user machines should never reach the fallback.
-            sidecar_text = _read_manual_pdf_sidecar(source.corpus_path, source_path)
-            if sidecar_text is not None:
-                normalised = sidecar_text
-            else:
-                normalised = normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
-        else:
-            normalised = normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
+        normalised = _read_source_text(source, source_path)
 
         _NORMALISED_SOURCE_TEXT_CACHE[source_key] = normalised
         self._source_text_cache[source.id] = normalised

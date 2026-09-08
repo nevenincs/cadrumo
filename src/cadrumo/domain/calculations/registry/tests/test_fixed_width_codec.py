@@ -184,15 +184,71 @@ def test_allowed_integer_domain_is_enforced_symmetrically_after_wire_normalizati
         parse_fixed_width_export_field(field, "02")
 
 
-def test_schema_refuses_allowed_values_without_the_enumerated_policy() -> None:
+def test_schema_refuses_allowed_values_under_any_other_value_policy() -> None:
+    """Enumerated digits is the one POLICY a closed domain may be paired with.
+
+    Every other policy already fixes the slot's meaning -- a checkbox, a year, a
+    calendar part -- so a domain declared beside it would either restate that
+    policy or contradict it, and neither is a reviewed statement about values.
+    """
     with pytest.raises(ValidationError, match="requires value_policy"):
         _field(
             length=1,
             allowed_values=("1",),
             value_policy="selected-1-unselected-0",
         )
-    with pytest.raises(ValidationError, match="requires value_policy"):
+
+
+def test_schema_refuses_a_policyless_allowed_domain_outside_the_scaled_amount_shape() -> None:
+    """Without a policy, only the unsigned scaled-amount slot carries a domain.
+
+    An integer slot declaring no policy has no reviewed spelling for a member,
+    which is what the enumerated policy exists to supply; the scaled shape
+    supplies it instead through its declared decimal count.
+    """
+    with pytest.raises(ValidationError, match="allowed_values requires an unsigned"):
         _field(length=1, allowed_values=("1",))
+
+
+def test_a_scaled_amount_slot_carries_a_closed_domain_in_whole_units() -> None:
+    """A member is the SEMANTIC value, and the declared scale takes it to the wire.
+
+    This is the shape modelo 390's 2025 expired-rate slots take: fifteen integer
+    positions and two decimals in a seventeen-byte slot, whose design mandates
+    the value zero. Rendering and parsing settle the member identically, and the
+    refusal is the codec's -- a value outside the domain never reaches the wire
+    rather than being coerced onto it.
+    """
+    field = _field(
+        length=17,
+        data_type="decimal",
+        decimals=2,
+        allowed_values=("0",),
+    )
+
+    assert render_fixed_width_export_field(field, Decimal("0.00")) == "0" * 17
+    assert parse_fixed_width_export_field(field, "0" * 17) == Decimal("0.00")
+    # The domain is read in units, so the refused value is one euro, not one
+    # cent: a cents reading would have admitted this very wire form.
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        render_fixed_width_export_field(field, Decimal("1.00"))
+    with pytest.raises(RegistryValidationError, match="outside allowed_values"):
+        parse_fixed_width_export_field(field, "0" * 14 + "100")
+    with pytest.raises(RegistryValidationError, match="not an allowed integer"):
+        render_fixed_width_export_field(field, Decimal("0.01"))
+
+
+def test_a_scaled_domain_member_is_charged_the_width_its_own_scale_spends() -> None:
+    """A member whose scaled wire form overflows the slot is refused.
+
+    Four unit digits and two decimals need six bytes. Charged the member the
+    bare slot width instead, a five-byte slot would have admitted a domain no
+    value in it can be written into.
+    """
+    with pytest.raises(ValidationError, match="out-of-width"):
+        _field(length=5, data_type="decimal", decimals=2, allowed_values=("1234",))
+
+    assert _field(length=6, data_type="decimal", decimals=2, allowed_values=("1234",)).allowed_values == ("1234",)
 
 
 @pytest.mark.parametrize(

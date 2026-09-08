@@ -36,6 +36,56 @@ _REQUIRED_ANSWERS: Final[tuple[str, ...]] = (
 )
 
 
+def _resolve_m210_answers(
+    *,
+    transaction_id: str,
+    tipo_renta_code: str | None,
+    gross_income_amount: Decimal | None,
+    applicable_rate: Decimal | None,
+    payer_mode: M210PayerMode | None,
+) -> tuple[str, Decimal, Decimal, M210PayerMode] | None:
+    """Return a complete answer set, or refuse a partial one."""
+    supplied = {
+        "tipo_renta_code": tipo_renta_code,
+        "gross_income_amount": gross_income_amount,
+        "applicable_rate": applicable_rate,
+        "payer_mode": payer_mode,
+    }
+    answered = [name for name, value in supplied.items() if value is not None]
+    if not answered:
+        return None
+    if tipo_renta_code is None or gross_income_amount is None or applicable_rate is None or payer_mode is None:
+        raise TransactionValidationError(
+            "an explicit Modelo 210 classification requires every declaration answer",
+            context={
+                "transaction_id": transaction_id,
+                "answered": ", ".join(answered),
+                "missing": ", ".join(name for name in _REQUIRED_ANSWERS if supplied[name] is None),
+            },
+        )
+    return tipo_renta_code, gross_income_amount, applicable_rate, payer_mode
+
+
+def _require_incoming_m210_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+) -> None:
+    """Refuse a missing or outgoing row before building its M210 declaration."""
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    transaction = repository.load().get(transaction_id)
+    if transaction is None or transaction.direction is not TransactionDirection.INCOMING:
+        raise TransactionValidationError(
+            "Modelo 210 declares non-resident income, so only an incoming transaction carries it",
+            context={
+                "transaction_id": transaction_id,
+                "required_direction": TransactionDirection.INCOMING.value,
+                "actual_direction": "absent" if transaction is None else transaction.direction.value,
+            },
+        )
+
+
 def resolve_m210_income_classification(
     *,
     bucket_id: str,
@@ -69,36 +119,21 @@ def resolve_m210_income_classification(
             partially supplied, or the named transaction is absent or not
             incoming.
     """
-    supplied = {
-        "tipo_renta_code": tipo_renta_code,
-        "gross_income_amount": gross_income_amount,
-        "applicable_rate": applicable_rate,
-        "payer_mode": payer_mode,
-    }
-    answered = [name for name, value in supplied.items() if value is not None]
-    if not answered:
+    answers = _resolve_m210_answers(
+        transaction_id=transaction_id,
+        tipo_renta_code=tipo_renta_code,
+        gross_income_amount=gross_income_amount,
+        applicable_rate=applicable_rate,
+        payer_mode=payer_mode,
+    )
+    if answers is None:
         return None
-    if tipo_renta_code is None or gross_income_amount is None or applicable_rate is None or payer_mode is None:
-        raise TransactionValidationError(
-            "an explicit Modelo 210 classification requires every declaration answer",
-            context={
-                "transaction_id": transaction_id,
-                "answered": ", ".join(answered),
-                "missing": ", ".join(name for name in _REQUIRED_ANSWERS if supplied[name] is None),
-            },
-        )
-
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    transaction = repository.load().get(transaction_id)
-    if transaction is None or transaction.direction is not TransactionDirection.INCOMING:
-        raise TransactionValidationError(
-            "Modelo 210 declares non-resident income, so only an incoming transaction carries it",
-            context={
-                "transaction_id": transaction_id,
-                "required_direction": TransactionDirection.INCOMING.value,
-                "actual_direction": "absent" if transaction is None else transaction.direction.value,
-            },
-        )
+    _require_incoming_m210_transaction(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        transaction_repository=transaction_repository,
+    )
+    tipo_renta_code, gross_income_amount, applicable_rate, payer_mode = answers
 
     return M210IncomeClassification(
         official_tipo_renta_code=tipo_renta_code,
