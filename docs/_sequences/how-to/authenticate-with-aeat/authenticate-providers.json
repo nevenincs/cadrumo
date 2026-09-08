@@ -19,32 +19,17 @@
             {
               "description": "auth.catalogue.certificate_description",
               "id": "certificate",
-              "implemented": true,
               "label": "auth.catalogue.certificate_label"
             },
             {
               "description": "auth.catalogue.clave_movil_description",
               "id": "clave_movil",
-              "implemented": true,
               "label": "auth.catalogue.clave_movil_label"
-            },
-            {
-              "description": "auth.catalogue.clave_pin_description",
-              "id": "clave_pin",
-              "implemented": false,
-              "label": "auth.catalogue.clave_pin_label"
             },
             {
               "description": "auth.catalogue.clave_permanente_description",
               "id": "clave_permanente",
-              "implemented": true,
               "label": "auth.catalogue.clave_permanente_label"
-            },
-            {
-              "description": "auth.catalogue.dnie_pkcs_description",
-              "id": "dnie_pkcs",
-              "implemented": false,
-              "label": "auth.catalogue.dnie_pkcs_label"
             }
           ]
         },

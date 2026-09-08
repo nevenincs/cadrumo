@@ -52,7 +52,7 @@ _DOS_STUB_OFFSET = 0x40
 def _launcher(name: str) -> Path:
     resolved = shutil.which(name)
     if resolved is None:
-        pytest.skip(f"{name} is not installed in this environment")
+        pytest.fail(f"{name} is not on PATH; this project installs it as a console script")
     return Path(resolved).resolve(strict=True)
 
 

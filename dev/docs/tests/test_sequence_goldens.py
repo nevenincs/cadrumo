@@ -388,6 +388,7 @@ _FIXTURE_BODY = "\n".join(
     [
         "aeat --format json config profile list",
         "@result aeat --format json config profile list",
+        "@expect result.profiles[0].active == true",
         "@expect exit_code == 0",
     ],
 )

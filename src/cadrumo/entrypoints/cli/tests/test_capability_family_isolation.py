@@ -161,12 +161,19 @@ def test_the_declarations_still_partition_every_live_node() -> None:
     assert len(_GROUPS) >= 20, f"only {len(_GROUPS)} distinct declarations; the taxonomy may have collapsed"
 
 
-@pytest.mark.parametrize("capabilities", sorted(_GROUPS, key=sorted), ids=lambda caps: ",".join(sorted(caps)) or "none")
+@pytest.mark.parametrize(
+    "capabilities",
+    sorted(set(_GROUPS) - set(_PENDING_ADJUDICATION), key=sorted),
+    ids=lambda caps: ",".join(sorted(caps)) or "none",
+)
 def test_a_group_loads_only_the_families_it_declares(capabilities: frozenset[Capability]) -> None:
-    """DISCRIMINATING: resolution stays inside the declared capability set."""
-    if capabilities in _PENDING_ADJUDICATION:
-        pytest.skip(f"pending adjudication: {_PENDING_ADJUDICATION[capabilities]}")
+    """DISCRIMINATING: resolution stays inside the declared capability set.
 
+    The pending groups are excluded from this parametrisation rather than
+    skipped inside it: a skip reports a green case that asserted nothing, while
+    the exclusion leaves the whole pending set covered by the STALE-ENTRY case
+    below, which fails the moment one of them stops applying.
+    """
     allowed = _allowed_families(capabilities)
     loaded = _loaded_families(_GROUPS[capabilities])
     undeclared = sorted(family for family in loaded if family not in allowed)

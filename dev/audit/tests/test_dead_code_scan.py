@@ -29,6 +29,25 @@ def _isolated_vulture_config(tmp_path: Path) -> Path:
     return config
 
 
+def _expected_vulture_path(path: Path) -> str:
+    """Render *path* the way vulture's own ``format_path`` reports it.
+
+    ``vulture.utils.format_path`` renders a path relative to the process's
+    current working directory (the repo root here, via ``cwd=_REPO_ROOT``)
+    when it resolves under it, and falls back to the path exactly as given
+    otherwise. The run harness confines pytest's basetemp under the
+    repository's own ``.logs`` tree, so ``tmp_path`` candidates land inside
+    the repo root and vulture reports them relative -- with the OS-native
+    separator, not the POSIX form the repo-relative helpers elsewhere use.
+    Mirroring the real contract keeps the assertion about vulture's actual
+    rendering rule rather than assuming a particular basetemp location.
+    """
+    try:
+        return str(path.relative_to(_REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def test_real_scan_over_the_tree_returns_a_typed_outcome_with_real_findings() -> None:
     """A real vulture run classifies to CLEAN or FINDINGS, never a crash.
 
@@ -74,7 +93,7 @@ def test_whitelist_does_not_mask_former_protocol_parameter_names(tmp_path: Path,
     )
 
     assert completed.returncode == 3, completed.stderr
-    assert f"{candidate}:" in completed.stdout
+    assert f"{_expected_vulture_path(candidate)}:" in completed.stdout
     assert f"unused function '{unused_name}'" in completed.stdout
 
 
@@ -105,7 +124,7 @@ def test_vulture_detects_a_type_import_used_only_in_a_quoted_cast(tmp_path: Path
     )
 
     assert completed.returncode == 3, completed.stderr
-    assert f"{candidate}:" in completed.stdout
+    assert f"{_expected_vulture_path(candidate)}:" in completed.stdout
     assert "unused import '_Table'" in completed.stdout
 
 

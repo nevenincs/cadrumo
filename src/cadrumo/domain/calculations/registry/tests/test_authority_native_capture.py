@@ -346,11 +346,11 @@ def test_native_authority_coalesces_relative_dot_and_symlink_root_aliases(
 
     registry_link = tmp_path / "registry-link"
     source_link = tmp_path / "source-link"
-    try:
-        registry_link.symlink_to(registry_authority.root, target_is_directory=True)
-        source_link.symlink_to(registry_authority.source_root, target_is_directory=True)
-    except OSError as exc:
-        pytest.skip(f"directory symlinks are unavailable: {exc}")
+    # Created without a guard: a host that cannot make a directory symlink
+    # raises here and is reported as a red naming the OS refusal, rather than a
+    # green that hides the alias-coalescing proof this case exists for.
+    registry_link.symlink_to(registry_authority.root, target_is_directory=True)
+    source_link.symlink_to(registry_authority.source_root, target_is_directory=True)
     linked = ValidatedRegistryAuthority.load(registry_link, source_root=source_link)
 
     assert linked is registry_authority
@@ -386,13 +386,24 @@ def test_native_authority_fails_closed_on_unresolvable_roots(tmp_path: Path) -> 
         ValidatedRegistryAuthority.load(missing, source_root=missing)
 
 
-@pytest.mark.skipif(not hasattr(os, "fork"), reason="requires POSIX fork semantics")
 def test_fork_rebuilds_active_reader_state_and_refuses_every_inherited_coordinate(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """A child neither waits on inherited locks nor accepts parent authority values."""
-    if sys.platform == "win32":
-        pytest.skip("requires POSIX fork semantics")
+    """A child neither waits on inherited locks nor accepts parent authority values.
+
+    Branched on the platform rather than skipped, in the same shape as the case
+    policy above: where the interpreter offers no ``fork`` there is no inherited
+    load state to refuse, and that absence is asserted -- ``win32`` is the only
+    supported platform without it -- so the case reports a real verdict on every
+    host instead of a green that read nothing.
+    """
+    if not hasattr(os, "fork"):
+        assert sys.platform == "win32", (
+            f"{sys.platform} offers no os.fork; a POSIX host that lost it would silently "
+            "retire this proof rather than exercise the fork barrier"
+        )
+        return
+
     capture = registry_authority.capture_law_selected_projection(
         _MODEL0_ID,
         filing_year=_FILING_YEAR,
@@ -452,13 +463,13 @@ def test_fork_rebuilds_active_reader_state_and_refuses_every_inherited_coordinat
     child_bytes = os.read(read_fd, 65536)
     os.close(read_fd)
     _, status = os.waitpid(child_pid, 0)
-    result = json.loads(child_bytes)
+    child_result = json.loads(child_bytes)
 
     assert not reader.is_alive()
     assert os.waitstatus_to_exitcode(status) == 0
-    assert "error" not in result
-    assert result["inherited_refusals"] == 4
-    assert result["fresh_domain"] != parent_current.comparison_domain
+    assert "error" not in child_result
+    assert child_result["inherited_refusals"] == 4
+    assert child_result["fresh_domain"] != parent_current.comparison_domain
 
 
 def test_native_capture_snapshot_is_isolated_from_the_authority_cache(

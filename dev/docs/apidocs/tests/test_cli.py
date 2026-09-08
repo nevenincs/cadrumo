@@ -21,14 +21,14 @@ for a drift gate.
 from __future__ import annotations
 
 import pytest
-from typer.testing import CliRunner
+from typer.testing import CliRunner, Result
 
 from ..cli import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
 
-def _invoke(*arguments: str) -> object:
+def _invoke(*arguments: str) -> Result:
     return CliRunner().invoke(app, list(arguments))
 
 
@@ -69,8 +69,13 @@ def test_the_drift_check_names_what_drifted() -> None:
     """A count with no names sends the reader to diff the whole stub tree."""
     result = _invoke("scaffold", "--check")
 
+    # Asserted in BOTH states rather than skipped in one: a conformant tree must
+    # say so in as many words, and a drifted one must name the category that
+    # drifted. Skipping the conformant branch would report a green case that
+    # read the output and checked nothing about it.
     if result.exit_code == 0:
-        pytest.skip("the stub tree is conformant, so there is nothing to name")
+        assert "No drift detected" in result.output, result.output
+        return
     assert "Drift detected:" in result.output
     assert any(heading in result.output for heading in ("Missing stubs:", "Orphan stubs:", "Stale stubs:"))
 

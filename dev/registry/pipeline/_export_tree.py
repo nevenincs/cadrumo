@@ -75,7 +75,7 @@ from .source_defects import (
     NoteStatedApplicabilityDeclaration,
     SourceDefectDeclaration,
     adjudicated_literal_for,
-    note_governed_amount_scale_for,
+    note_governed_amount_for,
     note_governed_amounts_for,
     note_stated_applicability_for,
     validate_note_governed_amount_declarations,
@@ -1022,7 +1022,7 @@ def _numeric_derivation(
         #   re-scaled by a rule nobody reviewed for that document -- but it is a
         #   reading the design does not support, not a derivation, and the
         #   footnote-pointer screen carries the outstanding queue.
-        adjudicated = note_governed_amount_scale_for(
+        adjudicated = note_governed_amount_for(
             note_governed_amounts,
             sheet=parser_field.sheet,
             published_content=pointer_content,

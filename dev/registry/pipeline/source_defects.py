@@ -48,9 +48,10 @@ __all__ = [
     "NoteStatedApplicabilityDeclaration",
     "SourceDefectDeclaration",
     "adjudicated_literal_for",
-    "note_governed_amount_scale_for",
+    "note_governed_amount_for",
     "note_governed_amounts_for",
     "note_stated_applicability_for",
+    "note_stated_applicability_reading_for",
     "note_states_only_applicability",
     "source_defects_for",
     "validate_note_governed_amount_declarations",
@@ -553,7 +554,7 @@ def validate_note_governed_amount_declarations(
             )
 
 
-def note_governed_amount_scale_for(
+def note_governed_amount_for(
     declarations: tuple[NoteGovernedAmountDeclaration, ...],
     *,
     sheet: str,
@@ -567,8 +568,8 @@ def note_governed_amount_scale_for(
     caller handed only ``(integer, decimal)`` would have to guess the rest.
 
     This is the one matcher a cell is admitted by. The renderer and the
-    footnote census both take their verdict from it, which is what keeps the
-    two from disagreeing about which cells are covered.
+    footnote census both take the covering declaration from it, which is what
+    keeps the two from disagreeing about which cells are covered.
 
     ``published_content`` is the cell's whitespace-normalised content, which is
     what the numeric derivation reads. Anything the declaration does not name
@@ -703,6 +704,33 @@ def validate_note_stated_applicability_declarations(
             )
 
 
+def note_stated_applicability_reading_for(
+    declarations: tuple[NoteStatedApplicabilityDeclaration, ...],
+    *,
+    sheet: str,
+    published_content: str,
+) -> NoteStatedApplicabilityDeclaration | None:
+    """Return the applicability reading covering this cell, or ``None``.
+
+    This is the one matcher a cell is admitted by, exactly as
+    :func:`note_governed_amount_for` is for the sibling family. The eligibility
+    predicate asks it through :func:`note_states_only_applicability` and the
+    footnote census asks it for the declaration itself, so neither can hold a
+    second copy of the sheet-and-content comparison that decides coverage.
+
+    ``published_content`` is the cell's whitespace-normalised content, which is
+    what both the eligibility predicate and the numeric derivation read. Anything
+    the declaration does not name exactly leaves the caller's own reading
+    standing, which is the behaviour a reader should be able to assume when no
+    declaration applies.
+    """
+    for declaration in declarations:
+        if declaration.sheet != sheet or declaration.published_content != published_content:
+            continue
+        return declaration
+    return None
+
+
 def note_states_only_applicability(
     declarations: tuple[NoteStatedApplicabilityDeclaration, ...],
     *,
@@ -711,13 +739,10 @@ def note_states_only_applicability(
 ) -> bool:
     """Report whether this exact cell has been read and found to state no wire fact.
 
-    ``published_content`` is the cell's whitespace-normalised content, which is
-    what both the eligibility predicate and the numeric derivation read. Anything
-    the declaration does not name exactly leaves the caller's own reading
-    standing, which is the behaviour a reader should be able to assume when no
-    declaration applies.
+    The boolean form of :func:`note_stated_applicability_reading_for`, for the
+    eligibility predicate, which needs the verdict and not the declaration.
     """
-    return any(
-        declaration.sheet == sheet and declaration.published_content == published_content
-        for declaration in declarations
+    return (
+        note_stated_applicability_reading_for(declarations, sheet=sheet, published_content=published_content)
+        is not None
     )

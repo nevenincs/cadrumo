@@ -19,6 +19,7 @@ import pytest
 from textual.containers import Vertical
 from textual.widgets import Button, Input, Static
 
+from .....application.user_profile.authentication import ProfileAuthenticationRefusedError
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.passphrase_rotation import (
     ProfilePassphraseRotationError,
@@ -223,7 +224,7 @@ async def test_a_completed_rotation_opens_under_the_new_passphrase_only(tmp_path
         assert app.outcome.password_generation == 2
 
         login_profile(name=str(profile_id), passphrase_callback=lambda: _NEW_PASSPHRASE)
-        with pytest.raises(Exception):  # noqa: B017 - the old credential must be dead, any refusal proves it
+        with pytest.raises(ProfileAuthenticationRefusedError):
             login_profile(name=str(profile_id), passphrase_callback=lambda: _CURRENT_PASSPHRASE)
 
 

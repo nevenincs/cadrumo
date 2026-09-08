@@ -4,17 +4,16 @@ from __future__ import annotations
 
 import os
 from base64 import b64encode
-from contextlib import suppress
 from datetime import UTC, datetime, timedelta
 from multiprocessing import get_context
 from pathlib import Path
 from queue import Empty
-from secrets import token_urlsafe
-from typing import Any, Final
+from typing import Any
 from uuid import UUID, uuid4
 
-import keyring
 import pytest
+
+from cadrumo.tests._os_keychain_hook import require_os_credential_store
 
 from ....adapters.persistence.storage.custody.acceleration_receipt import mint_profile_session, profile_session_path
 from ....adapters.persistence.storage.custody.capsule import (
@@ -184,69 +183,6 @@ def _filed_record(*, filed_at: datetime) -> ModeloRecord:
         filed_at=filed_at,
         filed_by="aeat.cli.modelo.file",
     )
-
-
-_CREDENTIAL_STORE_PROBE_SERVICE: Final[str] = "cadrumo:test-probe:profile-session-custody"
-
-
-def _os_credential_store_refusal() -> str | None:
-    """Report why this host cannot custody a session key, or ``None`` if it can.
-
-    The probe deliberately stands BELOW Cadrumo: it drives the ``keyring``
-    library directly, under its own probe service name and a synthetic random
-    value it deletes again, so a refusal it reports is a property of the host's
-    credential store rather than of anything this repository wrote. That is
-    what keeps the guard from hiding a defect -- when the store answers, the
-    cases below run the real mint and fail loudly on any Cadrumo regression.
-
-    A write/read/delete round trip is the capability the callers need, not a
-    class-level usability flag: this workstation's ``WinVaultKeyring`` reports
-    priority 5 and is selected as the live backend, then refuses every call
-    with ``(1312, 'CredRead', 'A specified logon session does not exist')``
-    because an SSH or service logon has no credential-manager session to
-    reach. A headless CI runner answers the same way.
-    """
-    try:
-        backend = keyring.get_keyring()
-        priority = float(getattr(backend, "priority", 0))
-    except Exception as exc:
-        return f"the OS credential store backend cannot be inspected: {exc}"
-    if priority <= 0:
-        return f"no usable OS credential store is configured (selected backend {backend})"
-
-    account = f"probe:{uuid4()}"
-    probe_value = token_urlsafe(16)
-    try:
-        keyring.set_password(_CREDENTIAL_STORE_PROBE_SERVICE, account, probe_value)
-    except Exception as exc:
-        return f"{backend} refused a synthetic probe write: {exc}"
-    try:
-        stored = keyring.get_password(_CREDENTIAL_STORE_PROBE_SERVICE, account)
-    except Exception as exc:
-        return f"{backend} refused a synthetic probe read: {exc}"
-    finally:
-        with suppress(Exception):
-            keyring.delete_password(_CREDENTIAL_STORE_PROBE_SERVICE, account)
-    if stored != probe_value:
-        return f"{backend} accepted a synthetic probe write but its read-back disagreed"
-    return None
-
-
-def _require_os_credential_store() -> None:
-    """Skip on a DETECTED unreachable credential store, never unconditionally.
-
-    ``mint_profile_session`` has no file-store fallback: the persisted receipt
-    is split knowledge, and the on-disk half is written only once the OS
-    credential store has taken the session key. A case whose subject needs a
-    receipt that EXISTS therefore cannot reach that subject at all here, and
-    the honest outcome is a skip naming the measured reason rather than a red
-    gate that no code change can close. Pinning a null or file keyring instead
-    would leave the mint asserting nothing about the writer it names, which is
-    the substitution this project's gates forbid.
-    """
-    refusal = _os_credential_store_refusal()
-    if refusal is not None:
-        pytest.skip(f"the OS credential store cannot custody a profile-session key on this host: {refusal}")
 
 
 def _persist_real_current_session_acceleration(root: Path) -> Path:
@@ -795,7 +731,7 @@ def test_journal_writer_refuses_an_existing_leaf_and_never_overwrites_it(tmp_pat
 
 @pytest.mark.os_keychain
 def test_delete_owner_receipts_are_durable_and_idempotent(tmp_path: Path) -> None:
-    _require_os_credential_store()
+    require_os_credential_store()
     _committed_capsule(tmp_path)
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
@@ -1119,7 +1055,7 @@ def test_transaction_lock_refuses_a_real_reparse_capsule_root(tmp_path: Path) ->
 @pytest.mark.os_keychain
 def test_owner_receipts_resume_after_owner_effect_precedes_journal_state(tmp_path: Path) -> None:
     """A real owner effect survives a crash before its enclosing state update."""
-    _require_os_credential_store()
+    require_os_credential_store()
     _committed_capsule(tmp_path)
     service = ProfileCustodyTransactionService(root=tmp_path)
     _authorise_clear_hold(service)
