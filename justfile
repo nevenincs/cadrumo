@@ -1421,7 +1421,7 @@ release-publish:
 #   produced from it.
 
 # Run the full local gate: static analysis, dependency audit, tests, build.
-[group('check')]
+[group('meta')]
 ci:
     @just check-all
     @just audit-deps
