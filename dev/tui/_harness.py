@@ -1,10 +1,8 @@
-"""Drive the in-boundary TUI devtool harness as a subprocess.
+"""Drive the repository TUI harness as a subprocess.
 
-``cadrumo.entrypoints.tui.devtools`` already owns surface construction,
-pilot replay and SVG export, and the architecture decision places that
-tooling there deliberately. This module does not reimplement any of it: it
-runs that harness and collects what it writes, which is the one external
-reference the decision sanctions.
+``dev.tui.harness`` owns surface construction, pilot replay and SVG export.
+This module does not reimplement any of it: it runs that harness and collects
+what it writes.
 
 Each capture is a fresh process. The harness rebuilds its app from birth on
 every command, so a frame is always a statement about the current tree, and
@@ -25,7 +23,7 @@ from .._paths import REPO_ROOT, UTF_8
 from ._artifacts import FrameFailureKind, ThemeName
 from ._viewports import Viewport
 
-HARNESS_MODULE: Final[str] = "cadrumo.entrypoints.tui.devtools"
+HARNESS_MODULE: Final[str] = "dev.tui.harness"
 WORKSPACE_ENV_VAR: Final[str] = "CADRUMO_TUI_WORKSPACE"
 
 _ELAPSED = re.compile(r"·\s*(?P<ms>[\d.]+)ms\s")
@@ -64,7 +62,7 @@ def classify(output: str) -> FrameFailureKind:
 
 @dataclass(frozen=True)
 class Surface:
-    """One drivable surface, as the in-boundary harness reports it."""
+    """One drivable surface, as the development harness reports it."""
 
     name: str
     summary: str

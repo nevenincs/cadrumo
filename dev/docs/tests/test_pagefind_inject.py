@@ -200,7 +200,7 @@ _NEGATIVE_FRAGMENT = "negative counter"
 def test_an_empty_projection_carries_no_contradiction() -> None:
     """Empty-parameter control: an empty record set with a zero census is legal.
 
-    Completeness is a separate boundary (:meth:`SearchRecordProjection.require_complete`,
+    Completeness is a separate boundary (:meth:`SearchRecordProjection.require_complete_corpus`,
     and ``_require_complete_projection`` on the injector's own type); construction
     refuses only a census that disagrees with its own records.
     """
@@ -327,7 +327,7 @@ def test_an_empty_projection_is_not_the_complete_corpus() -> None:
     )
 
     with pytest.raises(SearchInjectionError) as excinfo:
-        empty.require_complete()
+        empty.require_complete_corpus()
 
     assert _CASILLA_GAP_FRAGMENT in str(excinfo.value), str(excinfo.value)
 
@@ -346,7 +346,7 @@ def test_a_projection_with_both_arms_satisfied_is_admitted(_real_casilla_record:
         cli_options=0,
     )
 
-    complete.require_complete()
+    complete.require_complete_corpus()
 
 
 def test_an_empty_casilla_arm_is_refused_by_the_value_object() -> None:
@@ -369,7 +369,7 @@ def test_an_empty_casilla_arm_is_refused_by_the_value_object() -> None:
     )
 
     with pytest.raises(SearchInjectionError) as excinfo:
-        projection.require_complete()
+        projection.require_complete_corpus()
 
     message = str(excinfo.value)
     assert _CASILLA_GAP_FRAGMENT in message, message
@@ -397,7 +397,7 @@ def test_a_skipped_cli_arm_is_refused_even_with_casillas_present(
     )
 
     with pytest.raises(SearchInjectionError) as excinfo:
-        projection.require_complete()
+        projection.require_complete_corpus()
 
     message = str(excinfo.value)
     assert _CLI_GAP_FRAGMENT in message, message

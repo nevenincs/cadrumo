@@ -523,7 +523,7 @@ def test_the_authoritative_projection_satisfies_the_completeness_boundary(
     _authoritative_projection: SearchRecordProjection,
 ) -> None:
     """Anti-noise: the real bundled projection is admitted, not merely constructible."""
-    _authoritative_projection.require_complete()
+    _authoritative_projection.require_complete_corpus()
 
 
 def test_run_sweep_refuses_a_projection_whose_casilla_arm_is_empty(

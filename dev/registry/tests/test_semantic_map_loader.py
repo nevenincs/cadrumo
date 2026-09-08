@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
+    compile_filing_projection_ref,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
@@ -281,6 +282,54 @@ def test_loader_refuses_invalid_projection_discriminants_and_string_keys(
 
     with pytest.raises(RegistryValidationError, match=message):
         load_semantic_map(root)
+
+
+def test_regimen_simplificado_coherence_refusal_never_carries_pydantics_input_value_dump(tmp_path: Path) -> None:
+    """The loader's OTHER ``validation_error_detail`` call site, exercised for the first time.
+
+    ``compile_filing_projection_ref``'s discriminated union can dispatch to a
+    submodel carrying its own ``model_validator(mode="after")`` --
+    ``M303RegimenSimplificadoActivityProjectionRef._cohort_owns_field`` here --
+    and a model-level failure there makes pydantic's ``str(ValidationError)``
+    embed an ``input_value=`` repr of the WHOLE submodel dict, the exact
+    mechanism already proven and fixed below for the fragment-level validator.
+    Every existing test reaching this projection_ref-compile call site only
+    matched the refusal message's shape; none proved the ``input_value=`` dump
+    the raw exception actually carries is stripped. This submodel's fields
+    are closed enums/ints today, so nothing sensitive is at stake yet, but
+    the guarantee this loader makes (:mod:`._pydantic_error_detail`: never
+    build from ``str(exc)``) cannot assume a payload shape -- the leak
+    mechanism is proven reachable here regardless of what a future
+    projection-ref member's fields hold.
+    """
+    root = tmp_path / "semantic-map"
+    root.mkdir()
+
+    raw_payload = {
+        "projection_kind": "m303_regimen_simplificado_activity",
+        "cohort": "agricola",
+        "slot": 1,
+        "field": "iae_epigrafe",
+    }
+    with pytest.raises(ValidationError) as raw_excinfo:
+        compile_filing_projection_ref(raw_payload)
+    assert "input_value" in str(raw_excinfo.value), "premise: the raw ValidationError must actually dump the payload"
+
+    authored = (_RECORD + _PROJECTION_ENTRY).replace(
+        'projection_kind = "m303_prorrata_activity"\nslot = 1\nfield = "cnae"\ncasilla_id = "500"',
+        'projection_kind = "m303_regimen_simplificado_activity"\ncohort = "agricola"\nslot = 1\nfield = "iae_epigrafe"',
+    )
+    _write(root / "0001-authority.toml", _fragment(fragment_id="authority", body=authored))
+
+    with pytest.raises(RegistryValidationError) as excinfo:
+        load_semantic_map(root)
+
+    message = str(excinfo.value)
+    assert "input_value" not in message
+    assert "input_type" not in message
+    assert "errors.pydantic.dev" not in message
+    assert "projection_ref is not canonical" in message
+    assert "requires field in its owned set" in message
 
 
 def test_empty_fragment_refusal_never_carries_a_sibling_fields_value(tmp_path: Path) -> None:

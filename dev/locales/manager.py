@@ -6,13 +6,12 @@ rejection, while :data:`LocaleNode` documents the recursive locale-tree shape
 shared by the manager and parity tests.
 """
 
-import json
 import re
 from collections.abc import Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import IO, Any, cast, override
+from typing import IO, Any, override
 
 import yaml
 
@@ -39,8 +38,6 @@ from .wizard_translation_audit import wizard_descriptor_keys
 type LocaleNode = str | dict[str, "LocaleNode"] | None
 
 _log = get_logger(__name__)
-_INTENTIONAL_IDENTICAL_FILENAME = "_intentional_identical.json"
-
 _MODELO_SCHEMA_PREFIX = "modelo.schema."
 """The one key family whose catalogues accept an explicitly absent value.
 
@@ -63,23 +60,6 @@ class _MissingLocaleLeaf(Enum):
 
 
 _MISSING_LOCALE_LEAF = _MissingLocaleLeaf.TOKEN
-
-
-def _load_intentional_identical(path: Path) -> dict[str, dict[str, object]]:
-    """Load the translation-honesty allowlist, tolerating its absence."""
-    if not path.is_file():
-        return {}
-    try:
-        loaded = json.loads(path.read_text(encoding=UTF_8_ENCODING))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise LocaleError(f"Cannot read {path.name}: {exc}") from exc
-    if not isinstance(loaded, dict):
-        raise LocaleError(f"{path.name} must contain a JSON object")
-    # CAST-RATIONALE-JSON-BOUNDARY: the decoded object carries no key or value
-    # types, and the isinstance guard above establishes only that it is a
-    # mapping. Each entry is checked again below before being copied.
-    decoded = cast("dict[str, object]", loaded)
-    return {locale: dict(entries) for locale, entries in decoded.items() if isinstance(entries, dict)}
 
 
 @dataclass(frozen=True)
@@ -711,33 +691,6 @@ class LocaleManager:
                 _set_nested_leaf(data, dotted_key, value)
             _rewrite_locale_mapping(guard, target, data)
         return target
-
-    def allow_identical(self, locale: str, dotted_key: str, reason: str) -> Path:
-        """Record one key as deliberately identical to its source, with a reason."""
-        if not reason.strip():
-            raise LocaleError(f"Cannot allow {dotted_key!r}: a non-empty reason is required")
-        parts = dotted_key.split(".")
-        if not dotted_key or any(not part for part in parts):
-            raise LocaleError(f"Invalid locale key: {dotted_key!r}")
-        if parts[0].startswith("_"):
-            raise LocaleError(f"Cannot allow {dotted_key!r}: keys prefixed with '_' are allowlist metadata")
-
-        target = self._locale_path(locale)
-        allowlist_path = self.locales_dir / _INTENTIONAL_IDENTICAL_FILENAME
-
-        full_data = self.load_locale(target)
-        if dotted_key not in self.get_yaml_keys(full_data):
-            name = target.name if target.is_file() else locale
-            raise LocaleError(f"Locale key not found in {name}: {dotted_key!r}; run locale scaffold first")
-        with catalogue_write_guard(self.locales_dir) as guard:
-            guard.observe(allowlist_path)
-            allowlist = _load_intentional_identical(allowlist_path)
-            allowlist.setdefault(locale, {})[dotted_key] = reason.strip()
-            guard.write_text(
-                allowlist_path,
-                json.dumps(allowlist, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
-            )
-        return allowlist_path
 
     def remove_locale_value(self, locale: str, dotted_key: str) -> Path:
         """Remove one existing locale leaf."""

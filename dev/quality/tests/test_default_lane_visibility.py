@@ -67,9 +67,8 @@ def test_a_module_level_mark_without_an_execution_marker_defers_to_its_tests(
     The screen asked about per-test decorators only when a module carried no
     module-level `pytestmark` at all. A module carrying one that names no
     EXECUTION marker fell straight through to the sharpest condition, so
-    `dev/audit/tests/test_size_budget_dev_corpus.py` -- hexagonal marker at
-    module level, ten `unit` decorators on its tests -- was reported as
-    running nowhere while ten of its tests ran.
+    a module with hexagonal markers at module level and `unit` decorators on
+    its tests was reported as running nowhere while those tests ran.
 
     Its sibling above is the discriminator: the same module-level line with
     UNDECORATED tests is still the sharpest condition, and must stay so.

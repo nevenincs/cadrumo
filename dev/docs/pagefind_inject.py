@@ -153,7 +153,7 @@ class SearchRecordProjection:
                 f"search-record projection counters describe {described} records while it carries {len(self.records)}",
             )
 
-    def require_complete(self) -> None:
+    def require_complete_corpus(self) -> None:
         """Refuse a projection that is not the COMPLETE authoritative corpus.
 
         Completeness is a different invariant from the census coherence

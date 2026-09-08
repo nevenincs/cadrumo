@@ -62,12 +62,10 @@ from cadrumo.application.operator_surface.help_models import (
     RootLandingReport,
 )
 from cadrumo.application.operator_surface.models import (
-    FamilyMountState,
     FilingStatus,
     LifecycleContract,
     ModeloLifecycleStep,
     MountedCommandDomain,
-    MountedCommandFamily,
     OperatorMutability,
     RootSurface,
     RootSurfaceName,
@@ -528,52 +526,13 @@ def test_filing_status_filed_is_sole_source_for_filed_token() -> None:
     assert live_family.child == "live"
 
 
-def test_no_family_is_left_declared_unimplemented() -> None:
-    """Custody passphrase rotation shipped; nothing else claims an owed gap.
-
-    The global recovery facade left no declaration behind either, so the two
-    dispositions (retired vs. owed-but-unbuilt) do not quietly converge.
-    """
+def test_retired_recovery_family_names_are_absent() -> None:
+    """Retired family names disappear instead of surviving as state records."""
     contract = get_operator_surface_contract()
     by_child = {family.child: family for family in contract.command_families}
 
-    unmounted = {
-        family.child
-        for family in contract.command_families
-        if family.mount_state is FamilyMountState.DECLARED_UNIMPLEMENTED
-    }
-    assert unmounted == set()
-
     assert "recover" not in by_child
     assert "recovery" not in by_child
-
-
-def test_a_mounted_family_may_not_carry_an_unimplemented_reason() -> None:
-    """A shipped capability must lose its gap note, not keep it as decoration."""
-    with pytest.raises(ValidationError, match="only a declared-unimplemented family"):
-        MountedCommandFamily(
-            domain=MountedCommandDomain.CUSTODY,
-            root=RootSurfaceName.CONFIG,
-            child="login",
-            operator_question="authenticate a taxpayer profile",
-            service_owner="cadrumo.application.user_profile",
-            mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-            unimplemented_reason="stale note left behind after the capability shipped",
-        )
-
-
-def test_an_unimplemented_family_must_name_the_capability_it_waits_on() -> None:
-    """Without a stated reason the marker is an unattributable silencer."""
-    with pytest.raises(ValidationError, match="must state the capability"):
-        MountedCommandFamily(
-            domain=MountedCommandDomain.CUSTODY,
-            root=RootSurfaceName.CONFIG,
-            child="passphrase",
-            operator_question="rotate the profile custody passphrase",
-            service_owner="cadrumo.application.user_profile",
-            mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-            mount_state=FamilyMountState.DECLARED_UNIMPLEMENTED,
-        )
 
 
 def test_filing_status_has_no_token_shim_module() -> None:

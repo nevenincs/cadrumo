@@ -5,7 +5,7 @@ registrations below, so this docstring deliberately does not restate it: an
 enumeration kept in two places drifted in one of them, which is how ``runs``
 and ``snapshot`` came to be undocumented verbs.
 
-Rendering shells out to the in-boundary devtool harness once per frame, so a
+Rendering shells out to the development harness once per frame, so a
 full matrix is minutes rather than seconds -- each frame rebuilds its app
 from birth, and the surfaces that need a profile pay real key derivation.
 That cost buys the property that makes the artefacts worth reviewing: no
@@ -71,7 +71,7 @@ def _echo(text: str) -> None:
 
     Written as bytes rather than through ``print``: a Windows console defaults
     to cp1252, which mangles the box-drawing and dash characters the harness's
-    own diagnostics are built from -- the same reason the in-boundary harness
+    own diagnostics are built from -- the same reason the development harness
     encodes its output by hand.
     """
     sys.stdout.buffer.write(text.encode(UTF_8, errors="replace") + b"\n")
@@ -131,9 +131,9 @@ def inventory_command(
     """
     interfaces = _inventory.scan()
     surfaces = tuple(surface.name for surface in _harness.surfaces())
-    table = _coverage.merge_rendered_by(_harness.coverage())
+    table = _harness.coverage()
     _coverage.check(interfaces, surfaces, rendered_table=table)
-    resolved_notes = _coverage.notes(table)
+    resolved_notes = _coverage.notes(interfaces, surfaces, rendered_table=table)
 
     directory = run_directory(run)
     rendered: dict[str, tuple[str, ...]] = {}
@@ -154,6 +154,8 @@ def inventory_command(
         covered_by = rendered.get(interface.qualname, ())
         if covered_by:
             mark = ", ".join(covered_by)
+        elif interface.is_base:
+            mark = "STRUCTURAL BASE"
         else:
             mark = "NOT RENDERED"
             uncovered += 1
@@ -324,9 +326,9 @@ def render_command(
     run = DEFAULT_RUN_NAME
     available = _harness.surfaces()
     interfaces = _inventory.scan()
-    coverage_table = _coverage.merge_rendered_by(_harness.coverage())
-    coverage_notes = _coverage.notes(coverage_table)
-    _coverage.check(interfaces, tuple(item.name for item in available), rendered_table=coverage_table)
+    coverage_table = _harness.coverage()
+    available_names = tuple(item.name for item in available)
+    coverage_notes = _coverage.notes(interfaces, available_names, rendered_table=coverage_table)
 
     chosen_surfaces = _resolve_surfaces(surface, available)
     chosen_viewports = _resolve_viewports(viewport)

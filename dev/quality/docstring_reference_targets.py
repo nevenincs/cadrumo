@@ -17,7 +17,8 @@ package must resolve to a module or a symbol the tree defines. A bare name is
 checked only when the tree neither defines nor imports it anywhere, which keeps
 third-party names out of the report without an allowlist to maintain.
 
-The screen exits 0 whatever it finds; the gate that refuses is a test.
+The scanner's CLI is the gate: it exits non-zero whenever it finds a dangling
+target and zero only after inspecting the shipped tree and finding none.
 """
 
 from __future__ import annotations
@@ -291,19 +292,19 @@ def dangling_references(root: Path) -> tuple[DanglingReference, ...]:
     return tuple(findings)
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Print one greppable row per dangling reference; always exit 0."""
+def main(argv: list[str] | None = None, *, root: Path = _PACKAGE_ROOT) -> int:
+    """Print one greppable row per dangling reference and enforce live zero."""
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
     parser.add_argument("--limit", type=int, default=0, help="show at most this many rows")
     args = parser.parse_args(argv)
 
-    findings = dangling_references(_PACKAGE_ROOT)
+    findings = dangling_references(root)
     rows = findings[: args.limit] if args.limit else findings
     for finding in rows:
         sys.stdout.write(f"dangling target={finding.target} module={finding.module}\n")
     by_module = collections.Counter(finding.module for finding in findings)
     sys.stdout.write(f"summary dangling={len(findings)} modules={len(by_module)}\n")
-    return 0
+    return 1 if findings else 0
 
 
 if __name__ == "__main__":

@@ -47,6 +47,7 @@ def collect_residue() -> tuple[ResidueCell, ...]:
     """
     from cadrumo.domain.calculations.registry.authority import bundled_authority
 
+    from ..supported_filing_years import audit_supported_filing_years
     from ..temporal_coverage import compose_temporal_coverage
 
     authority = bundled_authority()
@@ -71,7 +72,11 @@ def collect_residue() -> tuple[ResidueCell, ...]:
             period=str(gap.period),
             detail=f"missing {gap.missing_prerequisite}",
         )
-        for gap in authority.supported_filing_year_gaps
+        for gap in audit_supported_filing_years(
+            authority.modelos,
+            catalogue=authority.catalogues.supported_filing_years,
+            sources=authority.catalogues.sources,
+        )
     )
     return tuple(sorted(set(cells)))
 

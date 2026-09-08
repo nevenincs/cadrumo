@@ -27,19 +27,12 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.i18n import extract_placeholders
 
 from .manager import (
-    _INTENTIONAL_IDENTICAL_FILENAME,
-    _MODELO_SCHEMA_PREFIX,
     LocaleManager,
     _covered_by_namespace,
     _flatten_raw_locale_leaves,
-    _load_intentional_identical,
     discover_locale_codes,
     locale_catalogue_source,
 )
-
-_REFERENCE_LOCALE_FILE = "en.yml"
-_MODELO_SOURCE_LOCALE_FILE = "es.yml"
-_PENDING_BUCKET_KEY = "untranslated_pending"
 
 # tr() consumes these kwargs as rendering directives and strips them from the
 # interpolation map, so a catalogue token carrying one of these names can
@@ -55,16 +48,13 @@ class CatalogueLeafState(StrEnum):
     KEY_ECHO = "key_echo"
     BLANK = "blank"
     UNBINDABLE = "unbindable"
-    IDENTICAL_ALLOWLISTED = "identical_allowlisted"
-    IDENTICAL_PENDING = "identical_pending"
     ABSENT = "absent"
 
 
 class CatalogueStatusRecord(BaseModel):
     """State partition of the required key set for one locale catalogue.
 
-    ``authored + key_echo + blank + unbindable + identical_allowlisted +
-    identical_pending + absent == required`` by construction — an
+    ``authored + key_echo + blank + unbindable + absent == required`` by construction — an
     internal-consistency guarantee over the scanner's required set, not a
     completeness guarantee over every key production could ever request.
     ``extra`` counts catalogue keys outside the required set that no
@@ -81,8 +71,6 @@ class CatalogueStatusRecord(BaseModel):
     key_echo: int = Field(ge=0)
     blank: int = Field(ge=0, default=0)
     unbindable: int = Field(ge=0, default=0)
-    identical_allowlisted: int = Field(ge=0)
-    identical_pending: int = Field(ge=0)
     absent: int = Field(ge=0)
     extra: int = Field(ge=0)
     namespace_exempted: int = Field(ge=0, default=0)
@@ -91,10 +79,6 @@ class CatalogueStatusRecord(BaseModel):
 def classify_catalogue_leaf(
     key: str,
     value: str | None,
-    *,
-    reference_value: str | None,
-    is_reference_locale: bool,
-    allowlisted: bool,
 ) -> CatalogueLeafState:
     """Classify one required catalogue key's value into its honest state.
 
@@ -102,15 +86,6 @@ def classify_catalogue_leaf(
         key: Dotted locale key being classified.
         value: The locale's stored leaf, or ``None`` when missing or not a
             string.
-        reference_value: The canonical source catalogue's leaf for ``key``.
-        is_reference_locale: Whether the classified catalogue is a source
-            equivalent for this key. English is the source for generic
-            application keys; Spanish is the mandatory source for Modelo
-            schema keys, while English may carry the same official text when
-            the source itself is already English.
-        allowlisted: Whether the key carries a per-key
-            deliberately-identical allowlist entry for this locale.
-
     Comparison is whitespace-normalised so a stray space or trailing
     punctuation cannot smuggle a scaffold placeholder past the echo check,
     and an empty-after-strip value is its own never-authored state. Two
@@ -123,8 +98,8 @@ def classify_catalogue_leaf(
     false positives and teach operators to ignore the report.
 
     Returns:
-        Exactly one :class:`CatalogueLeafState`; only ``AUTHORED`` and
-        ``IDENTICAL_ALLOWLISTED`` describe finished work.
+        Exactly one :class:`CatalogueLeafState`; only ``AUTHORED`` describes
+        a present, structurally valid value.
     """
     if value is None:
         return CatalogueLeafState.ABSENT
@@ -137,8 +112,6 @@ def classify_catalogue_leaf(
         # A token named after a tr() rendering directive can never bind;
         # the value looks authored but is structurally broken.
         return CatalogueLeafState.UNBINDABLE
-    if not is_reference_locale and reference_value is not None and stripped == reference_value.strip():
-        return CatalogueLeafState.IDENTICAL_ALLOWLISTED if allowlisted else CatalogueLeafState.IDENTICAL_PENDING
     return CatalogueLeafState.AUTHORED
 
 
@@ -153,25 +126,17 @@ def catalogue_status(manager: LocaleManager) -> tuple[CatalogueStatusRecord, ...
     namespace_prefixes = tuple(
         marker.rstrip("*").rstrip(".") for marker in manager.get_codebase_namespaces() if marker.rstrip("*").rstrip(".")
     )
-    allowlist = _load_intentional_identical(manager.locales_dir / _INTENTIONAL_IDENTICAL_FILENAME)
-
     leaves_by_file: dict[str, dict[str, str]] = {}
     for locale in sorted(discover_locale_codes(manager.locales_dir)):
         source = locale_catalogue_source(manager.locales_dir, locale)
         if source is None:
             continue
         leaves_by_file[f"{locale}.yml"] = _string_leaves(_flatten_raw_locale_leaves(manager.load_locale(source)))
-    reference_leaves = leaves_by_file.get(_REFERENCE_LOCALE_FILE, {})
-    modelo_source_leaves = leaves_by_file.get(_MODELO_SOURCE_LOCALE_FILE, {})
-
     return tuple(
         _catalogue_record(
             locale_file=locale_file,
             leaves=leaves,
             required_keys=required_keys,
-            reference_leaves=reference_leaves,
-            modelo_source_leaves=modelo_source_leaves,
-            allowlist=allowlist,
             namespace_prefixes=namespace_prefixes,
         )
         for locale_file, leaves in leaves_by_file.items()
@@ -183,27 +148,14 @@ def _catalogue_record(
     locale_file: str,
     leaves: dict[str, str],
     required_keys: set[str],
-    reference_leaves: dict[str, str],
-    modelo_source_leaves: dict[str, str],
-    allowlist: dict[str, dict[str, object]],
     namespace_prefixes: tuple[str, ...],
 ) -> CatalogueStatusRecord:
     """Partition one catalogue's leaves into the honest per-state counts."""
-    locale_code = locale_file.removesuffix(".yml")
-    allowed_keys = {
-        key for key in allowlist.get(locale_code, {}) if not key.startswith("_") and key != _PENDING_BUCKET_KEY
-    }
     counts = dict.fromkeys(CatalogueLeafState, 0)
     for key in required_keys:
-        is_modelo_key = key.startswith(_MODELO_SCHEMA_PREFIX)
         state = classify_catalogue_leaf(
             key,
             leaves.get(key),
-            reference_value=(modelo_source_leaves if is_modelo_key else reference_leaves).get(key),
-            is_reference_locale=(
-                locale_file == _REFERENCE_LOCALE_FILE or (is_modelo_key and locale_file == _MODELO_SOURCE_LOCALE_FILE)
-            ),
-            allowlisted=key in allowed_keys,
         )
         counts[state] += 1
     not_required = [key for key in leaves if key not in required_keys]
@@ -215,8 +167,6 @@ def _catalogue_record(
         key_echo=counts[CatalogueLeafState.KEY_ECHO],
         blank=counts[CatalogueLeafState.BLANK],
         unbindable=counts[CatalogueLeafState.UNBINDABLE],
-        identical_allowlisted=counts[CatalogueLeafState.IDENTICAL_ALLOWLISTED],
-        identical_pending=counts[CatalogueLeafState.IDENTICAL_PENDING],
         absent=counts[CatalogueLeafState.ABSENT],
         extra=len(not_required) - namespace_exempted,
         namespace_exempted=namespace_exempted,

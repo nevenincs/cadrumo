@@ -278,31 +278,25 @@ check-relative-imports:
 check-architecture:
     @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_closed_vocabulary_canonicalization.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
 
-# Verify no shipped module has become unreachable from the declared entrypoints.
-# The baseline in dev/quality/unreachable_module_ratchet.toml may only shrink;
-# a new unreachable module fails rather than being absorbed into it.
+# Refuse numeric product policy embedded beside modelo-routing branches.
 [group('static-checks')]
-check-unreachable-ratchet:
-    @uv run --no-sync python -m dev.quality.unreachable_module_ratchet
+check-modelo-regulatory-literals:
+    @uv run --no-sync python -m dev.quality.modelo_regulatory_literals
 
-# Verify every live modelo action candidate carries a reviewed classification and
-# that no recorded disposition contradicts the observed shape. The table in
-# dev/quality/modelo_workspace_action_classification_table.py is the reviewed
-# denominator; a new modelo command reds this immediately rather than inheriting
-# a mechanical classification, and a row recorded as delivered while observably
-# unwired reds too.
-[group('static-checks')]
-check-modelo-action-denominator:
-    @uv run --no-sync pytest -q -n0 dev/tests/test_modelo_workspace_action_denominator.py
+[doc('Refuse regulatory literals embedded in modelo-specific registry modules.')]
+[group('quality')]
+check-modelo-regulatory-embeds:
+    @uv run --no-sync python -m dev.quality.modelo_regulatory_embeds
 
-# Verify no reachable module started carrying unused symbols, and no orphaned
-# test module appeared. The baseline in dev/quality/unused_symbol_ratchet.toml
-# may only shrink; a module that grows, or one absent from the file, fails
-# rather than being absorbed. Covers the population the module ratchet cannot
-# see: a symbol inside a module that is itself reachable.
+# Report every shipped module no declared product command reaches.
 [group('static-checks')]
-check-unused-symbol-ratchet:
-    @uv run --no-sync python -m dev.quality.unused_symbol_ratchet
+check-unreachable-module-coverage:
+    @uv run --no-sync python -m dev.quality.unreachable_module_coverage
+
+# Report every exact unused symbol and orphaned test module in the live tree.
+[group('static-checks')]
+check-unused-symbol-coverage:
+    @uv run --no-sync python -m dev.quality.unused_symbol_coverage
 
 # A store nothing fills reads as empty rather than as absent, so a count
 # rendered from it reports zero forever and an aggregation contributes a zero
@@ -323,31 +317,31 @@ check-secure-store-write-path:
 # Verify the set of unrendered TUI interfaces only shrinks.
 [group('static-checks')]
 check-tui-render-coverage:
-    @uv run --no-sync python -m dev.quality.tui_render_coverage_ratchet
+    @uv run --no-sync python -m dev.quality.tui_render_coverage
 
 [group('static-checks')]
 check-narrowing-delegators:
     @uv run --no-sync python -m dev.quality.narrowing_delegators
 
+# Refuse shipped development-progress censuses and named engine rollout switches.
 [group('static-checks')]
-check-docstring-reference-ratchet:
-    @uv run --no-sync python -m dev.quality.docstring_reference_ratchet
+check-production-metastate:
+    @uv run --no-sync python -m dev.quality.production_metastate
 
-# Verify no module gained a published name that nothing collects. A name in
-# __all__ that no non-test module imports AND the reachability audit reports
-# unused is a promise nothing takes up. Resolving the 368 already recorded is
-# a published-surface decision for an owner; this refuses a NEW one, which is
-# the half needing no decision.
 [group('static-checks')]
-check-unconsumed-export-ratchet:
-    @uv run --no-sync python -m dev.quality.unconsumed_export_ratchet
+check-docstring-references:
+    @uv run --no-sync python -m dev.quality.docstring_reference_targets
 
-# Verify every persistence surface a product command READS still has a
-# production writer. The baseline in dev/quality/write_path_backlog.toml may
-# only shrink; a newly writerless store fails rather than being absorbed.
+# Report every name in __all__ that no non-test module imports and the live
+# reachability audit also reports unused.
 [group('static-checks')]
-check-write-path-backlog:
-    @uv run --no-sync python -m dev.quality.write_path_backlog
+check-unconsumed-export-coverage:
+    @uv run --no-sync python -m dev.quality.unconsumed_export_coverage
+
+# Refuse every production-readable persistence surface with no production writer.
+[group('static-checks')]
+check-write-path-coverage:
+    @uv run --no-sync python -m dev.quality.write_path_coverage
 
 # Verify dependency declarations for drift or unused packages. Silent on success.
 [group('static-checks')]
@@ -723,7 +717,7 @@ harness_exclusions := prepend("--ignore=", harness_members)
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 [group('testing')]
 test-ratchets:
-    @uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_mock_inventory.py dev/tests/test_monkeypatch_inventory.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_no_tautology.py --tb=short
+    @uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_mock_inventory.py dev/tests/test_monkeypatch_inventory.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py --tb=short
 
 # The real-proof pass raises the per-test wall ceiling above the product suite's
 # 300 s ini default, for the reason `test-dev-ci` already states: this lane's
@@ -1170,20 +1164,6 @@ audit-health-report:
 [group('audits')]
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
-
-# Audit module and callable sizes across src/ and dev/ against the committed
-# ratchet in dev/audit/size_budget_baseline.json. Exits 1 only on MOVEMENT: a
-# subject that broke through its own ceiling, or a ceiling that outlived its
-# subject. Standing debt is declared in the baseline and does not fail, so this
-# is green until something grows.
-#
-# Pay debt down and re-run with --regenerate to lower the ceilings. Absorbing
-# growth needs --regenerate --accept-growth, so a broken ceiling can only be
-# raised deliberately and in a reviewable diff. Wired blocking in ci.yml.
-[doc('Audit module and callable sizes across src/ and dev/ against the declared band.')]
-[group('audits')]
-audit-size-budget:
-    @uv run --no-sync python -m dev.audit.size_budget
 
 # Audit module, class, enum, and function names across src/ and dev/.
 # Public production declarations must be singular and globally unique; private

@@ -21,13 +21,8 @@ inter-locale parity while the Modelo resolver applies its Spanish-source
 fallback. Every other key is omitted, so the parity check reports it missing
 until an author supplies real values.
 
-**The trade this makes is deliberate and worth stating.** An unvalued key was
-already a red gate before this change; it reddened the honesty ratchet instead
-of the parity check. What changes is that the ratchet carries a
-``_key_echo_ceiling`` that can be RAISED -- which is how 176 leaves were
-committed -- while a missing key has no such knob. So the red moves from a
-dismissable gate to one that can only be cleared by authoring the values, and
-nothing reaches an operator in the meantime.
+An unvalued key is therefore visible only as a live parity failure that can be
+cleared by authoring the value; nothing reaches an operator in the meantime.
 """
 
 from __future__ import annotations

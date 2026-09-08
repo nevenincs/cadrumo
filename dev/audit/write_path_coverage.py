@@ -561,7 +561,7 @@ def _outside_write_labels(spec: ShippedTreeSpec, surface: _SurfaceClass, verbs: 
     alive?" -- and never clears the finding: neither ``tests`` nor ``dev/`` is
     installed, so neither can fill a store for a user. The class name is
     matched as a bare load here as well as an attribute, because the natural
-    spelling in a test is ``DeudasService().capture(...)``.
+    spelling in a test may instantiate a service inline before calling its writer.
     """
     labels: set[str] = set()
     write_verbs = frozenset(verbs.write)

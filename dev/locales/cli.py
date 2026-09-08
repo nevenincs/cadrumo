@@ -106,9 +106,7 @@ def status(
     """Print the honest per-leaf state partition for every locale surface.
 
     Catalogue rows partition required keys into authored, key-echo,
-    unbindable, identical-to-source, and absent states. Generic keys use
-    English as the source; Modelo schema keys use the mandatory Spanish
-    source.
+    unbindable, blank, and absent states.
     """
     manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
     for record in catalogue_status(manager):
@@ -120,8 +118,7 @@ def _echo_catalogue_status(record: CatalogueStatusRecord) -> None:
     typer.echo(
         f"catalogue file={record.locale_file} required={record.required} authored={record.authored} "
         f"key_echo={record.key_echo} blank={record.blank} unbindable={record.unbindable} "
-        f"identical_allowlisted={record.identical_allowlisted} "
-        f"identical_pending={record.identical_pending} absent={record.absent} extra={record.extra} "
+        f"absent={record.absent} extra={record.extra} "
         f"namespace_exempted={record.namespace_exempted}",
     )
 
@@ -335,31 +332,6 @@ def _echo_move(result: LocaleSubtreeMoveResult) -> None:
     typer.echo(f"rewrote {len(result.written_paths)} catalogue shard(s)")
 
 
-@app.command("allow-identical")
-def allow_identical(
-    locale: Annotated[
-        str,
-        typer.Argument(help="Locale code to update."),
-    ],
-    key: Annotated[
-        str,
-        typer.Argument(help="Dotted locale key to exempt."),
-    ],
-    reason: Annotated[
-        str,
-        typer.Argument(
-            help="Why this string is legitimately identical to its canonical source.",
-        ),
-    ],
-) -> None:
-    """Record one key as deliberately identical to its canonical source."""
-    try:
-        path = _default_manager().allow_identical(locale, key, reason)
-    except LocaleError as exc:
-        raise typer.BadParameter(str(exc)) from exc
-    typer.echo(f"recorded {path.name}:{locale}:{key}")
-
-
 @app.command("canonicalize-product-identity")
 def canonicalize_product_identity(
     ctx: typer.Context,
@@ -498,10 +470,8 @@ def _echo_colanding(result: ColandingResult) -> None:
     typer.echo(
         f"co-landing change={result.change} modules={result.inspected_modules} "
         f"added={len(result.added_keys)} removed={len(result.removed_keys)} "
-        f"held={len(result.held_keys)} findings={len(result.findings)}",
+        f"findings={len(result.findings)}",
     )
-    for key in result.held_keys:
-        typer.echo(f"  held {key} (owning command family is declared unimplemented)")
     for finding in result.findings:
         typer.echo(f"  {finding.render()}")
 

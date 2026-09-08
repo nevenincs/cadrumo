@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import hashlib
 import os
 import shutil
@@ -1123,3 +1124,52 @@ def test_a_rehearsal_that_introduces_an_enforced_finding_is_refused(
         match=r"rehearsal introduces an enforced object-name finding.*retained rehearsal root",
     ):
         rehearse_object_name_component(manifest, inventory=inventory, component=component, repo_root=repo)
+
+
+def _declared_tuple(module_filename: str, constant: str) -> tuple[str, ...]:
+    """Read a module-level string tuple from SOURCE, not from the imported module.
+
+    A sibling case in this file monkeypatches ``_FIRST_PARTY_ROOTS`` to a
+    single synthetic package, so an importing join reads whatever ran last and
+    fails or passes by test order. The declaration is what the join is about.
+    """
+    source = (Path(__file__).resolve().parent.parent / module_filename).read_text(encoding="utf-8")
+    for node in ast.parse(source).body:
+        target = (
+            node.target
+            if isinstance(node, ast.AnnAssign)
+            else (node.targets[0] if isinstance(node, ast.Assign) and node.targets else None)
+        )
+        if isinstance(target, ast.Name) and target.id == constant and node.value is not None:
+            value = ast.literal_eval(node.value)
+            return tuple(str(item) for item in value)
+    message = f"{constant} is not declared at module level in {module_filename}"
+    raise AssertionError(message)
+
+
+def test_the_eviction_roots_cover_every_package_the_graph_builds() -> None:
+    """The rehearsal must evict at least the packages the graph loads.
+
+    ``object_name_graph`` builds its import graph over ``_FIRST_PARTY_ROOTS``;
+    this module evicts ``_FIRST_PARTY_IMPORT_ROOTS`` from ``sys.modules`` so the
+    copy's graph inspection is not contaminated by the live tree. The two hold
+    the same value today and nothing joined them -- the graph's constant is
+    reached by three test modules, this one by none. Adding a first-party
+    package is the reachable path: an author updates the constant the tests
+    point at, misses this one, and the rehearsal quietly stops evicting a
+    package the graph still analyses, which is contamination reported as a
+    clean receipt.
+
+    A SUBSET, not equality: evicting more than the graph builds is lawful and
+    harmless, so asserting equality would refuse a legitimate widening. Only
+    the direction that matters is pinned.
+    """
+    graph_roots = set(_declared_tuple("object_name_graph.py", "_FIRST_PARTY_ROOTS"))
+    eviction_roots = set(_declared_tuple("object_name_rehearsal.py", "_FIRST_PARTY_IMPORT_ROOTS"))
+
+    assert graph_roots, "the graph declares no first-party roots, so this join would compare nothing"
+    assert eviction_roots, "the rehearsal evicts nothing, so every live-tree module survives into the copy"
+    assert graph_roots <= eviction_roots, (
+        "the rehearsal does not evict every package the graph builds, so the copy's inspection can "
+        f"see live-tree modules: built-but-not-evicted={sorted(graph_roots - eviction_roots)}"
+    )

@@ -589,3 +589,42 @@ def test_live_project_uses_annotations_as_its_only_future_directive() -> None:
     violations = _future_directive_violations(_project_python_files())
 
     assert violations == ()
+
+
+def test_the_two_path_factory_vocabularies_have_not_drifted_apart() -> None:
+    """Two scanners carry the same path-construction vocabulary; nothing joined them.
+
+    ``governance_corpus_scan`` and ``import_hygiene_scan`` each declare their own
+    ``_PATH_FACTORY_CALLABLES`` and ``_SEGMENT_JOIN_CALLABLES``, with the same
+    members and near-identical comments, and each uses them the same way -- a
+    ``not in`` test that decides whether a call assembles a path. Nothing reads
+    either constant from a test, so a name added to one and not the other would
+    leave one scanner quietly blind to a construct the other recognises, in the
+    direction that reports clean.
+
+    The two are compared rather than merged: extracting a shared module would
+    relocate a private symbol across a package boundary for a seven-name tuple,
+    and the copies are deliberate -- each scanner stays importable on its own.
+    Comparing them costs nothing and makes the divergence loud.
+    """
+    from ..quality.governance_corpus_scan import _PATH_FACTORY_CALLABLES as GOVERNANCE_FACTORIES
+    from ..quality.governance_corpus_scan import _SEGMENT_JOIN_CALLABLES as GOVERNANCE_JOINS
+    from ..quality.import_hygiene_scan import _PATH_FACTORY_CALLABLES as HYGIENE_FACTORIES
+    from ..quality.import_hygiene_scan import _SEGMENT_JOIN_CALLABLES as HYGIENE_JOINS
+
+    assert GOVERNANCE_FACTORIES, (
+        "the governance scanner's path vocabulary is empty, so its check reads every call as a non-factory"
+    )
+    assert HYGIENE_FACTORIES, (
+        "the hygiene scanner's path vocabulary is empty, so its check reads every call as a non-factory"
+    )
+    assert GOVERNANCE_FACTORIES == HYGIENE_FACTORIES, (
+        "the two scanners' path-factory vocabularies have drifted, so one recognises a construct the "
+        f"other does not: governance-only={sorted(GOVERNANCE_FACTORIES - HYGIENE_FACTORIES)} "
+        f"hygiene-only={sorted(HYGIENE_FACTORIES - GOVERNANCE_FACTORIES)}"
+    )
+    assert GOVERNANCE_JOINS == HYGIENE_JOINS, (
+        "the two scanners' segment-join vocabularies have drifted: "
+        f"governance-only={sorted(GOVERNANCE_JOINS - HYGIENE_JOINS)} "
+        f"hygiene-only={sorted(HYGIENE_JOINS - GOVERNANCE_JOINS)}"
+    )

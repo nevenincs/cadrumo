@@ -174,9 +174,8 @@ def visibility_census(
                 # A module-level `pytestmark` that carries no EXECUTION marker is
                 # not the same as carrying no markers: the execution marker may sit
                 # on each test. Reaching `no_execution_marker` without asking made
-                # the screen report `dev/audit/tests/test_size_budget_dev_corpus.py`
-                # -- `pytestmark = [hex_core]` plus ten `@pytest.mark.unit`
-                # decorators -- as running nowhere, while ten of its tests ran. A
+                # modules with per-test execution decorators read as running nowhere.
+                # A
                 # false positive in the sharpest channel is worse than none at all:
                 # it is the row a reader is meant to act on first.
                 kind = "per_function_markers_only" if decorates_any_test(tree) else "no_execution_marker"

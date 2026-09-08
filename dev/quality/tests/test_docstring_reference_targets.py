@@ -15,6 +15,7 @@ from ..docstring_reference_targets import (
     collect_defined_names,
     dangling_references,
     docstring_references,
+    main,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -42,6 +43,22 @@ def test_a_reference_to_a_symbol_nothing_defines_is_reported(tmp_path: Path) -> 
     )
     targets = [item.target for item in dangling_references(root)]
     assert targets == ["resolve_read_id"]
+
+
+def test_the_gate_refuses_a_dangling_target_and_accepts_a_resolved_one(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = _package(tmp_path, live='"""Points at :func:`missing`."""\n')
+    assert main([], root=root) == 1
+    assert "dangling target=missing" in capsys.readouterr().out
+
+    (root / "live.py").write_text(
+        '"""Points at :func:`present`."""\n\n\ndef present() -> None:\n    pass\n',
+        encoding="utf-8",
+    )
+    assert main([], root=root) == 0
+    assert "summary dangling=0 modules=0" in capsys.readouterr().out
 
 
 def test_a_file_the_walk_listed_but_cannot_read_refuses(tmp_path: Path) -> None:

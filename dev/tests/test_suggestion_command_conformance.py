@@ -63,7 +63,6 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from cadrumo.core.json_contract import EnvelopeStatus
 from cadrumo.core.operator_action_enums import ActionEvidenceProvenance
-from cadrumo.entrypoints.cli._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES
 from cadrumo.tests.cli_runner import cadrumo_click_command
 
 from .._paths import REPO_ROOT
@@ -291,11 +290,6 @@ def _dead_citations_in(text: str, *, origin: str, require_runnable_leaf: bool = 
             # naming it must not be an error -- but the judgement is READ from
             # the one register that holds it, never restated here, or the two
             # lists drift and a genuinely dead verb hides behind the copy.
-            # CLI verbs are hyphenated ("subject-access-request") while the
-            # register keys them by schema name ("subject_access_request"),
-            # so the two spellings are reconciled here rather than in either.
-            if ".".join(tokens).replace("-", "_") in DECLARED_UNIMPLEMENTED_SURFACES:
-                continue
             failures.append(f"{origin}: cites {cited!r} but {dead_token!r} does not resolve in the live CLI tree")
             continue
         if require_runnable_leaf and terminates_on_group and not has_trailing_help:

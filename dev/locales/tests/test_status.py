@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
@@ -42,8 +41,7 @@ def manager(tmp_path: Path) -> LocaleManager:
         # first echoes its own key despite the trailing space, second is
         # authored, third is absent, fifth is whitespace-only.
         "ca": "audit:\n  first: 'audit.first '\n  second: 'Segon missatge'\n  fifth: '   '\n",
-        # first is identical to en without an allowlist entry, second is
-        # identical WITH one, third is authored.
+        # Values may legitimately be identical across languages; all three are authored.
         "hu": ("audit:\n  first: 'First message'\n  second: 'Second message'\n  third: 'Harmadik üzenet'\n"),
         # Fully authored, plus one key the codebase never declares.
         "es": (
@@ -54,10 +52,6 @@ def manager(tmp_path: Path) -> LocaleManager:
     }
     for locale in _LOCALES:
         (locales_dir / f"{locale}.yml").write_text(catalogues[locale], encoding="utf-8")
-    (locales_dir / "_intentional_identical.json").write_text(
-        json.dumps({"hu": {"audit.second": "brand name shared with English"}}),
-        encoding="utf-8",
-    )
     return LocaleManager(src_dir=source_dir, locales_dir=locales_dir)
 
 
@@ -96,17 +90,15 @@ def test_catalogue_status_partitions_every_required_key(manager: LocaleManager) 
             record.key_echo,
             record.blank,
             record.unbindable,
-            record.identical_allowlisted,
-            record.identical_pending,
             record.extra,
         )
         for name, record in by_file.items()
     }
     assert observed == {
-        "en.yml": (4, 0, 0, 1, 0, 0, 0),
-        "ca.yml": (1, 1, 1, 0, 0, 0, 0),
-        "hu.yml": (1, 0, 0, 0, 1, 1, 0),
-        "es.yml": (4, 0, 0, 0, 0, 0, 1),
+        "en.yml": (4, 0, 0, 1, 0),
+        "ca.yml": (1, 1, 1, 0, 0),
+        "hu.yml": (3, 0, 0, 0, 0),
+        "es.yml": (4, 0, 0, 0, 1),
     }
 
     for record in by_file.values():
@@ -115,42 +107,25 @@ def test_catalogue_status_partitions_every_required_key(manager: LocaleManager) 
             + record.key_echo
             + record.blank
             + record.unbindable
-            + record.identical_allowlisted
-            + record.identical_pending
             + record.absent
         )
         assert partition == record.required
 
 
-def test_classifier_never_reports_a_defect_as_authored() -> None:
-    """Key-echo and unallowlisted identical values are refused as authored."""
+def test_classifier_never_reports_a_structural_defect_as_authored() -> None:
+    """Key echoes, absence, blank values, and unbindable tokens are not authored."""
     assert (
         classify_catalogue_leaf(
             "audit.first",
             "audit.first",
-            reference_value="First message",
-            is_reference_locale=False,
-            allowlisted=True,
         )
         is CatalogueLeafState.KEY_ECHO
     )
-    assert (
-        classify_catalogue_leaf(
-            "audit.first",
-            "First message",
-            reference_value="First message",
-            is_reference_locale=False,
-            allowlisted=False,
-        )
-        is CatalogueLeafState.IDENTICAL_PENDING
-    )
+    assert classify_catalogue_leaf("audit.first", "First message") is CatalogueLeafState.AUTHORED
     assert (
         classify_catalogue_leaf(
             "audit.first",
             None,
-            reference_value="First message",
-            is_reference_locale=False,
-            allowlisted=False,
         )
         is CatalogueLeafState.ABSENT
     )
@@ -158,9 +133,6 @@ def test_classifier_never_reports_a_defect_as_authored() -> None:
         classify_catalogue_leaf(
             "audit.first",
             "First message",
-            reference_value="First message",
-            is_reference_locale=True,
-            allowlisted=False,
         )
         is CatalogueLeafState.AUTHORED
     )
@@ -170,9 +142,6 @@ def test_classifier_never_reports_a_defect_as_authored() -> None:
         classify_catalogue_leaf(
             "audit.first",
             "Recorded %{locale} entry",
-            reference_value="First message",
-            is_reference_locale=False,
-            allowlisted=False,
         )
         is CatalogueLeafState.UNBINDABLE
     )
@@ -189,9 +158,6 @@ def test_classifier_never_reports_a_defect_as_authored() -> None:
             classify_catalogue_leaf(
                 "audit.first",
                 planted,
-                reference_value="First message",
-                is_reference_locale=False,
-                allowlisted=False,
             )
             is expected
         ), planted
@@ -212,8 +178,6 @@ def test_status_command_reports_catalogue_partition(manager: LocaleManager) -> N
     assert rows["ca.yml"]["blank"] == "1"
     assert rows["en.yml"]["unbindable"] == "1"
     assert rows["en.yml"]["namespace_exempted"] == "0"
-    assert rows["hu.yml"]["identical_allowlisted"] == "1"
-    assert rows["hu.yml"]["identical_pending"] == "1"
     assert rows["es.yml"]["extra"] == "1"
 
 

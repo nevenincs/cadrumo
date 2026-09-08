@@ -548,7 +548,7 @@ def run_sweep(
     # this function returns a clean SweepResult -- and SweepResult carries no
     # field that would name the shortfall, unlike the degraded-retrieval run it
     # reports through failed_query_count.
-    projection.require_complete()
+    projection.require_complete_corpus()
     target_resolver = resolver if resolver is not None else TargetResolver(search_record_projection=projection)
 
     # The mapping boundary may only ship ids emitted by the complete projection

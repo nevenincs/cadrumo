@@ -11,8 +11,7 @@ invisible in review and surfaces only as an unexplained working-tree delta.
 ``test_*.py`` are out of scope; every other module is gated, including support
 modules that happen to live under a ``tests/`` package. That choice is
 deliberate and was paid for: an earlier sweep scoped by "under ``tests/``" and
-so missed four SUPPORT modules that write COMMITTED artefacts -- the size-budget
-baseline and three fixture sidecar generators -- which kept translating their
+so missed SUPPORT modules that write COMMITTED fixture sidecars, which kept translating their
 outputs. The honest discriminator is "does this writer target a tracked
 artefact", which no static pass can decide; "is this a ``test_*.py`` module" is
 the closest structural proxy that needs no hand-maintained include-list and so
@@ -88,15 +87,9 @@ EXEMPTIONS: dict[tuple[str, str], str] = {
         "src/cadrumo/adapters/persistence/storage/bucket/sealed_archive_writer.py",
         "write_sealed_archive",
     ): ("tarfile.open(mode='w:gz') is a BINARY archive handle, not a text stream. It takes no newline argument."),
-    ("dev/locales/manager.py", "LocaleManager.allow_identical"): (
-        "guard.write_text() is CatalogueWriteGuard.write_text, not Path.write_text -- the "
-        "AST matcher keys on the attribute name alone. It delegates to atomic_write_text, "
-        "which encodes the string to bytes in Python and writes them through a BINARY "
-        "NamedTemporaryFile handle, so no newline argument applies and no translation occurs."
-    ),
     ("dev/locales/manager.py", "_rewrite_locale_mapping"): (
-        "Same guard.write_text() shape as LocaleManager.allow_identical above: a binary "
-        "atomic-write handle underneath, immune to the CRLF-drift this gate guards against."
+        "CatalogueWriteGuard.write_text delegates to a binary atomic-write handle, "
+        "so the text-mode newline parameter does not apply."
     ),
 }
 

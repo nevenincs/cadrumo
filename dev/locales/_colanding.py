@@ -18,15 +18,6 @@ invariants over that delta:
 * A key whose LAST call site the change removes must not be left standing in the
   catalogues. Otherwise the commit orphans a key nobody will attribute later.
 
-The second invariant has one derived exemption, and it is derived rather than
-allowlisted on purpose. A command family the operator surface declares but has
-not built -- :attr:`FamilyMountState.DECLARED_UNIMPLEMENTED` -- HOLDS its
-catalogue strings: nothing reaches them, so they have no call site, but they are
-not retirement residue either, and pruning them would assert a retirement no
-ruling supports. That distinction already has an owner in
-``MOUNTED_COMMAND_FAMILIES``, so this reads the answer there instead of keeping a
-second, hand-maintained list that could disagree with it.
-
 Deliberately NOT checked: a catalogue key added ahead of any call site. Bulk
 scaffolding and the registry authoring sweep both legitimately add catalogue
 content in their own commits, so that direction fires constantly on correct work,
@@ -48,8 +39,6 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from cadrumo.application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
-from cadrumo.application.operator_surface.models import FamilyMountState
 from cadrumo.core.external_constants import UTF_8_ENCODING
 
 from .._paths import REPO_ROOT
@@ -94,7 +83,6 @@ class ColandingResult(BaseModel):
     inspected_modules: int = Field(ge=0)
     added_keys: tuple[str, ...] = ()
     removed_keys: tuple[str, ...] = ()
-    held_keys: tuple[str, ...] = ()
     findings: tuple[ColandingFinding, ...] = ()
 
     @property
@@ -182,15 +170,6 @@ def resolve_change(selector: str, repo_root: Path = REPO_ROOT) -> _Change:
     return _Change(label=selector, base=base.strip(), head=head.strip())
 
 
-def _held_family_namespaces() -> frozenset[str]:
-    """Return the ``cli.<root>.<child>.`` prefixes of declared-unimplemented families."""
-    return frozenset(
-        f"cli.{family.root.value}.{family.child}."
-        for family in MOUNTED_COMMAND_FAMILIES
-        if family.mount_state is FamilyMountState.DECLARED_UNIMPLEMENTED
-    )
-
-
 def _catalogue_key_sets(manager: LocaleManager, repo_root: Path, revision: str) -> dict[str, set[str]]:
     """Return each LOCALE's key set as the change leaves it.
 
@@ -268,18 +247,13 @@ def check_colanding(
                 ),
             )
 
-    held: list[str] = []
     if removed:
         live_keys = manager.get_codebase_keys()
-        held_prefixes = _held_family_namespaces()
         for key in removed:
             if key in live_keys:
                 continue
             carrying = tuple(name for name, keys in sorted(key_sets.items()) if key in keys)
             if not carrying:
-                continue
-            if any(key.startswith(prefix) for prefix in held_prefixes):
-                held.append(key)
                 continue
             findings.append(
                 ColandingFinding(
@@ -288,7 +262,7 @@ def check_colanding(
                     detail=(
                         f"the change removes its last call site but leaves it in {', '.join(carrying)}. "
                         "Remove the key from all four catalogues with `python -m dev.locales remove` "
-                        "in this same change, or declare the owning command family unimplemented."
+                        "in this same change."
                     ),
                 ),
             )
@@ -298,7 +272,6 @@ def check_colanding(
         inspected_modules=len(paths),
         added_keys=tuple(added),
         removed_keys=tuple(removed),
-        held_keys=tuple(sorted(held)),
         findings=tuple(findings),
     )
 

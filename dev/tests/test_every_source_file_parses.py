@@ -32,6 +32,8 @@ from __future__ import annotations
 
 import ast
 import os
+import pathlib
+import re
 import sys
 from pathlib import Path
 from typing import Final
@@ -166,9 +168,51 @@ def test_every_source_file_parses() -> None:
     reason="Python 3.14 template-string grammar is unavailable on the 3.13 floor",
 )
 def test_parser_rejects_syntax_newer_than_the_supported_floor() -> None:
-    """A newer interpreter must not make newer-only syntax look supported."""
+    """A newer interpreter must not make newer-only syntax look supported.
+
+    The skip is correct -- on the 3.13 floor that grammar cannot be parsed at
+    all, so the refusal would hold for a reason unrelated to the pin. It does
+    mean this case runs nowhere today: the unit suite runs on the pinned 3.13,
+    and the 3.14 rows in the runtime inventory install and smoke-test wheels
+    rather than running this suite. The test below carries the same property
+    on every interpreter, so the pin is not left guarded only by a case that
+    never executes.
+    """
     with pytest.raises(SyntaxError):
         _parse_source('value = t"template {name}"', filename="newer_syntax.py")
+
+
+def test_the_grammar_floor_matches_the_packaging_floor_and_is_actually_passed() -> None:
+    """The pin must equal the floor the project publishes, and must reach ``ast.parse``.
+
+    Both halves are needed and neither is covered above. If ``_OLDEST_SUPPORTED_PYTHON``
+    drifted above the published ``requires-python``, this gate would bless syntax the
+    project's own minimum interpreter cannot parse; if the argument stopped being passed,
+    the constant would be decorative. ``pyproject.toml`` is the independent authority --
+    it is where the floor is declared to installers, and it is not derived from this
+    module.
+    """
+    manifest = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    declared = re.search(r'requires-python\s*=\s*">=(\d+)\.(\d+)"', manifest)
+    assert declared is not None, "pyproject.toml declares no `requires-python` floor to join against"
+    published = (int(declared.group(1)), int(declared.group(2)))
+
+    assert published == _OLDEST_SUPPORTED_PYTHON, (
+        f"the parse gate pins {_OLDEST_SUPPORTED_PYTHON} while the project publishes a floor of "
+        f"{published}; one of the two is wrong and the gate is the half nobody installs"
+    )
+
+    parsed = ast.parse(pathlib.Path(__file__).read_text(encoding="utf-8"))
+    passes_pin = any(
+        isinstance(node, ast.FunctionDef)
+        and node.name == "_parse_source"
+        and any(
+            isinstance(call, ast.Call) and any(kw.arg == "feature_version" for kw in call.keywords)
+            for call in ast.walk(node)
+        )
+        for node in ast.walk(parsed)
+    )
+    assert passes_pin, "`_parse_source` no longer passes `feature_version`, so the floor is decorative"
 
 
 def test_the_independent_prune_list_still_matches_the_shared_one() -> None:

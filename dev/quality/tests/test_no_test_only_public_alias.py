@@ -1,24 +1,16 @@
 """Gate: no module publishes a name that exists only so a test can import it.
 
-The shape is ``PUBLIC = _PRIVATE`` at module level, where the private symbol is
-defined in the same module and carries the real implementation, production
-calls the PRIVATE name, and the public alias is imported by nothing but tests.
+The shape is ``PUBLIC = ORIGIN`` at module level, where ``ORIGIN`` is defined
+or imported in the same module and the public alias is imported by nothing but
+tests.
 It reads as published API and is not: the architecture rule bars alias and
 re-export layers outright, and the alias also hides that the module's real
 surface is the private one.
 
-Twenty-four of these were removed across the shipped tree. Each removal was the
-same edit -- point the test at the private name, which a test in the same
-package may import, and delete the alias with its ``__all__`` entry.
-
-Deliberately narrow, so the rule catches that shape and not its neighbours:
-
-* the target must be defined in the SAME module, which excludes a re-export
-  under a clearer name (``IVA_COMPENSATION_WALLET_URL = WALLET_URL``, whose
-  target is imported) -- a different question about package vocabulary;
-* the alias must have at least one TEST consumer, which excludes an export
+The target must be bound in the same module, including by import. The alias
+must have at least one test consumer, which excludes an export
   nothing reads at all, a published-surface decision rather than an alias;
-* the alias must be dead in production, so a genuine second name in use is
+and the alias must be dead in production, so a genuine second name in use is
   untouched.
 """
 
@@ -79,6 +71,9 @@ def _bound_names(tree: ast.Module) -> set[str]:
             names.add(node.targets[0].id)
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
             names.add(node.target.id)
+        elif isinstance(node, (ast.Import, ast.ImportFrom)):
+            for alias in node.names:
+                names.add(alias.asname or alias.name.split(".")[0])
     return names
 
 
@@ -98,7 +93,7 @@ def find_test_only_aliases(production: dict[Path, str], tests: dict[Path, str]) 
             if not (isinstance(target, ast.Name) and isinstance(value, ast.Name)):
                 continue
             alias, origin = target.id, value.id
-            if alias.startswith("_") or not origin.startswith("_") or origin not in local:
+            if alias.startswith("_") or origin not in local:
                 continue
             if _uses(alias, production, skip=path) == 0 and _uses(alias, tests) >= 1:
                 try:
@@ -145,17 +140,17 @@ def test_the_gate_catches_a_planted_alias(tmp_path: Path) -> None:
     assert [(alias, origin) for alias, origin, _ in found] == [("work", "_work")]
 
 
-def test_a_reexport_under_a_clearer_name_is_not_an_offender(tmp_path: Path) -> None:
-    """The target is imported, not defined here, so it is a vocabulary question."""
+def test_the_gate_catches_an_imported_target_alias(tmp_path: Path) -> None:
+    """A different public spelling for an imported authority is still test-only."""
     module = tmp_path / "subject.py"
     module.write_text("from .other import WALLET_URL\n\nPUBLIC_URL = WALLET_URL\n", encoding="utf-8")
     test = tmp_path / "test_subject.py"
     test.write_text("from .subject import PUBLIC_URL\n", encoding="utf-8")
 
-    assert (
-        find_test_only_aliases({module: module.read_text(encoding="utf-8")}, {test: test.read_text(encoding="utf-8")})
-        == []
-    )
+    assert [(alias, origin) for alias, origin, _ in find_test_only_aliases(
+        {module: module.read_text(encoding="utf-8")},
+        {test: test.read_text(encoding="utf-8")},
+    )] == [("PUBLIC_URL", "WALLET_URL")]
 
 
 def test_an_alias_production_still_uses_is_not_an_offender(tmp_path: Path) -> None:

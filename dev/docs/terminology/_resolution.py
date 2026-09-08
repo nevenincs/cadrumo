@@ -43,7 +43,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import StrEnum
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -77,6 +77,7 @@ __all__ = [
     "ResolutionResult",
     "ResolvedTarget",
     "TargetResolver",
+    "UnbuiltGeneratedInputError",
     "resolve_chunk_hits",
 ]
 
@@ -810,6 +811,61 @@ def _read_casilla_source_sections(project_relpath: str) -> tuple[_CasillaSourceS
     return tuple(sections)
 
 
+#: The generated CLI-reference tree the CLI resolution rule reads. It is a
+#: BUILD PRODUCT, gitignored and written by the docs build (``just docs``,
+#: which runs ``generate_cli_reference`` from the Sphinx builder-inited hook),
+#: so a clean checkout does not have it at all.
+_CLI_REFERENCE_ROOT: Final[str] = "docs/cli"
+
+#: Fewer emitted pages than this means the tree is a partial artefact rather
+#: than a real generator run. The generator writes an index page plus one page
+#: per command family, so the smallest honest tree is several pages; a one- or
+#: two-page tree drops hits for exactly the same reason an absent one does, and
+#: must be refused for the same reason.
+_MIN_CLI_REFERENCE_PAGES: Final[int] = 3
+
+
+class UnbuiltGeneratedInputError(RuntimeError):
+    """A resolution rule's generated input tree was never built.
+
+    Distinct from a :class:`DroppedHit`. A drop is a finding ABOUT the corpus;
+    this is the absence of the corpus. Collapsing the two lets an unbuilt tree
+    masquerade as a run in which every hit legitimately failed to resolve.
+    """
+
+
+def _require_built_cli_reference(repo_root: Path) -> None:
+    """Refuse when the generated CLI-reference tree is absent or too short.
+
+    Args:
+        repo_root: Checkout root holding the generated tree. Injectable so a
+            test can drive a real absent, short, and complete tree without
+            touching the shared worktree.
+
+    Raises:
+        UnbuiltGeneratedInputError: The tree is missing, or holds fewer than
+            :data:`_MIN_CLI_REFERENCE_PAGES` pages.
+    """
+    root = repo_root / _CLI_REFERENCE_ROOT
+    remedy = (
+        "run `just docs` (or any full docs build) to write it; it is a gitignored "
+        "build product, not a committed source tree"
+    )
+    if not root.is_dir():
+        raise UnbuiltGeneratedInputError(
+            f"the generated CLI reference tree {_CLI_REFERENCE_ROOT!r} does not exist under "
+            f"{repo_root}, so no CLI hit can be resolved and every one of them would be "
+            f"reported as an ordinary unresolvable hit instead: {remedy}",
+        )
+    pages = tuple(root.rglob("*.rst"))
+    if len(pages) < _MIN_CLI_REFERENCE_PAGES:
+        raise UnbuiltGeneratedInputError(
+            f"the generated CLI reference tree {_CLI_REFERENCE_ROOT!r} under {repo_root} holds "
+            f"{len(pages)} page(s), fewer than the {_MIN_CLI_REFERENCE_PAGES} a real generator "
+            f"run emits, so it cannot ground the CLI hits being resolved: {remedy}",
+        )
+
+
 def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None:
     """Read generated CLI command and parameter locators from one RST page.
 
@@ -822,6 +878,12 @@ def _read_cli_source_locators(project_relpath: str) -> _CliSourceLocators | None
     try:
         lines = absolute.read_text(encoding=_UTF_8).splitlines()
     except (OSError, UnicodeError):
+        # An unreadable page is a genuine finding ONLY when the generated tree it
+        # belongs to was actually built. When it was not, the read fails for every
+        # page alike and returning ``None`` launders a missing build product into a
+        # per-hit NO_TARGET_ENTITY drop indistinguishable from a page that really
+        # carries no command or option locator.
+        _require_built_cli_reference(_REPO_ROOT)
         return None
 
     command_headers = [

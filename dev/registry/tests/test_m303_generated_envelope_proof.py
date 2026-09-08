@@ -42,6 +42,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry._supplementary_orden import compile_supplementary_ordenes
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory, load_registry_tree
 from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
@@ -147,6 +148,11 @@ def _committed_tree_hashes(tree) -> tuple[tuple[str, str], ...]:
 def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
     """Return one source-owned live DP30305 value arrival, without a test layout."""
     filing_year = snapshot.filing_year
+    prior_snapshot_ref = bundled_authority().snapshot(
+        "303",
+        filing_year=filing_year - 1,
+        period="4T",
+    ).snapshot_ref
     register = ProrrataRegister(
         sector_definitions=(
             SectorDefinition(sector_id="a", letra=SectorDiferenciadoLetra.A, member_activity_codes=("4711",)),
@@ -160,6 +166,7 @@ def _m303_2026_prorrata_and_differentiated_producer(*, snapshot, catalogues):
                 especial_transition=None,
                 provisional_percentage=Decimal("50"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                source_registry_snapshot_refs=(prior_snapshot_ref,),
             )
             for sector_id in (None, "a", "b")
         ),

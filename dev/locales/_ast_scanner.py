@@ -344,11 +344,11 @@ def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = fr
     the value is a bare scalar rather than a registry, so the constant and
     collection rules had nothing to match either. Both branches were invisible.
 
-    The candidate value is deliberately narrow -- a string constant or a
-    conditional between them, nothing else. A local bound to a dict, a call, or
-    a subscript is already the business of the registry and row-table rules,
-    and widening this to any expression would let it claim their shapes
-    without their confirmation.
+    The candidate value is deliberately narrow -- a string constant, a
+    conditional between them, or the literal fallback of ``mapping.get``.
+    Other calls and subscripts are already the business of registry and
+    row-table rules, and widening this to any expression would let it claim
+    their shapes without their confirmation.
 
     Shape alone still does not collect: a dotted literal in a local is as
     likely to be a route or a lookup token as copy, so the NAME must reach a
@@ -364,10 +364,18 @@ def _flow_confirmed_local_key_names(tree: ast.AST, wrappers: frozenset[str] = fr
             target, value = node.target, node.value
         if not isinstance(target, ast.Name) or value is None:
             continue
-        if not isinstance(value, ast.Constant | ast.IfExp):
-            continue
         literals: set[str] = set()
-        _collect_dotted_literals(value, literals)
+        if isinstance(value, ast.Constant | ast.IfExp):
+            _collect_dotted_literals(value, literals)
+        elif (
+            isinstance(value, ast.Call)
+            and isinstance(value.func, ast.Attribute)
+            and value.func.attr == "get"
+            and len(value.args) >= 2
+        ):
+            _collect_dotted_literals(value.args[1], literals)
+        else:
+            continue
         if literals:
             candidates.setdefault(target.id, set()).update(literals)
     if not candidates:
@@ -487,7 +495,7 @@ def _extract_locale_constant_keys(tree: ast.AST, wrappers: frozenset[str] = froz
         # A table written inline has no assignment for the walk below to match
         # against, so its keys are taken from the confirmed expression itself.
         if name.startswith(_ANONYMOUS_TABLE):
-            _collect_declared_locale_keys(value, findings)
+            _collect_row_table_key_column_literals(tree, value, findings, wrappers)
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
             named = any(_declares_locale_key_constant(target) for target in node.targets)
@@ -775,6 +783,45 @@ def _row_table_key_columns(node: ast.expr | None) -> frozenset[int]:
     )
 
 
+def _collect_row_table_key_column_literals(
+    tree: ast.AST,
+    value: ast.expr,
+    findings: set[str],
+    wrappers: frozenset[str],
+) -> None:
+    """Collect only the row-table columns whose bindings reach a key sink."""
+    rows = _literal_row_grid(value)
+    if rows is None:
+        return
+    tr_names = _translation_call_names(tree) | wrappers
+    bound_columns: dict[str, int] = {}
+    for binding in _iteration_bindings(tree):
+        if binding.iter is not value:
+            continue
+        for index, target in enumerate(getattr(binding.target, "elts", ())):
+            if isinstance(target, ast.Name):
+                bound_columns[target.id] = index
+    if not bound_columns:
+        # Anonymous tables passed into a helper are iterated through the
+        # helper parameter rather than the literal expression itself. Their
+        # flow was already confirmed by the parameter-alias pass above; retain
+        # the established collection path for that distinct inline shape.
+        _collect_declared_locale_keys(value, findings)
+        return
+    key_columns: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        for argument in _call_site_key_argument_exprs(node, tr_names):
+            if isinstance(argument, ast.Name) and argument.id in bound_columns:
+                key_columns.add(bound_columns[argument.id])
+    for row in rows:
+        for index in key_columns:
+            literal = row[index]
+            if literal is not None:
+                findings.add(literal)
+
+
 def _shape_candidate_locale_key_row_tables(tree: ast.AST) -> dict[str, ast.expr]:
     """Return every ``Name -> row-table-literal`` pair shaped as a locale-key registry."""
     candidates: dict[str, ast.expr] = {}
@@ -810,7 +857,18 @@ def _row_table_names_iterated_into_a_sink(
     key_columns = {name: _row_table_key_columns(value) for name, value in candidates.items()}
     bound_to_table: dict[str, set[str]] = {}
     for node in _iteration_bindings(tree):
-        for table in _iterated_candidate_tables(node.iter, candidates, aliases):
+        tables = _iterated_candidate_tables(node.iter, candidates, aliases)
+        if not tables and _is_locale_key_row_table_literal(node.iter):
+            # A table written directly in ``for ... in (...)`` has no
+            # assignment target to enter the candidate map. It is the same
+            # semantic shape as a named table or one passed inline to a helper,
+            # so register the expression itself and keep the existing
+            # key-column and sink-flow checks authoritative.
+            synthetic = f"{_ANONYMOUS_TABLE}{len(candidates)}"
+            candidates[synthetic] = node.iter
+            key_columns[synthetic] = _row_table_key_columns(node.iter)
+            tables = frozenset({synthetic})
+        for table in tables:
             columns = key_columns[table]
             if isinstance(node.target, ast.Name):
                 # A whole-row binding cannot say which column reaches the sink,
@@ -1690,12 +1748,7 @@ def tr_constant_naming_violations_in_tree(tree: ast.AST) -> Iterator[tuple[int, 
     literal the scanner can see, or a named constant whose OWN IDENTIFIER
     hides the key from every literal-key scan. It never inspects, resolves,
     or has any opinion about the STRING VALUE a locale catalogue stores under
-    that key. Whether a translated value is legitimately identical across
-    locales (a bare regulatory acronym such as ``IVA``/``IRPF``, a Spanish
-    product noun, a bare interpolation placeholder, a literal CLI command) is
-    a distinct concern owned entirely by the ``_intentional_identical.json``
-    allowlist and its honesty gate — this function does not read locale
-    catalogue files at all, so the two mechanisms cannot collide.
+    that key. This function does not read locale catalogue files.
     """
     tr_names = _translation_call_names(tree)
     for node in ast.walk(tree):
