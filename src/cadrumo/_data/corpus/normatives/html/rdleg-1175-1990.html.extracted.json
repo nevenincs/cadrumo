@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rdleg-1175-1990.html",
   "source_sha256": "6e6a1f50a7d45e0d37a438f37c3f83046268a4ebd3fbbd12765f3ed344445448",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.3",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/act.php?id=BOE-A-1990-23930",
   "units": [
     {

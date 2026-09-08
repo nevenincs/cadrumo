@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-31-2022.html",
   "source_sha256": "fc5a77c6dbbf295b6555e0284491e230404a9f263f5d65e6763f7c5705501ace",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.3",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/act.php?id=BOE-A-2022-22128",
   "units": [
     {
