@@ -19,7 +19,6 @@ from ..workspace_producers import (
     ModeloWorkspaceContributingProjectionV1,
     ModeloWorkspaceContributorKindV1,
     ModeloWorkspaceEpochV1,
-    ModeloWorkspaceProducerContractInventoryV1,
     ModeloWorkspaceProducerContractV1,
     ModeloWorkspaceProducerStampV1,
     modelo_workspace_projection_schema_fingerprint,
@@ -246,88 +245,6 @@ def test_workspace_epoch_currentness_requires_an_exact_same_domain_coordinate() 
     assert captured.require_current(_epoch("calculation.owner", 10)) is captured
     with pytest.raises(ValueError, match="no longer current"):
         captured.require_current(_epoch("calculation.owner", 11))
-
-
-def test_workspace_producer_inventory_is_a_sorted_complete_round_trip_fixed_point() -> None:
-    inventory = ModeloWorkspaceProducerContractInventoryV1.generate(_contracts())
-
-    assert tuple(
-        (contract.contributor.owner, contract.contributor.producer) for contract in inventory.contracts
-    ) == tuple(sorted((contract.contributor.owner, contract.contributor.producer) for contract in inventory.contracts))
-    assert set(contract.contributor_kind for contract in inventory.contracts) == set(ModeloWorkspaceContributorKindV1)
-    assert {contract.epoch_schema_version for contract in inventory.contracts} == {2}
-    assert ModeloWorkspaceProducerContractInventoryV1.model_validate_json(inventory.model_dump_json()) == inventory
-    assert inventory.require_current(_contracts()) is inventory
-
-
-def test_workspace_producer_inventory_refuses_missing_duplicate_and_unclassified_contributors() -> None:
-    contracts = _contracts()
-    with pytest.raises(ValidationError):
-        ModeloWorkspaceProducerContractInventoryV1.generate(contracts[:-1])
-    with pytest.raises(ValidationError, match="duplicate a contributor identity"):
-        ModeloWorkspaceProducerContractInventoryV1.generate((*contracts[:-1], contracts[0]))
-    stale_contract = contracts[0].model_copy(update={"projection_contract_version": 2})
-    with pytest.raises(ValidationError, match="contract is stale"):
-        ModeloWorkspaceProducerContractInventoryV1.generate((stale_contract, *contracts[1:]))
-
-    unclassified_contract = contracts[0].model_dump(mode="json")
-    unclassified_contract["contributor_kind"] = "unclassified"
-    with pytest.raises(ValidationError):
-        ModeloWorkspaceProducerContractInventoryV1.model_validate(
-            {
-                "contracts": (unclassified_contract, *(contract.model_dump(mode="json") for contract in contracts[1:])),
-                "inventory_digest": _DIGEST,
-            }
-        )
-
-
-def test_workspace_producer_inventory_refuses_a_current_contract_set_that_has_drifted() -> None:
-    inventory = ModeloWorkspaceProducerContractInventoryV1.generate(_contracts())
-    current_contracts = tuple(
-        _contract(
-            contract.contributor_kind,
-            projection_contract_version=(
-                2 if contract.contributor_kind is ModeloWorkspaceContributorKindV1.READINESS else 1
-            ),
-        )
-        for contract in _contracts()
-    )
-
-    with pytest.raises(ValueError, match="inventory is stale"):
-        inventory.require_current(current_contracts)
-
-
-def test_the_closed_inventory_registers_all_eight_contributors_exactly() -> None:
-    """The real production inventory, not a synthetic fixture."""
-    from ..workspace_producers import MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1
-
-    kinds = {contract.contributor_kind for contract in MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts}
-    assert kinds == set(ModeloWorkspaceContributorKindV1)
-    assert len(MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts) == len(ModeloWorkspaceContributorKindV1)
-
-
-def test_every_contract_matches_the_governing_adrs_contributor_fixed_point() -> None:
-    """The owner/producer identities reproduce the governing decision's table verbatim, not a free-form label."""
-    from ..workspace_producers import MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1
-
-    expected = {
-        ModeloWorkspaceContributorKindV1.REGISTRY: ("domain.calculations.registry", "validated_registry_projection"),
-        ModeloWorkspaceContributorKindV1.WORK: ("application.modelo.work_addressing", "resolved_work_target"),
-        ModeloWorkspaceContributorKindV1.BOUNDED_REVIEW: ("application.modelo.work_review", "modelo_work_review"),
-        ModeloWorkspaceContributorKindV1.CALCULATION: ("application.modelo.calculation", "calculation_materialization"),
-        ModeloWorkspaceContributorKindV1.READINESS: ("application.state_projection", "modelo_readiness"),
-        ModeloWorkspaceContributorKindV1.CLOSURE: ("application.registry", "registry_closure"),
-        ModeloWorkspaceContributorKindV1.LOCALE_CATALOGUE: ("locales", "locale_catalogue"),
-        ModeloWorkspaceContributorKindV1.FIELD_MANIFEST: (
-            "application.modelo.workspace_manifest",
-            "workspace_field_manifest",
-        ),
-    }
-    actual = {
-        contract.contributor_kind: (contract.contributor.owner, contract.contributor.producer)
-        for contract in MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts
-    }
-    assert actual == expected
 
 
 def test_registry_port_captures_the_admission_specific_projection() -> None:

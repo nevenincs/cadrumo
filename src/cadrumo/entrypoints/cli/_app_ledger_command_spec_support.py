@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Final
 
+from ...application.ledger.operator_input_contracts import OperatorInputContract
 from .command_spec import (
     FLAG_VALUE,
     TEXT_VALUE,
@@ -212,6 +213,26 @@ def _required_text_argument(name: str, help_key: str) -> ArgumentSpec:
     )
 
 
+def _option_from_application_contract(contract: OperatorInputContract, help_key: str | None) -> OptionSpec:
+    """Project an application-owned operator input into CLI presentation metadata."""
+    return OptionSpec(
+        name=contract.name,
+        declarations=contract.tokens,
+        value=ValueContract(DeferredTarget(contract.value_module, contract.value_name)),
+        default=ParameterDefault.required() if contract.required else ParameterDefault.value(None),
+        help_key=TranslationKey(help_key) if help_key is not None else None,
+        metavar=None,
+        is_flag=False,
+        flag_value=None,
+        multiple=False,
+        count=False,
+        eager=False,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    )
+
+
 _EVIDENCE_TRANSACTION_ID_ARGUMENT: Final[ArgumentSpec] = ArgumentSpec(
     name="transaction_id",
     value=ValueContract(DeferredTarget("builtins", "str")),
@@ -372,6 +393,7 @@ __all__ = [
     "_OPTIONAL_YEAR_OPTION",
     "_blank_default_text_option",
     "_boolean_flag_option",
+    "_option_from_application_contract",
     "_optional_text_option",
     "_repeatable_text_option",
     "_required_text_argument",

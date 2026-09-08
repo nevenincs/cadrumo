@@ -38,16 +38,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.entrypoints.cli.errors.CliTuiNotImplementedError",
-        ErrorCode(
-            code="TUI_NOT_IMPLEMENTED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_tui_not_implemented",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.entrypoints.cli.errors.CliOutboundPayloadBoundaryError",
         ErrorCode(
             code="INTERNAL_CLI_OUTBOUND_PAYLOAD_BOUNDARY",

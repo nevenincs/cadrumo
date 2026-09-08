@@ -470,6 +470,7 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
                 condition=OperationTerminalCondition.FAILED,
                 effect=snapshot.effect,
                 settled_at=self._clock(),
+                failure_error_code=None if registered is None else registered.code,
                 diagnostic_ref=self._executor_failure_diagnostic_reference(snapshot, error),
             )
         return await self.settle(snapshot.identity.operation_id, receipt)

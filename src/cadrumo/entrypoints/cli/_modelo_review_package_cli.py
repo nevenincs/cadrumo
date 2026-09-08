@@ -68,6 +68,7 @@ from ...adapters.persistence.profile.recipient_replay_guard import (
     RecipientReplayGuardRepository,
 )
 from ...application.modelo.action_errors import CalculationRevisionNotFoundError
+from ...application.modelo.operator_inputs import ModeloReviewPackageBuildOperatorInput
 from ...application.modelo.review_package import (
     ReviewPackageError,
     ReviewPackageIntegrityError,
@@ -109,16 +110,10 @@ from ...application.modelo.review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
-from ...application.modelo.selectors import (
-    ModeloCalculationRevisionSelector,
-)
 from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
-from ...core.payment_election import PaymentElection
-from ...core.prior_domiciliation_election import PriorDomiciliationElection
-from ...core.refund_election import RefundElection
 from ._common import emit_envelope, filing_taxpayer_or_refuse
 from ._modelo_behavior_support import resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
@@ -143,27 +138,19 @@ from ._modelo_review_package_rendering import (
 
 def review_package_build(
     ctx: typer.Context,
-    work_unit_id: str | None = None,
-    modelo: str | None = None,
-    year: int | None = None,
-    period: str | None = None,
-    registry_revision: str | None = None,
-    bucket_id: str | None = None,
-    select: str = ModeloCalculationRevisionSelector.CURRENT.value,
-    output: Path | None = None,
-    revision: str | None = None,
-    actor: str | None = None,
-    refund_election: RefundElection = RefundElection.COMPENSAR,
-    payment_election: PaymentElection = PaymentElection.INGRESO,
-    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
-    notes: str = "",
+    **input_values: object,
 ) -> None:
     """Assemble a shareable review package for the resolved revision."""
     from ._modelo_cli_support import bad_parameter_from_error
 
+    operator_input = ModeloReviewPackageBuildOperatorInput.model_validate(input_values)
     workflow_state = workflow_state_repository().load()
     workflow_profile = filing_taxpayer_or_refuse(workflow_state)
-    if output is None or not str(output).strip() or str(output).strip() == ".":
+    if (
+        operator_input.output is None
+        or not str(operator_input.output).strip()
+        or str(operator_input.output).strip() == "."
+    ):
         raise typer.BadParameter(
             tr(
                 "cli.app.modelo.review_package.errors.output_required",
@@ -171,28 +158,30 @@ def review_package_build(
             )
         )
     selected_revision = resolve_exportable_revision_for_cli(
-        revision=revision,
-        work_unit_id=work_unit_id,
-        modelo=modelo,
-        year=year,
-        period=period,
-        registry_revision=registry_revision,
-        bucket_id=bucket_id,
-        select=select,
+        revision=operator_input.revision,
+        work_unit_id=operator_input.work_unit_id,
+        modelo=operator_input.modelo,
+        year=operator_input.year,
+        period=operator_input.period,
+        registry_revision=operator_input.registry_revision,
+        bucket_id=operator_input.bucket_id,
+        select=operator_input.select,
     )
     target_revision_id = selected_revision.calculation_revision_id
-    resolved_actor = actor or resolve_default_actor()
+    resolved_actor = operator_input.actor or resolve_default_actor()
     work_unit = get_work_unit(selected_revision.work_unit_id)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-draft-", dir=output.parent) as staging_name:
+    operator_input.output.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(
+        prefix="cadrumo-review-package-draft-", dir=operator_input.output.parent
+    ) as staging_name:
         draft_path = Path(staging_name) / "draft.fichero-boe"
         export_result = export_modelo_revision_for_cli(
             calculation_revision_id=target_revision_id,
             output_path=draft_path,
             actor=resolved_actor,
-            refund_election=refund_election,
-            payment_election=payment_election,
-            prior_domiciliation_election=prior_domiciliation_election,
+            refund_election=operator_input.refund_election,
+            payment_election=operator_input.payment_election,
+            prior_domiciliation_election=operator_input.prior_domiciliation_election,
             workflow_profile=workflow_profile,
         )
         from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -208,9 +197,9 @@ def review_package_build(
                 revision=revision_record,
                 work_unit=work_unit,
                 draft_bytes=draft_bytes,
-                output_path=output,
+                output_path=operator_input.output,
                 built_by=resolved_actor,
-                notes=notes,
+                notes=operator_input.notes,
             )
         except (ReviewPackageRevisionStateError, ReviewPackageError) as exc:
             raise bad_parameter_from_error(exc) from exc
@@ -220,6 +209,9 @@ def review_package_build(
         result=review_package_build_result_payload(build_result),
         lines=review_package_build_result_lines(build_result, export_bucket_event_id=export_result.bucket_event_id),
     )
+
+
+setattr(review_package_build, "__input_model__", ModeloReviewPackageBuildOperatorInput)  # noqa: B010
 
 
 def review_package_verify(ctx: typer.Context, package: Path) -> None:

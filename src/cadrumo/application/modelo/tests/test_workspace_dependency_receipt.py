@@ -24,10 +24,7 @@ from types import ModuleType
 import pytest
 
 from .. import workspace, workspace_manifest, workspace_models, workspace_producers
-from ..workspace_producers import (
-    MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1,
-    ModeloWorkspaceContributorKindV1,
-)
+from ..workspace_producers import ModeloWorkspaceContributorKindV1, ModeloWorkspaceProducerContractV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,9 +109,15 @@ def test_exactly_one_authority_defines_each_canonical_workspace_entry_point() ->
 
 
 def test_native_owner_surface_inventory_covers_every_declared_contributor_kind() -> None:
-    """The inventory proof is real introspection against the live enum, never a hand-picked count."""
-    kinds = {contract.contributor_kind for contract in MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1.contracts}
+    """Type-directed discovery proves every live contributor kind has one contract."""
+    contracts = tuple(
+        value
+        for value in vars(workspace_producers).values()
+        if isinstance(value, ModeloWorkspaceProducerContractV1)
+    )
+    kinds = {contract.contributor_kind for contract in contracts}
     assert kinds == set(ModeloWorkspaceContributorKindV1)
+    assert len(contracts) == len(kinds)
 
 
 def test_read_destinations_name_real_importable_entry_points() -> None:

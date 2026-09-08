@@ -1643,8 +1643,7 @@ cli:
         sal_reserva_not_decimal: 'Els valors --sal-* han de ser imports decimals;
           s''ha rebut: {value}. Utilitzeu el punt com a separador decimal i sense
           separador de milers, p. ex. 1234.56.'
-        select_help: Llista les unitats de treball registrades i, amb --tui, permet
-          triar-ne una per obrir-ne la revisió.
+        select_help: Llista les unitats de treball registrades.
         selector_ambiguous: 'Més d''una unitat de treball activa coincideix amb aquest
           model, any i període.
 
@@ -2360,8 +2359,6 @@ cli:
       quiet_help: Executa sense interacció usant només els valors dels flags indicats;
         els flags requerits sense valor provoquen un error. Suficient per si sol;
         combina amb --accept-defaults per omplir la resta amb els valors per defecte.
-      tui_scripted_conflict: --tui no es pot combinar amb --quiet, --accept-defaults
-        ni amb opcions de camps del perfil.
     status:
       empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME`
         per començar.
@@ -3306,7 +3303,6 @@ cli:
           només lectura.
         section_command_families: Famílies d'ordres
         section_diagnostics: Diagnòstic
-        section_frontend_options: Opcions d'interfície
         section_profile_authentication_options: Opcions d'autenticació del perfil
         section_recovery: Reprendre o recuperar
         section_start_resume: Començar o continuar
@@ -3685,9 +3681,6 @@ cli:
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
-    self_test_help: Inicia la interfície de pantalla completa sense terminal i surt,
-      per comprovar que arrenca.
-    tui_help: Sol·licita la interfície de pantalla completa per a l'ordre seleccionada.
     verbose_help: Habilita la sortida detallada.
     version_help: Mostra el número de versió i surt.
   topic:

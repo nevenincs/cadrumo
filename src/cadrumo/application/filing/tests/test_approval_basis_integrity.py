@@ -32,13 +32,15 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloApprovalBasis, ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
-from ....tests.filing import build_registry_filing_draft_from_decimals
+from ....tests.filing import (
+    build_registry_filing_draft_from_decimals,
+    empty_prior_filing_observations_fingerprint,
+    empty_profile_activity_fingerprint,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from ..draft_review import (
     approve_draft,
     compute_review_checksum,
-    empty_prior_filing_observations_fingerprint,
-    empty_profile_activity_fingerprint,
     refresh_review_status,
 )
 from ..runtime import build_runtime_schema_provider

@@ -74,8 +74,8 @@ class CommittedProfileView(BaseModel):
     custody_present: Literal[True] = True
     label_revision: int = Field(ge=1)
     label_content_digest: PrefixedContentDigest
-    label_self_digest: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
-    label_source_witness: str = Field(pattern=r"^sha256:[0-9a-f]{64}$")
+    label_self_digest: PrefixedContentDigest
+    label_source_witness: PrefixedContentDigest
     fact_summary: ProfileFactSummary = Field(default_factory=LockedProfileFactSummary)
 
     @field_validator("committed_at")

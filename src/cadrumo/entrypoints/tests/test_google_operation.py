@@ -7,6 +7,8 @@ import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from threading import Event, Thread
+from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
@@ -16,10 +18,10 @@ from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRep
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...application.export.google_operation import (
     GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
-    GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
     GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
     GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
     GoogleSheetsExportOperationRequest,
+    GoogleSheetsExportRemoteResult,
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
     build_google_sheets_export_service,
@@ -27,6 +29,7 @@ from ...application.export.google_operation import (
 from ...application.operations.capabilities import OperationRequestStoragePolicy
 from ...application.operations.composition import compose_operation_services
 from ...application.operations.models import OperationRequest
+from ...application.operations.persistence.leases import operation_conflict_scope_reference
 from ...application.operations.registry import OperationRegistry
 from ...core.operations import (
     OperationEffect,
@@ -34,15 +37,33 @@ from ...core.operations import (
     OperationTerminalCondition,
 )
 from ...tests.secure_sql import isolated_runtime_profile
+from ..cli._modelo_spreadsheet_cli import _google_operation_error, execute_google_sheets_export
+from ..cli.errors import CliRefusedBoundaryError
 from ..operation_composition import compose_operation_dependencies
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _services(root: Path):
+@pytest.mark.parametrize(
+    ("code", "message_key"),
+    (
+        ("REFUSED_GOOGLE_SHEETS_EXPORT_CAPABILITY_DISABLED", "cli.app.modelo.spreadsheet.push.capability_disabled"),
+        ("REFUSED_GOOGLE_SHEETS_EXPORT_ROOT_FOLDER_REQUIRED", "cli.app.modelo.spreadsheet.push.root_folder_required"),
+        ("REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING", "adapters.outbound.storage._factory.errors.google_client_missing"),
+        ("REFUSED_GOOGLE_SHEETS_EXPORT_TOKEN_MISSING", "adapters.outbound.storage._factory.errors.google_token_missing"),
+    ),
+)
+def test_cli_projects_registered_export_refusals_without_an_owner_allowlist(code: str, message_key: str) -> None:
+    projected = _google_operation_error(code, diagnostic_ref=None)
+    assert isinstance(projected, CliRefusedBoundaryError)
+    assert projected.translated_message == message_key
+
+
+def _services(root: Path, *, definition=None):
     """Compose the actual encrypted supervision stack around the default owner."""
-    definition = build_google_sheets_export_operation_definition()
+    definition = definition or build_google_sheets_export_operation_definition()
     journal = OperationJournalRepository(storage_root=root)
+    leases = OperationLeaseFilesystemRepository(storage_root=root)
     services = compose_operation_services(
         registry=OperationRegistry(
             definitions=(definition,),
@@ -51,7 +72,7 @@ def _services(root: Path):
         journal=journal,
         reader=journal,
         event_stream=journal,
-        leases=OperationLeaseFilesystemRepository(storage_root=root),
+        leases=leases,
         operands=operation_secure_reference_repository(),
         owner_id="1" * 64,
         lease_token_factory=lambda: "2" * 64,
@@ -60,7 +81,7 @@ def _services(root: Path):
         execution_timeout=timedelta(seconds=5),
         cleanup_timeout=timedelta(seconds=5),
     )
-    return services, journal
+    return services, journal, leases
 
 
 async def _submit_and_start(services, journal, request: OperationRequest[GoogleSheetsExportOperationRequest]):
@@ -107,7 +128,7 @@ def test_default_owner_builds_a_real_registry_plan_then_refuses_uncomposed_remot
 ) -> None:
     """No fabricated snapshot, plan, port, mock, or patched transport is used here."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        services, journal = _services(profile.storage_root)
+        services, journal, leases = _services(profile.storage_root)
         request = OperationRequest(
             definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
             subject_ref=f"profile:{profile.bucket_id}",
@@ -125,11 +146,18 @@ def test_default_owner_builds_a_real_registry_plan_then_refuses_uncomposed_remot
             asyncio.run(services.shutdown())
 
     assert terminal.terminal_condition is OperationTerminalCondition.FAILED
-    assert terminal.effect is OperationEffect.UNKNOWN
+    assert terminal.effect is OperationEffect.NONE
+    scope_ref = operation_conflict_scope_reference(
+        definition_id=terminal.identity.definition_id,
+        subject_ref=terminal.identity.subject_ref,
+    )
+    released = asyncio.run(
+        leases.inspect(scope_ref, terminal.identity.operation_id, observed_at=datetime.now(UTC))
+    )
+    assert released.current is None
     assert tuple(event.phase_code for event in replay.events if event.kind is OperationEventKind.PHASE) == (
         GOOGLE_SHEETS_EXPORT_PHASE_PREFLIGHT,
         GOOGLE_SHEETS_EXPORT_PHASE_PLAN,
-        GOOGLE_SHEETS_EXPORT_PHASE_APPLY,
     )
 
 
@@ -180,3 +208,61 @@ def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_prove
         for keyword in handoff.keywords
     )
     assert build_google_sheets_export_service().__class__.__name__ == "GoogleSheetsExportService"
+
+
+@pytest.mark.timeout(90)
+def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_path: Path, monkeypatch) -> None:
+    """The changed command reaches the real journalled supervisor and public result resolver."""
+    from ...application.export import google_operation
+    from ...application.operations import supervisor as supervisor_module
+    from .. import operation_composition
+    from ..cli import _modelo_spreadsheet_cli as cli_module
+
+    entered = Event()
+    release = Event()
+
+    class Prepared:
+        def execute(self, _plan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
+            entered.set()
+            assert release.wait(timeout=10)
+            return GoogleSheetsExportRemoteResult(
+                dry_run=dry_run,
+                root_folder_id="root",
+                value_cells_written=1,
+                formula_cells_written=2,
+                protected_ranges_written=3,
+                tab_count=4,
+            )
+
+    definition = build_google_sheets_export_operation_definition(prepare_port=lambda _profile: Prepared())
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        services, journal, leases = _services(profile.storage_root, definition=definition)
+        monkeypatch.setattr(operation_composition, "compose_operation_dependencies", lambda: services)
+        monkeypatch.setattr(cli_module, "resolve_active_profile", lambda: profile.bucket_id)
+        monkeypatch.setattr(google_operation, "resolve_active_capability", lambda _capability: SimpleNamespace(enabled=True))
+        monkeypatch.setattr(supervisor_module, "new_operation_id", lambda: "b" * 64)
+
+        outcome = []
+        command = Thread(
+            target=lambda: outcome.append(
+                execute_google_sheets_export(modelo="130", period="1T", year=2025, dry_run=True)
+            )
+        )
+        command.start()
+        assert entered.wait(timeout=80)
+        scope_ref = operation_conflict_scope_reference(
+            definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
+            subject_ref=f"profile:{profile.bucket_id}",
+        )
+        held = asyncio.run(leases.inspect(scope_ref, "b" * 64, observed_at=datetime.now(UTC)))
+        assert held.current is not None
+        release.set()
+        command.join(timeout=20)
+        assert not command.is_alive()
+        active, result = outcome[0]
+        terminal = asyncio.run(journal.load("b" * 64))
+
+    assert active == profile.bucket_id
+    assert result.period == "1T"
+    assert result.value_cells_written == 1
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED

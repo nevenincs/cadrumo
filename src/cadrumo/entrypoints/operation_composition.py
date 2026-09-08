@@ -6,6 +6,7 @@ import secrets
 from datetime import timedelta
 
 from ..adapters.outbound.google.calc_sheets_apply import apply_export_plan, preview_export_plan
+from ..adapters.outbound.storage.errors import OutboundStorageError, OutboundStorageValidationError
 from ..adapters.outbound.storage.factory import build_google_credentials, resolve_drive_root_folder_id
 from ..adapters.persistence.operations.financial_operand_custody import (
     OperationFinancialOperandCustodyFilesystemRepository,
@@ -19,9 +20,13 @@ from ..application.auth.operation_definitions import (
     build_auth_operation_registrations,
 )
 from ..application.export.google_operation import (
+    GoogleSheetsExportAuthDependencyError,
+    GoogleSheetsExportClientMissingError,
+    GoogleSheetsExportPreparedPort,
     GoogleSheetsExportRemoteResult,
     GoogleSheetsExportRootFolderRequiredError,
     GoogleSheetsExportService,
+    GoogleSheetsExportTokenMissingError,
     build_google_sheets_export_operation_definition,
     build_google_sheets_export_operation_registration,
     build_google_sheets_export_service,
@@ -58,55 +63,71 @@ _EXECUTION_TIMEOUT = timedelta(hours=1)
 _CLEANUP_TIMEOUT = timedelta(minutes=2)
 
 
-def _google_sheets_export_port(
+def _google_sheets_export_prepare_port(
     *,
     settings: Settings,
 ):
     """Compose the sole Google transport and mandatory sync-run provenance handoff."""
 
-    def export(profile_id: str, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
-        credentials = build_google_credentials(profile=profile_id)
+    def prepare(profile_id: str) -> GoogleSheetsExportPreparedPort:
         root_folder_id = resolve_drive_root_folder_id(profile=profile_id, settings=settings)
         if not root_folder_id:
             raise GoogleSheetsExportRootFolderRequiredError("Google Drive root folder is required")
-        if dry_run:
-            preview = preview_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
-            return GoogleSheetsExportRemoteResult(
-                dry_run=True,
-                root_folder_id=root_folder_id,
-                spreadsheet_exists=preview.spreadsheet_exists,
-                folder_id=preview.folder_id,
-                spreadsheet_id=preview.spreadsheet_id,
-                spreadsheet_url=preview.spreadsheet_url,
-                value_cells_written=len(plan.value_cells),
-                formula_cells_written=len(plan.formula_cells),
-                protected_ranges_written=len(plan.protected_ranges),
-                tab_count=len(TabName),
-                ranges_to_clear=preview.ranges_to_clear,
-                value_cells_changed=preview.value_cells_changed,
-                value_cells_unchanged=preview.value_cells_unchanged,
-                formula_cells_to_write=preview.formula_cells_to_write,
-            )
-        applied = export_modelo_to_sheets(
-            plan,
-            credentials=credentials,
-            root_folder_id=root_folder_id,
-            sync_run_repository=SyncRunRecordRepository(),
-            apply_export_plan=apply_export_plan,
-        )
-        return GoogleSheetsExportRemoteResult(
-            dry_run=False,
-            root_folder_id=root_folder_id,
-            folder_id=applied.folder_id,
-            spreadsheet_id=applied.spreadsheet_id,
-            spreadsheet_url=applied.spreadsheet_url,
-            value_cells_written=applied.value_cells_written,
-            formula_cells_written=applied.formula_cells_written,
-            protected_ranges_written=applied.protected_ranges_written,
-            tab_count=applied.tab_count,
-        )
+        try:
+            credentials = build_google_credentials(profile=profile_id)
+        except OutboundStorageValidationError as exc:
+            if exc.translated_message == "adapters.outbound.storage._factory.errors.google_client_missing":
+                raise GoogleSheetsExportClientMissingError(str(exc)) from exc
+            if exc.translated_message == "adapters.outbound.storage._factory.errors.google_token_missing":
+                raise GoogleSheetsExportTokenMissingError(str(exc)) from exc
+            raise
+        except OutboundStorageError as exc:
+            if exc.translated_message == "adapters.outbound.storage._factory.errors.google_auth_import_failed":
+                raise GoogleSheetsExportAuthDependencyError(str(exc)) from exc
+            raise
 
-    return export
+        class PreparedGoogleSheetsExport:
+            def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
+                if dry_run:
+                    preview = preview_export_plan(plan, credentials=credentials, root_folder_id=root_folder_id)
+                    return GoogleSheetsExportRemoteResult(
+                        dry_run=True,
+                        root_folder_id=root_folder_id,
+                        spreadsheet_exists=preview.spreadsheet_exists,
+                        folder_id=preview.folder_id,
+                        spreadsheet_id=preview.spreadsheet_id,
+                        spreadsheet_url=preview.spreadsheet_url,
+                        value_cells_written=len(plan.value_cells),
+                        formula_cells_written=len(plan.formula_cells),
+                        protected_ranges_written=len(plan.protected_ranges),
+                        tab_count=len(TabName),
+                        ranges_to_clear=preview.ranges_to_clear,
+                        value_cells_changed=preview.value_cells_changed,
+                        value_cells_unchanged=preview.value_cells_unchanged,
+                        formula_cells_to_write=preview.formula_cells_to_write,
+                    )
+                applied = export_modelo_to_sheets(
+                    plan,
+                    credentials=credentials,
+                    root_folder_id=root_folder_id,
+                    sync_run_repository=SyncRunRecordRepository(),
+                    apply_export_plan=apply_export_plan,
+                )
+                return GoogleSheetsExportRemoteResult(
+                    dry_run=False,
+                    root_folder_id=root_folder_id,
+                    folder_id=applied.folder_id,
+                    spreadsheet_id=applied.spreadsheet_id,
+                    spreadsheet_url=applied.spreadsheet_url,
+                    value_cells_written=applied.value_cells_written,
+                    formula_cells_written=applied.formula_cells_written,
+                    protected_ranges_written=applied.protected_ranges_written,
+                    tab_count=applied.tab_count,
+                )
+
+        return PreparedGoogleSheetsExport()
+
+    return prepare
 
 
 def compose_google_sheets_export_service(
@@ -115,7 +136,9 @@ def compose_google_sheets_export_service(
 ) -> GoogleSheetsExportService:
     """Return the canonical application service with its outer transport bound."""
     resolved_settings = settings or load_settings()
-    return build_google_sheets_export_service(export_port=_google_sheets_export_port(settings=resolved_settings))
+    return build_google_sheets_export_service(
+        prepare_port=_google_sheets_export_prepare_port(settings=resolved_settings)
+    )
 
 
 def build_production_operation_registry(
@@ -134,7 +157,7 @@ def build_production_operation_registry(
         google_export_definition
         if google_export_definition is not None
         else build_google_sheets_export_operation_definition(
-            export_port=_google_sheets_export_port(settings=resolved_settings)
+            prepare_port=_google_sheets_export_prepare_port(settings=resolved_settings)
         )
     )
     filed_history_definition = build_filed_history_operation_definition(

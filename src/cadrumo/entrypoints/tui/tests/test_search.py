@@ -142,6 +142,15 @@ class SearchHostApp(App[None]):
         yield Static("workbench")
 
 
+class NonSearchHostApp(App[None]):
+    """A real palette root that intentionally omits the workbench host seam."""
+
+    @override
+    def compose(self) -> ComposeResult:
+        """Mount a screen without any workbench search capability."""
+        yield Static("not a workbench")
+
+
 async def _hits(provider: WorkbenchSearchProviderV1 | WorkbenchCommandProviderV1, query: str) -> list[Hit]:
     """Collect a provider's conventional query hits."""
     hits: list[Hit] = []
@@ -200,6 +209,17 @@ async def test_search_provider_skips_nonadmitted_and_unresolved_result_routes() 
     async with app.run_test():
         provider = WorkbenchSearchProviderV1(app.screen)
         assert await _hits(provider, "declaration") == []
+
+
+@pytest.mark.asyncio
+async def test_palette_providers_fail_closed_outside_a_workbench_search_host() -> None:
+    """An accidental non-workbench mount yields no routes and no host error."""
+    app = NonSearchHostApp()
+
+    async with app.run_test():
+        assert await _hits(WorkbenchSearchProviderV1(app.screen), "declaration") == []
+        assert await _hits(WorkbenchCommandProviderV1(app.screen), "declaration") == []
+        assert await _discover(WorkbenchCommandProviderV1(app.screen)) == []
 
 
 @pytest.mark.asyncio

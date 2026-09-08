@@ -45,13 +45,14 @@ To let an AI assistant such as Claude drive Cadrumo, continue with
 aeat app overview status
 ```
 
-Add `--tui` to work in a full-screen interface instead:
+Start the full-screen workbench separately when that suits the task:
 
 ```bash
-aeat --tui
+aeat app tui
 ```
 
-Both drive the same engine and the same local records.
+The command starts the independent workbench; its navigation and availability
+are owned inside that interface. Both entrypoints use the same local records.
 
 ## Install channels
 

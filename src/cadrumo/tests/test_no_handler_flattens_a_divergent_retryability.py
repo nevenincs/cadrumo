@@ -26,9 +26,8 @@ excluded rather than assumed:
   a conflict around a bounded file read that cannot produce the subclass at all.
 - The Google-auth and outbound-storage surfaces under ``entrypoints/cli`` carry
   this shape at roughly thirty sites, and whether those codes should be
-  retryable at all is an open question for whoever owns that surface --
-  `test_custody_retryable_codes_are_declared` records the same boundary. Gating
-  them here would make this test answer a question it does not own.
+  retryable at all belongs to those surfaces. Gating them here would make this
+  test answer a question it does not own.
 """
 
 from __future__ import annotations

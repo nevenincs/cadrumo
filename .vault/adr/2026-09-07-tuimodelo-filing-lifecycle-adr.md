@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff7b5e6376b84b4b2dfde72239493c673f09c0a9ace2486be4ce42ad295bc058'
+body_hash: 'sha256:1ce0b07ec1571bdeddcc39ccba474e1ac7b56fcfe0301fdacaa852761155c630'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
@@ -147,44 +147,15 @@ surfaces call.
 
 ### Lifecycle vocabulary
 
-The relocation of history policy out of the adapter forces a reconciliation this record must
-settle before either surface renders a history, because two vocabularies describe the same
-lifecycle and neither is a subset of the other. The event taxonomy is the store's, and the
-sanitized lifecycle kind is the frontend's. Measured on the live tree, the store declares
-twenty-two modelo event types, the adapter's history handler admits eleven of them, and the
-sanitized lifecycle kind offers ten arms. Those three numbers do not reconcile by inspection, and
-the ways they fail to reconcile are each a different defect.
+The declaration workspace retains a sanitized lifecycle kind because that vocabulary is part of its typed projection contract. It does not, however, publish a production mapping from every bucket event type to that vocabulary until a live application producer actually performs that conversion. A mapping used only by completeness tests is development metastate, not product behavior.
 
-Two lifecycle arms cannot be populated at all. The kinds meaning created and renamed have exactly
-one source event each, work-unit creation and work-unit rename, and the adapter's filter excludes
-both. A frontend enum that offers an arm its only supplier can never emit is a promise the
-product cannot keep, so the relocated service admits those two events and the arms become
-reachable.
+Verification refusal remains a distinct sanitized arm so no future producer may collapse refusal into absence or success. Created and renamed remain legitimate arms of the projection contract. These semantic requirements govern any producer that supplies lifecycle facts; they do not justify a dormant event-to-kind table in the shipped package.
 
-One admitted event has no arm to land in. Verification refusal is admitted by the adapter and has
-no sanitized kind, so a surface built on the kind alone would either drop it or fold it into the
-kind meaning verified. Both are forbidden: dropping it collapses a refusal into an absence, and
-folding it reports a refused verification as a passed one. The vocabulary therefore gains a
-refusal arm rather than the surface gaining a special case.
+Events about live evidence, ledger recapture, reconciliation, wallet corrections, withholding communications, or audit bundles are not declaration lifecycle facts. That subject boundary remains decided here. It is not encoded as an `excluded` enum or a second inventory in production merely to prove that every current event name has been classified. When a live producer is introduced, it must select declaration-owned facts through its actual conversion behavior and prove the boundary with input/output tests. Until then, tests construct sanitized facts directly and exercise the workspace projection without maintaining mapped-versus-ignored rollout state.
 
-Two admitted events belong to a different subject and must not be folded. The audit-verified and
-audit-exported events concern the evidence bundle, not the declaration, and mapping them onto the
-declaration's verified and exported arms would report evidence-bundle activity as declaration
-activity. They are carried with their own subject, or they are excluded from the declaration
-history and their exclusion is stated.
+A new bucket event does not create a product obligation to extend a dormant census. It affects this surface only when a live lifecycle producer consumes it. The owning producer and its behavioral tests then decide whether and how the event becomes a declaration lifecycle fact; source code must never carry an exhaustive implemented-versus-excluded ledger for development tracking.
 
-The remaining excluded events are a scoping decision rather than a defect, and the decision is
-recorded so it is not re-litigated per surface. Live-evidence stamping, ledger-evidence
-recapture, reconciliation, the two wallet events and the four withholding-communication events
-are lifecycle facts about neighbouring subjects. They are admitted where the surface's subject is
-the work unit and its evidence, and excluded where it is the declaration's own filing lifecycle;
-either way the count admitted is derived from the taxonomy at call time rather than from a
-hand-maintained set, so a new event type cannot be silently dropped by a stale literal.
-
-The state axes stay separate from both. The work-unit state and the calculation-revision state
-are closed domain enumerations in the product's Spanish domain language, and the lifecycle kind
-is an event vocabulary. A state is what a thing currently is; a kind is what happened to it. This
-record does not merge them, and no surface may derive one from the other by string mapping.
+The state axes stay separate from the lifecycle vocabulary. Work-unit state and calculation-revision state describe what a thing currently is; lifecycle kind describes a supplied historical fact. No surface may derive one from another by string mapping.
 
 ## Rationale
 

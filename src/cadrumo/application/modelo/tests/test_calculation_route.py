@@ -7,11 +7,9 @@ from dataclasses import replace
 import pytest
 
 from ....core.aggregation import BindingSourceKind
-from ....core.calculation_route import ModeloCalculationRouteId
 from ...calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummarySourceResolver
 from ..calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
-    CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
     DESIGN_CONSTANT_RESOLVER_ID,
     MANUAL_INPUT_RESOLVER_ID,
@@ -33,7 +31,6 @@ def test_production_route_derives_its_unique_routable_sources_from_executable_ow
 
 
 def test_route_reads_class_level_identity_and_declares_every_stage_and_manual_owner() -> None:
-    assert CALCULATION_ROUTE_ID is ModeloCalculationRouteId.MODELO_WORK_CALCULATION
     class_owned = tuple(row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if row.resolver_type is not None)
     assert all(row.resolver_id == row.resolver_type.resolver_id for row in class_owned)
     assert all(row.owned_sources == row.resolver_type.owned_sources for row in class_owned)

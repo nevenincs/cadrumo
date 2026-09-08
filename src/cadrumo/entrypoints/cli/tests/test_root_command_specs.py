@@ -4,7 +4,9 @@ import ast
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from .. import app
 from .._command_runtime import resolve_deferred_target
 from .._root_command_specs import ROOT_COMMAND_SPECS
 from ..command_spec import CommandSpecGraph
@@ -18,6 +20,7 @@ def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> No
     assert tuple(node.path for node in graph.nodes()) == (
         ("aeat",),
         ("aeat", "app"),
+        ("aeat", "app", "tui"),
         ("aeat", "config"),
     )
     root = graph.by_key()["root"]
@@ -30,7 +33,6 @@ def test_root_specs_own_the_executable_namespace_and_parameter_contracts() -> No
         "detail",
         "help_",
         "format_",
-        "tui",
         "quiet",
         "verbose",
         "debug",
@@ -52,6 +54,7 @@ def test_root_executable_targets_are_public_behavior_only_functions() -> None:
     } == {
         "app_root",
         "config_root",
+        "launch_tui",
         "root_command",
     }
     for spec in executable:
@@ -69,3 +72,17 @@ def test_root_executable_targets_are_public_behavior_only_functions() -> None:
     assert functions.keys() == {"app_root", "root_command"}
     assert all(not node.decorator_list for node in functions.values())
     assert all("typer.Option" not in ast.unparse(node.args) for node in functions.values())
+
+
+def test_the_live_parser_exposes_only_the_app_tui_launch_seam() -> None:
+    """The TUI launch is a leaf under ``app``, never a root request modifier."""
+    runner = CliRunner()
+
+    app_help = runner.invoke(app, ["app", "--help"])
+    launcher_help = runner.invoke(app, ["app", "tui", "--help"])
+    retired_request = runner.invoke(app, ["--tui"])
+
+    assert app_help.exit_code == 0, app_help.output
+    assert launcher_help.exit_code == 0, launcher_help.output
+    assert retired_request.exit_code != 0
+    assert "--tui" in retired_request.output

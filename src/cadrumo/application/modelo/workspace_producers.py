@@ -6,7 +6,7 @@ from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol, Self, TypedDict, runtime_checkable
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.hashing import content_hash_hex
@@ -242,61 +242,6 @@ class ModeloWorkspaceAtomicProjectionPortV1[ProjectionT: BaseModel](Protocol):
         ...
 
 
-class ModeloWorkspaceProducerContractInventoryV1(_WorkspaceProducerModel):
-    """Generated fixed point over the complete, current Workspace contributor denominator."""
-
-    inventory_version: Literal[1] = 1
-    contracts: Annotated[
-        tuple[ModeloWorkspaceProducerContractV1, ...],
-        Field(
-            min_length=len(ModeloWorkspaceContributorKindV1),
-            max_length=len(ModeloWorkspaceContributorKindV1),
-        ),
-    ]
-    inventory_digest: ContentDigest
-
-    @field_validator("contracts")
-    @classmethod
-    def _require_sorted_unique_contributor_contracts(
-        cls,
-        value: tuple[ModeloWorkspaceProducerContractV1, ...],
-    ) -> tuple[ModeloWorkspaceProducerContractV1, ...]:
-        if any(contract.contract_digest != _producer_contract_digest(contract) for contract in value):
-            raise ValueError("workspace producer inventory cannot include a stale contract")
-        identities = tuple((contract.contributor.owner, contract.contributor.producer) for contract in value)
-        if len(set(identities)) != len(identities):
-            raise ValueError("workspace producer contracts must not duplicate a contributor identity")
-        kinds = tuple(contract.contributor_kind for contract in value)
-        if set(kinds) != set(ModeloWorkspaceContributorKindV1) or len(set(kinds)) != len(kinds):
-            raise ValueError("workspace producer contracts must classify every contributor kind exactly once")
-        if identities != tuple(sorted(identities)):
-            raise ValueError("workspace producer contracts must be sorted by owner and producer")
-        return value
-
-    @model_validator(mode="after")
-    def _require_reproducible_inventory_digest(self) -> ModeloWorkspaceProducerContractInventoryV1:
-        if self.inventory_digest != _producer_contract_inventory_digest(self.contracts):
-            raise ValueError("workspace producer contract inventory digest does not reproduce")
-        return self
-
-    @classmethod
-    def generate(cls, contracts: tuple[ModeloWorkspaceProducerContractV1, ...]) -> Self:
-        """Generate the deterministic inventory from the contributors composed on this tree."""
-        canonical = tuple(
-            sorted(contracts, key=lambda contract: (contract.contributor.owner, contract.contributor.producer))
-        )
-        return cls(
-            contracts=canonical,
-            inventory_digest=_producer_contract_inventory_digest(canonical),
-        )
-
-    def require_current(self, contracts: tuple[ModeloWorkspaceProducerContractV1, ...]) -> Self:
-        """Refuse a missing, duplicate, unclassified, or stale contributor contract set."""
-        if self != self.generate(contracts):
-            raise ValueError("workspace producer contract inventory is stale")
-        return self
-
-
 def _producer_contract_digest(contract: ModeloWorkspaceProducerContractV1) -> ContentDigest:
     return content_hash_hex(
         {
@@ -309,17 +254,6 @@ def _producer_contract_digest(contract: ModeloWorkspaceProducerContractV1) -> Co
             "epoch_kind": contract.epoch_kind.value,
             "epoch_schema_version": contract.epoch_schema_version,
             "atomic_read_operation": contract.atomic_read_operation,
-        }
-    )
-
-
-def _producer_contract_inventory_digest(
-    contracts: tuple[ModeloWorkspaceProducerContractV1, ...],
-) -> ContentDigest:
-    return content_hash_hex(
-        {
-            "inventory_version": 1,
-            "contracts": [contract.model_dump(mode="json") for contract in contracts],
         }
     )
 
@@ -489,20 +423,6 @@ MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1 = _declared_contract(
     projection_contract_version=1,
     projection_type=ModeloWorkspaceFieldManifestV1,
 )
-
-MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1 = ModeloWorkspaceProducerContractInventoryV1.generate(
-    (
-        MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
-        MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
-        MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1,
-        MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1,
-        MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
-        MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1,
-        MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1,
-        MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1,
-    ),
-)
-
 
 class ModeloWorkspaceRegistryPortV1:
     """Application-owned port realization delegating to the registry authority."""
@@ -941,7 +861,6 @@ __all__ = [
     "MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_FIELD_MANIFEST_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1",
-    "MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1",
     "MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1",
@@ -957,7 +876,6 @@ __all__ = [
     "ModeloWorkspaceFieldManifestPortV1",
     "ModeloWorkspaceLocaleCataloguePortV1",
     "ModeloWorkspaceLocaleCatalogueProjectionV1",
-    "ModeloWorkspaceProducerContractInventoryV1",
     "ModeloWorkspaceProducerContractV1",
     "ModeloWorkspaceProducerStampV1",
     "ModeloWorkspaceReadinessPortV1",

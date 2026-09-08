@@ -14,7 +14,7 @@ related:
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
 modified: '2026-09-08'
 body_schema: body-v2
-body_hash: 'sha256:e48726caccbf1e28cb20d6040accde8b5fbac4a46141476f57a0a5732c1e54eb'
+body_hash: 'sha256:164b8eec8023e754f4c55fb06342b0b36c6a55b7800a7da434cd80960b1ff45e'
 ---
 
 # `tui-entrypoint-separation` plan
@@ -39,7 +39,7 @@ Remove the global request, command capability model, and every CLI routing branc
 - [ ] `P01.S01` - Remove TuiCapability and the per-command capability field from the canonical command specification; `src/cadrumo/entrypoints/cli/command_spec.py`.
 - [ ] `P01.S02` - Remove capability arguments and values from the CLI command-spec declaration families; `src/cadrumo/entrypoints/cli command-spec modules`.
 - [ ] `P01.S03` - Delete the global TUI request state, enforcement policy, and command-runtime interception; `src/cadrumo/entrypoints/cli root runtime`.
-- [ ] `P01.S04` - Remove root help and locale keys that advertise the retired global TUI option; `src/cadrumo/entrypoints/cli root presentation`.
+- [ ] `P01.S04` - Remove root help, the retired CLI-TUI refusal registry row, and the associated CLI/error locale keys; `src/cadrumo/entrypoints/cli root presentation`, `src/cadrumo/core/errors/registry`, and `src/cadrumo/locales`.
 
 ### Phase `P02` - install the opaque root launcher
 
@@ -49,7 +49,7 @@ Expose aeat app tui as the sole launch seam and retire the CLI destination proto
 - [ ] `P02.S06` - Reduce the session bridge to fixed child-process launch and exit-status propagation; `src/cadrumo/entrypoints/cli/_tui_session.py`.
 - [ ] `P02.S07` - Remove Modelo selection and review branches that route CLI work into TUI destinations; `src/cadrumo/entrypoints/cli Modelo work handlers`.
 - [ ] `P02.S08` - Remove profile-manager dispatch that selects a TUI flow from CLI invocation state; `src/cadrumo/entrypoints/cli/config/_manager_dispatch.py`.
-- [ ] `P02.S09` - Retire the shared CLI-to-TUI destination outcome protocol after confirming no non-CLI consumer remains; `src/cadrumo/entrypoints/full_screen_session_protocol.py`.
+- [ ] `P02.S09` - Retire the shared inter-entrypoint destination protocol and destination-only TUI execution after confirming no consumer remains; `src/cadrumo/entrypoints/full_screen_session_protocol.py` and `src/cadrumo/entrypoints/tui/destination_session.py`.
 
 ### Phase `P03` - prove and publish the separated boundary
 

@@ -649,8 +649,8 @@ llm:
     consent:
       binding_mismatch: 'Rebutjat: l''autorització per a la lectura fora de l''equip
         es va atorgar per a un altre document. El consentiment queda vinculat als
-        bytes exactes per als quals es va concedir, de manera que no es pot
-        reutilitzar per enviar aquest.'
+        bytes exactes per als quals es va concedir, de manera que no es pot reutilitzar
+        per enviar aquest.'
       dispatch_refused: 'Rebutjat: aquesta sol·licitud llegeix un document del contribuent
         i l''enviaria al proveïdor extern %{provider} sense una autorització de consentiment
         per a aquesta invocació.'
@@ -729,15 +729,20 @@ operation:
       receipt_refusal: Rebuig
       receipt_result: Resultat
     refusal:
-      cancellation_unavailable: La cancel·lació no està disponible ara mateix. Torna-ho a provar d'aquí a poc.
+      cancellation_unavailable: La cancel·lació no està disponible ara mateix. Torna-ho
+        a provar d'aquí a poc.
       cancellation_unsupported: Aquesta operació no es pot cancel·lar un cop iniciada.
       operation_terminal: L'operació ja ha acabat, així que no hi ha res a cancel·lar.
-      response_authority_unavailable: No s'ha pogut registrar la resposta ara mateix. Torna-ho a provar d'aquí a poc.
+      response_authority_unavailable: No s'ha pogut registrar la resposta ara mateix.
+        Torna-ho a provar d'aquí a poc.
       response_not_pending: Aquesta operació no espera cap resposta.
-      stale_operation_revision: L'operació ha avançat mentre decidies. Espera l'actualització i torna-ho a provar.
+      stale_operation_revision: L'operació ha avançat mentre decidies. Espera l'actualització
+        i torna-ho a provar.
       unknown_operation: El backend ja no coneix aquesta operació.
-      unsupported_cancellation_version: Aquesta versió no pot cancel·lar aquesta operació. Actualitza Cadrumo.
-      unsupported_response_control_version: Aquesta versió no pot respondre a aquesta operació. Actualitza Cadrumo.
+      unsupported_cancellation_version: Aquesta versió no pot cancel·lar aquesta operació.
+        Actualitza Cadrumo.
+      unsupported_response_control_version: Aquesta versió no pot respondre a aquesta
+        operació. Actualitza Cadrumo.
     status:
       running: En curs
 overview:
@@ -1517,6 +1522,8 @@ tui:
       profile: Perfil
       sign_out: Tanca la sessió
       unavailable: Els controls del compte no estan disponibles en aquesta sessió.
+    navigation:
+      unavailable: No es pot obrir l'àrea sol·licitada en aquesta sessió.
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
     title: 'Cadrumo: sessió de terminal'
   search:

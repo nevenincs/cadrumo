@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-registry-api-gate'
 date: '2026-08-24'
-modified: '2026-08-28'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:f30d0855abd43114c8c76b296706714fb3fa16539abc7693fa55d644bc2dc777'
+body_hash: 'sha256:43653f168c1d1e6b46f3d39b2f6d5f9b6510d235e9dffd539896a905bd7074d8'
 related:
   - '[[2026-08-24-tui-registry-api-gate-research]]'
   - '[[2026-08-24-tui-registry-api-gate-architecture-reconciliation-audit]]'
@@ -1205,3 +1205,13 @@ identifier may appear under `src/`, including in the conformance suite. C2
 still authorizes only complex read-only Workspace consumers and still does not
 create `modelo.edit`, authorize a command, or open verify/file/export/
 amendment/lifecycle/secret/recovery interactions by implication.
+
+### S213: producer contracts are runtime facts; their aggregate inventory is development metastate
+
+The eight application-owned producer contracts and their owner-specific stamps remain the live Workspace consistency boundary. Each port still returns its own contract, every captured projection still validates its stamp against that contract, and the contributor-kind enum remains the typed denominator of a successful Workspace read.
+
+`ModeloWorkspaceProducerContractInventoryV1`, its generated singleton, and the inventory digest are retired. They were not consumed by assembly, capture, revalidation, or any product reader; they existed solely so tests and a development receipt could classify the current set as complete, stale, missing, or duplicated. Those are development metaconditions and do not belong in the shipped application model.
+
+The fixed-point conformance proof now discovers the module's live `ModeloWorkspaceProducerContractV1` instances by their semantic type, compares their contributor kinds with the typed enum, and refuses duplicate kinds. It does not maintain a second tuple of contracts, a list of constant names, or a production digest over that list. The execution record may cite this source-tree conformance result, but no runtime schema or receipt carries an inventory version or inventory artifact digest.
+
+This amendment replaces the earlier requirements that `ModeloWorkspaceProducerContractInventoryV1` inventory the registrations, that producer-contract inventory digests change with epoch schema changes, and that the C2 receipt record an inventory schema version or artifact digest. Individual producer contract digests continue to change when their own declared contract changes.

@@ -729,13 +729,6 @@ class SchemaState(Enum):
     UNAVAILABLE = "unavailable"
 
 
-class TuiCapability(Enum):
-    """Closed TUI routing posture for one command-graph node."""
-
-    NOT_IMPLEMENTED = "not-implemented"
-    AVAILABLE = "available"
-
-
 @dataclass(frozen=True, slots=True)
 class ResultSchemaSpec:
     """Explicit result-schema target or intentional absence/unavailability."""
@@ -784,7 +777,6 @@ class CommandSpec:
     profile_authentication: ProfileAuthenticationPosture = ProfileAuthenticationPosture.NOT_APPLICABLE
     profile_target_parameter: str | None = None
     allow_unregistered_profile_diagnostic: bool = False
-    tui_capability: TuiCapability = TuiCapability.NOT_IMPLEMENTED
 
     def __post_init__(self) -> None:
         """Validate the command node's identity, hierarchy, and dispatch invariants, or raise."""
@@ -1033,6 +1025,5 @@ __all__ = [
     "ResultSchemaSpec",
     "SchemaState",
     "TranslationKey",
-    "TuiCapability",
     "ValueContract",
 ]

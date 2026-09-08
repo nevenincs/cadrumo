@@ -48,9 +48,6 @@ from ...core.tabular import (
 from ...core.workbook import first_formula_cell_column
 from .action_errors import ModeloLocalObservationError
 
-CSV_EXTENSIONS: Final[frozenset[str]] = frozenset({".csv", ".txt"})
-"""Extensions routed to the CSV reader; anything else is routed to XLSX."""
-
 _CASILLA_CODE_HEADER_ALIASES: Final[frozenset[str]] = frozenset(
     {"casilla_code", "casilla", "casilla_id", "code", "id", "box", "casilla.id"},
 )
@@ -310,7 +307,6 @@ def _read_xlsx_rows(path: Path) -> list[list[str]]:
 
 
 __all__ = [
-    "CSV_EXTENSIONS",
     "parse_casilla_lexical_spreadsheet",
     "parse_casilla_value_spreadsheet",
 ]

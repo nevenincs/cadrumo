@@ -10,7 +10,7 @@ navigate and cannot invoke a business action.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import Final, Protocol, override, runtime_checkable
+from typing import ClassVar, Final, Protocol, override, runtime_checkable
 
 from textual.command import DiscoveryHit, Hit, Hits, Provider
 
@@ -68,12 +68,25 @@ class TuiSearchHostV1(Protocol):
 class TuiSearchHostError(RuntimeError):
     """Raised when a palette provider is mounted outside the workbench root."""
 
+    __bare_base_rationale__: ClassVar[str] = (
+        "entrypoint-local search-host admission signal; `_host_or_none` catches it at the "
+        "command-palette provider boundary and withholds entries outside `TuiSearchHostV1`"
+    )
+
 
 def _require_host(app: object) -> TuiSearchHostV1:
     """Return the root host or fail before reading search state."""
     if not isinstance(app, TuiSearchHostV1):
         raise TuiSearchHostError("the workbench palette requires a TuiSearchHostV1 root")
     return app
+
+
+def _host_or_none(app: object) -> TuiSearchHostV1 | None:
+    """Return a usable palette host, withholding entries outside the workbench."""
+    try:
+        return _require_host(app)
+    except TuiSearchHostError:
+        return None
 
 
 _RESULT_LABEL_LOCALE_KEYS: Final[Mapping[WorkbenchSearchLabelKey, str]] = {
@@ -216,7 +229,9 @@ class WorkbenchSearchProviderV1(Provider):
             request = WorkbenchSearchRequest(query=query)
         except ValueError:
             return
-        host = _require_host(self.app)
+        host = _host_or_none(self.app)
+        if host is None:
+            return
         if host.workbench_search_refusal_code is not None:
             # A refused search is a state the root already computed and named.
             # Dereferencing the service here would raise on the FIRST-RUN case
@@ -256,12 +271,15 @@ class WorkbenchCommandProviderV1(Provider):
     async def search(self, query: str) -> Hits:
         """Fuzzy-match the current catalogue's admitted routes and actions."""
         matcher = self.matcher(query)
-        for text, target in _command_entries(_require_host(self.app).destination_catalogue):
+        host = _host_or_none(self.app)
+        if host is None:
+            return
+        for text, target in _command_entries(host.destination_catalogue):
             if (score := matcher.match(text)) > 0:
                 yield Hit(
                     score=score,
                     match_display=matcher.highlight(text),
-                    command=_navigation_command(_require_host(self.app).navigate_to, target),
+                    command=_navigation_command(host.navigate_to, target),
                     text=text,
                     help=_destination_text(target.destination),
                 )
@@ -269,7 +287,9 @@ class WorkbenchCommandProviderV1(Provider):
     @override
     async def discover(self) -> Hits:
         """List the current admitted destinations and actions before typing."""
-        host = _require_host(self.app)
+        host = _host_or_none(self.app)
+        if host is None:
+            return
         for text, target in _command_entries(host.destination_catalogue):
             yield DiscoveryHit(
                 display=text,

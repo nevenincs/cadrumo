@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Literal
 
 from ...core.aggregation import BindingSourceKind
-from ...core.calculation_route import ModeloCalculationRouteId
 from ..aggregation import (
     AtribucionMemberSourceResolver,
     ForeignAssetsAggregationSourceResolver,
@@ -35,7 +34,6 @@ from .borrador_binding import Modelo100BorradorSourceResolver
 
 type CalculationRouteResolverStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh"]
 type CalculationRouteStage = CalculationRouteResolverStage | Literal["manual"]
-CALCULATION_ROUTE_ID = ModeloCalculationRouteId.MODELO_WORK_CALCULATION
 MANUAL_INPUT_RESOLVER_ID = "manual_input"
 DESIGN_CONSTANT_RESOLVER_ID = "design_constant"
 
@@ -230,7 +228,6 @@ def require_calculation_route_resolver(stage: CalculationRouteStage, resolver: o
 
 __all__ = [
     "CALCULATION_ROUTE_ENROLLED_SOURCES",
-    "CALCULATION_ROUTE_ID",
     "CALCULATION_ROUTE_PRE_MESH_SOURCES",
     "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
     "DESIGN_CONSTANT_RESOLVER_ID",

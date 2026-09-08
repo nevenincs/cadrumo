@@ -11,12 +11,13 @@ import pytest
 from pydantic import ValidationError
 
 from ...core.period import Period
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
-from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ...domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from .. import workbench_generation as generation_module
-from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
+from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..ledger.workspace import (
     LedgerWorkspaceArea,
     LedgerWorkspaceAreaStateV1,
@@ -27,6 +28,7 @@ from ..ledger.workspace import (
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceProjectionV1
+from ..operations.registry import OperationPublicContractSetV1
 from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..overview.home import (
     HomeAccountSession,
@@ -38,6 +40,7 @@ from ..overview.home import (
 )
 from ..overview.tests.calendar_test_support import modelo_record
 from ..search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
+from ..user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
 from ..workbench_generation import (
     CallableWorkbenchGenerationReadDoorV1,
     InstalledWorkbenchGenerationProviderV1,
@@ -204,6 +207,169 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
     assert generation.aeat_sync.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.modelo.availability is WorkbenchGenerationAvailability.UNAVAILABLE
     assert generation.search.availability is WorkbenchGenerationAvailability.UNAVAILABLE
+
+
+def test_secure_profile_provider_contains_rejected_declarations_projection() -> None:
+    """A contradictory declaration catalogue refuses only its workspace source."""
+    period = Period.from_year_and_code(2026, "1T")
+    revision_id = bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id
+    unit = WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_PROFILE_ID,
+        modelo="130",
+        filing_year=2026,
+        period=period,
+        revision_id=revision_id,
+        name="declaration",
+        created_at=_NOW,
+        updated_at=_NOW,
+    )
+    duplicate_address = unit.model_copy(update={"work_unit_id": "a" * 64})
+    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    work_units = _Repository(
+        WorkUnitCatalogue.model_construct(
+            work_units={unit.work_unit_id: unit, duplicate_address.work_unit_id: duplicate_address}
+        )
+    )
+    revisions = _Repository(CalculationRevisionCatalogue())
+    filings = _Repository(ModeloRecordCatalogue())
+    door = SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        profile_repository=cast(Any, profile),
+        work_unit_repository=cast(Any, work_units),
+        calculation_repository=cast(Any, revisions),
+        filing_repository=cast(Any, filings),
+        clock=lambda: _NOW,
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="Perfil local",
+            expires_at=_NOW,
+        ),
+    )
+
+    generation = InstalledWorkbenchGenerationProviderV1(door)()
+
+    assert generation.home.projection is not None
+    assert generation.declarations.projection is None
+    assert generation.declarations.availability is WorkbenchGenerationAvailability.UNAVAILABLE
+    assert generation.declarations.refusal == "workbench.declarations.snapshot_projector_unavailable"
+    assert generation.declarations_admission.state is WorkbenchDestinationAdmissionState.UNAVAILABLE
+
+
+def test_secure_profile_aeat_sync_reader_contains_a_validation_error() -> None:
+    """A malformed AEAT Sync row refuses its source with the projector reason."""
+    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.transactions.models import TransactionCatalogue
+    from ..aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
+
+    profile = _Repository(
+        UserProfileRecord(
+            profile_id=_PROFILE_ID,
+            setup_state=ProfileSetupState.INCOMPLETE,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="00000000T"),
+                UserProfileFact(path="contact.fiscal_address", value="x" * 257),
+            ),
+        )
+    )
+    work_units = _Repository(WorkUnitCatalogue())
+    revisions = _Repository(CalculationRevisionCatalogue())
+    filings = _Repository(ModeloRecordCatalogue())
+    contracts = OperationPublicContractSetV1.build(
+        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+    )
+    with pytest.raises(ValidationError):
+        read_local_aeat_sync_workspace_projection(
+            bucket_id=_PROFILE_ID,
+            subject_key="00000000T",
+            observed_at=_NOW,
+            filings=(),
+            operation_contracts=contracts,
+            censo_values={"contact.fiscal_address": "x" * 257},
+        )
+    door = SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        profile_repository=cast(Any, profile),
+        work_unit_repository=cast(Any, work_units),
+        calculation_repository=cast(Any, revisions),
+        filing_repository=cast(Any, filings),
+        clock=lambda: _NOW,
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="Perfil local",
+            expires_at=_NOW,
+        ),
+        operation_contracts=contracts,
+        transaction_repository=cast(Any, _StableStore(TransactionCatalogue())),
+        invoice_repository=cast(Any, _StableStore(InvoiceCatalogue())),
+        modelo_projection_reader=lambda _unit: pytest.fail("the empty catalogue must not invoke the Modelo reader"),
+    )
+
+    generation = InstalledWorkbenchGenerationProviderV1(door)()
+
+    assert generation.home.projection is not None
+    assert generation.home.availability is WorkbenchGenerationAvailability.AVAILABLE
+    assert generation.aeat_sync.projection is None
+    assert generation.aeat_sync.availability is WorkbenchGenerationAvailability.UNAVAILABLE
+    assert generation.aeat_sync.refusal == "workbench.aeat_sync.snapshot_projector_unavailable"
+    assert generation.aeat_sync_admission.state is WorkbenchDestinationAdmissionState.UNAVAILABLE
+    assert generation.aeat_sync_admission.reason_code == generation.aeat_sync.refusal
+    assert generation.search.projection is None
+    assert generation.search.availability is WorkbenchGenerationAvailability.UNAVAILABLE
+    assert generation.search.refusal == generation.aeat_sync.refusal
+
+
+def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error() -> None:
+    """A malformed subject reaches the real projector and is contained at the door."""
+    from ..aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
+
+    profile = _Repository(UserProfileRecord(profile_id=_PROFILE_ID, setup_state=ProfileSetupState.INCOMPLETE))
+    work_units = _Repository(WorkUnitCatalogue())
+    revisions = _Repository(CalculationRevisionCatalogue())
+    filings = _Repository(ModeloRecordCatalogue())
+    contracts = OperationPublicContractSetV1.build(
+        (build_censal_operation_registration(CENSAL_OPERATION_DEFINITION).contract,)
+    )
+    with pytest.raises(AeatSyncWorkspaceProjectionError, match="subject key cannot be blank"):
+        read_local_aeat_sync_workspace_projection(
+            bucket_id=_PROFILE_ID,
+            subject_key=" ",
+            observed_at=_NOW,
+            filings=(),
+            operation_contracts=contracts,
+            censo_values={},
+        )
+    door = SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        profile_repository=cast(Any, profile),
+        work_unit_repository=cast(Any, work_units),
+        calculation_repository=cast(Any, revisions),
+        filing_repository=cast(Any, filings),
+        clock=lambda: _NOW,
+        account_session_reader=lambda: HomeAccountSession(
+            posture=HomeSessionPosture.ACTIVE,
+            profile_label="Perfil local",
+            expires_at=_NOW,
+        ),
+        operation_contracts=contracts,
+    )
+
+    projection, refusal = door._read_aeat_sync(
+        " ",
+        observed_at=_NOW,
+        filings=(),
+        custody_count=None,
+        censo_values={},
+    )
+
+    assert projection is None
+    assert refusal == "workbench.aeat_sync.snapshot_projector_unavailable"
 
 
 def test_secure_profile_provider_refuses_a_generation_changed_during_capture(

@@ -26,9 +26,9 @@ from pydantic import TypeAdapter, ValidationError
 
 from ..application.filing.draft_construction import build_draft
 from ..application.filing.draft_review import (
+    _prior_filing_observations_fingerprint,
+    _profile_activity_fingerprint,
     approve_draft,
-    empty_prior_filing_observations_fingerprint,
-    empty_profile_activity_fingerprint,
 )
 from ..application.filing.runtime import build_runtime_schema_provider
 from ..core.casilla_id import CasillaId, validated_casilla_id
@@ -43,6 +43,16 @@ from ..domain.transactions.models import TransactionCatalogue
 
 _REGISTRY_TEST_BUCKET_ID = "1465aefb-768a-4344-a564-1f0737966d59"  # was 'registry-test'
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
+
+
+def empty_prior_filing_observations_fingerprint() -> str:
+    """Return the production digest for an empty prior-observation set."""
+    return _prior_filing_observations_fingerprint(())
+
+
+def empty_profile_activity_fingerprint() -> str:
+    """Return the production digest for an absent taxpayer profile."""
+    return _profile_activity_fingerprint(None)
 
 
 @dataclass(frozen=True, slots=True)

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from typing import ClassVar, cast
 
 import pytest
+from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.binding import Binding
 from textual.screen import Screen
 from textual.widgets import Button, Static
@@ -16,6 +17,7 @@ from ....application.overview.home import HomeProjectionV1, HomeSessionPosture
 from ....application.search.workbench import WorkbenchDestinationAdmissionState, WorkbenchSearchService
 from ....application.user_profile.login_session import ProfileLoginOutcome
 from ....application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
+from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
 from ..account import (
     AccountFactoriesV1,
@@ -24,12 +26,12 @@ from ..account import (
     AccountSessionExpiredError,
 )
 from ..app import CadrumoTuiApp
-from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ..home import HomeScreen
 from ..navigation import (
     TUI_DESTINATION_CATALOGUE,
     TuiDestinationAdmissionV1,
     TuiDestinationCatalogueV1,
+    TuiDestinationIdV1,
     TuiFocusIdentityV1,
     TuiNavigationTargetV1,
     TuiScreenContextV1,
@@ -55,7 +57,13 @@ class MarkerScreen(Screen[None]):
         self.dismiss(None)
 
 
-def _catalogue(contexts: list[TuiScreenContextV1]) -> TuiDestinationCatalogueV1:
+def _catalogue(
+    contexts: list[TuiScreenContextV1],
+    *,
+    destination: TuiDestinationIdV1 = "workbench.ledger",
+    destination_state: WorkbenchDestinationAdmissionState = WorkbenchDestinationAdmissionState.AVAILABLE,
+    destination_factory: TuiScreenFactoryV1 | None = None,
+) -> TuiDestinationCatalogueV1:
     """Build the complete admitted catalogue around one observable factory seam."""
 
     def factory(context: TuiScreenContextV1) -> Screen[None]:
@@ -69,10 +77,92 @@ def _catalogue(contexts: list[TuiScreenContextV1]) -> TuiDestinationCatalogueV1:
         )
         for descriptor in TUI_DESTINATION_CATALOGUE
     }
+    if destination_state is not WorkbenchDestinationAdmissionState.AVAILABLE:
+        admissions[destination] = TuiDestinationAdmissionV1(
+            destination=destination,
+            state=destination_state,
+            reason_code="workbench.destination.unavailable",
+        )
     factories: dict[str, TuiScreenFactoryV1] = {
         descriptor.destination: factory for descriptor in TUI_DESTINATION_CATALOGUE
     }
+    if destination_state is WorkbenchDestinationAdmissionState.AVAILABLE and destination_factory is not None:
+        factories[destination] = destination_factory
+    elif destination_state is not WorkbenchDestinationAdmissionState.AVAILABLE:
+        del factories[destination]
     return build_destination_catalogue(admissions=admissions, factories=factories)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "destination_state",
+    [WorkbenchDestinationAdmissionState.LOCKED, WorkbenchDestinationAdmissionState.STALE],
+)
+async def test_navigate_to_refuses_unavailable_destination_without_replacing_home(
+    destination_state: WorkbenchDestinationAdmissionState,
+) -> None:
+    """A route revoked after composition leaves Home mounted and reports the shared refusal."""
+    target = TuiNavigationTargetV1(
+        destination="workbench.ledger",
+        focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
+    )
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue([], destination_state=destination_state),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=_account_factories(HandoverScreen()),
+    )
+
+    async with app.run_test() as pilot:
+        home = app.screen
+
+        app.navigate_to(target)
+        await pilot.pause()
+
+        assert app.screen is home
+        assert len(app.screen_stack) == 2
+        assert app._active_target is None
+        assert app.is_running
+        assert str(app.query_one("#root-navigation-refusal", Static).render()) == tr("tui.root.navigation.unavailable")
+        assert str(app.query_one("#root-account-refusal", Static).render()) == ""
+
+
+@pytest.mark.asyncio
+async def test_navigate_to_refuses_a_factory_invocation_failure_without_replacing_home() -> None:
+    """A broken injected factory is contained at the root boundary, after real invocation."""
+    seen: list[TuiScreenContextV1] = []
+
+    def broken_factory(context: TuiScreenContextV1) -> Screen[None]:
+        seen.append(context)
+        raise TypeError("factory implementation failure")
+
+    target = TuiNavigationTargetV1(
+        destination="workbench.ledger",
+        focus=TuiFocusIdentityV1(destination="workbench.ledger", semantic_key="ledger.entry"),
+    )
+    app = CadrumoTuiApp(
+        services=cast(OperationComposedServices, object()),
+        destination_catalogue=_catalogue(
+            [],
+            destination_factory=broken_factory,
+        ),
+        refresh_home=lambda: build_home_projection_fixture(HomeFixtureScenario.READY),
+        account_factories=_account_factories(HandoverScreen()),
+    )
+
+    async with app.run_test() as pilot:
+        home = app.screen
+
+        app.navigate_to(target)
+        await pilot.pause()
+
+        assert seen == [TuiScreenContextV1(destination="workbench.ledger", focus=target.focus)]
+        assert app.screen is home
+        assert len(app.screen_stack) == 2
+        assert app._active_target is None
+        assert app.is_running
+        assert str(app.query_one("#root-navigation-refusal", Static).render()) == tr("tui.root.navigation.unavailable")
+        assert str(app.query_one("#root-account-refusal", Static).render()) == ""
 
 
 @pytest.mark.asyncio

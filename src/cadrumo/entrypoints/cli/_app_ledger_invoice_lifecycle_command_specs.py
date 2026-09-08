@@ -6,12 +6,14 @@ from __future__ import annotations
 
 from typing import Final
 
+from ...application.ledger.operator_input_contracts import NOTES_INPUT
 from ._app_ledger_command_spec_policies import (
     _POLICY_2,
     _POLICY_4,
     _POLICY_5,
     _POLICY_9,
 )
+from ._app_ledger_command_spec_support import _option_from_application_contract
 from .app_ledger_invoice_common_command_parameters import (
     INVOICE_INTAKE_WIZARD_CORE_OPTIONS,
     INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS,
@@ -165,22 +167,7 @@ LEDGER_INVOICE_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
-            OptionSpec(
-                name="notes",
-                declarations=("--notes",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(None),
-                help_key=None,
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=False,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
+            _option_from_application_contract(NOTES_INPUT, None),
             OPTIONAL_IVA_CATEGORY_OPTION,
             *INVOICE_LIFECYCLE_METADATA_OPTIONS,
         ),

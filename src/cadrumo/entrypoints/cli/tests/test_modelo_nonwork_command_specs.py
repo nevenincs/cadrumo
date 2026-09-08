@@ -554,7 +554,13 @@ def test_every_nonwork_target_is_public_resolvable_and_runtime_materializable() 
         assert not target.qualname.startswith("_")
         behavior = getattr(importlib.import_module(target.module), target.qualname)
         assert callable(behavior)
-        behavior_parameters = {name for name in inspect.signature(behavior).parameters if name != "ctx"}
+        signature = inspect.signature(behavior)
+        variadic = any(parameter.kind is inspect.Parameter.VAR_KEYWORD for parameter in signature.parameters.values())
+        if variadic:
+            input_model = getattr(behavior, "__input_model__")  # noqa: B009
+            behavior_parameters = set(input_model.model_fields)
+        else:
+            behavior_parameters = {name for name in signature.parameters if name != "ctx"}
         assert behavior_parameters == {parameter.name for parameter in spec.parameters}
         _behavior_wrapper(COMMAND_GRAPH, spec)
 

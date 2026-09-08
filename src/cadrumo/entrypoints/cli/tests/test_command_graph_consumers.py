@@ -126,8 +126,3 @@ def test_every_projected_target_matches_its_authored_spec() -> None:
         assert row.schema_owner == spec.result_schema.target.identity
         assert row.schema_name == spec.result_schema.target.qualname
         assert row.handler_owner == spec.handler.target.identity
-
-
-#: The retired-generator physical-absence proof lives in the development test
-#: tree's ``test_command_graph_legacy_sources_absent.py``, which names the two
-#: retired generator scripts and their one consumer directly.

@@ -1,11 +1,4 @@
-"""Frontend-neutral selection helpers for CLI profile commands.
-
-The CLI uses these small parser and capability projections to decide whether
-an invocation carries explicit profile facts and whether the host supports a
-full-screen frontend.  Constructing or presenting that frontend belongs to
-``cadrumo.entrypoints.tui``; the CLI remains a line-mode projection over the
-application contracts.
-"""
+"""Parser metadata helpers for CLI profile commands."""
 
 from __future__ import annotations
 
@@ -21,7 +14,6 @@ _ROUTING_META_KEYS = frozenset(
         "profile_name",
         "quiet",
         "accept_defaults",
-        "tui",
         "secrets_stdin",
         "secrets_fd",
         "recovery_handoff_fd",

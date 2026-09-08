@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Final
 
+from ...application.ledger.operator_input_contracts import INVOICE_CLASS_INPUT
+from ._app_ledger_command_spec_support import _option_from_application_contract
 from .command_spec import (
     DeferredTarget,
     OptionSpec,
@@ -95,22 +97,7 @@ INVOICE_LIFECYCLE_METADATA_OPTIONS: Final[tuple[OptionSpec, ...]] = (
         show_default=True,
         hidden=False,
     ),
-    OptionSpec(
-        name="invoice_class",
-        declarations=("--invoice-class",),
-        value=ValueContract(DeferredTarget("cadrumo.domain.invoices.enums", "InvoiceClass")),
-        default=ParameterDefault.value(None),
-        help_key=TranslationKey("cli.app.ledger.invoice.invoice_class_help"),
-        metavar=None,
-        is_flag=False,
-        flag_value=None,
-        multiple=False,
-        count=False,
-        eager=False,
-        constraint=ParameterConstraint(),
-        show_default=True,
-        hidden=False,
-    ),
+    _option_from_application_contract(INVOICE_CLASS_INPUT, "cli.app.ledger.invoice.invoice_class_help"),
     OptionSpec(
         name="series",
         declarations=("--series",),

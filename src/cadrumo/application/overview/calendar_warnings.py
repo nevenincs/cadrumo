@@ -223,16 +223,6 @@ _M303_SIMPLIFICADO_FORFAIT_WARNING_LOCALE_KEY = "cli.overview.warning.m303_simpl
 _M303_SIMPLIFICADO_FORFAIT_ACTION_ID = "operator.modelo.describe"
 
 
-def calendar_censo_enrolment_profile_keys() -> tuple[str, ...]:
-    """Return profile paths whose censo provenance can witness enrolment.
-
-    The paths are compared with live Modelo 036 / censo-stamped profile facts
-    before :class:`OverviewCensoEnrolmentState` and
-    :class:`CalendarWarning` values are produced.
-    """
-    return tuple(sorted(_CENSO_ENROLMENT_PROFILE_KEYS))
-
-
 def calendar_applicability_profile_keys_for_modelo(modelo: str) -> tuple[str, ...]:
     """Return profile keys that can influence calendar applicability for ``modelo``.
 
@@ -492,5 +482,4 @@ __all__ = [
     "_calendar_regime_incompatibility_warnings",
     "_calendar_unverified_justificante_warnings",
     "calendar_applicability_profile_keys_for_modelo",
-    "calendar_censo_enrolment_profile_keys",
 ]

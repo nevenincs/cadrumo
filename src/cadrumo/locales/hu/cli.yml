@@ -1637,8 +1637,7 @@ cli:
         sal_reserva_not_decimal: 'A --sal-* értékeknek decimális összegeknek kell
           lenniük; kapott érték: {value}. Használjon tizedespontot ezreselválasztó
           nélkül, pl. 1234.56.'
-        select_help: Felsorolja a regisztrált munkaegységeket, és --tui esetén lehetővé
-          teszi az egyik kiválasztását az áttekintés megnyitásához.
+        select_help: Felsorolja a regisztrált munkaegységeket.
         selector_ambiguous: Több aktív munkaegység illeszkedik erre a modellre, évre
           és időszakra. {candidates}
         selector_not_found: Nincs aktív munkaegység ehhez a modellhez, évhez és időszakhoz.
@@ -2355,8 +2354,6 @@ cli:
       quiet_help: Csak a megadott kapcsolóértékek alapján fut interakció nélkül; a
         megadatlan kötelező kapcsolók hibát okoznak. Önmagában elegendő; kombinálja
         az --accept-defaults kapcsolóval a többi alapértékből való kitöltéséhez.
-      tui_scripted_conflict: A --tui nem használható együtt a --quiet, a --accept-defaults
-        vagy a profilmezők kapcsolóival.
     status:
       empty_profile: 'Nincs beállított profil. Futtassa: `aeat config profile create
         NÉV` a kezdéshez.'
@@ -3297,7 +3294,6 @@ cli:
         recovery_repair: Adatmódosítás előtt futtasd ezt a csak olvasható állapotjelentést.
         section_command_families: Parancscsaládok
         section_diagnostics: Diagnosztika
-        section_frontend_options: Felületi beállítások
         section_profile_authentication_options: Profilhitelesítési beállítások
         section_recovery: Folytatás vagy helyreállítás
         section_start_resume: Kezdés vagy folytatás
@@ -3669,9 +3665,6 @@ cli:
     language_help: A kimenet és a súgószöveg nyelve (en, es, ca, hu).
     profile_help: Az aktív profil neve.
     quiet_help: Csak a hibák megjelenítése.
-    self_test_help: Elindítja a teljes képernyős felületet terminál nélkül, majd kilép,
-      hogy igazolja az indulást.
-    tui_help: A teljes képernyős felület kérése a kiválasztott parancshoz.
     verbose_help: Részletes kimenet engedélyezése.
     version_help: A verziószám megjelenítése és kilépés.
   topic:

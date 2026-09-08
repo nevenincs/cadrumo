@@ -965,6 +965,76 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.export.google_operation.GoogleSheetsExportCapabilityDisabledError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_SHEETS_EXPORT_CAPABILITY_DISABLED",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.app.modelo.spreadsheet.push.capability_disabled",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.export.google_operation.GoogleSheetsExportRootFolderRequiredError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_SHEETS_EXPORT_ROOT_FOLDER_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="cli.app.modelo.spreadsheet.push.root_folder_required",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.export.google_operation.GoogleSheetsExportActiveProfileRequiredError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_SHEETS_EXPORT_ACTIVE_PROFILE_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="adapters.google.profile_binding.errors.no_active_profile",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.export.google_operation.GoogleSheetsExportSubjectMismatchError",
+        ErrorCode(
+            code="ERROR_GOOGLE_SHEETS_EXPORT_SUBJECT_MISMATCH",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_application_registry",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.export.google_operation.GoogleSheetsExportClientMissingError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_SHEETS_EXPORT_CLIENT_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="adapters.outbound.storage._factory.errors.google_client_missing",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.export.google_operation.GoogleSheetsExportTokenMissingError",
+        ErrorCode(
+            code="REFUSED_GOOGLE_SHEETS_EXPORT_TOKEN_MISSING",
+            category=ErrorCategory.REFUSED,
+            message_key="adapters.outbound.storage._factory.errors.google_token_missing",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.export.google_operation.GoogleSheetsExportAuthDependencyError",
+        ErrorCode(
+            code="FAIL_GOOGLE_SHEETS_EXPORT_AUTH_DEPENDENCY",
+            category=ErrorCategory.FAIL,
+            message_key="adapters.outbound.storage._factory.errors.google_auth_import_failed",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.export.errors.ExportFormatError",
         ErrorCode(
             code="REFUSED_EXPORT_FORMAT",

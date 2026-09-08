@@ -18,6 +18,7 @@ from pydantic import (
 )
 
 from ...core.hashing import content_hash_hex
+from ...core.hex import HEX_PATTERN_64
 from ...core.identity import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -862,7 +863,7 @@ class OperationRegistry(BaseModel):
         return definition.request_type.model_validate_json(raw)
 
 
-_HEX64_DIGEST_PATTERN = "^[0-9a-f]{64}$"
+_HEX64_DIGEST_PATTERN = HEX_PATTERN_64
 
 
 def _is_hex64_shaped_schema(value: object) -> bool:

@@ -249,6 +249,26 @@ def test_terminal_receipt_enforces_result_and_refusal_meaning() -> None:
     )
     assert failed.diagnostic_ref == "sha256:0123456789ab"
 
+    registered_failure = OperationTerminalReceipt(
+        identity=_identity(),
+        revision=1,
+        condition=OperationTerminalCondition.FAILED,
+        effect=OperationEffect.NONE,
+        settled_at=_NOW,
+        failure_error_code="ERROR_CADRUMO_CORE",
+    )
+    assert registered_failure.failure_error_code == "ERROR_CADRUMO_CORE"
+
+    with pytest.raises(ValidationError, match="not uniquely registered"):
+        OperationTerminalReceipt(
+            identity=_identity(),
+            revision=1,
+            condition=OperationTerminalCondition.FAILED,
+            effect=OperationEffect.NONE,
+            settled_at=_NOW,
+            failure_error_code="ERROR_NOT_REGISTERED",
+        )
+
     with pytest.raises(ValidationError):
         OperationTerminalReceipt(
             identity=_identity(),

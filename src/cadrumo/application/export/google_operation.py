@@ -10,14 +10,16 @@ outside this application package by the authorised production composition step.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
-from typing import ClassVar, Self
+from typing import Protocol, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validator
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.capabilities import ServiceCapability
+from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
@@ -78,28 +80,34 @@ _PUBLIC_REQUEST_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", va
 
 type GoogleSnapshotResolver = Callable[[ModeloId, Period], RegistrySnapshot]
 type GoogleExportPlanBuilder = Callable[..., SheetExportPlan]
-type GoogleSheetsExportPort = Callable[[str, SheetExportPlan, bool], "GoogleSheetsExportRemoteResult"]
-
-
-class GoogleSheetsExportCapabilityDisabledError(ValueError):
+class GoogleSheetsExportCapabilityDisabledError(CadrumoError):
     """The active profile has not admitted Google workbook export."""
 
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal-google-export-capability-carrier: the CLI sync door catches this by name "
-        "and re-raises CliRefusedBoundaryError with the registered "
-        "cli.app.modelo.spreadsheet.push.capability_disabled message, so it never reaches "
-        "an operator as itself"
-    )
 
 
-class GoogleSheetsExportRootFolderRequiredError(ValueError):
+class GoogleSheetsExportRootFolderRequiredError(CadrumoError):
     """The composed transport has no configured Drive root folder."""
 
-    __bare_base_rationale__: ClassVar[str] = (
-        "internal-google-export-root-folder-carrier: the CLI sync door catches this by name "
-        "and re-raises CliRefusedBoundaryError with the registered "
-        "cli.app.modelo.spreadsheet.push.root_folder_required message"
-    )
+
+class GoogleSheetsExportClientMissingError(CadrumoError):
+    """The active profile has no registered Google OAuth client."""
+
+
+class GoogleSheetsExportTokenMissingError(CadrumoError):
+    """The active profile has no persisted Google OAuth token."""
+
+
+class GoogleSheetsExportAuthDependencyError(CadrumoError):
+    """The Google authentication dependency is unavailable."""
+
+
+
+class GoogleSheetsExportActiveProfileRequiredError(CadrumoError):
+    """The requested export profile is no longer the active profile."""
+
+
+class GoogleSheetsExportSubjectMismatchError(CadrumoError):
+    """The supervised subject contradicts the export payload profile."""
 
 
 class GoogleSheetsExportOperationRequest(CredentialFreeOperationRequest):
@@ -183,11 +191,50 @@ class GoogleSheetsExportOperationResult(GoogleSheetsWorkbookWriteFacts):
     registry_sha: str = Field(min_length=1, max_length=128)
 
 
+class GoogleSheetsExportPublicResultV1(GoogleSheetsWorkbookWriteFacts):
+    """Renderer-neutral settled export result with no domain-only field types."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    profile_id: UUID
+    modelo: ModeloId
+    revision: RevisionId
+    period: str = Field(min_length=1, max_length=32)
+    filing_year: FilingYear
+    engine_version: str = Field(min_length=1, max_length=128)
+    registry_sha: str = Field(min_length=1, max_length=128)
+
+
+class GoogleSheetsExportPreparedPort(Protocol):
+    """In-memory prepared transport whose remaining call may mutate remotely."""
+
+    def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
+        """Preview or apply the plan after configuration and authentication succeeded."""
+        ...
+
+
+type GoogleSheetsExportPreparePort = Callable[[str], GoogleSheetsExportPreparedPort]
+
+
+def project_google_sheets_export_result(
+    result: BaseModel,
+    _terminal_receipt: object,
+) -> BaseModel:
+    """Project the private settled result into its strict public V1 shape."""
+    if not isinstance(result, GoogleSheetsExportOperationResult):
+        raise TypeError("Google Sheets export result projector received the wrong result type")
+    return GoogleSheetsExportPublicResultV1(
+        **result.model_dump(exclude={"period"}),
+        period=result.period.registry_token,
+        filing_year=result.period.filing_year,
+    )
+
+
 def _require_active_profile(profile_id: UUID) -> str:
     """Bind an export to the exact selected active profile."""
     active_bucket_id = require_active_bucket_id()
     if active_bucket_id != str(profile_id):
-        raise ValueError("Google Sheets export requires its profile to be active")
+        raise GoogleSheetsExportActiveProfileRequiredError("Google Sheets export requires its profile to be active")
     return active_bucket_id
 
 
@@ -196,7 +243,7 @@ def _require_active_profile_subject(
 ) -> None:
     """Bind the supervised request subject to the selected active profile."""
     if request.subject_ref != _profile_subject(str(request.payload.profile_id)):
-        raise ValueError("Google Sheets export subject does not match its exact profile")
+        raise GoogleSheetsExportSubjectMismatchError("Google Sheets export subject does not match its exact profile")
 
 
 def _resolve_snapshot(modelo: ModeloId, period: Period) -> RegistrySnapshot:
@@ -208,11 +255,7 @@ def _resolve_snapshot(modelo: ModeloId, period: Period) -> RegistrySnapshot:
     )
 
 
-def _unconfigured_google_sheets_export_port(
-    _profile_id: str,
-    _plan: SheetExportPlan,
-    _dry_run: bool,
-) -> GoogleSheetsExportRemoteResult:
+def _unconfigured_google_sheets_export_prepare_port(_profile_id: str) -> GoogleSheetsExportPreparedPort:
     """Refuse accidental execution before the production composition binds a port."""
     raise RuntimeError("Google Sheets export transport has not been composed")
 
@@ -223,12 +266,12 @@ class GoogleSheetsExportService:
     def __init__(
         self,
         *,
-        export_port: GoogleSheetsExportPort = _unconfigured_google_sheets_export_port,
+        prepare_port: GoogleSheetsExportPreparePort = _unconfigured_google_sheets_export_prepare_port,
         snapshot_resolver: GoogleSnapshotResolver = _resolve_snapshot,
         plan_builder: GoogleExportPlanBuilder = build_export_plan,
     ) -> None:
         """Bind the ports and policies this export service resolves through."""
-        self._export_port = export_port
+        self._prepare_port = prepare_port
         self._snapshot_resolver = snapshot_resolver
         self._plan_builder = plan_builder
 
@@ -243,7 +286,8 @@ class GoogleSheetsExportService:
         active_bucket_id = self.admit(payload)
         snapshot = self.snapshot(payload)
         plan = self.plan(snapshot, prefill_relations=payload.prefill_relations)
-        remote = self.remote(active_bucket_id, plan, dry_run=payload.dry_run)
+        prepared = self.prepare(active_bucket_id)
+        remote = self.remote(prepared, plan, dry_run=payload.dry_run)
         return self.result(payload, snapshot, plan, remote)
 
     def admit(self, payload: GoogleSheetsExportOperationRequest) -> str:
@@ -260,15 +304,19 @@ class GoogleSheetsExportService:
         """Build one canonical workbook plan from the resolved snapshot."""
         return self._build_plan(snapshot, prefill_relations=prefill_relations)
 
+    def prepare(self, active_bucket_id: str) -> GoogleSheetsExportPreparedPort:
+        """Resolve credentials and mandatory root configuration before mutation."""
+        return self._prepare_port(active_bucket_id)
+
     def remote(
         self,
-        active_bucket_id: str,
+        prepared: GoogleSheetsExportPreparedPort,
         plan: SheetExportPlan,
         *,
         dry_run: bool,
     ) -> GoogleSheetsExportRemoteResult:
         """Cross the injected remote boundary without choosing an adapter."""
-        remote = self._export_port(active_bucket_id, plan, dry_run)
+        remote = prepared.execute(plan, dry_run)
         if remote.dry_run is not dry_run:
             raise ValueError("Google Sheets export port returned a mismatched dry-run result")
         return remote
@@ -322,16 +370,17 @@ class GoogleSheetsExportOperationExecutor:
         snapshot = self._service.snapshot(payload)
         await context.events.phase(GOOGLE_SHEETS_EXPORT_PHASE_PLAN)
         plan = self._service.plan(snapshot, prefill_relations=payload.prefill_relations)
+        prepared = await asyncio.to_thread(self._service.prepare, active_bucket_id)
 
         if payload.dry_run:
             await context.events.phase(GOOGLE_SHEETS_EXPORT_PHASE_PREVIEW)
-            remote = self._service.remote(active_bucket_id, plan, dry_run=True)
+            remote = await asyncio.to_thread(self._service.remote, prepared, plan, dry_run=True)
             await context.events.effect(OperationEffect.NONE)
         else:
             await context.events.phase(GOOGLE_SHEETS_EXPORT_PHASE_APPLY)
             await context.events.effect(OperationEffect.UNKNOWN)
             async with context.cancellation.irreversible_section():
-                remote = self._service.remote(active_bucket_id, plan, dry_run=False)
+                remote = await asyncio.to_thread(self._service.remote, prepared, plan, dry_run=False)
             await context.events.effect(OperationEffect.UPDATED)
 
         result = self._service.result(payload, snapshot, plan, remote)
@@ -372,7 +421,7 @@ def _result(
 
 def build_google_sheets_export_operation_definition(
     *,
-    export_port: GoogleSheetsExportPort = _unconfigured_google_sheets_export_port,
+    prepare_port: GoogleSheetsExportPreparePort = _unconfigured_google_sheets_export_prepare_port,
     snapshot_resolver: GoogleSnapshotResolver = _resolve_snapshot,
     plan_builder: GoogleExportPlanBuilder = build_export_plan,
 ) -> OperationDefinition:
@@ -381,7 +430,7 @@ def build_google_sheets_export_operation_definition(
     def build() -> GoogleSheetsExportOperationExecutor:
         return GoogleSheetsExportOperationExecutor(
             service=build_google_sheets_export_service(
-                export_port=export_port,
+                prepare_port=prepare_port,
                 snapshot_resolver=snapshot_resolver,
                 plan_builder=plan_builder,
             ),
@@ -420,13 +469,13 @@ def build_google_sheets_export_operation_definition(
 
 def build_google_sheets_export_service(
     *,
-    export_port: GoogleSheetsExportPort = _unconfigured_google_sheets_export_port,
+    prepare_port: GoogleSheetsExportPreparePort = _unconfigured_google_sheets_export_prepare_port,
     snapshot_resolver: GoogleSnapshotResolver = _resolve_snapshot,
     plan_builder: GoogleExportPlanBuilder = build_export_plan,
 ) -> GoogleSheetsExportService:
     """Build the reusable application service from injected boundary ports."""
     return GoogleSheetsExportService(
-        export_port=export_port,
+        prepare_port=prepare_port,
         snapshot_resolver=snapshot_resolver,
         plan_builder=plan_builder,
     )
@@ -446,8 +495,9 @@ def build_google_sheets_export_operation_registration(
         result_schema=OperationSchemaBindingV1.bind(
             schema_id=f"{GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID}.result",
             schema_version=1,
-            model_type=GoogleSheetsExportOperationResult,
+            model_type=GoogleSheetsExportPublicResultV1,
         ),
+        result_projector=project_google_sheets_export_result,
     )
 
 
@@ -459,16 +509,24 @@ __all__ = [
     "GOOGLE_SHEETS_EXPORT_PHASE_PREVIEW",
     "GOOGLE_SHEETS_EXPORT_PHASE_SETTLEMENT",
     "GoogleExportPlanBuilder",
+    "GoogleSheetsExportActiveProfileRequiredError",
+    "GoogleSheetsExportAuthDependencyError",
     "GoogleSheetsExportCapabilityDisabledError",
+    "GoogleSheetsExportClientMissingError",
     "GoogleSheetsExportOperationExecutor",
     "GoogleSheetsExportOperationRequest",
     "GoogleSheetsExportOperationResult",
-    "GoogleSheetsExportPort",
+    "GoogleSheetsExportPreparePort",
+    "GoogleSheetsExportPreparedPort",
+    "GoogleSheetsExportPublicResultV1",
     "GoogleSheetsExportRemoteResult",
     "GoogleSheetsExportRootFolderRequiredError",
     "GoogleSheetsExportService",
+    "GoogleSheetsExportSubjectMismatchError",
+    "GoogleSheetsExportTokenMissingError",
     "GoogleSnapshotResolver",
     "build_google_sheets_export_operation_definition",
     "build_google_sheets_export_operation_registration",
     "build_google_sheets_export_service",
+    "project_google_sheets_export_result",
 ]

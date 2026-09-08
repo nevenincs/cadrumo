@@ -2,7 +2,7 @@
 
 The composition under test is the production one: a real encrypted profile is
 created and unlocked through the canonical registration and login doors, and
-the root is then composed exactly the way ``aeat --tui`` composes it. Nothing
+the root is then composed exactly the way ``aeat app tui`` composes it. Nothing
 here substitutes a projection, a repository, or an operation service — a gate
 built on a stand-in would prove only that the stand-in agrees with itself.
 

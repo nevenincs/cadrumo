@@ -21,7 +21,7 @@ from enum import StrEnum
 from typing import Final, Literal, Protocol, Self
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ValidationError, model_validator
 
 from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
@@ -47,7 +47,7 @@ from ..domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPro
 from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
-from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
+from .aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from .calculations.verification_report_gate import require_verification_report_coordinates_current
 from .ledger.workspace import (
     LedgerWorkspaceArea,
@@ -63,6 +63,7 @@ from .modelo.declarations_calendar import (
 from .modelo.declarations_workspace import (
     DeclarationResultCasillaReaderV1,
     DeclarationsWorkspaceAvailability,
+    DeclarationsWorkspaceProjectionError,
     DeclarationsWorkspaceProjectionV1,
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
@@ -100,6 +101,9 @@ from .search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinatio
 from .user_profile.projections import projection_for_taxpayer, record_to_path_values
 
 WORKBENCH_GENERATION_CONTRACT_VERSION: Literal[1] = 1
+
+_AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
+_AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
 
 
 class WorkbenchGenerationAvailability(StrEnum):
@@ -361,23 +365,26 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         revisions, calculations_revision = self.calculation_repository.load_revisioned()
         filings, filings_revision = self.filing_repository.load_revisioned()
 
-        declarations = project_declarations_workspace(
-            bucket_id=self.profile_id,
-            work_units=work_units,
-            calculation_revisions=revisions,
-            filing_records=filings,
-            lifecycle_facts=(),
-            result_casilla_reader=self.result_casilla_reader,
-            zone_observations=(
-                _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
-                _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
-                DeclarationsWorkspaceZoneObservationV1(
-                    zone=DeclarationsWorkspaceZone.FILING_HISTORY,
-                    availability=DeclarationsWorkspaceAvailability.UNAVAILABLE,
-                    reason_code="workbench.declarations.lifecycle_reader_unavailable",
+        try:
+            declarations = project_declarations_workspace(
+                bucket_id=self.profile_id,
+                work_units=work_units,
+                calculation_revisions=revisions,
+                filing_records=filings,
+                lifecycle_facts=(),
+                result_casilla_reader=self.result_casilla_reader,
+                zone_observations=(
+                    _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
+                    _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
+                    DeclarationsWorkspaceZoneObservationV1(
+                        zone=DeclarationsWorkspaceZone.FILING_HISTORY,
+                        availability=DeclarationsWorkspaceAvailability.UNAVAILABLE,
+                        reason_code="workbench.declarations.lifecycle_reader_unavailable",
+                    ),
                 ),
-            ),
-        )
+            )
+        except DeclarationsWorkspaceProjectionError:
+            declarations = None
         taxpayer = projection_for_taxpayer(record, tax_id_default="00000000T")
         raw_values = record_to_path_values(record)
         query_range = OverviewCalendarRange(
@@ -429,7 +436,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         custody_count = self._load_custody_count()
         ledger = self._read_ledger(revisions.revisions, work_units, sources=ledger_sources)
         modelo = self._read_modelo(work_units)
-        aeat_sync = self._read_aeat_sync(
+        aeat_sync, aeat_sync_refusal = self._read_aeat_sync(
             _declared_tax_id(raw_values),
             observed_at=observed_at,
             filings=tuple(filings.records.values()),
@@ -474,8 +481,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     refusal="workbench.ledger.snapshot_projector_unavailable"
                 )
             ),
-            declarations=WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1].available(
-                declarations, observed_at=observed_at
+            declarations=(
+                WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1].available(
+                    declarations, observed_at=observed_at
+                )
+                if declarations is not None
+                else WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1].unavailable(
+                    refusal="workbench.declarations.snapshot_projector_unavailable"
+                )
             ),
             declarations_calendar=WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1].available(
                 declarations_calendar,
@@ -487,7 +500,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 )
                 if aeat_sync is not None
                 else WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].unavailable(
-                    refusal="workbench.aeat_sync.reader_unavailable"
+                    refusal=aeat_sync_refusal
                 )
             ),
             modelo=(
@@ -508,8 +521,14 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     reason_code="workbench.ledger.snapshot_projector_unavailable",
                 )
             ),
-            declarations_admission=_generation_admission(
-                "workbench.declarations", WorkbenchDestinationAdmissionState.AVAILABLE
+            declarations_admission=(
+                _generation_admission("workbench.declarations", WorkbenchDestinationAdmissionState.AVAILABLE)
+                if declarations is not None
+                else _generation_admission(
+                    "workbench.declarations",
+                    WorkbenchDestinationAdmissionState.UNAVAILABLE,
+                    reason_code="workbench.declarations.snapshot_projector_unavailable",
+                )
             ),
             aeat_sync_admission=(
                 _generation_admission("workbench.aeat_sync", WorkbenchDestinationAdmissionState.AVAILABLE)
@@ -517,7 +536,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                 else _generation_admission(
                     "workbench.aeat_sync",
                     WorkbenchDestinationAdmissionState.UNAVAILABLE,
-                    reason_code="workbench.aeat_sync.reader_unavailable",
+                    reason_code=aeat_sync_refusal,
                 )
             ),
         )
@@ -607,27 +626,41 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings: tuple[ModeloRecord, ...],
         custody_count: int | None,
         censo_values: Mapping[str, object],
-    ) -> AeatSyncWorkspaceProjectionV1 | None:
+    ) -> tuple[AeatSyncWorkspaceProjectionV1 | None, NamespacedId]:
         """Project the pre-pull AEAT Sync workspace against composed contracts.
 
         A profile carrying no NIF has no subject to scope AEAT evidence to.
         Scoping it to the schema's placeholder would produce a workspace whose
         rows a later real pull would refuse as a mixed subject, so the source
         stays unavailable until the profile declares its identity.
+
+        A malformed local projection is likewise a source refusal.  The
+        workspace projector remains the boundary that detects it, while this
+        installed-session reader prevents one rejected AEAT Sync projection
+        from preventing Home and the other workbench sources from rendering.
+        Its projector-specific refusal stays distinct from the missing-reader
+        refusal so downstream source, admission, and search semantics retain
+        the actual cause.
         """
         if self.operation_contracts is None or subject_key is None:
-            return None
+            return None, _AEAT_SYNC_READER_UNAVAILABLE
         from .aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
-        return read_local_aeat_sync_workspace_projection(
-            bucket_id=self.profile_id,
-            subject_key=subject_key,
-            observed_at=observed_at,
-            filings=filings,
-            operation_contracts=self.operation_contracts,
-            custody_count=custody_count,
-            censo_values={key: value for key, value in censo_values.items() if isinstance(value, str)},
-        )
+        try:
+            return (
+                read_local_aeat_sync_workspace_projection(
+                    bucket_id=self.profile_id,
+                    subject_key=subject_key,
+                    observed_at=observed_at,
+                    filings=filings,
+                    operation_contracts=self.operation_contracts,
+                    custody_count=custody_count,
+                    censo_values={key: value for key, value in censo_values.items() if isinstance(value, str)},
+                ),
+                _AEAT_SYNC_READER_UNAVAILABLE,
+            )
+        except (AeatSyncWorkspaceProjectionError, ValidationError):
+            return None, _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE
 
 
 def _declared_tax_id(raw_values: Mapping[str, object]) -> str | None:

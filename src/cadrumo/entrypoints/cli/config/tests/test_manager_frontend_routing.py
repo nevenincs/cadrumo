@@ -1,9 +1,4 @@
-"""Boundary proofs for the profile CLI projection.
-
-The profile commands are line-mode entrypoints. Full-screen composition lives
-under the dedicated TUI root, so this suite pins the only selection behavior
-that remains here: distinguishing explicit wizard facts from parser metadata.
-"""
+"""Boundary proofs for the profile CLI projection."""
 
 from __future__ import annotations
 
@@ -29,7 +24,6 @@ def test_empty_repeated_option_default_is_not_an_explicit_profile_fact() -> None
         "profile_name": "Primer Contacto",
         "quiet": False,
         "accept_defaults": False,
-        "tui": False,
         "irpf_income_categories": [],
     }
 

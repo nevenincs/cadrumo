@@ -13,10 +13,12 @@ related:
   - '[[2026-09-07-tuimodelo-work-creator-adr]]'
   - '[[2026-09-07-tuimodelo-satellite-families-adr]]'
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
-modified: '2026-09-07'
+modified: '2026-09-08'
 body_schema: body-v2
-body_hash: 'sha256:88e661430b3c450100dc9b946cb21985ce58abe90c4dda5c31d37e018d146355'
+body_hash: 'sha256:5622e12094a239574306c097111878da83a30dcbcde0854cc613f92d3921cc5a'
 ---
+
+<!-- RETIRED: S13, S14 -->
 
 # `tuimodelo` plan
 
@@ -70,8 +72,6 @@ Resolve the five still-open rows an archived campaign left held and the rows who
 
 Extend the denominator so a delivered surface and its recorded classification must agree, and correct the specs that under-declare their write route.
 
-- [ ] `W01.P02.S13` - Share the interface capability declaration out of the command-line package so a full-screen surface can read a command's capability posture without importing the adapter REVERTED AND RE-SCOPED BY MEASUREMENT, 2026-09-07. This relocation was performed and then undone, because both halves of its premise are false. NO MODULE UNDER `src/cadrumo/entrypoints/tui` READS THE CAPABILITY AT ALL -- measured across the package, zero consumers -- so no full-screen surface is waiting on it and nothing is stranded from the frontend's side. The declaration therefore stays where its only readers are, in the command-line package, alongside the policy that refuses an unenrolled request. THIS ROW IS NOW A PRECONDITION RATHER THAN A TASK: it reopens when a modelo surface actually needs a command's routing posture, and only then, at which point the declaration moves to the CORE ring rather than beside either adapter, because two sibling entrypoints may not reach into each other and a genuinely common dependency belongs to the core. Re-performing the relocation before a named consumer exists rebuilds a shared layer nobody imports.; `src/cadrumo/entrypoints/cli/command_spec.py`.
-- [ ] `W01.P02.S14` - Relocate the capability model to a shared owner both adapters may consume, sequencing it before the denominator extension that reads it REVERTED AND RE-SCOPED BY MEASUREMENT, 2026-09-07, together with the row above; the two describe one relocation from two sides. THE SEQUENCING CLAIM IS THE FALSIFIED HALF: this row asserted the relocation must precede the denominator extension that reads it. It does not. The denominator lives in the development tree, which may import the command-line package freely, and the extension was completed with the declaration left exactly where it was. There is no ordering constraint between them because there is no dependency. Reopens with the row above, on the same condition: a named full-screen consumer, and then a move to the core ring.; `src/cadrumo/entrypoints/cli/command_spec.py`.
 - [x] `W01.P02.S170` - Create headroom on the denominator module before extending it, which sits 63 lines under a ceiling that three steps in this phase and six later steps must share; `dev/quality/modelo_workspace_action_denominator.py`.
 - [x] `W01.P02.S04` - Extend the observed action signature with interface capability and dispatchability so the gate can see a wired surface; `dev/quality/modelo_workspace_action_denominator.py`.
 - [x] `W01.P02.S05` - Add delivered dispositions for reads and for mutations to the closed taxonomy, which today offers no arm a delivered mutation can occupy; `dev/quality/modelo_workspace_action_classification.py`.

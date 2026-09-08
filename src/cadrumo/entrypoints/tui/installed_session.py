@@ -1,4 +1,4 @@
-"""Production composition for one installed ``aeat --tui`` workbench session.
+"""Production composition for one installed ``aeat app tui`` workbench session.
 
 This is the seam the installed process actually starts through. It owns the
 order of the session rather than any behaviour of its own: bind the adapter

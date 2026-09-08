@@ -1094,6 +1094,7 @@ def test_start_settles_registered_executor_refusal_without_persisting_its_sensit
         assert terminal.effect is OperationEffect.NONE
         assert terminal.terminal_receipt is not None
         assert terminal.terminal_receipt.refusal_ref == get_registered_error_code(AeatLiveReadNotEnabledError()).code
+        assert terminal.terminal_receipt.failure_error_code is None
         assert terminal.terminal_receipt.diagnostic_ref is None
         assert len(terminal.events) == 1
         assert isinstance(terminal.events[0], OperationTerminalEvent)
@@ -1131,6 +1132,7 @@ def test_start_settles_unexpected_executor_failure_with_correlated_opaque_diagno
         assert terminal.terminal_condition is OperationTerminalCondition.FAILED
         assert terminal.effect is OperationEffect.UPDATED
         assert terminal.terminal_receipt is not None
+        assert terminal.terminal_receipt.failure_error_code is None
         correlation = terminal.terminal_receipt.diagnostic_ref
         assert correlation is not None and correlation.startswith("sha256:")
         assert correlation == "sha256:7941bacab17db1fdca826bf7e7e55a69919916975fb0cb7d31d9e2d8e3d06376"
@@ -1174,6 +1176,7 @@ def test_start_normalizes_registered_non_refusal_error_to_safe_failed_diagnostic
         assert terminal.terminal_condition is OperationTerminalCondition.FAILED
         assert terminal.terminal_receipt is not None
         assert terminal.terminal_receipt.refusal_ref is None
+        assert terminal.terminal_receipt.failure_error_code == get_registered_error_code(CoreError()).code
         correlation = terminal.terminal_receipt.diagnostic_ref
         assert correlation is not None and correlation.startswith("sha256:")
         assert tuple(type(event) for event in terminal.events) == (

@@ -1656,8 +1656,7 @@ cli:
         sal_reserva_not_decimal: 'Los valores --sal-* deben ser importes decimales;
           se recibió: {value}. Use el punto como separador decimal y sin separador
           de miles, p. ej. 1234.56.'
-        select_help: Lista las unidades de trabajo registradas y, con --tui, permite
-          elegir una para abrir su revisión.
+        select_help: Lista las unidades de trabajo registradas.
         selector_ambiguous: 'Más de una unidad de trabajo activa coincide con este
           modelo, año y periodo.
 
@@ -2387,8 +2386,6 @@ cli:
         los flags requeridos sin valor provocan un error. Suficiente por sí solo;
         combínalo con --accept-defaults para rellenar el resto con los valores por
         defecto.
-      tui_scripted_conflict: --tui no se puede combinar con --quiet, --accept-defaults
-        ni con opciones de campos del perfil.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
         para empezar.
@@ -3342,7 +3339,6 @@ cli:
           solo lectura.
         section_command_families: Familias de comandos
         section_diagnostics: Diagnóstico
-        section_frontend_options: Opciones de interfaz
         section_profile_authentication_options: Opciones de autenticación del perfil
         section_recovery: Reanudar o recuperar
         section_start_resume: Empezar o continuar
@@ -3722,9 +3718,6 @@ cli:
     language_help: Idioma de la salida y del texto de ayuda (en, es, ca, hu).
     profile_help: Nombre del perfil activo.
     quiet_help: Mostrar solo los errores.
-    self_test_help: Inicia la interfaz de pantalla completa sin terminal y sale, para
-      comprobar que arranca.
-    tui_help: Solicita la interfaz de pantalla completa para el comando seleccionado.
     verbose_help: Habilitar salida detallada.
     version_help: Mostrar el número de versión y salir.
   topic:

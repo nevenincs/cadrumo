@@ -15,8 +15,6 @@ Key entry points:
 * :func:`filing_profile_from_taxpayer` — projects taxpayer identity from a
   domain :class:`~domain.deadlines.TaxpayerProfile` into the runtime
   profile shape without deriving legal filing obligations.
-* :func:`load_default_filing_profile` — loads the active profile bucket
-  and returns a runtime profile.
 * :func:`build_runtime_schema_provider` — requires registry-backed snapshots.
 
 The schema provider consumes a
@@ -27,9 +25,6 @@ a :class:`~domain.calculations.registry.ValidatedRegistryAuthority` loaded
 from the configured registry root.
 
 See Also:
-    :func:`application.wizard.status.load_active_taxpayer_profile`
-        Active-profile bridge that supplies the
-        :class:`domain.deadlines.TaxpayerProfile` projected here.
     :mod:`application.modelo._workflow_gate`
         Calculation-revision workflow gate that uses this runtime provider to
         build and approve filing drafts.
@@ -67,9 +62,6 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     RevisionId,
     SourceRefId,
-)
-from ...domain.calculations.registry.loader_fingerprints import (
-    clear_fingerprint_cache as _clear_loader_fingerprint_cache,
 )
 from ...domain.calculations.registry.rate_box_partition import (
     RateBoxPartition,
@@ -411,45 +403,6 @@ def filing_profile_from_taxpayer(
     )
 
 
-def load_default_filing_profile(
-    *,
-    display_name: str | None = None,
-) -> ModeloOperatorProfile:
-    """Load the active profile bucket for runtime filing commands.
-
-    Resolves the active workflow profile via the wizard descriptor's
-    typed projection and re-shapes it as a runtime
-    :class:`ModeloOperatorProfile`. Operator profile values stored in
-    the profile bucket are the single source of truth.
-
-    Args:
-        display_name: Optional friendly label propagated to the
-            returned profile.
-
-    Returns:
-        The loaded :class:`ModeloOperatorProfile`.
-
-    Raises:
-        ModeloBuilderError: When no profile is active in the workflow
-            state.
-    """
-    from ..wizard.status import (
-        WizardStatusError,
-        load_active_taxpayer_profile,
-    )
-    from ..workflow.persistence import workflow_state_repository
-
-    state = workflow_state_repository().load()
-    try:
-        profile = load_active_taxpayer_profile(state)
-    except WizardStatusError as exc:
-        raise ModeloBuilderError(
-            translated_message="application.filing.runtime.errors.active_profile_load_failed",
-            context={"reason": exc.__class__.__name__},
-        ) from exc
-    return filing_profile_from_taxpayer(profile, display_name=display_name)
-
-
 def build_runtime_schema_provider(
     registry_root: Path | None = None,
     *,
@@ -595,22 +548,6 @@ def _registry_snapshot_unavailable_error(
 _FINGERPRINT_CACHE: dict[Path, tuple[float, tuple[tuple[str, int, int, str], ...]]] = {}
 
 
-def clear_runtime_fingerprint_cache() -> None:
-    """Clear the time-based TTL cache for registry tree fingerprints.
-
-    Also clears the canonical collector's own cache
-    (:func:`~domain.calculations.registry.clear_fingerprint_cache`).
-    ``registry_tree_fingerprint`` now delegates its walk to that collector,
-    which carries its own path-keyed TTL cache underneath this module's
-    one-second wrapper; clearing only the outer layer would leave a caller
-    that mutates the registry tree and calls this function still served a
-    stale collector-cached value, exactly the correctness hole this
-    delegation exists to close.
-    """
-    _FINGERPRINT_CACHE.clear()
-    _clear_loader_fingerprint_cache()
-
-
 def registry_tree_fingerprint(
     root: Path,
 ) -> tuple[tuple[str, int, int, str], ...]:
@@ -625,11 +562,9 @@ def registry_tree_fingerprint(
     exempts the digest for the package-bundled tree (read-only, never
     rewritten in-process) so the common case pays only per-file call
     overhead, not hashing. It is used as a cache key for
-    :func:`build_runtime_schema_provider`; call
-    :func:`clear_runtime_fingerprint_cache` when tests or tooling mutate the
-    registry tree inside the one-second TTL this module's own cache holds
-    (the collector's own, longer-lived cache for the bundled root is a
-    separate, per-path layer this TTL sits in front of).
+    :func:`build_runtime_schema_provider`; the collector's own, longer-lived
+    cache for the bundled root is a separate, per-path layer this TTL sits in
+    front of.
     """
     import time
 
@@ -885,10 +820,8 @@ __all__ = [
     "RegistryModeloSubview",
     "RegistrySchemaAccessor",
     "build_runtime_schema_provider",
-    "clear_runtime_fingerprint_cache",
     "collection_from_snapshot",
     "filing_profile_from_taxpayer",
-    "load_default_filing_profile",
     "registry_tree_fingerprint",
     "registry_value_type",
 ]

@@ -135,8 +135,6 @@ MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
 MODELO_EXPORT_OPERATION_DEFINITION_ID = "modelo.export"
 MODELO_WORK_AMEND_OPERATION_DEFINITION_ID = "modelo.work.amend"
 MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID = "modelo.edit.apply"
-MODELO_WORK_VERIFY_PROGRESS_UNIT = "casilla"
-
 #: ``pattern=r"\S"`` refuses an all-whitespace id, which ``min_length`` alone
 #: admits. An identifier is NOT stripped -- unlike a display name, altering it
 #: would change what it addresses -- so the guard requires a non-whitespace
@@ -794,7 +792,7 @@ class ModeloExportPublicResultV1(BaseModel):
     #: and silently trimming one would mask a typo rather than surface it.
     output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
     byte_size: NonNegativeInt
-    file_sha256: Annotated[str, Field(pattern=r"^[a-f0-9]{64}$")]
+    file_sha256: ContentDigest
     export_format: Annotated[str, Field(min_length=1, max_length=64)]
     handoff_required: bool = True
 
@@ -1967,7 +1965,6 @@ __all__ = [
     "MODELO_WORK_FILE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
     "MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID",
-    "MODELO_WORK_VERIFY_PROGRESS_UNIT",
     "ModeloEditApplyExecutor",
     "ModeloEditApplyOperationRequestV1",
     "ModeloEditApplyPublicResultV1",

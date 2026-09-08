@@ -520,9 +520,14 @@ def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path) -> None:
     import os
     import time
 
-    from ..runtime import clear_runtime_fingerprint_cache, registry_tree_fingerprint
+    from ....domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
+    from ..runtime import _FINGERPRINT_CACHE, registry_tree_fingerprint
 
-    clear_runtime_fingerprint_cache()
+    def clear_test_fingerprint_caches() -> None:
+        _FINGERPRINT_CACHE.clear()
+        clear_fingerprint_cache()
+
+    clear_test_fingerprint_caches()
     try:
         reg_root = tmp_path / "registry"
         (reg_root / "legal").mkdir(parents=True)
@@ -539,7 +544,7 @@ def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path) -> None:
         fp2 = registry_tree_fingerprint(reg_root)
         assert fp2 == fp1
 
-        clear_runtime_fingerprint_cache()
+        clear_test_fingerprint_caches()
         fp3 = registry_tree_fingerprint(reg_root)
         assert fp3 != fp1
 
@@ -550,4 +555,4 @@ def test_registry_tree_fingerprint_ttl_cache(tmp_path: Path) -> None:
         fp4 = registry_tree_fingerprint(reg_root)
         assert fp4 != fp3
     finally:
-        clear_runtime_fingerprint_cache()
+        clear_test_fingerprint_caches()

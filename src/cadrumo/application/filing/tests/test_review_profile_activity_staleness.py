@@ -20,9 +20,8 @@ See Also:
         Builds the current review fingerprints, including profile activity.
     :func:`~application.filing.approval_stale_reasons`
         Compares the stored basis with the current profile-activity digest.
-    :func:`~application.filing.empty_profile_activity_fingerprint`
-        Supplies the explicit empty-source fingerprint used by tests and
-        overrides.
+    :func:`~cadrumo.tests.filing.empty_profile_activity_fingerprint`
+        Supplies the explicit empty-source fingerprint used by tests.
     :mod:`~application.filing.tests.test_review_prior_filing_staleness`
         Sister approval-basis coverage for another self-loaded source surface.
 """
@@ -42,6 +41,7 @@ from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
 from ....domain.user_profile.values import UserProfileFact
+from ....tests.filing import empty_profile_activity_fingerprint
 from ....tests.profile_capsule import open_test_profile_session, set_active_test_profile_facts
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -50,7 +50,6 @@ from ..draft_review import (
     ModeloApprovalStaleReason,
     approval_stale_reasons,
     approve_draft,
-    empty_profile_activity_fingerprint,
 )
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
 

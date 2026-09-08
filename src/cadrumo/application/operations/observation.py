@@ -161,6 +161,7 @@ class OperationObservationService:
             pending_interaction=_project_pending_interaction(snapshot.pending_interaction, contract),
             result_ref=None if receipt is None else receipt.result_ref,
             refusal_ref=None if receipt is None else receipt.refusal_ref,
+            failure_error_code=None if receipt is None else receipt.failure_error_code,
             diagnostic_ref=None if receipt is None else receipt.diagnostic_ref,
         )
         replay = materialization.replay
@@ -348,6 +349,7 @@ def _project_event(event: OperationEvent) -> OperationPublicEventV1:
         effect=receipt.effect,
         result_ref=receipt.result_ref,
         refusal_ref=receipt.refusal_ref,
+        failure_error_code=receipt.failure_error_code,
         diagnostic_ref=receipt.diagnostic_ref,
     )
 

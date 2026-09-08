@@ -4,16 +4,18 @@ from __future__ import annotations
 
 import hashlib
 import hmac
+import re
 import secrets
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Any, Final, Protocol, Self, override
+from typing import Annotated, Any, ClassVar, Final, Protocol, Self, override
 
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
 
 from ...core.filing_year import FilingYear
+from ...core.hex import HEX_PATTERN_64
 from ...core.identifier_grammar import NamespacedId
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -30,13 +32,16 @@ AEAT_SYNC_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 _NOTIFICATION_SELECTION_KEY: Final[bytes] = secrets.token_bytes(32)
 _NOTIFICATION_SELECTION_PREFIX: Final[str] = "aeat_sync.notification."
 _NOTIFICATION_SELECTION_DIGEST_LENGTH: Final[int] = 64
+_NOTIFICATION_SELECTION_PATTERN: Final[str] = (
+    rf"^{re.escape(_NOTIFICATION_SELECTION_PREFIX)}{HEX_PATTERN_64.removeprefix('^').removesuffix('$')}$"
+)
 
 type AeatSyncNotificationSelectionKey = Annotated[
     str,
     StringConstraints(
         min_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
         max_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
-        pattern=r"^aeat_sync\.notification\.[0-9a-f]{64}$",
+        pattern=_NOTIFICATION_SELECTION_PATTERN,
     ),
 ]
 """Opaque, bounded identity for one projected notification row.
@@ -50,6 +55,11 @@ retaining the private notification identity.
 
 class AeatSyncWorkspaceProjectionError(ValueError):
     """Already-loaded authorities cannot form one safe snapshot."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal AEAT Sync projector-integrity carrier; SecureProfileWorkbenchGenerationReadDoorV1._read_aeat_sync "
+        "converts it into the unavailable AEAT Sync source result"
+    )
 
 
 class AeatSyncWorkspaceZone(StrEnum):

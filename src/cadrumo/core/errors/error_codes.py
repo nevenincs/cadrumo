@@ -219,6 +219,14 @@ def declared_error_codes() -> tuple[tuple[str, ErrorCode], ...]:
     return tuple(_DECLARED_CODE_BY_QUALNAME.items())
 
 
+def get_registered_error_code_by_code(code: str) -> ErrorCode:
+    """Resolve one stable code through the sole declared ErrorCode authority."""
+    matches = tuple(error_code for error_code in _DECLARED_CODE_BY_QUALNAME.values() if error_code.code == code)
+    if len(matches) != 1:
+        raise ValueError(f"error code {code!r} is not uniquely registered (found {len(matches)})")
+    return matches[0]
+
+
 def _flush_deferred_binds() -> None:
     """Attempt to bind any classes whose registration was deferred.
 
@@ -619,6 +627,7 @@ __all__ = [
     "declared_error_codes",
     "get_error_exit_code",
     "get_registered_error_code",
+    "get_registered_error_code_by_code",
     "register",
     "render_error_json",
     "render_error_text",

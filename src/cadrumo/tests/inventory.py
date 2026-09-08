@@ -23,16 +23,6 @@ FIXTURES_DIR: Path = SRC_CADRUMO / "tests" / "fixtures"
 CAST_RATIONALE_MARKER = "CAST-RATIONALE-"
 """Marker prefix required next to production ``cast()`` escape hatches."""
 
-BARE_UTF8_LITERAL_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(r'encoding="utf-8"'),
-    re.compile(r'\.encode\("utf-8"\)'),
-    re.compile(r'\.decode\("utf-8"\)'),
-)
-"""Text patterns that identify bare UTF-8 literals in source inventory scans."""
-
-UTF8_HASH_ALLOWLIST_TOKENS = frozenset({"hashlib", "hmac", "sha256", "sha1", "md5", "hasher"})
-"""Line tokens that exempt hash-protocol UTF-8 literals from text-I/O ratchets."""
-
 _TEST_MODULE_GLOBS: tuple[str, ...] = ("**/test_*.py", "**/_test_*.py")
 
 _PRUNED_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset({"__pycache__", ".git", ".venv", ".pytest_cache"})
@@ -554,31 +544,6 @@ def regex_line_hits(
                 continue
             hits.append(f"{_display_path(path)}:{line_no}: {match.group(0)!r}")
     return hits
-
-
-def is_hash_protocol_site(line: str, tokens: Iterable[str] = UTF8_HASH_ALLOWLIST_TOKENS) -> bool:
-    """Return True when a source line contains a hash/HMAC allowlist token."""
-    token_set = frozenset(tokens)
-    return any(token in line for token in token_set)
-
-
-def bare_utf8_literal_violations(
-    path: Path,
-    *,
-    hash_allowlist_tokens: Iterable[str] = UTF8_HASH_ALLOWLIST_TOKENS,
-) -> list[tuple[int, str]]:
-    """Return ``(lineno, stripped line)`` pairs for non-hash bare UTF-8 literals."""
-    violations: list[tuple[int, str]] = []
-    try:
-        source = path.read_text(encoding="utf-8", errors="replace")
-    except OSError:
-        return violations
-    for lineno, line in enumerate(source.splitlines(), start=1):
-        if is_hash_protocol_site(line, hash_allowlist_tokens):
-            continue
-        if any(pattern.search(line) for pattern in BARE_UTF8_LITERAL_PATTERNS):
-            violations.append((lineno, line.strip()))
-    return violations
 
 
 def _display_path(path: Path) -> str:

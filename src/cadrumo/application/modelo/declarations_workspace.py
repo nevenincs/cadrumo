@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Protocol, Self
+from typing import ClassVar, Final, Protocol, Self
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
@@ -23,7 +23,6 @@ from ...core.identity import BucketId, CalculationRevisionId, FilingRecordId, Wo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
-from ...domain.buckets.event import BucketEventType
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -43,6 +42,12 @@ DECLARATIONS_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
 
 class DeclarationsWorkspaceProjectionError(ValueError):
     """The supplied authorities cannot form one coherent safe snapshot."""
+
+    __bare_base_rationale__: ClassVar[str] = (
+        "internal Declarations projector-integrity carrier; "
+        "SecureProfileWorkbenchGenerationReadDoorV1.read_workbench_generation_inputs "
+        "converts it into the unavailable Declarations source result"
+    )
 
 
 class DeclarationsWorkspaceZone(StrEnum):
@@ -74,15 +79,7 @@ class DeclarationsWorkspaceAvailability(StrEnum):
 
 
 class DeclarationsLifecycleKind(StrEnum):
-    """Sanitized lifecycle meanings accepted from the lifecycle authority.
-
-    The frontend half of a correspondence whose store half is
-    :class:`cadrumo.domain.buckets.BucketEventType`. Every arm here is supplied
-    by exactly one modelo event type, and every event type on the declaration's
-    own filing lifecycle lands on exactly one arm; the pairing is declared in
-    :data:`DECLARATION_LIFECYCLE_EVENT_KINDS` and the events deliberately left
-    out are classified in :data:`DECLARATION_LIFECYCLE_EXCLUDED_EVENTS` rather
-    than simply absent.
+    """Sanitized lifecycle meanings accepted by the workspace projection.
 
     ``VERIFICATION_REFUSED`` exists because a refusal has nowhere else honest to
     go. Without it a surface reading the kind alone would either drop the event,
@@ -101,62 +98,6 @@ class DeclarationsLifecycleKind(StrEnum):
     DISCARDED = "discarded"
     EXTERNAL_EVIDENCE_IMPORTED = "external_evidence_imported"
     EXPORTED = "exported"
-
-
-class DeclarationsLifecycleExclusion(StrEnum):
-    """Why a modelo event type carries no declaration lifecycle kind.
-
-    An excluded event is a classified decision, not an oversight. Keeping the
-    reason in a closed vocabulary is what stops the exclusion being
-    re-litigated per surface, and what makes a newly declared event type that
-    nobody has considered distinguishable from one deliberately left out.
-    """
-
-    NEIGHBOURING_SUBJECT = "neighbouring_subject"
-    EVIDENCE_BUNDLE_SUBJECT = "evidence_bundle_subject"
-
-
-DECLARATION_LIFECYCLE_EVENT_KINDS: Final[Mapping[BucketEventType, DeclarationsLifecycleKind]] = {
-    BucketEventType.MODELO_WORK_UNIT_CREATED: DeclarationsLifecycleKind.CREATED,
-    BucketEventType.MODELO_WORK_UNIT_RENAMED: DeclarationsLifecycleKind.RENAMED,
-    BucketEventType.MODELO_CALCULATION_CREATED: DeclarationsLifecycleKind.CALCULATED,
-    BucketEventType.MODELO_VERIFICATION_PASSED: DeclarationsLifecycleKind.VERIFIED,
-    BucketEventType.MODELO_VERIFICATION_REFUSED: DeclarationsLifecycleKind.VERIFICATION_REFUSED,
-    BucketEventType.MODELO_FILED: DeclarationsLifecycleKind.FILED,
-    BucketEventType.MODELO_FILED_SUPERSEDED: DeclarationsLifecycleKind.SUPERSEDED,
-    BucketEventType.MODELO_AMENDED: DeclarationsLifecycleKind.AMENDED,
-    BucketEventType.MODELO_WORK_UNIT_DISCARDED: DeclarationsLifecycleKind.DISCARDED,
-    BucketEventType.MODELO_FILING_IMPORTED: DeclarationsLifecycleKind.EXTERNAL_EVIDENCE_IMPORTED,
-    BucketEventType.MODELO_EXPORTED: DeclarationsLifecycleKind.EXPORTED,
-}
-"""The declaration's own filing lifecycle, event type to sanitized kind.
-
-A bijection, and deliberately so. An arm no event can supply is a promise the
-product cannot keep, and an event with no arm is a fact the surface must either
-drop or misfile.
-"""
-
-DECLARATION_LIFECYCLE_EXCLUDED_EVENTS: Final[Mapping[BucketEventType, DeclarationsLifecycleExclusion]] = {
-    BucketEventType.MODELO_LIVE_EVIDENCE_STAMPED: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_LEDGER_EVIDENCE_RECAPTURED: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_RECONCILED: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_IVA_WALLET_CORRECTED: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_IVA_WALLET_OVERRIDE_RECORDED: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_145_COMMUNICATION_CREATED: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_145_COMMUNICATION_EXPORTED: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_145_COMMUNICATION_DELIVERED_TO_PAYER: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_145_COMMUNICATION_LOCALLY_COMPLETED: DeclarationsLifecycleExclusion.NEIGHBOURING_SUBJECT,
-    BucketEventType.MODELO_AUDIT_VERIFIED: DeclarationsLifecycleExclusion.EVIDENCE_BUNDLE_SUBJECT,
-    BucketEventType.MODELO_AUDIT_EXPORTED: DeclarationsLifecycleExclusion.EVIDENCE_BUNDLE_SUBJECT,
-}
-"""Modelo events that are real lifecycle facts about something other than this declaration.
-
-The neighbouring-subject rows describe the work unit and its evidence rather
-than the declaration's filing lifecycle. The evidence-bundle rows describe the
-audit bundle: mapping them onto this vocabulary's verified and exported arms
-would report evidence-bundle activity as declaration activity, which is why
-they are excluded here rather than folded.
-"""
 
 
 class DeclarationsWorkspaceZoneObservationV1(BaseModel):
@@ -691,9 +632,6 @@ def _lifecycle_rows(
 
 __all__ = [
     "DECLARATIONS_WORKSPACE_CONTRACT_VERSION",
-    "DECLARATION_LIFECYCLE_EVENT_KINDS",
-    "DECLARATION_LIFECYCLE_EXCLUDED_EVENTS",
-    "DeclarationsLifecycleExclusion",
     "DeclarationsLifecycleKind",
     "DeclarationsSanitizedLifecycleFactV1",
     "DeclarationsWorkspaceAvailability",
