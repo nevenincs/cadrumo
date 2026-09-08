@@ -312,7 +312,7 @@ def check_no_open_release_blockers(
 def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
     """Confirm the most recent packaging-smoke manifest, if any, reports success.
 
-    Advisory: a fresh checkout has never run `just packaging-smoke*`, so
+    Advisory: a fresh checkout has never run `just test-packaging-smoke*`, so
     absence of evidence is reported but does not block the gate.
     """
     smoke_dir = repo_root / "var" / "packaging-smoke"
@@ -327,7 +327,7 @@ def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
             "advisory",
             False,
             "no packaging-smoke manifest found under var/packaging-smoke or its evidence checkpoint — "
-            "run `just packaging-smoke` first",
+            "run `just test-packaging-smoke` first",
         )
     latest = manifests[-1]
     try:

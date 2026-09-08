@@ -64,7 +64,7 @@ def test_the_just_check_reports_the_version_it_resolved(
 ) -> None:
     """Presence is not enough; the check runs it and prints what answered.
 
-    ``postCreateCommand`` is ``just install && just env-setup``, so a ``just``
+    ``postCreateCommand`` is ``just setup-install && just setup-env``, so a ``just``
     that resolves but cannot run fails container creation rather than the build,
     which is the confusing failure this check exists to pre-empt.
     """

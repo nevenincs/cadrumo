@@ -379,7 +379,7 @@ dev = [
   # `src/cadrumo/` runtime path imports it. It lives here, not in [project.dependencies],
   # so production installs stay lean — a PEP 735 group is a valid direct-dep location
   # for the `[tool.uv.sources]` cu130 pin per vaultspec-rag's torch_config, and
-  # `just install` installs the dev group so contributors still get GPU torch.
+  # `just setup-install` installs the dev group so contributors still get GPU torch.
   "torch>=2.4",
   # Import-linter for layered-architecture boundary enforcement.
   # Contract definition lives in `.importlinter` at repo root; activated by
@@ -449,7 +449,7 @@ dev = [
   # tooling tracks latest.
   "vaultspec-core>=0.1.55",
   "vaultspec-rag[mcp]>=0.3.8",
-  # Sphinx documentation pipeline — `just docs` builds HTML + Markdown from
+  # Sphinx documentation pipeline — `just docs-build` builds HTML + Markdown from
   # the Google-style + Sphinx-cross-referenced docstrings under src/cadrumo/.
   "sphinx>=8.1,<9",  # <9: sphinx-hoverxref 1.4.2 (latest) crashes on Sphinx 9's _Opt config repr at config-inited
   "sphinx-autodoc-typehints>=2.5",

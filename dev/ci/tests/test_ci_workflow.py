@@ -534,7 +534,7 @@ def test_ci_workflow_provisions_browser_before_unit_tests() -> None:
     browser_step = step_names.index("Provision Playwright Chromium")
     unit_step = step_names.index("Test (unit)")
 
-    assert steps[browser_step]["run"] == "just env-playwright"
+    assert steps[browser_step]["run"] == "just setup-playwright"
     assert browser_step < unit_step
 
 

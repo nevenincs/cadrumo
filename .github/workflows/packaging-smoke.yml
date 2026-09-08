@@ -90,7 +90,7 @@ jobs:
       # Reclaim the preinstalled toolchains the job never uses, and sample
       # disk/memory every minute during the one-invocation campaign so a
       # resource death names its lane in the interleaved output. The campaign
-      # stays a single `just packaging-smoke-ci` invocation so every lane
+      # stays a single `just test-packaging-smoke-ci` invocation so every lane
       # consumes the same cohort bytes built once.
       # NOTE: this lane performs no disk reclamation. A GitHub-hosted-only
       # reclaim step stood here, and under the self-hosted-only fleet policy
@@ -112,7 +112,7 @@ jobs:
           ( while true; do echo "[resources $(date -u +%H:%M:%S)] $(df -h --output=avail / | tail -1 | tr -d ' ') free disk, $(free -m | sed -n 2p | awk '{print $7}') MiB avail mem"; sleep 60; done ) &
           sampler=$!
           status=0
-          just packaging-smoke-ci || status=$?
+          just test-packaging-smoke-ci || status=$?
           kill "$sampler" 2>/dev/null || true
           exit "$status"
 
@@ -215,7 +215,7 @@ jobs:
         env:
           CADRUMO_TEST_WORKERS: "8"
           CADRUMO_PACKAGING_LANE_CONCURRENCY: "2"
-        run: just packaging-smoke
+        run: just test-packaging-smoke
 
       - name: Checkpoint packaging evidence
         if: always()
@@ -306,7 +306,7 @@ jobs:
         env:
           CADRUMO_TEST_WORKERS: "2"
           CADRUMO_PACKAGING_LANE_CONCURRENCY: "2"
-        run: just packaging-smoke
+        run: just test-packaging-smoke
 
       - name: Checkpoint packaging evidence
         if: always()

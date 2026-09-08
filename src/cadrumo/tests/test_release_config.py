@@ -1,6 +1,6 @@
 """Tripwire tests for the release-please LOCAL-only workflow.
 
-These tests validate the project-meta files that drive `just release`:
+These tests validate the project-meta files that drive `just release-publish`:
 
 - ``release-please-config.json``
 - ``.release-please-manifest.json``

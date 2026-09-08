@@ -103,7 +103,7 @@ reporting, not as authorisation, until the first release exists.
 To see what will be built before releasing anything:
 
 ```console
-just packaging-distributions
+just build-distributions
 ```
 
 That runs the same two operations the publish workflow performs, in the same order, and
@@ -137,7 +137,7 @@ When a new CPython minor reaches its final release, promote it in this order:
 1. Move the `next` row into `stable`, set `current_stable_minor`, and add the
    following prerelease row in `dev/ci/python-runtime-matrix.json`. Keep the
    promoted stable row blocking but `classifier_eligible: false` initially.
-2. Run `just python-compatibility` locally from a clean checkout and run the
+2. Run `just test-python-compatibility` locally from a clean checkout and run the
    dedicated compatibility workflow. Require source, binary, and sealed-artifact
    evidence for the new stable row on every supported platform.
 3. Add the exact `Programming Language :: Python :: 3.N` classifier to the root

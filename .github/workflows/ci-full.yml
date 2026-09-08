@@ -70,7 +70,7 @@ jobs:
           uv run vaultspec-core install --force
 
       - name: Provision Playwright Chromium
-        run: just env-playwright
+        run: just setup-playwright
 
       - name: Lint
         run: |
@@ -229,13 +229,13 @@ jobs:
         # artefact. The cost of the earlier position is that a failure in a later
         # hard step now happens after the build has been paid for.
         #
-        # `just docs` is a FULL build despite the recipe's "changed documents"
+        # `just docs-build` is a FULL build despite the recipe's "changed documents"
         # docstring — it passes `docs/conf.py`, which `planned_doc_targets`
         # treats as the full-build trigger, so it does not depend on a diff and
         # is correct on a cold workspace. Verified rather than assumed, because
         # a changed-only build would no-op on a clean checkout and leave the
         # artefact absent, which is precisely the failure this step removes.
-        run: just docs
+        run: just docs-build
 
       - name: Tooling gates no other lane reaches
         # The recipe's own docstring names it: "the dev/ tooling gates that no
@@ -334,7 +334,7 @@ jobs:
         # aborting in their fixtures, so this step is minutes of genuine work
         # rather than seconds of fast failure. A red verdict here is a real
         # binding or oracle regression.
-        run: just packaging-smoke-serial
+        run: just test-packaging-smoke-serial
 
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,

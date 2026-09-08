@@ -46,7 +46,7 @@ def test_the_same_invocation_uncommented_is_executed() -> None:
 
 def test_an_indented_comment_is_still_a_comment() -> None:
     """YAML block scalars keep their indentation, so the rule strips first."""
-    assert executed_lines("    # just packaging-smoke") == ()
+    assert executed_lines("    # just test-packaging-smoke") == ()
 
 
 def test_a_hash_that_is_not_a_comment_survives_intact() -> None:
@@ -73,11 +73,11 @@ def test_an_absent_run_block_reads_as_executing_nothing() -> None:
 
 def test_a_sequence_of_scripts_joins_under_the_same_rule() -> None:
     """Joining every step in a job must not reintroduce the prose."""
-    steps = ("# just packaging-smoke", "just packaging-quick", None)
+    steps = ("# just test-packaging-smoke", "just test-packaging-quick", None)
 
-    assert executed_text(steps) == "just packaging-quick"
+    assert executed_text(steps) == "just test-packaging-quick"
 
 
 def test_a_bare_string_is_one_script_rather_than_its_characters() -> None:
     """The iterable overload must not shred a single `run:` block."""
-    assert executed_text("just packaging-quick") == "just packaging-quick"
+    assert executed_text("just test-packaging-quick") == "just test-packaging-quick"

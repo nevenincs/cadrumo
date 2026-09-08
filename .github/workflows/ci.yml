@@ -366,7 +366,7 @@ jobs:
           node-version: "20"
 
       - name: Provision Playwright Chromium
-        run: just env-playwright
+        run: just setup-playwright
 
       - name: Test (unit)
         # --durations keeps a rolling public profile of the suite's heaviest

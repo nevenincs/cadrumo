@@ -15,7 +15,7 @@ project in a ready-made container.
 Install the project and its tools in one step:
 
 ```bash
-just init
+just bootstrap
 ```
 
 This creates the pinned Python environment, installs the project and all
@@ -36,14 +36,14 @@ and pre-bakes the Playwright browser; later reopens reuse the cached image.
 Without VS Code, build and run the image directly:
 
 ```bash
-just devcontainer-build
+just build-devcontainer
 docker run --rm -it -v "$(pwd)":/workspace cadrumo-devcontainer bash
 ```
 
 Verify the image installs cleanly and its toolchain works end to end:
 
 ```bash
-just devcontainer-test
+just test-devcontainer
 ```
 
 The container has no interactive display, so live AEAT browser reads run
@@ -54,7 +54,7 @@ Mount it or set `CADRUMO_CERTIFICATE_PATH` after the container starts if you nee
 
 ## Check the workstation
 
-`just doctor` runs `aeat config check` against the checkout's environment. The
+`just doctor-check` runs `aeat config check` against the checkout's environment. The
 report lists each external dependency, whether it is available, and the exact
 command to fix any gap.
 
@@ -62,10 +62,10 @@ Provision the optional Playwright browser and get guidance for the on-host
 vision model:
 
 ```bash
-just provision
+just setup-provision
 ```
 
-Run `just doctor` again after each change to confirm the gap is closed.
+Run `just doctor-check` again after each change to confirm the gap is closed.
 
 ## Check Python runtime compatibility
 
@@ -92,7 +92,7 @@ uv python install 3.13 3.14 3.15
 Then run the inventory-driven compatibility command from a clean checkout:
 
 ```console
-just python-compatibility
+just test-python-compatibility
 ```
 
 The command writes evidence below `var/python-runtime-compatibility/`. Source

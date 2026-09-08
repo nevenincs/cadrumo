@@ -167,7 +167,7 @@ def test_the_codes_are_distinct() -> None:
 
 
 def test_the_init_codes_match_the_agreed_allocation() -> None:
-    """L6 allocated 2-6 for `just init`; nothing else may claim them."""
+    """L6 allocated 2-6 for `just bootstrap`; nothing else may claim them."""
     allocated = (
         INIT_HOST_TOOL_MISSING,
         INIT_STALE,

@@ -144,7 +144,7 @@ jobs:
         # volume-shadowed /home/runner, pre-warmed portable-ruby, the entrypoint,
         # and the agent — plus a tmpfs proof that a volume mounted over
         # /home/runner cannot shadow any of it.
-        run: just runner-image-test
+        run: just test-runner-image
 
       - name: Reclaim build space
         # Hardware space is limited on this fleet (see dev/runners/README.md), and
@@ -175,7 +175,7 @@ jobs:
         uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
 
       - name: Build and verify the devcontainer image
-        run: just devcontainer-test
+        run: just test-devcontainer
 
       - name: Reclaim build space
         if: always()

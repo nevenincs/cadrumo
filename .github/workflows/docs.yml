@@ -109,7 +109,7 @@ jobs:
         # (palette ranking, inline ladder, query-param, full-text class ranking,
         # pagefind injection, deployment parity) drive the built page in
         # Chromium. Without this they fail on the harness, not on the content.
-        run: just env-playwright
+        run: just setup-playwright
 
       - name: Build the documentation site
         # THE GATES READ A BUILT ARTEFACT, so the build is a precondition and not
@@ -128,7 +128,7 @@ jobs:
         # count is zero, so it was an unrun lane carrying the same latent gap,
         # which would have failed on its first dispatch. The stale-artefact
         # hazard is real but had not yet had the chance to fire.
-        run: just docs
+        run: just docs-build
 
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,

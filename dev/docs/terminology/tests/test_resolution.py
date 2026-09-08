@@ -267,7 +267,7 @@ def _cli_reference_source(relpath: str) -> Path:
     if not path.is_file():
         pytest.fail(
             f"the generated CLI reference tree is built but does not hold {relpath!r}; "
-            "rebuild it with `just docs` if the command tree changed",
+            "rebuild it with `just docs-build` if the command tree changed",
         )
     return path
 
@@ -597,7 +597,7 @@ def test_absent_generated_cli_reference_tree_is_refused_not_dropped(tmp_path: Pa
         _require_built_cli_reference(tmp_path)
     message = str(refusal.value)
     assert "docs/cli" in message, "the refusal must name the root that is missing"
-    assert "just docs" in message, "the refusal must name the remedy that writes it"
+    assert "just docs-build" in message, "the refusal must name the remedy that writes it"
 
 
 def test_short_generated_cli_reference_tree_is_refused_like_an_absent_one(tmp_path: Path) -> None:

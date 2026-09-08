@@ -1,1 +1,1 @@
-"""Workstation environment provisioning-verification tooling (`just playwright-doctor` et al.)."""
+"""Workstation environment provisioning-verification tooling (`just doctor-playwright` et al.)."""

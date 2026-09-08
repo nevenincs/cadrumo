@@ -9,7 +9,7 @@ have.
 That divergence is live. ``runner-fleet-health.yml`` fires on push and on
 dispatch, and its ``dev-image`` job is guarded by
 ``github.event_name == 'workflow_dispatch' && inputs.include_dev_image``. The
-job runs on NO push, and ``just devcontainer-test`` -- the only thing that
+job runs on NO push, and ``just test-devcontainer`` -- the only thing that
 builds and probes the contributor image -- is reached from nowhere else. A
 workflow-level reading calls that lane push-triggered, which is the reassuring
 answer and the wrong one.

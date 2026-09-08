@@ -114,7 +114,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Cadrumo quick packaging probe
-        run: just packaging-quick
+        run: just test-packaging-quick
 
   quick-windows:
     name: Cadrumo quick / Windows / cohort + core probe
@@ -150,7 +150,7 @@ jobs:
         run: uv sync --frozen
 
       - name: Cadrumo quick packaging probe
-        run: just packaging-quick
+        run: just test-packaging-quick
 
   quick-macos:
     name: Cadrumo quick / macOS / cohort + core probe
@@ -178,4 +178,4 @@ jobs:
         run: uv sync --frozen
 
       - name: Cadrumo quick packaging probe
-        run: just packaging-quick
+        run: just test-packaging-quick
