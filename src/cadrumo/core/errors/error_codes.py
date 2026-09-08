@@ -329,21 +329,6 @@ def get_registered_error_code(error: BaseException | type[BaseException]) -> Err
     return code
 
 
-def resolve_output_language() -> str:
-    """Resolve the configured output language, defaulting to ``es``."""
-    try:
-        from ..i18n import output_language
-
-        return output_language()
-    except Exception as exc:
-        logger.debug(
-            "resolve_output_language: i18n resolution failed; falling back to 'es' (%s)",
-            exc,
-            exc_info=True,
-        )
-        return "es"
-
-
 def scrub_error_context(context: Mapping[str, object] | None) -> dict[str, str] | None:
     """Redact secret-looking keys and strip internal keys from ``context``.
 
@@ -632,6 +617,5 @@ __all__ = [
     "render_error_json",
     "render_error_text",
     "resolve_error_message",
-    "resolve_output_language",
     "scrub_error_context",
 ]
