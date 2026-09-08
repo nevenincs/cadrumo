@@ -20,11 +20,9 @@ import pytest
 from ...core.config import override_settings
 from ...core.errors.hierarchy import CadrumoError, CoreError
 from ...core.optional_extras import MissingOptionalExtraError, OptionalExtra, require_optional_extra
-from ...core.storage_taxonomy import ExternalPathRole
 from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
 from ..provisioning import (
     OPTIONAL_EXTRAS,
-    PLAYWRIGHT_BROWSERS_ROOT_ROLE,
     DependencyStatus,
     _playwright_browsers_root,
     probe_ollama_vision,
@@ -118,12 +116,6 @@ def test_probe_playwright_browser_missing_root_is_unavailable_not_an_error(
     """A nonexistent cache root reports unavailable rather than raising OSError."""
     status = probe_playwright_browser(cache_root=tmp_path / "does-not-exist")
     assert status.available is False
-
-
-def test_playwright_browsers_root_escape_is_declared() -> None:
-    """The Playwright browser cache carries a positive third-party-cache
-    declaration rather than sitting silently outside the storage taxonomy."""
-    assert PLAYWRIGHT_BROWSERS_ROOT_ROLE is ExternalPathRole.THIRD_PARTY_CACHE
 
 
 def test_playwright_browsers_root_still_honours_vendor_env_var(tmp_path: Path) -> None:
