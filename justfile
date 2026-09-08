@@ -304,12 +304,16 @@ check-unused-symbol-coverage:
 check-secure-store-write-path:
     @uv run --no-sync python -m dev.quality.secure_store_write_path
 
+# Verify every Sphinx cross-reference in a docstring names a symbol that
+# still exists; a dangling target fails the build.
+[doc('Verify every docstring cross-reference resolves to a real symbol.')]
 [group('check')]
 check-docstring-references:
     @uv run --no-sync python -m dev.quality.docstring_reference_targets
 
 # Report every name in __all__ that no non-test module imports and the live
 # reachability audit also reports unused.
+[doc('Refuse every exported name no non-test module consumes.')]
 [group('check')]
 check-unconsumed-export-coverage:
     @uv run --no-sync python -m dev.quality.unconsumed_export_coverage
