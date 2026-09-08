@@ -18,8 +18,6 @@ silently filtered out of every result.
 See Also:
     :func:`~application.corpus_search.search_terminology`
         Public facade for approved-concept terminology search.
-    :func:`~application.corpus_search.lookup_terminology`
-        Public facade for exact concept-id lookup.
 
 Notes:
     External adapters may project ranked terminology hits into their own
@@ -344,25 +342,6 @@ def search_terminology(
     return tuple(hit for _score, hit in scored[:limit])
 
 
-def lookup_terminology(concept_id: str, *, locale: str = _FALLBACK_LOCALE) -> TerminologyConcept:
-    """Return one concept by id.
-
-    Raises:
-        CorpusSearchInputError: If ``concept_id`` is unknown.
-
-    Returns:
-        A :class:`TerminologyConcept`.
-    """
-    key = concept_id.strip()
-    for concept in load_terminology_concepts(locale):
-        if concept.concept_id == key:
-            return concept
-    raise CorpusSearchInputError(
-        reason="concept_unknown",
-        context={"concept_id": concept_id},
-    )
-
-
 __all__ = [
     "CONCEPT_ID_MAX_LENGTH",
     "CONCEPT_ID_MIN_LENGTH",
@@ -370,6 +349,5 @@ __all__ = [
     "TerminologyConcept",
     "TerminologyHit",
     "load_terminology_concepts",
-    "lookup_terminology",
     "search_terminology",
 ]

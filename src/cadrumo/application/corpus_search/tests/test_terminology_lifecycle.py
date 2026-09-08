@@ -20,7 +20,6 @@ from ..terminology import (
     _project_concept,
     _terminology_root,
     load_terminology_concepts,
-    lookup_terminology,
     search_terminology,
 )
 
@@ -115,7 +114,6 @@ def test_search_default_surfaces_only_approved_concepts() -> None:
         # if the default lifecycle filter were not applied.
         hits = search_terminology(concept_id, locale="es")
         assert concept_id not in {hit.concept_id for hit in hits}
-        assert lookup_terminology(concept_id, locale="es").concept_id == concept_id
 
 
 def test_search_widened_to_a_member_surfaces_that_lifecycle() -> None:
