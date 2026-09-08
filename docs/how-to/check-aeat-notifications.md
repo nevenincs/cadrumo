@@ -75,7 +75,7 @@ without contacting AEAT, or list the figures reported by each parsed document:
 
 Treat history as a document record, not as a balance. It does not total the
 figures, state what is currently payable, or replace the recaudación register
-shown by the `aeat app live deudas` commands. A document alone does not establish
+reported by AEAT's debts consulta. A document alone does not establish
 whether its amount was paid, appealed, reduced, or superseded.
 
 ---

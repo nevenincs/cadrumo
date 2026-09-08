@@ -30,8 +30,8 @@ Submodules
    cadrumo.application.modelo._dt12_advisory
    cadrumo.application.modelo._dt12_antiquity_advisory
    cadrumo.application.modelo._edit_execution
-   cadrumo.application.modelo._edit_facade
    cadrumo.application.modelo._export_amendment_evidence
+   cadrumo.application.modelo._ledger_anchor_capture
    cadrumo.application.modelo._ledger_drift_gate
    cadrumo.application.modelo._ledger_evidence_gate
    cadrumo.application.modelo._m145_communication
@@ -76,6 +76,7 @@ Submodules
    cadrumo.application.modelo.calculation_actions
    cadrumo.application.modelo.calculation_repository
    cadrumo.application.modelo.calculation_resolution
+   cadrumo.application.modelo.calculation_revision_gate
    cadrumo.application.modelo.calculation_route
    cadrumo.application.modelo.calculation_source_policy
    cadrumo.application.modelo.data_inventory

@@ -16,7 +16,6 @@ Subpackages
    cadrumo.entrypoints.tui.aeat_sync
    cadrumo.entrypoints.tui.components
    cadrumo.entrypoints.tui.declarations
-   cadrumo.entrypoints.tui.devtools
    cadrumo.entrypoints.tui.flows
    cadrumo.entrypoints.tui.ledger
    cadrumo.entrypoints.tui.modelo

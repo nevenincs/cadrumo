@@ -40,3 +40,4 @@ Submodules
    cadrumo.application.calculations.relation_prefill_m202
    cadrumo.application.calculations.revision_carry_gate
    cadrumo.application.calculations.row_set_assembly
+   cadrumo.application.calculations.verification_report_gate

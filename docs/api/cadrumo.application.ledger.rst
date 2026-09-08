@@ -80,6 +80,7 @@ Submodules
    cadrumo.application.ledger.review_filter
    cadrumo.application.ledger.review_projection
    cadrumo.application.ledger.rule_repository
+   cadrumo.application.ledger.source_jurisdiction
    cadrumo.application.ledger.stale_filing_query
    cadrumo.application.ledger.transaction_repository
    cadrumo.application.ledger.usage_ratio_repository

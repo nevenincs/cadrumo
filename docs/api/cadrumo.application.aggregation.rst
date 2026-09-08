@@ -16,7 +16,6 @@ Submodules
    cadrumo.application.aggregation._atribucion_member
    cadrumo.application.aggregation._business_proportion
    cadrumo.application.aggregation._counterpart
-   cadrumo.application.aggregation._currency_predicates
    cadrumo.application.aggregation._evidence_advisory
    cadrumo.application.aggregation._foreign_assets
    cadrumo.application.aggregation._grouping
@@ -52,6 +51,7 @@ Submodules
    cadrumo.application.aggregation._source_profile
    cadrumo.application.aggregation._undeclared_activity_advisory
    cadrumo.application.aggregation._withholding_source
+   cadrumo.application.aggregation.currency_predicates
    cadrumo.application.aggregation.errors
    cadrumo.application.aggregation.iva_ledger
    cadrumo.application.aggregation.ledger_filing_snapshot

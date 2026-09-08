@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.entrypoints.tui.declarations.action_guards
    cadrumo.entrypoints.tui.declarations.calendar
    cadrumo.entrypoints.tui.declarations.controller
    cadrumo.entrypoints.tui.declarations.filing_history

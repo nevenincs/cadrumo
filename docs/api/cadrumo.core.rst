@@ -77,7 +77,6 @@ Submodules
    cadrumo.core.credentials
    cadrumo.core.declaracion_idioma
    cadrumo.core.descendant_relacion
-   cadrumo.core.deuda_direccion
    cadrumo.core.directory_scan
    cadrumo.core.document_shape
    cadrumo.core.draft_discrepancy
@@ -128,7 +127,6 @@ Submodules
    cadrumo.core.modelo_work_progress_state
    cadrumo.core.models
    cadrumo.core.notificacion_estado_servicio
-   cadrumo.core.objeto_tributario
    cadrumo.core.observed_header_fact
    cadrumo.core.operations
    cadrumo.core.operator_action_enums
@@ -166,7 +164,6 @@ Submodules
    cadrumo.core.schema_family_disposition
    cadrumo.core.secure_object_write
    cadrumo.core.setup_answers
-   cadrumo.core.source_connectivity
    cadrumo.core.source_locator
    cadrumo.core.spanish_postcode
    cadrumo.core.spanish_stemming
