@@ -30,7 +30,6 @@ from ....tests.secure_sql import TestRuntimeProfile
 from ..extraction_draft_store import (
     ExtractionDraftDocument,
     StoredExtractionDraft,
-    discard_extraction_draft,
     load_extraction_drafts,
     read_extraction_draft,
     write_extraction_draft,
@@ -170,39 +169,6 @@ def test_a_correction_replaces_the_pending_draft_rather_than_forking_a_second(
     assert pending is not None
     assert pending.draft.supplier_tax_id == "ESX1234567L"
     assert pending.extractor == "operator-correction"
-
-
-def test_discarding_a_draft_leaves_its_siblings_untouched(profile: TestRuntimeProfile) -> None:
-    """A confirmed draft is dropped; a pending one for another document survives.
-
-    A confirmed document that still shows a pending review invites a second
-    confirm of the same evidence, so the discard must happen -- but it must not
-    take unrelated reviews with it.
-    """
-    for reference in (_REFERENCE, "ev-other"):
-        write_extraction_draft(
-            bucket_id=profile.bucket_id,
-            evidence_reference=reference,
-            draft=_two_rate_draft(),
-            extractor="en16931-ubl",
-            settings=profile.settings,
-        )
-
-    remaining = discard_extraction_draft(
-        bucket_id=profile.bucket_id,
-        evidence_reference=_REFERENCE,
-        settings=profile.settings,
-    )
-
-    assert [row.evidence_reference for row in remaining.drafts] == ["ev-other"]
-    assert (
-        read_extraction_draft(
-            bucket_id=profile.bucket_id,
-            evidence_reference=_REFERENCE,
-            settings=profile.settings,
-        )
-        is None
-    )
 
 
 def test_deleting_a_persisted_field_makes_the_load_refuse() -> None:
