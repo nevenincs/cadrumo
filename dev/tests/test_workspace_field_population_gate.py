@@ -84,14 +84,6 @@ _OUTSTANDING: frozenset[str] = frozenset(
         "ModeloWorkspaceDomainRefusalV1.capability",
         "ModeloWorkspaceDomainRefusalV1.evidence",
         "ModeloWorkspaceDomainRefusalV1.source_disposition",
-        # Not a field-level gap at all: this refusal TYPE has zero production
-        # constructions. The refusal union declares three members and
-        # production builds exactly one of them, so two advertise outcomes
-        # nothing emits -- the finding the gate-integrity audit already carries,
-        # and this field is its symptom. It becomes fillable when the type is
-        # first produced, and asking for a recovery action on a refusal nobody
-        # raises is asking about a payload that does not exist.
-        "ModeloWorkspaceRevisionMismatchRefusalV1.recovery_action",
         # Not populatable, and the reason is structural rather than a missing
         # field. Applicability is declared on the REVISION and expressed against
         # TAXPAYER conditions -- entity types, income categories, estimation

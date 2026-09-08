@@ -38,11 +38,10 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
     ModeloWorkspaceConstraintReferenceV1,
+    ModeloWorkspaceDomainRefusalV1,
     ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceRecordLabelV1,
-    ModeloWorkspaceRefusalV1,
     ModeloWorkspaceScalarMaterializationV1,
-    ModeloWorkspaceVersionRefusalV1,
 )
 from .....core.models import STRICT_FROZEN_CONFIG
 
@@ -239,7 +238,7 @@ def capability_row(capability: ModeloWorkspaceCapabilityV1) -> ModeloWorkspaceCa
     )
 
 
-type ModeloWorkspaceRefusalKindV1 = Literal["unsupported_version", "revision_assertion_mismatch", "domain"]
+type ModeloWorkspaceRefusalKindV1 = Literal["domain"]
 
 
 class ModeloWorkspaceRefusalViewV1(_ViewModel):
@@ -254,33 +253,21 @@ class ModeloWorkspaceRefusalViewV1(_ViewModel):
     kind: ModeloWorkspaceRefusalKindV1
     responsible_owner: str | None
     reconsideration_condition: str | None
-    source: ModeloWorkspaceRefusalV1
+    source: ModeloWorkspaceDomainRefusalV1
 
     @model_validator(mode="after")
     def _mirror_the_source_refusal(self) -> ModeloWorkspaceRefusalViewV1:
-        source = self.source
-        if self.kind != source.kind:
+        if self.kind != self.source.kind:
             raise ValueError("refusal view must mirror the refusal's own discriminator")
-        if isinstance(source, ModeloWorkspaceVersionRefusalV1):
-            if self.responsible_owner is not None or self.reconsideration_condition is not None:
-                raise ValueError("a pre-parse version refusal carries no owner or reconsideration condition")
-            return self
-        if self.responsible_owner != source.responsible_owner:
+        if self.responsible_owner != self.source.responsible_owner:
             raise ValueError("refusal view must mirror the refusal's responsible owner")
-        if self.reconsideration_condition != source.reconsideration_condition:
+        if self.reconsideration_condition != self.source.reconsideration_condition:
             raise ValueError("refusal view must mirror the refusal's reconsideration condition")
         return self
 
 
-def refusal_view(refusal: ModeloWorkspaceRefusalV1) -> ModeloWorkspaceRefusalViewV1:
+def refusal_view(refusal: ModeloWorkspaceDomainRefusalV1) -> ModeloWorkspaceRefusalViewV1:
     """Narrow any refusal arm to the presentation facts it actually carries."""
-    if isinstance(refusal, ModeloWorkspaceVersionRefusalV1):
-        return ModeloWorkspaceRefusalViewV1(
-            kind=refusal.kind,
-            responsible_owner=None,
-            reconsideration_condition=None,
-            source=refusal,
-        )
     return ModeloWorkspaceRefusalViewV1(
         kind=refusal.kind,
         responsible_owner=refusal.responsible_owner,

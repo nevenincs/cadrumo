@@ -241,16 +241,9 @@ def resolve_modelo_workspace_revision_axes(
     source. This function never captures REGISTRY itself -- it only evaluates
     the two axes against what the caller already captured.
 
-    This function NEVER raises on a mismatch. ``ModeloWorkspaceRevisionAssertionV1``
-    has a ``MISMATCHED`` disposition member precisely because the shared
-    Workspace contract expects the mismatch surfaced as typed data, carried
-    into ``ModeloWorkspaceRevisionMismatchRefusalV1`` by the assembly layer --
-    an exception escaping here would destroy the very information that typed
-    refusal exists to carry. A caller that wants the canonical translated
-    mismatch text (for example to construct that refusal's prose) reuses the
-    sole pure :func:`assert_work_target_revision` itself, over the same
-    ``requested_revision_id`` / ``stored_revision_id`` / law revision triple
-    this function computed its dispositions from; it is not called here.
+    This function never raises on a mismatch. Each independently evaluated
+    assertion retains its typed ``MISMATCHED`` disposition in the resolved
+    target, so callers receive the divergence without losing either axis.
     """
     requested_revision_id = resolution.requested_revision_id
     stored_revision_id = resolution.work_unit.revision_id if resolution.work_unit is not None else None
@@ -382,11 +375,9 @@ def resolve_modelo_workspace_target(
 
     This is the shared shape both admissions build their projection or
     refusal on top of. It carries no mismatch judgement of its own beyond
-    what ``ModeloWorkspaceRevisionAxes`` already computed: a caller finding
-    either assertion at ``MISMATCHED`` builds
-    ``ModeloWorkspaceRevisionMismatchRefusalV1`` from this same record rather
-    than treating the mismatch as an exception -- this function never raises
-    for a revision mismatch.
+    what ``ModeloWorkspaceRevisionAxes`` already computed. This function never
+    raises for a revision mismatch; it preserves both assertion dispositions
+    on the resolved target.
     """
     resolution, registry_projection, axes = capture_modelo_workspace_target_axes(
         target,

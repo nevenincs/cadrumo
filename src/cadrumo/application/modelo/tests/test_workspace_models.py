@@ -26,12 +26,10 @@ from ..workspace_models import (
     ModeloWorkspaceCapabilityV1,
     ModeloWorkspaceCasillaReferenceV1,
     ModeloWorkspaceContributorIdentityV1,
-    ModeloWorkspaceCountFactValueV1,
     ModeloWorkspaceCursorV1,
     ModeloWorkspaceEvidenceFactV1,
     ModeloWorkspaceEvidenceHorizonV1,
     ModeloWorkspaceFacetName,
-    ModeloWorkspaceFlagFactValueV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
     ModeloWorkspaceLocalizedTextV1,
@@ -39,15 +37,11 @@ from ..workspace_models import (
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceProvenanceRecordV1,
     ModeloWorkspaceReadinessV1,
-    ModeloWorkspaceRefusalV1,
-    ModeloWorkspaceRefusedResultV1,
     ModeloWorkspaceRequestV1,
     ModeloWorkspaceResolvedTargetV1,
-    ModeloWorkspaceResultV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
-    ModeloWorkspaceRevisionMismatchRefusalV1,
     ModeloWorkspaceScalarMaterializationRecordV1,
     ModeloWorkspaceSchemaClassification,
     ModeloWorkspaceSchemaIdentityV1,
@@ -56,7 +50,6 @@ from ..workspace_models import (
     ModeloWorkspaceStaticInspectionScopeV1,
     ModeloWorkspaceTechnicalLabelV1,
     ModeloWorkspaceTextFactValueV1,
-    ModeloWorkspaceVersionRefusalV1,
     ModeloWorkspaceVisibleFilingTargetV1,
     ModeloWorkspaceWorkReviewFacetV1,
 )
@@ -268,19 +261,6 @@ def test_workspace_request_preserves_the_canonical_visible_target_through_a_stri
         )
     with pytest.raises(ValidationError):
         request.__setattr__("contract_version", 2)
-
-
-def test_workspace_result_keeps_version_refusal_outside_the_v1_coordinate_arm() -> None:
-    result = ModeloWorkspaceRefusedResultV1(
-        refusal=ModeloWorkspaceVersionRefusalV1(requested_version=2),
-    )
-
-    decoded = TypeAdapter(ModeloWorkspaceResultV1).validate_json(result.model_dump_json())
-
-    assert isinstance(decoded, ModeloWorkspaceRefusedResultV1)
-    assert decoded.refusal.requested_version == 2
-    assert decoded.refusal.supported_version == 1
-    assert "contract_version" not in decoded.model_dump(mode="json")
 
 
 def test_workspace_bounded_facet_pins_all_root_consistency_coordinates() -> None:
@@ -512,22 +492,12 @@ def test_workspace_materialization_is_a_true_discriminated_union() -> None:
         )
 
 
-def test_workspace_safe_fact_values_discriminate_text_counts_and_flags_without_cross_branch_constraints() -> None:
-    count = ModeloWorkspaceEvidenceFactV1(
-        name="records",
-        value=ModeloWorkspaceCountFactValueV1(value=2),
-    )
-    flag = ModeloWorkspaceEvidenceFactV1(
-        name="measured",
-        value=ModeloWorkspaceFlagFactValueV1(value=True),
-    )
+def test_workspace_safe_fact_value_rejects_unbounded_text() -> None:
     text = ModeloWorkspaceEvidenceFactV1(
         name="owner",
         value=ModeloWorkspaceTextFactValueV1(value="registry"),
     )
 
-    assert count.value.value == 2
-    assert flag.value.value is True
     assert text.value.value == "registry"
     with pytest.raises(ValidationError):
         ModeloWorkspaceEvidenceFactV1.model_validate(
@@ -627,63 +597,6 @@ def test_workspace_revision_assertion_axes_are_required_independent_and_current_
                     "disposition": "not_present",
                 },
             }
-        )
-
-
-def test_workspace_revision_mismatch_refusal_preserves_both_axes_and_every_mismatching_source() -> None:
-    requested = ModeloWorkspaceRevisionAssertionV1(
-        source=ModeloWorkspaceRevisionAssertionSource.REQUESTED,
-        disposition=ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED,
-        asserted_revision_id="2024-y-siguientes",
-    )
-    stored = ModeloWorkspaceRevisionAssertionV1(
-        source=ModeloWorkspaceRevisionAssertionSource.STORED,
-        disposition=ModeloWorkspaceRevisionAssertionDisposition.MISMATCHED,
-        asserted_revision_id="2023-y-siguientes",
-    )
-    selected_target = ModeloWorkspaceResolvedTargetV1.model_validate(
-        {
-            **_target().model_dump(),
-            "requested_revision_assertion": requested,
-            "stored_revision_assertion": stored,
-        }
-    )
-    requested_target = ModeloWorkspaceVisibleFilingTargetV1(
-        target=ModeloVisibleFilingTarget(
-            modelo=selected_target.modelo,
-            filing_year=selected_target.filing_year,
-            period=selected_target.period,
-        )
-    )
-    refusal = ModeloWorkspaceRevisionMismatchRefusalV1(
-        requested_target=requested_target,
-        selected_target=selected_target,
-        requested_revision_assertion=requested,
-        stored_revision_assertion=stored,
-        mismatching_sources=(
-            ModeloWorkspaceRevisionAssertionSource.REQUESTED,
-            ModeloWorkspaceRevisionAssertionSource.STORED,
-        ),
-        responsible_owner="application.modelo.work_addressing",
-        reconsideration_condition="supply assertions that match the selected revision",
-    )
-
-    decoded = TypeAdapter(ModeloWorkspaceRefusalV1).validate_json(refusal.model_dump_json())
-
-    assert decoded == refusal
-    assert decoded.mismatching_sources == (
-        ModeloWorkspaceRevisionAssertionSource.REQUESTED,
-        ModeloWorkspaceRevisionAssertionSource.STORED,
-    )
-    with pytest.raises(ValidationError, match="every and only mismatching source"):
-        ModeloWorkspaceRevisionMismatchRefusalV1(
-            requested_target=requested_target,
-            selected_target=selected_target,
-            requested_revision_assertion=requested,
-            stored_revision_assertion=stored,
-            mismatching_sources=(ModeloWorkspaceRevisionAssertionSource.REQUESTED,),
-            responsible_owner="application.modelo.work_addressing",
-            reconsideration_condition="supply assertions that match the selected revision",
         )
 
 

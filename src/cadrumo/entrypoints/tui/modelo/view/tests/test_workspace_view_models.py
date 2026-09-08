@@ -28,7 +28,6 @@ from ......application.modelo.workspace_models import (
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
     ModeloWorkspaceTechnicalLabelV1,
-    ModeloWorkspaceVersionRefusalV1,
     ModeloWorkspaceVisibleFilingTargetV1,
 )
 from ......core.external_constants import OutputLanguage
@@ -38,7 +37,6 @@ from ..models import (
     ModeloWorkspaceBoundedPageV1,
     ModeloWorkspaceCapabilityRowV1,
     ModeloWorkspaceCompletePageV1,
-    ModeloWorkspaceRefusalViewV1,
     capability_row,
     constraint_disclosure,
     display_text,
@@ -192,15 +190,6 @@ def test_display_text_reports_a_localized_label_as_translated() -> None:
     assert localized.translated is True
 
 
-def test_a_version_refusal_view_names_no_owner_it_does_not_have() -> None:
-    """The pre-parse refusal carries neither owner nor condition, and says so."""
-    view = refusal_view(ModeloWorkspaceVersionRefusalV1(requested_version=2))
-
-    assert view.kind == "unsupported_version"
-    assert view.responsible_owner is None
-    assert view.reconsideration_condition is None
-
-
 def test_a_domain_refusal_view_carries_the_owner_and_condition_verbatim() -> None:
     refusal = ModeloWorkspaceDomainRefusalV1(
         code=ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
@@ -220,19 +209,6 @@ def test_a_domain_refusal_view_carries_the_owner_and_condition_verbatim() -> Non
     assert view.responsible_owner == "application.modelo.workspace"
     assert view.reconsideration_condition == "calculate this work unit first"
     assert view.source is refusal
-
-
-def test_a_refusal_view_cannot_invent_an_owner_for_a_version_refusal() -> None:
-    """Anti-tautology for the refusal mirror: a fabricated owner is refused."""
-    refusal = ModeloWorkspaceVersionRefusalV1(requested_version=2)
-
-    with pytest.raises(ValidationError, match="carries no owner or reconsideration condition"):
-        ModeloWorkspaceRefusalViewV1(
-            kind="unsupported_version",
-            responsible_owner="someone",
-            reconsideration_condition="something",
-            source=refusal,
-        )
 
 
 def test_a_bounded_page_is_a_different_shape_from_a_complete_one() -> None:

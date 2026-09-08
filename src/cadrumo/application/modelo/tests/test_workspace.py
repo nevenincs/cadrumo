@@ -249,9 +249,8 @@ def test_a_stored_revision_diverging_from_the_law_selected_one_is_typed_data_not
 ) -> None:
     """A mismatch must surface as a MISMATCHED disposition, never an exception that erases it.
 
-    ``ModeloWorkspaceRevisionMismatchRefusalV1`` is built FROM the mismatched
-    axes; an exception escaping the axis computation would destroy the exact
-    information that typed refusal exists to carry.
+    An exception escaping the axis computation would destroy the exact
+    information the resolved target carries.
     """
     bucket_id, repository = workspace_repos
     work_unit = _seed_work_unit(repository, bucket_id=bucket_id)
