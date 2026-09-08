@@ -20,6 +20,7 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
@@ -121,7 +122,17 @@ def test_canonical_authority_maps_configured_custody_storage_failure_to_typed_re
     monkeypatch.setattr(filing_export_proof, "prove_secure_export_replay", _invoke_configured_custody)
 
     assessment = authority.assess_for(
-        FilingExportProofCoordinate(modelo="111", revision="2019-y-siguientes", layout_ids=("test-layout",)),
+        FilingExportProofCoordinate(
+            modelo="111",
+            revision="2019-y-siguientes",
+            snapshot_ref=RegistrySnapshotRef(
+                modelo="111",
+                revision_id="2019-y-siguientes",
+                modelo_year=2025,
+                period="1T",
+            ),
+            layout_ids=("test-layout",),
+        ),
     )
 
     assert custody.called
