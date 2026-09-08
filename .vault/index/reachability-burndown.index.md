@@ -6,7 +6,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:76625b0153343f166c03ebf0fa9b3820bca61942a05ff8897c94ee3b321a5caa'
+body_hash: 'sha256:daad3c5be028784e77844bca94becf8013fdfb9497ffbd91b7795f77a9602bc7'
 related:
   - '[[2026-09-04-reachability-burndown-W01-P01-S01]]'
   - '[[2026-09-04-reachability-burndown-W01-P01-S02]]'
@@ -164,6 +164,16 @@ related:
   - '[[2026-09-04-reachability-burndown-W05-P12-S230]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S231]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S232]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S233]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S234]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S235]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S236]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S237]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S238]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S239]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S240]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S241]]'
+  - '[[2026-09-04-reachability-burndown-W05-P12-S242]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S25]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S26]]'
   - '[[2026-09-04-reachability-burndown-W05-P12-S27]]'
@@ -242,6 +252,7 @@ related:
   - '[[2026-09-04-reachability-burndown-adr]]'
   - '[[2026-09-04-reachability-burndown-plan]]'
   - '[[2026-09-04-reachability-burndown-reference]]'
+  - '[[2026-09-08-reachability-burndown-exec]]'
   - '[[2026-09-08-reachability-burndown-s184-declaration-capture-owner-audit]]'
   - '[[2026-09-08-reachability-burndown-s185-cotejo-view-residue-audit]]'
   - '[[2026-09-08-reachability-burndown-s186-filed-observation-resolver-wrappers-audit]]'
@@ -588,6 +599,17 @@ Auto-generated index of all documents tagged with `#reachability-burndown`.
 - `2026-09-04-reachability-burndown-W05-P12-S230` - Delete the unused LlmReviewRequest envelope, its export and self-only constructor tests, and documentation claiming it is part of the live typed spine; retain the directly consumed invocation-origin and decision enums and the execute_reviewed_decision workflow that every CLI caller actually uses.
 - `2026-09-04-reachability-burndown-W05-P12-S231` - Delete the unreachable review-kind reservation metastate: remove the test-only reserved-token map and accessor, dedicated ReviewKindReservedError, central error registration, and self-only registry/operator probes; retain the live source-kind selector and its generic fail-closed unknown-token refusal.
 - `2026-09-04-reachability-burndown-W05-P12-S232` - Delete the test-only BORRADOR_100_SNAPSHOT_NAMESPACE string alias and export from the live Modelo 100 snapshot service; make the retained secure-storage boundary tests read the canonical LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE definition directly while preserving encrypted namespace, schema-version, and lifecycle behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S233` - Delete the wholly unused PROFILE_RECORD_SCHEMA_VERSION literal and export from capsule record persistence; retain the active secure-object namespace definition, current-version boundary validation, encrypted record lifecycle, and current-schema-only refusal behavior.
+- `2026-09-04-reachability-burndown-W05-P12-S234` - Remove the unused profile-bundle import-event metadata that describes an event no production path emits, while retaining the accepted bundle deserializer authority.
+- `2026-09-04-reachability-burndown-W05-P12-S235` - Delete the wholly unconsumed SchemaModuleLoadFailure record and export from the command-graph projection; retain the live deferred-target resolver exceptions and graph-derived schema conformance authority.
+- `2026-09-04-reachability-burndown-W05-P12-S236` - Delete the broken machine-secret importer filename census and fixed command-identity roster from the command-spec authority test; retain graph-derived projection checks and planted channel/contract refusal proofs.
+- `2026-09-04-reachability-burndown-W05-P12-S237` - Delete the unused MODELO_CODE_CHOICE_ALL production constant and the development-only _MIGRATION_IN_PROGRESS classification that falsely clears every bare modelo axis; expose the live axes directly through the zero-target detector for owning-mechanism resolution.
+- `2026-09-04-reachability-burndown-W05-P12-S238` - Pin app.live.portals.list --modelo to the full canonical Modelo enum at the command boundary, replacing its late malformed-token refusal while preserving suppressed-code portal lookup and the shared typed boundary envelope.
+- `2026-09-04-reachability-burndown-W05-P12-S239` - Delete the unsound closed-value-axis heuristic gate and its hand-maintained exemption classifications; amend the accepted ADR to retain enum typing as an owning command-contract rule without a field-name/sys.modules census.
+- `2026-09-04-reachability-burndown-W05-P12-S240` - Delete the _UNADJUDICATED_REPEATED_SLOTS development-status census and its mirror/staleness tests; retain the derived corpus anchor, split amount/date reconstruction, optional-slot, and planted-reversion renderer proofs.
+- `2026-09-04-reachability-burndown-W05-P12-S241` - Delete the deferred cross-layer import status ledger and its census-agreement tests; retain the executable import-linter layer contracts as the sole architecture authority.
+- `2026-09-04-reachability-burndown-W05-P12-S242` - Delete the unreachable error-module resolve_output_language fallback and export; keep the canonical i18n resolver and preserve logger redaction tests without naming or simulating the dead helper.
+- `2026-09-08-reachability-burndown-exec` - reachability-burndown <display-path>
 
 ### plan
 

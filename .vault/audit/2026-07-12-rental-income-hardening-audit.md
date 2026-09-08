@@ -3,8 +3,8 @@ tags:
   - '#audit'
   - '#rental-income-hardening'
 date: '2026-07-12'
-modified: '2026-08-15'
-body_hash: 'sha256:fe9de7d2afcbd3dd9041dca13341ee3a6e1db3e9c2d61a99344144282cae9ae1'
+modified: '2026-09-08'
+body_hash: 'sha256:29d989bf6bc24ace45a0e7190bccd9292a52fec80f888a449f225ac26a36fa47'
 related: []
 ---
 
@@ -47,3 +47,7 @@ Mark every legacy mission criterion complete with this audit as its evidence.
 Do not recreate the rejected root-level rental CLI or the removed
 rental-specific Anexo C provider. Any future rental work must target the
 accepted `fincas` source-data and registry-binding boundaries.
+
+### Resolution (2026-09-08)
+
+The audited subsystem was withdrawn. Later source-integration grounding proved that no finca source kind, application workflow, calculation binding, command, or presentation consumer existed; `fincas_source_readiness` could only return false. The domain package, persistence adapter and tables, dormant error vocabulary, and synthetic tests were therefore a disconnected pre-release feature rather than a live rental-income capability. The canonical Modelo 100 registry parameters and official legal corpus remain.

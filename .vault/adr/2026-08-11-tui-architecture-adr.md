@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:ee1fe7f8cb82fec081c88597e018fc192b5c3725db5547eeb1282a35691d8d7f'
+body_hash: 'sha256:0a2d0d1d09a55c6ce3ed8ab51ee3564ced346dfdcf19e93513948f1804670a64'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -1406,6 +1406,10 @@ are grounded in `2026-08-24-tui-operation-observation-research`.
   path survives.
 - C0 and C3 remain independently gated by their exact dependency receipts;
   neither receipt authorizes a later Modelo or visual cohort by implication.
+
+### Amendment (2026-09-08): operation-owned feedback supersedes unused generic widgets
+
+The earlier implementation prescription assigning generic bounded-log and safe-error widgets to `components/logs.py` and `components/errors.py` is withdrawn. No composition root or shipped screen consumed those widgets; their only consumers were their own synthetic tests. The live `OperationModal` now owns rendering of bounded public event rows and typed refusal copy from the operation projection, which is the stronger D7a boundary because it cannot accept arbitrary log records or a second error-envelope DTO. The enduring decision remains that `components` may contain reusable presentation mechanics, but it does not require speculative components without a product consumer.
 
 ## Amendment 2026-08-28: dependency receipts move from code to vault attestation
 

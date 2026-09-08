@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#unreachable-capability'
 date: '2026-09-02'
-modified: '2026-09-02'
+modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbaf30a8497ff66a8081ca2dad28fde67ced0bc7b1f1baa4c7234b561955e542'
+body_hash: 'sha256:4f67da201a17ecca63a1a352b12b290cc8273aaf40b6bc3350762bad8ea73576'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
 ---
@@ -89,65 +89,7 @@ defects that do not exist.
 
 ### `domain/fincas/` with `adapters/persistence/profile/fincas.py`
 
-**What it is.** Spanish rental-property income for the IRPF annual return: the
-computation an operator needs to declare what a let property earned. Gross
-rent per contract, deductible expenses under LIRPF article 23.1 with the
-carry-forward the article requires, the article 23.1.f amortisation, the
-article 23.2 reducciÃ³n tier resolution for residential letting, and the
-article 85 imputation for property that was not let.
-
-**How complete.** Eleven domain modules and a five-repository persistence
-adapter, around 1,800 lines of implementation against roughly 1,400 lines of
-tests, all passing. It is registry-grounded rather than hard-coded: sixty
-rental parameters ship across the Modelo 100 revisions carrying `legal_refs`
-to LIRPF article 23, with the amortisation rate additionally citing RIRPF
-article 14, and several carrying source citations whose required text is
-verified against the bundled corpus.
-
-The persistence half needs no work at all. The five `rental_*` tables are
-declared on the same SQLAlchemy base whose `metadata.create_all` runs at
-`adapters/persistence/storage/sql/engine.py`, so every profile database that
-exists today already carries them, empty.
-
-Verified against the bundled AEAT manual rather than assumed: all four
-reduction tier rates match, both tenant age bounds match, the rent-reduction
-threshold matches, and the proportional co-tenant rule is implemented with the
-governing BOE sentence quoted at the implementation site in
-`domain/fincas/tier_resolver.py`.
-
-**Why not connected.** SEQUENCED, on top of a deleted-caller origin. It had a
-caller: a full `aeat rental` command family covering fincas, contracts,
-expenses and the Anexo C aggregate, deleted in the May 2026 restructure and
-never replaced. It is now blocked forward as well. The
-source-connectivity census row `fincas.annual-aggregates` is
-`grounding_blocked`, and the plan that owns it hard-sequences fincas behind
-amortization, whose own promotion step is still open. The row's stated blocker
-and the code's stated blocker disagree â€” `domain/fincas/source_readiness.py`
-reports a persistence gap, which is the closed meaning of a different
-disposition â€” and that disagreement is unresolved.
-
-The genuine gap is narrower than either: the `Finca` record carries no
-ownership or usufruct share, so it assumes full title, while the manual
-requires the owning contribuyente and both percentages as per-property facts.
-
-**What it adds.** Rental income is one of the most common IRPF situations for
-an individual filer, and the article 23.2 reduction is worth between 50 and 90
-per cent of net income depending on tier, which is a large sum decided by
-conditions most filers get wrong by hand. The engine already resolves those
-tiers correctly against the manual. Connected, it turns a return that a
-landlord cannot presently prepare in this product into one they can.
-
-This is the largest single block of finished, legally grounded capability in
-the inventory.
-
-**Wiring needed.** Three things in order, none of them small. Route the
-aggregates through the encrypted calculation-revision boundary so readiness can
-return true. Add the ownership and usufruct fields the manual specifies. Decide
-the destination casilla mapping, which the bundled manual can settle: its
-chapter 4 names the destination casillas individually and fixes the grain with
-a worked example of one property across two successive tenancies, income per
-contract inside a per-property per-year envelope. Only then a CLI subject over
-the repositories that already exist.
+**Adjudication (2026-09-08).** Deleted as a disconnected pre-release feature. The earlier `aeat rental` caller had been removed, no replacement acquisition, application, calculation-binding, command, or presentation path existed, and the slice’s own source-readiness projection was permanently false. Synthetic repository roundtrips and regulatory calculations could not establish product reachability. The canonical Modelo 100 registry parameters and official legal corpus remain as the authorities for any future live implementation.
 
 ### `entrypoints/tui/modelo/action/` with `modelo/actions.py`
 
@@ -335,27 +277,7 @@ the slice.
 
 ### `entrypoints/tui/components/errors.py`, `logs.py`, `_safe_text.py`
 
-**What it is.** Three reusable widgets for showing a failure or a run log
-without leaking: a bounded error panel with an action label and runbook id, a
-bounded log panel holding at most sixteen severity-tagged entries, and a shared
-validator that refuses filesystem paths, URLs, tracebacks and credential
-markers before rendering.
-
-**How complete.** 293 lines against 137 test lines. Small and complete.
-
-**Why not connected.** OVERSIGHT, and not merely the mount. The other
-components in the same package are reached by live screens; these three are
-not, with no record explaining the asymmetry. The operations modal, the natural
-consumer of a bounded log panel, rolls its own into a plain static widget and
-never imports the component.
-
-**What it adds.** Indirect but real. Nothing tax-domain, but the redaction
-guard is a second line of defence against a diagnostic putting a taxpayer's
-file path or a credential fragment on screen.
-
-**Wiring needed.** Point the operations modal's log pane at the bounded panel
-and route its terminal-refusal copy through the error panel. A small edit
-inside the operations cohort that does not wait on the home screen.
+**Adjudication (2026-09-08).** Deleted as a superseded, self-tested slice. The live `OperationModal` now renders its bounded public event rows and typed refusal copy directly from operation-owned DTOs, while no shipped screen ever consumed the generic error/log widgets. Their standalone safe-record vocabulary and synthetic tests therefore did not protect a product path. The accepted TUI architecture ADR was amended to withdraw the obsolete component prescription.
 
 ### `core/observability/replay.py`
 
@@ -932,31 +854,4 @@ are worth wiring.
 
 ## A fifth disposition the ratchet does not offer
 
-The ratchet header names four remedies for an unreachable module: move harness
-code beside its dev consumer, move shared test support into the wheel-excluded
-test package, delete capability that lost its last caller, or wire capability
-that should be live.
-
-Two entries fit none of them, and both are correctly shaped as they are.
-
-`core/compatibility_lifecycle.py` is dormant by explicit decision. Its own
-docstring describes a regime-switched policy that is a no-op today and
-activates on a one-line flip, with the regime a one-way repo-committed constant
-rather than a setting, so a compliance posture cannot vary per machine or be
-silently unset in CI. It is actively armed: a milestone tripwire fails the
-build if the package version reaches 1.0 while the regime is still
-pre-release. What it protects is multi-year readability of a taxpayer's filed
-data across the prescription window. Nothing to wire; flip it at 1.0.
-
-`core/address_components.py` is a design-time vocabulary, explicitly not a
-shared address type, because Modelo 210 identifies a municipio by INE code
-while Modelo 360 writes its name in thirty characters, and merging them would
-assert an interchangeability that does not hold. Its consumer is a gate with
-teeth: a test walks every filing producer key, picks the vocabulary from the
-key's infix, and fails on any leaf outside it. Having no runtime import is the
-intended shape.
-
-Both should be recorded as correctly shaped rather than carried on a wiring
-backlog. If the ratchet adopts a fifth disposition, these two are its first
-members, and their entries there want a rationale rather than a bare
-unreachable comment.
+This section's former classifications are superseded. The dormant compatibility lifecycle was production development state and has been removed. The address-component module was likewise a hand-maintained vocabulary consumed only by its own census test; it did not own runtime address parsing or serialization and was removed with that test. Neither case justifies adding a classification disposition to a reachability detector.

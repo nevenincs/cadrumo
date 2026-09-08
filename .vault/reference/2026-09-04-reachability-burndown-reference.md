@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc3ce959bccb9ecc8acde92433ab4cce7c05bde3831a87e6d399ca7217db4f81'
+body_hash: 'sha256:eb4b4e850d8885d9d06d4a8da25887794020f146fb41c4e1288a0189b5db0435'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -129,6 +129,40 @@ A selector’s named “reserved” tokens are production metastate when the liv
 A public string alias derived from a typed persistence definition is duplicate vocabulary when the live repository already receives that definition and no product caller observes the alias. Delete the alias and export, then have storage-boundary tests assert the typed owner’s namespace or schema field directly. Retain encrypted roundtrip and corruption tests: they prove the persistence contract, unlike a second spelling of its identity.
 
 An unused current-version literal does not enforce a persisted-format contract; it is a second, inert statement of the version. Keep version markers only where the owning serializer, typed namespace, or reader actually writes and refuses them. Delete an unconsumed constant and export outright, then run the real encrypted roundtrip and current-schema refusal suites rather than inventing a test for the discarded spelling.
+
+Comments describing a plausible future audit event do not turn its actor or payload-version constants into product metadata. When no writer emits the event and no reader consumes those fields, delete the constants as one abandoned declaration while retaining tests of the real import boundary; do not add an event merely to make speculative metadata reachable.
+
+A security test that hard-codes command identities and importer filenames is not confinement proof, especially when its AST predicate cannot match the live import spelling. Delete the census and preserve graph-derived contract projection plus planted invalid-channel and duplicate-contract cases. Safety gates should fail on forbidden behavior or malformed executable structure, not on divergence from a second list of current code names.
+
+A migration-in-progress entry that clears an entire parameter-name class is development metastate and a false-green allowlist, even when a stale-entry test polices it. Delete the classification and let the zero-target detector name every live axis. Close the exposure step on detector integrity and then resolve the surfaced population through enum typing or enduring semantic behavior, never by restoring a campaign disposition.
+
+A global closed-axis detector is unsound when it infers semantics from a shared parameter name and whichever model classes happen to be loaded, then repairs false positives with command/parameter allowlists. Delete that detector and keep the architectural rule at owning command contracts, where the real enum, dynamic registry, normalizer, or instructive refusal is observable. A false-green classification gate contributes less quality than focused boundary tests with planted invalid tokens.
+
+A test-owned list of exact layout identities labelled unadjudicated is campaign state, not renderer assurance. Delete the list and the tests that merely require current findings to appear in it; retain tests derived from the live corpus that reconstruct split values, handle absence, and deliberately break a real policy. Undecided regulatory modelling belongs in a plan, while executable renderer properties belong in the suite.
+
+A test that scans function-local imports and assigns every exact path/function pair a status such as documented, deliberate, or unadjudicated is an architecture census, not an architecture boundary. Delete it when the executable import-linter contracts already own layer direction. A status ledger can stay green with dozens of unreviewed edges; the real contract must pass or fail from imports themselves.
+
+A second live-auth session path is not justified by a narrower no-acquisition promise when every product caller enters through the central authenticated-session owner. If exact reachability exposes the narrower verifier after a census test is removed, delete the branch and its export rather than manufacturing a caller. Preserve the identity, storage, provider-lifecycle, and access-gate guarantees through the live `ensure_authenticated_aeat_session` path and its focused behavioral tests.
+
+A reusable presentation component is not material merely because its synthetic suite proves redaction, bounding, and rendering in isolation. When no composition root mounts it and a live feature-specific surface already renders the same safe public DTOs through a stronger owning boundary, delete the generic component, its duplicate DTO vocabulary, helper, locale leaves, and self-only tests together. Amend any ADR that prescribed the speculative widget, and retain behavioral tests on the mounted product surface plus unrelated shared components.
+
+A one-call presentation facade is duplicate vocabulary when it merely constructs the canonical screen around an already-bound controller and no product caller uses it. Delete the protocol, wrapper, outcome predicate, export, and prose advertising the wrapper; let the host mount the canonical screen directly. Preserve the mounted screen’s lifecycle tests, which prove the actual behavior rather than the unused convenience API.
+
+A legally detailed domain package is still an abandoned partial feature when its former command was deleted, no replacement acquisition or calculation binding exists, and its own readiness projection can never become true. Remove the domain models, repository ports, adapter, ORM tables, error registrations, locale leaves, constants, synthetic roundtrips, and census entries as one slice. Preserve the official corpus and canonical registry parameters independently; legal grounding survives without shipping an unreachable implementation.
+
+After withdrawing the last production consumer of a generic persistence decorator, follow the newly exposed exact symbol instead of preserving it for its standalone crypto tests. Delete the decorator, purpose-specific AAD, public prose, and its synthetic ORM column while retaining the live hashed lookup and row-bound secure-object encryption owners. Rewrite nearby tests to exercise those live owners, not the removed storage representation.
+
+A minimal version-header DTO is not a version boundary when no parser, dispatcher, or serializer consumes it. Delete the class and export instead of preserving an uncalled pre-dispatch shape; keep version handling on the live request/result models and prove those contracts through their behavioral model suite.
+
+A gate that makes a dead discriminated-union arm green by recording why it is dead is an allowlist even when it calls the entries rulings or adjudications and checks for staleness. Delete the gate, narrow the union to shapes a live assembler emits, remove synthetic constructor tests and unreachable consumer branches, and keep behavioral coverage on the surviving producer-to-presentation path. A future protocol version or outcome earns a new arm only when its parser or assembler can actually produce it.
+
+A production vocabulary consumed only by a test that checks current enum leaves against the vocabulary is a test-owned census, not a product authority. Delete the constants and census together, retain each live producer key and its owning serializer, and run behavioral schema/export gates. Descriptive domain differences belong beside the actual models; they do not make a disconnected set of approved spellings reachable.
+
+When a shipped constants module explicitly says its only consumer is a development renderer, move the semantic constant to that renderer rather than preserving `src/` as a stable import target for tooling. Delete production-side self-tests and any dev gate exception that blesses the reverse dependency. Validate the development output through its real loader/renderer suite; `dev/` may depend on product types, but product packaging must not exist to serve `dev/`.
+
+A typed event and injection parameter do not establish a measured health dimension when no product path captures the observation. Delete the DTO, evaluator, synthetic event tests, and unreachable reporting branches together; keep the health probe limited to facts it obtains itself. A future live observer should introduce its event at the acquisition boundary and wire it through composition, not predeclare a dormant advisory contract.
+
+When exact reachability exposes a generic projector beside a stronger live workflow-specific projector, compare their evidence inputs before preserving either. Delete the generic helper and self-tests when only the live owner derives grounding from canonical observations and handles domain exclusions; retaining both creates duplicate vocabulary with different safety semantics. Verify the shared evidence model and the live capture/recapture path, not the unused convenience.
 
 ## Authority boundaries
 

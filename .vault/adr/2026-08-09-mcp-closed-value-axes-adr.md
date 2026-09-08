@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-closed-value-axes'
 date: '2026-08-09'
-modified: '2026-08-09'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:4c9e06395c5ed31e3aeafe8ef29574806e8e0a556ed7371e49de5107f8f5e7dc'
+body_hash: 'sha256:09bcc57a4ae7861867ad4cd4ac7c96c1bdd9ed1a13963912372fcba5fe668ba8'
 related:
   - "[[2026-08-08-mcp-closed-value-axes-audit]]"
 ---
@@ -80,3 +80,9 @@ An axis-specific error code stops being reachable *through the CLI* for pinned a
 The promotion is not mechanical, and this ADR should not be read as licence to sweep. Checks 2 and 3 are invisible at the declaration site -- the guard sits in the command body, often several frames away -- and this campaign shipped one regression by pinning an axis whose out-of-set values reached a legally-grounded redirect. The three checks are the deliverable as much as the decision is.
 
 Enforcement is `entrypoints/mcp/tests/test_closed_value_axis_gate.py`, which detects the shape mechanically and requires each occurrence to be pinned or to carry an exemption naming which check exempts it. `unadjudicated` is a permitted, visible classification: it records that nobody has run the checks yet, and is explicitly not a claim that the site is correct.
+
+### Amendment (2026-09-08): enforcement belongs to owning command contracts
+
+The enum-typing decision remains accepted, but the global `test_closed_value_axis_gate.py` enforcement prescription is withdrawn. That detector inferred a closed axis when a bare CLI parameter merely shared its name with any enum-typed pydantic field loaded in `sys.modules`; it therefore produced name-collision and dynamic-registry false positives, depended on hand-maintained parameter and command exemptions, and allowed an `unadjudicated` development disposition to clear real findings. Its result varied with import state rather than solely with the command graph.
+
+Static closed axes must still declare their enum at the command boundary. Enforcement now belongs to the command spec and behavior tests that know the axis's actual value authority, including planted invalid-token coverage and input-schema enumeration. Dynamic registry sets, instructive out-of-set refusals, and normalising parsers remain governed by the three checks in this ADR, but no production identity or campaign status is maintained in a global exemption census.
