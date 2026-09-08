@@ -1748,12 +1748,29 @@ def test_cast_rationale_violations_ignore_out_of_tree_cache_entries(tmp_path: Pa
     assert cast_rationale_violations({path: tree}) == []
 
 
+def _expected_display_path(path: Path) -> str:
+    """Render *path* the way ``regex_line_hits`` reports it.
+
+    The helper renders a path inside the repository relative to its root and
+    falls back to the absolute form for anything outside. Which branch a
+    ``tmp_path`` takes is not the test's to assume: the run harness confines
+    pytest's basetemp under the repository's own ``.logs`` tree, so the
+    temporary file is repo-relative here and absolute under a basetemp pointed
+    elsewhere. Mirroring the contract keeps the assertion about the rendering
+    rule rather than about where the temporary directory happened to land.
+    """
+    try:
+        return repo_relative(path)
+    except ValueError:
+        return path.as_posix()
+
+
 def test_regex_line_hits_reports_repo_relative_matches_and_skips_comments(tmp_path: Path) -> None:
     """Regex scan helper reports real source lines while ignoring comment-only hits."""
     path = tmp_path / "module.py"
     path.write_text('# token\nvalue = "token"\n', encoding="utf-8")
 
-    assert regex_line_hits([path], re.compile("token")) == [f"{path.as_posix()}:2: 'token'"]
+    assert regex_line_hits([path], re.compile("token")) == [f"{_expected_display_path(path)}:2: 'token'"]
 
 
 def test_regex_line_hits_can_include_comment_lines(tmp_path: Path) -> None:
@@ -1762,5 +1779,5 @@ def test_regex_line_hits_can_include_comment_lines(tmp_path: Path) -> None:
     path.write_text("# token\n", encoding="utf-8")
 
     assert regex_line_hits([path], re.compile("token"), skip_comment_lines=False) == [
-        f"{path.as_posix()}:1: 'token'",
+        f"{_expected_display_path(path)}:1: 'token'",
     ]
