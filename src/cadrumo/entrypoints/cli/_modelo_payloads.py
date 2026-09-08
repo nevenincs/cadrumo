@@ -706,6 +706,7 @@ class WorkVerifyResult(OutputSchema):
     operation: str = "modelo.work.verify"
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
+    registry_snapshot_ref: RegistrySnapshotRef
     completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]
@@ -880,6 +881,7 @@ class VerificationReportShowResult(OutputSchema):
     operation: str = "modelo.verification_report.show"
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
+    registry_snapshot_ref: RegistrySnapshotRef
     completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]
