@@ -42,9 +42,9 @@ The entrypoint question is already settled: bare `aeat --tui` starts the out-of-
 ## Constraints
 
 - The public navigation vocabulary is Home, Ledger, Declarations and AEAT Sync. Profile is always reachable through the account identity control. Implementation terms such as Secret, Flow, Operation and WorkUnit are not navigation labels.
-- â€œDeclarationâ€� is the human-facing term for a local Modelo/year/period case. â€œFilingâ€� is reserved for submission or filing evidence.
+- â€œDeclaration” is the human-facing term for a local Modelo/year/period case. â€œFiling” is reserved for submission or filing evidence.
 - Home is local-only on initial load. AEAT network activity is always an explicit action with visible progress, result and failure state.
-- â€œSyncâ€� means explicit pull, compare, reconcile and supported push or filing actions. It must not imply automatic two-way convergence or silently choose which side wins.
+- â€œSync” means explicit pull, compare, reconcile and supported push or filing actions. It must not imply automatic two-way convergence or silently choose which side wins.
 - Every Home zone and destination admission carries an explicit state such as available, locked, stale, never captured or unavailable. Unavailable destinations remain understandable rather than masquerading as empty data.
 - Only the active destination body is mounted. Navigation uses routed screens, not a tab container retaining inactive workspaces.
 - Focus, active destination, blockers and statuses have textual non-colour cues. Focus restoration uses semantic identity rather than row position.
@@ -80,7 +80,7 @@ Operators gain one coherent workbench, a first-class Ledger, a declaration lifec
 
 The architecture and interface plans must be reconciled before execution. Work now includes a Home projection and refresh contract, production area factories, host-neutral declaration navigation, a Ledger TUI, a public calendar/evidence composition provider, AEAT Sync and notification projections, global search, localization, responsive behavior and accessibility gates. These capabilities may land incrementally, but unavailable destinations cannot claim completion.
 
-The earlier â€œfive existing areas, no shape changesâ€� implementation text is retired by this amendment. The entrypoint retirement and out-of-process CLI boundary remain in force.
+The earlier â€œfive existing areas, no shape changes” implementation text is retired by this amendment. The entrypoint retirement and out-of-process CLI boundary remain in force.
 
 ## Amendment 2026-09-08: independent launcher replaces the global CLI request
 

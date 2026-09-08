@@ -209,12 +209,12 @@ denominator, accessibility matrix, and the following admission chain:
 
 | Cohort | Admission evidence consumed by this parent |
 |---|---|
-| C0 Ã¢â‚¬â€� operation foundation | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md` as `TuiOperationObservationDependencyReceiptV1` |
-| C1 Ã¢â‚¬â€� bounded review | accepted companion identity plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md` as `ModeloWorkspaceC1ExitReceiptV1` |
-| C2 Ã¢â‚¬â€� complex read workspace | C1 plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as `ModeloWorkspaceC2DependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md` as `ModeloWorkspaceC2ExitReceiptV1` |
-| C3 Ã¢â‚¬â€� staged editor | C0 and C2 plus `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md` as `ModeloEditContractC3DependencyReceiptV1` and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md` as `TuiOperationFinancialOperandDependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md` as `ModeloWorkspaceC3ExitReceiptV1` |
-| C4 Ã¢â‚¬â€� lifecycle actions | C3, the green generated action denominator, each owning domain/operation capability, and `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md` as `ModeloWorkspaceC4ExitReceiptV1` |
-| C5 Ã¢â‚¬â€� visual closure | C4 plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md` as `ModeloWorkspaceC5ExitReceiptV1` |
+| C0 — operation foundation | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md` as `TuiOperationObservationDependencyReceiptV1` |
+| C1 — bounded review | accepted companion identity plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md` as `ModeloWorkspaceC1ExitReceiptV1` |
+| C2 — complex read workspace | C1 plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md` as `ModeloWorkspaceC2DependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md` as `ModeloWorkspaceC2ExitReceiptV1` |
+| C3 — staged editor | C0 and C2 plus `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md` as `ModeloEditContractC3DependencyReceiptV1` and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md` as `TuiOperationFinancialOperandDependencyReceiptV1`, then `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md` as `ModeloWorkspaceC3ExitReceiptV1` |
+| C4 — lifecycle actions | C3, the green generated action denominator, each owning domain/operation capability, and `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md` as `ModeloWorkspaceC4ExitReceiptV1` |
+| C5 — visual closure | C4 plus `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md` as `ModeloWorkspaceC5ExitReceiptV1` |
 
 The companion's named validators, predecessor digests, current-HEAD action
 denominator, compatibility coordinates, and per-cohort visual proofs are part

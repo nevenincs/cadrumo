@@ -132,7 +132,7 @@ export authorities. The boundary and evidence are grounded in
 
 ## Implementation
 
-### D0 Ã¢â‚¬â€� Authority and composition
+### D0 — Authority and composition
 
 The Modelo interface is one feature beneath the accepted root application. It
 publishes a closed `ModeloDestination` catalogue, route factories, immutable
@@ -155,7 +155,7 @@ accepted interface ADR. A conflict is resolved toward the accepted parent for
 root/common concerns and toward this record only for the feature-specific
 workspace/editor concerns named here. Neither record supersedes the other.
 
-### D1 Ã¢â‚¬â€� Route and destination catalogue
+### D1 — Route and destination catalogue
 
 The closed initial catalogue is:
 
@@ -213,7 +213,7 @@ Modelo catalogue. Invoking a Modelo action opens the operation-owned surface
 with an origin reference; terminal settlement returns through the root router to
 the mapped Modelo destination and initiates the refresh protocol in D6.
 
-### D2 Ã¢â‚¬â€� TUI-local view models
+### D2 — TUI-local view models
 
 The feature exposes frozen, callback-free view-model families for:
 
@@ -235,13 +235,13 @@ informational values without reinterpreting registry data types. An unsupported
 projected kind produces an explicit renderer-refusal view and fails projection
 coverage; it never falls back to a generic editable text box.
 
-Semantic field, section, row, and causal addressesÃ¢â‚¬â€�not display labels,
-translated text, list offsets, or widget instance IDsÃ¢â‚¬â€�anchor routing, focus,
+Semantic field, section, row, and causal addresses—not display labels,
+translated text, list offsets, or widget instance IDs—anchor routing, focus,
 dirty state, validation, and test assertions. Widget expansion, selection,
 scroll, active lexeme, and focus remain TUI-local ephemeral state and never feed
 back into the application projection.
 
-### D3 Ã¢â‚¬â€� Read consistency, scale, and bounded traversal
+### D3 — Read consistency, scale, and bounded traversal
 
 One workspace load establishes an immutable `ModeloWorkspaceReadSession` with
 the visible and exact resolved address, selected registry revision, workspace
@@ -266,7 +266,7 @@ presentation supplied by the producer. A producer may deliver a bounded
 complete workspace in one response, but neither the interface nor its
 acceptance tests assume eager construction of every widget or causal node.
 
-### D4 Ã¢â‚¬â€� Edit-session transaction
+### D4 — Edit-session transaction
 
 Entering edit mode sends the current read coordinates through
 `ModeloEditAdmissionRequestV1`. A successful response supplies the separate
@@ -328,7 +328,7 @@ local draft; after handoff, the public operation projection and the application
 edit result receipt are the sole recovery truths. C3 cannot open until the
 accepted operation parent owns the handoff and its live-tree receipt is green.
 
-### D5 Ã¢â‚¬â€� Repeated-row semantics
+### D5 — Repeated-row semantics
 
 An existing row uses the application-issued stable semantic row address. A new
 row receives an opaque TUI-local `DraftRowId` that remains stable across local
@@ -350,7 +350,7 @@ edit contract, not the TUI, maps this order to canonical row coordinates and
 validates row limits, uniqueness, source identity, and cross-row rules.
 Positional widget indexes are never row identity.
 
-### D6 Ã¢â‚¬â€� Validation, conflict, settlement, and refresh
+### D6 — Validation, conflict, settlement, and refresh
 
 Validation has three owned layers:
 
@@ -395,7 +395,7 @@ session and requires a fresh read before any further action. Refresh failure
 retains the terminal operation result and offers a canonical retry; it never
 presents the old view as settled truth.
 
-### D7 Ã¢â‚¬â€� Capability, refusal, and action presentation
+### D7 — Capability, refusal, and action presentation
 
 Each destination renders all of its applicable capability slots from the
 application projection. The closed dispositions are `AVAILABLE`,
@@ -474,7 +474,7 @@ result destination is mapped, the denominator row is green, and the action's
 applicable D8 receipt has passed. An unavailable prerequisite renders a typed
 refusal; it never removes the candidate from the fixed point.
 
-### D8 Ã¢â‚¬â€� Localization, accessibility, responsiveness, and sensitive display
+### D8 — Localization, accessibility, responsiveness, and sensitive display
 
 Resolved locale changes labels, help, formatting, and canonical messages only.
 It does not change addresses, values, revision selection, capability, baseline,
@@ -517,7 +517,7 @@ cohort exit receipt is green on current HEAD. A typed `NOT_APPLICABLE` proof is
 permitted only under the receipt rules in D10; an omitted matrix cell is never a
 pass.
 
-### D9 Ã¢â‚¬â€� Version and compatibility behavior
+### D9 — Version and compatibility behavior
 
 The TUI declares every compatibility coordinate it actually consumes rather
 than one generic operation version. C3 editor admission consumes the exact
@@ -556,19 +556,19 @@ dispatch maps, tests, and consumers in one change. No aliases, deprecated
 destination IDs, dual projection adapters, permissive extra fields, or fallback
 generic widgets remain after migration.
 
-### D10 Ã¢â‚¬â€� Acceptance receipts and staged cohorts
+### D10 — Acceptance receipts and staged cohorts
 
 The implementation plan must preserve this receipt chain; later cohorts may not
 substitute mocks, prose, or a proposed record for an unmet predecessor:
 
 | Cohort | Required entrance receipts | Canonical exit artifact, schema, and validator | Required proof |
 |---|---|---|---|
-| C0 Ã¢â‚¬â€� operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
-| C1 Ã¢â‚¬â€� bounded review | this companion ADR accepted with exact stem, accepting commit, and body hash; accepted Casilla review; accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
-| C2 Ã¢â‚¬â€� complex read workspace | C1 exit plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`; `ModeloWorkspaceC2DependencyReceiptV1`; `validate_modelo_workspace_c2_dependency_receipt` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md`; `ModeloWorkspaceC2ExitReceiptV1`; `validate_modelo_workspace_c2_exit_receipt` | C1-route atomic replacement; destination/factory census; projection coverage; baseline facets; refusal states; large schema/row/provenance matrix; production composition |
-| C3 Ã¢â‚¬â€� staged editor | C0 and C2 exits; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`; `ModeloEditContractC3DependencyReceiptV1`; `validate_modelo_edit_contract_c3_dependency_receipt`; and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`; `TuiOperationFinancialOperandDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md`; `ModeloWorkspaceC3ExitReceiptV1`; `validate_modelo_workspace_c3_exit_receipt` | exact compatibility tuple; edit/row state machine; parse and validation focus; review-only submit; stale refusal; atomic-result refresh; locale switch; operation handoff consumption; sensitive non-retention |
-| C4 Ã¢â‚¬â€� lifecycle actions | C3 exit, green generated action denominator, and each owning domain capability and operation definition | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md`; `ModeloWorkspaceC4ExitReceiptV1`; `validate_modelo_workspace_c4_exit_receipt` | zero unclassified action candidates; exact interaction and terminal refresh; rename, discard, verify, file, export, and amend proofs independently; amendment-wizard disposition |
-| C5 Ã¢â‚¬â€� visual closure | C4 exit and every C1-C4 destination/action classified | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md`; `ModeloWorkspaceC5ExitReceiptV1`; `validate_modelo_workspace_c5_exit_receipt` | aggregate four-locale, three-geometry, two-theme, keyboard, non-colour, large-schema/row, refusal/conflict, route/action anti-vacuity, no-transitional-TUI, and installed root-app proof |
+| C0 — operation foundation | amended accepted `2026-08-11-tui-architecture-adr` | `.vault/reference/2026-08-24-tui-operation-observation-dependency-receipt.md`; `TuiOperationObservationDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_public_operation_dependency_receipt.py` | `OperationPublicDefinitionContractV1` and contract-set schema identities/digests; atomic observation fold; registered safe REVIEW resolver, typed refusals, and non-authority; typed result-to-Workspace refresh-target adapter from a fresh process; settlement, interaction, cancellation, effect, recovery, and production DI |
+| C1 — bounded review | this companion ADR accepted with exact stem, accepting commit, and body hash; accepted Casilla review; accepted interface migration lane | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c1-exit-receipt.md`; `ModeloWorkspaceC1ExitReceiptV1`; `validate_modelo_workspace_c1_exit_receipt` | canonical `modelo.work.review` relocation; four-locale/three-geometry/two-theme keyboard and non-colour proof; no legacy production import |
+| C2 — complex read workspace | C1 exit plus `.vault/reference/2026-08-24-tui-registry-api-gate-c2-dependency-receipt.md`; `ModeloWorkspaceC2DependencyReceiptV1`; `validate_modelo_workspace_c2_dependency_receipt` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c2-exit-receipt.md`; `ModeloWorkspaceC2ExitReceiptV1`; `validate_modelo_workspace_c2_exit_receipt` | C1-route atomic replacement; destination/factory census; projection coverage; baseline facets; refusal states; large schema/row/provenance matrix; production composition |
+| C3 — staged editor | C0 and C2 exits; `.vault/reference/2026-08-24-modelo-edit-contract-c3-dependency-receipt.md`; `ModeloEditContractC3DependencyReceiptV1`; `validate_modelo_edit_contract_c3_dependency_receipt`; and `.vault/reference/2026-08-24-tui-operation-financial-operand-dependency-receipt.md`; `TuiOperationFinancialOperandDependencyReceiptV1`; `src/cadrumo/application/operations/tests/test_financial_operand_dependency_receipt.py` | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c3-exit-receipt.md`; `ModeloWorkspaceC3ExitReceiptV1`; `validate_modelo_workspace_c3_exit_receipt` | exact compatibility tuple; edit/row state machine; parse and validation focus; review-only submit; stale refusal; atomic-result refresh; locale switch; operation handoff consumption; sensitive non-retention |
+| C4 — lifecycle actions | C3 exit, green generated action denominator, and each owning domain capability and operation definition | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c4-exit-receipt.md`; `ModeloWorkspaceC4ExitReceiptV1`; `validate_modelo_workspace_c4_exit_receipt` | zero unclassified action candidates; exact interaction and terminal refresh; rename, discard, verify, file, export, and amend proofs independently; amendment-wizard disposition |
+| C5 — visual closure | C4 exit and every C1-C4 destination/action classified | `.vault/reference/2026-08-24-tui-modelo-workspace-interface-c5-exit-receipt.md`; `ModeloWorkspaceC5ExitReceiptV1`; `validate_modelo_workspace_c5_exit_receipt` | aggregate four-locale, three-geometry, two-theme, keyboard, non-colour, large-schema/row, refusal/conflict, route/action anti-vacuity, no-transitional-TUI, and installed root-app proof |
 
 `ModeloWorkspaceC1ExitReceiptV1` has a closed mandatory governing prefix: exact
 stem `2026-08-24-tui-modelo-workspace-interface-adr`, status `accepted`, its

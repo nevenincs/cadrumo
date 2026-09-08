@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-08'
 body_schema: body-v2
-body_hash: 'sha256:a3f88f3d27c7ba3e897d364d2bb0c0b8569133c42f72c8bfb8d9a252c4371cd6'
+body_hash: 'sha256:7b3acc60f39c18d169e45d4d945f4be4fde474d3e2a7fa5850be2987de0cd8fb'
 ---
 
 <!-- RETIRED: S151 -->
@@ -303,7 +303,7 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S201` - Delete the test-only CertificateSecretBackend protocol and its runtime-checkability/export assertions, and rewrite documentation to name the sole live SecureStorageCertificateSecretBackend directly, while retaining all secure-store behavior, certificate-source operations, bucket scoping, witnesses, rotation metadata, and secret classification.; `Certificate secret backend, adjacent CLI/application documentation and focused tests, exact reachability signal, focused gates, Step Record, and independent code review.`.
 - [x] `W05.P12.S202` - Delete the test-only BULK_INVOICE_IMPORT_ALLOWED_COLUMNS aggregate from the production invoice importer and make the cross-importer FieldRole coverage gate derive the accepted invoice column set from BulkInvoiceImportRow.model_fields, while retaining the live required/optional parsing authorities and classification importer's live allowed-column boundary.; `Bulk invoice importer and FieldRole coverage gate, exact reachability signal, focused importer and detector-teeth tests, Step Record, and independent code review.`.
 - [x] `W05.P12.S203` - Delete the two wholly unused transaction_missing_*_iva_evidence boolean projections and their exports from the live evidence-advisory module, retaining the single missing-evidence flow classifier and diagnostic projection consumed by calculation and verification paths.; `Aggregation evidence advisory module, exact reachability signal, focused aggregation and verification gates, Step Record, and independent code review.`.
-- [ ] `W05.P12.S204` - Delete the test-only read-only aliases COUNTERPART_MODELO_KIND_CATALOGUE and RETENCIONES_MODELO_SCHEME_CATALOGUE, their exports, and alias-only typing imports; keep the private live catalogues as the aggregation owners and make generic grouping refusal tests use minimal synthetic catalogues.; `Counterpart and retenciones aggregators plus focused invariant tests, exact reachability signal, focused gates, Step Record, and independent code review.`.
+- [x] `W05.P12.S204` - Delete the test-only read-only aliases COUNTERPART_MODELO_KIND_CATALOGUE and RETENCIONES_MODELO_SCHEME_CATALOGUE, their exports, and alias-only typing imports; keep the private live catalogues as the aggregation owners and make generic grouping refusal tests use minimal synthetic catalogues.; `Counterpart and retenciones aggregators plus focused invariant tests, exact reachability signal, focused gates, Step Record, and independent code review.`.
 
 ## Parallelization
 

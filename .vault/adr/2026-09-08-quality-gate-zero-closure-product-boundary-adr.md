@@ -1,16 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#quality-gate-zero-closure'
+  - "#adr"
+  - "#quality-gate-zero-closure"
 date: '2026-09-08'
-modified: '2026-09-08'
-body_schema: 'body-v2'
-body_hash: 'sha256:e4ebbdba7430c5353bd3ee6f854891b9eb48182b9520de68e9af06c201659d4a'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]"
   - "[[2026-09-08-quality-gate-zero-closure-dev-tooling-product-boundary-audit]]"
+supersedes:
+  - '2026-09-07-quality-gate-zero-closure-blind-green-gates-adr'
+modified: '2026-09-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:cd8f6527b32c8559a892e959b1a3f28aca36d7a9b3c12353e6144713f399d3ba'
 ---
-
 # `quality-gate-zero-closure` adr: `Development tooling serves product authority and behavior` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -31,7 +32,7 @@ This decision supersedes the standing mutation/meta-detector mandate. Historical
 ## Considered options
 
 - Restore the mutation-tested detector stack: rejected because it reinstates the closed loop.
-- Replace it with another mutation dato or home-grown analyzer family: rejected because changing implementation does not correct authority direction.
+- Replace it with another mutation tool or home-grown analyzer family: rejected because changing implementation does not correct authority direction.
 - Keep disabled machinery as optional history: rejected because version history already preserves it and dormant code creates maintenance ambiguity.
 - Retain only tooling that verifies product authorities and behavior, with mutation permitted only as a bounded product-code diagnostic: accepted.
 

@@ -1,11 +1,8 @@
 ---
 tags:
-  - '#adr'
-  - '#quality-gate-zero-closure'
+  - "#adr"
+  - "#quality-gate-zero-closure"
 date: '2026-09-07'
-modified: '2026-09-08'
-body_schema: 'body-v2'
-body_hash: 'sha256:898cfb735aa95c4188dfc4b356d3558619b0614de5067edb25263b5e4b36ca31'
 related:
   - "[[2026-08-24-quality-gate-zero-closure-adr]]"
   - "[[2026-07-25-test-harness-honesty-adr]]"
@@ -13,11 +10,15 @@ related:
   - "[[2026-08-04-canonical-storage-management-void-assertion-class-audit]]"
   - "[[2026-08-30-repo-gate-integrity-wrong-subject-gates-audit]]"
   - "[[2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr]]"
-  - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
-  - '[[2026-09-07-quality-gate-zero-closure-never-emitted-decidability-measurement-audit]]'
-  - '[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]'
+  - "[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]"
+  - "[[2026-09-07-quality-gate-zero-closure-never-emitted-decidability-measurement-audit]]"
+  - "[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]"
+superseded_by: '2026-09-08-quality-gate-zero-closure-product-boundary-adr'
+modified: '2026-09-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:5438a90416030c9a7f7b97ca946ec6e1d144f5d724729bd5d4d7afcd9282f082'
 ---
-# `quality-gate-zero-closure` adr: `Blind green is a gate failure, and most of it is mechanically detectable` | (**status:** `accepted`)
+# `quality-gate-zero-closure` adr: `Blind green is a gate failure, and most of it is mechanically detectable` | (**status:** `superseded`)
 
 ## Problem Statement
 
