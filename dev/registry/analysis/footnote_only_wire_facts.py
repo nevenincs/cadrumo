@@ -18,9 +18,8 @@ misses modelo 200's nota 1, which states a filling rule outright. A vocabulary
 miss therefore orders the reading queue and settles nothing, and no count of
 misses may be reported as a count of notes that state no wire fact.
 
-Four conditions are reported, and every row names one of them. Three of them
-are outstanding work - a reference nobody has followed yet - and the fourth is
-not:
+Five conditions are reported, and every row names one of them. Three of them
+are outstanding work - a reference nobody has followed yet - and two are not:
 
 - ``pointer_resolves_vocabulary_hit`` - the note the cell points at is defined
   and uses the reading aid's vocabulary, so it is worth opening first.
@@ -49,6 +48,20 @@ not:
   declaration exists where previously there was a cross-reference nobody had
   opened. Re-reading a declaration remains ordinary review work; this screen
   simply stops counting it as unopened.
+- ``pointer_applicability_adjudicated`` - somebody followed this reference and
+  found the note states WHEN the slot applies and nothing about how a value is
+  written. A
+  :class:`~dev.registry.pipeline.source_defects.NoteStatedApplicabilityDeclaration`
+  records that reading, pinned the same three ways and carrying no digit counts
+  by construction, because nothing about the wire form was learned. The
+  eligibility predicate then sends the field where every blank-``Contenido``
+  numeric field of its design already goes, to the reviewed render profile.
+
+  Reported apart from ``pointer_adjudicated`` because the two answer different
+  questions about the same note. One says what the representation is; this one
+  says the note states none. A reader re-checking an adjudication needs to know
+  which reading they are re-checking, and a single covered condition would not
+  tell them.
 
 The rows are kept and reclassified rather than dropped, so the covered
 population stays visible and a reader can see the mechanism working. The
@@ -61,10 +74,18 @@ An adjudication does not outrank ``pointer_unresolved``. A design that never
 defines the note still owes a transcription whatever has been adjudicated for
 it, so that condition is decided first and is unchanged by this table.
 
-Only fields the eligibility predicate would newly admit are reported. A field
-already eligible needs no pointer argument, and a reserved slot never becomes
-eligible, so including either would inflate the population with rows carrying
-no work.
+A field is reported when the eligibility predicate would newly admit it, or when
+it is already admitted BECAUSE its pointer was read and declared to state
+applicability only. A field eligible for any other reason needs no pointer
+argument, and a reserved slot never becomes eligible, so including either would
+inflate the population with rows carrying no work.
+
+That predicate is asked through the pipeline's own routed entry point, with the
+design's declarations resolved there rather than assembled here. This module
+once called the bare projection with no declarations and so answered a different
+question from the renderer, reporting a cell that had been read, recorded and
+acted on as outstanding. A screen that disagrees with the thing it screens is
+worse than no screen, because its rows read as work.
 
 The screen exits 0 whatever it finds. It reports; it does not gate. The gate
 belongs with the predicate correction, which cannot land until the reviewed
@@ -82,12 +103,15 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 from ..pipeline._record_design_ir import RecordDesignIntermediateField, RecordDesignIntermediateSource
-from ..pipeline._render_profile import project_render_profile_eligibility
+from ..pipeline._render_profile import resolve_render_profile_eligibility
 from ..pipeline.render_check import revision_render_inputs
 from ..pipeline.source_defects import (
     NoteGovernedAmountDeclaration,
+    NoteStatedApplicabilityDeclaration,
     note_governed_amount_scale_for,
     note_governed_amounts_for,
+    note_stated_applicability_for,
+    note_states_only_applicability,
 )
 from .footnote_pointer_notes import (
     PointerEvidence,
@@ -97,12 +121,16 @@ from .footnote_pointer_notes import (
 )
 
 __all__ = [
+    "ADJUDICATED_KINDS",
     "KINDS",
     "OUTSTANDING_KINDS",
     "PointerWireFactFinding",
     "cell_adjudication",
+    "cell_applicability_reading",
     "classify_pointer",
+    "field_is_render_profile_eligible",
     "pinned_adjudications",
+    "pinned_applicability_readings",
     "revision_findings",
     "screen_authority",
 ]
@@ -114,12 +142,21 @@ KINDS: tuple[str, ...] = (
     "pointer_resolves_vocabulary_miss",
     "pointer_unresolved",
     "pointer_adjudicated",
+    "pointer_applicability_adjudicated",
 )
+
+#: The conditions in which somebody HAS followed the reference. Two, because two
+#: declaration families record two different readings of a note and answer two
+#: different questions: what the representation is, and that the note states
+#: none. Collapsing them would lose which question was answered for a cell, and
+#: a reader re-checking an adjudication needs to know which one they are
+#: re-checking.
+ADJUDICATED_KINDS: tuple[str, ...] = ("pointer_adjudicated", "pointer_applicability_adjudicated")
 
 #: The conditions that are work still to be done. Declared beside ``KINDS`` and
 #: derived from it, so a condition added later is outstanding unless somebody
 #: says otherwise - the safe default for a screen whose population is a queue.
-OUTSTANDING_KINDS: tuple[str, ...] = tuple(kind for kind in KINDS if kind != "pointer_adjudicated")
+OUTSTANDING_KINDS: tuple[str, ...] = tuple(kind for kind in KINDS if kind not in ADJUDICATED_KINDS)
 
 _UTF_8 = "utf-8"
 
@@ -144,20 +181,48 @@ class PointerWireFactFinding:
     detail: str
 
 
-def would_become_eligible(field: RecordDesignIntermediateField) -> bool:
+def field_is_render_profile_eligible(
+    field: RecordDesignIntermediateField, source: RecordDesignIntermediateSource
+) -> bool:
+    """Whether the shipped predicate admits this field, asked as the RENDERER asks it.
+
+    Routed through :func:`resolve_render_profile_eligibility`, which resolves and
+    validates the design's own declarations, rather than through the bare
+    projection with arguments assembled here. That distinction is the whole
+    reason this function exists: this module reached past the routed entry point
+    and passed no applicability declarations, so it computed a different
+    eligibility answer from the renderer and reported a cell whose note had been
+    read, recorded and acted on as a reference nobody had opened. The screen and
+    the renderer now ask one function about one pinned design, so the answers
+    cannot drift apart again by omission.
+
+    The projection is a per-field filter, so asking it about one field returns
+    the same verdict as that field's membership in the design-wide partition the
+    renderer validates against. That equality is asserted rather than assumed.
+    """
+    return bool(resolve_render_profile_eligibility([field], source).all_fields)
+
+
+def would_become_eligible(field: RecordDesignIntermediateField, source: RecordDesignIntermediateSource) -> bool:
     """Whether dropping the pointer-as-fact reading would admit this field.
 
     Asked through the shipped predicate rather than by restating its clauses.
-    The field is put through :func:`project_render_profile_eligibility` twice,
-    once as it stands and once with its content cleared, and only a field the
+    The field is put through :func:`field_is_render_profile_eligible` twice, once
+    as it stands and once with its content cleared, and only a field the
     predicate rejects now and admits then is reported. Restating the numeric,
     absent-naturaleza and reserved clauses here would be a second copy of the
     eligibility rule, and the copy would be the one that stopped agreeing.
+
+    A cell whose note has been READ and declared to state applicability only is
+    already admitted, so this returns ``False`` for it. That is correct and is
+    not the whole reporting rule: such a cell is still a pointer-only cell and
+    still belongs in the census, as an adjudicated row rather than an
+    outstanding one. :func:`revision_findings` decides that, not this.
     """
-    if project_render_profile_eligibility([field]).all_fields:
+    if field_is_render_profile_eligible(field, source):
         return False
     cleared = field.model_copy(update={"content": None})
-    return bool(project_render_profile_eligibility([cleared]).all_fields)
+    return field_is_render_profile_eligible(cleared, source)
 
 
 def pinned_adjudications(source: RecordDesignIntermediateSource) -> tuple[NoteGovernedAmountDeclaration, ...]:
@@ -207,8 +272,51 @@ def cell_adjudication(
     )
 
 
+def pinned_applicability_readings(
+    source: RecordDesignIntermediateSource,
+) -> tuple[NoteStatedApplicabilityDeclaration, ...]:
+    """Return the applicability readings declared for, and pinned to, this design.
+
+    The sibling of :func:`pinned_adjudications`, resolved and filtered the same
+    way and for the same reasons. These are used only to QUOTE the note that was
+    read into a row's detail line: the eligibility verdict itself comes from
+    :func:`field_is_render_profile_eligible`, which routes through the pipeline's
+    own resolver, so this lookup cannot decide a cell the renderer decides
+    differently.
+    """
+    return tuple(
+        declaration
+        for declaration in note_stated_applicability_for(source.source_ref)
+        if declaration.source_ref == source.source_ref and declaration.source_sha256 == source.source_sha256
+    )
+
+
+def cell_applicability_reading(
+    declarations: tuple[NoteStatedApplicabilityDeclaration, ...], *, sheet: str, content: str
+) -> NoteStatedApplicabilityDeclaration | None:
+    """Return the applicability reading covering this content cell, or ``None``.
+
+    The verdict is taken from :func:`note_states_only_applicability`, the same
+    matcher the eligibility predicate admits a cell by, so the two cannot
+    disagree about what has been read. The declaration is looked up afterwards
+    only to quote the note into the row's detail line.
+    """
+    published = " ".join(content.split())
+    if not note_states_only_applicability(declarations, sheet=sheet, published_content=published):
+        return None
+    return next(
+        declaration
+        for declaration in declarations
+        if declaration.sheet == sheet and declaration.published_content == published
+    )
+
+
 def classify_pointer(
-    evidence: PointerEvidence, *, resolved: int, adjudication: NoteGovernedAmountDeclaration | None
+    evidence: PointerEvidence,
+    *,
+    resolved: int,
+    adjudication: NoteGovernedAmountDeclaration | None,
+    applicability: NoteStatedApplicabilityDeclaration | None,
 ) -> tuple[str, str]:
     """Return the condition a resolved pointer falls under, and its detail line.
 
@@ -218,23 +326,43 @@ def classify_pointer(
     it had neither a live member nor a proof, which is the state this package
     treats as a condition that has stopped reporting without anyone noticing.
 
-    ``adjudication`` is required rather than defaulted. A default would let a
-    caller that never looked report a covered cell as outstanding work by
-    omission, which is the reading this condition exists to end.
+    ``adjudication`` and ``applicability`` are both required rather than
+    defaulted. A default would let a caller that never looked report a covered
+    cell as outstanding work by omission, which is the reading these two
+    conditions exist to end.
 
     The order is the precedence. An unresolved pointer is unresolved whatever
     vocabulary the notes it did resolve happen to use, and whatever has been
-    adjudicated for it, because a design that never defines the note owes a
-    transcription either way. An adjudicated pointer outranks the vocabulary
-    reading, which is a queue order for notes still to be opened and has nothing
-    to say about a note somebody has already read.
+    declared for it, because a design that never defines the note owes a
+    transcription either way. Either adjudicated condition outranks the
+    vocabulary reading, which is a queue order for notes still to be opened and
+    has nothing to say about a note somebody has already read.
+
+    The two adjudicated conditions are reported separately because they record
+    different readings of the note: one says what the representation is, the
+    other says the note states none. A cell carrying both declarations is a
+    contradiction in the declaration tables rather than a corpus fact, so both
+    are named in the detail line instead of one silently displacing the other.
     """
     if evidence.unresolved:
         return "pointer_unresolved", f"design defines no {', '.join(evidence.unresolved)}"
     if adjudication is not None:
+        contradiction = (
+            ""
+            if applicability is None
+            else (
+                f"; ALSO declared to state applicability only at "
+                f"{applicability.sheet}!{applicability.note_cell} - the two readings contradict"
+            )
+        )
         return "pointer_adjudicated", (
             f"{resolved} note(s) resolved, read at {adjudication.sheet}!{adjudication.note_cell}: "
-            f"{adjudication.note_statement!r}"
+            f"{adjudication.note_statement!r}{contradiction}"
+        )
+    if applicability is not None:
+        return "pointer_applicability_adjudicated", (
+            f"{resolved} note(s) resolved, read at {applicability.sheet}!{applicability.note_cell} and found to "
+            f"state applicability only, so no wire fact: {applicability.note_statement!r}"
         )
     if evidence.mentions_wire_vocabulary:
         return "pointer_resolves_vocabulary_hit", f"{resolved} note(s) resolved, read these first"
@@ -250,7 +378,9 @@ def revision_findings(
     corpus_path = bundled_path() / authority.catalogues.sources[source_ref].corpus_path
     transcription = design_transcription_path(corpus_path)
     by_sheet = sheet_note_definitions(transcription.read_text(encoding=_UTF_8)) if transcription.is_file() else {}
-    adjudications = pinned_adjudications(inputs.joined.source)
+    source = inputs.joined.source
+    adjudications = pinned_adjudications(source)
+    readings = pinned_applicability_readings(source)
 
     findings: list[PointerWireFactFinding] = []
     for joined_field in inputs.joined.fields:
@@ -261,7 +391,20 @@ def revision_findings(
         # Resolved against the field's OWN sheet. A design numbers each page's
         # notes from one, so a design-wide lookup hands back another page's note.
         resolved = resolve_pointer_notes(content, by_sheet.get(field.sheet, {}))
-        if not resolved or not would_become_eligible(field):
+        if not resolved:
+            continue
+        applicability = cell_applicability_reading(readings, sheet=field.sheet, content=content)
+        # Two ways a pointer-only cell belongs in this census, and both are asked
+        # through the routed predicate. Either the correction would newly admit
+        # the field - an unread pointer, outstanding work - or the field is
+        # ALREADY admitted because its note was read and declared to state no
+        # wire fact. The second is why the reported set is not simply the first:
+        # once such a declaration lands the field stops being newly admissible,
+        # and reporting only newly-admissible fields would drop the row silently
+        # at the moment it became covered. This screen keeps covered rows and
+        # reclassifies them, so its census can be reconciled against its rows.
+        covered = applicability is not None and field_is_render_profile_eligible(field, source)
+        if not (covered or would_become_eligible(field, source)):
             continue
         # Asked through the module that owns the reading aid rather than by
         # keeping a second copy of its vocabulary here.
@@ -270,6 +413,7 @@ def revision_findings(
             evidence,
             resolved=len(resolved),
             adjudication=cell_adjudication(adjudications, sheet=field.sheet, content=content),
+            applicability=applicability,
         )
         findings.append(
             PointerWireFactFinding(

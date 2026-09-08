@@ -7,11 +7,21 @@ newly admit, and the reading aid must not be mistaken for a verdict. The second
 carries a live counterexample, because it was very nearly reported as one.
 
 A third followed: a reference somebody HAS followed must stop being counted as
-one nobody has. The adjudication table that records those readings is pinned to
-one design by digest and to one sheet by name, so the tests below prove both
-directions - a covered cell drops out of the outstanding population, and a
-declaration pinned to another digest, another sheet, or another pointer covers
-nothing. Without the second half the screen would credit work never done.
+one nobody has. Two declaration families record those readings - what the note
+says the representation is, and that the note states none - and each is pinned
+to one design by digest, one sheet by name, and one exact published pointer, so
+the tests below prove both directions for both: a covered cell drops out of the
+outstanding population, and a declaration pinned to another digest, another
+sheet, or another pointer covers nothing. Without the second half the screen
+would credit work never done.
+
+A fourth is the one the others could not see. The screen must return the SAME
+eligibility verdict as the renderer for a field of a pinned design, and it did
+not: it reached past the routed predicate and passed none of the design's
+declarations, so a cell somebody had read was reported as outstanding while the
+renderer treated it as read. Every test here passed throughout, because each
+asserted the shape of a row and none asserted agreement with the thing being
+screened.
 """
 
 from __future__ import annotations
@@ -23,16 +33,20 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 from ..analysis.footnote_only_wire_facts import (
+    ADJUDICATED_KINDS,
     KINDS,
     OUTSTANDING_KINDS,
     cell_adjudication,
+    cell_applicability_reading,
+    field_is_render_profile_eligible,
     pinned_adjudications,
+    pinned_applicability_readings,
     revision_findings,
     would_become_eligible,
 )
 from ..analysis.footnote_pointer_notes import note_definitions
-from ..pipeline._render_profile import project_render_profile_eligibility
-from ..pipeline.source_defects import NoteGovernedAmountDeclaration
+from ..pipeline._render_profile import project_render_profile_eligibility, resolve_render_profile_eligibility
+from ..pipeline.source_defects import NoteGovernedAmountDeclaration, NoteStatedApplicabilityDeclaration
 
 #: Named once per module rather than repeated at each read site, where a typo
 #: would be a silent decode change rather than an error.
@@ -62,6 +76,26 @@ def _declaration(
         note_statement="Nota 2: estas casillas deben estar rellenas a 0",
         integer_digits=15,
         decimal_digits=2,
+        sign_policy="unsigned",
+        evidence="Written in this test to exercise the screen's matcher; adjudicates nothing.",
+    )
+
+
+def _applicability_reading(
+    *,
+    source_ref: str = "fixture-design-ref",
+    source_sha256: str = _FOREIGN_SHA256,
+    sheet: str = "Pag. 1",
+    published_content: str = "Nota 2",
+) -> NoteStatedApplicabilityDeclaration:
+    """One applicability reading written here, carrying no digit counts by construction."""
+    return NoteStatedApplicabilityDeclaration(
+        source_ref=source_ref,
+        source_sha256=source_sha256,
+        sheet=sheet,
+        published_content=published_content,
+        note_cell="A98",
+        note_statement="Nota 2: solo para periodos 02 y siguientes",
         evidence="Written in this test to exercise the screen's matcher; adjudicates nothing.",
     )
 
@@ -106,10 +140,11 @@ def test_every_reported_field_is_one_the_predicate_would_newly_admit(
     from ..pipeline.render_check import revision_render_inputs
 
     inputs = revision_render_inputs(authority, modelo="200", revision="2025-y-siguientes")
+    source = inputs.joined.source
     reported = {
         (field.parser_field.sheet, field.parser_field.source_row)
         for field in inputs.joined.fields
-        if would_become_eligible(field.parser_field)
+        if would_become_eligible(field.parser_field, source)
     }
     assert reported, "no field would become eligible, so the screen measures nothing"
     for field in inputs.joined.fields:
@@ -119,8 +154,61 @@ def test_every_reported_field_is_one_the_predicate_would_newly_admit(
         # Rejected as it stands, admitted once the pointer stops counting as the
         # design's own statement. Both halves matter: a field already eligible
         # needs no pointer argument at all.
-        assert not project_render_profile_eligibility([parser_field]).all_fields
-        assert project_render_profile_eligibility([parser_field.model_copy(update={"content": None})]).all_fields
+        assert not field_is_render_profile_eligible(parser_field, source)
+        assert field_is_render_profile_eligible(parser_field.model_copy(update={"content": None}), source)
+
+
+def test_the_screen_and_the_renderer_return_one_eligibility_verdict_per_field(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The screen's eligibility answer must EQUAL the one the renderer validates against.
+
+    This is the property the screen lost. The renderer resolves a design's
+    applicability readings from the source the parser read and partitions the
+    whole design against them; the screen asked the bare projection about one
+    field at a time and passed no readings at all. The two then disagreed about
+    modelo 353's ``Nota 4.`` cells - read, recorded and acted on for the
+    renderer, outstanding work for the screen - and no test could see it,
+    because every existing assertion was about the shape of a row.
+
+    Asserted as an agreement and not as a population, so it pins no count and
+    ratchets nothing: for every field of the design, the screen's verdict equals
+    that field's membership in the design-wide partition. A screen that goes back
+    to assembling the predicate's arguments itself fails here on the first field
+    whose cell a declaration covers.
+    """
+    from ..pipeline.render_check import revision_render_inputs
+
+    inputs = revision_render_inputs(authority, modelo="353", revision="2026-desde-02")
+    source = inputs.joined.source
+    fields = tuple(joined_field.parser_field for joined_field in inputs.joined.fields)
+
+    # The renderer's side: the whole design at once, exactly as
+    # ``validate_render_profile`` asks it.
+    renderer = resolve_render_profile_eligibility(fields, source)
+    eligible = {(field.sheet, field.source_row) for field in renderer.all_fields}
+    assert eligible, "no field of this design is eligible, so the agreement below is vacuous"
+
+    for field in fields:
+        assert field_is_render_profile_eligible(field, source) == ((field.sheet, field.source_row) in eligible), (
+            f"the screen and the renderer disagree about {field.sheet}!{field.source_cell}"
+        )
+
+    # And the teeth: the drifted call - the bare projection with the argument
+    # omitted - genuinely returns a DIFFERENT verdict for a covered cell, so the
+    # agreement above is not asserting that two spellings of one call agree.
+    readings = pinned_applicability_readings(source)
+    assert readings, "this design declares no applicability reading, so the drift cannot be reproduced"
+    covered = [
+        field
+        for field in fields
+        if field.content is not None
+        and cell_applicability_reading(readings, sheet=field.sheet, content=field.content) is not None
+    ]
+    assert covered, "no field carries a covered cell, so the drift cannot be reproduced"
+    for field in covered:
+        assert field_is_render_profile_eligible(field, source)
+        assert not project_render_profile_eligibility([field]).all_fields
 
 
 def test_a_vocabulary_miss_does_not_mean_the_note_states_no_wire_fact(
@@ -180,13 +268,32 @@ def test_every_pointer_condition_is_reachable_from_constructed_evidence() -> Non
     miss = evidence(FootnotePointerNote(pointer="(1)", note="1", text="Solo para residentes."))
     unresolved = evidence(FootnotePointerNote(pointer="(1)", note="1", text=""))
 
-    assert classify_pointer(hit, resolved=1, adjudication=None)[0] == "pointer_resolves_vocabulary_hit"
-    assert classify_pointer(miss, resolved=1, adjudication=None)[0] == "pointer_resolves_vocabulary_miss"
-    assert classify_pointer(unresolved, resolved=0, adjudication=None)[0] == "pointer_unresolved"
-    assert classify_pointer(miss, resolved=1, adjudication=_declaration())[0] == "pointer_adjudicated"
+    def kind_of(
+        item: PointerEvidence,
+        *,
+        adjudication: NoteGovernedAmountDeclaration | None = None,
+        applicability: NoteStatedApplicabilityDeclaration | None = None,
+    ) -> str:
+        return classify_pointer(
+            item,
+            resolved=0 if item is unresolved else 1,
+            adjudication=adjudication,
+            applicability=applicability,
+        )[0]
 
-    reached = {classify_pointer(item, resolved=1, adjudication=None)[0] for item in (hit, miss, unresolved)}
-    reached.add(classify_pointer(miss, resolved=1, adjudication=_declaration())[0])
+    assert kind_of(hit) == "pointer_resolves_vocabulary_hit"
+    assert kind_of(miss) == "pointer_resolves_vocabulary_miss"
+    assert kind_of(unresolved) == "pointer_unresolved"
+    assert kind_of(miss, adjudication=_declaration()) == "pointer_adjudicated"
+    assert kind_of(miss, applicability=_applicability_reading()) == "pointer_applicability_adjudicated"
+
+    reached = {
+        kind_of(hit),
+        kind_of(miss),
+        kind_of(unresolved),
+        kind_of(miss, adjudication=_declaration()),
+        kind_of(miss, applicability=_applicability_reading()),
+    }
     assert reached == set(KINDS), "a declared condition is unreachable from any input"
 
 
@@ -208,7 +315,7 @@ def test_an_unresolved_pointer_outranks_the_vocabulary_reading() -> None:
             FootnotePointerNote(pointer="(2)", note="2", text=""),
         ),
     )
-    kind, detail = classify_pointer(mixed, resolved=1, adjudication=None)
+    kind, detail = classify_pointer(mixed, resolved=1, adjudication=None, applicability=None)
     assert kind == "pointer_unresolved"
     assert "2" in detail
 
@@ -221,7 +328,7 @@ def test_the_detail_line_carries_the_resolved_count_it_was_given() -> None:
     miss = PointerEvidence(
         cell="(1)", pointer="(1)", notes=(FootnotePointerNote(pointer="(1)", note="1", text="Solo residentes."),)
     )
-    assert "3 note(s)" in classify_pointer(miss, resolved=3, adjudication=None)[1]
+    assert "3 note(s)" in classify_pointer(miss, resolved=3, adjudication=None, applicability=None)[1]
 
 
 def test_a_cell_covered_by_an_adjudication_is_no_longer_outstanding_work(
@@ -297,13 +404,20 @@ def test_an_unresolved_pointer_stays_unresolved_however_it_was_adjudicated(
 ) -> None:
     """The transcription is still missing, and that is a different remedy.
 
-    Asserted twice. Once on constructed evidence, where an adjudication is
-    offered alongside a note the design never defines and must not displace the
-    condition; and once live, where the corpus's unresolved rows must survive
-    the new condition unchanged.
+    Asserted over constructed evidence, and over BOTH declaration families: an
+    adjudicated representation and a recorded applicability reading are each
+    offered alongside a note the design never defines, and neither may displace
+    the condition.
+
+    The corpus half of this test was removed rather than repaired. It asserted
+    that the live screen still reported unresolved rows, and every one of the
+    three it stood on was FALSE: modelos 200, 202 and 222 each define the note
+    their pointer names, printing the label alone on its row with the wording
+    beneath, and the definition grammar refused that shape. A condition whose
+    only live members were reading defects cannot be held by asserting they
+    stay. The condition is real and is proved here on input written for it.
     """
-    from ..analysis.corpus import bundled_modelo_ids
-    from ..analysis.footnote_only_wire_facts import classify_pointer, screen_authority
+    from ..analysis.footnote_only_wire_facts import classify_pointer
     from ..analysis.footnote_pointer_notes import FootnotePointerNote, PointerEvidence
 
     # ``note`` carries the label the resolver builds - "nota 2" - so the detail
@@ -311,17 +425,79 @@ def test_an_unresolved_pointer_stays_unresolved_however_it_was_adjudicated(
     missing = PointerEvidence(
         cell="Nota 2", pointer="Nota 2", notes=(FootnotePointerNote(pointer="Nota 2", note="nota 2", text=""),)
     )
-    kind, detail = classify_pointer(missing, resolved=0, adjudication=_declaration())
-    assert kind == "pointer_unresolved"
-    assert "nota 2" in detail
+    outcomes = (
+        classify_pointer(missing, resolved=0, adjudication=_declaration(), applicability=None),
+        classify_pointer(missing, resolved=0, adjudication=None, applicability=_applicability_reading()),
+        classify_pointer(missing, resolved=0, adjudication=_declaration(), applicability=_applicability_reading()),
+    )
+    for kind, detail in outcomes:
+        assert kind == "pointer_unresolved"
+        assert "nota 2" in detail
+        assert kind in OUTSTANDING_KINDS
 
-    live = screen_authority(authority, bundled_modelo_ids())
-    unresolved = [item for item in live if item.kind == "pointer_unresolved"]
-    assert unresolved, "the corpus's unresolved pointers stopped being reported"
-    assert all(item.kind in OUTSTANDING_KINDS for item in unresolved)
+
+def test_an_applicability_reading_stops_a_cell_being_counted_as_unopened(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Modelo 353's read pointer is a covered row, not a pending one.
+
+    The live case for the second adjudicated condition. The cell publishes
+    ``Nota 4.``, the note it names says only which periods the slot applies to,
+    and a declaration records that reading; the renderer therefore sends the
+    field where every blank-``Contenido`` numeric field of its design goes. The
+    screen used to report it as a reference nobody had opened.
+
+    The row is asserted to still be PRESENT and merely reclassified, for the same
+    reason its sibling condition is: a covered row that vanishes cannot be
+    reconciled against the census, and a reader would not be able to see the
+    mechanism working.
+    """
+    findings = revision_findings(authority, modelo="353", revision="2026-desde-02")
+    covered = [item for item in findings if item.kind == "pointer_applicability_adjudicated"]
+    assert covered, "modelo 353's read pointer stopped being reported at all"
+    for item in covered:
+        assert item.kind not in OUTSTANDING_KINDS
+        # The detail quotes the note that was read and says what was concluded
+        # from it, so the row carries what a re-reader needs.
+        assert "Solo para periodos 02 y siguientes" in item.detail
+        assert "applicability only" in item.detail
 
 
 def test_the_declared_conditions_split_into_outstanding_and_covered() -> None:
     """The census cannot lose a condition to either side of the split."""
     assert set(OUTSTANDING_KINDS) < set(KINDS)
-    assert set(KINDS) - set(OUTSTANDING_KINDS) == {"pointer_adjudicated"}
+    assert set(KINDS) - set(OUTSTANDING_KINDS) == set(ADJUDICATED_KINDS)
+    assert set(ADJUDICATED_KINDS) < set(KINDS)
+
+
+def test_an_applicability_reading_pinned_elsewhere_covers_nothing(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The second declaration family is pinned exactly as the first is.
+
+    Exercised against the SHIPPED readings twice - through the design's real
+    parser-read source, which must select them, and through a source carrying a
+    foreign digest, which must select none - and then against a reading authored
+    here, to prove the sheet and the exact published pointer are both part of the
+    match. Without this half a matcher that had stopped checking the pin would
+    credit a reading of a file nobody read.
+    """
+    from ..pipeline.render_check import revision_render_inputs
+
+    source = revision_render_inputs(authority, modelo="353", revision="2026-desde-02").joined.source
+    live = pinned_applicability_readings(source)
+    assert live, "the shipped applicability readings no longer reach modelo 353's design"
+
+    reissued = source.model_copy(update={"source_sha256": _FOREIGN_SHA256})
+    assert pinned_applicability_readings(reissued) == (), "a stale pin was admitted"
+    assert (
+        cell_applicability_reading(pinned_applicability_readings(reissued), sheet=live[0].sheet, content="Nota 4.")
+        is None
+    )
+
+    authored = (_applicability_reading(sheet="Pag. 1", published_content="Nota 2"),)
+    assert cell_applicability_reading(authored, sheet="Pag. 1", content="Nota 2") is not None
+    assert cell_applicability_reading(authored, sheet="Pag. 1", content="  Nota   2 ") is not None
+    assert cell_applicability_reading(authored, sheet="Pag. 2", content="Nota 2") is None
+    assert cell_applicability_reading(authored, sheet="Pag. 1", content="Nota 3") is None
+    assert cell_applicability_reading(authored, sheet="Pag. 1", content="Nota 2.") is None

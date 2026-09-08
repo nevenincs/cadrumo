@@ -1022,23 +1022,30 @@ def _numeric_derivation(
         #   re-scaled by a rule nobody reviewed for that document -- but it is a
         #   reading the design does not support, not a derivation, and the
         #   footnote-pointer screen carries the outstanding queue.
-        adjudicated_scale = note_governed_amount_scale_for(
+        adjudicated = note_governed_amount_scale_for(
             note_governed_amounts,
             sheet=parser_field.sheet,
             published_content=pointer_content,
         )
-        if adjudicated_scale is not None:
-            whole_digits, decimal_digits = adjudicated_scale
-            _require_numeric_extent(joined_field, expected_length=whole_digits + decimal_digits)
+        if adjudicated is not None:
+            # The sign travels with the adjudication and drives data_type,
+            # `signed` and `decimals` together, exactly as it does in
+            # `_profile_width_17_derivation`: `money` carries its scale inside
+            # the codec and the schema refuses a field declaring decimals beside
+            # any other data_type, so a signed run must not pass one. The width
+            # check counts the sign position, so a signed adjudication that does
+            # not fill the slot is refused like an unsigned one.
+            signed = adjudicated.signed
+            _require_numeric_extent(joined_field, expected_length=adjudicated.wire_length)
             return _schema_field(
                 joined_field,
-                data_type="decimal",
+                data_type="money" if signed else "decimal",
                 required=_is_required(parser_field.validation),
                 padding=ExportPadding.LEFT_ZERO,
                 justification=ExportJustification.RIGHT,
-                signed=False,
+                signed=signed,
                 export_record_id=export_record_id,
-                decimals=decimal_digits,
+                decimals=None if signed else adjudicated.decimal_digits,
                 derivation_code="numeric-note-governed-amount-v1",
             )
         return _schema_field(

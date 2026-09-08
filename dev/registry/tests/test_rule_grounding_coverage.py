@@ -51,21 +51,83 @@ def corpus(authority: ValidatedRegistryAuthority) -> tuple[object, ...]:
 
 
 def test_the_join_separates_grounded_from_ungrounded_fields(corpus: tuple[object, ...]) -> None:
-    """Both conditions occur, so the join is discriminating rather than uniform.
+    """The join discriminates rather than reporting every field the same way.
 
     A join reporting every field the same way would still produce rows and a
-    census, and would tell the authoring task nothing. Held as presence of both
-    populations, not as their sizes.
+    census, and would tell the authoring task nothing.
+
+    The discrimination is asserted on input written here rather than on the
+    live corpus, because the corpus no longer supplies the mixture. Every
+    outstanding field now cites a note its own sheet defines, so every live row
+    is ``grounded_by_own_note``. That is not the join losing a condition: the
+    three fields that used to fall through to the weaker conditions did so
+    because their designs print a note's label alone on its row and the
+    definition grammar refused that shape, so the citations resolve now and the
+    strongest grounding applies. A population assertion could not tell those two
+    stories apart, which is why the property moved onto explicit input.
     """
+    from ..analysis.rule_grounding_coverage import classify_grounding
+
     assert corpus, "the join lost its live population"
-    kinds = {item.kind for item in corpus}
-    assert len(kinds) > 1, "the join reports every field the same way"
-    assert kinds <= set(KINDS)
-    # `ungrounded` has no instance in the corpus since design-level notes were
-    # admitted, so it is not required here. It keeps its own proof below, on
-    # constructed input, rather than being deleted as unreachable.
-    assert "grounded_by_type_convention" in kinds
-    assert "grounded_by_design_note" in kinds
+    assert {item.kind for item in corpus} <= set(KINDS)
+
+    mixed = classify_grounding(
+        (
+            _Field(aeat_type="Num", cell="S1!B1", notes=("nota 1",), kind="pointer_resolves_vocabulary_miss"),
+            _Field(aeat_type="Num", cell="S1!B2"),
+            _Field(aeat_type="An", cell="S1!B3"),
+        ),
+        by_type={"Num": ["S1:nota 4"]},
+        design_notes=("S1",),
+        modelo="200",
+        revision="r",
+    )
+    assert [item.kind for item in mixed] == [
+        "grounded_by_own_note",
+        "grounded_by_type_convention",
+        "grounded_by_design_note",
+    ]
+
+
+def test_every_live_grounded_row_names_a_note_its_own_sheet_really_defines(
+    corpus: tuple[object, ...],
+) -> None:
+    """The live floor the two emptied ones were re-pointed at.
+
+    Two conditions lost their entire live population to a corrected reading -
+    ``grounded_by_type_convention`` held two rows and ``grounded_by_design_note``
+    one, and all three were fields whose own citation the definition grammar
+    could not read. Their floors were doing real work: they are what stops an
+    absence claim passing because the screen quietly stopped examining anything.
+    So the work moves here rather than being dropped, onto the population that
+    absorbed those rows.
+
+    ``grounded_by_own_note`` is the strongest condition the join reports and the
+    hardest to fake: the credit is only valid if the note the field's own cell
+    cites is really defined on the field's own sheet. That is checked here
+    against the design transcription itself, so a join crediting a field with a
+    note nobody could open fails, and a join that reported nothing at all fails
+    on the floor below it.
+    """
+    from ..analysis.footnote_pointer_notes import sheet_note_definitions
+    from ..analysis.note_label_scope import transcription_paths
+
+    grounded = [item for item in corpus if item.kind == "grounded_by_own_note"]
+    assert grounded, "the join's strongest condition lost its live population"
+
+    by_design = {path.name: path for path in transcription_paths()}
+    for item in grounded:
+        design = by_design.get(item.design)
+        assert design is not None, f"{item.cell} names a transcription the corpus does not carry: {item.design!r}"
+        defined = sheet_note_definitions(design.read_text(encoding="utf-8"))
+        sheet = item.cell.split("!", 1)[0]
+        assert item.notes, f"{item.cell} is credited with its own note and names none"
+        for note in item.notes:
+            note_sheet, label = note.split(":", 1)
+            # Scoped to the field's OWN sheet, both in the credit and in the
+            # lookup: a note label names a note only together with its sheet.
+            assert note_sheet == sheet, f"{item.cell} is credited with {note!r} from another sheet"
+            assert defined.get(sheet, {}).get(label), f"{item.cell} cites {note!r}, which {item.design} never defines"
 
 
 def test_a_grounded_field_names_notes_that_really_cover_its_type(
@@ -74,11 +136,36 @@ def test_a_grounded_field_names_notes_that_really_cover_its_type(
     """Every note credited to a field states a convention for that field's type.
 
     This is the assertion that stops the join drifting into matching a field
-    against any convention its design happens to carry. Checked against the
-    convention screen's own output rather than against a copy of its rule.
+    against any convention its design happens to carry.
+
+    Asserted on written input, and then over whatever live rows carry this
+    condition. The live half is announced rather than required: the condition
+    has no member in the corpus today, for the reason the join test above
+    records, and demanding one would make this gate fail for a corpus that got
+    BETTER. It still runs the cross-check against the convention screen's own
+    output the moment a member reappears.
     """
+    from ..analysis.rule_grounding_coverage import classify_grounding
+
+    # The type join, on input where the wrong answer is available: the design
+    # states a convention for `An` as well, and the `Num` field must not receive
+    # it.
+    written = classify_grounding(
+        (_Field(aeat_type="Num", cell="S1!B1"),),
+        by_type={"Num": ["S1:nota 4"], "An": ["S1:nota 3"]},
+        design_notes=(),
+        modelo="200",
+        revision="r",
+    )
+    assert [item.kind for item in written] == ["grounded_by_type_convention"]
+    assert written[0].notes == ("S1:nota 4",)
+
     grounded = [item for item in corpus if item.kind == "grounded_by_type_convention"]
-    assert grounded, "no field is grounded, so this proves nothing"
+    report_unread(
+        "rule-grounding type-convention cross-check",
+        "no live field is grounded by a type convention, so the corpus half of this gate asserted nothing",
+        () if grounded else ("grounded_by_type_convention",),
+    )
     for item in grounded:
         assert item.notes
         covering = {
@@ -100,9 +187,18 @@ def test_a_field_grounded_only_by_a_design_note_names_that_note(
     would put a field's rule on wording that says nothing about it - modelo
     200's design note does settle its amounts, and another design's says only
     that the NIF is mandatory, and the row cannot tell them apart.
+
+    The corpus half is announced rather than required, for the same reason as
+    the gate above: this condition's live members were fields whose own citation
+    the definition grammar could not read, and they are grounded by that
+    citation now.
     """
     fallback = [item for item in corpus if item.kind == "grounded_by_design_note"]
-    assert fallback, "the fallback condition lost its live population"
+    report_unread(
+        "rule-grounding design-note fallback",
+        "no live field falls back to a design note, so the corpus half of this gate asserted nothing",
+        () if fallback else ("grounded_by_design_note",),
+    )
     for item in fallback:
         assert item.notes
         assert all(note.endswith(":unnumbered") for note in item.notes)
