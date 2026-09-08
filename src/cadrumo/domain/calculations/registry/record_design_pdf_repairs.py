@@ -800,6 +800,29 @@ _STRANDED_CASILLA_TAG_RE = re.compile(r"^\s*\[\d+\]\s*$")
 _TRAILING_CASILLA_TAG_RE = re.compile(r"\[\d+\]\s*$")
 
 
+def _field_shaped_pdf_line(line: str, row_number: int) -> bool:
+    """Whether a line can carry a casilla tag as a field or split-row half."""
+    return (
+        parse_pdf_row(line, row_number) is not None
+        or REVERSED_ROW_TAIL_RE.match(line) is not None
+        or _REVERSED_ROW_HEAD_RE.match(line) is not None
+    )
+
+
+def _can_reattach_casilla_tag(previous: str, row_number: int) -> bool:
+    """Guard a stranded tag from headings, prose, and already-closed rows."""
+    if not previous.strip() or _TRAILING_CASILLA_TAG_RE.search(previous) is not None:
+        return False
+    cleaned = clean_pdf_line(previous)
+    if (
+        pdf_page_name(cleaned) is not None
+        or pdf_record_heading_name(cleaned) is not None
+        or pdf_candidate_record_name(cleaned) is not None
+    ):
+        return False
+    return _field_shaped_pdf_line(previous, row_number)
+
+
 def reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Fold a casilla reference emitted alone back onto the row it terminates.
 
@@ -831,19 +854,7 @@ def reattach_stranded_casilla_tags(lines: tuple[str, ...]) -> tuple[str, ...]:
     for line in lines:
         if folded and _STRANDED_CASILLA_TAG_RE.match(line):
             previous = folded[-1]
-            cleaned = clean_pdf_line(previous)
-            if (
-                previous.strip()
-                and not _TRAILING_CASILLA_TAG_RE.search(previous)
-                and pdf_page_name(cleaned) is None
-                and pdf_record_heading_name(cleaned) is None
-                and pdf_candidate_record_name(cleaned) is None
-                and (
-                    parse_pdf_row(previous, len(folded)) is not None
-                    or REVERSED_ROW_TAIL_RE.match(previous) is not None
-                    or _REVERSED_ROW_HEAD_RE.match(previous) is not None
-                )
-            ):
+            if _can_reattach_casilla_tag(previous, len(folded)):
                 folded[-1] = f"{previous.rstrip()} {line.strip()}"
                 continue
         folded.append(line)

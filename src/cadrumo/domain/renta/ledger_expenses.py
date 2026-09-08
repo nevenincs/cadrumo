@@ -391,6 +391,146 @@ def select_deductibility_profile(
     return region_override_profiles.get(context.residence_ccaa, state_profile)
 
 
+def _evaluate_full_deductible_rule(
+    _fact: RentaDeductibleExpenseFact,
+    _rule: ProportionalityRule,
+    _context: RentaDeductibilityContext,
+    deductible_basis: Decimal,
+) -> _RentaDeductibilityDecision:
+    return _RentaDeductibilityDecision(
+        status=RentaDeductibilityStatus.ELIGIBLE,
+        reason="deductible",
+        deductible_amount=deductible_basis,
+        applied_ratio=Decimal("1"),
+        statutory_cap_applied=None,
+    )
+
+
+def _evaluate_fixed_percentage_rule(
+    fact: RentaDeductibleExpenseFact,
+    _rule: ProportionalityRule,
+    _context: RentaDeductibilityContext,
+    deductible_basis: Decimal,
+) -> _RentaDeductibilityDecision:
+    fixed_pct = _rule.fixed_pct
+    if fixed_pct is None:
+        raise RentaValidationError(
+            f"proportionality rule for {fact.category.value!r} declares a fixed percentage kind without a rate",
+        )
+    return _RentaDeductibilityDecision(
+        status=RentaDeductibilityStatus.ELIGIBLE,
+        reason="deductible",
+        deductible_amount=deductible_basis * fixed_pct,
+        applied_ratio=fixed_pct,
+        statutory_cap_applied=None,
+    )
+
+
+def _evaluate_usage_ratio_rule(
+    fact: RentaDeductibleExpenseFact,
+    rule: ProportionalityRule,
+    context: RentaDeductibilityContext,
+    deductible_basis: Decimal,
+) -> _RentaDeductibilityDecision:
+    ratio = context.usage_ratios.get(fact.category, rule.default_ratio)
+    if ratio is None:
+        return _RentaDeductibilityDecision(
+            status=RentaDeductibilityStatus.INELIGIBLE,
+            reason="missing usage ratio",
+            deductible_amount=Decimal("0"),
+            applied_ratio=None,
+            statutory_cap_applied=None,
+        )
+    return _RentaDeductibilityDecision(
+        status=RentaDeductibilityStatus.ELIGIBLE,
+        reason="deductible",
+        deductible_amount=deductible_basis * ratio,
+        applied_ratio=ratio,
+        statutory_cap_applied=None,
+    )
+
+
+def _evaluate_statutory_cap_rule(
+    _fact: RentaDeductibleExpenseFact,
+    rule: ProportionalityRule,
+    context: RentaDeductibilityContext,
+    deductible_basis: Decimal,
+) -> _RentaDeductibilityDecision:
+    cap_applied = _resolve_statutory_cap(rule=rule, context=context)
+    if cap_applied is None:
+        return _RentaDeductibilityDecision(
+            status=RentaDeductibilityStatus.INELIGIBLE,
+            reason="missing statutory cap context",
+            deductible_amount=Decimal("0"),
+            applied_ratio=None,
+            statutory_cap_applied=None,
+        )
+    deductible_amount = min(deductible_basis, cap_applied)
+    applied_ratio = Decimal("0") if deductible_basis == Decimal("0") else deductible_amount / deductible_basis
+    return _RentaDeductibilityDecision(
+        status=RentaDeductibilityStatus.ELIGIBLE,
+        reason="deductible",
+        deductible_amount=deductible_amount,
+        applied_ratio=applied_ratio,
+        statutory_cap_applied=cap_applied,
+    )
+
+
+def _evaluate_non_deductible_rule(
+    _fact: RentaDeductibleExpenseFact,
+    _rule: ProportionalityRule,
+    _context: RentaDeductibilityContext,
+    _deductible_basis: Decimal,
+) -> _RentaDeductibilityDecision:
+    return _RentaDeductibilityDecision(
+        status=RentaDeductibilityStatus.INELIGIBLE,
+        reason="non deductible category",
+        deductible_amount=Decimal("0"),
+        applied_ratio=Decimal("0"),
+        statutory_cap_applied=None,
+    )
+
+
+def _evaluate_exclusive_use_rule(
+    _fact: RentaDeductibleExpenseFact,
+    _rule: ProportionalityRule,
+    context: RentaDeductibilityContext,
+    deductible_basis: Decimal,
+) -> _RentaDeductibilityDecision:
+    if context.exclusive_use_confirmed:
+        return _RentaDeductibilityDecision(
+            status=RentaDeductibilityStatus.ELIGIBLE,
+            reason="deductible",
+            deductible_amount=deductible_basis,
+            applied_ratio=Decimal("1"),
+            statutory_cap_applied=None,
+        )
+    return _RentaDeductibilityDecision(
+        status=RentaDeductibilityStatus.INELIGIBLE,
+        reason="exclusive use not confirmed",
+        deductible_amount=Decimal("0"),
+        applied_ratio=None,
+        statutory_cap_applied=None,
+    )
+
+
+_RentaDeductibilityEvaluator = Callable[
+    [RentaDeductibleExpenseFact, ProportionalityRule, RentaDeductibilityContext, Decimal],
+    _RentaDeductibilityDecision,
+]
+_RENTA_DEDUCTIBILITY_EVALUATORS: Mapping[ProportionalityKind, _RentaDeductibilityEvaluator] = MappingProxyType(
+    {
+        ProportionalityKind.FULL_DEDUCTIBLE: _evaluate_full_deductible_rule,
+        ProportionalityKind.FIXED_PERCENTAGE: _evaluate_fixed_percentage_rule,
+        ProportionalityKind.USAGE_RATIO_HOME_AREA: _evaluate_usage_ratio_rule,
+        ProportionalityKind.USAGE_RATIO_PERSONAL: _evaluate_usage_ratio_rule,
+        ProportionalityKind.STATUTORY_CAP: _evaluate_statutory_cap_rule,
+        ProportionalityKind.NON_DEDUCTIBLE: _evaluate_non_deductible_rule,
+        ProportionalityKind.REQUIRES_EXCLUSIVE_USE: _evaluate_exclusive_use_rule,
+    },
+)
+
+
 def evaluate_renta_deductibility(
     fact: RentaDeductibleExpenseFact,
     profile: CategoryProfile,
@@ -409,68 +549,13 @@ def evaluate_renta_deductibility(
         )
     rule = profile.proportionality
     deductible_basis = _deductible_basis_amount(fact, context)
-    deductible_abs: Decimal
-    applied_ratio: Decimal | None
-    cap_applied: Decimal | None = None
-    status = RentaDeductibilityStatus.ELIGIBLE
-    reason = "deductible"
-
-    if rule.kind is ProportionalityKind.FULL_DEDUCTIBLE:
-        deductible_abs = deductible_basis
-        applied_ratio = Decimal("1")
-    elif rule.kind is ProportionalityKind.FIXED_PERCENTAGE:
-        if rule.fixed_pct is None:
-            raise RentaValidationError(
-                f"proportionality rule for {fact.category.value!r} declares a fixed percentage kind without a rate",
-            )
-        applied_ratio = rule.fixed_pct
-        deductible_abs = deductible_basis * applied_ratio
-    elif rule.kind in {ProportionalityKind.USAGE_RATIO_HOME_AREA, ProportionalityKind.USAGE_RATIO_PERSONAL}:
-        ratio = context.usage_ratios.get(fact.category, rule.default_ratio)
-        if ratio is None:
-            status = RentaDeductibilityStatus.INELIGIBLE
-            reason = "missing usage ratio"
-            applied_ratio = None
-            deductible_abs = Decimal("0")
-        else:
-            applied_ratio = ratio
-            deductible_abs = deductible_basis * ratio
-    elif rule.kind is ProportionalityKind.STATUTORY_CAP:
-        cap_applied = _resolve_statutory_cap(rule=rule, context=context)
-        if cap_applied is None:
-            status = RentaDeductibilityStatus.INELIGIBLE
-            reason = "missing statutory cap context"
-            applied_ratio = None
-            deductible_abs = Decimal("0")
-        else:
-            deductible_abs = min(deductible_basis, cap_applied)
-            applied_ratio = Decimal("0") if deductible_basis == Decimal("0") else deductible_abs / deductible_basis
-    elif rule.kind is ProportionalityKind.NON_DEDUCTIBLE:
-        status = RentaDeductibilityStatus.INELIGIBLE
-        reason = "non deductible category"
-        applied_ratio = Decimal("0")
-        deductible_abs = Decimal("0")
-    elif rule.kind is ProportionalityKind.REQUIRES_EXCLUSIVE_USE:
-        if context.exclusive_use_confirmed:
-            applied_ratio = Decimal("1")
-            # The confirmation gates WHETHER the cost is deductible, never what
-            # the deductible cost is, so this reads the same basis its five
-            # sibling branches do. Deducting the IVA-inclusive gross here would
-            # claim the input IVA a second time: the activity already recovers
-            # it as cuota soportada on Modelo 303, and only the share it has no
-            # right to deduct is real acquisition cost (PGC NRV 12.ª) -- which
-            # is exactly what ``_deductible_basis_amount`` folds in.
-            deductible_abs = deductible_basis
-        else:
-            status = RentaDeductibilityStatus.INELIGIBLE
-            reason = "exclusive use not confirmed"
-            applied_ratio = None
-            deductible_abs = Decimal("0")
-    else:  # pragma: no cover - closed enum exhaustiveness guard
+    evaluator = _RENTA_DEDUCTIBILITY_EVALUATORS.get(rule.kind)
+    if evaluator is None:  # pragma: no cover - closed enum exhaustiveness guard
         raise RentaValidationError(f"unsupported proportionality kind: {rule.kind.value}")
+    decision = evaluator(fact, rule, context, deductible_basis)
 
-    signed_deductible = deductible_abs * fact.sign
-    signed_non_deductible = (fact.gross_amount - deductible_abs) * fact.sign
+    signed_deductible = decision.deductible_amount * fact.sign
+    signed_non_deductible = (fact.gross_amount - decision.deductible_amount) * fact.sign
     return RentaDeductibilityResult(
         transaction_id=fact.transaction_id,
         invoice_id=fact.invoice_id,
@@ -478,13 +563,13 @@ def evaluate_renta_deductibility(
         category_family=family_for(fact.category),
         profile_year=context.profile_year,
         proportionality_kind=rule.kind,
-        status=status,
-        reason=reason,
+        status=decision.status,
+        reason=decision.reason,
         gross_amount=fact.gross_amount * fact.sign,
         deductible_amount=signed_deductible,
         non_deductible_amount=signed_non_deductible,
-        applied_ratio=applied_ratio,
-        statutory_cap_applied=cap_applied,
+        applied_ratio=decision.applied_ratio,
+        statutory_cap_applied=decision.statutory_cap_applied,
         legal_references=rule.citations,
     )
 
