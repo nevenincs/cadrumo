@@ -98,7 +98,7 @@ def test_the_declaration_reaches_the_register_intact() -> None:
     """Every operator-supplied fact must survive into the persisted record."""
     with _register() as service:
         outcome = declare_bien_inversion(
-            _command(asset_record_ref="asset-7", prorrata_sector_id="sector-2"),
+            _command(prorrata_sector_id="sector-2"),
             service=service,
         )
         stored = service.list_all().records
@@ -109,7 +109,6 @@ def test_the_declaration_reaches_the_register_intact() -> None:
     assert record.acquisition_year == 2024
     assert record.cuota_soportada == Decimal("2100.00")
     assert record.prorrata_inicial_pct == Decimal("60")
-    assert record.asset_record_ref == "asset-7"
     assert record.prorrata_sector_id == "sector-2"
     assert record.disposal is None
     assert outcome.record == record

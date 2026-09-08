@@ -133,9 +133,8 @@ class SectorDiferenciadoLetra(StrEnum):
 
     Attributes:
         A: Letra a' — distinct CNAE groups whose art. 104 general prorrata
-            percentages differ by more than 50 percentage points
-            (``PRORRATA_SECTORAL_SEPARATION_SPREAD_PP``). The only ground on which
-            the art. 101.Dos AEAT-authorised common regime may later apply.
+            percentages differ by more than 50 percentage points. The only ground
+            on which the art. 101.Dos AEAT-authorised common regime may later apply.
         B: Letra b' — activities under the regímenes especiales (simplificado,
             agricultura/ganadería/pesca, oro de inversión, recargo de
             equivalencia); their deduction is governed by their special regime.

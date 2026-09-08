@@ -31,6 +31,7 @@ from ....domain.iva_compensation.filed_derivation import (
     M303CompensationAvailableDerivation,
     M303CompensationBasis,
 )
+from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from .. import errors as errors_module
 from .. import m303_carry_ingress as m303_module
@@ -298,7 +299,9 @@ def _seed_official_observation(repository: CalculationObservationRepository) -> 
             _plain_m303_observation(),
             source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             captured_at=_CAPTURED_AT,
+            source_headers=(_header(ResultDisposition.COMPENSACION),),
             source_metadata={"aeat_expediente_id": "202530300000001Z"},
+            stamped_revision_id=revision_id_for_observation(_plain_m303_observation()),
         )
     )
 
@@ -387,7 +390,7 @@ def test_m303_disposition_contradiction_has_an_exact_safety_verdict(tmp_path: Pa
                     provenance_kind="source_header",
                     provenance_locator="m303-submitted-file:devolucion",
                 ),
-                normalize_m303_carry=True,
+                stamped_revision_id=revision_id_for_observation(_plain_m303_observation()),
             )
 
     _assert_exact_terminal_contract(
@@ -420,7 +423,15 @@ def test_m303_derived_carry_contradiction_has_an_exact_safety_verdict(tmp_path: 
                     provenance_kind="app_filing",
                     provenance_locator="filed-revision:2025:1T",
                 ),
-                normalize_m303_carry=True,
+                stamped_revision_id=revision_id_for_observation(
+                    _m303_observation(
+                        {
+                            M303_COMPENSATION_POSTERIOR_CASILLA: Decimal("7.00"),
+                            M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-20.00"),
+                            M303_COMPENSATION_AVAILABLE_CASILLA: Decimal("99.00"),
+                        }
+                    )
+                ),
             )
 
     _assert_exact_terminal_contract(
@@ -465,11 +476,10 @@ def test_m303_registry_formula_contradiction_has_an_exact_safety_verdict() -> No
     )
 
 
-@pytest.mark.parametrize("source_kind", (ObservationSourceKind.OPERATOR_MANUAL, ObservationSourceKind.APP_FILING))
-def test_both_real_observation_repository_displacement_branches_have_exact_safety_verdicts(
+def test_real_app_filing_observation_repository_displacement_has_exact_safety_verdict(
     tmp_path: Path,
-    source_kind: ObservationSourceKind,
 ) -> None:
+    source_kind = ObservationSourceKind.APP_FILING
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         _seed_official_observation(repository)
@@ -479,6 +489,12 @@ def test_both_real_observation_repository_displacement_branches_have_exact_safet
                 _plain_m303_observation(),
                 source_kind=source_kind,
                 captured_at=_CAPTURED_AT + timedelta(days=1),
+                result_disposition=ResultDispositionProjection(
+                    disposition=ResultDisposition.COMPENSACION,
+                    provenance_kind="app_filing",
+                    provenance_locator="test:terminal-preconditions:incoming-displacement",
+                ),
+                stamped_revision_id=revision_id_for_observation(_plain_m303_observation()),
             )
 
     _assert_exact_terminal_contract(

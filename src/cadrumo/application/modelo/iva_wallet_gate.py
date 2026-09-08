@@ -908,6 +908,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
     taxpayer_nif = taxpayer_nif_for_bucket(work_unit.bucket_id)
     if taxpayer_nif is None:
         return None
+    from ..calculations.binding_prefill import BindingPrefillReport
     from ..calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 
     evidence = _prior_period_carry_evidence(work_unit, snapshot=snapshot)
@@ -917,10 +918,7 @@ def lazily_reconcile_local_iva_compensation_for_work_unit(
         wallet=None,
         decision_repository=repository,
         local_recurrence=evidence.recurrence,
-        # The generic previous-filing reader can still read legacy envelopes for
-        # unrelated consumers. The lazy Modelo 303 wallet gate instead admits
-        # only the explicit disposition-aware envelope recurrence below.
-        use_repository_local_recurrence=False,
+        prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
         # A stored prior-period observation this build cannot use is NOT an
         # absence. Its presence proves the taxpayer had a prior Modelo 303
         # period, which is the exact fact the activity-start proof asserts did
@@ -979,7 +977,7 @@ def _prior_period_carry_evidence(
 
     A prior calculation revision records a local calculation, not the filed
     declaration's disposition. It therefore cannot establish this recurrence.
-    Missing, legacy, revision-refused, or disposition-conflicting envelopes
+    Missing, unnormalized, revision-refused, or disposition-conflicting envelopes
     yield no usable recurrence, so the wallet gate blocks rather than selecting
     an invented carry amount.
 
@@ -1018,12 +1016,7 @@ def _prior_period_carry_evidence(
     if (
         observation.filing_year != requirement.filing_year
         or observation.period != source_period.registry_token
-        or revision_carry_outcome(
-            payload.stamped_revision_id,
-            source_modelo=observation.modelo,
-            source_filing_year=observation.filing_year,
-            source_period=observation.period,
-        ).refused
+        or revision_carry_outcome(payload.registry_snapshot_ref).refused
     ):
         return found
     try:
@@ -1041,6 +1034,7 @@ def _prior_period_carry_evidence(
             source_modelo=Modelo.M303.value,
             source_filing_year=requirement.filing_year,
             source_periods=(source_period,),
+            source_registry_snapshot_refs=(validated.registry_snapshot_ref,),
             resolved_at=validated.captured_at,
             source_locator=(
                 f"observation-envelope:{Modelo.M303.value}:{source_period.filing_year}:{source_period.registry_token}"

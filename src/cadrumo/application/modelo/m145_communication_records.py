@@ -61,8 +61,10 @@ from ...domain.calculations.registry.export import resolve_export_layout
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportRecordDefinition
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.errors import ModeloError, ModeloExportError
+from ..calculations.revision_carry_gate import revision_carry_outcome
 from ._m145_communication import (
     M145_COMMUNICATION_MODELO,
     M145_COMMUNICATION_SERVICE_OWNER,
@@ -269,6 +271,16 @@ class M145CommunicationRecord(BaseModel):
     note: str | None = Field(default=None, max_length=512)
 
     @property
+    def registry_snapshot_ref(self) -> RegistrySnapshotRef:
+        """Return the canonical coordinate represented by this record's distributed identity fields."""
+        return RegistrySnapshotRef(
+            modelo=self.modelo,
+            revision_id=self.revision_id,
+            modelo_year=self.communication_year,
+            period=self.period_token.value,
+        )
+
+    @property
     def snapshot_id(self) -> str:
         """Return the communication record id under the generic name the snapshot repository expects."""
         return self.communication_record_id
@@ -419,7 +431,19 @@ def _snapshot_for_scope(
 def list_m145_communication_records(*, bucket_id: BucketId) -> tuple[M145CommunicationRecord, ...]:
     """Return every local Modelo 145 communication record in one bucket."""
     records = _m145_communication_record_repository(bucket_id).list_snapshots()
-    return tuple(sorted(records, key=lambda record: (record.created_at, record.communication_record_id)))
+    current = tuple(_require_m145_record_coordinates_current(record) for record in records)
+    return tuple(sorted(current, key=lambda record: (record.created_at, record.communication_record_id)))
+
+
+def _require_m145_record_coordinates_current(record: M145CommunicationRecord) -> M145CommunicationRecord:
+    """Return a persisted M145 record only after shared-gate re-confirmation."""
+    outcome = revision_carry_outcome(record.registry_snapshot_ref)
+    if outcome.refused:
+        raise M145CommunicationRecordValidationError(
+            "Modelo 145 record registry coordinate cannot be re-confirmed: "
+            f"{record.registry_snapshot_ref.revision_id}: {outcome.detail}"
+        )
+    return record
 
 
 def read_m145_communication_record(
@@ -428,7 +452,8 @@ def read_m145_communication_record(
     bucket_id: BucketId,
 ) -> M145CommunicationRecord:
     """Return one Modelo 145 communication record by id or unambiguous prefix."""
-    return _m145_communication_record_repository(bucket_id).resolve(communication_record_id)
+    record = _m145_communication_record_repository(bucket_id).resolve(communication_record_id)
+    return _require_m145_record_coordinates_current(record)
 
 
 def _m145_communication_event_payload(
@@ -903,7 +928,7 @@ def mark_m145_communication_record_delivered_to_payer(
 ) -> M145CommunicationRecord:
     """Mark one valid local communication record as delivered to the payer."""
     repository = _m145_communication_record_repository(bucket_id)
-    record = repository.resolve(communication_record_id)
+    record = _require_m145_record_coordinates_current(repository.resolve(communication_record_id))
     if record.state in {
         M145CommunicationRecordState.DELIVERED_TO_PAYER,
         M145CommunicationRecordState.LOCALLY_COMPLETED,
@@ -965,7 +990,7 @@ def mark_m145_communication_record_locally_completed(
 ) -> M145CommunicationRecord:
     """Mark one payer-delivered local communication record as locally completed."""
     repository = _m145_communication_record_repository(bucket_id)
-    record = repository.resolve(communication_record_id)
+    record = _require_m145_record_coordinates_current(repository.resolve(communication_record_id))
     if record.state is M145CommunicationRecordState.LOCALLY_COMPLETED:
         _LOGGER.debug(
             "m145 communication record completion reused state communication_record_id=%s state=%s",
@@ -1049,7 +1074,7 @@ def create_m145_communication_record(
             "m145 communication record create reused existing communication_record_id=%s",
             record_id,
         )
-        return repository.load(record_id)
+        return _require_m145_record_coordinates_current(repository.load(record_id))
 
     record = M145CommunicationRecord(
         communication_record_id=record_id,

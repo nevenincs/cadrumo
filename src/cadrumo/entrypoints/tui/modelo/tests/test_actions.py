@@ -19,7 +19,6 @@ import pytest
 from .....application.modelo import operation_definitions
 from ..actions import (
     MODELO_ACTION_DISPATCH,
-    MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS,
     ModeloActionPort,
     ModeloActionView,
     action_for_operation,
@@ -95,30 +94,6 @@ def test_the_table_is_keyed_by_the_id_each_row_carries() -> None:
     """A key that disagreed with its row would dispatch one action as another."""
     mismatched = [key for key, row in MODELO_ACTION_DISPATCH.items() if key != row.action_id]
     assert not mismatched, f"keys disagreeing with their row's action_id: {mismatched}"
-
-
-def test_the_pending_actions_are_disjoint_from_the_dispatchable_ones() -> None:
-    """An action cannot be both dispatchable and declared undispatchable.
-
-    Overlap would mean the module contradicts itself about the one thing the
-    pending list exists to say.
-    """
-    overlap = sorted(set(MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS) & set(MODELO_ACTION_DISPATCH))
-    assert not overlap, f"actions declared both dispatchable and pending: {overlap}"
-
-
-def test_no_pending_action_has_a_registered_operation() -> None:
-    """The pending list must state a real gap, not a stale one.
-
-    If one of these acquires a registered definition, it belongs in the
-    dispatch table and this fails -- which is the point. A pending list that
-    goes stale silently would understate the surface indefinitely.
-    """
-    registered = _registered_definition_ids()
-    now_registered = sorted(set(MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS) & registered)
-    assert not now_registered, (
-        f"these are declared pending but now have registered operations, so they are dispatchable: {now_registered}"
-    )
 
 
 def test_a_destructive_action_does_not_return_to_the_screen_it_destroyed() -> None:

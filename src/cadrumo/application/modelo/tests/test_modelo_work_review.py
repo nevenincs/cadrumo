@@ -16,6 +16,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.runtime_graph import revision_date_binding_ids
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....domain.filing.schema import ModeloValueKind
@@ -45,6 +46,7 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
+from ..action_errors import WorkUnitRevisionDivergenceError
 from ..calculation_actions import calculate_modelo_revision
 from ..work_review import (
     ModeloWorkOriginAnomaly,
@@ -189,6 +191,56 @@ def test_review_projects_resolvable_work_without_a_calculation_from_real_storage
     assert computed.origin_anomaly is ModeloWorkOriginAnomaly.BROKEN_CALCULATION_CHAIN
 
 
+def test_work_review_refuses_a_persisted_revision_with_divergent_registry_coordinate(repos: Repos) -> None:
+    """The operator review surface cannot render registry-interpreted stale values."""
+    work_repo, calculation_repo, _, verification_repo, _ = repos
+    work_unit = _persist_work_unit(repos)
+    revision_id = derive_calculation_revision_id(
+        work_unit_id=work_unit.work_unit_id,
+        input_values_by_casilla_id={},
+        binding_overrides={},
+        casilla_values={},
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    stale = CalculationRevision(
+        calculation_revision_id=revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id="persisted-stale-revision",
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
+        state=CalculationRevisionState.BORRADOR,
+        input_values_by_casilla_id={},
+        casilla_values={},
+        created_at=T0,
+        updated_at=T0,
+        filing_instance_evidence=None,
+        source_provenance=(),
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), stale))
+    work_repo.save(
+        upsert_work_unit(
+            work_repo.load(),
+            work_unit.model_copy(update={"current_calculation_revision_id": revision_id}),
+        )
+    )
+
+    with pytest.raises(WorkUnitRevisionDivergenceError):
+        build_modelo_work_review(
+            work_unit.bucket_id,
+            work_unit.modelo,
+            work_unit.filing_year,
+            work_unit.period,
+            authority=bundled_authority(),
+            work_unit_repository=work_repo,
+            calculation_repository=calculation_repo,
+            verification_repository=verification_repo,
+        )
+
+
 def test_review_progress_is_undefined_without_a_revision_manifest(repos: Repos) -> None:
     work_repo, calculation_repo, _, verification_repo, _ = repos
     work_unit = _persist_work_unit(
@@ -240,6 +292,12 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=(
@@ -280,6 +338,7 @@ def test_review_progress_reads_a_persisted_blocking_verdict(repos: Repos) -> Non
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=revision_id,
+        registry_snapshot_ref=revision.registry_snapshot_ref,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=(finding,),
         run_at=T0,
@@ -538,6 +597,12 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         binding_overrides=binding_overrides,
         created_at=T0,

@@ -31,7 +31,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...aggregation import CallerOverrideDisposition, precedence_ladder_sources
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (
@@ -209,7 +209,17 @@ def _seed_prior_year_m100_zero_carry(objects: SecureObjectRepository) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo="100",
+                filing_year=2024,
+                period=_ANNUAL_PERIOD,
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=2024,
+                    period=_ANNUAL_PERIOD,
+                    casilla_values={_M100_2024_NEGATIVE_GENERAL_BASE_CARRY_CASILLA: Decimal("0")},
+                ),
+            )))
     )
 
 

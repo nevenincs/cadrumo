@@ -23,11 +23,18 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ..sector_lifecycle import seed_sector_carried_definitive_from_register, settle_sector_definitive
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
+    return bundled_authority().snapshot(Modelo.M303.value, filing_year=ejercicio, period="4T").snapshot_ref
 
 
 def _provisional_entry(*, ejercicio: int, sector_id: str, percentage: Decimal) -> ProrrataRegisterEntry:
@@ -39,6 +46,7 @@ def _provisional_entry(*, ejercicio: int, sector_id: str, percentage: Decimal) -
         provisional_percentage=percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=f"prorrata-register:{ejercicio - 1}:{sector_id}",
+        source_registry_snapshot_refs=(),
     )
 
 
@@ -144,6 +152,7 @@ def test_sector_seed_does_not_read_whole_entity_definitive() -> None:
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
             source_observation_ref="303:2024:4T",
+            source_registry_snapshot_refs=(_m303_snapshot_ref(2024),),
         ),
         con_derecho_volume=Decimal("50000.00"),
         sin_derecho_volume=Decimal("50000.00"),

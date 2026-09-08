@@ -61,6 +61,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.binding_prefill import BindingPrefillReport
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ...calculations.relation_prefill import resolve_relations_from_local_store
@@ -211,6 +212,8 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
         repository=CalculationObservationRepository(),
         decided_at=_DECIDED_AT,
         treat_absent_recurrence_as_first_period=True,
+        local_recurrence=None,
+        prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
     )
     assert report.decision.divergence == "first_period_zero"
 

@@ -9,7 +9,7 @@ from functools import cache
 import pytest
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from ....core.aggregation import CalculationSourceLineageRole
 from ....core.authority_grade import RegistryAuthorityGrade
@@ -110,7 +110,7 @@ def _wallet(amount: Decimal) -> IvaCompensationWalletObservation:
             ),
         ),
         total_pending=amount,
-        source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
+        source_url=AnyHttpUrl(WALLET_URL),
         captured_at=_CLOCK,
         raw_sha256="a" * 64,
     )

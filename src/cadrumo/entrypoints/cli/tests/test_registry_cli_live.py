@@ -871,6 +871,11 @@ def _filed_observation(
             for casilla_id, value in casilla_values.items()
         ),
         extraction_coverage={"submitted_file": 1.0},
+        registry_snapshot_ref=bundled_authority().snapshot(
+            modelo,
+            filing_year=ejercicio,
+            period=period,
+        ).snapshot_ref,
     )
 
 

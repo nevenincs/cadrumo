@@ -52,14 +52,16 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from .....domain.modelos.calculation_revision_m303_handoff import M303FilingInstanceEvidence
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from .....tests.filing_evidence import regimen_simplificado_filing_evidence
-from .....tests.secure_sql import isolated_runtime_profile
+from .....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..modelos_calculation import (
     _CALCULATION_CATALOGUE_VERSION,
     _CALCULATION_NAMESPACE,
     _CALCULATION_OBJECT_KEY,
     CalculationRevisionCatalogueRepository,
 )
+from ..modelos_work_units import WorkUnitCatalogueRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -74,6 +76,15 @@ _CASILLA_01: CasillaId = validated_casilla_id("casilla-01", surface="_CASILLA_01
 _CASILLA_12: CasillaId = validated_casilla_id("casilla-12", surface="_CASILLA_12")
 _DECL_PERIODO_CASILLA: CasillaId = validated_casilla_id("decl.periodo", surface="_DECL_PERIODO_CASILLA")
 _DECL_PERIODO_CODE = "1T"
+_REGISTRY_SNAPSHOT_REF = bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref
+_WORK_UNIT_PERIOD = Period.from_year_and_code(_REGISTRY_SNAPSHOT_REF.modelo_year, _REGISTRY_SNAPSHOT_REF.period)
+_WORK_UNIT_ID = derive_work_unit_id(
+    bucket_id=_BUCKET_ID,
+    modelo=_REGISTRY_SNAPSHOT_REF.modelo,
+    filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
+    period=_WORK_UNIT_PERIOD,
+    revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+)
 
 
 def _hex(seed: str) -> str:
@@ -81,6 +92,29 @@ def _hex(seed: str) -> str:
 
     base = seed * 64
     return base[:64]
+
+
+def _parent_work_unit() -> WorkUnit:
+    return WorkUnit(
+        work_unit_id=_WORK_UNIT_ID,
+        bucket_id=_BUCKET_ID,
+        modelo=_REGISTRY_SNAPSHOT_REF.modelo,
+        filing_year=_REGISTRY_SNAPSHOT_REF.modelo_year,
+        period=_WORK_UNIT_PERIOD,
+        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
+        name="303-2026-1T",
+        created_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
+        updated_at=datetime(2024, 7, 1, 12, 0, 0, tzinfo=UTC),
+    )
+
+
+def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
+    # ``TestRuntimeProfile.repository`` is the secure-object seam shared by
+    # the sibling work-unit and calculation repositories. Keep this helper
+    # test-only: production joins through the repository on every save/load.
+    WorkUnitCatalogueRepository(objects=profile.repository).save(
+        WorkUnitCatalogue.from_work_units((_parent_work_unit(),)),
+    )
 
 
 def _filing_instance_evidence() -> FilingInstanceEvidence:
@@ -127,7 +161,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
     entries carrying real ``legal_refs`` / ``source_refs`` provenance.
     """
 
-    work_unit_id = _hex("a")
+    work_unit_id = _WORK_UNIT_ID
     created_at = datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC)
     verified_at = created_at + timedelta(hours=3)
 
@@ -196,6 +230,7 @@ def _populated_catalogue() -> CalculationRevisionCatalogue:
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
@@ -219,6 +254,7 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     """A fully-populated calculation revision round-trips through encrypted SQL."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
         repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
         original = _populated_catalogue()
         repo.save(original)
@@ -295,7 +331,8 @@ def test_changed_filing_evidence_persists_as_a_distinct_revision_without_replaci
         },
     )
 
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
         repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
         repo.save(original_catalogue)
         repo.save(two_revisions)
@@ -328,6 +365,7 @@ def test_calculation_revision_catalogue_dropped_observations_surfaces_at_load(
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
         repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
         original = _populated_catalogue()
         repo.save(original)
@@ -366,6 +404,7 @@ def test_calculation_revision_catalogue_dropped_filing_evidence_refuses_at_load(
     """Dropping immutable M303 evidence must be observable at the encrypted boundary."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
         repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
         original = _populated_catalogue()
         repo.save(original)
@@ -391,6 +430,79 @@ def test_calculation_revision_catalogue_dropped_filing_evidence_refuses_at_load(
 
         with pytest.raises(CalculationRevisionPersistenceError):
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+
+def test_calculation_revision_catalogue_dropped_registry_snapshot_ref_refuses_at_load(
+    tmp_path: Path,
+) -> None:
+    """A persisted revision without its canonical registry coordinate is refused."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        original = _populated_catalogue()
+        repo.save(original)
+        record = profile.repository.load(
+            _CALCULATION_NAMESPACE,
+            _CALCULATION_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        ((_revision_id, persisted_revision),) = envelope["payload"]["revisions"].items()
+        assert persisted_revision["registry_snapshot_ref"] == _REGISTRY_SNAPSHOT_REF.model_dump(mode="json")
+        del persisted_revision["registry_snapshot_ref"]
+        profile.repository.save(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(CalculationRevisionPersistenceError):
+            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+
+def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_refuses_at_load(
+    tmp_path: Path,
+) -> None:
+    """A revision coordinate that disagrees with its parent WorkUnit is refused."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        original = _populated_catalogue()
+        repo.save(original)
+        record = profile.repository.load(
+            _CALCULATION_NAMESPACE,
+            _CALCULATION_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_CALCULATION_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        ((_revision_id, persisted_revision),) = envelope["payload"]["revisions"].items()
+        mismatched_ref = _REGISTRY_SNAPSHOT_REF.model_copy(update={"revision_id": "wrong-parent-revision"})
+        persisted_revision["registry_snapshot_ref"] = mismatched_ref.model_dump(mode="json")
+        profile.repository.save(
+            namespace=_CALCULATION_NAMESPACE,
+            object_key=_CALCULATION_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(CalculationRevisionPersistenceError) as raised:
+            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+
+    assert raised.value.context == {
+        "reason": "parent_registry_coordinate_mismatch",
+        "work_unit_id": _WORK_UNIT_ID,
+    }
 
 
 def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
@@ -506,11 +618,7 @@ def test_pre_s58_evidence_less_catalogue_is_rejected_at_encrypted_load(
         with pytest.raises(CalculationRevisionPersistenceError) as raised:
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
-    assert raised.value.context == {
-        "reason": "unsupported_envelope_version",
-        "stored_schema_version": 1,
-        "max_supported_version": _CALCULATION_CATALOGUE_VERSION,
-    }
+    assert raised.value.context == {"reason": "invalid_payload"}
 
 
 @pytest.mark.parametrize(
@@ -538,6 +646,7 @@ def test_calculation_revision_refuses_ambiguous_lifecycle_instants_at_encrypted_
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
         repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
         repo.save(_populated_catalogue())
 

@@ -224,7 +224,6 @@ errors:
     error_financial_iva_catalogue: Az IVA-katalógust nem sikerült betölteni, feloldani
       vagy érvényesíteni.
     error_financial_iva_category_not_found: A kért IVA-kategória nem található a katalógusban.
-    error_financial_iva_classification: Az IVA nem sorolható be egyértelműen.
     error_financial_iva_rate_not_found: Nem található IVA-kulcs a kért tagállam és
       típus esetén.
     error_financial_iva_rate_overlap: Két IVA-kulcs azonos hatályossági ablakot oszt.
@@ -239,8 +238,6 @@ errors:
     error_invoice_validation: Egy számla-rekord nem ment át az érvényesítésen.
     error_iva_prorrata: Hiba történt az IVA prorrata-számítás során.
     error_iva_prorrata_input: Az IVA prorrata bemeneti adatai sértik az invariánsokat.
-    error_iva_prorrata_sector: Az IVA prorrata szektoriális-szétválasztási adatai
-      ellentmondásosak.
     error_iva_validation: Egy IVA-mezőérték érvénytelen.
     error_justificante: Igazolással kapcsolatos hiba történt.
     error_justificante_csv_not_found: A PDF nem tartalmaz Código Seguro de Verificación
@@ -290,7 +287,6 @@ errors:
     error_portals_unknown_portal: A megadott AEAT portál nem létezik.
     error_portals_validation: Egy portál metaadatai nem mentek át az érvényesítésen.
     error_profile_amortization_ledger: Egy profil amortizációs főkönyvi művelete érvénytelen.
-    error_profile_asset_record: Egy profil vagyonelem-rekordja szerkezetileg érvénytelen.
     error_profile_bienes_inversion_record: Egy beruházási javak áfa-korrekciós nyilvántartása
       szerkezetileg érvénytelen.
     error_profile_inventory_ledger: Egy profil készlet-főkönyvi művelete érvénytelen.
@@ -375,8 +371,8 @@ errors:
       nem távolítható el; továbbra is a lemezen van.
     fail_access_gate_authorization_manifest: A modellengedélyezési jegyzéket nem sikerült
       betölteni, vagy érvénytelen engedélyezési bejegyzést tartalmaz.
-    fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
     fail_borrador_parse: A Modelo 100 tervezet PDF-et nem sikerült bevallássá elemezni.
+    fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
     fail_browser_session_browser: A böngésző-munkamenet böngészőjét nem sikerült elindítani.
     fail_browser_validation: A böngésző-munkamenet paraméterei nem mentek át az érvényesítésen.
     fail_certificado_censal_parse: Nem sikerült beolvasni a Certificado de Situación
@@ -820,8 +816,6 @@ errors:
     refused_auth_login_live_tests_disabled: Az éles bejelentkezési próbák le vannak
       tiltva.
     refused_auth_login_precondition: A bejelentkezés előfeltétele nem teljesül.
-    refused_auth_provider_reserved: A kiválasztott hitelesítési szolgáltató foglalt
-      és nem elérhető.
     refused_calculations_casilla_constraint: Egy számított mező értéke kívül esik
       az adott mezőhöz deklarált korlátokon. Tekintse át a számítási bemeneteket.
     refused_cli_boundary: A parancs elutasította a kérést.
@@ -898,7 +892,8 @@ errors:
       nem elemezhető decimálisként.'
     refused_iva_compensation_year_range: 'Elutasítva: az IVA-kompenzáció éve az elfogadott
       tartományon kívül van.'
-    refused_iva_prorrata_especial_margin_ungrounded: A kötelező különleges arányosítási küszöb nem alapozható meg erre az adóévre.
+    refused_iva_prorrata_especial_margin_ungrounded: A kötelező különleges arányosítási
+      küszöb nem alapozható meg erre az adóévre.
     refused_iva_wallet_reconciliation_invariant: Az IVA tárca egyeztetési bemenetek
       egy szükséges feltételt sértenek. Ellenőrizze a tárca-kor beállítást, és próbálja
       újra.
@@ -914,8 +909,6 @@ errors:
       azonosítóval.
     refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
       a megadott azonosítóval.
-    refused_live_deudas_snapshot_not_found: Nem létezik deudas-pillanatkép a megadott
-      azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép
       a megadott azonosítóval.
     refused_live_justificante_capture_snapshot_not_found: Nem létezik rögzített igazolás-pillanatkép
@@ -989,11 +982,10 @@ errors:
     refused_pension_reduccion_computation: A nyugdíjcsökkentés számításának bemenete
       megsértett egy numerikus előfeltételt. Javítsa a megadott összegeket.
     refused_profile_already_exists: Ilyen adatokkal rendelkező profil már létezik.
-    refused_profile_asset_validation: Egy profil vagyonelem-rekordja nem ment át az
-      érvényesítésen.
     refused_profile_basis_cap_exceeded: A halmozott amortizáció meghaladná a vagyonelem
       bekerülési értékét.
-    refused_profile_bienes_inversion_parameters: Az aktív revízió nem határoz meg beruházási javakra vonatkozó áfa-korrekciós értékeket ehhez a bevallási környezethez.
+    refused_profile_bienes_inversion_parameters: Az aktív revízió nem határoz meg
+      beruházási javakra vonatkozó áfa-korrekciós értékeket ehhez a bevallási környezethez.
     refused_profile_bienes_inversion_validation: Egy beruházási javak áfa-korrekciós
       nyilvántartása nem ment át az ellenőrzésen.
     refused_profile_binding_resolution: A számításhoz szükséges profiladatot nem sikerült

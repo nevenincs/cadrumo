@@ -32,12 +32,15 @@ from pathlib import Path
 
 import pytest
 
-from ......core.config import load_settings, override_settings
+from ......core.config import Settings, load_settings, override_settings
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import bucket_scoped_storage_path
 from ....tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ...errors import UnsecuredModeRefusedError
 from ...secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
+from ...sql import SecureObjectRepository
+from ...sql.engine import create_engine_from_settings
+from ..active_session import activate_session
 from ..bucket_session import BucketSession
 from ..master_key import refuse_unsecured_bucket_with_real_profile
 
@@ -70,6 +73,14 @@ def _bucket_database(bucket_id: str) -> Path:
     )
 
 
+def _profile_objects(bucket_id: str) -> SecureObjectRepository:
+    """Build the production secure-object schema for ``bucket_id``."""
+    database = _bucket_database(bucket_id)
+    database.parent.mkdir(parents=True, exist_ok=True)
+    settings = Settings(cadrumo_database_url=f"sqlite:///{database.as_posix()}")
+    return SecureObjectRepository(engine=create_engine_from_settings(settings))
+
+
 def test_an_unreadable_bucket_database_refuses(tmp_path: Path) -> None:
     """DISCRIMINATING: the branch whose own comment records the old regression.
 
@@ -94,14 +105,23 @@ def test_an_undecryptable_profile_payload_refuses(tmp_path: Path) -> None:
     would sail past it.
     """
     with override_settings(cadrumo_local_storage_root=tmp_path):
+        session = _unsecured_session(_BUCKET_ID, tmp_path)
+        with activate_session(session):
+            _profile_objects(_BUCKET_ID).save(
+                namespace=USER_PROFILE_VALUE_NAMESPACE.namespace,
+                object_key=f"user-profile:{_BUCKET_ID}",
+                classification=USER_PROFILE_VALUE_NAMESPACE.sensitivity,
+                schema_version=USER_PROFILE_VALUE_NAMESPACE.schema_version,
+                written_at=datetime.now(UTC),
+                payload=b'{}',
+            )
+        session.close()
         database = _bucket_database(_BUCKET_ID)
-        database.parent.mkdir(parents=True, exist_ok=True)
         connection = sqlite3.connect(database)
         try:
-            connection.execute("CREATE TABLE secure_objects (namespace TEXT, payload BLOB)")
             connection.execute(
-                "INSERT INTO secure_objects VALUES (?, ?)",
-                (USER_PROFILE_VALUE_NAMESPACE.namespace, b"not-a-cipher-envelope"),
+                "UPDATE secure_objects SET payload = ? WHERE namespace = ?",
+                (b"not-a-cipher-envelope", USER_PROFILE_VALUE_NAMESPACE.namespace),
             )
             connection.commit()
         finally:
@@ -148,13 +168,6 @@ def test_a_bucket_with_no_database_yet_is_admitted(tmp_path: Path) -> None:
 def test_a_bucket_carrying_no_profile_rows_is_admitted(tmp_path: Path) -> None:
     """A real database with nothing in the profile namespace judges nothing."""
     with override_settings(cadrumo_local_storage_root=tmp_path):
-        database = _bucket_database(_BUCKET_ID)
-        database.parent.mkdir(parents=True, exist_ok=True)
-        connection = sqlite3.connect(database)
-        try:
-            connection.execute("CREATE TABLE secure_objects (namespace TEXT, payload BLOB)")
-            connection.commit()
-        finally:
-            connection.close()
+        _profile_objects(_BUCKET_ID)
 
         refuse_unsecured_bucket_with_real_profile(_unsecured_session(_BUCKET_ID, tmp_path))

@@ -21,16 +21,23 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from ....core.modelo import Modelo
 from ....core.prorrata_register import (
     ProrrataEspecialTransitionKind,
     ProrrataProvisionalProvenance,
     ProrrataRegisterRegime,
 )
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import ProrrataEspecialTransitionEvidence, ProrrataRegisterEntry
 from ....tests.secure_sql import isolated_runtime_profile
 from ..service import ProrrataRegisterService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
+    return bundled_authority().snapshot(Modelo.M303.value, filing_year=2025, period="4T").snapshot_ref
 
 
 def test_declare_especial_transition_persists_typed_option(tmp_path: Path) -> None:
@@ -46,6 +53,7 @@ def test_declare_especial_transition_persists_typed_option(tmp_path: Path) -> No
                 kind=ProrrataEspecialTransitionKind.OPCION,
                 evidence_reference="modelo-303-2026-prorrata-opcion",
             ),
+            source_registry_snapshot_refs=(),
         )
 
         updated = service.declare_especial_transition(entry)
@@ -71,6 +79,7 @@ def test_record_aeat_autorizada_persists_authorised_override(tmp_path: Path) -> 
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
+                source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
             ),
         )
 
@@ -125,6 +134,7 @@ def test_record_inicio_actividad_persists_proposed_override(tmp_path: Path) -> N
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
+                source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
             ),
         )
 
@@ -179,6 +189,7 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(tmp_path: Path
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
+                source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
             ),
         )
         authorised = ProrrataRegisterEntry(
@@ -188,6 +199,7 @@ def test_resolve_provisional_uses_ladder_for_authorised_candidate(tmp_path: Path
             provisional_percentage=Decimal("63"),
             provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
             authorisation_reference="AEAT-AUTH-2026-0009",
+            source_registry_snapshot_refs=(),
         )
 
         resolution = service.resolve_provisional(2026, candidate_entries=(authorised,))
@@ -209,6 +221,7 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(tmp_path: Path) ->
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
+                source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
             ),
         )
         inicio = ProrrataRegisterEntry(
@@ -218,6 +231,7 @@ def test_resolve_provisional_uses_ladder_for_inicio_candidate(tmp_path: Path) ->
             provisional_percentage=Decimal("55"),
             provisional_provenance=ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
             authorisation_reference="INICIO-036-2026-0005",
+            source_registry_snapshot_refs=(),
         )
 
         resolution = service.resolve_provisional(2026, candidate_entries=(inicio,))
@@ -240,6 +254,7 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(tmp_path: Pa
                 provisional_percentage=Decimal("80"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
+                source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
             ),
         )
         other_sector = ProrrataRegisterEntry(
@@ -250,6 +265,7 @@ def test_resolve_provisional_filters_candidates_to_requested_sector(tmp_path: Pa
             provisional_percentage=Decimal("63"),
             provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
             authorisation_reference="AEAT-AUTH-2026-0010",
+            source_registry_snapshot_refs=(),
         )
 
         resolution = service.resolve_provisional(

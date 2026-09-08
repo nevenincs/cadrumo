@@ -70,17 +70,6 @@ _FLOW_DESCRIPTION_LOCALE_KEY = "cli.config.auth.apoderado.configure_help"
 _REPRESENTED_NIF_PROMPT_LOCALE_KEY = "cli.config.auth.apoderado.configure.represented_nif_help"
 _SCOPES_PROMPT_LOCALE_KEY = "cli.config.auth.apoderado.configure.scope_help"
 
-#: Every locale key this module references, for the scaffold gate.
-APODERADO_FLOW_LOCALE_KEYS: tuple[str, ...] = (
-    _FLOW_TITLE_LOCALE_KEY,
-    _FLOW_DESCRIPTION_LOCALE_KEY,
-    _REPRESENTED_NIF_PROMPT_LOCALE_KEY,
-    _SCOPES_PROMPT_LOCALE_KEY,
-    _FORMAT_TAX_ID_LOCALE_KEY,
-    _NIF_INVALID_LOCALE_KEY,
-)
-
-
 class ApoderadoFlowAnswers(BaseModel):
     """The typed answer shape the apoderado flow collects.
 
@@ -228,7 +217,6 @@ def run_apoderado_flow(
 
 __all__ = [
     "APODERADO_FLOW_ID",
-    "APODERADO_FLOW_LOCALE_KEYS",
     "REPRESENTED_NIF_PAGE_ID",
     "REPRESENTED_NIF_VALIDATOR_ID",
     "SCOPES_PAGE_ID",

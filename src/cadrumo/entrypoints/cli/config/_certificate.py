@@ -9,9 +9,8 @@ entity and select the active one, rather than re-running
 per-source passphrase slice: instead of one global, env-only
 ``CADRUMO_CERTIFICATE_PASSWORD_SECRET`` shared by whichever source happens
 to be active, ``certificate secret set`` binds a passphrase to one
-named source through a typed
-:class:`~application.auth.CertificateSecretBackend` backed solely by
-encrypted secure storage.
+named source through the sole
+:class:`~application.auth.SecureStorageCertificateSecretBackend`.
 
 See Also:
     :func:`~application.auth.register_operator_certificate_source`
@@ -20,8 +19,8 @@ See Also:
         Application service behind ``certificate list``.
     :func:`~application.auth.select_operator_certificate_source`
         Application service behind ``certificate select``.
-    :class:`~application.auth.CertificateSecretBackend`
-        Per-source passphrase boundary used by ``certificate secret`` verbs.
+    :class:`~application.auth.SecureStorageCertificateSecretBackend`
+        Per-source encrypted passphrase owner used by ``certificate secret`` verbs.
     :mod:`~entrypoints.cli.config_payloads`
         Typed JSON payload schemas shared by config auth command results.
 """

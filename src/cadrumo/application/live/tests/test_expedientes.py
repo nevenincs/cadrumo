@@ -27,7 +27,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -47,8 +46,6 @@ from ..expedientes import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _DECLARACION_CONSULT_URL = aeat_url("www6", configured_path("sede_paths", "declaracion_consult"))
 _BUCKET_A_ID = "56565656-5656-4656-8656-565656565656"

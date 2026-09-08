@@ -244,11 +244,6 @@ adapters:
             puede interpretar o no indica zona horaria: {actual_value}.'
   persistence:
     profile:
-      assets:
-        errors:
-          asset_already_exists: Ese activo ya existe en el libro cifrado de activos.
-          load_amortizacion_ledger_failed: No se pudo cargar el libro cifrado de amortización.
-          load_asset_ledger_failed: No se pudo cargar el libro cifrado de activos.
       bienes_inversion:
         errors:
           load_register_failed: No se puede cargar el registro cifrado de regularización

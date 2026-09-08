@@ -19,6 +19,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING
 
+from ...application.calculations.revision_carry_gate import revision_carry_outcome
 from ...application.overview.calendar import build_overview_calendar_events, calendar_events_from_modelo_records
 from ...application.overview.calendar_evidence import no_aeat_history_notice
 from ...application.overview.calendar_models import (
@@ -346,6 +347,12 @@ def _calendar_verified_filed_declaration_observations(
     verified_observations: list[FiledDeclaracionObservation] = []
     verified_artefact_csvs: dict[str, str] = {}
     for observation in store.list_observations():
+        outcome = revision_carry_outcome(observation.registry_snapshot_ref)
+        if outcome.refused:
+            raise ValueError(
+                "filed declaration registry coordinate cannot be re-confirmed: "
+                f"{observation.registry_snapshot_ref.revision_id}: {outcome.detail}"
+            )
         verified_artefacts: list[FiledDeclaracionArtefact] = []
         for artefact in observation.artefacts:
             if artefact.kind != "justificante_pdf":

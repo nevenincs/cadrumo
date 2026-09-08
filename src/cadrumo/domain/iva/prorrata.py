@@ -55,23 +55,6 @@ Legal sources (Ley 37/1992 del IVA, BOE-A-1992-28740):
   :func:`especial_mandatory_rule`, which reports the margin that
   selection applied.
 
-* **Art. 9.1.c** — sectoral separation (``régimen de sectores
-  diferenciados``) applies when the taxpayer's activities form two or more
-  distinct sectors and the difference between the highest and lowest
-  general prorrata across sectors exceeds fifty percentage points. Each
-  sector then runs its own prorrata (general or especial). This module
-  computes the predicate; sector identification itself is a profile/
-  registry concern carried in :class:`ProrrataSector`.
-
-  DECLARED, NOT YET REACHED. The general and especial regimes of this
-  substrate are computed by the live calculation path; the sectoral one is
-  not. Nothing calls :func:`requires_sectoral_separation` or
-  :func:`compute_sectoral_prorrata`, so a taxpayer whose activities do form
-  differentiated sectors deducts without the separation art. 9.1.c requires.
-  Said here rather than left to a caller search, because everything around
-  it in this module IS reached and a reader has no way to tell the two
-  apart.
-
 The substrate distinguishes *provisional* and *definitiva* prorrata
 percentages explicitly (LIVA arts. 105 and 109). The provisional
 percentage applies during quarterly/monthly Modelo 303 filings and is
@@ -86,7 +69,7 @@ carry validated prorrata references on IVA ledger observations.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from decimal import ROUND_CEILING, Decimal
 from enum import StrEnum
 from typing import Annotated
@@ -100,13 +83,10 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.external_constants import (
-    PRORRATA_SECTORAL_SEPARATION_SPREAD_PP,
-)
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents
 from ...core.percentage import Percentage
-from .errors import ProrrataInputError, ProrrataSectorError
+from .errors import ProrrataInputError
 from .prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
 
 
@@ -195,24 +175,6 @@ class ProrrataInputs(_ProrrataStrictFrozen):
             "similar). Must be non-negative."
         ),
     )
-
-
-class ProrrataSector(_ProrrataStrictFrozen):
-    """A single sector under the sectoral-separation regime (art. 9.1.c LIVA).
-
-    A taxpayer with two or more economic sectors whose general prorratas
-    differ by more than fifty percentage points must compute the prorrata
-    independently per sector. Each sector carries its own filtered totals
-    and may run under ``GENERAL`` or ``ESPECIAL`` regime.
-    """
-
-    sector_id: SectorId
-    name: Annotated[
-        str,
-        StringConstraints(strip_whitespace=True, min_length=1, max_length=200),
-    ]
-    inputs: ProrrataInputs
-    regime: ProrrataRegime = ProrrataRegime.GENERAL
 
 
 class ProrrataResult(_ProrrataStrictFrozen):
@@ -762,75 +724,6 @@ def compute_regularizacion_prorrata_anual(
 
 
 # ---------------------------------------------------------------------------
-# Sectoral separation (art. 9.1.c LIVA)
-# ---------------------------------------------------------------------------
-
-
-_SECTORAL_SEPARATION_THRESHOLD_PERCENTAGE_POINTS = PRORRATA_SECTORAL_SEPARATION_SPREAD_PP
-
-
-def _ensure_unique_sectors(sectors: Sequence[ProrrataSector]) -> None:
-    seen: set[str] = set()
-    for sector in sectors:
-        if sector.sector_id in seen:
-            raise ProrrataSectorError(f"duplicate sector_id in sectors list: {sector.sector_id!r}")
-        seen.add(sector.sector_id)
-
-
-def requires_sectoral_separation(sectors: Sequence[ProrrataSector]) -> bool:
-    """Return True when LIVA art. 9.1.c mandates sectoral separation.
-
-    The rule: a taxpayer with two or more economic sectors must compute
-    prorrata independently per sector whenever the difference between the
-    highest and lowest general prorrata across sectors exceeds fifty
-    percentage points.
-
-    Sectors are identified by stable ``sector_id``; the caller is
-    responsible for assigning activity codes (e.g., CNAE / IAE-epígrafe)
-    to sectors before invoking this function. A sectors list with fewer
-    than two members returns ``False`` because the threshold cannot
-    apply.
-    """
-    if len(sectors) < 2:
-        return False
-    _ensure_unique_sectors(sectors)
-    percentages = [_compute_percentage_general(sector.inputs) for sector in sectors]
-    spread = max(percentages) - min(percentages)
-    return spread > _SECTORAL_SEPARATION_THRESHOLD_PERCENTAGE_POINTS
-
-
-def compute_sectoral_prorrata(
-    sectors: Sequence[ProrrataSector],
-    *,
-    year: int,
-    kind: ProrrataKind,
-    period: str | None = None,
-) -> tuple[ProrrataResult, ...]:
-    """Compute the general prorrata for each sector.
-
-    Returns one :class:`ProrrataResult` per input sector, in the same
-    order. This function does NOT enforce whether sectoral separation
-    applies — that decision lives in
-    :func:`requires_sectoral_separation`; this calculator runs once the
-    caller has decided separation is required.
-    """
-    if not sectors:
-        raise ProrrataSectorError("sectors sequence must not be empty")
-    _ensure_unique_sectors(sectors)
-    _validate_year(year)
-    return tuple(
-        compute_prorrata_general(
-            sector.inputs,
-            year=year,
-            kind=kind,
-            period=period,
-            sector_id=sector.sector_id,
-        )
-        for sector in sectors
-    )
-
-
-# ---------------------------------------------------------------------------
 # Helpers for caller-side rollups
 # ---------------------------------------------------------------------------
 
@@ -856,18 +749,15 @@ __all__ = (
     "ProrrataReference",
     "ProrrataRegime",
     "ProrrataResult",
-    "ProrrataSector",
     "RegularizacionProrrataDireccion",
     "RegularizacionProrrataResult",
     "classify_input_deduction",
     "compute_prorrata_definitiva_anual",
     "compute_prorrata_general",
     "compute_regularizacion_prorrata_anual",
-    "compute_sectoral_prorrata",
     "deductible_percentage_for",
     "especial_mandatory_rule",
     "is_especial_mandatory",
-    "requires_sectoral_separation",
     "sum_deductible_amounts",
     "validate_prorrata_reference",
 )

@@ -17,10 +17,13 @@ and uniform :class:`~cadrumo.core.json_contract.Notice` rows into
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from decimal import Decimal
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
+from ...application.modelo.calculation import (
+    visible_calculation_casilla_values,
+    visible_calculation_observations,
+)
 from ...application.modelo.result_summary import calculation_result_summary
 from ...application.modelo.verification_preconditions import VerificationFindingPreconditionProjection
 from ...application.modelo.work_plazo import (
@@ -28,7 +31,6 @@ from ...application.modelo.work_plazo import (
     ModeloWorkDeadlinePosture,
     modelo_work_deadline_posture,
 )
-from ...core.casilla_id import CasillaId
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...domain.calculations.registry.binding_selector_utils import BooleanBindingEncodedValue
@@ -63,7 +65,6 @@ if TYPE_CHECKING:
     from ...application.aggregation import CalculationSourceDiagnostic
 
 _EXTEMPORANEOUS_RECARGO_LEGAL_REF = "ley-58-2003:art-27.2"
-_M349_ROW_FIELD_TEMPLATE_PREFIXES = ("op.", "rect.")
 _M184_SOCIO_HANDOFF_CODE = "modelo.work.m184_socio_handoff"
 # The canonical M100 régimen-de-atribución (actividad económica) income casilla
 # the attributed base folds into: 1577 stays relation-canonical and the
@@ -268,34 +269,6 @@ def _short_id_text(value: str | None) -> str:
     blank-for-absent fallback.
     """
     return short_id(value) or ""
-
-
-def _has_m349_detail_rows(rev: CalculationRevision) -> bool:
-    return any(getattr(row, "row_type", None) == "operador" for row in rev.detail_rows)
-
-
-def _is_m349_row_field_template_casilla(casilla_id: str) -> bool:
-    return casilla_id.startswith(_M349_ROW_FIELD_TEMPLATE_PREFIXES)
-
-
-def _visible_calculation_casilla_values(rev: CalculationRevision) -> Mapping[CasillaId, Decimal]:
-    if not _has_m349_detail_rows(rev):
-        return rev.casilla_values
-    return {
-        casilla_id: value
-        for casilla_id, value in rev.casilla_values.items()
-        if not _is_m349_row_field_template_casilla(str(casilla_id))
-    }
-
-
-def _visible_calculation_observations(rev: CalculationRevision) -> tuple[CasillaObservation, ...]:
-    if not _has_m349_detail_rows(rev):
-        return rev.observations
-    return tuple(
-        observation
-        for observation in rev.observations
-        if not _is_m349_row_field_template_casilla(str(observation.casilla_id))
-    )
 
 
 def _effective_work_unit_state(unit: WorkUnit) -> str:
@@ -588,7 +561,7 @@ def calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisio
             source_refs=tuple(obs.source_refs),
             absent_by_design=obs.absent_by_design,
         )
-        for obs in _visible_calculation_observations(rev)
+        for obs in visible_calculation_observations(rev)
     )
     source_provenance = tuple(
         SourceProvenancePayload(
@@ -607,8 +580,9 @@ def calculation_revision_payload(rev: CalculationRevision) -> CalculationRevisio
     return CalculationRevisionPayload(
         calculation_revision_id=rev.calculation_revision_id,
         work_unit_id=rev.work_unit_id,
+        registry_snapshot_ref=rev.registry_snapshot_ref,
         state=rev.state.value,
-        casilla_values={k: str(v) for k, v in _visible_calculation_casilla_values(rev).items()},
+        casilla_values={k: str(v) for k, v in visible_calculation_casilla_values(rev).items()},
         observations=observations,
         result_summary=result_summary_payload(rev),
         detail_rows=detail_row_payloads(rev),
@@ -774,8 +748,8 @@ def calculation_revision_lines(rev: CalculationRevision, *, verbose: bool = Fals
     summary_lines = result_summary_lines(rev)
     if summary_lines:
         lines.extend(summary_lines)
-    observation_by_casilla = {obs.casilla_id: obs for obs in _visible_calculation_observations(rev)}
-    for casilla, value in sorted(_visible_calculation_casilla_values(rev).items()):
+    observation_by_casilla = {obs.casilla_id: obs for obs in visible_calculation_observations(rev)}
+    for casilla, value in sorted(visible_calculation_casilla_values(rev).items()):
         observation = observation_by_casilla.get(casilla)
         if observation is None:
             lines.append(f"casilla\t{casilla}\t{value}")
@@ -1026,6 +1000,7 @@ def verification_report_payload(
     return VerificationReportPayload(
         verification_report_id=report.verification_report_id,
         calculation_revision_id=report.calculation_revision_id,
+        registry_snapshot_ref=report.registry_snapshot_ref,
         completeness_status=report.completeness_status,
         granted_verificado_completo=report.granted_verificado_completo,
         resolved_casilla_ids=list(report.resolved_casilla_ids),

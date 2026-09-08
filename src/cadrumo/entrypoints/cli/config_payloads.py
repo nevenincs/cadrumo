@@ -6,12 +6,8 @@ config command result. Field sets match the production emit sites in
 pydantic dumps stay arrays. Application services remain authoritative for
 profile, auth, apoderado, repair, diagnostics, and workflow semantics.
 
-A few keys here declare a schema for a verb the tree does not expose. Those are
-not oversights: each is listed in
-:data:`~cadrumo.entrypoints.cli._verb_input_schema.DECLARED_UNIMPLEMENTED_SURFACES`
-with the reason it is held, because deleting the declaration would erase the only
-visible evidence that a capability lost its door. A declaration with no verb and
-no entry there is residue and should go.
+Every declared schema must resolve through the live command graph and operator
+surface. A declaration with no live verb is residue and must be removed.
 """
 
 from __future__ import annotations
@@ -641,12 +637,11 @@ class AuthProvidersResult(OutputSchema):
     """JSON envelope for ``aeat config auth providers``.
 
     Wraps :class:`AuthProvidersReport`; each row IS the canonical
-    :class:`AuthProviderListing`, preserving implemented and reserved provider
-    slots from the auth catalogue.
+    :class:`AuthProviderListing`, preserving the executable provider catalogue.
 
     The rows were redeclared as ``list[dict[str, object]]``, so the envelope
     accepted a shape the report it wraps rejects outright: an empty row, an
-    empty label, ``implemented="yes"``, or an unknown provider id all passed
+    empty label or an unknown provider id passed
     the shell while the canonical model refused each. Nesting the canonical
     listing makes the envelope's contract the report's contract by
     construction rather than by the projection remembering to agree.

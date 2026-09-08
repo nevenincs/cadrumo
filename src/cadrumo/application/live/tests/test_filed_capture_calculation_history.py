@@ -32,7 +32,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.modelos.filing_record import ExternalEvidence, ExternalEvidenceKind
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import read_db_at_rest_bytes
 from ...calculations.binding_prefill import (
     extract_modelo_303_local_iva_compensation_recurrence,
@@ -322,6 +322,7 @@ def test_binding_prefill_uses_profile_secure_iva_compensation_history(tmp_path: 
                 taxpayer_nif=_SYNTHETIC_PROFILE_ID,
                 filing_year=2026,
                 period=Period.from_year_and_code(2026, "1T"),
+                registry_snapshot_ref=_registry_snapshot("303", 2026, "1T").snapshot_ref,
                 expediente_id=_SYNTHETIC_EXPEDIENTE_ID,
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
@@ -1542,7 +1543,17 @@ def test_binding_prefill_refuses_incomplete_prior_filing_observation(tmp_path: P
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CAPTURED_AT,
-            )
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=2026,
+                    period="1T",
+                    observations=registry_grounded_observations(
+                        modelo="303",
+                        filing_year=2026,
+                        period="1T",
+                        casilla_values={_M303_POSTERIOR_CASILLA: Decimal("1200.00")},
+                    ),
+                )))
         )
 
         target_snapshot = _registry_snapshot("303", 2026, "2T")
@@ -1596,6 +1607,7 @@ def _filed_130_observation(
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
+        registry_snapshot_ref=_registry_snapshot("130", 2026, "1T").snapshot_ref,
     )
 
 

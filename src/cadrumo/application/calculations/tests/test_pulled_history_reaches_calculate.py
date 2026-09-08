@@ -66,7 +66,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...live.filed_observation_persistence import persist_filed_calculation_observation
 from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
@@ -221,7 +221,17 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
             ),
             source_kind=ObservationSourceKind.APP_FILING,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=Modelo.M100.value,
+                filing_year=_YEAR - 1,
+                period=_M100_ANNUAL_PERIOD,
+                observations=registry_grounded_observations(
+                    modelo=Modelo.M100.value,
+                    filing_year=_YEAR - 1,
+                    period=_M100_ANNUAL_PERIOD,
+                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                ),
+            )))
     )
 
 

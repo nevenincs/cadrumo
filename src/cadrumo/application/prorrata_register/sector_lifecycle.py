@@ -78,6 +78,7 @@ def seed_sector_carried_definitive_from_register(
         provisional_percentage=prior.definitive_percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=f"prorrata-register:{ejercicio - 1}:{sector_id}",
+        source_registry_snapshot_refs=prior.source_registry_snapshot_refs,
     )
 
 

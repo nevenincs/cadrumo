@@ -28,9 +28,7 @@ class _Violation(NamedTuple):
 
 _DEFAULT_SQL_BACKED_CONSTRUCTORS: frozenset[str] = frozenset(
     {
-        "AmortizacionLedgerRepository",
         "ArrendamientoRepository",
-        "AssetsLedgerRepository",
         "AttachmentStore",
         "Borrador100SnapshotRepository",
         "BucketEventHistoryRepository",

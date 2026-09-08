@@ -293,27 +293,6 @@ def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:
     profile_login_session_port().bind_session(session)
 
 
-def profile_advance_session_idle_deadline(
-    *,
-    storage_root: Path,
-    profile_id: UUID,
-    record: ProfilePersistedSessionPort,
-    new_idle_deadline: datetime,
-) -> ProfilePersistedSessionPort:
-    """Advance one receipt without exposing its keychain key to the app."""
-    return profile_login_session_port().advance_acceleration_idle_deadline(
-        storage_root=storage_root,
-        profile_id=profile_id,
-        record=record,
-        new_idle_deadline=new_idle_deadline,
-    )
-
-
-def profile_is_persisted_session(record: object) -> TypeGuard[ProfilePersistedSessionPort]:
-    """Return whether an outcome record is the persistence-owned receipt DTO."""
-    return profile_login_session_port().is_persisted_receipt(record)
-
-
 __all__ = [
     "ProfileBucketSessionPort",
     "ProfileLoginSessionPort",
@@ -321,10 +300,8 @@ __all__ = [
     "ProfilePersistedSessionPort",
     "ProfileSessionResumeOutcomePort",
     "bind_profile_login_session_port",
-    "profile_advance_session_idle_deadline",
     "profile_bind_bucket_session",
     "profile_current_bucket_session",
-    "profile_is_persisted_session",
     "profile_login_session_port",
     "profile_session_serves_bucket",
 ]

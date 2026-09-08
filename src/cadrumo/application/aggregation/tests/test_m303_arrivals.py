@@ -114,6 +114,7 @@ def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
         ejercicio=2026,
         regime=ProrrataRegisterRegime.ESPECIAL,
         especial_transition=option,
+        source_registry_snapshot_refs=(),
     )
 
     arrival = resolve_m303_prorrata_transition_arrival(
@@ -135,6 +136,7 @@ def test_prorrata_transition_arrival_is_blank_before_the_modelo_303_final_period
             kind=ProrrataEspecialTransitionKind.OPCION,
             evidence_reference="modelo-303-2026-prorrata-opcion",
         ),
+        source_registry_snapshot_refs=(),
     )
     register = ProrrataRegister(entries=(entry,))
 
@@ -177,6 +179,7 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
             kind=ProrrataEspecialTransitionKind.OPCION,
             evidence_reference="modelo-303-2026-retail-opcion",
         ),
+        source_registry_snapshot_refs=(),
     )
     revocation_entry = ProrrataRegisterEntry(
         ejercicio=2026,
@@ -186,6 +189,7 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
             kind=ProrrataEspecialTransitionKind.REVOCACION,
             evidence_reference="modelo-303-2026-wholesale-revocacion",
         ),
+        source_registry_snapshot_refs=(),
     )
 
     with pytest.raises(ValidationError, match="contradictory prorrata especial option and revocation evidence"):
@@ -196,6 +200,7 @@ def test_prorrata_register_rejects_both_option_and_revocation_for_one_ejercicio(
                     sector_id="wholesale",
                     regime=ProrrataRegisterRegime.ESPECIAL,
                     especial_transition=None,
+                    source_registry_snapshot_refs=(),
                 ),
                 option_entry,
                 revocation_entry,
@@ -210,6 +215,7 @@ def test_prorrata_transition_arrival_does_not_infer_an_option_from_an_existing_e
                 ejercicio=2026,
                 regime=ProrrataRegisterRegime.ESPECIAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
     )
@@ -229,6 +235,7 @@ def test_prorrata_register_refuses_a_revocation_without_a_prior_especial_state()
             kind=ProrrataEspecialTransitionKind.REVOCACION,
             evidence_reference="modelo-303-2026-revocacion",
         ),
+        source_registry_snapshot_refs=(),
     )
 
     with pytest.raises(ValidationError, match="prior-year especial register state"):
@@ -243,6 +250,7 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
             kind=ProrrataEspecialTransitionKind.REVOCACION,
             evidence_reference="modelo-303-2026-revocacion",
         ),
+        source_registry_snapshot_refs=(),
     )
     register = ProrrataRegister(
         entries=(
@@ -250,6 +258,7 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
                 ejercicio=2025,
                 regime=ProrrataRegisterRegime.ESPECIAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             revocation_entry,
         ),
@@ -269,6 +278,7 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
         sector_id="retail",
         regime=ProrrataRegisterRegime.GENERAL,
         especial_transition=None,
+        source_registry_snapshot_refs=(),
     )
     register = ProrrataRegister(
         entries=(current,),
@@ -300,6 +310,7 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
                 ejercicio=2026,
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             current,
             ProrrataRegisterEntry(
@@ -307,6 +318,7 @@ def test_prorrata_transition_arrival_requires_complete_current_year_register_cov
                 sector_id="leasing",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
         sector_definitions=register.sector_definitions,

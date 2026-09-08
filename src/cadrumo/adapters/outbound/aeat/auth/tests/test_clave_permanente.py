@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 from urllib.parse import urlsplit
 
 import pytest
 from pydantic import AnyUrl
 
+from ......application.auth.protocols import BrowserPagePort
 from ......application.auth.session_types import AeatSession, ClavePermanenteSessionDetail
 from ......core.auth_provider import AuthProviderKind
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
 from ......tests.secure_sql import isolated_runtime_profile
+from .. import clave_permanente as clave_permanente_module
 from ..clave_permanente import ClavePermanenteAuthProvider
 from ..clave_permanente_support import clave_permanente_auth_browser_action_policy
 from ..errors import AuthConfigurationError
@@ -115,6 +118,59 @@ class TestBrowserActionPolicy:
                 policy,
                 RemoteOperation(kind="browser_action", action="clave-permanente-unreviewed"),
             )
+
+    @pytest.mark.parametrize(
+        ("blocked_action", "expected_page_events"),
+        (
+            ("clave-permanente-fill-username", []),
+            ("clave-permanente-fill-password", ["fill"]),
+            (
+                "clave-permanente-authenticate",
+                ["fill", "fill"],
+            ),
+        ),
+    )
+    def test_policy_refusal_precedes_each_live_form_mutation(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        blocked_action: str,
+        expected_page_events: list[str],
+    ) -> None:
+        """A refused action never reaches its corresponding page mutation."""
+        page_events: list[str] = []
+
+        class RecordingPage:
+            async def fill(self, _selector: str, _value: str) -> None:
+                page_events.append("fill")
+
+            async def click(self, _selector: str) -> None:
+                page_events.append("click")
+
+            async def content(self) -> str:
+                return ""
+
+        def refuse_selected_action(_policy: object, operation: RemoteOperation) -> None:
+            if operation.action == blocked_action:
+                raise RegistryValidationError(f"refused {blocked_action}")
+
+        monkeypatch.setattr(
+            clave_permanente_module,
+            "assert_remote_operation_allowed",
+            refuse_selected_action,
+        )
+        provider = ClavePermanenteAuthProvider(_settings_for(tmp_path))
+
+        async def run() -> None:
+            with pytest.raises(RegistryValidationError, match=f"refused {blocked_action}"):
+                await provider._drive_login_form(
+                    cast(BrowserPagePort, RecordingPage()),
+                    dni_nie="12345678Z",
+                    password="secret",
+                )
+
+        _run(run())
+        assert page_events == expected_page_events
 
 
 def test_auth_provider_kind_has_clave_permanente_member() -> None:

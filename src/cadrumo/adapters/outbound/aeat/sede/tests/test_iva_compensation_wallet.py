@@ -30,6 +30,7 @@ from ...browser.factory import opened_browser_page, shared_playwright_runtime
 from .._adapter_utils import is_aeat_auth_gate_redirect
 from .._iva_compensation_wallet_parsing import (
     IVA_COMPENSATION_WALLET_READ_POLICY,
+    WALLET_URL,
     _parse_spanish_decimal,
     _wallet_row_from_cells,
     assert_own_name_representation_form_html,
@@ -41,7 +42,6 @@ from .._iva_compensation_wallet_parsing import (
 )
 from ..errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from ..iva_compensation_wallet import (
-    IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
     _assert_read_browser_action,
     _assert_read_http,
@@ -129,7 +129,7 @@ def test_parse_iva_compensation_wallet_html_extracts_disponible_rows_and_total()
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
         target_period=_TARGET_PERIOD,
-        source_url=IVA_COMPENSATION_WALLET_URL,
+        source_url=WALLET_URL,
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
@@ -165,7 +165,7 @@ def test_parse_iva_compensation_wallet_html_does_not_under_declare_a_populated_c
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
         target_period=_TARGET_PERIOD,
-        source_url=IVA_COMPENSATION_WALLET_URL,
+        source_url=WALLET_URL,
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         allow_empty_wallet_shell=True,
     )
@@ -190,7 +190,7 @@ def test_parse_iva_compensation_wallet_html_accepts_zero_aggregate_empty_cartera
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
         target_period=_TARGET_PERIOD,
-        source_url=IVA_COMPENSATION_WALLET_URL,
+        source_url=WALLET_URL,
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
@@ -240,7 +240,7 @@ def test_an_aggregate_grouped_with_any_printed_separator_reads_the_whole_figure(
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
         target_period=_TARGET_PERIOD,
-        source_url=IVA_COMPENSATION_WALLET_URL,
+        source_url=WALLET_URL,
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
@@ -282,7 +282,7 @@ def test_a_cuota_disponible_cell_grouped_with_any_printed_separator_is_read_not_
         authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
         target_year=2026,
         target_period=_TARGET_PERIOD,
-        source_url=IVA_COMPENSATION_WALLET_URL,
+        source_url=WALLET_URL,
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
     )
 
@@ -313,7 +313,7 @@ def test_a_cuota_disponible_cell_grouped_with_an_ascii_space_is_still_refused() 
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period=_TARGET_PERIOD,
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
@@ -334,7 +334,7 @@ def test_parse_iva_compensation_wallet_html_rejects_summary_row_mismatch() -> No
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period=_TARGET_PERIOD,
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
@@ -356,7 +356,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unrecognized_page() -> None:
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period=_TARGET_PERIOD,
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
@@ -381,7 +381,7 @@ def test_parse_iva_compensation_wallet_html_refuses_unexecuted_empty_wallet_surf
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period=_TARGET_PERIOD,
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
@@ -405,7 +405,7 @@ def test_parse_iva_compensation_wallet_html_refuses_execute_shell_as_empty_walle
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period=_TARGET_PERIOD,
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
@@ -430,7 +430,7 @@ def test_parse_iva_compensation_wallet_html_refuses_executed_empty_wallet_shell_
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period=_TARGET_PERIOD,
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
             allow_empty_wallet_shell=True,
         )
@@ -449,7 +449,7 @@ def test_parse_iva_compensation_wallet_html_refuses_wrong_rendered_target_period
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         )
 
@@ -474,7 +474,7 @@ def test_parse_iva_compensation_wallet_html_refuses_authorized_empty_wallet_shel
             authenticated_identity=_SYNTHETIC_TAXPAYER_REF,
             target_year=2026,
             target_period=_TARGET_PERIOD,
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
             allow_empty_wallet_shell=True,
         )
@@ -524,7 +524,7 @@ def test_wallet_execute_initial_shape_waits_for_delayed_submit() -> None:
 
 
 def test_iva_wallet_read_guard_allows_declared_wallet_read_post_surface() -> None:
-    _assert_read_http("POST", IVA_COMPENSATION_WALLET_URL)
+    _assert_read_http("POST", WALLET_URL)
 
 
 def test_iva_wallet_read_guard_rejects_unclassified_browser_action() -> None:
@@ -621,7 +621,7 @@ def test_discover_iva_compensation_wallet_entrypoint_preserves_query_and_drops_f
             base_url=PRE303_PRESENTATION_SERVICE_URL,
         )
 
-        assert discovered == f"{IVA_COMPENSATION_WALLET_URL}?{query}", fragment
+        assert discovered == f"{WALLET_URL}?{query}", fragment
 
 
 def test_discover_iva_compensation_wallet_entrypoint_rejects_non_aeat_host() -> None:
@@ -643,7 +643,7 @@ def test_discover_iva_compensation_wallet_entrypoint_rejects_non_aeat_host() -> 
 
 def test_iva_wallet_auth_gate_detector_matches_aeat_4033_redirect() -> None:
     assert is_aeat_auth_gate_redirect(_AEAT_AUTH_GATE_URL)
-    assert not is_aeat_auth_gate_redirect(IVA_COMPENSATION_WALLET_URL)
+    assert not is_aeat_auth_gate_redirect(WALLET_URL)
 
 
 def test_wallet_shape_context_redacts_url_query_and_input_values() -> None:
@@ -657,10 +657,10 @@ def test_wallet_shape_context_redacts_url_query_and_input_values() -> None:
 
     context = wallet_page_shape_context(
         html,
-        landing_url=f"{IVA_COMPENSATION_WALLET_URL}?token=QUERY-CANARY#fragment",
+        landing_url=f"{WALLET_URL}?token=QUERY-CANARY#fragment",
     )
 
-    assert context["landing_url"] == IVA_COMPENSATION_WALLET_URL
+    assert context["landing_url"] == WALLET_URL
     assert "QUERY-CANARY" not in str(context)
     assert context["raw_sha256"]
 
@@ -694,7 +694,7 @@ def test_wallet_shape_context_carries_page_text_so_the_leak_assertion_can_fire()
     </body></html>
     """
 
-    context = wallet_page_shape_context(html, landing_url=IVA_COMPENSATION_WALLET_URL)
+    context = wallet_page_shape_context(html, landing_url=WALLET_URL)
 
     assert "QUERY-CANARY" in str(context)
     assert context["inputs"][0]["id"] == "QUERY-CANARY"
@@ -714,7 +714,7 @@ def test_wallet_shape_context_reports_discovered_wallet_entrypoints_without_quer
 
     context = wallet_page_shape_context(
         html,
-        landing_url=f"{IVA_COMPENSATION_WALLET_URL}?token=QUERY-CANARY#fragment",
+        landing_url=f"{WALLET_URL}?token=QUERY-CANARY#fragment",
     )
 
     assert context["wallet_entrypoint_count"] == 2
@@ -768,7 +768,7 @@ def test_iva_wallet_live_routes_are_centralized_external_constants() -> None:
     """
     assert (
         f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
-    ) == IVA_COMPENSATION_WALLET_URL
+    ) == WALLET_URL
     assert (
         f"{EXTERNAL.aeat.domains.sede}{EXTERNAL.aeat.pre303.presentation_service_path}"
     ) == PRE303_PRESENTATION_SERVICE_URL
@@ -987,12 +987,12 @@ class TestWalletLandingRefusal:
         assert_wallet_read_landing(PRE303_PRESENTATION_SERVICE_URL)
 
     def test_the_wallet_itself_is_admitted(self) -> None:
-        assert_wallet_read_landing(IVA_COMPENSATION_WALLET_URL)
+        assert_wallet_read_landing(WALLET_URL)
 
     def test_a_numbered_load_balancer_host_serving_the_wallet_is_admitted(self) -> None:
         """AEAT assigns the numbered host per session; that dispatch is not a write."""
         aeat = Settings.external_constants().aeat
-        assert_wallet_read_landing(f"{aeat.domains.www6}{urlsplit(IVA_COMPENSATION_WALLET_URL).path}")
+        assert_wallet_read_landing(f"{aeat.domains.www6}{urlsplit(WALLET_URL).path}")
 
     @pytest.mark.parametrize("write_path", CENSAL_WRITE_SURFACE_PATH_CANARIES)
     def test_a_real_aeat_write_surface_is_refused(self, write_path: str) -> None:

@@ -45,7 +45,7 @@ from ....tests.profile_storage_root_fixture import bucket_session_storage_fixtur
 from ....tests.user_profile import register_minimal_profile
 from ...wizard import compiler as _wizard  # noqa: F401  (compiler import seeds the ProfileKey registry)
 from .. import certificate_secret_backend as _backend_module
-from ..certificate_secret_backend import CertificateSecretBackend, SecureStorageCertificateSecretBackend
+from ..certificate_secret_backend import SecureStorageCertificateSecretBackend
 from ..certificate_source_operations import (
     register_operator_certificate_source,
     remove_operator_certificate_source_secret,
@@ -106,13 +106,6 @@ def test_secure_storage_backend_roundtrips_a_secret(secret_store: SecretStore) -
 
     assert resolved is not None
     assert resolved.get_secret_value() == "correct-horse-battery-staple"
-
-
-def test_public_certificate_secret_backend_imports_and_constructs() -> None:
-    """The public auth surface can construct its certificate-secret backend."""
-    backend = SecureStorageCertificateSecretBackend(bucket_id=_BUCKET_ID)
-
-    assert isinstance(backend, CertificateSecretBackend)
 
 
 def test_secure_storage_backend_get_is_none_when_unset(secret_store: SecretStore) -> None:
@@ -296,13 +289,12 @@ def test_retired_keyring_symbol_absent_from_backend_module(symbol: str) -> None:
 
 
 def test_secure_storage_backend_is_the_only_public_backend() -> None:
-    """The module exposes exactly the secure-storage backend and its protocol.
+    """The module exposes exactly the live secure-storage backend.
 
     No backend-descriptor label survives: named certificate secrets have a
     single storage authority, so there is no backend name to select or project.
     """
     assert set(_backend_module.__all__) == {
-        "CertificateSecretBackend",
         "SecureStorageCertificateSecretBackend",
     }
     assert not hasattr(_backend_module, "SECURE_STORAGE_BACKEND_LABEL")

@@ -9,7 +9,7 @@ from typing import Literal
 
 from pydantic import AnyHttpUrl
 
-from ....adapters.outbound.aeat.sede.iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
@@ -21,9 +21,12 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.casilla_value_kind import CasillaValueKind
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....tests.registry_snapshot import build_snapshot
 from ....tests.registry_tree import bundled_registry_tree
@@ -32,6 +35,16 @@ from ....tests.registry_tree import bundled_registry_tree
 #: is a ``SubjectTaxId``, so a placeholder label is refused at the boundary
 #: and the fixture must carry a real identifier shape.
 _TAXPAYER_REF = "12345678Z"
+
+
+@cache
+def m303_registry_snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
+    """Return the law-selected canonical coordinate used by a test fixture."""
+    return bundled_authority().snapshot(
+        Modelo.M303.value,
+        filing_year=filing_year,
+        period=period,
+    ).snapshot_ref
 
 
 _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA: CasillaId = validated_casilla_id(
@@ -98,6 +111,7 @@ def _state(
         taxpayer_nif=_TAXPAYER_REF,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
+        registry_snapshot_ref=m303_registry_snapshot_ref(filing_year, period),
         presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
         prior_pending_amount=None,
         applied_amount=applied,
@@ -127,7 +141,7 @@ def _wallet(amount: Decimal, *, generation_year: int = 2022) -> IvaCompensationW
             ),
         ),
         total_pending=amount,
-        source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
+        source_url=AnyHttpUrl(WALLET_URL),
         captured_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
         raw_sha256="a" * 64,
     )
@@ -152,6 +166,11 @@ def _filed_observation(modelo: str) -> FiledDeclaracionObservation:
                 captured_at=datetime(2025, 1, 20, 12, 0, tzinfo=UTC),
             ),
         ),
+        registry_snapshot_ref=bundled_authority().snapshot(
+            modelo,
+            filing_year=2024,
+            period="4T",
+        ).snapshot_ref,
     )
 
 
@@ -241,6 +260,7 @@ def _filed_390_observation(
                 captured_at=datetime(2026, 1, 30, 12, 0, tzinfo=UTC),
             ),
         ),
+        registry_snapshot_ref=_modelo_390_annual_snapshot().snapshot_ref,
         casillas=(
             ObservedCasillaValue(
                 casilla_id=_M390_COMPENSACION_ULTIMO_PERIODO_CASILLA,

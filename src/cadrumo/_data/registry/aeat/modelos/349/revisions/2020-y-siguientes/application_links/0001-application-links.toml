@@ -9,7 +9,7 @@ source_refs = ["aeat-modelo-349-procedure"]
 [[revisions."2020-y-siguientes".application_links]]
 id = "modelo-349-filed-declarations-observation"
 surface = "portal"
-consumer = "cadrumo.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+consumer = "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation"
 requires_snapshot = true
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1", "ley-58-2003:art-93"]
 source_refs = ["aeat-modelo-349-procedure"]

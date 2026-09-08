@@ -50,6 +50,7 @@ from ..registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+
 _PASSWORD = "delete-while-logged-in-password"  # noqa: S105 - real test credential
 _LABEL = "Signed-in operator"
 

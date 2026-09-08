@@ -11,6 +11,7 @@ import pytest
 
 from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....application.modelo.filed_revision_observation import APP_FILING_SOURCE_KIND
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -94,6 +95,7 @@ def _seed_prior_year_zero_carry(runtime_profile: TestRuntimeProfile) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_CAPTURED_AT,
+            stamped_revision_id=str(bundled_authority().snapshot("100", filing_year=2024, period="0A").revision.id),
         )
     )
 

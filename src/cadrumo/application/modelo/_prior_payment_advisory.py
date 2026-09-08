@@ -52,7 +52,10 @@ from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.period_offset_math import same_ejercicio_prior_quarter_anchors
 from ...domain.calculations.registry.schema import ModeloRevision
 from ..aggregation import CalculationSourceDiagnostic, casilla_registry_legal_refs
-from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.observations_repository import (
+    CalculationObservationRepository,
+    require_observation_envelope_coordinates_current,
+)
 
 __all__ = [
     "collect_prior_payment_minoracion_not_captured_diagnostics",
@@ -109,6 +112,7 @@ def _prior_m130_filing_exists(
         return False
     wanted = set(prior_codes)
     for payload in repository.iter_modelo(Modelo.M130.value):
+        require_observation_envelope_coordinates_current(payload)
         observation = payload.observation
         if observation.filing_year == filing_year and observation.period in wanted:
             return True
@@ -263,6 +267,7 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
     wanted = set(prior_codes)
     uncaptured_periods: list[str] = []
     for payload in observation_repository.iter_modelo(Modelo.M130.value):
+        require_observation_envelope_coordinates_current(payload)
         observation = payload.observation
         if observation.filing_year != filing_year or observation.period not in wanted:
             continue

@@ -32,7 +32,6 @@ from .._app_live_command_spec_support import (
     NO_RESULT_SCHEMA,
 )
 from .._app_live_command_specs import LIVE_COMMAND_SPECS
-from .._app_live_deudas_command_specs import LIVE_DEUDAS_COMMAND_SPECS
 from .._app_live_expedientes_command_specs import LIVE_EXPEDIENTES_COMMAND_SPECS
 from .._app_live_foundation_command_specs import LIVE_FOUNDATION_COMMAND_SPECS
 from .._app_live_iva_wallet_command_specs import LIVE_IVA_WALLET_COMMAND_SPECS
@@ -72,10 +71,6 @@ EXPECTED_LIVE_PATHS = {
     "app live borrador 100 latest",
     "app live borrador 100 list",
     "app live borrador 100 view",
-    "app live deudas",
-    "app live deudas latest",
-    "app live deudas list",
-    "app live deudas view",
     "app live expedientes",
     "app live expedientes latest",
     "app live expedientes list",
@@ -314,15 +309,14 @@ def test_live_specs_are_the_exact_complete_current_surface() -> None:
     graph = CommandSpecGraph((*ROOT_COMMAND_SPECS, *LIVE_COMMAND_SPECS))
     live_keys = {spec.key for spec in LIVE_COMMAND_SPECS}
     actual = {" ".join(node.path[1:]) for node in graph.nodes() if node.spec.key in live_keys}
-    assert len(LIVE_COMMAND_SPECS) == 49
-    assert sum(spec.kind == "leaf" for spec in LIVE_COMMAND_SPECS) == 37
+    assert len(LIVE_COMMAND_SPECS) == 45
+    assert sum(spec.kind == "leaf" for spec in LIVE_COMMAND_SPECS) == 34
     assert actual == EXPECTED_LIVE_PATHS
 
 
 def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     foundation = {spec.key: spec for spec in LIVE_FOUNDATION_COMMAND_SPECS}
     borrador = {spec.key: spec for spec in LIVE_BORRADOR_COMMAND_SPECS}
-    deudas = {spec.key: spec for spec in LIVE_DEUDAS_COMMAND_SPECS}
     expedientes = {spec.key: spec for spec in LIVE_EXPEDIENTES_COMMAND_SPECS}
     iva_wallet = {spec.key: spec for spec in LIVE_IVA_WALLET_COMMAND_SPECS}
     justificante = {spec.key: spec for spec in LIVE_JUSTIFICANTE_COMMAND_SPECS}
@@ -341,7 +335,6 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         notifications["app_live_notifications_document"],
         borrador["app_live_borrador"],
         borrador["app_live_borrador_100"],
-        deudas["app_live_deudas"],
         expedientes["app_live_expedientes"],
     ):
         assert spec.invocation is _METADATA_GROUP_INVOCATION
@@ -356,7 +349,6 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         *LIVE_PORTALS_COMMAND_SPECS[1:],
         *(spec for spec in LIVE_NOTIFICATIONS_COMMAND_SPECS[1:] if spec.kind == "leaf"),
         *LIVE_BORRADOR_COMMAND_SPECS[2:],
-        *LIVE_DEUDAS_COMMAND_SPECS[1:],
         *LIVE_EXPEDIENTES_COMMAND_SPECS[1:],
     ):
         assert spec.invocation is _LEAF_INVOCATION
@@ -369,8 +361,6 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
         "app_live_borrador_100_latest",
     ):
         assert borrador[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
-    for key in ("app_live_deudas_list", "app_live_deudas_view", "app_live_deudas_latest"):
-        assert deudas[key].policy is _ENCRYPTED_LOCAL_READ_POLICY
     for key in (
         "app_live_expedientes_list",
         "app_live_expedientes_view",
@@ -494,7 +484,6 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
     for path, spec in (
         (("aeat", "app", "live"), foundation["app_live"]),
         (("aeat", "app", "live", "borrador", "100", "latest"), borrador["app_live_borrador_100_latest"]),
-        (("aeat", "app", "live", "deudas", "view"), deudas["app_live_deudas_view"]),
         (("aeat", "app", "live", "expedientes", "pull"), expedientes["app_live_expedientes_pull"]),
         (("aeat", "app", "live", "filed", "pull-sources"), foundation["app_live_filed_pull_sources"]),
         (("aeat", "app", "live", "iva-wallet", "pull-evidence"), iva_wallet["app_live_iva_wallet_pull_evidence"]),
@@ -517,7 +506,7 @@ def test_live_shared_specs_keep_exact_identity_order_and_routes() -> None:
 
 def test_every_live_leaf_has_public_resolvable_behavior_and_schema_targets() -> None:
     leaves = [spec for spec in LIVE_COMMAND_SPECS if spec.kind == "leaf"]
-    assert len(leaves) == 37
+    assert len(leaves) == 34
     for spec in leaves:
         assert spec.handler is not None
         assert spec.handler.target is not None

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -22,7 +22,6 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...registry.source_connectivity import load_source_connectivity_census
 from ..work_addressing import ModeloWorkRegistryYearMismatchError
 from ..work_lifecycle import create_work_unit
 from ..workspace import (
@@ -74,10 +73,6 @@ from ..workspace_models import (
     ModeloWorkspaceVisibleFilingTargetV1,
 )
 from ..workspace_producers import ModeloWorkspaceRegistryProjectionV1
-
-#: Fixed observation instant for the closure capture, so a limb set does not
-#: shift under the suite because a census entry expired between runs.
-_CLOSURE_AS_OF = date(2026, 8, 24)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -1320,6 +1315,7 @@ def _real_calculation_revision_with_row_materialization():
     from ....core.aggregation import BindingSourceKind
     from ....core.casilla_id import validated_casilla_id
     from ....domain.calculations.registry.bindings import CasillaObservation
+    from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
     from ....domain.calculations.row_casilla import DirectRowMaterializationProvenance
     from ....domain.calculations.row_source_identity import RowSourceIdentity
     from ....domain.modelos.calculation_revision import (
@@ -1373,6 +1369,12 @@ def _real_calculation_revision_with_row_materialization():
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2022",
+            modelo_year=2026,
+            period="1T",
+        ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={scalar_casilla: "140000.00"},
         row_binding_values=row_binding_values,
@@ -1431,6 +1433,7 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
     from decimal import Decimal
 
     from ....core.casilla_id import validated_casilla_id
+    from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
     from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
     from ....domain.modelos.work_unit import derive_work_unit_id
     from ..workspace import ModeloWorkspaceMaterializationProvenanceMissingError
@@ -1449,6 +1452,12 @@ def test_graded_snapshot_materialization_facet_refuses_a_row_value_with_no_prove
     revision = CalculationRevision.model_construct(
         calculation_revision_id="a" * 64,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2022",
+            modelo_year=2026,
+            period="1T",
+        ),
         state=CalculationRevisionState.BORRADOR,
         row_casilla_values=row_casilla_values,
         row_casilla_provenance={},
@@ -1870,6 +1879,7 @@ def _resolved_target_with_work_unit(*, work_unit_id: str, revision_id: str = "20
 
 
 def _minimal_calculation_revision(*, work_unit_id: str, state):
+    from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
     from ....domain.modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionState,
@@ -1890,6 +1900,12 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2022",
+            modelo_year=2026,
+            period="1T",
+        ),
         state=state,
         casilla_values={},
         observations=(),
@@ -2064,8 +2080,6 @@ def test_resolve_graded_snapshot_result_refuses_when_the_target_has_no_calculati
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=authority,
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 
@@ -2123,8 +2137,6 @@ def test_resolve_graded_snapshot_result_refuses_target_not_found_when_no_work_un
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=authority,
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 
@@ -2218,8 +2230,6 @@ def test_resolve_graded_snapshot_result_assembles_a_complete_projection_over_a_r
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=authority,
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 
@@ -2323,8 +2333,6 @@ def test_resolve_graded_snapshot_result_refuses_authority_grade_unavailable(
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=authority,
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 
@@ -2422,8 +2430,6 @@ def test_resolve_graded_snapshot_result_reraises_a_non_grade_registry_validation
             calculation_repository=calculation_repo,
             verification_repository=verification_repo,
             authority=authority,
-            census=load_source_connectivity_census(),
-            as_of=_CLOSURE_AS_OF,
             output_language=OutputLanguage.ES,
         )
 
@@ -2537,8 +2543,6 @@ def test_resolve_graded_snapshot_result_reads_the_work_catalogue_before_any_writ
             calculation_repository=calculation_repo,
             verification_repository=verification_repo,
             authority=authority,
-            census=load_source_connectivity_census(),
-            as_of=_CLOSURE_AS_OF,
             output_language=OutputLanguage.ES,
         )
 
@@ -2645,8 +2649,6 @@ def test_resolve_graded_snapshot_result_baseline_reflects_a_real_contributor_cha
             calculation_repository=calculation_repo,
             verification_repository=verification_repo,
             authority=authority,
-            census=load_source_connectivity_census(),
-            as_of=_CLOSURE_AS_OF,
             output_language=OutputLanguage.ES,
         )
         assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)

@@ -140,32 +140,6 @@ def test_literal_survivor_scan_reads_a_non_empty_corpus() -> None:
 
 
 # ---------------------------------------------------------------------------
-# No duplicate SEDE_BODY_ENCODING = "latin-1" outside _browser_constants
-# ---------------------------------------------------------------------------
-
-_BROWSER_CONSTANTS = _SRC_ROOT / "adapters" / "outbound" / "aeat" / "sede" / "_browser_constants.py"
-
-_RE_SEDE_BODY_ENCODING_DEF = re.compile(r'SEDE_BODY_ENCODING\s*:\s*Final\[str\]\s*=\s*"latin-1"')
-
-
-def test_no_duplicate_sede_body_encoding_definition() -> None:
-    """SEDE_BODY_ENCODING definition must exist only in _browser_constants.py."""
-    # Verify the canonical site still defines it (not deleted by accident)
-    if _BROWSER_CONSTANTS.is_file():
-        canonical_text = _BROWSER_CONSTANTS.read_text(encoding="utf-8", errors="replace")
-        assert "SEDE_BODY_ENCODING" in canonical_text, (
-            "_browser_constants.py no longer exports SEDE_BODY_ENCODING; update callers and this test."
-        )
-
-    # Verify no other production file re-defines SEDE_BODY_ENCODING as a bare "latin-1"
-    non_canonical = [p for p in _production_py_files() if p != _BROWSER_CONSTANTS]
-    hits = _scan(non_canonical, _RE_SEDE_BODY_ENCODING_DEF)
-    assert not hits, f"Found {len(hits)} duplicate SEDE_BODY_ENCODING = 'latin-1' definition(s):\n" + "\n".join(
-        f"  {h}" for h in hits
-    )
-
-
-# ---------------------------------------------------------------------------
 # No bare "production" string used as OracleEnvironment bypass outside
 # the match validator and TOML/config defaults
 # ---------------------------------------------------------------------------

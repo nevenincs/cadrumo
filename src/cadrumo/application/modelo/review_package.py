@@ -46,7 +46,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
-from pydantic import BaseModel, Field, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from ...core.corpus_manifest.errors import CorpusBundleError, CorpusManifestTamperError
 from ...core.corpus_manifest.manifest import build_corpus_bundle, verify_corpus_bundle
@@ -57,9 +57,11 @@ from ...core.identity import BucketId, CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevision
 from ...domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
 from ...domain.modelos.work_unit import WorkUnit
+from ..calculations.revision_carry_gate import revision_carry_outcome
 from .review_package_text import ReviewPackageNote
 
 #: Wire-format version of the review-package descriptor. Bumped when the
@@ -135,6 +137,7 @@ class ReviewPackageManifest(BaseModel):
     bucket_id: BucketId
     work_unit_id: WorkUnitId
     calculation_revision_id: CalculationRevisionId
+    registry_snapshot_ref: RegistrySnapshotRef
     modelo: str = Field(min_length=1, max_length=8)
     filing_year: FilingYear
     period: Period
@@ -143,6 +146,18 @@ class ReviewPackageManifest(BaseModel):
     built_at: datetime
     built_by: ReviewPackageActor
     notes: ReviewPackageNote = ""
+
+    @model_validator(mode="after")
+    def _registry_coordinate_matches_manifest(self) -> ReviewPackageManifest:
+        expected = RegistrySnapshotRef(
+            modelo=self.modelo,
+            revision_id=self.registry_snapshot_ref.revision_id,
+            modelo_year=self.filing_year,
+            period=self.period.registry_token,
+        )
+        if self.registry_snapshot_ref != expected:
+            raise ValueError("review-package registry_snapshot_ref must match modelo, filing_year, and period")
+        return self
 
 
 class ReviewPackageBuildResult(BaseModel):
@@ -245,6 +260,25 @@ def build_review_package(
                 "revision_work_unit_id": revision.work_unit_id,
             },
         )
+    if revision.registry_snapshot_ref != RegistrySnapshotRef(
+        modelo=work_unit.modelo,
+        revision_id=work_unit.revision_id,
+        modelo_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    ):
+        raise ReviewPackageError(
+            translated_message="application.modelo.errors.review_package_generic",
+            context={"work_unit_id": work_unit.work_unit_id, "detail": "registry snapshot coordinate mismatch"},
+        )
+    carry_outcome = revision_carry_outcome(revision.registry_snapshot_ref)
+    if carry_outcome.refused:
+        raise ReviewPackageError(
+            translated_message="application.modelo.errors.review_package_generic",
+            context={
+                "work_unit_id": work_unit.work_unit_id,
+                "detail": carry_outcome.detail or "registry revision cannot be re-confirmed",
+            },
+        )
     if revision.state not in CURRENT_SEALED_REVISION_STATES:
         raise ReviewPackageRevisionStateError(
             translated_message="application.modelo.errors.review_package_revision_state",
@@ -260,6 +294,7 @@ def build_review_package(
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit.work_unit_id,
         calculation_revision_id=revision.calculation_revision_id,
+        registry_snapshot_ref=revision.registry_snapshot_ref,
         modelo=str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period,
@@ -353,6 +388,15 @@ def verify_review_package(package_path: Path) -> ReviewPackageVerification:
         result_missing=result.missing,
         result_mismatched=result.mismatched,
     )
+    carry_outcome = revision_carry_outcome(manifest.registry_snapshot_ref)
+    if carry_outcome.refused:
+        raise ReviewPackageIntegrityError(
+            translated_message="application.modelo.errors.review_package_integrity",
+            context={
+                "package_path": str(package_path),
+                "detail": carry_outcome.detail or "registry revision cannot be re-confirmed",
+            },
+        )
 
     return ReviewPackageVerification(
         manifest=manifest,

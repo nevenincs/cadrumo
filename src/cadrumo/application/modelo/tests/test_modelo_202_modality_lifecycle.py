@@ -25,6 +25,7 @@ from ....adapters.persistence.profile.modelos_verification_reports import Verifi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IVARegime,
@@ -250,6 +251,12 @@ def _seed_legacy_zero_m202_revision(
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=state,
         casilla_values=_ZERO_M202_CASILLA_VALUES,
         observations=registry_grounded_observations(

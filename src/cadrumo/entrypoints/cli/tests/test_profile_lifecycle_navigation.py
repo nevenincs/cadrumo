@@ -22,7 +22,6 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator, Sequence
 from pathlib import Path
-from typing import Final
 
 import pytest
 from click.testing import Result
@@ -36,9 +35,6 @@ __all__ = ["isolated_profile_storage"]
 from ._profile_lifecycle_support import create_profile_via_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def _invoke(args: Sequence[str]) -> Result:

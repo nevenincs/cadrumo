@@ -25,12 +25,6 @@ class ModeloLocalizationFieldKind(StrEnum):
     OFFICIAL_NAME = "official_name"
 
 
-ModeloLocalizationField = Literal[
-    ModeloLocalizationFieldKind.LABEL,
-    ModeloLocalizationFieldKind.HELP,
-    ModeloLocalizationFieldKind.TITLE,
-    ModeloLocalizationFieldKind.OFFICIAL_NAME,
-]
 """Every localizable field."""
 
 CasillaLocalizationField = Literal[
@@ -312,7 +306,6 @@ def require_modelo_localization(
 
 __all__ = [
     "CasillaLocalizationField",
-    "ModeloLocalizationField",
     "ModeloLocalizationFieldKind",
     "casilla_alias_locale_key",
     "casilla_continuity_locale_key",

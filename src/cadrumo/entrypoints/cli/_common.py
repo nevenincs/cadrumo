@@ -1071,8 +1071,10 @@ def load_invoices() -> InvoiceCatalogue:
 
 
 def load_drafts() -> tuple[ModeloDraft, ...]:
+    from ...application.filing.draft_revision_gate import require_modelo_draft_coordinates_current
+
     repo = _draft_repo()
-    return tuple(repo.iter_drafts())
+    return tuple(require_modelo_draft_coordinates_current(draft) for draft in repo.iter_drafts())
 
 
 def draft_by_id(draft_id: str) -> ModeloDraft:

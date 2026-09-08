@@ -626,20 +626,30 @@ def persist_and_reconcile_iva_compensation_wallet(
         filing_year=reloaded.target_year,
         period=reloaded.target_period.registry_token,
     )
+    resolved_repository = repository or _CalculationObservationRepository()
+    from ..calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
+
+    local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+        snapshot,
+        repository=resolved_repository,
+        captured_at=decided_at,
+    )
     reconciliation = _reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=reloaded.taxpayer_nif,
         wallet=_wallet_reconciliation_observation(reloaded),
-        repository=repository,
+        repository=resolved_repository,
         decision_repository=decision_repository,
         decided_at=decided_at,
+        local_recurrence=local_recurrence,
+        prefill_report=prefill_report,
     )
     decision = reconciliation.decision
     decision_repo = (
         decision_repository
         if decision_repository is not None
         else _IvaWalletDecisionRepository(
-            objects=repository.secure_object_repository if repository is not None else None,
+            objects=resolved_repository.secure_object_repository,
         )
     )
     loaded_decision = decision_repo.load_decision(

@@ -61,6 +61,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "28282828-2828-4828-8828-282828282828"
 
 
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+
+
 class LedgerIvaAggregationSourceResolver(_LedgerIvaAggregationSourceResolver):
     """Bind injected real repositories to an explicit empty Bienes authority."""
 
@@ -363,6 +367,7 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance(
                     provisional_percentage=Decimal("80"),
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                     source_observation_ref="303:2025:4T",
+                    source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
             ),
         ),

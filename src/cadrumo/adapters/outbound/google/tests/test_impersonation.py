@@ -43,7 +43,6 @@ from ..impersonation import (
     GoogleCredentialSourceSelection,
     GoogleImpersonationConfig,
     _ensure_source_credential_is_fresh,
-    describe_impersonation_target,
     resolve_impersonated_credentials,
 )
 from ..records import DRIVE_FILE_SCOPE, SHEETS_SCOPE
@@ -152,16 +151,6 @@ def test_config_accepts_domain_wide_delegation_subject() -> None:
         subject="taxpayer@example-workspace-domain.com",
     )
     assert config.subject == "taxpayer@example-workspace-domain.com"
-
-
-# ---------------------------------------------------------------------------
-# describe_impersonation_target — exact SA email surfacing
-# ---------------------------------------------------------------------------
-
-
-def test_describe_impersonation_target_returns_exact_principal() -> None:
-    config = GoogleImpersonationConfig(target_principal=_TARGET_PRINCIPAL)
-    assert describe_impersonation_target(config) == _TARGET_PRINCIPAL
 
 
 # ---------------------------------------------------------------------------

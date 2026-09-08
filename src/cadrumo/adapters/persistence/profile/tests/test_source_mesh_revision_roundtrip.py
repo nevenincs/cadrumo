@@ -39,6 +39,7 @@ from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRol
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.calculations.row_casilla import DirectRowMaterializationProvenance
 from .....domain.calculations.row_source_identity import RowSourceIdentity
 from .....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
@@ -68,6 +69,12 @@ _SOURCE_REFS = ("boe-modelo-303-2025-form",)
 
 _CASILLA: CasillaId = validated_casilla_id("00501")
 _ROW_CASILLA: CasillaId = validated_casilla_id("00181")
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2022",
+    modelo_year=2026,
+    period="1T",
+)
 
 __all__ = ["secure_objects"]
 
@@ -165,6 +172,7 @@ def _revision(
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={_CASILLA: "140000.00"},
         row_binding_values=row_values,

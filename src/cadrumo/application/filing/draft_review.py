@@ -32,7 +32,7 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Final, Protocol
+from typing import Final, Protocol, cast
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core.hashing import content_hash_hex
@@ -681,7 +681,17 @@ def _prior_filing_observations_fingerprint(payloads: Iterable[_StoredPriorObserv
     stream structurally (the stored envelope type is private to the observation
     repository); an empty stream yields the stable empty-set digest.
     """
-    projected = sorted(_normalize_prior_filing_observation(payload) for payload in payloads)
+    from ..calculations.observations_repository import (
+        ObservationEnvelopePayload,
+        require_observation_envelope_coordinates_current,
+    )
+
+    projected = sorted(
+        _normalize_prior_filing_observation(
+            require_observation_envelope_coordinates_current(cast(ObservationEnvelopePayload, payload))
+        )
+        for payload in payloads
+    )
     return content_hash_hex(projected)
 
 

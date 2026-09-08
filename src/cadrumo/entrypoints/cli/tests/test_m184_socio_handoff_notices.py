@@ -16,6 +16,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.json_contract import NoticeSeverity
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -28,6 +29,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
 _WORK_UNIT_ID = "a" * 64
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="184",
+    revision_id="2025-y-siguientes",
+    modelo_year=2025,
+    period="0A",
+)
 
 
 def _revision(*detail_rows: ModeloDetailRow) -> CalculationRevision:
@@ -43,6 +50,7 @@ def _revision(*detail_rows: ModeloDetailRow) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=_WORK_UNIT_ID,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         binding_overrides={},

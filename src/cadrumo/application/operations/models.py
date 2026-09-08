@@ -103,6 +103,7 @@ class OperationTerminalReceipt(BaseModel):
     settled_at: datetime
     result_ref: OperationReference | None = None
     refusal_ref: OperationReference | None = None
+    failure_error_code: Annotated[str, Field(pattern=r"^[A-Z][A-Z0-9_]+$")] | None = None
     diagnostic_ref: OperationDiagnosticReference | None = None
 
     @model_validator(mode="after")
@@ -112,6 +113,7 @@ class OperationTerminalReceipt(BaseModel):
             condition=self.condition,
             result_ref=self.result_ref,
             refusal_ref=self.refusal_ref,
+            failure_error_code=self.failure_error_code,
         )
         return self
 
@@ -121,16 +123,21 @@ def validate_terminal_reference_meaning(
     condition: OperationTerminalCondition,
     result_ref: OperationReference | None,
     refusal_ref: OperationReference | None,
+    failure_error_code: str | None = None,
 ) -> None:
     """Enforce the canonical terminal result/refusal relationship."""
     if condition is OperationTerminalCondition.SUCCEEDED:
         if result_ref is None or refusal_ref is not None:
             raise ValueError("succeeded operation requires one result reference and forbids a refusal reference")
     elif condition is OperationTerminalCondition.REFUSED:
-        if refusal_ref is None or result_ref is not None:
+        if refusal_ref is None or result_ref is not None or failure_error_code is not None:
             raise ValueError("refused operation requires one refusal reference and forbids a result reference")
     elif refusal_ref is not None:
         raise ValueError("refusal reference is valid only for a refused operation")
+    if condition is not OperationTerminalCondition.FAILED and failure_ref is not None:
+        raise ValueError("failure reference is valid only for a failed operation")
+    if failure_ref is not None and result_ref is not None:
+        raise ValueError("failed operation cannot carry both result and failure references")
 
 
 class OperationSnapshot[RequestPayloadT: BaseModel](BaseModel):

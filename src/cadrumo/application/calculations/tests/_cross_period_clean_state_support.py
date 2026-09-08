@@ -15,8 +15,10 @@ from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.applicability_modelo202 import Modelo202Modality
@@ -38,12 +40,16 @@ from ....domain.modelos.filing_record import (
     ModeloRecordStatus,
     derive_filing_record_id,
 )
-from ....domain.modelos.work_unit import WorkUnit
+from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.filing_evidence import general_m303_filing_evidence
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
+from ....tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....tests.registry_snapshot import build_snapshot
 from ....tests.registry_tree import bundled_registry_tree
 from ...modelo.external_import_actions import import_external_filing_evidence
@@ -58,6 +64,7 @@ from ..cross_period_clean_state import (
     evaluate_cross_period_clean_state,
 )
 from ..cross_period_external_evidence import filing_external_evidence_blockers
+from ..iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ..observations_repository import CalculationObservationRepository, ObservationSourceKind
 
 _PROFILE_ID = "39039039-0390-4390-8390-390390390390"
@@ -150,17 +157,32 @@ def _save_source_observation(
     source_kind: str = "aeat_sede_justificante",
     source_metadata: dict[str, str] | None = None,
 ) -> None:
+    values = dict(source_values)
+    values.setdefault(M303_RESULTADO_CASILLA, Decimal("1"))
+    observation = registry_grounded_modelo_observation(
+        modelo="303",
+        filing_year=_M390_YEAR,
+        period=period,
+        casilla_values=values,
+    )
+    source_headers: tuple[ObservedHeaderFact, ...] = ()
+    if ObservationSourceKind(source_kind).is_official_aeat:
+        source_headers = (
+            ObservedHeaderFact(
+                header_key="declaration_type",
+                value="I",
+                source_artefact_kind="submitted_file",
+                source_locator=f"test:cross-period-clean-state:{period}:declaration-type",
+            ),
+        )
     repository.save(
         repository.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo="303",
-                filing_year=_M390_YEAR,
-                period=period,
-                casilla_values=source_values,
-            ),
+            observation,
             source_kind=source_kind,
             captured_at=_CLOCK,
             source_metadata=source_metadata,
+            source_headers=source_headers,
+            stamped_revision_id=revision_id_for_observation(observation),
         )
     )
 
@@ -195,18 +217,20 @@ def _save_member_322_observation(
     source_casilla_ids: tuple[CasillaId, ...],
     source_metadata: dict[str, str] | None = None,
 ) -> None:
+    observation = registry_grounded_modelo_observation(
+        modelo="322",
+        filing_year=_M353_YEAR,
+        period=_M353_PERIOD,
+        casilla_values=_member_source_values(member_nif, source_casilla_ids),
+    )
     repository.save(
         repository.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo="322",
-                filing_year=_M353_YEAR,
-                period=_M353_PERIOD,
-                casilla_values=_member_source_values(member_nif, source_casilla_ids),
-            ),
+            observation,
             source_kind="aeat_sede_justificante",
             captured_at=_CLOCK,
             member_nif=member_nif,
             source_metadata=source_metadata,
+            stamped_revision_id=revision_id_for_observation(observation),
         )
     )
 
@@ -227,7 +251,36 @@ def _seed_member_322_filing(
             "aeat_justificante_csv": f"JUST322{member_nif}",
         }
     values = _member_source_values(member_nif, source_casilla_ids)
-    work_unit_id = hashlib.sha256(f"322:{_M353_YEAR}:{_M353_PERIOD}:{member_nif}".encode()).hexdigest()
+    registry_snapshot = bundled_authority().snapshot(
+        "322",
+        filing_year=_M353_YEAR,
+        period=_M353_PERIOD,
+    )
+    work_unit_id = derive_work_unit_id(
+        bucket_id=_BUCKET_ID,
+        modelo="322",
+        filing_year=_M353_YEAR,
+        period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
+        revision_id=registry_snapshot.revision.id,
+    )
+    work_unit = WorkUnit(
+        work_unit_id=work_unit_id,
+        bucket_id=_BUCKET_ID,
+        modelo="322",
+        filing_year=_M353_YEAR,
+        period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
+        revision_id=registry_snapshot.revision.id,
+        name=f"322-{_M353_YEAR}-{_M353_PERIOD}-{member_nif}",
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+    work_unit_repository = WorkUnitCatalogueRepository()
+    work_unit_catalogue = work_unit_repository.load()
+    work_unit_repository.save(
+        WorkUnitCatalogue(
+            work_units={**dict(work_unit_catalogue.work_units), work_unit_id: work_unit},
+        ),
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -239,6 +292,7 @@ def _seed_member_322_filing(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot.snapshot_ref,
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=values,
         observations=registry_grounded_modelo_observation(
@@ -534,6 +588,11 @@ def _seed_source_filing_record_without_import_flow(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=bundled_authority().snapshot(
+            str(work_unit.modelo),
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ).snapshot_ref,
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=casilla_values,
         observations=registry_grounded_observations(

@@ -60,9 +60,11 @@ from ....core.casilla_id import CasillaId
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -334,6 +336,12 @@ def _calculation(
             source_provenance=(),
         ),
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         binding_overrides=overrides,
         casilla_values=values,
@@ -409,9 +417,8 @@ def _persist_pulled_filing(
       disposition and ``prior_domiciliation_election`` the Modelo 303
       rectificativa's prior-direct-debit election. This is a Modelo 130 register
       row; neither concept exists for it.
-    * ``normalize_m303_carry`` is the Modelo 303 carry-ingress policy switch. It
-      returns the envelope untouched for any other modelo, so enabling it here
-      would state an intent the write path cannot act on.
+    * Modelo 303 carry evidence is normalized by the canonical observation
+      write door; this Modelo 130 row never enters that path.
 
     ``m303_compensation_basis`` is set only by that ingress on the envelope it
     returns; the write path exposes no parameter for it, so it is not a fixture
@@ -476,6 +483,29 @@ def test_no_pulled_filing_produces_no_findings(
     )
 
     assert findings == []
+
+
+def test_pulled_filing_advisory_refuses_a_divergent_persisted_coordinate(
+    observation_repository: CalculationObservationRepository,
+) -> None:
+    """A stale observed value cannot participate in an advisory comparison."""
+    registry_revision = _law_resolved_revision()
+    subject, binding = _subject_casilla(registry_revision)
+    work_unit, target = _work_unit_and_calculation(
+        casilla_values={subject.id: _LOCAL_AMOUNT},
+        binding_overrides={binding.id: str(_LOCAL_AMOUNT)},
+    )
+    _persist_pulled_filing(observation_repository, casilla_values={subject.id: _FILED_AMOUNT})
+    stored = observation_repository.load_observation(_MODELO, work_unit.period)
+    assert stored is not None
+    observation_repository.save(stored.model_copy(update={"stamped_revision_id": "persisted-stale-revision"}))
+
+    with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+        pulled_filing_divergence_findings(
+            work_unit=work_unit,
+            target=target,
+            observation_repository=observation_repository,
+        )
 
 
 def test_a_pulled_filing_against_an_empty_bucket_produces_no_findings(

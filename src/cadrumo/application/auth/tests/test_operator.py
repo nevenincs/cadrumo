@@ -232,21 +232,14 @@ def test_configure_operator_auth_refuses_when_no_active_profile_bucket(tmp_path:
     assert typed_auth_events == []
 
 
-def test_configure_operator_auth_reserved_provider_emits_no_event() -> None:
-    """Reserved-provider slots (``clave_pin``, ``dnie_pkcs``) must "fail
-    closed without mutating config, credentials, sessions, locks, or
-    events" per the config-auth-shape contract. Surfacing the refusal
-    must precede every persisted side effect."""
-
-    from ..operator_results import AuthProviderReservedError
-
+def test_configure_operator_auth_unknown_provider_emits_no_event() -> None:
+    """Unknown providers fail before any persisted side effect."""
     _register_operator_profile()
     state_before = workflow_state_repository().load()
     auth_provider_before = state_before.auth.provider
 
-    for reserved in ("clave_pin", "dnie_pkcs"):
-        with pytest.raises(AuthProviderReservedError):
-            configure_operator_auth(reserved)
+    with pytest.raises(KeyError):
+        configure_operator_auth("not_a_provider")
 
     state_after = workflow_state_repository().load()
     assert state_after.auth.provider == auth_provider_before

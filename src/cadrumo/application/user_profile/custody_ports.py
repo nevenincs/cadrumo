@@ -920,18 +920,6 @@ class ProfileBucketStoragePort(Protocol):
         ...
 
 
-class ProfileSecureObjectInventoryPort(Protocol):
-    """Read-only namespace inventory for the authenticated active bucket."""
-
-    def list_namespaces(self) -> tuple[str, ...]:
-        """Return the registered namespaces present in the active bucket."""
-        ...
-
-    def list_keys(self, namespace: str) -> tuple[str, ...]:
-        """Return object keys present in one namespace."""
-        ...
-
-
 class ProfileCustodyInventoryEntryPort(Protocol):
     """One non-secret capsule member observed by physical custody storage."""
 
@@ -1140,10 +1128,6 @@ class ProfileCustodyPort(Protocol):
 
     def clear_output_language_hint(self, *, storage_root: Path, bucket_id: str) -> None:
         """Remove the hint when the preference it mirrors is cleared."""
-        ...
-
-    def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
-        """Return active-bucket namespace inventory."""
         ...
 
     def collect_profile_custody_carry(
@@ -1375,24 +1359,6 @@ def clear_profile_output_language_hint(*, storage_root: Path, bucket_id: str) ->
     )
 
 
-def default_profile_secure_object_inventory() -> ProfileSecureObjectInventoryPort:
-    """Return active-bucket namespace inventory through the application port.
-
-    DECLARED, NOT YET REACHED. No application module lists namespaces, so this
-    accessor has no caller and neither does the port method under it. Its
-    siblings do -- the crypto port at four production references, bucket
-    storage at three, the output-language hint at two -- which is why the
-    absence is invisible from inside a module this live.
-
-    The operation itself is real and performed: the participation index calls
-    ``list_keys`` straight on its own ``SecureObjectRepository``. That is an
-    adapter using persistence it owns, which is allowed, and it is why this is a
-    port waiting for an application-layer consumer rather than a facade some
-    other construct displaced.
-    """
-    return profile_custody_port().secure_object_inventory()
-
-
 def default_profile_record_crypto_port() -> ProfileRecordCryptoPort:
     """Return the production crypto adapter through the application port."""
     return profile_custody_port().record_crypto()
@@ -1605,11 +1571,6 @@ def profile_custody_record_session_material(
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)
 
 
-def profile_is_authentication_failure(error: BaseException) -> bool:
-    """Recognise the typed authentication refusals without leaking adapter types."""
-    return profile_custody_port().is_authentication_failure(error)
-
-
 def profile_is_keyring_unavailable(error: BaseException) -> bool:
     """Recognise a keychain persistence refusal for the process-scoped fallback."""
     return profile_custody_port().is_keyring_unavailable(error)
@@ -1688,7 +1649,6 @@ __all__ = [
     "ProfileRecordCryptoPort",
     "ProfileRecordEncryptedBlob",
     "ProfileRecoveryKeyPort",
-    "ProfileSecureObjectInventoryPort",
     "ProfileSnapshotPersistencePort",
     "bind_profile_custody_port",
     "canonical_snapshot_bytes",
@@ -1701,7 +1661,6 @@ __all__ = [
     "default_profile_bucket_storage",
     "default_profile_custody_local_record_store",
     "default_profile_record_crypto_port",
-    "default_profile_secure_object_inventory",
     "ensure_profile_custody_owner_root",
     "export_profile_recovery_artifact",
     "map_profile_authentication_proof_failure",
@@ -1711,7 +1670,6 @@ __all__ = [
     "profile_custody_recovery_envelope_path",
     "profile_custody_secure_object_namespace",
     "profile_custody_secure_object_repository",
-    "profile_is_authentication_failure",
     "profile_is_keyring_unavailable",
     "profile_is_persistence_failure",
     "prove_profile_recovery_artifact",

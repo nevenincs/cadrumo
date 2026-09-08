@@ -430,13 +430,12 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
     """
     from ..adapters.persistence.storage.custody.capsule import (
         load_committed_profile_custody_label_record,
-        replace_committed_profile_custody_data_file,
     )
     from ..adapters.persistence.storage.custody.capsule_records import (
-        PROFILE_CUSTODY_LABEL_FILENAME,
         ProfileCustodyCapsuleLabel,
     )
     from ..adapters.persistence.storage.custody.label_head_repository import ProfileLabelHeadRepository
+    from ..adapters.persistence.storage.custody.tests.support import replace_test_profile_custody_label_file
     from ..core.config import load_settings
     from ..core.hashing import prefixed_digest
 
@@ -461,9 +460,8 @@ def forge_colliding_capsule_label(*, profile_id: UUID, label: str, root: Path | 
         current_label=current,
         replacement_label=replacement,
     )
-    replace_committed_profile_custody_data_file(
+    replace_test_profile_custody_label_file(
         profile_id,
-        PROFILE_CUSTODY_LABEL_FILENAME,
         replacement.canonical_json_bytes(),
         expected_sha256=prefixed_digest(current.canonical_json_bytes()),
         root=resolved_root,

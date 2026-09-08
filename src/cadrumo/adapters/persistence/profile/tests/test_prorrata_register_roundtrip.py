@@ -34,6 +34,7 @@ import pydantic
 import pytest
 
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.modelo import Modelo
 from .....core.prorrata_register import (
     ProrrataActivityRowType,
     ProrrataEspecialTransitionKind,
@@ -42,6 +43,8 @@ from .....core.prorrata_register import (
     SectorDiferenciadoLetra,
 )
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from .....domain.prorrata_register.register import (
     PRORRATA_REGISTER_SCHEMA_VERSION,
@@ -53,11 +56,15 @@ from .....domain.prorrata_register.register import (
     SectorDefinition,
 )
 from .....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ....persistence.storage.errors import SecureObjectRevisionConflictError, StorageValidationError
+from ....persistence.storage.errors import EnvelopeVersionError, SecureObjectRevisionConflictError
 from ....persistence.storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
+    return bundled_authority().snapshot(Modelo.M303.value, filing_year=ejercicio, period="4T").snapshot_ref
 
 
 def test_repository_satisfies_the_revisioned_prorrata_port(tmp_path: Path) -> None:
@@ -73,6 +80,7 @@ def _populated_register() -> ProrrataRegister:
         provisional_percentage=Decimal("80"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="303:2023:4T",
+        source_registry_snapshot_refs=(_m303_snapshot_ref(2023),),
         definitive_percentage=Decimal("77"),
         definitive_volume_con_derecho=Decimal("154000.00"),
         definitive_volume_sin_derecho=Decimal("46000.00"),
@@ -88,12 +96,14 @@ def _populated_register() -> ProrrataRegister:
             kind=ProrrataEspecialTransitionKind.OPCION,
             evidence_reference="modelo-303-2024-prorrata-opcion",
         ),
+        source_registry_snapshot_refs=(),
     )
     interrupted = ProrrataRegisterEntry(
         ejercicio=2023,
         regime=ProrrataRegisterRegime.NINGUNA,
         especial_transition=None,
         interrupted=True,
+        source_registry_snapshot_refs=(),
     )
     sector_definition = SectorDefinition(
         sector_id="arrendamiento",
@@ -134,6 +144,7 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         assert carried.provisional_percentage == Decimal("80")
         assert carried.provisional_provenance is ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
         assert carried.source_observation_ref == "303:2023:4T"
+        assert carried.source_registry_snapshot_refs == (_m303_snapshot_ref(2023),)
         assert carried.definitive_percentage == Decimal("77")
         assert carried.definitive_volume_con_derecho == Decimal("154000.00")
         assert carried.definitive_volume_sin_derecho == Decimal("46000.00")
@@ -232,23 +243,22 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
 
         with pytest.raises(ProrrataRegisterError, match="unable to load prorrata register") as exc_info:
             repo.load()
-        assert isinstance(exc_info.value.__cause__, StorageValidationError)
-        assert "requires explicit schema migration before read" in str(exc_info.value.__cause__)
+        assert isinstance(exc_info.value.__cause__, EnvelopeVersionError)
 
 
 def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
     """Declaring an entry for an existing (ejercicio, sector) key replaces it in place."""
-    from ..prorrata_register import declare_prorrata_entry
-
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="789a648c-8348-42bc-b1b4-425b2de7d703"):
+        repository = ProrrataRegisterRepository()
         first = ProrrataRegisterEntry(
             ejercicio=2024,
             regime=ProrrataRegisterRegime.GENERAL,
             especial_transition=None,
             provisional_percentage=Decimal("80"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_registry_snapshot_refs=(_m303_snapshot_ref(2023),),
         )
-        declare_prorrata_entry(first)
+        repository.upsert_entry(first)
         settled = first.model_copy(
             update={
                 "definitive_percentage": Decimal("77"),
@@ -256,7 +266,7 @@ def test_register_upsert_replaces_entry_by_key(tmp_path: Path) -> None:
                 "definitive_volume_sin_derecho": Decimal("46000.00"),
             }
         )
-        register = declare_prorrata_entry(settled)
+        register = repository.upsert_entry(settled)
         assert len(register.entries_for_ejercicio(2024)) == 1
         assert register.entry_for(2024) == settled
 
@@ -272,6 +282,7 @@ def test_register_upserts_retain_encrypted_activity_rows(tmp_path: Path) -> None
                 ejercicio=2024,
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         )
         repo.upsert_sector_definition(

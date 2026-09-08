@@ -14,6 +14,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -84,6 +85,12 @@ def _seed_revision(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_M130_INGRESOS_CASILLA: str(value)},
         binding_overrides={},

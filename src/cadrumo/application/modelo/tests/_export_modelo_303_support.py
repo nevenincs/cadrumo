@@ -17,6 +17,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -50,12 +51,19 @@ from ._export_test_support import _seed_profile, _synthetic_valid_nif
 from .justificante_metadata import persist_justificante_metadata
 
 
+def _m303_snapshot_ref(period: str) -> RegistrySnapshotRef:
+    return bundled_authority().snapshot("303", filing_year=2026, period=period).snapshot_ref
+
+
 def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompensationReconciliationDecision:
     now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    source_ref = _m303_snapshot_ref("1T")
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, period),
+        target_registry_snapshot_ref=_m303_snapshot_ref(period),
+        source_registry_snapshot_refs=(source_ref,),
         selected_authority="missing",
         selected_amount=None,
         wallet_amount=Decimal("1200.00"),
@@ -66,6 +74,24 @@ def _blocked_wallet_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCom
         stale_wallet=False,
         reason_identity="wallet_local_recurrence_divergence",
         wallet_captured_at=now,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="aeat_wallet",
+                amount=Decimal("1200.00"),
+                source_locator="aeat-wallet:synthetic-modelo-303-export-divergence",
+                captured_at=now,
+                registry_snapshot_refs=(),
+            ),
+            IvaCompensationAuthoritySource(
+                source_kind="local_recurrence",
+                amount=Decimal("800.00"),
+                source_locator="observation-envelope:303:2026:1T",
+                source_modelo="303",
+                source_filing_year=2026,
+                source_periods=(Period.from_year_and_code(2026, "1T"),),
+                registry_snapshot_refs=(source_ref,),
+            ),
+        ),
         decided_at=now,
     )
 
@@ -76,10 +102,13 @@ def _filed_history_only_wallet_decision(
     period: str = "2T",
 ) -> IvaCompensationReconciliationDecision:
     now = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
+    source_ref = _m303_snapshot_ref("1T")
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, period),
+        target_registry_snapshot_ref=_m303_snapshot_ref(period),
+        source_registry_snapshot_refs=(source_ref,),
         selected_authority="filed_history",
         selected_amount=Decimal("800.00"),
         wallet_amount=None,
@@ -90,6 +119,17 @@ def _filed_history_only_wallet_decision(
         stale_wallet=False,
         reason_identity="filed_history_requires_override",
         wallet_captured_at=None,
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="filed_history_observation",
+                amount=Decimal("800.00"),
+                source_locator="observation-envelope:303:2026:1T",
+                source_modelo="303",
+                source_filing_year=2026,
+                source_periods=(Period.from_year_and_code(2026, "1T"),),
+                registry_snapshot_refs=(source_ref,),
+            ),
+        ),
         decided_at=now,
     )
 
@@ -100,6 +140,8 @@ def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompen
         taxpayer_nif=taxpayer_nif,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, period),
+        target_registry_snapshot_ref=_m303_snapshot_ref(period),
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),
@@ -116,6 +158,7 @@ def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompen
                 amount=Decimal("1200.00"),
                 source_locator="aeat-wallet:synthetic-modelo-303-export-wallet-only",
                 captured_at=now,
+                registry_snapshot_refs=(),
             ),
         ),
         decided_at=now,
@@ -230,6 +273,12 @@ def _seed_modelo_303_1t_clean_state(
     prior_revision = CalculationRevision(
         calculation_revision_id=prior_revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=values,
         observations=prior_observations,

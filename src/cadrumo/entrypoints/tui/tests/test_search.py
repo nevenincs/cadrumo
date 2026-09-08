@@ -41,7 +41,6 @@ from ..navigation import (
 )
 from ..search import (
     _RESULT_STATUS_LOCALE_KEYS,
-    _SEARCH_LOCALE_KEYS,
     WorkbenchCommandProviderV1,
     WorkbenchSearchProviderV1,
     _destination_text,
@@ -237,11 +236,6 @@ def test_search_copy_is_available_and_human_facing_in_every_locale(locale: str) 
     result = response.results[0]
     strict_token = I18N_STRICT_MISSING_KEYS.set(True)
     try:
-        for key in _SEARCH_LOCALE_KEYS:
-            if key == "tui.search.result.address":
-                tr(key, locale=locale, modelo="303", filing_year=2025, period="1T")
-            else:
-                tr(key, locale=locale)
         rendered = _result_text(result, locale=locale)
         destination = _destination_text("workbench.declarations", locale=locale)
         action = workbench_action_label("operator.declaration.open", locale=locale)

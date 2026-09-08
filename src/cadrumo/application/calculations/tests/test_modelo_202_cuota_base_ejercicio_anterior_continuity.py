@@ -53,7 +53,11 @@ from ....domain.calculations.registry.bindings import (
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
-from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
+from ....tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
@@ -138,7 +142,18 @@ def _seed_m200_cuota_liquida(*, source_year: int, cuota: Decimal, obs_repo: Calc
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=_MODELO_200,
+                filing_year=source_year,
+                period="0A",
+                observations=registry_grounded_observations(
+                    modelo=_MODELO_200,
+                    filing_year=source_year,
+                    period="0A",
+                    casilla_values={_M200_CUOTA_LIQUIDA_CASILLA: cuota},
+                    grade=RegistryAuthorityGrade.CALCULATION,
+                ),
+            )))
     )
 
 
@@ -173,7 +188,15 @@ def _seed_m202_1p(
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        )
+        stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
+                modelo=_MODELO_202,
+                filing_year=filing_year,
+                period="1P",
+                casilla_values={
+                    _M202_BASE_CASILLA: base,
+                    _M202_1P_PAGO_CASILLA: pago,
+                },
+            )))
     )
 
 

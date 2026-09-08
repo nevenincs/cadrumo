@@ -48,6 +48,7 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..aggregation import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
+from .revision_carry_gate import revision_carry_outcome
 
 _SOURCE_KIND = BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
 _SOURCE_CASILLA_VALUES: tuple[CasillaId, ...] = ("51", "53", "52", "54", "55", "56", "57", "58")
@@ -125,6 +126,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             target_filing_year=target.filing_year,
             values=values,
         )
+        self._require_registry_coordinates_current(handoff)
         binding_values = {
             binding_id: values[casilla_id]
             for casilla_id, binding_id in requirement.binding_ids_by_summary_casilla_id.items()
@@ -186,6 +188,7 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary target revision is missing its immutable handoff",
             )
+        self._require_registry_coordinates_current(persisted)
         if target_revision.work_unit_id != target_work_unit.work_unit_id:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary target revision does not belong to its target work unit",
@@ -209,6 +212,16 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 "M303 annual-summary persisted handoff no longer matches its exact filed source",
             )
+
+    @staticmethod
+    def _require_registry_coordinates_current(handoff: M303RegimenSimplificadoAnnualSummaryHandoff) -> None:
+        for snapshot_ref in (handoff.source_registry_snapshot_ref, handoff.target_registry_snapshot_ref):
+            outcome = revision_carry_outcome(snapshot_ref)
+            if outcome.refused:
+                raise M303RegimenSimplificadoAnnualSummaryHandoffError(
+                    "M303 annual-summary registry coordinate cannot be re-confirmed: "
+                    f"{snapshot_ref.revision_id}: {outcome.detail}"
+                )
 
     def _target_work_unit(self, context: CalculationSourceContext) -> WorkUnit:
         if context.work_unit_id is None:
@@ -269,6 +282,12 @@ class M303RegimenSimplificadoAnnualSummarySourceResolver:
         if revision is None:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(
                 f"M303 annual-summary handoff filed calculation revision {filed_id!r} is unavailable",
+            )
+        outcome = revision_carry_outcome(revision.registry_snapshot_ref)
+        if outcome.refused:
+            raise M303RegimenSimplificadoAnnualSummaryHandoffError(
+                "M303 annual-summary source calculation coordinate cannot be re-confirmed: "
+                f"{revision.registry_snapshot_ref.revision_id}: {outcome.detail}",
             )
         if revision.work_unit_id != source.work_unit_id or revision.state is not CalculationRevisionState.PRESENTADO:
             raise M303RegimenSimplificadoAnnualSummaryHandoffError(

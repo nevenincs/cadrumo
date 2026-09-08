@@ -12,7 +12,6 @@ from typing import Final, cast
 
 from .....core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from .errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
-from .records import ProfileCustodyKdfParameters
 
 KDF_FRAME_MAGIC: Final = b"CKDF"
 KDF_FRAME_VERSION: Final = 1
@@ -44,10 +43,6 @@ def decode_canonical_b64(value: str, *, field_name: str, expected_bytes: int | N
     if base64.b64encode(decoded).decode("ascii") != value:
         raise ValueError(f"{field_name} must be canonical base64")
     return decoded
-
-
-def kdf_strength(parameters: ProfileCustodyKdfParameters) -> tuple[int, int, int]:
-    return (parameters.memory_mib, parameters.iterations, parameters.parallelism)
 
 
 def read_kdf_frame_to_queue(fd: int, result_queue: queue.Queue[tuple[int, bytes] | BaseException]) -> None:

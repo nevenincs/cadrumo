@@ -32,7 +32,6 @@ from ....core.resources.bundled_data import bundled_path as _bundled_path
 from ._snapshot_internals import _build_validated_snapshot
 from ._source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ._supplementary_orden import collect_supplementary_orden_fingerprints, compile_supplementary_ordenes
-from ._supported_filing_years import SupportedFilingYearGap, audit_supported_filing_years
 from ._validate import RegistryValidator
 from ._validate_evidence import flush_corpus_text_cache
 from ._verdict_cache import (
@@ -445,7 +444,6 @@ class ValidatedRegistryAuthority:
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _authorization_manifest: AuthorizationManifest
-    _supported_filing_year_gaps: tuple[SupportedFilingYearGap, ...]
     _capture_generation: int = field(default=0, init=False, repr=False)
     _capture_reset_epoch: int = field(default=0, init=False, repr=False)
     _capture_state: _AuthorityLoadState | None = field(default=None, init=False, repr=False)
@@ -584,51 +582,6 @@ class ValidatedRegistryAuthority:
             The loaded :class:`AuthorizationManifest` object.
         """
         return self._authorization_manifest
-
-    @property
-    def supported_filing_year_gaps(self) -> tuple[SupportedFilingYearGap, ...]:
-        """Return the complete advisory gap projection for declared years."""
-        return self._supported_filing_year_gaps
-
-    def filing_bound_advisories_for_cell(
-        self,
-        modelo_id: str,
-        *,
-        filing_year: int,
-        period: str,
-    ) -> tuple[str, ...]:
-        """Return advisory lines for the exact cell being resolved, if it is bounded.
-
-        The whole-corpus projection carries every gapped cell, which is far too
-        many to surface on a resolution: an operator filing one period does not
-        need the other several hundred. This narrows it to the cell asked for,
-        so a caller can attach an advisory only when THIS filing is the one the
-        corpus cannot fully back.
-
-        Advisory, never a refusal. A bounded cell can still be calculated and
-        inspected; what the operator loses is the assurance that a bundled AEAT
-        or BOE artefact backs it, that its revision declares filing grade, or
-        that a revision resolves for it at all. Refusing here would take away
-        the surface that reports the problem.
-
-        Args:
-            modelo_id: The modelo being resolved.
-            filing_year: The filing year being resolved.
-            period: The registry period token being resolved.
-
-        Returns:
-            One line per missing prerequisite for this cell, sorted. Empty when
-            the cell carries every prerequisite declared support requires.
-        """
-        matching = sorted(
-            gap.missing_prerequisite
-            for gap in self._supported_filing_year_gaps
-            if gap.modelo == modelo_id and gap.filing_year == filing_year and str(gap.period) == period
-        )
-        return tuple(
-            f"modelo {modelo_id} {filing_year} {period}: declared support is not fully backed -- missing {prerequisite}"
-            for prerequisite in matching
-        )
 
     def modelo_has_engine(self, modelo_id: str) -> bool:
         """Return whether ``modelo_id`` declares a calculation surface.
@@ -1196,11 +1149,6 @@ def construct_authority(
         # The manifest is fingerprinted into _collect_registry_tree_fingerprints
         # so the current-identity slot invalidates when the manifest changes on disk.
         _authorization_manifest=load_authorization_manifest(root),
-        _supported_filing_year_gaps=audit_supported_filing_years(
-            modelos,
-            catalogue=supported_filing_years,
-            sources=catalogues.sources,
-        ),
     )
     return authority
 

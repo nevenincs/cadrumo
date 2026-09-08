@@ -12,7 +12,10 @@ from ....core.operator_action_enums import ActionConditionality, NoRecoveryOutco
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
-from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ..iva_wallet_gate import apply_iva_compensation_decision_binding as _apply_iva_compensation_decision_binding
 
@@ -50,10 +53,27 @@ def _decision(
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
+        target_registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
+        source_registry_snapshot_refs=(
+            bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
+        ),
         selected_authority="aeat_wallet" if not blocked else "missing",
         selected_amount=amount,
         wallet_amount=Decimal("1200"),
         local_recurrence_amount=Decimal("1200") if not blocked else Decimal("800"),
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="local_recurrence",
+                amount=Decimal("1200") if not blocked else Decimal("800"),
+                source_locator="test:local-recurrence:2026:2T",
+                source_modelo="303",
+                source_filing_year=2026,
+                source_periods=(Period.from_year_and_code(2026, "2T"),),
+                registry_snapshot_refs=(
+                    bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
+                ),
+            ),
+        ),
         override_amount=None,
         divergence="match" if not blocked else "wallet_higher",
         blocked=blocked,

@@ -24,7 +24,7 @@ from ....domain.iva_compensation.errors import (
     IvaCompensationSeedConflictError,
     IvaCompensationYearRangeError,
 )
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import IvaCompensationModeloError
 from ..iva_compensation_history import (
@@ -78,7 +78,14 @@ def _history_state_from_filed_observation(observation: object):
                 source_locator=f"test-filed-observation:{observation.ejercicio}:{observation.period.registry_token}",
             ),
         ),
-        normalize_m303_carry=True,
+        stamped_revision_id=revision_id_for_observation(
+            registry_grounded_modelo_observation(
+                modelo=observation.modelo,
+                filing_year=observation.ejercicio,
+                period=observation.period.registry_token,
+                casilla_values={casilla.casilla_id: casilla.decimal_value() for casilla in observation.casillas},
+            )
+        ),
     )
     return iva_compensation_state_from_observation_envelope(
         envelope,
@@ -232,6 +239,14 @@ def test_iva_compensation_history_refuses_a_non_303_envelope() -> None:
         ),
         source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
         captured_at=observation.presented_at,
+        stamped_revision_id=revision_id_for_observation(
+            registry_grounded_modelo_observation(
+                modelo=observation.modelo,
+                filing_year=observation.ejercicio,
+                period=observation.period.registry_token,
+                casilla_values={},
+            )
+        ),
     )
     with pytest.raises(M303CarryIngressError):
         iva_compensation_state_from_observation_envelope(

@@ -6,7 +6,6 @@ import json
 
 import pytest
 
-from ....core.config import override_settings
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
@@ -195,21 +194,20 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
     assert _payload(listed.output)["work_unit_count"] == 0
 
 
-def test_m210_engine_live_work_create_refuses_legacy_non_eea_irnr_missing_representante() -> None:
+def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() -> None:
     _create_gb_non_resident_profile()
     _remove_representante_fields_from_operator_profile()
 
-    with override_settings(cadrumo_m210_engine_live=True):
-        result = _invoke(
-            [
-                "--format", "json",
-                "app", "modelo", "work", "create",
-                "--modelo", "210",
-                "--year", "2025",
-                "--period", "EVENT-1",
-                "--revision", "2025",
-            ],
-        )  # fmt: skip
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "210",
+            "--year", "2025",
+            "--period", "EVENT-1",
+            "--revision", "2025",
+        ],
+    )  # fmt: skip
 
     assert result.exit_code != 0, result.output
     payload = json.loads(result.output)

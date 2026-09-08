@@ -8,6 +8,7 @@ import pytest
 
 from ....core.config import override_settings
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -30,6 +31,12 @@ _NOW = datetime(2026, 7, 2, 10, 30, tzinfo=UTC)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _REVISION_ID = "2019-y-siguientes"
 _PERIOD = Period.from_year_and_code(2026, "1T")
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="130",
+    revision_id=_REVISION_ID,
+    modelo_year=2026,
+    period="1T",
+)
 _WORK_UNIT_ID = derive_work_unit_id(
     bucket_id=_BUCKET_ID,
     modelo="130",
@@ -51,6 +58,7 @@ def _draft_revision() -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=_WORK_UNIT_ID,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         created_at=_NOW,
         updated_at=_NOW,
@@ -63,6 +71,7 @@ def _verified_revision() -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=_draft_revision().calculation_revision_id,
         work_unit_id=_WORK_UNIT_ID,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         created_at=_NOW,
         updated_at=_NOW,

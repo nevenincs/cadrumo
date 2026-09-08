@@ -12,6 +12,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -88,6 +89,12 @@ def _seed_calculation(
             CalculationRevision(
                 calculation_revision_id=calculation_revision_id,
                 work_unit_id=work_unit_id,
+                registry_snapshot_ref=RegistrySnapshotRef(
+                    modelo=_MODELO,
+                    revision_id=revision_id,
+                    modelo_year=2026,
+                    period=period.registry_token,
+                ),
                 state=CalculationRevisionState.BORRADOR,
                 input_values_by_casilla_id={_OUTPUT_CASILLA: str(output)},
                 casilla_values={_OUTPUT_CASILLA: output},

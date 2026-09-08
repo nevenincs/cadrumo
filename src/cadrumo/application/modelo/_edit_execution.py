@@ -44,6 +44,7 @@ from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryPr
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
@@ -269,6 +270,8 @@ def apply_modelo_edit(
         if baseline.current_calculation_revision_id is not None
         else None
     )
+    if current_revision is not None:
+        require_calculation_revision_coordinates_current(current_revision)
     reconstructed_detail_rows = _reconstruct_detail_rows(
         current_detail_rows=current_revision.detail_rows if current_revision is not None else (),
         detail_row_intents=submission.detail_row_intents,

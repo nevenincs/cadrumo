@@ -24,6 +24,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ...calculations.observations_repository import ObservationEnvelopePayload
 from ..draft_review import _prior_filing_observations_fingerprint, empty_prior_filing_observations_fingerprint
 
@@ -103,11 +104,13 @@ def test_prior_filing_fingerprint_tracks_a_text_casilla_without_decimal_coercion
     assert before != after
 
 
-def test_prior_filing_fingerprint_tracks_the_stamped_revision() -> None:
-    before = _prior_filing_observations_fingerprint([_carrier(value="100.00", stamped_revision_id="2019-y-siguientes")])
-    after = _prior_filing_observations_fingerprint([_carrier(value="100.00", stamped_revision_id="2024-y-siguientes")])
+def test_prior_filing_fingerprint_refuses_a_stale_stamped_revision() -> None:
+    _prior_filing_observations_fingerprint([_carrier(value="100.00", stamped_revision_id="2019-y-siguientes")])
 
-    assert before != after
+    with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+        _prior_filing_observations_fingerprint(
+            [_carrier(value="100.00", stamped_revision_id="2024-y-siguientes")],
+        )
 
 
 def test_prior_filing_fingerprint_is_deterministic_and_order_independent() -> None:

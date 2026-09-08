@@ -31,6 +31,7 @@ from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+
 _STARTED = datetime(2026, 8, 14, 9, tzinfo=UTC)
 _OPERATION_ID = "a" * 64
 _SCOPE_REF = operation_conflict_scope_reference(definition_id="test.operation", subject_ref="subject")

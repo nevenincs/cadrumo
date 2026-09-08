@@ -245,6 +245,7 @@ def test_cross_period_dependency_inventory_covers_declared_2026_target_modelos(
         "180",
         "190",
         "193",
+        "200",
         "202",
         "296",
         "303",

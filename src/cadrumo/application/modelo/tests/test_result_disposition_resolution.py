@@ -13,6 +13,7 @@ from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -84,6 +85,12 @@ def _verified_revision(work_unit: WorkUnit, values: dict[CasillaId, Decimal]) ->
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         casilla_values=values,
         observations=registry_grounded_observations(
@@ -113,6 +120,12 @@ def _revision_with_casilla_values(work_unit: WorkUnit, values: dict[CasillaId, D
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         casilla_values=values,
         observations=tuple(

@@ -17,6 +17,7 @@ from ....core.errors.error_codes import ERROR_REGISTRY
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.models import InvoiceCatalogue
@@ -328,6 +329,7 @@ def _seed_prior_m100_zero_carry() -> None:
             ),
             source_kind="app_filing",
             captured_at=datetime(2024, 6, 30, 12, 0, tzinfo=UTC),
+            stamped_revision_id=str(bundled_authority().snapshot("100", filing_year=2023, period="0A").revision.id),
         )
     )
 
@@ -723,7 +725,10 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
     # while leaving the ledger mesh assertions meaningful.
     with open_test_profile_session(bucket_id):
         from ....application.calculations.observations_repository import IvaWalletDecisionRepository
-        from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+        from ....domain.iva_compensation.reconciliation import (
+            IvaCompensationAuthoritySource,
+            IvaCompensationReconciliationDecision,
+        )
 
         TransactionCatalogueRepository(bucket_id=bucket_id).save(
             TransactionCatalogue.from_transactions((sale, purchase)),
@@ -732,10 +737,29 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
+            target_registry_snapshot_ref=bundled_authority().snapshot(
+                "303", filing_year=2026, period="1T"
+            ).snapshot_ref,
+            source_registry_snapshot_refs=(
+                bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+            ),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
             local_recurrence_amount=Decimal("0"),
+            authority_sources=(
+                IvaCompensationAuthoritySource(
+                    source_kind="local_recurrence",
+                    amount=Decimal("0"),
+                    source_locator="test:local-recurrence:2026:1T",
+                    source_modelo="303",
+                    source_filing_year=2026,
+                    source_periods=(Period.from_year_and_code(2026, "1T"),),
+                    registry_snapshot_refs=(
+                        bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+                    ),
+                ),
+            ),
             override_amount=None,
             divergence="wallet_missing",
             blocked=False,
@@ -868,17 +892,39 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     advisory assertions meaningful.
     """
     from ....application.calculations.observations_repository import IvaWalletDecisionRepository
-    from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+    from ....domain.iva_compensation.reconciliation import (
+        IvaCompensationAuthoritySource,
+        IvaCompensationReconciliationDecision,
+    )
 
     with open_test_profile_session(bucket_id):
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
+            target_registry_snapshot_ref=bundled_authority().snapshot(
+                "303", filing_year=2026, period="1T"
+            ).snapshot_ref,
+            source_registry_snapshot_refs=(
+                bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+            ),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
             local_recurrence_amount=Decimal("0"),
+            authority_sources=(
+                IvaCompensationAuthoritySource(
+                    source_kind="local_recurrence",
+                    amount=Decimal("0"),
+                    source_locator="test:local-recurrence:2026:1T",
+                    source_modelo="303",
+                    source_filing_year=2026,
+                    source_periods=(Period.from_year_and_code(2026, "1T"),),
+                    registry_snapshot_refs=(
+                        bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
+                    ),
+                ),
+            ),
             override_amount=None,
             divergence="wallet_missing",
             blocked=False,

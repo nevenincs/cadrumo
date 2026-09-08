@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any
 
 import pytest
 
@@ -16,7 +15,6 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import (
     ModeloCasillaProvenance,
     ModeloDraft,
@@ -33,10 +31,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.row_models import Modelo349OperadorRow
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.submission.models import ModeloDraftStatus
-from ....entrypoints.cli._modelo_rendering import (
-    calculation_revision_lines,
-    calculation_revision_payload,
-)
 from ....tests.registry_snapshot import build_snapshot
 from ...filing.draft_construction import _filing_binding_values
 from .._calculation_helpers import build_typed_observations
@@ -143,37 +137,6 @@ def _calculated_revision(
     input_values = {casilla_id: str(value) for casilla_id, value in inputs.items()}
     binding_overrides = {binding_id: str(value) for binding_id, value in binding_values.items()}
     detail_rows = (row,)
-    legacy_revision = CalculationRevision(
-        calculation_revision_id=derive_calculation_revision_id(
-            work_unit_id=work_unit.work_unit_id,
-            input_values_by_casilla_id=input_values,
-            binding_overrides=binding_overrides,
-            casilla_values=raw_casilla_values,
-            detail_rows=detail_rows,
-            filing_instance_evidence=None,
-            source_provenance=(),
-        ),
-        work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.BORRADOR,
-        input_values_by_casilla_id=input_values,
-        binding_overrides=binding_overrides,
-        casilla_values=raw_casilla_values,
-        observations=raw_observations,
-        detail_rows=detail_rows,
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    calc_lines: Any = calculation_revision_lines
-    calc_payload: Any = calculation_revision_payload
-    legacy_rendered_revision = "\n".join(calc_lines(legacy_revision))
-    legacy_payload = calc_payload(legacy_revision)
-    assert "casilla\top." not in legacy_rendered_revision
-    assert "casilla\trect." not in legacy_rendered_revision
-    assert not any(casilla_id.startswith("op.") for casilla_id in legacy_payload.casilla_values)
-    assert not any(casilla_id.startswith("rect.") for casilla_id in legacy_payload.casilla_values)
-
     casilla_values, observations = _suppress_m349_row_field_template_outputs(
         work_unit=work_unit,
         revision=snapshot.revision,
@@ -195,6 +158,7 @@ def _calculated_revision(
         CalculationRevision(
             calculation_revision_id=revision_id,
             work_unit_id=work_unit.work_unit_id,
+            registry_snapshot_ref=snapshot.snapshot_ref,
             state=CalculationRevisionState.BORRADOR,
             input_values_by_casilla_id=input_values,
             binding_overrides=binding_overrides,
@@ -237,12 +201,7 @@ def _approved_draft(
         for casilla in sorted(snapshot.revision.casillas, key=lambda item: item.id)
     )
     schema_version = f"registry:{snapshot.modelo.id}:{snapshot.revision.id}"
-    snapshot_ref = RegistrySnapshotRef(
-        modelo="349",
-        revision_id=snapshot.revision.id,
-        modelo_year=2026,
-        period=work_unit.period.registry_token,
-    )
+    snapshot_ref = snapshot.snapshot_ref
     draft_id = compute_modelo_draft_id(
         modelo="349",
         period=work_unit.period,

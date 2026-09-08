@@ -94,22 +94,6 @@ from .inventory import (
     repo_relative,
     resolve_dotted_origin,
 )
-from .size_budget import (
-    CALLABLE_POLICY,
-    MIN_SCANNED_CALLABLES,
-    MIN_SCANNED_MODULES,
-    MODULE_POLICY,
-    BudgetPolicy,
-    EmptyScanError,
-    assert_real_corpus,
-    build_limits,
-    callable_key,
-    evaluate_budget,
-    measure_callable_lines,
-    measure_module_lines,
-    scan_callable_lines,
-    scan_module_lines,
-)
 
 if TYPE_CHECKING:
     from .filing_evidence import general_m303_filing_evidence
@@ -119,38 +103,26 @@ FIXTURES_DIR: Path = Path(__file__).resolve().parent / "fixtures"
 """Root of the on-disk fixture tree bundled with the package."""
 
 __all__ = [
-    "CALLABLE_POLICY",
     "FIXTURES_DIR",
-    "MIN_SCANNED_CALLABLES",
-    "MIN_SCANNED_MODULES",
-    "MODULE_POLICY",
     "REPO_ROOT",
     "SRC_CADRUMO",
-    "BudgetPolicy",
-    "EmptyScanError",
     "aeat_relative",
     "apply_collection_storage_root",
     "assert_grammar_vocabulary_is_declared",
     "assert_path_matches_grammar",
-    "assert_real_corpus",
     "ast_for_path",
     "bare_utf8_literal_violations",
     "bucket_id",
-    "build_limits",
-    "callable_key",
     "cast_call_linenos",
     "cast_rationale_violations",
     "collection_storage_root",
     "discover_test_control_modules",
     "discover_test_modules",
-    "evaluate_budget",
     "general_m303_filing_evidence",
     "has_marker_on_line_or_adjacent_comment_block",
     "import_binding_map",
     "leaf_name",
     "literal_directory_runs",
-    "measure_callable_lines",
-    "measure_module_lines",
     "module_name",
     "modules_declaring_class",
     "non_test_package_python_files",
@@ -171,8 +143,6 @@ __all__ = [
     "repo_path",
     "repo_relative",
     "resolve_dotted_origin",
-    "scan_callable_lines",
-    "scan_module_lines",
     "temporary_env",
 ]
 

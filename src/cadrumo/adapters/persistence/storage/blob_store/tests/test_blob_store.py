@@ -32,6 +32,7 @@ from ..blob_store import BlobManifest, BlobReference, EncryptedBlobStore
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+
 _SESSION_OPENED_AT = datetime(2099, 5, 28, 11, 45, 0, tzinfo=UTC)
 _BAD_DIGESTS = (
     "../" + ("a" * 61),

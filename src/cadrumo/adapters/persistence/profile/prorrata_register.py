@@ -44,18 +44,6 @@ _log = get_logger(__name__)
 PRORRATA_REGISTER_FILENAME = "prorrata-register.secure-object"
 
 
-def declare_prorrata_entry(entry: ProrrataRegisterEntry) -> ProrrataRegister:
-    """Atomically add or replace ``entry`` in the encrypted register by its key.
-
-    Args:
-        entry: The per-ejercicio entry to insert or update.
-
-    Returns:
-        The updated :class:`ProrrataRegister` including the entry.
-    """
-    return ProrrataRegisterRepository().upsert_entry(entry)
-
-
 class ProrrataRegisterRepository:
     """Governed repository for the encrypted register singleton.
 
@@ -272,5 +260,4 @@ class ProrrataRegisterRepository:
 
 __all__ = [
     "ProrrataRegisterRepository",
-    "declare_prorrata_entry",
 ]

@@ -28,6 +28,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -57,6 +58,18 @@ def _prior_revision_id() -> str:
     return str(snapshot.revision.id)
 
 
+def _prior_registry_snapshot_ref() -> RegistrySnapshotRef:
+    return (
+        bundled_authority()
+        .snapshot(
+            Modelo.M303.value,
+            filing_year=_PRIOR_YEAR,
+            period=_SETTLEMENT_PERIOD,
+        )
+        .snapshot_ref
+    )
+
+
 def _save_prior_prorrata_observation(repo: CalculationObservationRepository, *, percentage: Decimal) -> None:
     observation = registry_grounded_modelo_observation(
         modelo=Modelo.M303.value,
@@ -82,6 +95,7 @@ def _carried_entry(*, percentage: Decimal) -> ProrrataRegisterEntry:
         provisional_percentage=percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=_SOURCE_REF,
+        source_registry_snapshot_refs=(_prior_registry_snapshot_ref(),),
     )
 
 
@@ -98,6 +112,7 @@ def _override_entry(
         provisional_percentage=percentage,
         provisional_provenance=provenance,
         authorisation_reference=reference,
+        source_registry_snapshot_refs=(),
     )
 
 

@@ -131,9 +131,8 @@ def validate_normalized_m303_carry_observation_envelope(
     normalization. Re-running the ingress independently establishes what the
     canonical projection would be; requiring it to equal the supplied envelope
     prevents a caller from selecting either semantic amount after validation.
-    Legacy envelopes remain readable through the observation repository, but
-    cannot pass this carry-consumer boundary without a disposition and explicit
-    normalized pair.
+    Every supported Modelo 303 writer produces this canonical shape; an
+    unnormalized payload is invalid persisted state, not a compatibility form.
     """
     if str(envelope.observation.modelo) != Modelo.M303.value:
         raise M303CarryIngressError(

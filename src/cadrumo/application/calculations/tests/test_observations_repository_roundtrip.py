@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta, timezone
 from decimal import Decimal
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -23,9 +24,13 @@ from pydantic import ValidationError
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import EnvelopeVersionError
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
+from ....core.result_disposition import ResultDisposition
 from ....core.secure_object_write import SecureObjectWrite
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....domain.iva_compensation.filed_derivation import M303CompensationBasis
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationDecisionReason,
@@ -43,9 +48,11 @@ from ..observations_repository import (
     IvaWalletDecisionRepository,
     ObservationEnvelopePayload,
     ObservationSourceKind,
+    ResultDispositionProjection,
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
 )
+from ._iva_compensation_history_support import m303_registry_snapshot_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -58,6 +65,11 @@ _M130_ABSENT_BY_DESIGN_CASILLA: CasillaId = validated_casilla_id("15")
 _M130_PAYMENT_BASE_CASILLA: CasillaId = validated_casilla_id("14")
 _M303_PERIOD_CASILLA: CasillaId = validated_casilla_id("decl.periodo")
 _CAPTURED_AT = datetime(2026, 5, 28, 11, 35, 0, tzinfo=UTC)
+
+
+@cache
+def _revision_id(modelo: str, filing_year: int, period: str) -> str:
+    return bundled_authority().admitted_revision_id(modelo, filing_year=filing_year, period=period)
 
 
 def _populated_observation() -> RegistryModeloObservation:
@@ -97,6 +109,17 @@ def _populated_observation() -> RegistryModeloObservation:
     )
 
 
+def _m303_ingreso_header() -> tuple[ObservedHeaderFact, ...]:
+    return (
+        ObservedHeaderFact(
+            header_key="declaration_type",
+            value="I",
+            source_artefact_kind="submitted_file",
+            source_locator="modelo-303:roundtrip-fixture:declaration_type",
+        ),
+    )
+
+
 def test_calculation_observation_survives_encrypted_storage_roundtrip(
     tmp_path: Path,
 ) -> None:
@@ -105,28 +128,28 @@ def test_calculation_observation_survives_encrypted_storage_roundtrip(
     with isolated_runtime_profile(tmp_path=tmp_path):
         original = _populated_observation()
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                original,
-                source_kind="aeat_sede_justificante",
-                captured_at=_CAPTURED_AT,
-                source_metadata={
-                    "aeat_register_status": "ALTA",
-                    "aeat_expediente_id": "202530300000001Z",
-                },
-            )
+        prepared = repo.prepare_observation_envelope(
+            original,
+            source_kind="aeat_sede_justificante",
+            stamped_revision_id=_revision_id("303", 2025, "1T"),
+            captured_at=_CAPTURED_AT,
+            source_headers=_m303_ingreso_header(),
+            source_metadata={
+                "aeat_register_status": "ALTA",
+                "aeat_expediente_id": "202530300000001Z",
+            },
         )
+        repo.save(prepared)
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
 
-        assert loaded is not None
-        assert loaded.observation == original
+        assert loaded == prepared
         assert loaded.source_kind == "aeat_sede_justificante"
         assert loaded.captured_at == _CAPTURED_AT
         assert loaded.source_metadata == {
             "aeat_register_status": "ALTA",
             "aeat_expediente_id": "202530300000001Z",
         }
-        assert len(loaded.observation.observations) == 3
+        assert len(loaded.observation.observations) == len(prepared.observation.observations)
         loaded_computed = next(
             observation
             for observation in loaded.observation.observations
@@ -164,7 +187,9 @@ def test_encrypted_observation_roundtrip_detects_a_dropped_text_value(tmp_path: 
             repo.prepare_observation_envelope(
                 original,
                 source_kind="aeat_sede_justificante",
+                stamped_revision_id=_revision_id("303", 2025, "1T"),
                 captured_at=_CAPTURED_AT,
+                source_headers=_m303_ingreso_header(),
             )
         )
         stmt = select(SecureObjectRow).where(
@@ -222,6 +247,7 @@ def test_calculation_observation_repository_rejects_printed_number_reference(
                 repo.prepare_observation_envelope(
                     observation,
                     source_kind="aeat_sede_justificante",
+                    stamped_revision_id=_revision_id("303", 2025, "1T"),
                     captured_at=_CAPTURED_AT,
                 )
             )
@@ -263,6 +289,7 @@ def test_calculation_observation_repository_rejects_printed_operand_casilla_ref(
                 repo.prepare_observation_envelope(
                     observation,
                     source_kind="aeat_sede_justificante",
+                    stamped_revision_id=_revision_id("303", 2025, "1T"),
                     captured_at=_CAPTURED_AT,
                 )
             )
@@ -298,7 +325,13 @@ def test_calculation_observation_repository_rejects_unregistered_m303_annual_ing
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         with pytest.raises(ObservationCasillaReferenceError) as raised:
-            repo.save(repo.prepare_observation_envelope(annual_ingress, source_kind="aeat_sede_justificante"))
+            repo.save(
+                repo.prepare_observation_envelope(
+                    annual_ingress,
+                    source_kind="aeat_sede_justificante",
+                    stamped_revision_id="2025",
+                )
+            )
 
         assert str(raised.value) == "application.calculations.observations.errors.registry_snapshot_missing"
         assert raised.value.context == {
@@ -352,6 +385,7 @@ def test_calculation_observation_absent_by_design_flag_survives_encrypted_storag
             repo.prepare_observation_envelope(
                 absent_by_design_observation,
                 source_kind="aeat_sede_justificante",
+                stamped_revision_id=_revision_id("130", 2026, "1T"),
                 captured_at=_CAPTURED_AT,
             )
         )
@@ -392,11 +426,13 @@ def test_second_observation_under_one_natural_key_leaves_the_first_unreachable(
     with isolated_runtime_profile(tmp_path=tmp_path):
         repo = CalculationObservationRepository()
         period = Period.from_year_and_code(2025, "1T")
+        generic_observation = RegistryModeloObservation(modelo="130", filing_year=2025, period="1T")
 
         repo.save(
             repo.prepare_observation_envelope(
-                _populated_observation(),
+                generic_observation,
                 source_kind="aeat_sede_justificante",
+                stamped_revision_id=_revision_id("130", 2025, "1T"),
                 captured_at=_CAPTURED_AT,
                 source_metadata={
                     "aeat_register_status": "ALTA",
@@ -406,8 +442,9 @@ def test_second_observation_under_one_natural_key_leaves_the_first_unreachable(
         )
         repo.save(
             repo.prepare_observation_envelope(
-                _populated_observation(),
+                generic_observation,
                 source_kind="operator_manual",
+                stamped_revision_id=_revision_id("130", 2025, "1T"),
                 captured_at=_CAPTURED_AT + timedelta(days=1),
                 source_metadata={"local_observation_kind": "operator_supplied"},
                 # This displacement is now refused by default. The intent is stated
@@ -419,13 +456,13 @@ def test_second_observation_under_one_natural_key_leaves_the_first_unreachable(
             )
         )
 
-        loaded = repo.load_observation("303", period)
+        loaded = repo.load_observation("130", period)
         assert loaded is not None
         assert loaded.source_kind == "operator_manual", (
             "the later write did not take the slot, so this measurement does not describe the code"
         )
 
-        scanned = [row for row in repo.iter_modelo("303") if row.observation.period == "1T"]
+        scanned = [row for row in repo.iter_modelo("130") if row.observation.period == "1T"]
         assert len(scanned) == 1, (
             f"expected one row per natural key, found {len(scanned)} -- if the substrate keeps prior "
             "payloads reachable through the modelo scan, displacing an official observation is "
@@ -446,17 +483,19 @@ def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
         repo = CalculationObservationRepository()
         target = _populated_observation()
         other = RegistryModeloObservation(modelo="130", filing_year=2025, period="2T")
-        repo.save(
-            repo.prepare_observation_envelope(
-                target,
-                source_kind="aeat_sede_justificante",
-                captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
-            )
+        prepared_target = repo.prepare_observation_envelope(
+            target,
+            source_kind="aeat_sede_justificante",
+            stamped_revision_id=_revision_id("303", 2025, "1T"),
+            source_headers=_m303_ingreso_header(),
+            captured_at=datetime(2026, 5, 21, 12, 0, tzinfo=UTC),
         )
+        repo.save(prepared_target)
         repo.save(
             repo.prepare_observation_envelope(
                 other,
                 source_kind="aeat_sede_justificante",
+                stamped_revision_id=_revision_id("130", 2025, "2T"),
                 captured_at=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
             )
         )
@@ -464,7 +503,7 @@ def test_calculation_observation_iter_modelo_enumerates_decrypted_records(
         loaded = tuple(repo.iter_modelo("303"))
 
         assert len(loaded) == 1
-        assert loaded[0].observation == target
+        assert loaded[0] == prepared_target
 
 
 def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
@@ -501,6 +540,8 @@ def test_calculation_observation_dropped_legal_refs_surfaces_at_load(
             repo.prepare_observation_envelope(
                 original,
                 source_kind="aeat_sede_justificante",
+                stamped_revision_id=_revision_id("303", 2025, "1T"),
+                source_headers=_m303_ingreso_header(),
                 captured_at=_CAPTURED_AT,
             )
         )
@@ -540,10 +581,23 @@ def test_iva_wallet_reconciliation_decision_v2_roundtrip_preserves_reason_identi
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "2T"),
+            target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
+            source_registry_snapshot_refs=(m303_registry_snapshot_ref(2026, "2T"),),
             selected_authority="taxpayer_override",
             selected_amount=Decimal("1100"),
             wallet_amount=Decimal("1200"),
             local_recurrence_amount=Decimal("1000"),
+            authority_sources=(
+                IvaCompensationAuthoritySource(
+                    source_kind="local_recurrence",
+                    amount=Decimal("1000"),
+                    source_locator="test:local-recurrence:2026:2T",
+                    source_modelo="303",
+                    source_filing_year=2026,
+                    source_periods=(Period.from_year_and_code(2026, "2T"),),
+                    registry_snapshot_refs=(m303_registry_snapshot_ref(2026, "2T"),),
+                ),
+            ),
             override_amount=Decimal("1100"),
             divergence="override",
             blocked=False,
@@ -633,6 +687,8 @@ def test_a_decision_payload_missing_the_unreadable_evidence_flag_reloads_unequal
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "2T"),
+            target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
+            source_registry_snapshot_refs=(),
             selected_authority="missing",
             selected_amount=None,
             divergence="missing",
@@ -681,10 +737,12 @@ def test_iva_wallet_reconciliation_decisions_keep_immutable_history(
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "2T"),
+            target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
+            source_registry_snapshot_refs=(),
             selected_authority="aeat_wallet",
             selected_amount=Decimal("1200"),
             wallet_amount=Decimal("1200"),
-            local_recurrence_amount=Decimal("1200"),
+            local_recurrence_amount=None,
             override_amount=None,
             divergence="match",
             blocked=False,
@@ -730,6 +788,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
                 amount=Decimal("1200"),
                 source_locator="https://example.test/wallet",
                 captured_at=wallet_captured_at,
+                registry_snapshot_refs=(),
             ),
             IvaCompensationAuthoritySource(
                 source_kind="local_recurrence",
@@ -739,6 +798,7 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
                 source_modelo="303",
                 source_filing_year=2025,
                 source_periods=(Period.from_year_and_code(2025, "4T"),),
+                registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "4T"),),
             ),
             IvaCompensationAuthoritySource(
                 source_kind="filed_history_observation",
@@ -748,18 +808,22 @@ def test_iva_wallet_reconciliation_decision_roundtrip_preserves_separate_authori
                 source_modelo="303",
                 source_filing_year=2025,
                 source_periods=(Period.from_year_and_code(2025, "4T"),),
+                registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "4T"),),
             ),
             IvaCompensationAuthoritySource(
                 source_kind="taxpayer_override",
                 amount=Decimal("1000"),
                 source_locator="operator-note:iva-wallet-review-2026-2T",
                 captured_at=decided_at,
+                registry_snapshot_refs=(),
             ),
         )
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "2T"),
+            target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
+            source_registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "4T"),),
             selected_authority="taxpayer_override",
             selected_amount=Decimal("1000"),
             wallet_amount=Decimal("1200"),
@@ -814,6 +878,12 @@ class TestCaptureInstantContract:
             "captured_at": datetime(2024, 4, 15, 10, 30, tzinfo=UTC),
             "source_kind": ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
             "stamped_revision_id": "revision-for-envelope-roundtrip",
+            "result_disposition": ResultDispositionProjection(
+                disposition=ResultDisposition.INGRESO,
+                provenance_kind="app_filing",
+                provenance_locator="capture-instant-contract",
+            ),
+            "m303_compensation_basis": M303CompensationBasis.RESULTADO,
         }
 
     def test_utc_aware_capture_instant_is_accepted(self) -> None:
@@ -822,6 +892,15 @@ class TestCaptureInstantContract:
 
         assert payload.captured_at.tzinfo is not None
         assert payload.captured_at.utcoffset() == timedelta(0)
+
+    def test_unnormalized_m303_payload_is_refused_at_model_admission(self) -> None:
+        """A stored M303 envelope has no legacy shape without canonical carry facts."""
+        fields = self._canonical_fields()
+        fields.pop("result_disposition")
+        fields.pop("m303_compensation_basis")
+
+        with pytest.raises(ValidationError, match="canonical result disposition and compensation basis"):
+            ObservationEnvelopePayload.model_validate(fields)
 
     @pytest.mark.parametrize(
         "captured_at",
@@ -851,10 +930,12 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
         taxpayer_nif="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
+        target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200"),
         wallet_amount=Decimal("1200"),
-        local_recurrence_amount=Decimal("1200"),
+        local_recurrence_amount=None,
         override_amount=None,
         divergence="match",
         blocked=False,

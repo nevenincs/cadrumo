@@ -143,6 +143,12 @@ def _persist_filed_revision(work_unit: WorkUnit, *, casilla_values: dict[str, De
             CalculationRevision(
                 calculation_revision_id=revision_id,
                 work_unit_id=work_unit.work_unit_id,
+                registry_snapshot_ref=RegistrySnapshotRef(
+                    modelo=work_unit.modelo,
+                    revision_id=work_unit.revision_id,
+                    modelo_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                ),
                 state=CalculationRevisionState.PRESENTADO,
                 casilla_values=validated_values,
                 observations=registry_grounded_observations(

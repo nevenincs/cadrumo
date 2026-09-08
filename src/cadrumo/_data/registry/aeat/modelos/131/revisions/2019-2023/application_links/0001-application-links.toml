@@ -50,7 +50,7 @@ source_refs = ["aeat-dr-131-2019-2023-v101", "aeat-modelo-131-instructions"]
 [[revisions."2019-2023".application_links]]
 id = "modelo-131-2019-2023-filed-declarations-observation"
 surface = "portal"
-consumer = "cadrumo.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+consumer = "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation"
 requires_snapshot = true
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3", "rd-439-2007:art-95"]
 source_refs = ["aeat-modelo-131-recuperacion-declaraciones"]

@@ -16,9 +16,8 @@ that reads ``os.environ`` / ``os.getenv`` with an ``"AEAT_*"`` literal
 key. The check is purely structural: a string literal inside a
 docstring is *not* a function call, so the AST walk ignores it.
 
-A short allowlist captures the documented irreducible exceptions —
-subprocess-IPC WRITE sites where ``Settings`` has no write API. Each
-allowlisted line is annotated in-source with a rationale comment.
+There is no exception mechanism: every direct AEAT-prefixed environment read
+outside the Settings owner is a live failure.
 
 See Also:
     :func:`~core.config.load_settings`
@@ -40,16 +39,10 @@ from pathlib import Path
 
 import pytest
 
-from ...tests import SRC_CADRUMO, aeat_relative, ast_for_path, production_ast_items
+from ...tests import aeat_relative, production_ast_items
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-
-# Files (relative to src/cadrumo/) where direct os.environ access to an
-# AEAT-prefixed variable is the only legitimate option. Each entry must
-# carry its rationale inline in the source — when reviewing this list,
-# verify the rationale matches "no Settings write API exists for this".
-_ALLOWLIST: frozenset[str] = frozenset[str]()
 
 _AEAT_KEY_PATTERN: re.Pattern[str] = re.compile(r"^AEAT_[A-Z0-9_]+$")
 
@@ -246,47 +239,18 @@ def _target_label(node: ast.expr) -> str:
     return "<environ-alias>"
 
 
-def test_no_direct_aeat_env_reads_outside_allowlist(source_tree_ast: Mapping[Path, ast.AST]) -> None:
-    """Every AEAT_* env read must flow through Settings, except allowlisted IPC writes."""
+def test_no_direct_aeat_env_reads(source_tree_ast: Mapping[Path, ast.AST]) -> None:
+    """Every AEAT-prefixed environment read must flow through Settings."""
     offences: list[str] = []
     for path, tree in _candidate_modules(source_tree_ast):
         rel = aeat_relative(path)
         violations = _violations_in(path, tree)
         if not violations:
             continue
-        if rel in _ALLOWLIST:
-            continue  # documented IPC-write exception
         for lineno, key, snippet in violations:
             offences.append(f"{rel}:{lineno}  reads {key!r} via {snippet}")
     assert not offences, (
-        "Direct os.environ / os.getenv reads of AEAT_* variables outside the allowlist. "
+        "Direct os.environ / os.getenv reads of AEAT_* variables. "
         "Route every read through cadrumo.core.config.load_settings() instead.\n"
         + "\n".join(f"  - {line}" for line in offences)
-    )
-
-
-def test_allowlisted_paths_actually_exist() -> None:
-    """Allowlist must not carry stale entries that bypass the check vacuously."""
-    missing = [entry for entry in _ALLOWLIST if not (SRC_CADRUMO / entry).exists()]
-    assert not missing, f"Allowlist entries no longer exist on disk: {missing}"
-
-
-def test_allowlisted_paths_still_contain_aeat_env_reads(source_tree_ast: Mapping[Path, ast.AST]) -> None:
-    """A file on the allowlist must still carry an AEAT_* os.environ read.
-
-    Without this check the allowlist would degrade into bitrot — if the
-    rationale changes and the file is refactored to route through
-    Settings, the allowlist entry becomes a free pass for any future
-    AEAT_* read added to that file.
-    """
-    stale: list[str] = []
-    for entry in _ALLOWLIST:
-        path = SRC_CADRUMO / entry
-        if not path.exists():
-            continue  # caught by the other test
-        tree = ast_for_path(path, source_tree_ast)
-        if tree is None or not _violations_in(path, tree):
-            stale.append(entry)
-    assert not stale, (
-        f"Allowlisted files no longer contain any AEAT_* os.environ read — remove them from the allowlist: {stale}"
     )

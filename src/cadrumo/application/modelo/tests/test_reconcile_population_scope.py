@@ -22,6 +22,7 @@ from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -72,6 +73,12 @@ def _calculation(
             filing_instance_evidence=None,
         ),
         work_unit_id=_WORK_UNIT_ID,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="130",
+            revision_id="2019-y-siguientes",
+            modelo_year=2026,
+            period="1T",
+        ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=supplied_inputs,
         binding_overrides=supplied_overrides,

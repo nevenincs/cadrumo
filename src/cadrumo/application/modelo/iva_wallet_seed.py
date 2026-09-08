@@ -454,7 +454,7 @@ def record_iva_compensation_override_for_bucket(
         )
 
     from ..calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
-    from ..calculations.observations_repository import IvaWalletDecisionRepository
+    from ..calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 
     existing = IvaWalletDecisionRepository().load_decision(taxpayer_nif, period)
     if existing is not None and not existing.blocked and str(existing.selected_authority) == "aeat_wallet":
@@ -480,11 +480,21 @@ def record_iva_compensation_override_for_bucket(
         evidence_locator=evidence_locator,
         recorded_at=now(),
     )
+    from ..calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
+
+    observation_repository = CalculationObservationRepository()
+    local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+        snapshot,
+        repository=observation_repository,
+    )
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=taxpayer_nif,
         wallet=None,
+        repository=observation_repository,
         override=override,
+        local_recurrence=local_recurrence,
+        prefill_report=prefill_report,
         persist=True,
     )
 

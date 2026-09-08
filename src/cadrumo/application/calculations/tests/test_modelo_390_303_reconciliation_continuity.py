@@ -67,6 +67,7 @@ from ....domain.calculations.registry.relations import materialize_relation_bind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ..iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
@@ -317,7 +318,9 @@ def _file_year_quarters_and_reconcile(
                     provenance_kind="app_filing",
                     provenance_locator=f"test-local-filing:{filing_year}:{period}",
                 ),
-                normalize_m303_carry=True,
+                stamped_revision_id=revision_id_for_observation(
+                    _registry_observation(modelo="303", filing_year=filing_year, period=period, result=q_result)
+                ),
             )
         )
     annual_result, produced = _calculate_390_annual(

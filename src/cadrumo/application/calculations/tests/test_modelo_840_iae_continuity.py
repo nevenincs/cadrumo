@@ -42,7 +42,7 @@ from ....core.external_constants import MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_
 from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..observations_repository import CalculationObservationRepository
 from ._observation_lookup_support import find_observation
@@ -193,7 +193,7 @@ def test_below_threshold_context_persists_exempt_classification_metadata(tmp_pat
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
                 source_metadata=_threshold_source_metadata(classification),
-            )
+            stamped_revision_id=revision_id_for_observation(obs))
         )
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
 
@@ -224,7 +224,7 @@ def test_at_threshold_context_persists_not_exempt_classification_metadata(tmp_pa
                 source_kind="app_filing",
                 captured_at=_CLOCK_N_PLUS_2,
                 source_metadata=_threshold_source_metadata(classification),
-            )
+            stamped_revision_id=revision_id_for_observation(obs))
         )
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_2, period="0A")
 
@@ -256,7 +256,7 @@ def test_exemption_classifications_are_independent_across_annual_contexts(tmp_pa
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
                 source_metadata=_threshold_source_metadata(classification_n),
-            )
+            stamped_revision_id=revision_id_for_observation(obs_n))
         )
         repo.save(
             repo.prepare_observation_envelope(
@@ -264,7 +264,7 @@ def test_exemption_classifications_are_independent_across_annual_contexts(tmp_pa
                 source_kind="app_filing",
                 captured_at=_CLOCK_N_PLUS_2,
                 source_metadata=_threshold_source_metadata(classification_n2),
-            )
+            stamped_revision_id=revision_id_for_observation(obs_n2))
         )
         loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
         loaded_n2 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_2, period="0A")
@@ -309,7 +309,7 @@ def test_anti_tautology_proof_missing_turnover_metadata_surfaces_as_inequality(t
                 source_kind="app_filing",
                 captured_at=_CLOCK_N,
                 source_metadata=full_metadata,
-            )
+            stamped_revision_id=revision_id_for_observation(obs_n))
         )
         loaded = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
 

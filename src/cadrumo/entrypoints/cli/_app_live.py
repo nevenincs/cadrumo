@@ -42,7 +42,6 @@ from ...application.live.filed_data_capture import (
     capture_source_filed_data,
     discover_filed_history,
     expected_but_not_found_notice,
-    found_more_than_expected_notices,
     list_filed_data,
     list_filed_data_bulk,
     pull_filed_history,
@@ -1269,7 +1268,6 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun, *, limit: int | None
     missing = expected_but_not_found_notice(run)
     if missing is not None:
         notices.append(missing)
-    notices.extend(found_more_than_expected_notices(run))
     if refused := run.refused_pairs:
         notices.append(
             Notice(

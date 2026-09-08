@@ -141,7 +141,7 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
     """
     from .....core.config import load_settings
     from .....core.storage_taxonomy_locations import bucket_scoped_storage_path
-    from ..crypto.encrypted_columns import decrypt_encrypted_bytes_column
+    from ..crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
     from ..secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
 
     if session.bucket_id == "unsecured":
@@ -156,7 +156,7 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
     try:
         with sqlite3.connect(db_path) as connection:
             rows = connection.execute(
-                "SELECT payload FROM secure_objects WHERE namespace = ?",
+                "SELECT namespace, object_key, schema_version, payload FROM secure_objects WHERE namespace = ?",
                 (USER_PROFILE_VALUE_NAMESPACE.namespace,),
             ).fetchall()
     except sqlite3.Error as exc:
@@ -170,9 +170,16 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
             "to prove the profile is synthetic; "
             "it is not safe for real data, so open the profile through its own password.",
         ) from exc
-    for (payload_wire,) in rows:
+    for namespace, object_key_digest, schema_version, payload_wire in rows:
         try:
-            payload_plain = decrypt_encrypted_bytes_column(bytes(payload_wire))
+            payload_plain = decrypt_secure_object_payload(
+                bytes(payload_wire),
+                associated_data=secure_object_payload_aad(
+                    str(namespace),
+                    bytes(object_key_digest),
+                    int(schema_version),
+                ),
+            )
         except (DecryptionError, TypeError, ValueError) as exc:
             raise UnsecuredModeRefusedError(
                 "unsecured storage backend cannot prove the active profile is synthetic; "
@@ -190,7 +197,7 @@ def refuse_unsecured_bucket_with_real_profile(session: BucketSession) -> None:
 
 # Published deterministic key for the unsecured-mode provider. Public by
 # design — the goal is to keep the substrate's encryption pipeline intact
-# (every record is still a CipherEnvelope / EncryptedBlob) while making
+# (every protected record is still an EncryptedBlob) while making
 # the wrapping key trivially recoverable so testing / educational /
 # throwaway scenarios do not require key management. Provides ZERO
 # confidentiality. The hostile-named env var + NIF-canary refusal at

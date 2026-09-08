@@ -76,8 +76,10 @@ from ...domain.modelos.verification_report import (
 )
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ._row_source_identity_replay import ModeloRowSourceFingerprint, revision_row_source_fingerprints_for_review
 from .action_errors import CalculationRevisionNotFoundError, StoredCalculationDriftError, WorkUnitNotFoundError
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .work_addressing import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
@@ -314,6 +316,7 @@ def _current_revision(
                 "stored_work_unit_id": revision.work_unit_id,
             },
         )
+    require_calculation_revision_coordinates_current(revision)
     return revision
 
 
@@ -323,7 +326,9 @@ def _latest_verification(
 ) -> VerificationReport | None:
     if revision is None:
         return None
-    reports = repository.load().for_calculation_revision(revision.calculation_revision_id)
+    reports = require_verification_report_coordinates_current(repository.load()).for_calculation_revision(
+        revision.calculation_revision_id
+    )
     return reports[-1] if reports else None
 
 
@@ -812,7 +817,9 @@ def _work_review_owner_observation(
     """Read the three joined catalogue limbs into one owner observation."""
     _work_units, work_unit_revision = work_unit_repository.load_revisioned()
     _calculations, calculation_revision = calculation_repository.load_revisioned()
-    verification_digest = content_hash_hex(verification_repository.load().model_dump(mode="json"))
+    verification_digest = content_hash_hex(
+        require_verification_report_coordinates_current(verification_repository.load()).model_dump(mode="json")
+    )
     return (work_unit_revision, calculation_revision, verification_digest)
 
 

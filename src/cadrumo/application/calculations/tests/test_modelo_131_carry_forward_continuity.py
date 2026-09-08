@@ -55,7 +55,7 @@ from ....domain.calculations.registry.bindings import (
     resolve_available_bound_inputs_by_casilla_id,
 )
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -224,7 +224,7 @@ def test_q2_2024_carry_forward_resolves_from_q1_2024_saldo(tmp_path: Path) -> No
                 _131_observation(filing_year=_YEAR_N, period="1T", result=q1),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            )
+            stamped_revision_id=revision_id_for_observation(_131_observation(filing_year=_YEAR_N, period="1T", result=q1)))
         )
         q2_snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N, period="2T")
         report = resolve_bindings_from_local_store(q2_snapshot, repository=obs_repo)

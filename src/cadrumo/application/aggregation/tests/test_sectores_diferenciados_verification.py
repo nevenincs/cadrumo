@@ -70,6 +70,10 @@ _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota
 _DEVENGADO_CUOTA_BINDING: BindingId = "modelo-303-iva-repercutido-general-cuota"
 
 
+def _m303_snapshot_ref(filing_year: int):
+    return bundled_authority().snapshot("303", filing_year=filing_year, period="4T").snapshot_ref
+
+
 def _raw(provider_id: str, *, amount: Decimal, counterparty: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
@@ -146,6 +150,7 @@ def _settled_2025_entry(sector_id: str | None, *, con: str, sin: str) -> Prorrat
         provisional_percentage=Decimal("50"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=f"seed:{sector_id or 'comun'}",
+        source_registry_snapshot_refs=(_m303_snapshot_ref(2024),),
     )
     return settle_sector_definitive(
         provisional,
@@ -196,6 +201,7 @@ def test_two_sectors_apportion_at_own_percentage_with_common_use_split(tmp_path:
         provisional_percentage=Decimal("40"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="seed:comun:2026",
+        source_registry_snapshot_refs=(_m303_snapshot_ref(2025),),
     )
 
     register_2026 = ProrrataRegister(

@@ -232,7 +232,6 @@ errors:
       o validar.
     error_financial_iva_category_not_found: No se encontró la categoría de IVA solicitada
       en el catálogo.
-    error_financial_iva_classification: No se pudo clasificar el IVA de forma determinista.
     error_financial_iva_rate_not_found: No se encontró un tipo de IVA para el estado
       miembro y el tipo solicitados.
     error_financial_iva_rate_overlap: Dos tipos de IVA comparten una ventana de vigencia.
@@ -250,8 +249,6 @@ errors:
     error_iva_prorrata: Se produjo un error en el cálculo de la prorrata del IVA.
     error_iva_prorrata_input: Los datos de entrada de la prorrata del IVA infringen
       sus invariantes.
-    error_iva_prorrata_sector: Los datos de separación sectorial de la prorrata del
-      IVA son inconsistentes.
     error_iva_validation: Un valor del IVA no es válido.
     error_justificante: Se produjo un error relacionado con el justificante.
     error_justificante_csv_not_found: El PDF no contiene un Código Seguro de Verificación.
@@ -309,8 +306,6 @@ errors:
     error_portals_validation: Los metadatos de un portal no superaron la validación.
     error_profile_amortization_ledger: Una operación del libro de amortizaciones del
       perfil no es válida.
-    error_profile_asset_record: Un registro de activo del perfil tiene una estructura
-      no válida.
     error_profile_bienes_inversion_record: Un registro de regularización de IVA por
       bienes de inversión no es estructuralmente válido.
     error_profile_inventory_ledger: Una operación del libro de inventario del perfil
@@ -407,9 +402,9 @@ errors:
       de inicio de sesión guardado de este perfil; sigue en el disco.
     fail_access_gate_authorization_manifest: No se pudo cargar el manifiesto de autorización
       de modelos o contiene una entrada de habilitación no válida.
-    fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
     fail_borrador_parse: No se pudo interpretar el PDF del borrador de Modelo 100
       como una declaración.
+    fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
     fail_browser_session_browser: Se produjo un error en la sesión del navegador.
     fail_browser_validation: Los parámetros del navegador no superaron la validación.
     fail_certificado_censal_parse: No se ha podido leer el documento del Certificado
@@ -869,8 +864,6 @@ errors:
       están deshabilitadas.
     refused_auth_login_precondition: La precondición para el inicio de sesión de autenticación
       no se cumple.
-    refused_auth_provider_reserved: El proveedor de autenticación seleccionado está
-      reservado pero no implementado.
     refused_calculations_casilla_constraint: Un valor de casilla calculado queda fuera
       de los límites declarados para esa casilla. Revisa los datos de entrada del
       cálculo.
@@ -951,7 +944,8 @@ errors:
       de IVA no se pudo interpretar como decimal.'
     refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensación
       de IVA esta fuera del rango aceptado.'
-    refused_iva_prorrata_especial_margin_ungrounded: El margen de prorrata especial obligatoria no puede fundamentarse para ese ejercicio.
+    refused_iva_prorrata_especial_margin_ungrounded: El margen de prorrata especial
+      obligatoria no puede fundamentarse para ese ejercicio.
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
       de antigüedad de la cartera y vuelva a intentarlo.
@@ -967,8 +961,6 @@ errors:
       con el identificador indicado.
     refused_live_borrador_snapshot_not_found: No existe ningún snapshot del borrador
       de Modelo 100 con el identificador indicado.
-    refused_live_deudas_snapshot_not_found: No existe ningún snapshot de deudas con
-      el identificador indicado.
     refused_live_expedientes_snapshot_not_found: No existe ningún snapshot de expedientes
       con el identificador indicado.
     refused_live_justificante_capture_snapshot_not_found: No existe ninguna captura
@@ -1047,11 +1039,10 @@ errors:
       de pensiones (DT 12ª LIRPF) recibió un importe que incumple una condición numérica.
       Corrige los importes indicados.
     refused_profile_already_exists: Ya existe un perfil con esos datos.
-    refused_profile_asset_validation: Un registro de activo del perfil no superó la
-      validación.
     refused_profile_basis_cap_exceeded: La amortización acumulada superaría la base
       de coste del activo.
-    refused_profile_bienes_inversion_parameters: La revisión activa no declara los importes de regularización de bienes de inversión para este contexto de declaración.
+    refused_profile_bienes_inversion_parameters: La revisión activa no declara los
+      importes de regularización de bienes de inversión para este contexto de declaración.
     refused_profile_bienes_inversion_validation: Un registro de regularización de
       IVA por bienes de inversión no superó la validación.
     refused_profile_binding_resolution: Un dato del perfil necesario para el cálculo

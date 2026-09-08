@@ -34,7 +34,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
@@ -123,7 +123,17 @@ def _save_observation(
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_CLOCK,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=modelo,
+                filing_year=filing_year,
+                period=period,
+                observations=registry_grounded_observations(
+                    modelo=modelo,
+                    filing_year=filing_year,
+                    period=period,
+                    casilla_values=casilla_values,
+                ),
+            )))
     )
 
 

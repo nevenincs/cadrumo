@@ -43,7 +43,7 @@ from ....domain.user_profile.loader import load_user_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
-from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
+from ...aggregation import ForeignAssetClass, ForeignAssetIngestObservation
 from ...user_profile.preflight import build_profile_preflight_requirement
 from ..action_errors import ModeloAggregationBindingError, ModeloProfileReadinessError
 from ..calculation_actions import (
@@ -517,24 +517,6 @@ def test_s09_invoice_catalogue_resolver_enrolled_fires_on_m349(
     )
 
 
-# ---------------------------------------------------------------------------
-# Deferred source kinds produce advisory not silent blank
-# ---------------------------------------------------------------------------
-
-
-def test_s10_deferred_source_kinds_are_enumerated_and_non_empty() -> None:
-    """DEFERRED_SOURCE_KINDS is non-empty and contains the expected deferred kinds."""
-    expected = frozenset(
-        {
-            BindingSourceKind.RELATED_PARTY_OPERATION,
-            BindingSourceKind.REFUND_OPERATION,
-        },
-    )
-    assert expected.issubset(DEFERRED_SOURCE_KINDS), f"Missing deferred kinds: {expected - DEFERRED_SOURCE_KINDS}"
-    assert BindingSourceKind.WITHHOLDING not in DEFERRED_SOURCE_KINDS
-    assert BindingSourceKind.ATRIBUCION_MEMBER not in DEFERRED_SOURCE_KINDS
-
-
 def _foreign_asset_observation(
     source_kind: BindingSourceKind,
     source_object_id: str,
@@ -601,7 +583,6 @@ def test_s16_foreign_asset_source_kind_is_enrolled_not_deferred(tmp_path: Path) 
             clock=_T1,
         )
 
-    assert BindingSourceKind.FOREIGN_ASSET not in DEFERRED_SOURCE_KINDS
     assert not [
         diagnostic
         for diagnostic in result.source_diagnostics
@@ -644,7 +625,6 @@ def test_s27_withholding_source_kind_is_enrolled_not_deferred() -> None:
     assert not withholding_advisories, (
         f"withholding is enrolled and must not appear as unhandled; unhandled={unhandled}"
     )
-    assert BindingSourceKind.WITHHOLDING not in DEFERRED_SOURCE_KINDS
 
 
 # ---------------------------------------------------------------------------

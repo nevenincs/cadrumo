@@ -24,6 +24,7 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import ObservationEvidenceDisplacementError
 from ..observations_repository import CalculationObservationRepository
@@ -66,7 +67,7 @@ def _save_official(repo: CalculationObservationRepository) -> None:
             source_kind="aeat_sede_justificante",
             captured_at=_CAPTURED_AT,
             source_metadata=_OFFICIAL_METADATA,
-        )
+        stamped_revision_id=revision_id_for_observation(_observation()))
     )
 
 
@@ -96,7 +97,7 @@ def test_a_non_official_write_over_captured_evidence_is_refused(tmp_path: Path, 
                     _observation(),
                     source_kind=source_kind,
                     captured_at=_CAPTURED_AT + timedelta(days=1),
-                )
+                stamped_revision_id=revision_id_for_observation(_observation()))
             )
 
         _assert_slot_still_official(repo)
@@ -121,7 +122,7 @@ def test_the_refusal_happens_before_any_write_is_prepared(tmp_path: Path, source
                 _observation(),
                 source_kind=source_kind,
                 captured_at=_CAPTURED_AT + timedelta(days=1),
-            )
+            stamped_revision_id=revision_id_for_observation(_observation()))
 
         _assert_slot_still_official(repo)
 
@@ -144,7 +145,7 @@ def test_the_operator_can_displace_evidence_deliberately(tmp_path: Path) -> None
                 captured_at=_CAPTURED_AT + timedelta(days=1),
                 source_metadata={"local_observation_kind": "operator_supplied"},
                 replace_official_evidence=True,
-            )
+            stamped_revision_id=revision_id_for_observation(_observation()))
         )
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
@@ -169,7 +170,7 @@ def test_official_evidence_may_replace_official_evidence(tmp_path: Path) -> None
                 source_kind="aeat_sede_live_capture",
                 captured_at=_CAPTURED_AT + timedelta(days=2),
                 source_metadata=_OFFICIAL_METADATA,
-            )
+            stamped_revision_id=revision_id_for_observation(_observation()))
         )
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
@@ -187,7 +188,7 @@ def test_a_manual_row_may_be_corrected_by_another_manual_row(tmp_path: Path) -> 
                 source_kind="operator_manual",
                 captured_at=_CAPTURED_AT,
                 source_metadata={"local_observation_kind": "operator_supplied"},
-            )
+            stamped_revision_id=revision_id_for_observation(_observation()))
         )
 
         repo.save(
@@ -195,7 +196,7 @@ def test_a_manual_row_may_be_corrected_by_another_manual_row(tmp_path: Path) -> 
                 _observation(),
                 source_kind="app_filing",
                 captured_at=_CAPTURED_AT + timedelta(days=1),
-            )
+            stamped_revision_id=revision_id_for_observation(_observation()))
         )
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))
@@ -218,7 +219,7 @@ def test_an_empty_slot_accepts_a_non_official_write(tmp_path: Path) -> None:
                 _observation(),
                 source_kind="app_filing",
                 captured_at=_CAPTURED_AT,
-            )
+            stamped_revision_id=revision_id_for_observation(_observation()))
         )
 
         loaded = repo.load_observation("303", Period.from_year_and_code(2025, "1T"))

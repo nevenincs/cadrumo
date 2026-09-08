@@ -141,7 +141,23 @@ class VerificationReportCatalogueRepository:
             },
         )
         if not unresolved:
-            return
+            mismatched = sorted(
+                report.calculation_revision_id
+                for report in catalogue.values()
+                if (revision := revisions.get(report.calculation_revision_id)) is not None
+                and report.registry_snapshot_ref != revision.registry_snapshot_ref
+            )
+            if not mismatched:
+                return
+            raise VerificationReportPersistenceError(
+                "verification report registry coordinate differs from its calculation revision",
+                translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
+                context={
+                    "reason": "registry_snapshot_ref_mismatch",
+                    "boundary": boundary,
+                    "calculation_revision_ids": mismatched,
+                },
+            )
         _LOGGER.error(
             "verification report references a calculation revision outside this bucket",
             extra={"boundary": boundary, "unresolved_count": len(unresolved)},

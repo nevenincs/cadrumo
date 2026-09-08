@@ -82,10 +82,14 @@ def _store_zero_prior_compensation(runtime_profile: TestRuntimeProfile) -> None:
             taxpayer_nif="12345678Z",
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
+            target_registry_snapshot_ref=bundled_authority()
+            .snapshot("303", filing_year=2026, period="1T")
+            .snapshot_ref,
+            source_registry_snapshot_refs=(),
             selected_authority="aeat_wallet",
             selected_amount=Decimal("0.00"),
             wallet_amount=Decimal("0.00"),
-            local_recurrence_amount=Decimal("0.00"),
+            local_recurrence_amount=None,
             override_amount=None,
             divergence="match",
             blocked=False,

@@ -29,6 +29,7 @@ from pydantic import ValidationError
 
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..carry_forward import IvaCompensationPeriodState
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -36,6 +37,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _VALID_NIF = "12345678Z"
 _PRESENTED_AT = datetime(2025, 4, 20, tzinfo=UTC)
 _VALID_DIGEST = "a3f1" * 16
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2025",
+    modelo_year=2025,
+    period="1T",
+)
 
 #: Each is exactly 64 characters, so only a hex/case check tells them from a
 #: real digest.
@@ -48,6 +55,7 @@ def _period_state(digest: str | None) -> IvaCompensationPeriodState:
         taxpayer_nif=_VALID_NIF,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         expediente_id="202530300000001Z",
         status="presented",
         presented_at=_PRESENTED_AT,
@@ -77,3 +85,20 @@ def test_period_state_accepts_the_canonical_digest() -> None:
 def test_period_state_keeps_the_declared_absent_case() -> None:
     """``None`` is the deliberate 'no submitted file captured' seed, not a gap."""
     assert _period_state(None).source_artefact_sha256 is None
+
+
+def test_period_state_requires_the_canonical_registry_coordinate() -> None:
+    with pytest.raises(ValidationError, match="registry_snapshot_ref"):
+        IvaCompensationPeriodState(
+            provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
+            taxpayer_nif=_VALID_NIF,
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            expediente_id="202530300000001Z",
+            status="presented",
+            presented_at=_PRESENTED_AT,
+            generated_amount=Decimal("100.00"),
+            available_end_amount=Decimal("100.00"),
+            source_observation_key="303:2025:1T",
+            source_artefact_sha256=_VALID_DIGEST,
+        )

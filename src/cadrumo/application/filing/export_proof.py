@@ -24,8 +24,10 @@ from ...domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
 )
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.schema import ModeloDraft
 from ...domain.submission.models import ModeloDraftStatus
+from ..calculations.revision_carry_gate import revision_carry_outcome
 from .export import export_draft
 from .export_verification import (
     DeclaracionExportResult,
@@ -49,10 +51,13 @@ class FilingExportProofCoordinate(BaseModel):
 
     modelo: ModeloId
     revision: RevisionId
+    snapshot_ref: RegistrySnapshotRef
     layout_ids: tuple[_Token, ...] = ()
 
     @model_validator(mode="after")
     def _require_coherent_coordinate(self) -> FilingExportProofCoordinate:
+        if self.modelo != self.snapshot_ref.modelo or self.revision != self.snapshot_ref.revision_id:
+            raise ValueError("proof modelo and revision must match snapshot_ref")
         if len(self.layout_ids) != len(set(self.layout_ids)):
             raise ValueError("proof layout identities must be unique")
         return self
@@ -623,8 +628,11 @@ def _require_export_inputs_match(
     filing_year: int,
     period: Period,
 ) -> None:
-    if draft.snapshot_ref.revision_id != coordinate.revision:
-        raise ValueError("proof draft revision must match the requested coordinate")
+    if draft.snapshot_ref != coordinate.snapshot_ref:
+        raise ValueError("proof draft registry coordinate must match the requested coordinate")
+    outcome = revision_carry_outcome(coordinate.snapshot_ref)
+    if outcome.refused:
+        raise ValueError(f"proof registry coordinate cannot be re-confirmed: {outcome.detail}")
     if draft.status is not ModeloDraftStatus.APROBADO:
         raise ValueError("proof draft must be approved")
     if (
@@ -676,6 +684,9 @@ def _require_custody_record(
     result: FilingExportConsumedResult,
     record: FilingExportSecureCustodyRecord,
 ) -> None:
+    outcome = revision_carry_outcome(record.coordinate.snapshot_ref)
+    if outcome.refused:
+        raise ValueError(f"custody registry coordinate cannot be re-confirmed: {outcome.detail}")
     expected = (
         request.coordinate,
         request.source_authority_id,

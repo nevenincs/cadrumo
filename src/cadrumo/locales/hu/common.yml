@@ -258,10 +258,6 @@ auth:
       személyazonosság-szolgáltatón keresztül. Az AEAT olvasási folyamataihoz automatizálható
       felügyelet nélkül; DNI/NIE és jelszó szükséges.
     clave_permanente_label: Cl@ve Permanente
-    clave_pin_description: Fenntartott zárt szolgáltatói hely a Cl@ve PIN számára.
-    clave_pin_label: Cl@ve PIN
-    dnie_pkcs_description: Fenntartott zárt szolgáltatói hely a DNI-e PKCS számára.
-    dnie_pkcs_label: DNI-e PKCS
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -639,9 +635,6 @@ live:
       expected_but_not_found: 'A bevallott profil {count} modelo/év párra vár benyújtást,
         amelyekre az AEAT nyilvántartása egyet sem adott vissza: {pairs}. Ellenőrizze,
         benyújtották-e ezeket.'
-      found_more_than_expected: Az AEAT nyilvántartása {raw_count} benyújtást tart
-        nyilván a(z) {modelo} modelóhoz ({period} {ejercicio}); a legutóbbi iktatás
-        ({expediente}) maradt meg, és {superseded} korábbi felülírásra került.
       recapture_divergence: 'A(z) {modelo} modelo {period} {ejercicio} ismételt lekérése
         {count} korábban megfigyelt casilla-értéket változtatott meg: {casillas}.
         Az AEAT helyesbített bevallást tarthat nyilván.'

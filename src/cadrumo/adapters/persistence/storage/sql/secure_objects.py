@@ -504,7 +504,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         """Move every undecryptable row into ``secure_objects_quarantine``.
 
         Iterates every populated namespace, probes each row's payload
-        through :func:`decrypt_encrypted_bytes_column`, and for rows that
+        through the row-identity-bound secure-object decryptor, and for rows that
         fail tag verification copies the original (encrypted) payload
         plus all metadata into the quarantine table, then deletes the
         row from ``secure_objects``. The quarantine table mirrors

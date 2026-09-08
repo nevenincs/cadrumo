@@ -28,6 +28,7 @@ from ..sql.secure_objects import SecureObjectWrite
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+
 _NOW = datetime(2026, 8, 16, 10, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "6b5f0a17-2c48-4d93-9a01-7e2d4c8b3f56"
 _OTHER_BUCKET_ID = "c47e9b02-15da-4f6e-8b73-9d0a5e1c2847"

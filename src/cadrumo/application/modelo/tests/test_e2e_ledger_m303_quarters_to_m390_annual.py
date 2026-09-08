@@ -385,10 +385,14 @@ def _wallet_decision(
         taxpayer_nif=taxpayer_nif,
         target_year=filing_year,
         target_period=Period.from_year_and_code(filing_year, period),
+        target_registry_snapshot_ref=bundled_authority()
+        .snapshot("303", filing_year=filing_year, period=period)
+        .snapshot_ref,
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("0.00"),
         wallet_amount=Decimal("0.00"),
-        local_recurrence_amount=Decimal("0.00"),
+        local_recurrence_amount=None,
         override_amount=None,
         divergence="match",
         blocked=False,

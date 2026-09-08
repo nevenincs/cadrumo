@@ -113,18 +113,6 @@ profile-id placeholder.
 """
 
 
-def detect_retired_profile_custody_member_paths(capsules_root: Path, *, keystore_root: Path) -> tuple[str, ...]:
-    """Return exact retired member names found by the anchored, no-open detector.
-
-    Both stores that can hold retired material are scanned: the buckets root
-    for the retired plaintext manifest, and the sibling keystore root for
-    retired shared-master key material.  Either root may be absent; an absent
-    root simply contributes nothing.
-    """
-    capsule_members, keystore_members = _retired_members_by_root(capsules_root, keystore_root=keystore_root)
-    return _merged_member_paths(capsule_members, keystore_members)
-
-
 def refuse_retired_profile_custody_paths(capsules_root: Path, *, keystore_root: Path) -> None:
     """Raise the one destructive-reset refusal when a retired member exists.
 
@@ -514,6 +502,5 @@ __all__ = [
     "PROFILE_CUSTODY_RETIRED_KEYSTORE_MEMBER_PATHS",
     "AnchoredCurrentCapsuleCommit",
     "anchored_current_capsule_commits",
-    "detect_retired_profile_custody_member_paths",
     "refuse_retired_profile_custody_paths",
 ]

@@ -94,7 +94,8 @@ def test_google_sheets_export_definition_declares_one_safe_credential_free_contr
         OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
     )
     assert registration.contract.request_schema.schema_id == "export.google-sheets.request"
-    assert registration.contract.result_schema is None
+    assert registration.contract.result_schema is not None
+    assert registration.contract.result_schema.schema_id == "export.google-sheets.result"
     request_schema = json.dumps(GoogleSheetsExportOperationRequest.model_json_schema(mode="validation")).lower()
     assert "secret" not in request_schema
     assert "token" not in request_schema

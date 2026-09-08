@@ -40,7 +40,7 @@ _Reference = Annotated[
     StringConstraints(strip_whitespace=True, min_length=1, max_length=2_048),
 ]
 
-type RegistryClosureLimbName = Literal["temporal_coverage", "source_connectivity", "filing_export"]
+type RegistryClosureLimbName = Literal["temporal_coverage", "filing_export"]
 """One independently-derived conjunct of the registry release predicate."""
 
 

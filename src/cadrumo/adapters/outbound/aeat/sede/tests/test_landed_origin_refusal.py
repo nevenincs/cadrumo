@@ -35,6 +35,7 @@ from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import LANDED_ORIGIN_CARTERA_CUOTAS_PATH_FIXTURE
 from .. import _adapter_utils, _declarations_fetch, iva_compensation_wallet
 from .._adapter_utils import landed_origin
+from .._iva_compensation_wallet_parsing import WALLET_URL
 from ..errors import SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -98,7 +99,7 @@ class TestTheWalletRefuses:
             produced = iva_compensation_wallet._landed_wallet_url(page)
         except SedeNavigationError:
             produced = None
-        assert produced != iva_compensation_wallet.IVA_COMPENSATION_WALLET_URL, (
+        assert produced != WALLET_URL, (
             f"FABRICATED wallet source_url {produced!r} recorded for an unusable landing {landed!r}"
         )
         assert produced is None

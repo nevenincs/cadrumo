@@ -2,7 +2,7 @@
 
 Inert namespace. Every contract is reached at its own defining module:
 ``censal_datos``, ``declarations``, ``declarations_observations``,
-``declarations_remote``, ``declarations_schema``, ``deudas``, ``errors``,
+``declarations_remote``, ``declarations_schema``, ``errors``,
 ``groi_check``, ``iva_compensation_wallet``, ``nif_iva_check``, ``notifications``,
 ``observation_store``, ``parse``, ``renta_web_open``, ``schema``, ``walker``.
 

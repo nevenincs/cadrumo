@@ -147,7 +147,6 @@ def verify_manual_dir(
     manual_id: ManualId,
     year: int,
     part: ManualPart = ManualPart.SINGLE,
-    review_required: bool | None = None,
     settings: Settings | None = None,
 ) -> ManualVerificationReport:
     """Verify every record under a manual part on disk.
@@ -156,13 +155,6 @@ def verify_manual_dir(
         manual_id: Handbook identifier.
         year: Tax year.
         part: Volume split within the year.
-        review_required: Reserved for the future soft-review gate
-            (sentinel-based reviewer placeholders). Currently this
-            flag has no effect because the ``_Reviewer`` constrained
-            type already enforces a non-empty reviewer at load time;
-            records failing that constraint surface as ``load-failed``
-            errors. Defaults to the ``CADRUMO_MANUALS_REVIEW_REQUIRED``
-            setting value.
         settings: Optional settings instance.
 
     Returns:
@@ -173,8 +165,6 @@ def verify_manual_dir(
             exists for the requested manual part.
     """
     resolved = settings or load_settings()
-    # Explicit no-op for v1; kept to lock the CLI surface. See docstring.
-    _ = review_required if review_required is not None else resolved.cadrumo_manuals_review_required
 
     part_root = resolve_part_root(manual_id=manual_id, year=year, part=part, settings=resolved)
     issues: list[ManualVerificationIssue] = []

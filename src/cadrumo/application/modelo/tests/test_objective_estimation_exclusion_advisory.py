@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IrpfEstimationRegime, IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -69,6 +70,12 @@ def _calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         casilla_values={},

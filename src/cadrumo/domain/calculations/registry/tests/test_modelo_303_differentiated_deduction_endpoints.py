@@ -30,6 +30,7 @@ from .....domain.bienes_inversion.register import (
     RegistroRegularizacionResult,
     RegistroRegularizacionRow,
 )
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.flow import IvaFlowDirection
 from .....domain.iva.prorrata import InputClassification
@@ -81,6 +82,10 @@ def _revision():
     return build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2025, period="4T").revision
 
 
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+
+
 def _projection_refs() -> tuple[M303DifferentiatedDeductionProjectionRef, ...]:
     return tuple(
         M303DifferentiatedDeductionProjectionRef(
@@ -107,6 +112,7 @@ def _register(*, percentage_b: Decimal = Decimal("60")) -> ProrrataRegister:
             especial_transition=None,
             provisional_percentage=percentage,
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         )
         for sector_id, percentage in (("a", Decimal("80")), ("b", percentage_b))
     )
@@ -364,13 +370,21 @@ def test_projector_refuses_wrong_owner_contribution_even_when_structurally_forge
     (
         (
             ProrrataRegisterEntry(
-                ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None
+                ejercicio=2025,
+                sector_id="a",
+                regime=ProrrataRegisterRegime.NINGUNA,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             "no applicable regime",
         ),
         (
             ProrrataRegisterEntry(
-                ejercicio=2025, sector_id="a", regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
+                ejercicio=2025,
+                sector_id="a",
+                regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             "no resolved percentage",
         ),

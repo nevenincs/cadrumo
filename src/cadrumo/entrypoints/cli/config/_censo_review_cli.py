@@ -6,12 +6,13 @@ import typer
 
 from ....application.user_profile.censal_operation import CensalReviewProjectionV1
 from ....core.i18n import tr
+from .._common import emit_progress_line
 
 
 def confirm_censal_review(projection: CensalReviewProjectionV1) -> bool:
     """Render the reviewed facts in the CLI and require explicit approval."""
     for field in projection.fields:
-        typer.echo(f"{field.path}: {field.observed_value or '—'} [{field.intent.value}]")
+        emit_progress_line(f"{field.path}: {field.observed_value or '—'} [{field.intent.value}]")
     return typer.confirm(tr("flows.manager.censal_review.apply"), default=False)
 
 

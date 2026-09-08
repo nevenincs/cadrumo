@@ -29,6 +29,7 @@ from ..errors import ProfileCustodyRecoveryGuidance, ProfileCustodyRefusal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+
 _PROFILE_ID = UUID("06648eb9-e60e-46d2-bd35-9aaf55a92e24")
 _LEGACY_BUCKET_ID = "33333333-3333-4333-8333-333333333333"
 

@@ -223,6 +223,7 @@ def persist_filed_calculation_observation(
     payload = repo.prepare_observation_envelope(
         registry_observation,
         source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+        stamped_revision_id=observation.registry_snapshot_ref.revision_id,
         captured_at=observation.presented_at,
         source_metadata=_filed_observation_source_metadata(observation, justificante_csvs=justificante_csvs),
         # Passed separately from source_metadata, and that is the whole point:
@@ -232,7 +233,6 @@ def persist_filed_calculation_observation(
         # Canonical ingress: official evidence must recover its one typed
         # disposition from the submitted-file header before it can participate
         # in M303 carry. No compensación default is admitted here.
-        normalize_m303_carry=True,
     )
     if observation.modelo == Modelo.M303:
         source_artefact_sha256 = next(

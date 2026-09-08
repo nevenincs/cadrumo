@@ -35,6 +35,7 @@ from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_
 from ....domain.calculations.registry.m303_regimen_simplificado_annual_summary_bindings import (
     m303_regimen_simplificado_annual_summary_requirement,
 )
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.regimen_simplificado_rows import (
@@ -237,6 +238,12 @@ def _persist_presentado_source(
     source_revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=source_work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=source_work_unit.modelo,
+            revision_id=source_work_unit.revision_id,
+            modelo_year=source_work_unit.filing_year,
+            period=source_work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=casilla_values,
         observations=registry_grounded_observations(
@@ -310,6 +317,12 @@ def _replace_source_with_new_filed_revision(
     replacement = CalculationRevision(
         calculation_revision_id=replacement_id,
         work_unit_id=source_work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=source_work_unit.modelo,
+            revision_id=source_work_unit.revision_id,
+            modelo_year=source_work_unit.filing_year,
+            period=source_work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=casilla_values,
         observations=registry_grounded_observations(

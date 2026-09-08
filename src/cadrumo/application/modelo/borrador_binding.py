@@ -57,6 +57,7 @@ from ..aggregation import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..calculations.revision_carry_gate import revision_carry_outcome
 from ._decimal_parsing import decimal_from_string
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import build_modelo_precondition_failure
@@ -170,6 +171,24 @@ def resolve_modelo_100_borrador_bindings(
         period=command.period,
         snapshot=snapshot,
     )
+    if revision_carry_outcome(snapshot.registry_snapshot_ref).refused:
+        raise Modelo100BorradorBindingError(
+            translated_message="application.modelo.borrador_binding.errors.snapshot_load_failed",
+            context={"borrador_snapshot_id": command.borrador_snapshot_id},
+            precondition_failure=build_modelo_precondition_failure(
+                subject_leaf_key="modelo.work.calculate",
+                condition_id="modelo.work.calculate.borrador_snapshot.active",
+                scenario_id="modelo.work.calculate.borrador_snapshot.load_failed",
+                evidence_id="modelo.work.calculate.borrador_snapshot",
+                evidence_values={
+                    "borrador_snapshot_id": command.borrador_snapshot_id,
+                    "modelo": command.modelo,
+                    "year": command.filing_year,
+                    "period": command.period.registry_token,
+                },
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+            ),
+        )
     if snapshot.state is not SnapshotLifecycleState.ACTIVE:
         raise Modelo100BorradorBindingError(
             translated_message="application.modelo.borrador_binding.errors.snapshot_not_active",

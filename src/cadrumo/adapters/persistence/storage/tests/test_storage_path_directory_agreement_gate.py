@@ -26,14 +26,9 @@ entries costs nothing -- the population grows from 25 to 28 and the gate still
 passes truly -- and catches a real break the exclusion used to hide, so the
 exclusion was removed rather than re-justified.
 
-``config_reset_journal``'s ``reset-operations`` directory was the one
-pre-existing exception -- joined onto the raw storage root in
-``application/_config_reset_repository.py`` rather than resolved through a
-declared category. That gap is closed: ``reset-operations`` is now
-``StorageCategory.CONFIG_RESET_JOURNAL``'s declared subpath, so the exemption
-list below is empty. Kept as a live dict rather than deleted outright, so a
-future genuinely-unmatched key has a declared home to name itself in rather
-than reopening this docstring.
+``config_reset_journal``'s former unmatched directory is now declared by
+``StorageCategory.CONFIG_RESET_JOURNAL``. There is no exemption mechanism:
+every unmatched directory run is a live failure.
 """
 
 from __future__ import annotations
@@ -54,16 +49,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _KNOWN_DIRECTORY_SUBPATHS: Final[frozenset[str]] = frozenset(
     storage_location(category).subpath for category in StorageCategory
 )
-
-_UNDECLARED_DIRECTORY_EXEMPTIONS: Final[dict[str, str]] = {}
-"""Genuinely-unmatched keys, named explicitly rather than silently skipped.
-
-Empty today: ``config_reset_journal`` was the sole prior entry, retired once
-``reset-operations`` became ``StorageCategory.CONFIG_RESET_JOURNAL``'s declared
-subpath. The anti-rot test below still runs over whatever this holds, so a
-future entry is proven genuine rather than trusted on the comment beside it.
-"""
-
 
 def _anchored_definitions() -> list[StoragePathDefinition]:
     """Every filesystem-kind (``<root>``-anchored) definition, any anchor value.
@@ -98,8 +83,6 @@ def test_at_least_one_grammar_yields_a_directory_literal_run() -> None:
 def test_every_filesystem_grammars_directory_portion_matches_a_declared_subpath() -> None:
     unmatched: list[str] = []
     for definition in _anchored_definitions():
-        if definition.key in _UNDECLARED_DIRECTORY_EXEMPTIONS:
-            continue
         runs = literal_directory_runs(grammar=definition.grammar, kind=definition.kind)
         for run in runs:
             if run not in _KNOWN_DIRECTORY_SUBPATHS:
@@ -108,18 +91,6 @@ def test_every_filesystem_grammars_directory_portion_matches_a_declared_subpath(
                     f"segment {run!r}, which no StorageCategory declares as its subpath",
                 )
     assert not unmatched, "\n".join(unmatched)
-
-
-def test_the_exemption_list_names_only_genuinely_unmatched_keys() -> None:
-    """Anti-rot: an exemption whose key now DOES match every run must be removed,
-    or a future declaration change could hide behind a stale exemption."""
-    for key in _UNDECLARED_DIRECTORY_EXEMPTIONS:
-        definition = STORAGE_NAMESPACE_REGISTRY.path_by_key(key)
-        runs = literal_directory_runs(grammar=definition.grammar, kind=definition.kind)
-        assert any(run not in _KNOWN_DIRECTORY_SUBPATHS for run in runs), (
-            f"{key!r} is exempted but every directory segment it spells now matches a "
-            "declared subpath -- remove the exemption, it no longer protects anything"
-        )
 
 
 def test_a_renamed_subpath_would_be_caught_positive_control() -> None:

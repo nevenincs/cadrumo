@@ -22,19 +22,18 @@ context would decrypt under a key anyone can read.
 from __future__ import annotations
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import pytest
-from sqlalchemy.engine.default import DefaultDialect
 
-from ......core.config import load_settings, override_settings
+from ......core.config import Settings, load_settings, override_settings
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import bucket_scoped_storage_path
-from ...crypto.encrypted_columns import EncryptedBytes
 from ...errors import UnsecuredModeRefusedError
 from ...secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
+from ...sql import SecureObjectRepository
+from ...sql.engine import create_engine_from_settings
 from ..active_session import activate_session, current_active_bucket_session
 from ..bucket_session import BucketSession
 from ..master_key import UnsecuredMasterKeyProvider
@@ -67,24 +66,22 @@ def _seed_profile_row(tax_id: str, root: Path) -> None:
         storage_root=root,
     )
     document = json.dumps({"payload": {"facts": [{"path": "identity.tax_id", "value": tax_id}]}})
-    try:
-        with activate_session(seeding):
-            wire = EncryptedBytes().process_bind_param(document.encode("utf-8"), DefaultDialect())
-    finally:
-        seeding.close()
-
     database = bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE_FILE, _BUCKET_ID, settings=load_settings())
     database.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(database)
+    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{database.as_posix()}"))
     try:
-        connection.execute("CREATE TABLE IF NOT EXISTS secure_objects (namespace TEXT, payload BLOB)")
-        connection.execute(
-            "INSERT INTO secure_objects (namespace, payload) VALUES (?, ?)",
-            (USER_PROFILE_VALUE_NAMESPACE.namespace, wire),
-        )
-        connection.commit()
+        with activate_session(seeding):
+            SecureObjectRepository(engine=engine).save(
+                namespace=USER_PROFILE_VALUE_NAMESPACE.namespace,
+                object_key=f"user-profile:{_BUCKET_ID}",
+                classification=USER_PROFILE_VALUE_NAMESPACE.sensitivity,
+                schema_version=USER_PROFILE_VALUE_NAMESPACE.schema_version,
+                written_at=datetime.now(UTC),
+                payload=document.encode("utf-8"),
+            )
     finally:
-        connection.close()
+        engine.dispose()
+        seeding.close()
 
 
 def test_entering_the_unsecured_provider_on_a_real_profile_refuses(tmp_path: Path) -> None:

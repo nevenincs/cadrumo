@@ -199,6 +199,11 @@ def _seed_revision(
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_snapshot_ref(
+            modelo=modelo,
+            period=typed_period,
+            revision_id=revision_id,
+        ),
         state=state,
         created_at=_SEEDED_REVISION_AT,
         updated_at=_SEEDED_REVISION_AT,

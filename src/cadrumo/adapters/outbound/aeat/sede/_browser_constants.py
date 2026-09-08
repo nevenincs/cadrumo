@@ -11,7 +11,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final, Literal
 
 from .....core.config import load_settings
-from .....core.external_constants import LATIN_1_ENCODING
 
 if TYPE_CHECKING:
     from playwright.async_api import ViewportSize
@@ -27,14 +26,6 @@ PLAYWRIGHT_WAIT_NETWORKIDLE: Final[Literal["networkidle"]] = "networkidle"
 #: Short Playwright timeout (ms) used for non-critical ``wait_for_load_state`` probes
 #: inside retry loops where proceeding on timeout is the desired behaviour.
 PLAYWRIGHT_TIMEOUT_SHORT_MS: Final[int] = 2_000
-
-#: Character encoding used by the AEAT sede for legacy fixed-width response bodies
-#: (e.g. Modelo 303 page-03 records).  Alias of the canonical
-#: :data:`~core.external_constants.LATIN_1_ENCODING` constant; kept under
-#: this adapter-local name so existing callers do not need to reach into
-#: ``external_constants`` directly.
-SEDE_BODY_ENCODING: Final[str] = LATIN_1_ENCODING
-
 
 def default_viewport() -> ViewportSize:
     """Return the configured browser viewport size from settings."""

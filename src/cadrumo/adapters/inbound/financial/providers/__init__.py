@@ -22,8 +22,8 @@ Major declarations:
   authoritative flow direction.
 * :class:`CsvProvider`, :class:`OfxProvider`, :class:`XlsxProvider`, and
   :class:`PdfN26Provider` — the concrete per-format parsers.
-* :func:`detect_provider` and :func:`provider_for_extension` — resolve the
-  provider for a given source.
+* :func:`detect_provider` — resolve the provider for a given source through
+  extension-prioritised content validation.
 * :class:`FinancialProviderError` and its subclasses
   (:class:`BankStatementParseError`,
   :class:`UnsupportedFinancialSourceError`,

@@ -55,6 +55,7 @@ from ....adapters.persistence.storage.sql.session import session_scope
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -93,7 +94,7 @@ def _work_unit(*, bucket_id: str) -> WorkUnit:
         modelo="303",
         filing_year=2026,
         period=period,
-        revision_id="recipient-encryption-revision",
+        revision_id="2026-y-siguientes",
     )
     return WorkUnit(
         work_unit_id=work_unit_id,
@@ -101,7 +102,7 @@ def _work_unit(*, bucket_id: str) -> WorkUnit:
         modelo=ModeloCode("303"),
         filing_year=2026,
         period=period,
-        revision_id="recipient-encryption-revision",
+        revision_id="2026-y-siguientes",
         name="303-2026-1T",
         created_at=_NOW,
         updated_at=_NOW,
@@ -122,6 +123,12 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
         casilla_values={_CUOTA_CASILLA: Decimal("21.00")},

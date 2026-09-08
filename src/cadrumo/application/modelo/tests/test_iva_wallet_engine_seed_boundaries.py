@@ -10,6 +10,7 @@ import pytest
 
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from ....tests import general_m303_filing_evidence
+from ...calculations.binding_prefill import BindingPrefillReport
 from ...calculations.iva_compensation_history import seed_iva_compensation_period
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
@@ -74,6 +75,8 @@ def test_in_scope_period_rejects_supplied_first_period_zero_decision(tmp_path: P
             repository=CalculationObservationRepository(),
             decided_at=_DECIDED_AT,
             treat_absent_recurrence_as_first_period=True,
+            local_recurrence=None,
+            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
         )
 
         assert report.decision.selected_authority == "local_recurrence"

@@ -29,19 +29,17 @@ from __future__ import annotations
 
 import pytest
 
-from .....application.aggregation import DEFERRED_SOURCE_KINDS
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from ..bindings import (
-    _BINDING_SELECTOR_REGISTRY,
     _BINDING_VALIDATOR_REGISTRY,
     validate_binding_selector_shape,
 )
 from ..errors import RegistryValidationError
 from ..schema import DataBindingDefinition, ModeloDefinition, ModeloRevision, RegistryCatalogues
-from ._registry_schema_support import _committed_modelo, _committed_registry_tree
+from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -52,16 +50,6 @@ _M130_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
     surface="_M130_PAGOS_FRACCIONADOS_CASILLA",
 )
 _M130_RESULTADO_PREVIO_CASILLA: CasillaId = validated_casilla_id("07", surface="_M130_RESULTADO_PREVIO_CASILLA")
-
-
-def _deferred_validator_exemptions(
-    *,
-    deferred: frozenset[BindingSourceKind],
-    declared: frozenset[BindingSourceKind],
-    implemented: frozenset[BindingSourceKind],
-) -> frozenset[BindingSourceKind]:
-    """Return only sources that are deferred, undeclared, and validatorless."""
-    return deferred - declared - implemented
 
 
 def _committed_modelo_130() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -329,89 +317,6 @@ def test_dispatch_table_covers_every_validated_family() -> None:
     for case in _FAMILY_CASES:
         source = case[1]
         assert source in covered, f"family case {source!r} is not in the validator dispatch table"
-
-
-#: Binding source kinds resolved BEFORE the registry binding mesh (a pre-mesh
-#: gate / source-mesh decision), so they never appear as a
-#: ``DataBindingDefinition.source`` and carry no per-family selector or
-#: validator. Documented as mesh-only in ``core.aggregation.BindingSourceKind``
-#: (the borrador prefill decision and the M303 IVA-wallet compensación decision).
-_DOCUMENTED_MESH_ONLY_SOURCE_KINDS = frozenset(
-    {
-        BindingSourceKind.BORRADOR,
-        BindingSourceKind.IVA_WALLET_DECISION,
-    },
-)
-
-
-def test_every_binding_source_kind_is_validator_dispatched_or_documented_mesh_only() -> None:
-    """No BindingSourceKind ships unvalidated: it is dispatch-validated or documented mesh-only.
-
-    A new binding source kind must either register a per-family validator in
-    ``_BINDING_VALIDATOR_REGISTRY`` (and, by the selector/validator parity
-    asserted below, a strict selector model) or be enrolled in the pinned
-    mesh-only set. A member in NEITHER class fails here loudly, closing the gap
-    where a new registry-declarable source could compile and silently skip the
-    build-time binding validation the single-contract discipline requires.
-    """
-    validated = frozenset(_BINDING_VALIDATOR_REGISTRY)
-
-    # A legal binding source (one carrying a strict selector model) has EXACTLY
-    # one dispatch validator, and every dispatch validator has a selector model:
-    # no legal source ships unvalidated and no validator dangles without a shape.
-    assert validated == frozenset(_BINDING_SELECTOR_REGISTRY), (
-        "validator dispatch table and selector-model table have drifted: "
-        f"validator-only={sorted(str(s) for s in validated - frozenset(_BINDING_SELECTOR_REGISTRY))}, "
-        f"selector-only={sorted(str(s) for s in frozenset(_BINDING_SELECTOR_REGISTRY) - validated)}"
-    )
-
-    # The two classes are disjoint: a source is validator-dispatched XOR mesh-only.
-    assert validated.isdisjoint(_DOCUMENTED_MESH_ONLY_SOURCE_KINDS), (
-        "a documented mesh-only source also carries a dispatch validator: "
-        f"{sorted(str(s) for s in validated & _DOCUMENTED_MESH_ONLY_SOURCE_KINDS)}"
-    )
-
-    # A deferred member without a validator is the only further legal class.
-    # The exemption is derived from production disposition and disappears as
-    # soon as the source gains a validator (or leaves deferral on enrollment).
-    modelos, _ = _committed_registry_tree()
-    declared = frozenset(
-        binding.source for modelo in modelos for revision in modelo.revisions.values() for binding in revision.bindings
-    )
-    deferred_without_validator = _deferred_validator_exemptions(
-        deferred=DEFERRED_SOURCE_KINDS,
-        declared=declared,
-        implemented=validated,
-    )
-    unclassified = (
-        frozenset(BindingSourceKind) - validated - _DOCUMENTED_MESH_ONLY_SOURCE_KINDS - deferred_without_validator
-    )
-    assert not unclassified
-
-
-@pytest.mark.parametrize("ratchet", ["binding", "validator", "deferral"])
-def test_inventory_validator_exemption_disappears_on_each_enrollment_ratchet(ratchet: str) -> None:
-    """Any declaration, validator, or end of deferral removes the exemption."""
-    inventory = BindingSourceKind.INVENTORY
-    deferred = frozenset({inventory})
-    declared: frozenset[BindingSourceKind] = frozenset[BindingSourceKind]()
-    implemented: frozenset[BindingSourceKind] = frozenset[BindingSourceKind]()
-    assert inventory in _deferred_validator_exemptions(
-        deferred=deferred,
-        declared=declared,
-        implemented=implemented,
-    )
-    if ratchet == "binding":
-        declared = frozenset({inventory})
-    elif ratchet == "validator":
-        implemented = frozenset({inventory})
-    else:
-        deferred = frozenset()
-    assert inventory not in _deferred_validator_exemptions(
-        deferred=deferred,
-        declared=declared,
-        implemented=implemented,
-    )
 
 
 def test_isolated_revision_build_gate_runs_every_family() -> None:

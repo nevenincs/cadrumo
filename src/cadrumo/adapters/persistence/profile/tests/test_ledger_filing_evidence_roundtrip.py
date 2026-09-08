@@ -11,6 +11,7 @@ from pydantic import ValidationError
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -34,6 +35,12 @@ _TX_ID = "c" * 64
 _EVIDENCE_CASILLA: CasillaId = validated_casilla_id("00501")
 _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2022",
+    modelo_year=2026,
+    period="1T",
+)
 
 __all__ = ["secure_objects"]
 
@@ -114,6 +121,7 @@ def _revision(evidence: LedgerFilingEvidence | None) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_EVIDENCE_CASILLA: "140000.00"},
         source_transaction_ids=(_TX_ID,),

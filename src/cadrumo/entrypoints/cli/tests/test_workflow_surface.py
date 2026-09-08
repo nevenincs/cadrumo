@@ -517,11 +517,11 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
 
     configure = _invoke(["config", "auth", "configure", "--provider", "clave_movil"])
     unsupported_spelling = _invoke(["config", "auth", "configure", "--provider", "clave-movil"])
-    unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_pin"])
-    unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
-    unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
-    reserved_reset = _invoke(
-        ["--format", "json", "config", "auth", "reset", "--provider", "clave_pin", "--yes"],
+    unsupported = _invoke(["config", "auth", "configure", "--provider", "unknown_provider"])
+    unsupported_test = _invoke(["config", "auth", "test", "--provider", "unknown_provider"])
+    unsupported_login = _invoke(["config", "auth", "login", "--provider", "unknown_provider"])
+    unsupported_reset = _invoke(
+        ["--format", "json", "config", "auth", "reset", "--provider", "unknown_provider", "--yes"],
     )
 
     assert configure.exit_code == 0, configure.output
@@ -529,19 +529,13 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     assert unsupported_spelling.exit_code != 0
     assert "clave-movil" in unsupported_spelling.output
     assert unsupported.exit_code != 0
-    assert "clave_pin" in unsupported.output
+    assert "unknown_provider" in unsupported.output
     assert unsupported_test.exit_code != 0
-    assert "dnie_pkcs" in unsupported_test.output
+    assert "unknown_provider" in unsupported_test.output
     assert unsupported_login.exit_code != 0
-    assert "dnie_pkcs" in unsupported_login.output
-    assert reserved_reset.exit_code == 0, reserved_reset.output
-    reset_payload = json.loads(_json_output(reserved_reset))["result"]
-    assert reset_payload["providers"] == ["clave_pin"]
-    assert reset_payload["removed_sessions"] == 0
-    assert reset_payload["cleared_provider_configuration"] is False
-    assert reset_payload["cleared_locks"] == 0
-    assert reset_payload["removed_certificate_sources"] == 0
-    assert reset_payload["removed_certificate_secrets"] == 0
+    assert "unknown_provider" in unsupported_login.output
+    assert unsupported_reset.exit_code != 0
+    assert "unknown_provider" in unsupported_reset.output
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:

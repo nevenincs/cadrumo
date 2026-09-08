@@ -8,7 +8,7 @@ Coverage (contract):
   (path points to a non-existent file).
 - contract-C: translated_message resolves to a non-placeholder string in the
   catalogue (i.e. the locale key exists and is bound to real copy).
-- contract-D: fetch_notifications_summary raises SedeNavigationError with
+- contract-D: fetch_notifications_query raises SedeNavigationError with
   translated_message when storage_state_path is None.
 - contract-E: fetch_iva_compensation_wallet raises SedeNavigationError with
   translated_message when storage_state_path is None.
@@ -102,17 +102,17 @@ def test_no_auth_session_locale_key_resolves_to_real_copy() -> None:
 
 
 # ---------------------------------------------------------------------------
-# contract-D: fetch_notifications_summary carries translated_message on None path
+# contract-D: fetch_notifications_query carries translated_message on None path
 # ---------------------------------------------------------------------------
 
 
-def test_fetch_notifications_summary_carries_translated_message_on_none_path() -> None:
-    from ..notifications import fetch_notifications_summary
+def test_fetch_notifications_query_carries_translated_message_on_none_path() -> None:
+    from ..notifications import fetch_notifications_query
 
     session = _minimal_session(storage_state_path=None)
 
     with pytest.raises(SedeNavigationError) as exc_info:
-        asyncio.run(fetch_notifications_summary(session))
+        asyncio.run(fetch_notifications_query(session))
 
     assert exc_info.value.translated_message is not None
     assert "adapters.sede.errors.no_auth_session" not in exc_info.value.translated_message

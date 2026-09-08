@@ -38,9 +38,6 @@ from ._kdf_codec import (
     close_fd as _close_fd,
 )
 from ._kdf_codec import (
-    kdf_strength as _kdf_strength,
-)
-from ._kdf_codec import (
     resource_refusal as _resource_refusal,
 )
 from ._kdf_codec import (
@@ -75,7 +72,6 @@ if TYPE_CHECKING:
 
 PROFILE_CUSTODY_KDF_CALIBRATION_VERSION: Final = 1
 PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
-PROFILE_CUSTODY_KDF_WARMUP_COUNT: Final = 1
 PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
 PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
 PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS: Final = 0.250
@@ -122,16 +118,6 @@ class ProfileCustodyUnlock:
     envelope_digest: str
     kdf: ProfileCustodyKdfParameters
     dek: bytes
-
-
-@dataclass(frozen=True, slots=True)
-class ProfileCustodyKdfRatchetProposal:
-    """A post-success proposal for the custody transaction owner to publish."""
-
-    profile_id: UUID
-    expected_envelope_digest: str
-    current: ProfileCustodyKdfParameters
-    proposed: ProfileCustodyKdfParameters
 
 
 def profile_password_wrap_aad(
@@ -509,21 +495,6 @@ def wrap_profile_custody_recovery_material(
     return wrapped
 
 
-def propose_profile_kdf_ratchet(
-    unlock: ProfileCustodyUnlock,
-    calibration: ProfileCustodyKdfCalibration,
-) -> ProfileCustodyKdfRatchetProposal | None:
-    """Propose, but never publish, a strictly stronger post-proof KDF record."""
-    if _kdf_strength(calibration.parameters) <= _kdf_strength(unlock.kdf):
-        return None
-    return ProfileCustodyKdfRatchetProposal(
-        profile_id=unlock.profile_id,
-        expected_envelope_digest=unlock.envelope_digest,
-        current=unlock.kdf,
-        proposed=calibration.parameters,
-    )
-
-
 def _measure_profile_kdf(
     parameters: ProfileCustodyKdfParameters,
     *,
@@ -658,9 +629,7 @@ __all__ = [
     "PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS",
     "PROFILE_CUSTODY_KDF_TARGET_MIN_SECONDS",
     "PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS",
-    "PROFILE_CUSTODY_KDF_WARMUP_COUNT",
     "ProfileCustodyKdfCalibration",
-    "ProfileCustodyKdfRatchetProposal",
     "ProfileCustodyKdfResources",
     "ProfileCustodyUnlock",
     "calibrate_profile_kdf",
@@ -670,7 +639,6 @@ __all__ = [
     "profile_kdf_lease",
     "profile_kdf_resources",
     "profile_password_wrap_aad",
-    "propose_profile_kdf_ratchet",
     "read_kdf_frame",
     "unlock_profile_custody",
     "unlock_profile_custody_password_material",

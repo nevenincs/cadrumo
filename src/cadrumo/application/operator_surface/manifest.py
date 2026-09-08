@@ -143,33 +143,18 @@ class InputSchemaInventoryRow(BaseModel):
 
 
 class MountedFamilyInventoryRow(BaseModel):
-    """One mounted-family declaration projected from the operator contract.
-
-    ``unimplemented_reason`` carries the contract's
-    :class:`~application.operator_surface.FamilyMountState` verdict in the form
-    the join needs: present means the declaration knowingly describes a family
-    the tree does not reach, and says which capability is owed; absent means the
-    declaration claims the tree reaches it.
-    """
+    """One mounted-family declaration projected from the operator contract."""
 
     model_config = _STRICT_FROZEN
 
     root: str = Field(min_length=1)
     child: str = Field(min_length=1)
     provenance: str = Field(min_length=1)
-    unimplemented_reason: str | None = None
 
     @field_validator("root", "child", "provenance")
     @classmethod
     def _mounted_family_text_is_non_blank(cls, value: str) -> str:
         return _require_non_blank_inventory_text(value)
-
-    @field_validator("unimplemented_reason")
-    @classmethod
-    def _unimplemented_reason_is_non_blank_when_present(cls, value: str | None) -> str | None:
-        if value is not None and not value.strip():
-            raise ValueError("an unimplemented reason must say which capability is missing")
-        return value
 
     @property
     def identity(self) -> tuple[str, str]:
@@ -579,14 +564,8 @@ def _reconcile_mounted_families(
     )
     for identity, declaration in family_by_identity.items():
         reached = identity in reached_family_identities
-        if not reached and declaration.unimplemented_reason is None:
+        if not reached:
             diagnostics.append(f"orphan mounted family declaration {' '.join(identity)} from {declaration.provenance}")
-        elif reached and declaration.unimplemented_reason is not None:
-            diagnostics.append(
-                f"stale declared-unimplemented family {' '.join(identity)}: the live tree now reaches it, "
-                f"so the recorded gap is closed and its note must go with the change that closed it "
-                f"({declaration.unimplemented_reason})"
-            )
     for identity in sorted(reached_family_identities - frozenset(family_by_identity)):
         diagnostics.append(f"live mounted family with no contract declaration: {' '.join(identity)}")
 

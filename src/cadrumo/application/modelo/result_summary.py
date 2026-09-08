@@ -46,6 +46,7 @@ from ...domain.calculations.registry.schema_verification import fold_reconciliat
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .work_lifecycle import get_work_unit
 
 _log = get_logger(__name__)
@@ -126,6 +127,7 @@ def calculation_result_summary(
     ``revision.casilla_values``. Returns ``None`` when no candidate row
     survives.
     """
+    require_calculation_revision_coordinates_current(revision)
     casilla_values = revision.casilla_values
     try:
         work_unit = work_unit_resolver(str(revision.work_unit_id))

@@ -135,7 +135,7 @@ _RE_LATIN1_DECODE = re.compile(r'\.decode\(\s*["\']latin-1["\']')
 
 
 def test_no_bare_latin1_decode_literals() -> None:
-    """All latin-1 decode calls must go through LATIN_1_ENCODING or SEDE_BODY_ENCODING."""
+    """All latin-1 decode calls must go through the shared encoding authority."""
     # Exclude _export_parse.py comment-only references — the decode itself is migrated.
     files = _production_py_files()
     hits = _scan(files, _RE_LATIN1_DECODE)
@@ -174,7 +174,7 @@ _PATTERN_CONTROLS: tuple[tuple[re.Pattern[str], str, str], ...] = (
         "locator.click(timeout=2_000)",
         "locator.click(timeout=PLAYWRIGHT_TIMEOUT_SHORT_MS)",
     ),
-    (_RE_LATIN1_DECODE, 'body.decode("latin-1")', "body.decode(SEDE_BODY_ENCODING)"),
+    (_RE_LATIN1_DECODE, 'body.decode("latin-1")', "body.decode(LATIN_1_ENCODING)"),
 )
 
 #: Near-misses that must stay unflagged, so the scans cannot be made to pass by

@@ -275,10 +275,6 @@ auth:
       el proveïdor d'identitat Cl@ve Permanente. Automatitzable sense intervenció
       per als fluxos de lectura de l'AEAT; requereix DNI/NIE i contrasenya.
     clave_permanente_label: Cl@ve Permanente
-    clave_pin_description: Slot reservat i tancat per a Cl@ve PIN.
-    clave_pin_label: Cl@ve PIN
-    dnie_pkcs_description: Slot reservat i tancat per a DNI-e PKCS.
-    dnie_pkcs_label: DNI-e PKCS
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -645,9 +641,6 @@ live:
       expected_but_not_found: 'El vostre perfil declarat espera una declaració en
         {count} parell(s) model/exercici per als quals el registre de l''AEAT no en
         va retornar cap: {pairs}. Comproveu si es van arribar a presentar.'
-      found_more_than_expected: El registre de l'AEAT conté {raw_count} declaracions
-        del model {modelo} {period} {ejercicio}; s'ha conservat el registre més recent
-        ({expediente}) i s'han substituït {superseded} d'anterior(s).
       recapture_divergence: 'Tornar a capturar el model {modelo} {period} {ejercicio}
         ha canviat {count} valor(s) de casella observats anteriorment: {casillas}.
         L''AEAT pot tenir una declaració rectificada.'

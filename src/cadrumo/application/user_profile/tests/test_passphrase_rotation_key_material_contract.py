@@ -22,8 +22,11 @@ from ....adapters.persistence.storage.custody.capsule import load_committed_prof
 from ....adapters.persistence.storage.custody.envelope import create_profile_custody_password_envelope
 from ....adapters.persistence.storage.custody.recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
-    parse_profile_custody_recovery_envelope,
-    unlock_profile_custody_recovery,
+    ProfileCustodyRecoveryEnvelope,
+)
+from ....adapters.persistence.storage.custody.recovery_artifact import (
+    ProfileCustodyRecoveryArtifact,
+    unlock_imported_profile_custody_recovery_artifact,
 )
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..capsule_record import (
@@ -77,10 +80,16 @@ def test_rotation_must_preserve_the_dek_epoch_so_an_outstanding_recovery_artifac
         assert rotated.self_digest != material.envelope.self_digest
         assert rotated.dek_epoch == material.envelope.dek_epoch
 
-        recovery = parse_profile_custody_recovery_envelope(
+        recovery = ProfileCustodyRecoveryEnvelope.model_validate_json(
             (material.capsule_path / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME).read_bytes(),
         )
-        proved = unlock_profile_custody_recovery(recovery, handed[0], sentinel=material.sentinel)
+        proved = unlock_imported_profile_custody_recovery_artifact(
+            ProfileCustodyRecoveryArtifact.from_recovery_envelope(recovery),
+            handed[0],
+            sentinel=material.sentinel,
+            expected_profile_id=profile_id,
+            expected_dek_epoch=material.envelope.dek_epoch,
+        )
 
         assert proved.dek == dek
         assert proved.dek_epoch == rotated.dek_epoch

@@ -36,7 +36,10 @@ from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
 )
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.filing_text import ModeloActorLabel
+from ..calculations.revision_carry_gate import revision_carry_outcome
+from .action_errors import WorkUnitRevisionDivergenceError
 
 
 class ModeloReconciliationEvidenceKind(StrEnum):
@@ -188,6 +191,7 @@ class ModeloReconciliationRecord(BaseModel):
     bucket_event_id: BucketEventId
     bucket_id: BucketId
     work_unit_id: WorkUnitId
+    registry_snapshot_ref: RegistrySnapshotRef
     source_kind: ModeloReconciliationEvidenceKind
     source_ref: str = ""
     verdict: ModeloReconciliationVerdict
@@ -325,11 +329,25 @@ def list_modelo_reconciliations(
     none for the requested work unit) returns an empty tuple — the clean "no
     reconciliations recorded yet" signal, not an error.
     """
-    records = [
-        record
-        for record in modelo_reconciliation_persistence().iter_records()
-        if record.bucket_id == bucket_id and (work_unit_id is None or record.work_unit_id == work_unit_id)
-    ]
+    records: list[ModeloReconciliationRecord] = []
+    for record in modelo_reconciliation_persistence().iter_records():
+        if record.bucket_id != bucket_id or (work_unit_id is not None and record.work_unit_id != work_unit_id):
+            continue
+        outcome = revision_carry_outcome(record.registry_snapshot_ref)
+        if outcome.refused:
+            ref = record.registry_snapshot_ref
+            raise WorkUnitRevisionDivergenceError(
+                translated_message="application.modelo.errors.work_unit_revision_divergence",
+                context={
+                    "work_unit_id": record.work_unit_id,
+                    "modelo": str(ref.modelo),
+                    "filing_year": str(ref.modelo_year),
+                    "period": str(ref.period),
+                    "work_unit_revision": str(ref.revision_id),
+                    "law_revision": str(outcome.selected_revision_id or "unresolvable"),
+                },
+            )
+        records.append(record)
     # Storage order is the object-key digest order, not the reconciliation
     # order; the event id breaks a tie between two runs sharing an instant so
     # the listing is stable across reads.

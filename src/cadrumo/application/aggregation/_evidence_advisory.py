@@ -161,18 +161,6 @@ def _transaction_missing_evidence_flow(transaction: Transaction) -> IvaFlowDirec
     return None if _row_has_linked_evidence(transaction) else flow
 
 
-def transaction_missing_deductible_iva_evidence(transaction: Transaction) -> bool:
-    """Return whether ``transaction`` claims deductible IVA without evidence."""
-    flow = _transaction_missing_evidence_flow(transaction)
-    return flow is not None and is_deducible_flow(flow)
-
-
-def transaction_missing_output_iva_evidence(transaction: Transaction) -> bool:
-    """Return whether ``transaction`` declares output IVA without linked evidence."""
-    flow = _transaction_missing_evidence_flow(transaction)
-    return flow is not None and is_devengada_flow(flow) and not is_deducible_flow(flow)
-
-
 def _missing_evidence_diagnostic(
     transaction: Transaction,
     *,
@@ -265,6 +253,4 @@ __all__ = [
     "MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND",
     "MISSING_OUTPUT_IVA_EVIDENCE_SOURCE_KIND",
     "missing_evidence_advisory_observations",
-    "transaction_missing_deductible_iva_evidence",
-    "transaction_missing_output_iva_evidence",
 ]

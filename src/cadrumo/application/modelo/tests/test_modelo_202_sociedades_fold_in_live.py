@@ -86,6 +86,7 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
+from ....tests.registry_observations import revision_id_for_observation
 from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
@@ -266,7 +267,20 @@ def _seed_m202_pago_for_m200(*, period: str, value: Decimal, obs_repo: Calculati
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=_M202,
+                filing_year=_FILING_YEAR,
+                period=period,
+                observations=registry_grounded_observations(
+                    modelo=_M202,
+                    filing_year=_FILING_YEAR,
+                    period=period,
+                    casilla_values={
+                        _M202_PAGO_OUTPUT: value,
+                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                    },
+                ),
+            )))
     )
 
 
@@ -369,7 +383,20 @@ def _seed_m202_pago(*, period: str, value: Decimal, obs_repo: CalculationObserva
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=_M202,
+                filing_year=_FILING_YEAR,
+                period=period,
+                observations=registry_grounded_observations(
+                    modelo=_M202,
+                    filing_year=_FILING_YEAR,
+                    period=period,
+                    casilla_values={
+                        _M202_PAGO_OUTPUT: value,
+                        _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                    },
+                ),
+            )))
     )
 
 
@@ -391,7 +418,18 @@ def _seed_m200_prior_cuota(*, cuota: Decimal, obs_repo: CalculationObservationRe
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=_M200,
+                filing_year=_PRIOR_M200_YEAR,
+                period="0A",
+                observations=registry_grounded_observations(
+                    modelo=_M200,
+                    filing_year=_PRIOR_M200_YEAR,
+                    period="0A",
+                    casilla_values={_M200_CUOTA_LIQUIDA: cuota},
+                    grade=RegistryAuthorityGrade.CALCULATION,
+                ),
+            )))
     )
 
 

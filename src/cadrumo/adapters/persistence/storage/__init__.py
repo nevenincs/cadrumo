@@ -23,10 +23,9 @@ Where the contracts live:
   contracts; a layer-two caller wants the predicates.
 - Encryption substrate — ``envelope``, ``blob_store``, ``master_key``,
   ``secret_store`` and ``crypto``, defining :class:`Envelope`,
-  :class:`CipherEnvelope`, :class:`EncryptedBlobStore`, :class:`SecretStore`,
+  :class:`EncryptedBlobStore`, :class:`SecretStore`,
   :class:`MasterKeyProvider` and the column-level helpers
-  :class:`EncryptedString`, :class:`EncryptedBytes`, :class:`EncryptedJSON`
-  and :class:`HashedLookup`.
+  :class:`EncryptedString` and :class:`HashedLookup`.
 - Runtime and custody boundary — ``runtime`` and ``runtime_readiness`` for
   :class:`StorageRuntime` and :class:`StorageRuntimeReadiness`,
   ``runtime_repository`` for the repository factories, ``custody`` for the

@@ -38,6 +38,7 @@ from ....modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....submission.models import ModeloDraftStatus
+from ..authority import bundled_authority
 from ..bindings import (
     CasillaObservation,
     OracleModeloObservation,
@@ -618,6 +619,11 @@ def test_calculation_revision_carries_typed_observations() -> None:
         source_refs=("aeat-iva-2025",),
     )
     work_unit_id = "b" * 64
+    registry_snapshot_ref = bundled_authority().snapshot(
+        "303",
+        filing_year=2025,
+        period="1T",
+    ).snapshot_ref
     casilla_values: dict[CasillaId, Decimal] = {_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("12345.67")}
     revision = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
@@ -629,6 +635,7 @@ def test_calculation_revision_carries_typed_observations() -> None:
             source_provenance=(),
         ),
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=(observation,),

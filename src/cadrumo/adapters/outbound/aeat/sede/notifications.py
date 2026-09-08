@@ -20,8 +20,8 @@ concern (the local inbox tracks read/unread); the reader never
 tells AEAT "this was read".
 
 Public surface: :class:`RemoteNotification`, :class:`NotificationsSnapshot`,
-:func:`parse_notifications_query`, :func:`parse_notifications_summary`,
-:func:`fetch_notifications_query`, :func:`fetch_notifications_summary`,
+:func:`parse_notifications_query`,
+:func:`fetch_notifications_query`,
 :func:`notifications_query_url`.
 """
 
@@ -152,17 +152,6 @@ The model validates strictly and is built from scraped text, so it takes the lit
 over the members rather than the bare enum, which would refuse the plain token.
 """
 
-SummaryTableTipo = Literal[
-    SedeNotificationTipo.NOTIFICACION,
-    SedeNotificationTipo.COMUNICACION,
-]
-"""The two kinds a summary table can actually distinguish.
-
-A genuine narrowing, not a second vocabulary: the summary table names one of these or
-says nothing at all, so ``PENDIENTE`` and ``UNKNOWN`` are unreachable there. Kept narrow
-so a reader cannot pass a pending row where a resolved kind is required.
-"""
-
 
 class RemoteNotification(BaseModel):
     """One row of AEAT's notifications/communications surface.
@@ -240,8 +229,6 @@ def parse_notifications_query(html: str, *, source_url: str) -> NotificationsSna
 
     This is the canonical list view; every row carries the full
     column set (``tipo``, ``leída``, ``modo de notificación``, etc.).
-    Prefer this over :func:`parse_notifications_summary` when a
-    complete picture is needed.
 
     Args:
         html: Raw HTML body of a SvInteresadosQuery results page.
@@ -251,29 +238,7 @@ def parse_notifications_query(html: str, *, source_url: str) -> NotificationsSna
     Returns:
         A :class:`NotificationsSnapshot` with one row per item.
     """
-    rows = _parse_rows(html, source_url=source_url, is_summary=False)
-    return NotificationsSnapshot(
-        rows=tuple(rows),
-        captured_at=now(),
-        source_url=AnyHttpUrl(source_url),
-    )
-
-
-def parse_notifications_summary(html: str, *, source_url: str) -> NotificationsSnapshot:
-    """Parse the unread-summary ``ResumenInteresados`` tables.
-
-    The summary carries fewer columns per row (no ``leída`` / ``modo``),
-    so the returned :class:`RemoteNotification` records leave those as
-    ``None``. Useful for a cheap unread count / dashboard view.
-
-    Args:
-        html: Raw HTML body of a ResumenInteresados page.
-        source_url: URL the HTML was scraped from.
-
-    Returns:
-        A :class:`NotificationsSnapshot` with one row per item.
-    """
-    rows = _parse_rows(html, source_url=source_url, is_summary=True)
+    rows = _parse_rows(html, source_url=source_url)
     return NotificationsSnapshot(
         rows=tuple(rows),
         captured_at=now(),
@@ -285,7 +250,6 @@ def _parse_rows(
     html: str,
     *,
     source_url: str,
-    is_summary: bool,
 ) -> list[RemoteNotification]:
     """Walk every certificate-bearing table in ``html`` and yield typed rows."""
     try:
@@ -297,7 +261,7 @@ def _parse_rows(
 
     rows: list[RemoteNotification] = []
     for table in soup.find_all("table"):
-        rows.extend(_certificate_table_rows(table, source_url=source_url, is_summary=is_summary))
+        rows.extend(_certificate_table_rows(table, source_url=source_url))
     return rows
 
 
@@ -305,7 +269,6 @@ def _certificate_table_rows(
     table: Tag,
     *,
     source_url: str,
-    is_summary: bool,
 ) -> list[RemoteNotification]:
     """Yield typed rows from one table, or nothing when it bears no certificate column."""
     header_cells = [th.get_text(" ", strip=True) for th in table.find_all("th")]
@@ -318,8 +281,6 @@ def _certificate_table_rows(
         table,
         header_index=_index_columns(normalised),
         source_url=source_url,
-        is_summary=is_summary,
-        summary_table_tipo=_summary_table_tipo(table) if is_summary else None,
     )
 
 
@@ -328,8 +289,6 @@ def _rows_from_table_body(
     *,
     header_index: dict[str, int],
     source_url: str,
-    is_summary: bool,
-    summary_table_tipo: SummaryTableTipo | None,
 ) -> list[RemoteNotification]:
     """Project every populated body row of one certificate-bearing table."""
     rows: list[RemoteNotification] = []
@@ -341,8 +300,6 @@ def _rows_from_table_body(
             cells,
             header_index=header_index,
             source_url=source_url,
-            is_summary=is_summary,
-            summary_table_tipo=summary_table_tipo,
         )
         if row is not None:
             rows.append(row)
@@ -391,8 +348,6 @@ def _row_from_cells(
     *,
     header_index: dict[str, int],
     source_url: str,
-    is_summary: bool,
-    summary_table_tipo: SummaryTableTipo | None,
 ) -> RemoteNotification | None:
     """Build a :class:`RemoteNotification` from one table row, or ``None`` if it cannot be classified."""
     cert_idx = header_index.get("certificado")
@@ -419,12 +374,7 @@ def _row_from_cells(
     titular_nif, titular_nombre = _split_nif_name(titular_raw)
     destinatario_nif, destinatario_nombre = _split_nif_name(destinatario_raw)
 
-    tipo = _classify_tipo(
-        tipo_raw,
-        concepto_raw,
-        is_summary=is_summary,
-        summary_table_tipo=summary_table_tipo,
-    )
+    tipo = _classify_tipo(tipo_raw, concepto_raw)
     concepto = concepto_raw.replace("*", "").strip()
     leida = _parse_leida(leida_raw)
 
@@ -463,25 +413,9 @@ def _split_nif_name(raw: str) -> tuple[str, str]:
     return parts[0], parts[1].strip()
 
 
-def _summary_table_tipo(table: Tag) -> SummaryTableTipo | None:
-    """Return the summary category declared by the table's preceding section heading."""
-    heading = table.find_previous(["h2", "h3"])
-    if heading is None:
-        return None
-    label = heading.get_text(" ", strip=True).lower()
-    if "comunic" in label:
-        return SedeNotificationTipo.COMUNICACION
-    if "notific" in label:
-        return SedeNotificationTipo.NOTIFICACION
-    return None
-
-
 def _classify_tipo(
     tipo_raw: str,
     concepto_raw: str,
-    *,
-    is_summary: bool,
-    summary_table_tipo: SummaryTableTipo | None,
 ) -> SedeNotificationTipoValue:
     """Classify a row into ``notificacion`` / ``comunicacion`` / ``pendiente`` / ``unknown``."""
     lower = tipo_raw.lower()
@@ -491,12 +425,6 @@ def _classify_tipo(
         return SedeNotificationTipo.NOTIFICACION
     if "comunic" in lower or "comunic" in concepto_raw.lower():
         return SedeNotificationTipo.COMUNICACION
-    if summary_table_tipo is not None:
-        return summary_table_tipo
-    if is_summary:
-        # A malformed summary lacking its section heading retains the historic
-        # conservative default instead of silently becoming an unknown row.
-        return SedeNotificationTipo.NOTIFICACION
     return SedeNotificationTipo.UNKNOWN
 
 
@@ -515,29 +443,6 @@ def _parse_leida(raw: str | None) -> bool | None:
 
 
 # ── Live fetchers ──────────────────────────────────────────────────────────
-
-
-async def fetch_notifications_summary(
-    session: AeatSession,
-    *,
-    settings: Settings | None = None,
-) -> NotificationsSnapshot:
-    """Live-fetch ``ResumenInteresados`` using the authenticated session.
-
-    Args:
-        session: An authenticated :class:`AeatSession` whose encrypted
-            browser state carries valid AEAT cookies.
-        settings: Optional :class:`core.config.Settings` override.
-
-    Returns:
-        A :class:`NotificationsSnapshot` parsed from the live HTML.
-    """
-    return await _fetch_and_parse(
-        session,
-        url=_NOTIF_SUMMARY_URL,
-        parser=parse_notifications_summary,
-        settings=settings,
-    )
 
 
 def notifications_query_url(*, today: date, lookback_years: int | None = None) -> str:
@@ -905,9 +810,7 @@ __all__ = [
     "assert_notifications_read_landing",
     "fetch_notification_document",
     "fetch_notifications_query",
-    "fetch_notifications_summary",
     "notification_detail_url",
     "notifications_query_url",
     "parse_notifications_query",
-    "parse_notifications_summary",
 ]

@@ -7,6 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
@@ -14,6 +15,7 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.iva_compensation.reconciliation import IvaCompensationOverride, IvaCompensationReconciliationDecision
 from ....tests import general_m303_filing_evidence
+from ...calculations.binding_prefill import BindingPrefillReport, extract_modelo_303_local_iva_compensation_recurrence
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import (
     CalculationObservationRepository,
@@ -61,12 +63,19 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
         snapshot = _snapshot_303()
+        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=observation_repo,
+            captured_at=_DECIDED_AT,
+        )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
             wallet=_wallet_observation(pending=Decimal("1200.00")),
             repository=observation_repo,
             decided_at=_DECIDED_AT,
+            local_recurrence=local_recurrence,
+            prefill_report=prefill_report,
         )
 
         loaded_decision = IvaWalletDecisionRepository().load_decision(
@@ -157,11 +166,11 @@ def test_no_seed_303_calculate_with_prior_filed_history_stays_safely_blocked(
 
     # Blocked on the filed-history-only divergence — never silently carried.
     assert "missing" in str(exc_info.value) or exc_info.value.translated_message is not None
-    # The blocked error MUST carry the divergence/reason context so the localized
-    # `iva_wallet_blocked` template renders them instead of leaking `%{divergence}`/`%{reason}`.
-    assert exc_info.value.translated_message == "application.modelo.errors.iva_wallet_blocked"
+    # Filed history without an operator-selected authority refuses through its
+    # canonical decision reason; no generic compatibility key is substituted.
+    assert exc_info.value.translated_message == "application.iva_wallet.decision_reason.filed_history_requires_override"
     assert exc_info.value.context is not None
-    assert exc_info.value.context["divergence"] == "missing"
+    assert exc_info.value.context["divergence"] == "filed_history_only"
     assert exc_info.value.context.get("reason")
 
 
@@ -171,12 +180,19 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
         snapshot = _snapshot_303()
+        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=observation_repo,
+            captured_at=_DECIDED_AT,
+        )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
             wallet=None,
             repository=observation_repo,
             decided_at=_DECIDED_AT,
+            local_recurrence=local_recurrence,
+            prefill_report=prefill_report,
         )
 
         assert report.decision.selected_authority == "filed_history"
@@ -188,7 +204,10 @@ def test_missing_wallet_filed_history_decision_blocks_real_modelo_303_engine(tmp
         }
 
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="filed_history_only") as exc_info:
+        with pytest.raises(
+            ModeloIvaWalletReconciliationBlocked,
+            match="filed_history_requires_override",
+        ) as exc_info:
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -249,7 +268,7 @@ def test_prior_calculated_303_cannot_unblock_next_period_without_validated_filed
 
         snapshot_2t = _snapshot_303(period="2T")
         work_unit_2t = _create_modelo_303_work_unit(snapshot_2t, work_unit_repository=work_repo)
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="missing"):
+        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="no_usable_authority"):
             calculate_modelo_revision(
                 work_unit_2t.work_unit_id,
                 actor="operator",
@@ -322,6 +341,11 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
         target_year = 2026
         target_period = "1T"
         snapshot = _snapshot_303(filing_year=target_year, period=target_period)
+        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=observation_repo,
+            captured_at=_DECIDED_AT,
+        )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
@@ -334,6 +358,8 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
             ),
             repository=observation_repo,
             decided_at=_DECIDED_AT,
+            local_recurrence=local_recurrence,
+            prefill_report=prefill_report,
         )
 
         assert report.decision.selected_authority == "aeat_wallet"
@@ -400,10 +426,10 @@ def _official_303_envelope(
     revision,
     work_unit,
     declaration_type: ResultDisposition,
-    stamped_revision_id: str | None = None,
+    stamped_revision_id: str | None,
     result_disposition: ResultDisposition | None = None,
 ) -> None:
-    """Persist an official-source envelope through the production encrypted repository."""
+    """Persist canonical evidence, then inject the requested read-side mutation."""
     source_headers = (
         ObservedHeaderFact(
             header_key="declaration_type",
@@ -412,30 +438,36 @@ def _official_303_envelope(
             source_locator=(f"modelo-303-fichero-boe:modelo-303-page-01:declaration-type:{declaration_type.value}"),
         ),
     )
-    repository.save(
-        repository.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo="303",
-                filing_year=work_unit.filing_year,
-                period=work_unit.period.registry_token,
-                observations=revision.observations,
-            ),
-            source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
-            captured_at=_DECIDED_AT,
-            stamped_revision_id=stamped_revision_id or work_unit.revision_id,
-            source_headers=source_headers,
-            result_disposition=(
-                ResultDispositionProjection(
-                    disposition=result_disposition,
-                    provenance_kind="source_header",
-                    provenance_locator="test:conflicting-official-disposition",
-                )
-                if result_disposition is not None
-                else None
-            ),
-            normalize_m303_carry=result_disposition is None,
-        )
+    observation = RegistryModeloObservation(
+        modelo="303",
+        filing_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+        observations=revision.observations,
     )
+    prepared = repository.prepare_observation_envelope(
+        observation,
+        source_kind=ObservationSourceKind.AEAT_SEDE_JUSTIFICANTE,
+        captured_at=_DECIDED_AT,
+        stamped_revision_id=work_unit.revision_id,
+        source_headers=source_headers,
+    )
+    mutated = prepared.model_copy(
+        update={
+            "stamped_revision_id": stamped_revision_id,
+            **(
+                {
+                    "result_disposition": ResultDispositionProjection(
+                        disposition=result_disposition,
+                        provenance_kind="source_header",
+                        provenance_locator="test:conflicting-official-disposition",
+                    ),
+                }
+                if result_disposition is not None
+                else {}
+            ),
+        }
+    )
+    repository.save(mutated)
 
 
 def test_refunded_filed_envelope_feeds_zero_to_wallet_and_never_reappears(tmp_path: Path) -> None:
@@ -557,6 +589,7 @@ def test_official_and_local_refund_envelopes_feed_the_same_wallet_recurrence(tmp
                     revision=revision,
                     work_unit=work_unit,
                     declaration_type=ResultDisposition.DEVOLUCION,
+                    stamped_revision_id=work_unit.revision_id,
                 )
             else:
                 persist_filed_revision_observation(
@@ -603,6 +636,13 @@ def test_wallet_refuses_revision_mismatched_or_header_conflicting_official_envel
             result_disposition=result_disposition,
         )
         target = _create_modelo_303_work_unit(_snapshot_303(period="2T"), work_unit_repository=work_repo)
+        if stamped_revision_id is None:
+            with pytest.raises(ValidationError, match="stamped_revision_id"):
+                lazily_reconcile_local_iva_compensation_for_work_unit(
+                    target,
+                    snapshot=_snapshot_303(period="2T"),
+                )
+            return
         decision = lazily_reconcile_local_iva_compensation_for_work_unit(
             target,
             snapshot=_snapshot_303(period="2T"),
@@ -660,6 +700,7 @@ def test_normal_wallet_replay_revalidates_prior_envelope_recurrence(
                 revision=revision,
                 work_unit=work_unit,
                 declaration_type=ResultDisposition.DEVOLUCION,
+                stamped_revision_id=work_unit.revision_id,
                 result_disposition=ResultDisposition.COMPENSACION,
             )
 
@@ -690,6 +731,7 @@ def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(tmp_
         work_repo, _, _ = _work_unit_repositories()
         snapshot = _snapshot_303(period="2T")
         target = _create_modelo_303_work_unit(snapshot, work_unit_repository=work_repo)
+        local_recurrence, prefill_report = (None, BindingPrefillReport(prefilled=(), binding_values={}))
         decision = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=taxpayer_nif,
@@ -702,6 +744,8 @@ def test_normal_wallet_replay_preserves_override_with_envelope_like_locator(tmp_
                 recorded_at=_DECIDED_AT,
             ),
             decided_at=_DECIDED_AT,
+            local_recurrence=local_recurrence,
+            prefill_report=prefill_report,
         ).decision
 
         replayed = resolve_iva_compensation_decision_for_calculation(

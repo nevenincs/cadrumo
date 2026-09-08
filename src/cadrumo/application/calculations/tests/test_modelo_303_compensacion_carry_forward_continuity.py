@@ -50,8 +50,12 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy import select
 
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.engine import get_engine
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import (
     RegistryModeloObservation,
@@ -60,9 +64,10 @@ from ....domain.calculations.registry.bindings import (
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.registry_observations import revision_id_for_observation
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
-from ..observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository, observation_key
 from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -330,7 +335,7 @@ def test_2024_2t_credit_carries_to_3t_across_the_official_design_boundary(tmp_pa
 
 def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_path: Path) -> None:
     """A persisted 2T observation cannot carry when its design stamp is wrong."""
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         observation_repository = CalculationObservationRepository()
         source_result, _ = _calculate_303(
             filing_year=_YEAR_2024,
@@ -347,10 +352,26 @@ def test_2024_3t_refuses_a_2t_observation_stamped_with_the_late_revision(tmp_pat
                 ),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-                # Mutation bite: 2T must be stamped with the early, not 3T,
-                # design. The real carry gate drops this persisted source.
-                stamped_revision_id=_LATE_2024_REVISION,
+                stamped_revision_id=_EARLY_2024_REVISION,
             )
+        )
+        statement = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == CalculationObservationRepository.namespace,
+            SecureObjectRow.object_key == observation_key(
+                _MODELO,
+                Period.from_year_and_code(_YEAR_2024, _EARLY_2024_PERIOD),
+            ),
+        )
+
+        def mutate(envelope) -> None:
+            # Mutation bite: 2T must be stamped with the early, not 3T,
+            # design. The real carry gate drops this persisted source.
+            envelope["payload"]["stamped_revision_id"] = _LATE_2024_REVISION
+
+        mutate_encrypted_secure_object_json(
+            get_engine(profile.settings),
+            row_statement=statement,
+            mutate=mutate,
         )
         target_snapshot = bundled_authority().snapshot(
             _MODELO,
@@ -407,7 +428,7 @@ def test_year_n_plus_1_1t_casilla_110_auto_resolves_from_prior_year_4t(tmp_path:
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            )
+            stamped_revision_id=revision_id_for_observation(_registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)))
         )
 
         snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")
@@ -448,7 +469,7 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            )
+            stamped_revision_id=revision_id_for_observation(_registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)))
         )
 
         # Year N+1 — 1T: the carry resolves from the local store (cross-renta

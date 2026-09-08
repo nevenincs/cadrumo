@@ -1,4 +1,4 @@
-"""Encrypted inventory-ledger resolver for the 2025 Modelo 100 projection."""
+"""Encrypted inventory-ledger resolver for typed inventory binding projections."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from typing import ClassVar, Protocol, get_args
 from pydantic import ValidationError
 
 from ...core.aggregation import BindingSourceKind
-from ...core.modelo import Modelo
 from ...domain.calculations.registry.inventory_bindings import InventorySelector
 from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.calculations.row_source_identity import RowSourceIdentity
@@ -80,19 +79,6 @@ class InventorySourceResolver:
         if not bindings:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         binding_ids = tuple(sorted({binding.id for binding in bindings}))
-        if context.modelo != Modelo.M100 or context.filing_year != 2025 or context.period.filing_year != 2025:
-            return CalculationSourceResolution(
-                resolver_id=self.resolver_id,
-                owned_sources=self.owned_sources,
-                unresolved_binding_ids=binding_ids,
-                diagnostics=(
-                    _diagnostic(
-                        reason="unhandled_binding_source",
-                        state="unsupported_coordinate",
-                        message="only Modelo 100 filing year 2025 inventory bindings are supported",
-                    ),
-                ),
-            )
         typed_bindings = [
             (binding, binding.selector) for binding in bindings if isinstance(binding.selector, InventorySelector)
         ]
@@ -108,6 +94,12 @@ class InventorySourceResolver:
                         message="one or more bindings do not carry the canonical inventory row template",
                     ),
                 ),
+            )
+        selector_years = {selector.filing_year for _binding, selector in typed_bindings}
+        if selector_years != {context.filing_year}:
+            return self._template_refusal(
+                binding_ids,
+                "inventory binding year must match the selected filing coordinate",
             )
         bindings_by_operation: dict[str, DataBindingDefinition] = {}
         for binding, selector in typed_bindings:
@@ -125,7 +117,7 @@ class InventorySourceResolver:
             return self._storage_refusal(binding_ids)
         ledgers = tuple(
             sorted(
-                (item for item in document.ledgers if item.year == 2025),
+                (item for item in document.ledgers if item.year == context.filing_year),
                 key=lambda item: item.actividad_id,
             ),
         )
@@ -138,7 +130,7 @@ class InventorySourceResolver:
                     _diagnostic(
                         reason="source_domain_not_ready",
                         state="missing_activity_ledgers",
-                        message="no complete 2025 inventory activity ledger is available",
+                        message=f"no complete {context.filing_year} inventory activity ledger is available",
                     ),
                 ),
             )

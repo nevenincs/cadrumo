@@ -22,6 +22,7 @@ import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.aeat_literal_fixtures import aeat_url, configured_template_path
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..borrador_100 import (
@@ -34,6 +35,12 @@ from ..errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PERIOD = Period.from_year_and_code(2024, "0A")
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="100",
+    revision_id="2024",
+    modelo_year=2024,
+    period="0A",
+)
 _BUCKET_ID = "50505050-5050-4050-8050-505050505050"
 _OTHER_BUCKET_ID = "51515151-5151-4151-8151-515151515151"
 
@@ -61,6 +68,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
     snapshot_id = derive_borrador_100_snapshot_id(
         filing_year=2024,
         period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=captured_at,
         source_url=source_url,
         binding_values=binding_values,
@@ -71,6 +79,7 @@ def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
         modelo="100",
         filing_year=2024,
         period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=captured_at,
         source_url=source_url,
         state=SnapshotLifecycleState.ACTIVE,
@@ -142,6 +151,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
         snapshot_id = derive_borrador_100_snapshot_id(
             filing_year=2024,
             period=_PERIOD,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             captured_at=captured_at,
             source_url=source_url,
             binding_values=binding_values,
@@ -152,6 +162,7 @@ def test_borrador_100_superseded_state_survives_encrypted_storage_roundtrip(
             modelo="100",
             filing_year=2024,
             period=_PERIOD,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             captured_at=captured_at,
             source_url=source_url,
             state=SnapshotLifecycleState.SUPERSEDED,
@@ -204,6 +215,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
         snapshot_id = derive_borrador_100_snapshot_id(
             filing_year=2024,
             period=_PERIOD,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             captured_at=captured_at,
             source_url=source_url,
             binding_values=binding_values,
@@ -214,6 +226,7 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
             modelo="100",
             filing_year=2024,
             period=_PERIOD,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             captured_at=captured_at,
             source_url=source_url,
             state=SnapshotLifecycleState.SUPERSEDED,

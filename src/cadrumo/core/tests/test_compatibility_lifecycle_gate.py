@@ -149,93 +149,35 @@ def test_every_durable_format_carries_a_frozen_floor() -> None:
 @pytest.mark.parametrize(
     ("floors", "expected"),
     [
-        # The exact shape the checkpoint would take today: the three canonical
-        # tiers frozen, every other durable format left bare.
-        #
-        # These expectations are hand-listed ON PURPOSE. Deriving them from
-        # PERSISTED_FORMATS would compute the answer the same way the function
-        # under test does, so every case would pass by construction. The cost is
-        # that they go stale whenever the inventory changes -- which is the
-        # price of an independent expectation, not a defect in it.
-        (
-            {"secure_object": 1, "bundle": 3, "archive": 3},
-            (
-                "bucket_database_file",
-                "operation_journal",
-                "profile_capsule_archive_payload",
-                "profile_capsule_commit",
-                "profile_capsule_password_envelope",
-                "profile_capsule_recovery_envelope",
-                "profile_record",
-                "secret_index",
-            ),
-        ),
-        # One omission is still an omission.
-        (
-            {"secure_object": 1, "bundle": 3, "archive": 3, "secret_index": 2},
-            (
-                "bucket_database_file",
-                "operation_journal",
-                "profile_capsule_archive_payload",
-                "profile_capsule_commit",
-                "profile_capsule_password_envelope",
-                "profile_capsule_recovery_envelope",
-                "profile_record",
-            ),
-        ),
-        # Freezing only the substrate leaves every other durable format bare.
-        (
-            {"secure_object": 1},
-            (
-                "archive",
-                "bucket_database_file",
-                "bundle",
-                "operation_journal",
-                "profile_capsule_archive_payload",
-                "profile_capsule_commit",
-                "profile_capsule_password_envelope",
-                "profile_capsule_recovery_envelope",
-                "profile_record",
-                "secret_index",
-            ),
-        ),
+        ({"durable-a": 1}, ("durable-b", "durable-c")),
+        ({"durable-a": 1, "durable-b": 2}, ("durable-c",)),
+        ({}, ("durable-a", "durable-b", "durable-c")),
     ],
 )
 def test_the_enrollment_predicate_names_every_uncovered_durable_format(
     floors: dict[str, int],
     expected: tuple[str, ...],
 ) -> None:
-    """Non-vacuity: the live gate above is green only because nothing is frozen yet.
-
-    Each case is a real mapping the flip commit could plausibly land, driven
-    through the real predicate against the real declaration table. Without
-    these the gate would pass just as happily if the predicate always returned
-    an empty tuple.
-    """
-    assert unfloored_durable_formats(floors, PERSISTED_FORMATS) == expected
+    """Prove missing durable formats without mirroring the live inventory."""
+    formats = {
+        "durable-a": PersistedFormatClass.DURABLE,
+        "durable-b": PersistedFormatClass.DURABLE,
+        "durable-c": PersistedFormatClass.DURABLE,
+        "regenerable": PersistedFormatClass.REGENERABLE,
+    }
+    assert unfloored_durable_formats(floors, formats) == expected
 
 
 def test_the_enrollment_predicate_accepts_a_complete_freeze() -> None:
-    """The other half of non-vacuity: the predicate is not simply always-failing.
-
-    A mapping covering every durable format returns clean, so the parametrised
-    rejections above are discriminating rather than vacuously strict.
-    """
-    complete = {key: 1 for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.DURABLE}
-    assert unfloored_durable_formats(complete, PERSISTED_FORMATS) == ()
+    """The predicate accepts a complete synthetic durable-format freeze."""
+    formats = {"durable": PersistedFormatClass.DURABLE, "cache": PersistedFormatClass.REGENERABLE}
+    assert unfloored_durable_formats({"durable": 1}, formats) == ()
 
 
 def test_a_regenerable_format_is_never_required_to_carry_a_floor() -> None:
-    """Regenerable state is excluded by construction, not by an allowlist.
-
-    A floor is a promise to keep reading old bytes; making it about a session
-    or a throttle sidecar would be an obligation to honour shapes the
-    application deliberately discards.
-    """
-    regenerable = sorted(key for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.REGENERABLE)
-    assert regenerable, "the declaration table must carry regenerable formats for this to mean anything"
-    durable_only = {key: 1 for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.DURABLE}
-    assert unfloored_durable_formats(durable_only, PERSISTED_FORMATS) == ()
+    """Regenerable state is excluded by the classification, not an allowlist."""
+    formats = {"durable": PersistedFormatClass.DURABLE, "cache": PersistedFormatClass.REGENERABLE}
+    assert unfloored_durable_formats({"durable": 1}, formats) == ()
 
 
 @pytest.mark.parametrize(
@@ -253,33 +195,18 @@ def test_the_unknown_key_predicate_names_every_undeclared_floor_key(
     floors: dict[str, int],
     expected: tuple[str, ...],
 ) -> None:
-    """Non-vacuity: the live gate is green only because nothing is frozen yet.
-
-    Driven through the real predicate against the real declaration table.
-    Without these the gate would pass just as happily if the predicate always
-    returned an empty tuple — which is the failure mode that let a hand-listed
-    reference set go stale here unnoticed in the first place.
-    """
-    assert unknown_floor_keys(floors, PERSISTED_FORMATS) == expected
+    """Prove unknown-key detection against a stable synthetic authority."""
+    formats = {"secure_object": PersistedFormatClass.DURABLE}
+    assert unknown_floor_keys(floors, formats) == expected
 
 
 def test_the_unknown_key_predicate_accepts_the_complete_durable_freeze() -> None:
-    """The other half of non-vacuity, and the deadlock proof.
-
-    The exact mapping the flip must land — every DURABLE format, derived from
-    the declaration — passes BOTH enrollment directions at once. Under the
-    superseded hand-listed reference set this mapping was impossible: it failed
-    the unknown-key direction on ``bucket_dek`` and ``bucket_manifest`` while
-    any mapping omitting them failed the uncovered-durable direction. That no
-    mapping could satisfy both is the contradiction this asserts is gone.
-    """
-    complete = {key: 1 for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.DURABLE}
-    assert len(complete) >= 4, (
-        f"expected the durable inventory to exceed the retired hand-list of three; got {complete}"
-    )
-    assert unknown_floor_keys(complete, PERSISTED_FORMATS) == ()
-    assert misclassified_floor_keys(complete, PERSISTED_FORMATS) == ()
-    assert unfloored_durable_formats(complete, PERSISTED_FORMATS) == ()
+    """A complete synthetic freeze passes all three enrollment directions."""
+    formats = {"durable": PersistedFormatClass.DURABLE, "cache": PersistedFormatClass.REGENERABLE}
+    floors = {"durable": 1}
+    assert unknown_floor_keys(floors, formats) == ()
+    assert misclassified_floor_keys(floors, formats) == ()
+    assert unfloored_durable_formats(floors, formats) == ()
 
 
 def test_a_regenerable_floor_key_is_declared_but_still_refused() -> None:
@@ -290,8 +217,7 @@ def test_a_regenerable_floor_key_is_declared_but_still_refused() -> None:
     a later simplification collapsing them into one and silently dropping a
     direction.
     """
-    regenerable = sorted(key for key, value in PERSISTED_FORMATS.items() if value is PersistedFormatClass.REGENERABLE)
-    assert regenerable, "the declaration table must carry regenerable formats for this to mean anything"
-    floors = {"secure_object": 1, regenerable[0]: 1}
-    assert unknown_floor_keys(floors, PERSISTED_FORMATS) == ()
-    assert misclassified_floor_keys(floors, PERSISTED_FORMATS) == (regenerable[0],)
+    formats = {"durable": PersistedFormatClass.DURABLE, "cache": PersistedFormatClass.REGENERABLE}
+    floors = {"durable": 1, "cache": 1}
+    assert unknown_floor_keys(floors, formats) == ()
+    assert misclassified_floor_keys(floors, formats) == ("cache",)

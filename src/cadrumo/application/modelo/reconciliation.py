@@ -58,11 +58,13 @@ from ...core.identity import BucketId, WorkUnitId, same_tax_identifier, tax_id_i
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.reconciliation.errors import ReconciliationDeclaracionParseError
 from ...domain.justificante import JustificanteParseError
 from ._reconcile_casilla import CasillaDivergence, CasillaDivergenceKind, detect_casilla_divergences
 from .action_errors import WorkUnitNotFoundError
 from .calculation_repository import calculation_revision_catalogue_repository
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .reconciliation_parsing import (
     ReconciliationDeclaracionObservation,
     reconciliation_evidence_parser,
@@ -689,6 +691,12 @@ def _finalise_reconciliation(
         bucket_event_id=event_id,
         bucket_id=work_unit.bucket_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         source_kind=source_kind,
         source_ref=source_ref,
         verdict=verdict,
@@ -1083,7 +1091,10 @@ def _filed_revision_for_work_unit(work_unit: WorkUnit) -> CalculationRevision | 
     silently disagree about which revision represents "what was filed."
     """
     catalogue = calculation_revision_catalogue_repository(bucket_id=str(work_unit.bucket_id)).load()
-    return _select_filed_revision(catalogue.for_work_unit(str(work_unit.work_unit_id)))
+    revision = _select_filed_revision(catalogue.for_work_unit(str(work_unit.work_unit_id)))
+    if revision is not None:
+        require_calculation_revision_coordinates_current(revision)
+    return revision
 
 
 def _select_filed_revision(revisions: tuple[CalculationRevision, ...]) -> CalculationRevision | None:

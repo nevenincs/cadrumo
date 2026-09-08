@@ -71,6 +71,10 @@ _SETTLEMENT_PERIOD = "4T"
 _MID_YEAR_PERIOD = "1T"
 
 
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+
+
 def _revision():
     snapshot = bundled_authority().snapshot(Modelo.M303.value, filing_year=_EJERCICIO, period="4T")
     return snapshot.revision
@@ -148,6 +152,7 @@ def _declare(regime: ProrrataRegisterRegime, *, percentage: Decimal, sector_id: 
             sector_id=sector_id,
             provisional_percentage=percentage,
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         )
     )
 
@@ -358,6 +363,7 @@ def test_silent_for_sectorized_register(tmp_path: Path) -> None:
                     sector_id=sector_id,
                     provisional_percentage=_GENERAL_PCT,
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )
         especial = _especial_diagnostics(_collect())

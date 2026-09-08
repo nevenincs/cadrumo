@@ -60,14 +60,14 @@ def _save_prior_prorrata_observation(
         period=_SETTLEMENT_PERIOD,
         casilla_values={_PORCENTAJE_ID: percentage},
     )
-    repo.save(
-        repo.prepare_observation_envelope(
-            observation,
-            source_kind=_SOURCE_KIND,
-            captured_at=_CLOCK,
-            stamped_revision_id=stamped_revision_id,
-        )
+    envelope = repo.prepare_observation_envelope(
+        observation,
+        source_kind=_SOURCE_KIND,
+        captured_at=_CLOCK,
+        stamped_revision_id=_prior_revision_id(),
     )
+    # Divergence is a read-side corruption scenario: canonical writes reject it.
+    repo.save(envelope.model_copy(update={"stamped_revision_id": stamped_revision_id}))
 
 
 def test_seed_happy_path_uses_prior_settlement_observation(tmp_path: Path) -> None:

@@ -6,7 +6,6 @@ import pytest
 
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.period import Period
-from ..declarations_observations import resolve_relation_values_from_filed_declarations
 from ._declarations_support import (
     UTC,
     Decimal,
@@ -15,6 +14,7 @@ from ._declarations_support import (
     _filed_observation,
     _modelo_snapshot,
     _renta_2025_relation_observations,
+    _resolve_relations_from_observations,
     _whitespace_nif_session,
     datetime,
     relation_source_requirements,
@@ -60,7 +60,7 @@ class TestFiledObservationRelations:
         snapshot = _modelo_snapshot("100", filing_year=2025, period="0A")
         observations = _renta_2025_relation_observations()
 
-        resolved = resolve_relation_values_from_filed_declarations(
+        resolved = _resolve_relations_from_observations(
             snapshot.revision,
             observations,
             filing_year=2025,
@@ -111,7 +111,7 @@ class TestFiledObservationRelations:
         )
 
         with pytest.raises(RegistryValidationError, match="expected one observed filing"):
-            resolve_relation_values_from_filed_declarations(
+            _resolve_relations_from_observations(
                 snapshot.revision,
                 observations,
                 filing_year=2025,
@@ -129,7 +129,7 @@ class TestFiledObservationRelations:
         )
 
         with pytest.raises(RegistryValidationError, match="found 2"):
-            resolve_relation_values_from_filed_declarations(
+            _resolve_relations_from_observations(
                 snapshot.revision,
                 (*observations, duplicate),
                 filing_year=2025,
@@ -162,7 +162,7 @@ class TestFiledObservationRelations:
             },
         }
 
-        resolved = resolve_relation_values_from_filed_declarations(
+        resolved = _resolve_relations_from_observations(
             snapshot.revision,
             tuple(
                 _filed_observation(
@@ -209,7 +209,7 @@ class TestFiledObservationRelations:
             },
         }
 
-        resolved = resolve_relation_values_from_filed_declarations(
+        resolved = _resolve_relations_from_observations(
             snapshot.revision,
             tuple(
                 _filed_observation(
@@ -248,7 +248,7 @@ class TestFiledObservationRelations:
         )
 
         with pytest.raises(RegistryValidationError, match="expected one observed filing"):
-            resolve_relation_values_from_filed_declarations(
+            _resolve_relations_from_observations(
                 snapshot.revision,
                 observations,
                 filing_year=2026,
@@ -273,7 +273,7 @@ class TestFiledObservationRelations:
         )
 
         with pytest.raises(SedeParseError, match="incomplete extraction coverage"):
-            resolve_relation_values_from_filed_declarations(
+            _resolve_relations_from_observations(
                 snapshot.revision,
                 observations,
                 filing_year=2026,
@@ -281,13 +281,13 @@ class TestFiledObservationRelations:
             )
 
 
-def test_capture_filed_declaration_empty_nif_carries_translated_message() -> None:
-    """contract-A: capture_filed_declaration_observation raises SedeNavigationError with
-    translated_message when AeatSession.identity_nif is whitespace-only."""
+def test_register_capture_empty_nif_carries_translated_message() -> None:
+    """The live session owner refuses an observation without an authenticated NIF."""
     import asyncio
+    from typing import cast
 
-    from ..declarations import Declaracion
-    from ..declarations_capture import capture_filed_declaration_observation
+    from ..._playwright import BrowserContext, Page
+    from ..declarations import Declaracion, DeclaracionesRegisterSession
     from ..errors import SedeNavigationError
 
     session = _whitespace_nif_session()
@@ -305,8 +305,13 @@ def test_capture_filed_declaration_empty_nif_carries_translated_message() -> Non
         declaration_copy_link_text=None,
     )
 
+    register = DeclaracionesRegisterSession(
+        session,
+        cast(Page, object()),
+        cast(BrowserContext, object()),
+    )
     with pytest.raises(SedeNavigationError) as exc_info:
-        asyncio.run(capture_filed_declaration_observation(session, declaration))
+        asyncio.run(register.capture_observation(declaration))
 
     assert exc_info.value.translated_message is not None
     assert "adapters.sede.errors.empty_identity_nif" not in exc_info.value.translated_message

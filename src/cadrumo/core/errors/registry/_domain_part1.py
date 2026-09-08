@@ -208,16 +208,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.live.deudas.DeudasSnapshotNotFoundError",
-        ErrorCode(
-            code="REFUSED_LIVE_DEUDAS_SNAPSHOT_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_live_deudas_snapshot_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.live.borrador_100.BorradorSnapshotNotFoundError",
         ErrorCode(
             code="REFUSED_LIVE_BORRADOR_SNAPSHOT_NOT_FOUND",
@@ -683,16 +673,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="ERROR_FINANCIAL_IVA_CATEGORY_NOT_FOUND",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_financial_iva_category_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.iva.errors.IvaClassificationError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_IVA_CLASSIFICATION",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_iva_classification",
             retryable=False,
             runbook_id=None,
         ),

@@ -30,6 +30,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult
 from ....domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -162,6 +163,12 @@ def _baseline_revision(
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="100",
+            revision_id="2025",
+            modelo_year=_YEAR,
+            period=_PERIOD,
+        ),
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=observations,

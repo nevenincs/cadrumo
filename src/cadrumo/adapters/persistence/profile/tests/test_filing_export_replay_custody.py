@@ -20,6 +20,7 @@ from .....application.filing.export_proof import (
     FilingExportSecureCustodyRecord,
     FilingExportSourcePinnedProbeExpectation,
 )
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
@@ -35,6 +36,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _OPAQUE_COORDINATE = FilingExportProofCoordinate(
     modelo="000",
     revision="custody-boundary",
+    snapshot_ref=RegistrySnapshotRef(
+        modelo="000",
+        revision_id="custody-boundary",
+        modelo_year=2026,
+        period="1T",
+    ),
     layout_ids=("custody-layout",),
 )
 _ATTESTED_AT = datetime(2026, 8, 25, 10, 0, tzinfo=UTC)

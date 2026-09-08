@@ -9,20 +9,20 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from ....adapters.outbound.aeat.sede.iva_compensation_wallet import (
-    IVA_COMPENSATION_WALLET_URL,
-    parse_iva_compensation_wallet_html,
-)
+from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import parse_iva_compensation_wallet_html
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.external_constants import PROVENANCE_SOURCE_MANUAL_CLI
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import (
@@ -116,7 +116,7 @@ def _wallet_observation(
         authenticated_identity=taxpayer_nif,
         target_year=target_year,
         target_period=target_period,
-        source_url=IVA_COMPENSATION_WALLET_URL,
+        source_url=WALLET_URL,
         captured_at=captured_at,
     )
 
@@ -145,7 +145,10 @@ def _prior_303_compensation_observation(
             modelo="303",
             filing_year=filing_year,
             period=period,
-            casilla_values={_M303_DISPONIBLE_CASILLA: amount},
+            casilla_values={
+                _M303_POSTERIOR_CASILLA: Decimal("0"),
+                _M303_RESULTADO_CASILLA: -amount,
+            },
         ),
     )
 
@@ -165,6 +168,15 @@ def _store_prior_303_compensation(
                 period=period,
             ),
             source_kind="aeat_sede_justificante",
+            source_headers=(
+                ObservedHeaderFact(
+                    header_key="declaration_type",
+                    value="C",
+                    source_artefact_kind="submitted_file",
+                    source_locator="test:iva-wallet:prior-declaration-type",
+                ),
+            ),
+            stamped_revision_id=_snapshot_303(filing_year=filing_year, period=period).revision.id,
             captured_at=_DECIDED_AT,
         )
     )
@@ -317,6 +329,12 @@ def _work_unit_and_revision_for_wallet_gate(
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=state,
         input_values_by_casilla_id={},
         binding_overrides={},
@@ -341,10 +359,12 @@ def _save_wallet_gate_decision(*, amount: Decimal, blocked: bool = False) -> Non
             taxpayer_nif=_TAXPAYER_NIF,
             target_year=_TARGET_YEAR,
             target_period=_period(_TARGET_YEAR, _TARGET_PERIOD),
+            target_registry_snapshot_ref=_snapshot_303().snapshot_ref,
+            source_registry_snapshot_refs=(),
             selected_authority="aeat_wallet" if not blocked else "missing",
             selected_amount=amount if not blocked else None,
             wallet_amount=amount,
-            local_recurrence_amount=amount,
+            local_recurrence_amount=None,
             override_amount=None,
             divergence="match" if not blocked else "filed_history_only",
             blocked=blocked,

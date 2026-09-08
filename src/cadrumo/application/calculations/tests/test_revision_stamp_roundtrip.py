@@ -2,7 +2,8 @@
 
 - :class:`ObservationEnvelopePayload` preserves the required
   ``stamped_revision_id`` through a secure-repository round trip.
-- ``save_observation`` derives the law-determined stamp when callers omit it.
+- ``prepare_observation_envelope`` requires callers to provide the canonical
+  law-determined stamp.
 - Anti-tautology proof: deleting ``stamped_revision_id`` from the on-disk JSON
   envelope refuses on reload.
 - Carry gate in ``resolve_bindings_from_local_store``: a divergent or
@@ -25,6 +26,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
@@ -47,6 +49,17 @@ _DIVERGENT_REVISION_ID = "definitely-not-the-right-revision-id-xyzzy"
 
 _M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
 _M303_CARRY_SOURCE_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
+
+
+def _m303_declaration_header(code: str = "I") -> tuple[ObservedHeaderFact, ...]:
+    return (
+        ObservedHeaderFact(
+            header_key="declaration_type",
+            value=code,
+            source_artefact_kind="submitted_file",
+            source_locator="revision-stamp-roundtrip:declaration-type",
+        ),
+    )
 
 
 def _filing_period(year: int = _YEAR, period: str = _PERIOD) -> Period:
@@ -86,14 +99,14 @@ def test_stamped_revision_id_survives_encrypted_storage_roundtrip(tmp_path: Path
     with isolated_runtime_profile(tmp_path=tmp_path):
         revision_id = _law_revision_id()
         repo = CalculationObservationRepository()
-        repo.save(
-            repo.prepare_observation_envelope(
-                _minimal_observation(),
-                source_kind=_SOURCE_KIND,
-                captured_at=_CLOCK,
-                stamped_revision_id=revision_id,
-            )
+        prepared = repo.prepare_observation_envelope(
+            _minimal_observation(),
+            source_kind=_SOURCE_KIND,
+            captured_at=_CLOCK,
+            source_headers=_m303_declaration_header(),
+            stamped_revision_id=revision_id,
         )
+        repo.save(prepared)
         loaded = repo.load_observation(_MODELO, _filing_period())
 
         assert loaded is not None
@@ -101,26 +114,20 @@ def test_stamped_revision_id_survives_encrypted_storage_roundtrip(tmp_path: Path
             f"stamped_revision_id did not survive the encrypted-storage roundtrip: "
             f"expected {revision_id!r}, got {loaded.stamped_revision_id!r}"
         )
-        assert loaded.observation == _minimal_observation()
+        assert loaded == prepared
 
 
-def test_save_observation_derives_stamped_revision_id(tmp_path: Path) -> None:
-    """Omitting stamped_revision_id on save persists the law-determined revision id."""
+def test_prepare_observation_envelope_requires_stamped_revision_id(tmp_path: Path) -> None:
+    """Omitting stamped_revision_id is rejected at the persistence boundary."""
     with isolated_runtime_profile(tmp_path=tmp_path):
-        expected = _law_revision_id()
         repo = CalculationObservationRepository()
-        repo.save(
+        with pytest.raises(TypeError, match="stamped_revision_id"):
             repo.prepare_observation_envelope(
                 _minimal_observation(),
                 source_kind=_SOURCE_KIND,
                 captured_at=_CLOCK,
+                source_headers=_m303_declaration_header(),
             )
-        )
-        loaded = repo.load_observation(_MODELO, _filing_period())
-
-        assert loaded is not None
-        assert loaded.stamped_revision_id == expected
-        assert loaded.observation == _minimal_observation()
 
 
 def test_stamped_revision_id_iter_modelo_propagates_stamp(tmp_path: Path) -> None:
@@ -133,6 +140,7 @@ def test_stamped_revision_id_iter_modelo_propagates_stamp(tmp_path: Path) -> Non
                 _minimal_observation(),
                 source_kind=_SOURCE_KIND,
                 captured_at=_CLOCK,
+                source_headers=_m303_declaration_header(),
                 stamped_revision_id=revision_id,
             )
         )
@@ -170,6 +178,7 @@ def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path)
                 _minimal_observation(),
                 source_kind=_SOURCE_KIND,
                 captured_at=_CLOCK,
+                source_headers=_m303_declaration_header(),
                 stamped_revision_id=revision_id,
             )
         )
@@ -238,6 +247,12 @@ def _m303_carry_source_observation(value: Decimal = Decimal("500.00")) -> Regist
         period=_M303_CARRY_SOURCE_PERIOD,
         observations=(
             CasillaObservation(
+                casilla_id=_M303_RESULTADO_CASILLA,
+                value=-value,
+                legal_refs=("ley-37-1992:art-99",),
+                source_refs=("aeat-dr-303-2025",),
+            ),
+            CasillaObservation(
                 casilla_id=_M303_CARRY_SOURCE_CASILLA,
                 value=value,
                 legal_refs=("ley-37-1992:art-99",),
@@ -263,15 +278,37 @@ def test_carry_divergent_stamp_refuses_single_observation(tmp_path: Path) -> Non
     from report.binding_values.  If the divergent stamp were silently accepted,
     the binding would be resolved and present in the map.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
+    from sqlalchemy import select
+
+    from ....adapters.persistence.storage.sql import SecureObjectRow
+    from ....adapters.persistence.storage.sql.engine import get_engine
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         repo = CalculationObservationRepository()
+        revision_id = _law_revision_id("303", _M303_CARRY_YEAR, _M303_CARRY_SOURCE_PERIOD)
         repo.save(
             repo.prepare_observation_envelope(
                 _m303_carry_source_observation(),
                 source_kind=_SOURCE_KIND,
                 captured_at=_CLOCK,
-                stamped_revision_id=_DIVERGENT_REVISION_ID,  # divergent: wrong revision
+                source_headers=_m303_declaration_header("C"),
+                stamped_revision_id=revision_id,
             )
+        )
+
+        object_key = observation_key("303", _filing_period(_M303_CARRY_YEAR, _M303_CARRY_SOURCE_PERIOD))
+        statement = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == CalculationObservationRepository.namespace,
+            SecureObjectRow.object_key == object_key,
+        )
+
+        def mutate(envelope) -> None:
+            envelope["payload"]["stamped_revision_id"] = _DIVERGENT_REVISION_ID
+
+        mutate_encrypted_secure_object_json(
+            get_engine(profile.settings),
+            row_statement=statement,
+            mutate=mutate,
         )
 
         snapshot = bundled_authority().snapshot(
@@ -307,6 +344,7 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
                 _m303_carry_source_observation(),
                 source_kind=_SOURCE_KIND,
                 captured_at=_CLOCK,
+                source_headers=_m303_declaration_header("C"),
                 stamped_revision_id=revision_id,
             )
         )

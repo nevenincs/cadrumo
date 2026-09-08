@@ -35,9 +35,8 @@ meaning NO CLAIM, not zero: no value here was checked against an independent AEA
 CLAIMED -- SPAN: this revision selects only exercise 2025, whose exact AEAT design and the \
 Orden HAC/1430/2025 amendment/application provisions are cited. The catalogue-only 2024 design \
 does not establish a legal era, and 2007-2023 and 2026 onward remain refused pending exact \
-authority. NOT CLAIMED -- the 5 donativo_donor bindings are members of \
-DEFERRED_SOURCE_KINDS: no resolver routes them today, so they emit a standing advisory rather than a \
-silent blank, and they resolve no value. NOT CLAIMED -- no export layout is declared and the tipo-2 \
+authority. NOT CLAIMED -- no production calculation resolver owns the 5 donativo_donor bindings, so \
+calculation refuses them rather than resolving a silent blank. NOT CLAIMED -- no export layout is declared and the tipo-2 \
 per-donor detail rows are not modelled. NOT CLAIMED -- all 3 locales are complete for the 7 labels, \
 but the translated strings were not audited for accuracy."""
 reviewed_at = 2026-08-21

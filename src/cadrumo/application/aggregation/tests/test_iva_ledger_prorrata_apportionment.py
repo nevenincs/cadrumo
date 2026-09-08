@@ -59,6 +59,10 @@ _DEDUCIBLE_BASE_BINDING: BindingId = "modelo-303-iva-soportado-interiores-base"
 _DEDUCIBLE_CUOTA_BINDING: BindingId = "modelo-303-iva-soportado-interiores-cuota"
 
 
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+
+
 def _deduction_authority(provider_id: str) -> dict[str, object]:
     return {
         "deduction_fact_kind": IvaDeductionFactKind.DOMESTIC_CURRENT,
@@ -233,6 +237,7 @@ def test_non_prorrata_register_keeps_fully_taxable_deducible_aggregation_byte_id
                         ejercicio=2026,
                         regime=ProrrataRegisterRegime.NINGUNA,
                         especial_transition=None,
+                        source_registry_snapshot_refs=(),
                     ),
                 ),
             ),
@@ -290,6 +295,7 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
                         provisional_percentage=Decimal("80"),
                         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                         source_observation_ref="303:2025:4T",
+                        source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                     ),
                 ),
             ),
@@ -331,6 +337,7 @@ def _seed_register(
                     provisional_percentage=percentage,
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                     source_observation_ref="303:2025:4T",
+                    source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
             ),
         ),
@@ -519,6 +526,7 @@ def _sector_entry(sector_id: str | None, percentage: Decimal) -> ProrrataRegiste
         provisional_percentage=percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=f"303:2025:4T:{sector_id or 'comun'}",
+        source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
     )
 
 
@@ -710,13 +718,21 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
         (None, "aggregation.iva_ledger.errors.differentiated_sector_without_filing_year_entry"),
         (
             ProrrataRegisterEntry(
-                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None
+                ejercicio=2026,
+                sector_id="comercio",
+                regime=ProrrataRegisterRegime.NINGUNA,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             "aggregation.iva_ledger.errors.differentiated_sector_inactive_for_filing_year",
         ),
         (
             ProrrataRegisterEntry(
-                ejercicio=2026, sector_id="comercio", regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
+                ejercicio=2026,
+                sector_id="comercio",
+                regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             "aggregation.iva_ledger.errors.differentiated_sector_without_provisional_percentage",
         ),

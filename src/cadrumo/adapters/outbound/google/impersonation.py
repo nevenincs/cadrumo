@@ -220,19 +220,6 @@ class GoogleCredentialSourceSelection(BaseModel):
         return self
 
 
-def describe_impersonation_target(config: GoogleImpersonationConfig) -> str:
-    """Return the exact service-account email ``config`` would impersonate.
-
-    Returns ``config.target_principal`` verbatim. Exists as a named accessor
-    (rather than reading the field directly at every call site) so a future
-    CLI ``show``/``status`` verb can surface "you are about to grant IAM
-    roles to exactly this identity" without requiring a live token exchange
-    first — satisfying the operator's need to confirm the SA identity before
-    approving an IAM role grant.
-    """
-    return config.target_principal
-
-
 class _RefreshableCredentials(Protocol):
     """The credential member this adapter drives.
 
@@ -422,6 +409,5 @@ __all__ = [
     "GoogleAuthImpersonationRefusedError",
     "GoogleCredentialSourceSelection",
     "GoogleImpersonationConfig",
-    "describe_impersonation_target",
     "resolve_impersonated_credentials",
 ]

@@ -13,9 +13,8 @@ consumed by the modelo calculate path.
 
 :func:`aggregate_per_modelo` remains the provider-grouped service for
 per-modelo rollup workflows. It is not the resolved-source envelope used by
-calculation; :func:`build_binding_source_dispositions` enforces exclusive ownership, declared
-precedence, no-silent-blank diagnostics, and the enrolled / deferred / reserved
-:class:`BindingSourceDisposition` registry.
+calculation; the production calculation route derives source ownership directly
+from each executable resolver contract.
 
 Concrete resolvers re-exported here include
 :class:`LedgerIvaAggregationSourceResolver`,
@@ -193,10 +192,7 @@ from ._service import (
     get_per_modelo_aggregation_contract,
 )
 from ._source_mesh import (
-    DEFERRED_SOURCE_KINDS,
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
-    RESERVED_SOURCE_KINDS,
-    BindingSourceDisposition,
     BorradorSourceProvenance,
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -207,7 +203,6 @@ from ._source_mesh import (
     CompositeSourceResolverId,
     ModeloSourceResolver,
     SourceMeshError,
-    build_binding_source_dispositions,
     casilla_registry_legal_refs,
     precedence_ladder_sources,
 )
@@ -252,7 +247,6 @@ from .modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAg
 __all__ = [
     "ACCEPTED_SOURCE_KINDS",
     "ADMINISTRADOR_RETENCION_RATE_SOURCE_KIND",
-    "DEFERRED_SOURCE_KINDS",
     "DIAGNOSTIC_MESSAGE_MAX_LENGTH",
     "INFERRED_ACTIVIDAD_RETENCION_RATE_SOURCE_KIND",
     "INFERRED_SECTORAL_RETENCION_RATE_SOURCE_KIND",
@@ -260,7 +254,6 @@ __all__ = [
     "IVA_LEDGER_COUNTERPARTY_GATE_REASONS",
     "IVA_LEDGER_MISSING_FACT_REASONS",
     "MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND",
-    "RESERVED_SOURCE_KINDS",
     "UNDECLARED_ACTIVITY_INCOME_SOURCE_KIND",
     "AggregationCategoryCoverageError",
     "AggregationConfigError",
@@ -272,7 +265,6 @@ __all__ = [
     "AggregationValidationError",
     "AnnualDeducibleTotalsByRegime",
     "AtribucionMemberSourceResolver",
-    "BindingSourceDisposition",
     "BorradorSourceProvenance",
     "CalculationSourceContext",
     "CalculationSourceDiagnostic",
@@ -364,7 +356,6 @@ __all__ = [
     "aggregate_retenciones_190",
     "aggregate_retenciones_193",
     "aggregation_period_for_modelo",
-    "build_binding_source_dispositions",
     "business_proportion",
     "casilla_registry_legal_refs",
     "compute_annual_deducible_totals_by_regime",

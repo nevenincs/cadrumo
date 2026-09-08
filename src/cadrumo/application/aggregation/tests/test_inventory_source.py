@@ -403,7 +403,7 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
         assert canary not in rendered
 
 
-def test_inventory_row_template_rejects_unsupported_coordinate_without_repository_read() -> None:
+def test_inventory_row_template_rejects_selector_coordinate_mismatch_without_repository_read() -> None:
     repository = _InventoryLedgerRepositoryScenario()
 
     result = InventorySourceResolver(inventory_repository=repository).resolve(
@@ -413,8 +413,8 @@ def test_inventory_row_template_rejects_unsupported_coordinate_without_repositor
     assert repository.loads == 0
     assert result.unresolved_binding_ids == ("inventory-0177", "inventory-0181", "inventory-0182")
     assert len(result.diagnostics) == 1
-    assert result.diagnostics[0].reason == "unhandled_binding_source"
-    assert "unsupported_coordinate" in result.diagnostics[0].message
+    assert result.diagnostics[0].reason == "unresolved_derived_binding"
+    assert "invalid_row_template_cohort" in result.diagnostics[0].message
 
 
 @pytest.mark.parametrize("shape", ["missing", "duplicate"])

@@ -73,7 +73,7 @@ source_refs = ["aeat-modelo-123-procedure"]
 [[revisions."2019-2023".application_links]]
 id = "modelo-123-2019-filed-declarations-observation"
 surface = "portal"
-consumer = "cadrumo.adapters.outbound.aeat.sede.capture_filed_declaration_observation"
+consumer = "cadrumo.adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation"
 requires_snapshot = true
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99", "orden-eha-3435-2007:anexo-ii", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101"]
 source_refs = ["aeat-modelo-123-procedure"]

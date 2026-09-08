@@ -23,6 +23,7 @@ from ....application.calculations.observations_repository import CalculationObse
 from ....application.user_profile.login_session import login_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....application.user_profile.status_projection import build_status_page_data
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..components.host import ScreenHostApp
@@ -86,6 +87,13 @@ def test_one_official_observation_silences_the_notice(tmp_path) -> None:
             CalculationObservationRepository().prepare_observation_envelope(
                 RegistryModeloObservation(modelo=_MODELO, filing_year=_FILING_YEAR, period=_PERIOD),
                 source_kind="aeat_sede_justificante",
+                stamped_revision_id=str(
+                    bundled_authority().snapshot(
+                        _MODELO,
+                        filing_year=_FILING_YEAR,
+                        period=_PERIOD,
+                    ).revision.id
+                ),
             )
         )
 

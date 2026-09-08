@@ -17,14 +17,20 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from sqlalchemy import select
 
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from ....adapters.persistence.storage.sql import SecureObjectRow
+from ....adapters.persistence.storage.sql.engine import get_engine
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.registry_observations import registry_grounded_modelo_observation
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..cross_period_clean_state import (
     CrossPeriodCleanStateBlocker,
@@ -32,7 +38,7 @@ from ..cross_period_clean_state import (
     cross_period_dependency_requirements,
     evaluate_cross_period_clean_state,
 )
-from ..observations_repository import CalculationObservationRepository
+from ..observations_repository import CalculationObservationRepository, observation_key
 from ..revision_carry_gate import revision_carry_outcome
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -52,6 +58,18 @@ _M303_CARRY_SOURCE_CASILLA: CasillaId = validated_casilla_id(
     "iva.compensacion-disponible-fin-periodo",
     surface="_M303_CARRY_SOURCE_CASILLA",
 )
+_M303_RESULTADO_CASILLA: CasillaId = validated_casilla_id("iva.resultado")
+
+
+def _m303_compensation_header() -> tuple[ObservedHeaderFact, ...]:
+    return (
+        ObservedHeaderFact(
+            header_key="declaration_type",
+            value="C",
+            source_artefact_kind="submitted_file",
+            source_locator="carry-gate-parity:declaration-type",
+        ),
+    )
 
 
 def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _SOURCE_PERIOD) -> str:
@@ -69,7 +87,10 @@ def _m390_first_quarter_requirements():
 
 
 def _source_values(source_casilla_ids: tuple[CasillaId, ...]) -> dict[CasillaId, Decimal]:
-    values = {_M303_CARRY_SOURCE_CASILLA: Decimal("500.00")}
+    values = {
+        _M303_CARRY_SOURCE_CASILLA: Decimal("500.00"),
+        _M303_RESULTADO_CASILLA: Decimal("-500.00"),
+    }
     for index, casilla_id in enumerate(sorted(source_casilla_ids), start=1):
         values.setdefault(casilla_id, Decimal(index))
     return values
@@ -91,6 +112,7 @@ def _save_source_observation(
             ),
             source_kind="aeat_sede_justificante",
             captured_at=_CLOCK,
+            source_headers=_m303_compensation_header(),
             stamped_revision_id=stamped_revision_id,
             source_metadata={
                 "aeat_register_status": "ALTA",
@@ -124,17 +146,36 @@ def _public_carry_outcomes(
     tmp_path: Path,
     stamped_revision_id: str,
 ) -> tuple[bool, bool]:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = CalculationObservationRepository()
         cross_snapshot, cross_requirements = _m390_first_quarter_requirements()
         source_casilla_ids = tuple(
             {casilla_id for requirement in cross_requirements for casilla_id in requirement.source_casilla_ids}
         )
+        canonical_stamp = _law_revision_id()
         _save_source_observation(
             repository,
             source_casilla_ids=source_casilla_ids,
-            stamped_revision_id=stamped_revision_id,
+            stamped_revision_id=canonical_stamp,
         )
+        if stamped_revision_id != canonical_stamp:
+            statement = select(SecureObjectRow).where(
+                SecureObjectRow.namespace == CalculationObservationRepository.namespace,
+                SecureObjectRow.object_key
+                == observation_key(
+                    _MODELO,
+                    Period.from_year_and_code(_YEAR, _SOURCE_PERIOD),
+                ),
+            )
+
+            def mutate(envelope) -> None:
+                envelope["payload"]["stamped_revision_id"] = stamped_revision_id
+
+            mutate_encrypted_secure_object_json(
+                get_engine(profile.settings),
+                row_statement=statement,
+                mutate=mutate,
+            )
 
         binding_snapshot = bundled_authority().snapshot(_MODELO, filing_year=_YEAR, period=_TARGET_PERIOD)
         binding_report = resolve_bindings_from_local_store(binding_snapshot, repository=repository)
@@ -166,10 +207,12 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Pa
         stamp = _DIVERGENT_REVISION_ID
         expected = True
     shared_refused = revision_carry_outcome(
-        stamp,
-        source_modelo=_MODELO,
-        source_filing_year=_YEAR,
-        source_period=_SOURCE_PERIOD,
+        RegistrySnapshotRef(
+            modelo=_MODELO,
+            revision_id=stamp,
+            modelo_year=_YEAR,
+            period=_SOURCE_PERIOD,
+        )
     ).refused
     binding_refused, cross_period_refused = _public_carry_outcomes(tmp_path / case, stamp)
 
@@ -182,10 +225,12 @@ def test_shared_gate_refuses_unresolvable_source() -> None:
     """A source context the registry cannot resolve is refused, not carried."""
     assert (
         revision_carry_outcome(
-            _DIVERGENT_REVISION_ID,
-            source_modelo=_NONEXISTENT_MODELO,
-            source_filing_year=_YEAR,
-            source_period=_SOURCE_PERIOD,
+            RegistrySnapshotRef(
+                modelo=_NONEXISTENT_MODELO,
+                revision_id=_DIVERGENT_REVISION_ID,
+                modelo_year=_YEAR,
+                period=_SOURCE_PERIOD,
+            )
         ).refused
         is True
     )

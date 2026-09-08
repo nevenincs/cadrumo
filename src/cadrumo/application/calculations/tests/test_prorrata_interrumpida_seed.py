@@ -45,6 +45,7 @@ def _settled(ejercicio: int, con: str, sin: str, percentage: str) -> ProrrataReg
         definitive_percentage=Decimal(percentage),
         definitive_volume_con_derecho=Decimal(con),
         definitive_volume_sin_derecho=Decimal(sin),
+        source_registry_snapshot_refs=(),
     )
 
 
@@ -55,7 +56,11 @@ def _genuine_gap_register() -> ProrrataRegister:
             _settled(2021, "1000", "1000", "50"),
             _settled(2022, "5000", "5000", "50"),
             ProrrataRegisterEntry(
-                ejercicio=2023, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None, interrupted=True
+                ejercicio=2023,
+                regime=ProrrataRegisterRegime.NINGUNA,
+                especial_transition=None,
+                interrupted=True,
+                source_registry_snapshot_refs=(),
             ),
         ),
     )
@@ -102,7 +107,11 @@ def test_seed_advises_visibly_on_insufficient_active_history() -> None:
         entries=(
             _settled(2022, "5000", "5000", "50"),
             ProrrataRegisterEntry(
-                ejercicio=2023, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None, interrupted=True
+                ejercicio=2023,
+                regime=ProrrataRegisterRegime.NINGUNA,
+                especial_transition=None,
+                interrupted=True,
+                source_registry_snapshot_refs=(),
             ),
         ),
     )

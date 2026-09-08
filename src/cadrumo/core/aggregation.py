@@ -393,19 +393,18 @@ class BindingSourceKind(StrEnum):
     # the "registro tipo 2" detail row carrying the donor's NIF, importe
     # donado, porcentaje de deducción aplicable, and the recurrencia flag
     # (donativo plurianual a la misma entidad, LIRPF art. 68.3 / LIS art. 20).
-    # No live resolver yet - Sheets-pull-only, the same deferred shape as the
-    # sibling detail-record families (ATRIBUCION_MEMBER, RELATED_PARTY_OPERATION,
-    # REFUND_OPERATION); the latter two remain registered in DEFERRED_SOURCE_KINDS
-    # (application/aggregation/_source_mesh.py).
+    # The row family is currently produced by the Sheets pull surface. A
+    # calculate request refuses these bindings until an executable route owns
+    # the source.
     DONATIVO_DONOR = "donativo_donor"
     # Modelo 193 hoja-anexo gastos relationship rows (NIF del contribuyente
     # plus the annual gastos de administracion y deposito amount), the same
-    # deferred Sheets-pull-only shape as the donativo family.
+    # Sheets-pull row shape matching the donativo family.
     GASTO193_CONTRIBUTOR = "gasto193_contributor"
     # Modelo 296 perceptor rows (IRNR retenciones): its own clave
     # vocabulary (numeric renta claves) cannot ride the shared
     # withholding family's A-L set, so it declares its own detail-record
-    # source in the same deferred Sheets-pull-only shape.
+    # source in the same Sheets-pull row shape.
     WITHHOLDING296 = "withholding296"
 
 

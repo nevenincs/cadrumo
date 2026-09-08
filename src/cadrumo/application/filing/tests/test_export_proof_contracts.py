@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from ....core.hashing import sha256_hex
 from ....core.period import Period
 from ....core.time.clock import now
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.errors import FilingExportValidationError
 from ..export import export_draft
 from ..export_proof import (
@@ -45,6 +46,7 @@ def _coordinate() -> FilingExportProofCoordinate:
     return FilingExportProofCoordinate(
         modelo="111",
         revision=draft.snapshot_ref.revision_id,
+        snapshot_ref=draft.snapshot_ref,
         layout_ids=("m111-2025-fichero-boe",),
     )
 
@@ -165,7 +167,16 @@ def test_conformance_request_cannot_carry_caller_supplied_filing_inputs() -> Non
 
 def test_layoutless_coordinate_can_report_refusal_but_not_conformance_success() -> None:
     """A total-corpus refusal may name a layoutless revision, never a vector."""
-    coordinate = FilingExportProofCoordinate(modelo="111", revision="layout-unavailable")
+    coordinate = FilingExportProofCoordinate(
+        modelo="111",
+        revision="layout-unavailable",
+        snapshot_ref=RegistrySnapshotRef(
+            modelo="111",
+            revision_id="layout-unavailable",
+            modelo_year=2026,
+            period="1T",
+        ),
+    )
     request = FilingExportConformanceRequest(coordinate=coordinate)
 
     assert request.coordinate.layout_ids == ()
@@ -178,6 +189,25 @@ def test_layoutless_coordinate_can_report_refusal_but_not_conformance_success() 
             mechanism_source_ref="test/provenance",
             mechanism_source_sha256=_DIGEST,
             provenance=_provenance(),
+        )
+
+
+def test_proof_coordinate_requires_the_canonical_snapshot_reference() -> None:
+    with pytest.raises(ValidationError, match="snapshot_ref"):
+        FilingExportProofCoordinate(modelo="111", revision="2025")
+
+
+def test_proof_coordinate_rejects_a_divergent_snapshot_reference() -> None:
+    with pytest.raises(ValidationError, match="must match snapshot_ref"):
+        FilingExportProofCoordinate(
+            modelo="111",
+            revision="2025",
+            snapshot_ref=RegistrySnapshotRef(
+                modelo="111",
+                revision_id="another-revision",
+                modelo_year=2026,
+                period="1T",
+            ),
         )
 
 

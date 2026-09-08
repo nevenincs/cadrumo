@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from types import MappingProxyType
 from typing import Literal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.calculation_route import ModeloCalculationRouteId
 from ..aggregation import (
     AtribucionMemberSourceResolver,
-    BindingSourceDisposition,
     ForeignAssetsAggregationSourceResolver,
     InventorySourceResolver,
     LedgerImpatriadoIncomeAggregationSourceResolver,
@@ -23,7 +21,6 @@ from ..aggregation import (
     ProfileSourceResolver,
     RetencionesAggregationSourceResolver,
     WithholdingSourceResolver,
-    build_binding_source_dispositions,
 )
 from ..aggregation.modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
@@ -162,6 +159,15 @@ def validate_calculation_route_resolver_ownership(
     if len(set(resolver_ids)) != len(resolver_ids):
         raise RuntimeError("calculation route resolver ids must be unique")
     source_owners: dict[BindingSourceKind, str] = {}
+    declared_resolver_types = {
+        row.resolver_type for row in ownership if isinstance(row, CalculationRouteResolverOwnership)
+    }
+    if declared_resolver_types != set(canonical_stages):
+        raise RuntimeError("calculation route must contain every canonical executable resolver exactly once")
+    if sum(isinstance(row, CalculationRouteManualOwnership) for row in ownership) != 1:
+        raise RuntimeError("calculation route must contain exactly one manual-input pseudo-owner")
+    if sum(isinstance(row, CalculationRouteDesignConstantOwnership) for row in ownership) != 1:
+        raise RuntimeError("calculation route must contain exactly one design-constant pseudo-owner")
     for row in ownership:
         if isinstance(row, CalculationRouteManualOwnership):
             if row != _MANUAL_INPUT_OWNER:
@@ -195,26 +201,10 @@ def validate_calculation_route_resolver_ownership(
                     f"{prior!r}, {row.resolver_id!r}",
                 )
             source_owners[source_kind] = row.resolver_id
-    dispositions = build_binding_source_dispositions(frozenset(source_owners))
-    for source_kind, disposition in dispositions.items():
-        has_owner = source_kind in source_owners
-        if (disposition is BindingSourceDisposition.ENROLLED) != has_owner:
-            raise RuntimeError(f"calculation route disposition disagrees with ownership: {source_kind.value}")
-
-
 validate_calculation_route_resolver_ownership(CALCULATION_ROUTE_RESOLVER_OWNERSHIP)
 
-CALCULATION_ROUTE_SOURCE_DISPOSITIONS = MappingProxyType(
-    dict(
-        build_binding_source_dispositions(
-            frozenset(source for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP for source in row.owned_sources),
-        ),
-    ),
-)
 CALCULATION_ROUTE_ENROLLED_SOURCES = frozenset(
-    source
-    for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
-    if disposition is BindingSourceDisposition.ENROLLED
+    source for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP for source in row.owned_sources
 )
 CALCULATION_ROUTE_PRE_MESH_SOURCES = frozenset(
     source for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if row.stage == "pre_mesh" for source in row.owned_sources
@@ -243,7 +233,6 @@ __all__ = [
     "CALCULATION_ROUTE_ID",
     "CALCULATION_ROUTE_PRE_MESH_SOURCES",
     "CALCULATION_ROUTE_RESOLVER_OWNERSHIP",
-    "CALCULATION_ROUTE_SOURCE_DISPOSITIONS",
     "DESIGN_CONSTANT_RESOLVER_ID",
     "MANUAL_INPUT_RESOLVER_ID",
     "CalculationRouteDesignConstantOwnership",

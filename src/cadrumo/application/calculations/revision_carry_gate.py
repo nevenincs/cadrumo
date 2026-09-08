@@ -31,8 +31,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 
 
 @dataclass(frozen=True, slots=True)
@@ -45,18 +46,15 @@ class RevisionCarryOutcome:
 
 
 def revision_carry_outcome(
-    stamped_revision_id: RevisionId,
+    snapshot_ref: RegistrySnapshotRef,
     *,
-    source_modelo: str,
-    source_filing_year: int,
-    source_period: str,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> RevisionCarryOutcome:
     """Return the single law-determined decision for a carried revision stamp.
 
-    Resolves through the process-wide validated registry authority already
-    used by modelo application services. Reusing that authority preserves the
-    law-determined inspection contract without re-discovering and recompiling
-    the entire authoring tree once per carried observation.
+    Resolves through the supplied validated registry authority, or the
+    process-wide bundled authority used by modelo application services when no
+    explicit authority is in scope. Both routes retain this one comparison gate.
 
     - Indeterminate (source context fails to resolve) → carry refused. Current
       observations must be re-confirmable against the law-determined revision;
@@ -66,21 +64,20 @@ def revision_carry_outcome(
     - Matching stamp → clean carry.
 
     Args:
-        stamped_revision_id: Required revision persisted with the source filing.
-        source_modelo: The carried observation's source modelo id.
-        source_filing_year: The source filing year.
-        source_period: The source period as the bare registry token
-            (``"1T"``, ``"0A"``, …).
+        snapshot_ref: Required complete registry coordinate persisted with the
+            source value.
+        authority: Existing validated authority for callers evaluating an
+            explicit registry root; defaults to the bundled authority.
 
     Returns:
         A typed outcome containing the selected revision when resolution succeeds,
         plus the refusal reason when the stamp diverges or cannot be re-confirmed.
     """
     try:
-        inspection = bundled_authority().inspect_revision(
-            source_modelo,
-            filing_year=source_filing_year,
-            period=source_period,
+        inspection = (authority or bundled_authority()).inspect_revision(
+            str(snapshot_ref.modelo),
+            filing_year=int(snapshot_ref.modelo_year),
+            period=str(snapshot_ref.period),
         )
     except Exception as exc:
         return RevisionCarryOutcome(
@@ -89,7 +86,7 @@ def revision_carry_outcome(
             detail=f"revision selection failed: {type(exc).__name__}",
         )
     selected_revision_id = inspection.revision_id
-    if stamped_revision_id != selected_revision_id:
+    if snapshot_ref.revision_id != selected_revision_id:
         return RevisionCarryOutcome(
             refused=True,
             selected_revision_id=selected_revision_id,

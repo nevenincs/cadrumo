@@ -180,5 +180,4 @@ def test_the_resolver_accepts_real_targets_including_lazy_ones() -> None:
     """
     assert _resolves("cadrumo.application.user_profile.CommittedProfileView") is True
     assert _resolves("cadrumo.application.user_profile.apply_profile_fact_changes") is True
-    assert _resolves("cadrumo.adapters.persistence.storage.bucket.trash_rename_and_remove") is True
     assert _resolves("cadrumo.core") is True

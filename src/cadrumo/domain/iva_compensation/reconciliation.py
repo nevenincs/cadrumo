@@ -29,10 +29,14 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
+from ..calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import IvaCompensationReconciliationInputError, IvaWalletReconciliationError
 
 DEFAULT_MAX_WALLET_AGE_DAYS: Final[int] = 31
 _FILED_HISTORY_OBSERVATION: Final = "filed_history_observation"
+_REGISTRY_DERIVED_AUTHORITY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
+    {_FILED_HISTORY_OBSERVATION, "local_recurrence"}
+)
 _AEAT_FILED_HISTORY_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
     {
         "aeat_sede_justificante",
@@ -114,15 +118,34 @@ class IvaCompensationAuthoritySource(BaseModel):
     source_modelo: str | None = Field(default=None, min_length=1, max_length=8)
     source_filing_year: FilingYear | None = None
     source_periods: tuple[Period, ...] = ()
+    registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
 
     @model_validator(mode="after")
     def _source_period_years_match(self) -> IvaCompensationAuthoritySource:
         if not self.source_periods:
+            if self.source_kind in _REGISTRY_DERIVED_AUTHORITY_SOURCE_KINDS:
+                raise ValueError("registry-derived authority sources require source periods and coordinates")
+            if self.registry_snapshot_refs:
+                raise ValueError("non-registry authority sources cannot carry registry coordinates")
             return self
         if self.source_filing_year is None:
             raise ValueError("source_filing_year is required when source_periods are present")
         if any(period.filing_year != self.source_filing_year for period in self.source_periods):
             raise ValueError("source_periods filing_year values must match source_filing_year")
+        if self.source_kind not in _REGISTRY_DERIVED_AUTHORITY_SOURCE_KINDS:
+            if self.registry_snapshot_refs:
+                raise ValueError("non-registry authority sources cannot carry registry coordinates")
+            return self
+        if self.source_modelo is None:
+            raise ValueError("registry-derived authority sources require source_modelo")
+        expected_coordinates = {
+            (str(self.source_modelo), self.source_filing_year, period.registry_token) for period in self.source_periods
+        }
+        actual_coordinates = {
+            (str(ref.modelo), ref.modelo_year, str(ref.period)) for ref in self.registry_snapshot_refs
+        }
+        if actual_coordinates != expected_coordinates:
+            raise ValueError("registry-derived authority source coordinates must exactly match its source periods")
         return self
 
 
@@ -139,6 +162,8 @@ class IvaCompensationReconciliationDecision(BaseModel):
     taxpayer_nif: str = Field(min_length=1, max_length=32)
     target_year: FilingYear
     target_period: Period
+    target_registry_snapshot_ref: RegistrySnapshotRef
+    source_registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
     selected_authority: IvaCompensationAuthority
     selected_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
     wallet_amount: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -178,6 +203,24 @@ class IvaCompensationReconciliationDecision(BaseModel):
 def _validate_reconciliation_target_and_amount(decision: IvaCompensationReconciliationDecision) -> None:
     if decision.target_period.filing_year != decision.target_year:
         raise ValueError("target_period.filing_year must match target_year")
+    target_ref = decision.target_registry_snapshot_ref
+    if (
+        target_ref.modelo != "303"
+        or target_ref.modelo_year != decision.target_year
+        or target_ref.period != decision.target_period.registry_token
+    ):
+        raise ValueError("target_registry_snapshot_ref must match the Modelo 303 decision target")
+    expected_source_refs = tuple(
+        dict.fromkeys(ref for source in decision.authority_sources for ref in source.registry_snapshot_refs)
+    )
+    if decision.source_registry_snapshot_refs != expected_source_refs:
+        raise ValueError("source_registry_snapshot_refs must exactly match the authority-source coordinates")
+    if decision.local_recurrence_amount is not None and not any(
+        source.source_kind in _REGISTRY_DERIVED_AUTHORITY_SOURCE_KINDS
+        and source.amount == decision.local_recurrence_amount
+        for source in decision.authority_sources
+    ):
+        raise ValueError("local_recurrence_amount requires a matching registry-derived authority source")
     if decision.selected_authority != "missing" and decision.selected_amount is None:
         raise ValueError("selected_amount is required unless selected_authority is 'missing'")
     if decision.selected_authority == "missing" and decision.selected_amount is not None:
@@ -280,6 +323,11 @@ class LocalIvaCompensationRecurrenceProtocol(Protocol):
         ...
 
     @property
+    def source_registry_snapshot_refs(self) -> tuple[RegistrySnapshotRef, ...]:
+        """Canonical registry coordinates that produced the recurrence."""
+        ...
+
+    @property
     def resolved_at(self) -> datetime:
         """When the recurrence was resolved."""
         ...
@@ -290,6 +338,7 @@ class _ReconciliationContext:
     taxpayer_nif: str
     target_year: int
     target_period: Period
+    target_registry_snapshot_ref: RegistrySnapshotRef
     wallet_amount: Decimal | None
     local_recurrence_amount: Decimal | None
     override: IvaCompensationOverride | None
@@ -304,6 +353,7 @@ def reconcile_iva_compensation_wallet(
     taxpayer_nif: str,
     target_year: int,
     target_period: Period,
+    target_registry_snapshot_ref: RegistrySnapshotRef,
     wallet: IvaCompensationWalletObservationProtocol | None,
     local_recurrence_amount: Decimal | None,
     local_recurrence_source: IvaCompensationAuthoritySource | None = None,
@@ -329,11 +379,24 @@ def reconcile_iva_compensation_wallet(
             target_year=target_year,
             target_period=target_period,
         )
+    if local_recurrence_amount is not None and local_recurrence_source is None:
+        if not is_first_iva_period:
+            raise ValueError("local recurrence values require their canonical registry source coordinate")
+        local_recurrence_source = IvaCompensationAuthoritySource(
+            source_kind="local_recurrence",
+            amount=local_recurrence_amount,
+            source_locator="target-revision:first-iva-period-zero",
+            source_modelo="303",
+            source_filing_year=target_year,
+            source_periods=(target_period,),
+            registry_snapshot_refs=(target_registry_snapshot_ref,),
+        )
     when = decided_at if decided_at is not None else now()
     ctx = _ReconciliationContext(
         taxpayer_nif=taxpayer_nif,
         target_year=target_year,
         target_period=target_period,
+        target_registry_snapshot_ref=target_registry_snapshot_ref,
         wallet_amount=wallet.total_pending if wallet is not None else None,
         local_recurrence_amount=local_recurrence_amount,
         override=override,
@@ -392,6 +455,10 @@ def _decision(
         taxpayer_nif=ctx.taxpayer_nif,
         target_year=ctx.target_year,
         target_period=ctx.target_period,
+        target_registry_snapshot_ref=ctx.target_registry_snapshot_ref,
+        source_registry_snapshot_refs=tuple(
+            dict.fromkeys(ref for source in ctx.authority_sources for ref in source.registry_snapshot_refs)
+        ),
         selected_authority=selected_authority,
         selected_amount=selected_amount,
         wallet_amount=wallet_amount,
@@ -630,14 +697,13 @@ def _authority_sources(
                 amount=wallet.total_pending,
                 source_locator=str(wallet.source_url),
                 captured_at=wallet.captured_at,
+                registry_snapshot_refs=(),
             ),
         )
     if local_recurrence_amount is not None:
-        recurrence_source = local_recurrence_source or IvaCompensationAuthoritySource(
-            source_kind="local_recurrence",
-            amount=local_recurrence_amount,
-            source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
-        )
+        if local_recurrence_source is None:
+            raise ValueError("local recurrence source coordinate was not supplied")
+        recurrence_source = local_recurrence_source
         if recurrence_source.source_kind == _FILED_HISTORY_OBSERVATION:
             sources.append(
                 IvaCompensationAuthoritySource(
@@ -648,6 +714,7 @@ def _authority_sources(
                     source_modelo=recurrence_source.source_modelo,
                     source_filing_year=recurrence_source.source_filing_year,
                     source_periods=recurrence_source.source_periods,
+                    registry_snapshot_refs=recurrence_source.registry_snapshot_refs,
                 ),
             )
         sources.append(recurrence_source)
@@ -658,6 +725,7 @@ def _authority_sources(
                 amount=override.amount,
                 source_locator=override.evidence_locator,
                 captured_at=override.recorded_at,
+                registry_snapshot_refs=(),
             ),
         )
     return tuple(sources)
@@ -693,6 +761,7 @@ def local_recurrence_authority_source(
         source_modelo=source_modelo,
         source_filing_year=source_filing_year,
         source_periods=source_periods,
+        registry_snapshot_refs=recurrence.source_registry_snapshot_refs,
     )
 
 

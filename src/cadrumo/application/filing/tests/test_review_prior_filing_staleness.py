@@ -34,6 +34,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
@@ -52,6 +53,10 @@ _SOURCE_REFS = ("boe-modelo-130-2025-form",)
 
 
 _M130_RESULTADO_CASILLA: CasillaId = validated_casilla_id("19", surface="prior filing staleness test")
+
+
+def _stamped_revision_id() -> str:
+    return str(bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id)
 
 
 def _schema_provider() -> CasillaSchemaProvider:
@@ -104,7 +109,11 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
     repository = CalculationObservationRepository(bucket_id=bucket_id)
 
     repository.save(
-        repository.prepare_observation_envelope(_prior_observation(value="100.00"), source_kind="app_filing")
+        repository.prepare_observation_envelope(
+            _prior_observation(value="100.00"),
+            source_kind="app_filing",
+            stamped_revision_id=_stamped_revision_id(),
+        )
     )
     approved = approve_draft(
         draft,
@@ -119,7 +128,11 @@ def test_approval_goes_stale_when_prior_filing_observation_changes(
     # Mutate ONLY the prior filing: same (modelo, year, period) key, different
     # filed value, so the self-loaded observation-store digest must change.
     repository.save(
-        repository.prepare_observation_envelope(_prior_observation(value="250.00"), source_kind="app_filing")
+        repository.prepare_observation_envelope(
+            _prior_observation(value="250.00"),
+            source_kind="app_filing",
+            stamped_revision_id=_stamped_revision_id(),
+        )
     )
 
     reasons = approval_stale_reasons(approved, bucket_id=bucket_id, schema_provider=schema_provider)
@@ -146,7 +159,11 @@ def test_approval_not_stale_when_prior_filing_observations_unchanged(
     repository = CalculationObservationRepository(bucket_id=bucket_id)
 
     repository.save(
-        repository.prepare_observation_envelope(_prior_observation(value="100.00"), source_kind="app_filing")
+        repository.prepare_observation_envelope(
+            _prior_observation(value="100.00"),
+            source_kind="app_filing",
+            stamped_revision_id=_stamped_revision_id(),
+        )
     )
     approved = approve_draft(
         draft,

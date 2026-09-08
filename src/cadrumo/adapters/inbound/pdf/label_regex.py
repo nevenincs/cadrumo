@@ -1,11 +1,9 @@
-"""Shared label-anchored regex extraction primitive.
+"""Shared label-anchored regex and decimal parsing primitives.
 
-Every casilla-complete extractor under :mod:`adapters.inbound.declaracion`
-runs essentially the same primitive:
-for a mapping of ``casilla_id`` to compiled pattern, search the PDF's text
-stream and return the first match per casilla. This module is the single
-authoritative implementation; the caller still decides which casillas are in
-scope through registry extraction profiles.
+The casilla-complete parser under :mod:`adapters.inbound.declaracion` owns
+target dispatch, page provenance, and missing, malformed, and ambiguous result
+classification. This module supplies only the reusable regex fragments and
+printed-decimal parser those extraction paths compose.
 
 The Spanish amount capture group :data:`SPANISH_AMOUNT_GROUP` is the canonical
 AEAT printed-amount format. Extractor modules import it and compose per-casilla
@@ -15,11 +13,8 @@ patterns on top of it.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
-from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
-from ....core.casilla_id import CasillaId
 from ....core.decimal.coercion import normalize_decimal_separators
 from ....core.decimal.printed_money import AEAT_THOUSANDS_SEPARATORS
 
@@ -142,70 +137,8 @@ def parse_spanish_decimal(raw: str) -> Decimal | None:
     return parsed
 
 
-@dataclass(frozen=True, slots=True)
-class LabelHit:
-    """One successful label-anchored regex match.
-
-    Attributes:
-        casilla_id: Stable casilla identifier the match is bound to.
-        raw_value: Verbatim substring captured by group 1 of the pattern,
-            with surrounding whitespace stripped.
-        decimal_value: ``raw_value`` parsed via :func:`parse_spanish_decimal`,
-            or ``None`` when the capture is non-numeric.
-        match_count: Number of times the pattern matched ``text``. ``1`` means
-            the label was unambiguous for this text stream; values greater than
-            ``1`` mean first-match-wins extraction succeeded but downstream
-            consumers should downgrade confidence or surface an ambiguity
-            warning.
-    """
-
-    casilla_id: CasillaId
-    raw_value: str
-    decimal_value: Decimal | None
-    match_count: int
-
-
-def apply_label_regex(
-    text: str,
-    label_regex_map: Mapping[CasillaId, re.Pattern[str]],
-) -> dict[CasillaId, LabelHit]:
-    """Run each ``(casilla_id, pattern)`` regex against ``text``.
-
-    First match wins for the raw value; :attr:`LabelHit.match_count`
-    reflects the total number of hits so callers can downgrade confidence
-    when the pattern is ambiguous. Patterns that never match are omitted rather
-    than represented as empty hits, leaving coverage decisions to the calling
-    parser's registry/profile policy.
-
-    Args:
-        text: Concatenated text returned by a PDF parser backend.
-        label_regex_map: Mapping of casilla identifier to compiled regex.
-            Each pattern must expose group ``1`` as the value capture.
-
-    Returns:
-        A dict keyed by casilla identifier, populated only for patterns
-        that matched at least once. Each value is a :class:`LabelHit`.
-    """
-    hits: dict[CasillaId, LabelHit] = {}
-    for casilla_id, pattern in label_regex_map.items():
-        matches = list(pattern.finditer(text))
-        if not matches:
-            continue
-        first = matches[0]
-        raw = first.group(1).strip()
-        hits[casilla_id] = LabelHit(
-            casilla_id=casilla_id,
-            raw_value=raw,
-            decimal_value=parse_spanish_decimal(raw),
-            match_count=len(matches),
-        )
-    return hits
-
-
 __all__ = [
     "SPANISH_AMOUNT_GROUP",
     "TEXT_VALUE_GROUP",
-    "LabelHit",
-    "apply_label_regex",
     "parse_spanish_decimal",
 ]

@@ -20,8 +20,11 @@ from ....adapters.persistence.storage.custody.capsule import load_committed_prof
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyRecoverySecretError
 from ....adapters.persistence.storage.custody.recovery import (
     PROFILE_CUSTODY_RECOVERY_FILENAME,
-    parse_profile_custody_recovery_envelope,
-    unlock_profile_custody_recovery,
+    ProfileCustodyRecoveryEnvelope,
+)
+from ....adapters.persistence.storage.custody.recovery_artifact import (
+    ProfileCustodyRecoveryArtifact,
+    unlock_imported_profile_custody_recovery_artifact,
 )
 from ....adapters.persistence.storage.recovery_key import RecoveryKey, generate_recovery_key
 from ....tests.secure_sql import isolated_profile_storage_root
@@ -76,9 +79,15 @@ def test_a_registration_that_takes_the_handover_publishes_a_wrapper_its_words_op
 
         material = load_committed_profile_password_material(UUID(outcome.profile_id))
         envelope_path = material.capsule_path / "custody" / PROFILE_CUSTODY_RECOVERY_FILENAME
-        envelope = parse_profile_custody_recovery_envelope(envelope_path.read_bytes())
+        envelope = ProfileCustodyRecoveryEnvelope.model_validate_json(envelope_path.read_bytes())
 
-        unlock = unlock_profile_custody_recovery(envelope, handed[0], sentinel=material.sentinel)
+        unlock = unlock_imported_profile_custody_recovery_artifact(
+            ProfileCustodyRecoveryArtifact.from_recovery_envelope(envelope),
+            handed[0],
+            sentinel=material.sentinel,
+            expected_profile_id=UUID(outcome.profile_id),
+            expected_dek_epoch=material.envelope.dek_epoch,
+        )
 
     assert unlock.profile_id == UUID(outcome.profile_id)
     assert unlock.dek_epoch == material.envelope.dek_epoch
@@ -104,12 +113,20 @@ def test_a_different_minted_mnemonic_does_not_open_the_published_wrapper(tmp_pat
         )
 
         material = load_committed_profile_password_material(UUID(outcome.profile_id))
-        envelope = parse_profile_custody_recovery_envelope(_recovery_envelope_path(outcome.profile_id).read_bytes())
+        envelope = ProfileCustodyRecoveryEnvelope.model_validate_json(
+            _recovery_envelope_path(outcome.profile_id).read_bytes()
+        )
 
         with generate_recovery_key() as impostor:
             assert impostor.mnemonic != handed[0]
             with pytest.raises(ProfileCustodyRecoverySecretError):
-                unlock_profile_custody_recovery(envelope, impostor.mnemonic, sentinel=material.sentinel)
+                unlock_imported_profile_custody_recovery_artifact(
+                    ProfileCustodyRecoveryArtifact.from_recovery_envelope(envelope),
+                    impostor.mnemonic,
+                    sentinel=material.sentinel,
+                    expected_profile_id=UUID(outcome.profile_id),
+                    expected_dek_epoch=material.envelope.dek_epoch,
+                )
 
 
 def test_registration_requires_a_recovery_handover_contract(tmp_path: Path) -> None:

@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -25,13 +24,6 @@ from ..store import save_envelope, save_events_append, save_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"runs"})
-"""Taxonomy-vocabulary literals this module deliberately pins.
-
-``root / "runs" / "NOT-HEX" / "trace.json"`` in the positive-control test is
-the real ``RUNS`` category shape, deliberately malformed at the run-id
-segment to prove the grammar matcher can still fail.
-"""
 
 _RUN_ID = "0123456789abcdef"
 

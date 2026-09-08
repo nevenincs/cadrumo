@@ -65,6 +65,10 @@ _Q2_2024 = _period(2025, "2T")
 _M130_GASTOS_CASILLA: CasillaId = validated_casilla_id("02")
 
 
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2024, period="4T").snapshot_ref
+
+
 def _raw_transaction(
     provider_id: str,
     *,
@@ -762,6 +766,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
             especial_transition=None,
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         ),
     )
 
@@ -801,7 +806,12 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
         TransactionCatalogue.from_transactions((row,)),
     )
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
-        ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
+        ProrrataRegisterEntry(
+            ejercicio=2025,
+            regime=ProrrataRegisterRegime.NINGUNA,
+            especial_transition=None,
+            source_registry_snapshot_refs=(),
+        ),
     )
 
     result = aggregate_renta_gasto_ledger_from_repositories(
@@ -848,6 +858,7 @@ def test_m130_and_m100_resolve_the_same_iva_deduction_ratio_for_the_same_ejercic
             especial_transition=None,
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         ),
     )
 

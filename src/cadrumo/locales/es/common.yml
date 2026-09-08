@@ -282,10 +282,6 @@ auth:
       del proveedor de identidad Cl@ve Permanente. Automatizable sin intervención
       para los flujos de lectura de la AEAT; requiere DNI/NIE y contraseña.
     clave_permanente_label: Cl@ve Permanente
-    clave_pin_description: Hueco reservado y cerrado para Cl@ve PIN.
-    clave_pin_label: Cl@ve PIN
-    dnie_pkcs_description: Hueco reservado y cerrado para DNI-e PKCS.
-    dnie_pkcs_label: DNI-e PKCS
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -654,9 +650,6 @@ live:
       expected_but_not_found: 'Su perfil declarado espera una declaración en {count}
         par(es) modelo/ejercicio para los que el registro de la AEAT no devolvió ninguna:
         {pairs}. Compruebe si llegaron a presentarse.'
-      found_more_than_expected: El registro de la AEAT contiene {raw_count} declaraciones
-        del modelo {modelo} {period} {ejercicio}; se conservó el registro más reciente
-        ({expediente}) y se sustituyeron {superseded} anterior(es).
       recapture_divergence: 'Volver a capturar el modelo {modelo} {period} {ejercicio}
         cambió {count} valor(es) de casilla observados anteriormente: {casillas}.
         La AEAT puede tener una declaración rectificada.'

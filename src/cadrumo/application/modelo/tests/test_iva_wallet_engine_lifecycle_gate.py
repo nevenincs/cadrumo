@@ -11,6 +11,7 @@ import pytest
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....tests import general_m303_filing_evidence
 from ....tests.env_scope import ready_clave_settings
+from ...calculations.binding_prefill import BindingPrefillReport
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import calculate_modelo_revision
@@ -53,6 +54,8 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
             repository=CalculationObservationRepository(),
             decided_at=_DECIDED_AT,
             treat_absent_recurrence_as_first_period=True,
+            local_recurrence=None,
+            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
         )
 
         assert report.decision.selected_authority == "local_recurrence"
@@ -147,6 +150,8 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(tm
             wallet=_wallet_observation(pending=Decimal("1200.00")),
             repository=CalculationObservationRepository(),
             decided_at=_DECIDED_AT,
+            local_recurrence=None,
+            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
         )
 
         assert report.decision.selected_authority == "aeat_wallet"

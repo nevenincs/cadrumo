@@ -12,18 +12,12 @@ from dataclasses import dataclass
 
 import pytest
 
-from ....core.config import Settings, override_settings
 from ....domain.calculations.registry.authority import bundled_authority
-from ....tests.aeat_literal_fixtures import aeat_host
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .._modelo_work_lifecycle_cli import guard_unsupported_work_modelo
-from ..errors import CliRefusedBoundaryError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-_SEDE_HOST = aeat_host("sede")
-
 
 @dataclass(frozen=True)
 class UnsupportedWorkCase:
@@ -35,20 +29,6 @@ class UnsupportedWorkCase:
 
 
 _UNSUPPORTED_WORK_CASES = (
-    UnsupportedWorkCase(
-        modelo="151",
-        year=2024,
-        period="0A",
-        revision="2024-y-siguientes",
-        required_groups=(("93",), ("EHA/2887/2008", "2887"), (_SEDE_HOST, "Sede")),
-    ),
-    UnsupportedWorkCase(
-        modelo="210",
-        year=2024,
-        period="1T",
-        revision="anual",
-        required_groups=(("5/2004", "TRLIRNR"), ("G320", _SEDE_HOST)),
-    ),
     UnsupportedWorkCase(
         modelo="600",
         year=2024,
@@ -76,20 +56,6 @@ _UNSUPPORTED_WORK_CASES = (
         period="0A",
         revision="actual",
         required_groups=(("29/1987", "LISyD"), ("Hacienda",)),
-    ),
-    UnsupportedWorkCase(
-        modelo="714",
-        year=2024,
-        period="0A",
-        revision="2021",
-        required_groups=(("19/1991", "1991"), ("HAC/1023/2021", "1023"), (_SEDE_HOST, "Sede")),
-    ),
-    UnsupportedWorkCase(
-        modelo="721",
-        year=2024,
-        period="0A",
-        revision="2023-y-siguientes",
-        required_groups=(("HFP/886/2023",), ("50",), (_SEDE_HOST, "Sede")),
     ),
 )
 
@@ -124,8 +90,6 @@ def test_work_create_unsupported_modelo_refuses_with_legal_authority(case: Unsup
         assert any(token in output for token in required_group), (
             f"modelo {case.modelo} output did not contain any of {required_group!r}: {output!r}"
         )
-    if case.modelo == "721":
-        assert "HFP/887/2023" not in output, "M721 must not cite the custodian-side 172/173 order"
     assert "could not evaluate" not in output
 
 
@@ -147,29 +111,11 @@ def test_registry_entries_for_unsupported_local_work_are_legally_grounded() -> N
         assert source_id in catalogues.sources
 
 
-def test_m210_engine_live_flag_only_bypasses_m210_guard() -> None:
-    """The M210 live-engine flag must not disable other unsupported-model refusals."""
+def test_aeat_modelos_are_not_classified_by_a_rollout_census() -> None:
+    """Every AEAT modelo proceeds to its real capability-owning boundary."""
 
-    with override_settings(cadrumo_m210_engine_live=True):
-        guard_unsupported_work_modelo("210")
-        for other in ("151", "600", "620", "650", "660", "714", "721"):
-            with pytest.raises(CliRefusedBoundaryError):
-                guard_unsupported_work_modelo(other)
-
-
-def test_m210_guard_refuses_when_engine_live_flag_is_unset() -> None:
-    """By default, M210 still refuses with a typed refusal carrying modelo context."""
-
-    assert Settings().cadrumo_m210_engine_live is False, (
-        "M210 engine-live must default False until full local-work support is accepted"
-    )
-
-    with pytest.raises(CliRefusedBoundaryError) as exc_info:
-        guard_unsupported_work_modelo("210")
-
-    assert exc_info.value.translated_message is not None
-    assert exc_info.value.context is not None
-    assert exc_info.value.context.get("modelo") == "210"
+    for modelo in ("151", "210", "714", "721"):
+        guard_unsupported_work_modelo(modelo)
 
 
 @pytest.mark.parametrize(

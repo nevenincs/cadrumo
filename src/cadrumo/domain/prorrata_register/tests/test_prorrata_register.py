@@ -26,6 +26,7 @@ from decimal import Decimal
 import pydantic
 import pytest
 
+from ....core.modelo import Modelo
 from ....core.prorrata_register import (
     ProrrataActivityRowType,
     ProrrataEspecialTransitionKind,
@@ -33,6 +34,8 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     SectorDiferenciadoLetra,
 )
+from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..register import (
     ProrrataActivityRow,
     ProrrataEspecialTransitionEvidence,
@@ -45,6 +48,18 @@ from ..register import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
+def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
+    return (
+        bundled_authority()
+        .snapshot(
+            Modelo.M303.value,
+            filing_year=ejercicio,
+            period="4T",
+        )
+        .snapshot_ref
+    )
+
+
 def _carried_entry(ejercicio: int = 2024, pct: str = "80") -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=ejercicio,
@@ -53,6 +68,7 @@ def _carried_entry(ejercicio: int = 2024, pct: str = "80") -> ProrrataRegisterEn
         provisional_percentage=Decimal(pct),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="303:2023:4T",
+        source_registry_snapshot_refs=(_m303_snapshot_ref(2023),),
     )
 
 
@@ -64,6 +80,7 @@ def _authorised_entry(ejercicio: int = 2024, pct: str = "60") -> ProrrataRegiste
         provisional_percentage=Decimal(pct),
         provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
         authorisation_reference="AEAT-AUTH-2024-0007",
+        source_registry_snapshot_refs=(),
     )
 
 
@@ -75,7 +92,37 @@ def _inicio_entry(ejercicio: int = 2024, pct: str = "50") -> ProrrataRegisterEnt
         provisional_percentage=Decimal(pct),
         provisional_provenance=ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
         authorisation_reference="INICIO-036-2024",
+        source_registry_snapshot_refs=(),
     )
+
+
+def test_entry_requires_registry_snapshot_refs() -> None:
+    """Registry-derived register rows cannot be reconstructed without coordinates."""
+    with pytest.raises(pydantic.ValidationError, match="source_registry_snapshot_refs"):
+        ProrrataRegisterEntry.model_validate(
+            {
+                "ejercicio": 2024,
+                "regime": ProrrataRegisterRegime.GENERAL,
+                "especial_transition": None,
+                "provisional_percentage": Decimal("80"),
+                "provisional_provenance": ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                "source_observation_ref": "303:2023:4T",
+            },
+        )
+
+
+def test_carried_entry_rejects_explicitly_empty_registry_snapshot_refs() -> None:
+    """A required field cannot be used as an empty compatibility stamp."""
+    with pytest.raises(pydantic.ValidationError, match="require source_registry_snapshot_refs"):
+        ProrrataRegisterEntry(
+            ejercicio=2024,
+            regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
+            provisional_percentage=Decimal("80"),
+            provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_observation_ref="303:2023:4T",
+            source_registry_snapshot_refs=(),
+        )
 
 
 def _activity_row(
@@ -141,7 +188,12 @@ def test_ladder_no_candidates_is_unresolved_never_default() -> None:
 
 def test_ladder_ignores_entry_without_percentage() -> None:
     """An entry that records a regime but no provisional percentage does not contribute a value."""
-    regime_only = ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None)
+    regime_only = ProrrataRegisterEntry(
+        ejercicio=2024,
+        regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
+        source_registry_snapshot_refs=(),
+    )
     resolution = resolve_provisional_percentage((regime_only,))
     assert resolution.resolved is False
     assert resolution.percentage is None
@@ -160,6 +212,7 @@ def test_entry_percentage_requires_provenance() -> None:
             regime=ProrrataRegisterRegime.GENERAL,
             especial_transition=None,
             provisional_percentage=Decimal("80"),
+            source_registry_snapshot_refs=(),
         )
 
 
@@ -171,6 +224,7 @@ def test_entry_provenance_requires_percentage() -> None:
             regime=ProrrataRegisterRegime.GENERAL,
             especial_transition=None,
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_registry_snapshot_refs=(),
         )
 
 
@@ -183,6 +237,7 @@ def test_entry_authorised_requires_reference() -> None:
             especial_transition=None,
             provisional_percentage=Decimal("60"),
             provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
+            source_registry_snapshot_refs=(),
         )
 
 
@@ -196,6 +251,7 @@ def test_entry_carried_forbids_authorisation_reference() -> None:
             provisional_percentage=Decimal("80"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
             authorisation_reference="should-not-be-here",
+            source_registry_snapshot_refs=(),
         )
 
 
@@ -208,6 +264,7 @@ def test_entry_partial_settlement_rejected() -> None:
             especial_transition=None,
             definitive_percentage=Decimal("65"),
             definitive_volume_con_derecho=Decimal("130000.00"),
+            source_registry_snapshot_refs=(),
         )
 
 
@@ -222,6 +279,7 @@ def test_entry_source_observation_only_for_carried() -> None:
             provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
             authorisation_reference="AEAT-AUTH-2024-0007",
             source_observation_ref="303:2023:4T",
+            source_registry_snapshot_refs=(_m303_snapshot_ref(2023),),
         )
 
 
@@ -232,6 +290,7 @@ def test_interrupted_entry_roundtrips_and_defaults_carry_no_percentages() -> Non
         regime=ProrrataRegisterRegime.NINGUNA,
         especial_transition=None,
         interrupted=True,
+        source_registry_snapshot_refs=(),
     )
     restored = ProrrataRegisterEntry.model_validate_json(entry.model_dump_json())
     assert restored == entry
@@ -251,6 +310,7 @@ def test_interrupted_entry_forbids_percentages_and_volumes() -> None:
             definitive_percentage=Decimal("50"),
             definitive_volume_con_derecho=Decimal("10000.00"),
             definitive_volume_sin_derecho=Decimal("10000.00"),
+            source_registry_snapshot_refs=(),
         )
 
 
@@ -262,6 +322,7 @@ def test_interrumpida_tres_ultimos_provenance_resolves_in_ladder() -> None:
         especial_transition=None,
         provisional_percentage=Decimal("70"),
         provisional_provenance=ProrrataProvisionalProvenance.INTERRUMPIDA_TRES_ULTIMOS,
+        source_registry_snapshot_refs=(),
     )
     resolution = resolve_provisional_percentage((resumed,))
     assert resolution.percentage == Decimal("70")
@@ -276,12 +337,17 @@ def _settled(ejercicio: int, con: str, sin: str) -> ProrrataRegisterEntry:
         definitive_percentage=Decimal("50"),
         definitive_volume_con_derecho=Decimal(con),
         definitive_volume_sin_derecho=Decimal(sin),
+        source_registry_snapshot_refs=(),
     )
 
 
 def _interrupted(ejercicio: int) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
-        ejercicio=ejercicio, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None, interrupted=True
+        ejercicio=ejercicio,
+        regime=ProrrataRegisterRegime.NINGUNA,
+        especial_transition=None,
+        interrupted=True,
+        source_registry_snapshot_refs=(),
     )
 
 
@@ -317,7 +383,12 @@ def test_walk_skips_unsettled_years() -> None:
         entries=(
             _settled(2020, "10000", "0"),
             _settled(2021, "6000", "4000"),
-            ProrrataRegisterEntry(ejercicio=2022, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),
+            ProrrataRegisterEntry(
+                ejercicio=2022,
+                regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
+            ),
         ),
     )
     aggregate = register.collect_last_three_active_years(before_ejercicio=2023)
@@ -329,7 +400,11 @@ def test_entry_unsupported_schema_version_rejected() -> None:
     """An unsupported schema_version is rejected."""
     with pytest.raises(pydantic.ValidationError, match="unsupported ProrrataRegisterEntry"):
         ProrrataRegisterEntry(
-            ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None, schema_version="9"
+            ejercicio=2024,
+            regime=ProrrataRegisterRegime.GENERAL,
+            especial_transition=None,
+            source_registry_snapshot_refs=(),
+            schema_version="9",
         )
 
 
@@ -388,22 +463,26 @@ def test_transition_state_and_prior_year_continuity_are_structural() -> None:
             ejercicio=2026,
             regime=ProrrataRegisterRegime.GENERAL,
             especial_transition=option,
+            source_registry_snapshot_refs=(),
         )
     with pytest.raises(pydantic.ValidationError, match="revocation requires current general"):
         ProrrataRegisterEntry(
             ejercicio=2026,
             regime=ProrrataRegisterRegime.ESPECIAL,
             especial_transition=revocation,
+            source_registry_snapshot_refs=(),
         )
     continuing = ProrrataRegisterEntry(
         ejercicio=2025,
         regime=ProrrataRegisterRegime.ESPECIAL,
         especial_transition=None,
+        source_registry_snapshot_refs=(),
     )
     option_entry = ProrrataRegisterEntry(
         ejercicio=2026,
         regime=ProrrataRegisterRegime.ESPECIAL,
         especial_transition=option,
+        source_registry_snapshot_refs=(),
     )
     with pytest.raises(pydantic.ValidationError, match="cannot repeat an immediately prior especial"):
         ProrrataRegister(entries=(continuing, option_entry))
@@ -411,6 +490,7 @@ def test_transition_state_and_prior_year_continuity_are_structural() -> None:
         ejercicio=2026,
         regime=ProrrataRegisterRegime.GENERAL,
         especial_transition=revocation,
+        source_registry_snapshot_refs=(),
     )
     assert ProrrataRegister(entries=(continuing, revocation_entry)).entries[-1] is revocation_entry
 
@@ -424,6 +504,7 @@ def test_entry_fully_settled_carried_is_valid() -> None:
         provisional_percentage=Decimal("80"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="303:2023:4T",
+        source_registry_snapshot_refs=(_m303_snapshot_ref(2023),),
         definitive_percentage=Decimal("77"),
         definitive_volume_con_derecho=Decimal("154000.00"),
         definitive_volume_sin_derecho=Decimal("46000.00"),
@@ -445,10 +526,18 @@ def test_register_rejects_duplicate_key() -> None:
 def test_register_distinct_sectors_coexist() -> None:
     """Two entries for the same ejercicio but different sectors coexist."""
     a = ProrrataRegisterEntry(
-        ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None, sector_id="comercio"
+        ejercicio=2024,
+        regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
+        sector_id="comercio",
+        source_registry_snapshot_refs=(),
     )
     b = ProrrataRegisterEntry(
-        ejercicio=2024, regime=ProrrataRegisterRegime.ESPECIAL, especial_transition=None, sector_id="alquiler"
+        ejercicio=2024,
+        regime=ProrrataRegisterRegime.ESPECIAL,
+        especial_transition=None,
+        sector_id="alquiler",
+        source_registry_snapshot_refs=(),
     )
     register = ProrrataRegister(entries=(a, b))
     assert len(register.entries_for_ejercicio(2024)) == 2
@@ -465,7 +554,12 @@ def test_activity_rows_keep_stable_identity_and_fixed_slots_unique() -> None:
 
 def test_activity_rows_are_ordered_and_complete_only_when_prorrata_applies() -> None:
     """An active prorrata year refuses the partial five-row substrate; none does not."""
-    active = ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None)
+    active = ProrrataRegisterEntry(
+        ejercicio=2024,
+        regime=ProrrataRegisterRegime.GENERAL,
+        especial_transition=None,
+        source_registry_snapshot_refs=(),
+    )
     partial = ProrrataRegister(entries=(active,), activity_rows=(_activity_row(activity_id="retail", slot=3),))
     assert partial.requires_activity_rows_for(2024) is True
     assert partial.activity_rows_complete_for(2024) is False
@@ -480,7 +574,12 @@ def test_activity_rows_are_ordered_and_complete_only_when_prorrata_applies() -> 
     assert complete.activity_rows_complete_for(2024) is True
     inactive = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(ejercicio=2024, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
+            ProrrataRegisterEntry(
+                ejercicio=2024,
+                regime=ProrrataRegisterRegime.NINGUNA,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
+            ),
         ),
     )
     assert inactive.requires_activity_rows_for(2024) is False
@@ -559,18 +658,25 @@ def test_sectorized_current_entry_coverage_requires_common_and_every_declared_se
     )
     register = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(ejercicio=2026, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
+            ),
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="retail",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="leasing",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
         sector_definitions=sector_definitions,
@@ -592,24 +698,32 @@ def test_sectorized_current_entry_coverage_refuses_missing_common_or_declared_sc
                 sector_id="retail",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="leasing",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
         sector_definitions=sector_definitions,
     )
     missing_declared_sector = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(ejercicio=2026, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
+            ),
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="retail",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
         sector_definitions=sector_definitions,
@@ -623,24 +737,32 @@ def test_sectorized_current_entry_coverage_refuses_an_extra_scope() -> None:
     """An undeclared extra sector cannot be smuggled into a complete filing declaration."""
     register = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(ejercicio=2026, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None),
+            ProrrataRegisterEntry(
+                ejercicio=2026,
+                regime=ProrrataRegisterRegime.GENERAL,
+                especial_transition=None,
+                source_registry_snapshot_refs=(),
+            ),
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="retail",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="leasing",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
             ProrrataRegisterEntry(
                 ejercicio=2026,
                 sector_id="unclassified",
                 regime=ProrrataRegisterRegime.GENERAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
         sector_definitions=(

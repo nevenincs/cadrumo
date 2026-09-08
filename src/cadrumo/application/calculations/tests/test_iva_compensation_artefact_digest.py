@@ -25,6 +25,7 @@ from pydantic import ValidationError
 
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ..iva_compensation_history import IvaCompensationAnnualSummary
 
@@ -34,6 +35,12 @@ _VALID_NIF = "12345678Z"
 _PRESENTED_AT = datetime(2025, 4, 20, tzinfo=UTC)
 _VALID_DIGEST = "a3f1" * 16
 _MALFORMED_DIGESTS = ("z" * 64, "A" * 64, "0123456789ABCDEF" * 4, "-" * 64)
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2025",
+    modelo_year=2025,
+    period="1T",
+)
 
 
 def _annual_summary(digest: str | None) -> IvaCompensationAnnualSummary:
@@ -57,6 +64,7 @@ def _period_state(digest: str | None) -> IvaCompensationPeriodState:
         taxpayer_nif=_VALID_NIF,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         expediente_id="202530300000001Z",
         status="presented",
         presented_at=_PRESENTED_AT,
@@ -157,6 +165,7 @@ def _period_state_with_nif(nif: str) -> IvaCompensationPeriodState:
         taxpayer_nif=nif,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         expediente_id="202530300000001Z",
         status="presented",
         presented_at=_PRESENTED_AT,

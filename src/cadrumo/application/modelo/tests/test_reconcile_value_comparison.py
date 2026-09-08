@@ -20,6 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...tests.profile_backend_fixtures import _isolated_backend
 
 __all__ = ["_isolated_backend"]
@@ -117,6 +118,12 @@ def _persist_filed_revision(work_unit: WorkUnit, *, total_ingresar: Decimal) -> 
             CalculationRevision(
                 calculation_revision_id=revision_id,
                 work_unit_id=work_unit.work_unit_id,
+                registry_snapshot_ref=RegistrySnapshotRef(
+                    modelo=work_unit.modelo,
+                    revision_id=work_unit.revision_id,
+                    modelo_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                ),
                 state=CalculationRevisionState.PRESENTADO,
                 casilla_values=casilla_values,
                 observations=registry_grounded_observations(

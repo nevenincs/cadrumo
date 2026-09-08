@@ -61,6 +61,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ...domain.iva.m303_settlement import is_m303_annual_settlement_period
@@ -99,6 +100,7 @@ from ..calculations.observations_repository import (
     PriorDomiciliationElectionProjection,
 )
 from ..filing.retention import try_record_filing_retention_snapshot
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ._m303_filing_evidence import m303_filing_evidence_failure
 from .action_errors import M303FilingEvidenceError
 from .filed_revision_observation import persist_filed_revision_observation, require_filing_result_disposition
@@ -215,6 +217,7 @@ def _source_provenance_trace_sha256(source_provenance: tuple[CalculationSourceRe
 def persist_calculation_revision(
     *,
     work_unit_id: str,
+    registry_snapshot_ref: RegistrySnapshotRef,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
     work_units_revision_id: str,
@@ -308,6 +311,14 @@ def persist_calculation_revision(
         evidence=filing_instance_evidence,
         operation="calculation revision creation",
     )
+    expected_snapshot_ref = RegistrySnapshotRef(
+        modelo=work_unit.modelo,
+        revision_id=work_unit.revision_id,
+        modelo_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+    if registry_snapshot_ref != expected_snapshot_ref:
+        raise ValueError("calculation revision registry snapshot ref must equal the parent work-unit coordinate")
     if any(item.materialization_rule_version != work_unit.revision_id for item in row_casilla_provenance.values()):
         raise ValueError("row casilla materialization rule version must equal the parent work-unit revision")
     revision_id = derive_calculation_revision_id(
@@ -378,6 +389,7 @@ def persist_calculation_revision(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
@@ -582,6 +594,7 @@ def _build_prorrata_settlement_write(
     # it cannot self-commit, and an unguarded read would put the whole register
     # back over a sector entry another writer added in between.
     register, register_revision_id = prorrata_register_repository.load_revisioned()
+    register = require_prorrata_register_coordinates_current(register)
     entry = _settled_prorrata_register_entry(
         work_unit=work_unit,
         register=register,
@@ -632,6 +645,12 @@ def _settled_prorrata_register_entry(
     definitive_percentage: Decimal,
 ) -> ProrrataRegisterEntry:
     volumen_sin_derecho = volumen_total - volumen_con_derecho
+    settlement_snapshot_ref = RegistrySnapshotRef(
+        modelo=work_unit.modelo,
+        revision_id=work_unit.revision_id,
+        modelo_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
     settlement_fields = {
         "definitive_percentage": definitive_percentage,
         "definitive_volume_con_derecho": volumen_con_derecho,
@@ -639,7 +658,15 @@ def _settled_prorrata_register_entry(
     }
     existing = register.entry_for(work_unit.filing_year)
     if existing is not None:
-        return ProrrataRegisterEntry.model_validate({**existing.model_dump(), **settlement_fields})
+        return ProrrataRegisterEntry.model_validate(
+            {
+                **existing.model_dump(),
+                **settlement_fields,
+                "source_registry_snapshot_refs": tuple(
+                    dict.fromkeys((*existing.source_registry_snapshot_refs, settlement_snapshot_ref))
+                ),
+            }
+        )
 
     regime = ProrrataRegisterRegime.GENERAL if volumen_sin_derecho > Decimal("0") else ProrrataRegisterRegime.NINGUNA
     return ProrrataRegisterEntry(
@@ -649,6 +676,7 @@ def _settled_prorrata_register_entry(
         definitive_percentage=definitive_percentage,
         definitive_volume_con_derecho=volumen_con_derecho,
         definitive_volume_sin_derecho=volumen_sin_derecho,
+        source_registry_snapshot_refs=(settlement_snapshot_ref,),
     )
 
 

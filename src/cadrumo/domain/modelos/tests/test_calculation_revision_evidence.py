@@ -15,6 +15,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.irnr import M210GrossIncomeSourceMode
 from ....core.period import Period
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...calculations.row_source_identity import RowSourceIdentity
 from ...filing_evidence import FilingEvidenceReference
 from ..calculation_revision import (
@@ -47,6 +48,13 @@ from ._calculation_revision_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2026-y-siguientes",
+    modelo_year=2026,
+    period="1T",
+)
 
 
 def test_m303_filing_evidence_requires_an_explicit_nullable_insolvency_fact() -> None:
@@ -121,6 +129,7 @@ def test_row_source_identity_is_hashed_redacted_and_coordinate_checked() -> None
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id="a" * 64,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         row_binding_values={key[0]: {"1": "10.00"}},
         row_source_identities={key: identity},
@@ -189,6 +198,7 @@ def test_row_source_identity_is_hashed_redacted_and_coordinate_checked() -> None
         CalculationRevision(
             calculation_revision_id=orphan_id,
             work_unit_id="a" * 64,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             state=CalculationRevisionState.BORRADOR,
             row_source_identities={key: identity},
             filing_instance_evidence=None,
@@ -211,6 +221,7 @@ def test_calculation_revision_requires_explicit_source_provenance_even_when_empt
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id="a" * 64,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         casilla_values={},
@@ -290,6 +301,7 @@ def test_calculation_revision_refuses_non_utc_lifecycle_instants(
     payload: dict[str, object] = {
         "calculation_revision_id": _base_id(),
         "work_unit_id": "a" * 64,
+        "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
         "state": state,
         "input_values_by_casilla_id": {_INPUT_CASILLA_001: "10.00"},
         "binding_overrides": {},
@@ -487,7 +499,6 @@ def test_production_revision_id_derivations_name_the_single_annual_summary_input
         "cadrumo/application/modelo/amendment_actions.py",
         "cadrumo/application/modelo/external_import_actions.py",
         "cadrumo/application/modelo/revision_persistence.py",
-        "cadrumo/entrypoints/tui/devtools/workbench_fixtures.py",
     }
     omissions = [
         f"{path}:{call.lineno}"
@@ -502,6 +513,7 @@ def test_portable_revision_json_missing_filing_evidence_is_rejected() -> None:
     payload = {
         "calculation_revision_id": "a" * 64,
         "work_unit_id": "b" * 64,
+        "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
         "state": "borrador",
         "created_at": "2026-01-01T00:00:00Z",
         "updated_at": "2026-01-01T00:00:00Z",

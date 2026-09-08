@@ -48,6 +48,7 @@ from ..domain.transactions.models import TransactionCatalogue
 from ..domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..domain.user_profile.values import UserProfileRecord
 from .aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
+from .calculations.verification_report_gate import require_verification_report_coordinates_current
 from .ledger.workspace import (
     LedgerWorkspaceArea,
     LedgerWorkspaceProjectionV1,
@@ -541,7 +542,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         """
         if self.verification_repository is None:
             return None
-        return self.verification_repository.load()
+        return require_verification_report_coordinates_current(self.verification_repository.load())
 
     def _load_ledger_sources(self) -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
         """Read the ledger stores once, as the value the guard compares.

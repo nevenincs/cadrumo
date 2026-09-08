@@ -5,7 +5,6 @@ cli:
         acquisition_year_help: Año de adquisición del bien.
         art108_help: Si el bien tiene la consideración de bien de inversión según
           LIVA art. 108.
-        asset_ref_help: Referencia cruzada opcional a un identificador de AssetRecord.
         cuota_soportada_help: IVA soportado total en la adquisición (positivo).
         declare_help: Declara un bien de inversión para su regularización de IVA.
         description_help: Descripción del bien.
@@ -530,12 +529,6 @@ cli:
         state_help: 'Filtro de estado del snapshot: active, superseded, discarded
           o all'
         view_help: Mostrar un snapshot del borrador del modelo 100
-      deudas:
-        app_help: Snapshots de deudas AEAT de solo lectura
-        latest_help: Muestra el snapshot de deudas más reciente
-        list_help: Lista los snapshots de deudas guardados
-        snapshot_id_help: Id del snapshot (o prefijo inequívoco)
-        view_help: Muestra un snapshot de deudas y cada deuda pendiente que contiene
       expediente_help: Identificador de expediente AEAT
       expedientes:
         app_help: Snapshots de expedientes AEAT de solo lectura
@@ -1278,12 +1271,12 @@ cli:
           importada de la AEAT
         amend_missing_options: 'Una rectificación requiere todas estas opciones: %{missing}.'
         amend_no_detail_rows_help: Declarar que esta rectificación no tiene registros
-          de detalle. En los modelos 184, 232, 347 y 349 los registros son la
-          declaración, por lo que declarar que no hay ninguno no es lo mismo que no
-          decir nada; si se omiten esta opción y --row, la rectificación se rechaza
-          en vez de suponerse.
-        amend_rows_contradiction: Use --row o --no-detail-rows, pero no ambos;
-          --no-detail-rows declara que no hay registros de detalle.
+          de detalle. En los modelos 184, 232, 347 y 349 los registros son la declaración,
+          por lo que declarar que no hay ninguno no es lo mismo que no decir nada;
+          si se omiten esta opción y --row, la rectificación se rechaza en vez de
+          suponerse.
+        amend_rows_contradiction: Use --row o --no-detail-rows, pero no ambos; --no-detail-rows
+          declara que no hay registros de detalle.
         amend_set_required: --set es obligatorio al menos una vez para una complementaria.
         amend_wizard_export_next_action: Rectificación presentada como registro interno
           en borrador. Exporta el fichero BOE compatible con la AEAT con `aeat app
@@ -1385,15 +1378,6 @@ cli:
         create_reused_renamed: Se devolvió la unidad de trabajo existente (idempotente
           sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
           indicado se aplicó como renombrado a %{name}.
-        create_stub_modelo_151_refused: 'Modelo %{modelo} (régimen especial de impatriados,
-          Ley Beckham) no está soportado para crear unidades de trabajo en este CLI.
-          Base legal: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
-          Presenta la declaración en la Sede de la AEAT.'
-        create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR, Impuesto sobre la
-          Renta de No Residentes) no está soportado para crear unidades de trabajo
-          en este CLI. Base legal: RD Legislativo 5/2004 TRLIRNR y Art. 28 TRLIRNR.
-          Presenta la declaración mediante el trámite G320 de la Sede de la AEAT en
-          sede.agenciatributaria.gob.es.'
         create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones
           patrimoniales y actos juridicos documentados) no está soportado para crear
           unidades de trabajo en este CLI. Fundamento legal: Ley 28/1990 y competencia
@@ -1410,15 +1394,6 @@ cli:
           del Modelo 650) no está soportado para crear unidades de trabajo en este
           CLI. Fundamento legal: Ley 29/1987 LISyD; presente ante la Hacienda autonómica
           competente.'
-        create_stub_modelo_714_refused: 'Modelo %{modelo} (Impuesto sobre el Patrimonio)
-          no está soportado para crear unidades de trabajo en este CLI. Base legal:
-          Ley 19/1991 Art. 28 y Orden HAC/1023/2021. Presenta la declaración en la
-          Sede de la AEAT.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre
-          monedas virtuales situadas en el extranjero) no está soportado para crear
-          unidades de trabajo en este CLI. Autoridad legal: Orden HFP/886/2023 y RD
-          1065/2007 Art. 42 quáter; el umbral informativo es 50.000 EUR a 31 de diciembre.
-          Presenta la declaración en la Sede de la AEAT cuando exista obligación legal.'
         dependencies_help: Muestra dependencias de historial de presentaciones entre
           modelos y los bloqueos clean-state actuales para una presentación objetivo
         dependencies_period_requires_modelo: La opción --period requiere --modelo.
@@ -1846,13 +1821,7 @@ cli:
         NAME' antes de configurar la autenticación.
       output_language_help: Idioma del texto de salida (es, en, ca, hu).
       provider_help: Identificador del proveedor (p.ej. certificado-electrónico)
-      providers:
-        status_implemented: disponible
-        status_reserved: reservado
-        status_unavailable_gloss: no disponible aún
       providers_help: Listar proveedores de autenticación soportados
-      reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
-        %{provider}.'
       reset_all_help: Restablecer todos los proveedores de autenticación conocidos
       reset_help: Retirar la configuración local del proveedor, las sesiones, los
         bloqueos, los certificados registrados y sus secretos guardados
@@ -2855,13 +2824,13 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --file.
-      irpf_category_help: 'Identificador de categoría de IRPF. Las facturas
-        profesionales cobradas en neto usan actividad_economica; los alquileres
-        pagados en neto usan arrendamiento_local o arrendamiento_vivienda_afecto.
-        Royalties y los ingresos de SGAE son capital mobiliario según el art. 25.4
-        LIRPF cuando el contribuyente no es el autor, y actividad económica según el
-        art. 27 LIRPF cuando sí lo es y ejerce la actividad. Ejecute aeat app ledger
-        categories para ver el catálogo completo.'
+      irpf_category_help: Identificador de categoría de IRPF. Las facturas profesionales
+        cobradas en neto usan actividad_economica; los alquileres pagados en neto
+        usan arrendamiento_local o arrendamiento_vivienda_afecto. Royalties y los
+        ingresos de SGAE son capital mobiliario según el art. 25.4 LIRPF cuando el
+        contribuyente no es el autor, y actividad económica según el art. 27 LIRPF
+        cuando sí lo es y ejerce la actividad. Ejecute aeat app ledger categories
+        para ver el catálogo completo.
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2970,10 +2939,10 @@ cli:
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
-      unknown_category: '--category-id {category!r} no reconocido. Indica un
-        identificador de categoría sin prefijo, como {example!r}, no una clave
-        compuesta ni con prefijo de familia. Ejecute aeat app ledger categories para
-        ver el catálogo reconocido.'
+      unknown_category: --category-id {category!r} no reconocido. Indica un identificador
+        de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
+        prefijo de familia. Ejecute aeat app ledger categories para ver el catálogo
+        reconocido.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     exclude:
@@ -3001,9 +2970,9 @@ cli:
         son una vista previa de lo que una importación real añadiría y omitiría.'
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
-      file_refused: 'Extracto rechazado y omitido: {file}. El resto de la carpeta se
-        ha importado.'
       file_help: Ruta al archivo del extracto bancario o directorio
+      file_refused: 'Extracto rechazado y omitido: {file}. El resto de la carpeta
+        se ha importado.'
       help: Importar extractos bancarios o registros al libro contable
       likely_duplicates: '{count} fila(s) importada(s) comparten fecha e importe con
         una transacción ya presente en el libro, pero tienen una descripción distinta,

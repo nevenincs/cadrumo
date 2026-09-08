@@ -77,7 +77,7 @@ from ....domain.iva_compensation.filed_derivation import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
@@ -204,8 +204,17 @@ def _seed_m303_compensacion_quarters(*, obs_repo: CalculationObservationReposito
                     provenance_kind="app_filing",
                     provenance_locator=f"test-local-filing:{_YEAR}:{period}",
                 ),
-                normalize_m303_carry=True,
-            )
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=_YEAR,
+                    period=period,
+                    observations=registry_grounded_observations(
+                        modelo="303",
+                        filing_year=_YEAR,
+                        period=period,
+                        casilla_values=casillas,
+                    ),
+                )))
         )
 
 

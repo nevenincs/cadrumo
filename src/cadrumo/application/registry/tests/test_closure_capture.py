@@ -1,15 +1,15 @@
 """Real-behavior proofs for the public registry-closure capture contract.
 
-Each composer this capture wraps walks the whole bundled registry with live
-byte and connectivity proofs, so this suite is deliberately economical: it
-mints exactly three real captures (module-scoped) and reuses them across every
+The composer this capture wraps walks the whole bundled registry with live
+byte proof, so this suite is deliberately economical: it
+mints two real captures (module-scoped) and reuses them across every
 assertion rather than recomposing per test.
 """
 
 from __future__ import annotations
 
 from dataclasses import fields
-from datetime import date
+from inspect import signature
 
 import pytest
 
@@ -20,45 +20,30 @@ from ..closure_capture import (
     capture_registry_closure,
     read_registry_closure_current_coordinate,
 )
-from ..source_connectivity import load_source_connectivity_census
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_AS_OF = date(2026, 8, 24)
-_LATER_AS_OF = date(2026, 12, 31)
+
+@pytest.fixture(scope="module")
+def _early_capture(registry_authority) -> RegistryClosureCapture:
+    return capture_registry_closure(authority=registry_authority)
 
 
 @pytest.fixture(scope="module")
-def _census():
-    return load_source_connectivity_census()
+def _early_capture_again(registry_authority) -> RegistryClosureCapture:
+    return capture_registry_closure(authority=registry_authority)
 
 
-@pytest.fixture(scope="module")
-def _early_capture(registry_authority, _census) -> RegistryClosureCapture:
-    return capture_registry_closure(authority=registry_authority, census=_census, as_of=_AS_OF)
-
-
-@pytest.fixture(scope="module")
-def _early_capture_again(registry_authority, _census) -> RegistryClosureCapture:
-    return capture_registry_closure(authority=registry_authority, census=_census, as_of=_AS_OF)
-
-
-@pytest.fixture(scope="module")
-def _late_capture(registry_authority, _census) -> RegistryClosureCapture:
-    return capture_registry_closure(authority=registry_authority, census=_census, as_of=_LATER_AS_OF)
-
-
-def test_capture_republishes_both_composers_without_a_third_derivation(_early_capture) -> None:
-    """The capture carries exactly the filing-export and source-connectivity limbs."""
+def test_capture_republishes_filing_export_without_a_second_derivation(_early_capture) -> None:
+    """The capture carries exactly the filing-export limbs."""
     names = {limb.name for limb in _early_capture.limbs}
-    assert names == {"filing_export", "source_connectivity"}
+    assert names == {"filing_export"}
     coordinates = {(limb.modelo, limb.revision, limb.name) for limb in _early_capture.limbs}
     assert len(coordinates) == len(_early_capture.limbs)
 
 
 def test_capture_is_singleflight_and_current_against_its_own_coordinate(
     registry_authority,
-    _census,
     _early_capture,
     _early_capture_again,
 ) -> None:
@@ -66,19 +51,8 @@ def test_capture_is_singleflight_and_current_against_its_own_coordinate(
     assert _early_capture.generation == _early_capture_again.generation
     assert _early_capture.comparison_domain == _early_capture_again.comparison_domain
 
-    current = read_registry_closure_current_coordinate(authority=registry_authority, census=_census, as_of=_AS_OF)
+    current = read_registry_closure_current_coordinate(authority=registry_authority)
     assert _early_capture.require_current(current) is _early_capture
-
-
-def test_closure_state_moves_independently_of_the_registry_snapshot(_early_capture, _late_capture) -> None:
-    """Advancing only the assessment date, with the same authority and census, changes closure.
-
-    This is the evidence for building a native generation here at all: if
-    closure were a pure function of the registry snapshot, the same authority
-    and census could never disagree with themselves across two dates.
-    """
-    assert _early_capture.limbs != _late_capture.limbs
-    assert _early_capture.generation != _late_capture.generation
 
 
 def test_a_superseded_generation_is_refused_within_one_owner_scope(_early_capture) -> None:
@@ -102,6 +76,13 @@ def test_capture_exposes_no_composer_internals_and_no_second_closure_shape() -> 
         "comparison_domain",
         "generation",
     }
+
+
+def test_closure_capture_accepts_only_executable_authorities() -> None:
+    """Development censuses cannot return as inputs to the product closure API."""
+    expected = {"authority", "filing_proof_authority"}
+    assert set(signature(capture_registry_closure).parameters) == expected
+    assert set(signature(read_registry_closure_current_coordinate).parameters) == expected
 
 
 def test_closure_capture_authority_is_owned_by_its_defining_module() -> None:

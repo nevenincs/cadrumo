@@ -160,10 +160,7 @@ from .workspace_producers import (
 )
 
 if TYPE_CHECKING:
-    from datetime import date
-
     from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from ..registry.source_connectivity import SourceConnectivityCensusManifest
 
 
 def modelo_work_selector_request_for_target(
@@ -1761,8 +1758,6 @@ def resolve_graded_snapshot_result(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     authority: ValidatedRegistryAuthority,
-    census: SourceConnectivityCensusManifest,
-    as_of: date,
     output_language: OutputLanguage,
     page_size: int = 200,
     cursor: ModeloWorkspaceCursorV1 | None = None,
@@ -1793,12 +1788,6 @@ def resolve_graded_snapshot_result(
     revision's declared grade cannot satisfy ``required_grade``, distinguished
     from any other :class:`RegistryValidationError` by its typed
     ``registry_failure`` condition rather than message text.
-
-    ``census`` and ``as_of`` are the CLOSURE contributor's own operands. They
-    are declared here rather than read inside the join because the assembly
-    protocol forbids a live owner read hidden in the assembler: every
-    contributor is captured through its port exactly once, from operands the
-    caller supplied or an earlier capture resolved.
 
     ``work_review`` is the exact frozen :class:`ModeloWorkReview` the
     BOUNDED_REVIEW port captures -- never independently re-derived or
@@ -1937,8 +1926,6 @@ def resolve_graded_snapshot_result(
 
     closure_capture = ModeloWorkspaceClosurePortV1(
         authority=authority,
-        census=census,
-        as_of=as_of,
     ).capture_projection_with_epoch()
     registry_closure_limbs = graded_snapshot_closure_limbs(
         closure_capture.projection.limbs,

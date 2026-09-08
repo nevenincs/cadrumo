@@ -14,7 +14,6 @@ from ...core.identity import BucketId, CalculationRevisionId, ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.revision_review import RevisionReviewStatus
-from ...core.source_connectivity import SourceConnectivityProofAuthority
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -27,7 +26,6 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..filing.export_proof import FilingExportProofAuthority
 from ..registry.closure import RegistryClosureLimb
-from ..registry.source_connectivity import SourceConnectivityCensusManifest
 from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness
 from .work_addressing import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
 from .work_review import ModeloWorkReview
@@ -389,7 +387,7 @@ class ModeloWorkspaceReadinessProjectionV1(_WorkspaceProducerModel):
 
 
 class ModeloWorkspaceClosureProjectionV1(_WorkspaceProducerModel):
-    """Every filing-export and source-connectivity closure limb, unmodified."""
+    """Every filing-export closure limb, unmodified."""
 
     limbs: tuple[RegistryClosureLimb, ...]
 
@@ -764,17 +762,11 @@ class ModeloWorkspaceClosurePortV1:
         self,
         *,
         authority: ValidatedRegistryAuthority,
-        census: SourceConnectivityCensusManifest,
-        as_of: date,
         filing_proof_authority: FilingExportProofAuthority | None = None,
-        connectivity_proof_authority: SourceConnectivityProofAuthority | None = None,
     ) -> None:
-        """Bind the authority, census and dates this port composes closure from."""
+        """Bind the authority and filing proof this port composes closure from."""
         self._authority = authority
-        self._census = census
-        self._as_of = as_of
         self._filing_proof_authority = filing_proof_authority
-        self._connectivity_proof_authority = connectivity_proof_authority
 
     @property
     def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
@@ -789,10 +781,7 @@ class ModeloWorkspaceClosurePortV1:
 
         capture = capture_registry_closure(
             authority=self._authority,
-            census=self._census,
-            as_of=self._as_of,
             filing_proof_authority=self._filing_proof_authority,
-            connectivity_proof_authority=self._connectivity_proof_authority,
         )
         return _contributing_projection(
             self.producer_contract,
@@ -807,10 +796,7 @@ class ModeloWorkspaceClosurePortV1:
 
         coordinate = read_registry_closure_current_coordinate(
             authority=self._authority,
-            census=self._census,
-            as_of=self._as_of,
             filing_proof_authority=self._filing_proof_authority,
-            connectivity_proof_authority=self._connectivity_proof_authority,
         )
         return _current_stamp_and_epoch(self.producer_contract, coordinate)
 

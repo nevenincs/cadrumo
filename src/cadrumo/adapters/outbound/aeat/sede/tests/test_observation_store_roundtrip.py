@@ -7,9 +7,9 @@ raw artefact bodies under
 operate at ``SensitivityClass.FINANCIAL``.
 
 Anti-tautology: the fixture populates non-default values on every
-optional field on :class:`FiledDeclaracionObservation`
+field on :class:`FiledDeclaracionObservation`
 (``casillas``, ``metadata``, ``extraction_coverage``,
-``registry_snapshot_id``) plus the optional ``storage_ref`` on the
+``registry_snapshot_ref``) plus the optional ``storage_ref`` on the
 artefact. A drift that silently dropped any of these on save would
 surface as inequality on the loaded observation.
 """
@@ -22,14 +22,15 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl
+from pydantic import AnyHttpUrl, ValidationError
 
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.authority import bundled_authority
 from ......tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
-from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from .._iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
     FiledDeclaracionArtefact,
@@ -68,7 +69,7 @@ def _populated_observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaraci
         ),
         metadata={"capture_session": "sede-2024-06-30-A"},
         extraction_coverage={"declaration_pdf": 0.95},
-        registry_snapshot_id="registry-2023-snapshot-04",
+        registry_snapshot_ref=bundled_authority().snapshot("100", filing_year=2023, period="0A").snapshot_ref,
     )
 
 
@@ -112,8 +113,14 @@ def test_filed_declaration_observation_roundtrips_through_encrypted_store(
         assert loaded.casillas[0].confidence == 0.87
         assert loaded.metadata == {"capture_session": "sede-2024-06-30-A"}
         assert loaded.extraction_coverage == {"declaration_pdf": 0.95}
-        assert loaded.registry_snapshot_id == "registry-2023-snapshot-04"
+        assert loaded.registry_snapshot_ref == observation.registry_snapshot_ref
         assert loaded.artefacts[0].storage_ref == persisted_artefact.storage_ref
+
+        legacy_payload = observation.model_dump()
+        legacy_payload.pop("registry_snapshot_ref")
+        legacy_payload["registry_snapshot_id"] = "registry-2023-snapshot-04"
+        with pytest.raises(ValidationError, match="registry_snapshot_ref"):
+            FiledDeclaracionObservation.model_validate(legacy_payload)
 
 
 def test_filed_declaration_observation_dropped_artefacts_surfaces_at_load(
@@ -217,7 +224,7 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
                 ),
             ),
             total_pending=Decimal("1200"),
-            source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
+            source_url=AnyHttpUrl(WALLET_URL),
             captured_at=captured_at,
             raw_sha256="b" * 64,
         )

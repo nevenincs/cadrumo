@@ -2,7 +2,7 @@
 
 ``InventoryLedgerRepository.create`` and the application service refused a
 second ledger for the same ``(actividad_id, year)`` pair, but the public
-``save`` / ``save_inventory`` path accepted any ``InventoryLedgerDocument`` and
+``InventoryLedgerRepository.save`` path accepted any ``InventoryLedgerDocument`` and
 wrote it without validating. A replacement document could therefore persist two
 ledgers for one pair while creation and every later lookup still assumed one
 canonical activity/year ledger.

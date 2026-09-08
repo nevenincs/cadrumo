@@ -17,6 +17,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.operator_action_enums import ActionArgumentSource, ActionConditionality, NoRecoveryOutcome
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -143,6 +144,12 @@ def _seed_revision(
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="130",
+            revision_id="2019-y-siguientes",
+            modelo_year=2026,
+            period="1T",
+        ),
         state=state,
         input_values_by_casilla_id={_OUTPUT_CASILLA: str(output)},
         casilla_values={_OUTPUT_CASILLA: output},

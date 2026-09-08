@@ -58,6 +58,7 @@ from .ids import (
 from .m303_orden_projection_models import M303AnnualOrdenAuthority
 from .period_selector_match import selector_period_matches_request
 from .schema_input_kind import InputKind
+from .schema_references import RegistrySnapshotRef
 from .schema_rounding import RegistryRoundingCode as RegistryRoundingCode
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
@@ -1123,6 +1124,16 @@ class RegistrySnapshot(RegistryModel):
     supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(
         default_factory=dict[Modelo, M303AnnualOrdenAuthority],
     )
+
+    @property
+    def snapshot_ref(self) -> RegistrySnapshotRef:
+        """Return this validated snapshot's canonical persisted coordinate."""
+        return RegistrySnapshotRef(
+            modelo=self.modelo.id,
+            revision_id=self.revision.id,
+            modelo_year=self.filing_year,
+            period=self.period,
+        )
 
     @staticmethod
     def _validate_identifier_keyed_map(field_name: str, values: Mapping[str, object]) -> None:

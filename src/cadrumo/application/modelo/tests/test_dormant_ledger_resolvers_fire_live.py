@@ -20,7 +20,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (
@@ -190,7 +190,22 @@ def test_m130_casilla_01_folds_seeded_ledger_income_on_live_calculate(
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo="100",
+                filing_year=_M130_PRIOR_YEAR,
+                period="0A",
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_M130_PRIOR_YEAR,
+                    period="0A",
+                    casilla_values={
+                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                    },
+                ),
+            )))
     )
 
     # Non-vacuity: casilla 01 binds the income aggregation source under test, and
@@ -277,7 +292,22 @@ def test_m130_casilla_06_prefills_from_net_paid_professional_invoice_on_live_cal
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo="100",
+                filing_year=_M130_PRIOR_YEAR,
+                period="0A",
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_M130_PRIOR_YEAR,
+                    period="0A",
+                    casilla_values={
+                        _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _M130_PRIOR_YEAR_NET_INCOME,
+                        _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                        _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                    },
+                ),
+            )))
     )
 
     revision = _revision("130", _M130_REVISION)

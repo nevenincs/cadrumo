@@ -24,7 +24,10 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.modelo import Modelo
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..prorrata_register import ProrrataRegisterRepository
@@ -36,6 +39,10 @@ _BUCKET_ID = "51355135-5135-4135-8135-513551355135"
 _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 
 
+def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
+    return bundled_authority().snapshot(Modelo.M303.value, filing_year=ejercicio, period="4T").snapshot_ref
+
+
 def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:
     return ProrrataRegisterEntry(
         ejercicio=ejercicio,
@@ -44,6 +51,7 @@ def _entry(ejercicio: int, *, percentage: str) -> ProrrataRegisterEntry:
         provisional_percentage=Decimal(percentage),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=f"303:{ejercicio - 1}:4T",
+        source_registry_snapshot_refs=(_m303_snapshot_ref(ejercicio - 1),),
     )
 
 

@@ -9,6 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ..errors import ModeloValidationError
 from ._calculation_revision_test_support import (
@@ -20,6 +21,13 @@ from ._calculation_revision_test_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="720",
+    revision_id="2013-y-siguientes",
+    modelo_year=2026,
+    period="0A",
+)
 
 
 def test_revision_id_changes_when_row_binding_value_changes() -> None:
@@ -201,6 +209,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_casilla_keys() -> 
         CalculationRevision(
             calculation_revision_id="0" * 64,
             work_unit_id="a" * 64,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             state=CalculationRevisionState.BORRADOR,
             input_values_by_casilla_id={_NONCANONICAL_CASILLA_KEY: "10.00"},
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
@@ -230,6 +239,7 @@ def test_calculation_revision_rejects_legacy_inputs_snapshot_key() -> None:
             {
                 "calculation_revision_id": revision_id,
                 "work_unit_id": "a" * 64,
+                "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
                 "state": CalculationRevisionState.BORRADOR,
                 "input_values_by_casilla_id": {_INPUT_CASILLA_001: "10.00"},
                 "inputs_snapshot": {_INPUT_CASILLA_001: "10.00"},
@@ -254,6 +264,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
         CalculationRevision(
             calculation_revision_id="0" * 64,
             work_unit_id="a" * 64,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             state=CalculationRevisionState.BORRADOR,
             binding_overrides={"Bad Binding": "10.00"},
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
@@ -267,6 +278,7 @@ def test_calculation_revision_rejects_persisted_non_canonical_binding_keys() -> 
         CalculationRevision(
             calculation_revision_id="0" * 64,
             work_unit_id="a" * 64,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             state=CalculationRevisionState.BORRADOR,
             bindings_sourced_from_borrador=("Bad Binding",),
             casilla_values={_OUTPUT_CASILLA_002: Decimal("15.00")},
@@ -295,6 +307,7 @@ def test_calculation_revision_normalises_row_binding_values() -> None:
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id="a" * 64,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         binding_overrides={},
@@ -328,6 +341,7 @@ def test_calculation_revision_rejects_overlapping_binding_and_relation_replay_id
         CalculationRevision(
             calculation_revision_id=revision_id,
             work_unit_id="a" * 64,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             state=CalculationRevisionState.BORRADOR,
             binding_overrides={replay_id: "1.00"},
             relation_overrides={replay_id: "1.00"},

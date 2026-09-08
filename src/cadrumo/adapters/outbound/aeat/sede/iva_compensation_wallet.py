@@ -85,7 +85,6 @@ _WALLET_SELECTOR_URL = EXTERNAL.aeat.clave_movil.selector_access_url_template.fo
 _OWN_NAME_REPRESENTATION_ACTION = PRE303.representation_own_name_action_label
 _WALLET_DISCOVERED_ENTRYPOINT_ACTION = PRE303.wallet_discovered_entrypoint_action_label
 _WALLET_EXECUTE_READ_ACTION = PRE303.wallet_execute_read_action_label
-IVA_COMPENSATION_WALLET_URL = WALLET_URL
 PRE303_PRESENTATION_SERVICE_URL = _PRE303_PRESENTATION_URL
 
 # The pages a wallet READ legitimately rests on: the Pre303 presentation
@@ -969,7 +968,6 @@ def _assert_read_browser_action(action: str) -> None:
 
 
 __all__ = [
-    "IVA_COMPENSATION_WALLET_URL",
     "PRE303_PRESENTATION_SERVICE_URL",
     "discover_iva_compensation_wallet_entrypoint",
     "fetch_iva_compensation_wallet",

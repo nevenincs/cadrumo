@@ -224,13 +224,6 @@ adapters:
             vagy nem tartalmaz időzónát: {actual_value}.'
   persistence:
     profile:
-      assets:
-        errors:
-          asset_already_exists: Ez az eszköz már szerepel a titkosított eszköznyilvántartásban.
-          load_amortizacion_ledger_failed: A titkosított amortizációs nyilvántartás
-            nem tölthető be.
-          load_asset_ledger_failed: A titkosított eszköznyilvántartás nem tölthető
-            be.
       bienes_inversion:
         errors:
           load_register_failed: Nem sikerült betölteni a beruházási javak titkosított

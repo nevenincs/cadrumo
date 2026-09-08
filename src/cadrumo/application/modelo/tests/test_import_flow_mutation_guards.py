@@ -14,6 +14,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -330,6 +331,12 @@ def test_calculation_revision_actions_refuse_a_foreign_work_unit(tmp_path: Path)
                 source_provenance=(),
             ),
             work_unit_id=foreign.work_unit_id,
+            registry_snapshot_ref=RegistrySnapshotRef(
+                modelo=foreign.modelo,
+                revision_id=foreign.revision_id,
+                modelo_year=foreign.filing_year,
+                period=foreign.period.registry_token,
+            ),
             state=CalculationRevisionState.BORRADOR,
             input_values_by_casilla_id={},
             casilla_values={},

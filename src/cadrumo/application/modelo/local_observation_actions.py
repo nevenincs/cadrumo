@@ -113,6 +113,11 @@ def record_operator_local_observation[CasillaKey](
         A :class:`ModeloLocalObservationResult` describing the persisted local
         observation stamp.
     """
+    if modelo == "303":
+        raise ModeloLocalObservationError(
+            "Modelo 303 observations require canonical filed or official evidence with a result disposition",
+            context={"modelo": modelo, "filing_year": filing_year, "period": period.registry_token},
+        )
     revision = _load_revision(modelo=modelo, filing_year=filing_year, period=period)
     canonical_values = _canonical_casilla_values(revision=revision, casilla_values=casilla_values)
     observations = _observation_rows(revision=revision, casilla_values=canonical_values)
@@ -138,7 +143,6 @@ def record_operator_local_observation[CasillaKey](
                 "official_evidence": "false",
                 "filing_record_created": "false",
             },
-            normalize_m303_carry=False,
             replace_official_evidence=replace_official_evidence,
         ),
     )

@@ -150,11 +150,18 @@ def _reconcile_revision_for_work_unit(
         if pointer:
             revision = revisions.get(pointer)
             if revision is not None:
+                from .calculation_revision_gate import require_calculation_revision_coordinates_current
+
+                require_calculation_revision_coordinates_current(revision)
                 return revision
     candidates = revisions.for_work_unit(unit.work_unit_id)
     if not candidates:
         return None
-    return max(candidates, key=_reconcile_revision_priority)
+    revision = max(candidates, key=_reconcile_revision_priority)
+    from .calculation_revision_gate import require_calculation_revision_coordinates_current
+
+    require_calculation_revision_coordinates_current(revision)
+    return revision
 
 
 def m303_m349_intracom_reconcile_findings(

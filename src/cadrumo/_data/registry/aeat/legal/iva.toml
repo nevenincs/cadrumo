@@ -1852,8 +1852,7 @@ Articulo 9, numero 1.o, letra c) LIVA: la definicion de los SECTORES DIFERENCIAD
 (base del art 101). Letra a': actividades economicas con grupos DISTINTOS en la Clasificacion \
 Nacional de Actividades Economicas (CNAE) cuyos regimenes de deduccion difieran; los regimenes se \
 consideran distintos cuando los porcentajes de deduccion del art 104 difieran en mas de 50 PUNTOS \
-PORCENTUALES respecto de la actividad principal (base del test \
-PRORRATA_SECTORAL_SEPARATION_SPREAD_PP = 50). Letra b': actividades acogidas a los regimenes \
+PORCENTUALES respecto de la actividad principal. Letra b': actividades acogidas a los regimenes \
 especiales simplificado, agricultura/ganaderia/pesca, oro de inversion o recargo de equivalencia. \
 Letras c'/d': arrendamiento financiero y cesion de creditos/prestamos (salvo factoring). La \
 particion del contribuyente en sectores diferenciados es un juicio legal (que grupos CNAE, si \

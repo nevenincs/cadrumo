@@ -140,7 +140,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.tests.manual_oracle_support import oracle_declared_figures
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
@@ -270,7 +270,20 @@ def _seed_zero_m202_pagos() -> None:
                 ),
                 source_kind=APP_FILING_SOURCE_KIND,
                 captured_at=_T0,
-            )
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo=_M202,
+                    filing_year=_FILING_YEAR,
+                    period=period,
+                    observations=registry_grounded_observations(
+                        modelo=_M202,
+                        filing_year=_FILING_YEAR,
+                        period=period,
+                        casilla_values={
+                            _M202_PAGO_OUTPUT: Decimal("0"),
+                            _M202_PAGO_OUTPUT_40_2: Decimal("0"),
+                        },
+                    ),
+                )))
         )
 
 

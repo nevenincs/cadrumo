@@ -28,8 +28,6 @@ application:
         operator_completion_required: Kész; operátor által közvetített Cl@ve befejezés
           szükséges.
     errors:
-      provider_reserved: A(z) {provider} hitelesítési szolgáltató foglalt és még nincs
-        implementálva.
       session_field_not_datetime: A(z) {field} munkamenet-mező csak datetime vagy
         ISO-8601 karakterlánc lehet.
     operator:
@@ -637,9 +635,9 @@ application:
       idempotency_key_conflict: Az idempotencia-kulcs már egy eltérő adatokkal tárolt
         tranzakciót azonosít. Használjon új idempotencia-kulcsot másik mozgáshoz,
         vagy hagyja el a kulcsot szándékos duplikátum hozzáadásához.
-      purchase_evidence_already_set: 'A főkönyvi tranzakciónak már van purchase_invoice_evidence_id-je,
-        és nem cserélhető helyben. A bizonylat leválasztása nincs implementálva: törölje
-        a tranzakciót, és adja hozzá újra a helyes bizonylattal.'
+      purchase_evidence_already_set: A beszerzési számla bizonylata a csatolás után
+        nem módosítható. Törölje a főkönyvi tranzakciót, majd adja hozzá újra a helyes
+        bizonylattal.
       transaction_id_prefix_ambiguous: 'a(z) %{prefix} tranzakcióazonosító-előtag
         %{count} tranzakcióra illeszkedik: %{matches}'
       transaction_id_prefix_empty: a tranzakcióazonosító-előtag üres
@@ -665,13 +663,6 @@ application:
         snapshot_id_blank: A borrador pillanatkép azonosítója nem lehet üres.
         snapshot_not_found: Egyetlen borrador pillanatkép sem felel meg a kért azonosítónak.
         snapshot_prefix_ambiguous: A borrador pillanatkép előtagja több pillanatképre
-          illeszkedik.
-    deudas:
-      errors:
-        bucket_id_blank: A deudas bucket azonosítója nem lehet üres.
-        snapshot_id_blank: A deudas pillanatkép azonosítója nem lehet üres.
-        snapshot_not_found: Nem található deudas-pillanatkép a kért azonosítóhoz.
-        snapshot_prefix_ambiguous: A deudas pillanatkép előtag több pillanatképre
           illeszkedik.
     expedientes:
       errors:

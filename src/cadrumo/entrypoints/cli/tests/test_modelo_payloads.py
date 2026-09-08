@@ -23,6 +23,7 @@ from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.ids import RelationId
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -59,12 +60,19 @@ _INPUT_EJERCICIO_CASILLA: CasillaId = validated_casilla_id("ejercicio")
 _INPUT_PERIODO_CASILLA: CasillaId = validated_casilla_id("periodo")
 _NON_CANONICAL_KEY = "bad key"
 _RELATION_OVERRIDE: RelationId = "renta-2024-rel-130-pagos-fraccionados"
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="130",
+    revision_id="2019-y-siguientes",
+    modelo_year=2024,
+    period="1T",
+)
 
 
 def _base_revision_fields() -> dict[str, Any]:
     return dict(
         calculation_revision_id=_REVISION_ID,
         work_unit_id=_WORK_UNIT_ID,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state="BORRADOR",
         casilla_values={_PAYLOAD_CASILLA: "1234.56"},
         observations=(
@@ -436,6 +444,7 @@ def test_calculation_revision_projection_preserves_absent_by_design_marker() -> 
             source_provenance=(),
         ),
         work_unit_id=_WORK_UNIT_ID,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=(absent, declared_zero),
@@ -499,6 +508,7 @@ def test_calculation_revision_projection_carries_dependency_treatment_without_di
             filing_instance_evidence=None,
         ),
         work_unit_id=_WORK_UNIT_ID,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=(

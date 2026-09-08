@@ -37,7 +37,6 @@ import pytest
 from .....tests.live_gate import requires_live_google_enabled
 from ..impersonation import (
     GoogleImpersonationConfig,
-    describe_impersonation_target,
     resolve_impersonated_credentials,
 )
 
@@ -71,8 +70,6 @@ def test_resolve_impersonated_credentials_mints_a_real_token_for_a_provisioned_s
     """
     target_principal = _require_live_and_target_principal_configured()
     config = GoogleImpersonationConfig(target_principal=target_principal)
-
-    assert describe_impersonation_target(config) == target_principal
 
     credentials = resolve_impersonated_credentials(config)
 

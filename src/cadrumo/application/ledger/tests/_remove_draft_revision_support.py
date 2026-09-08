@@ -8,6 +8,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -43,12 +44,17 @@ def _seed_revision_citing_transaction(
 ) -> str:
     """Seed one real revision in ``state`` that cites ``transaction_id``."""
     period = Period.from_year_and_code(2026, period_code)
+    registry_snapshot_ref = bundled_authority().snapshot(
+        "303",
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    ).snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
         period=period,
-        revision_id="2022",
+        revision_id=registry_snapshot_ref.revision_id,
     )
     filing_instance_evidence = general_m303_filing_evidence(period, reference="test:remove-draft-revision")
     revision_id = derive_calculation_revision_id(
@@ -66,7 +72,7 @@ def _seed_revision_citing_transaction(
         modelo=ModeloCode("303"),
         filing_year=2026,
         period=period,
-        revision_id="2022",
+        revision_id=registry_snapshot_ref.revision_id,
         name=f"303-2026-{period_code}",
         created_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
@@ -85,6 +91,7 @@ def _seed_revision_citing_transaction(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=state,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},

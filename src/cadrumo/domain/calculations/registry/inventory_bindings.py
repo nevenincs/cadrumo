@@ -10,14 +10,9 @@ projection is a revision-owned fact, declared by the bindings the authoring tree
 ships, so a later revision adding one must be an authoring change rather than an
 edit to this file. Today only the Modelo 100 2025 revision declares them.
 
-The operation-to-casilla identity below is retained as a structural invariant of
-the projection vocabulary rather than migrated: an operation names WHICH figure
-it produces, so its destination is what the operation means, not a value the law
-re-sets per year. Retiring it would leave nothing at all checking that a binding
-declaring ``complete_acquisition_cost`` targets the acquisition-cost box, and a
-guard with no replacement is worse than a duplicated declaration. The embed
-classification ledger records it as revision-owned data; that half needs
-re-adjudication before it moves.
+The operation-to-casilla identity below is a structural invariant of the
+projection vocabulary: an operation names WHICH figure it produces, so its
+destination is what the operation means, not a value the law re-sets per year.
 """
 
 from __future__ import annotations

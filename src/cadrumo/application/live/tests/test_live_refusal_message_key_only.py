@@ -49,7 +49,6 @@ _LIVE_PACKAGE = Path(__file__).resolve().parent.parent
 _LIVE_OWNED_ERRORS: frozenset[str] = frozenset(
     {
         "BorradorSnapshotNotFoundError",
-        "DeudasSnapshotNotFoundError",
         "ExpedientesSnapshotNotFoundError",
         "JustificanteCaptureSnapshotNotFoundError",
         "LiveApplicationError",

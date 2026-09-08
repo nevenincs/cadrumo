@@ -53,7 +53,6 @@ from ...core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
     result_disposition_casilla_ids,
-    result_disposition_is_refund,
 )
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import (
@@ -313,37 +312,6 @@ def _reject_non_revision_casilla_values(
         )
 
 
-def revision_is_refund_disposition(
-    *,
-    work_unit: WorkUnit,
-    revision: CalculationRevision,
-    workflow_profile: TaxpayerProfile,
-    period: Period,
-    refund_election: RefundElection = RefundElection.COMPENSAR,
-    payment_election: PaymentElection = PaymentElection.INGRESO,
-) -> bool:
-    """Return whether the revision's resolved disposition is a refund (devolución).
-
-    Resolves the supplied :class:`CalculationRevision` for a
-    :class:`TaxpayerProfile`, with the same :class:`~core.Period` refund
-    eligibility context used by export.
-
-    Convenience wrapper used by the cross-period carry path: a refunded Modelo 303
-    period generates zero compensación carry-forward. Reads the SAME resolved
-    disposition the export emits via :func:`resolve_modelo_result_disposition`,
-    threading the same ``refund_election`` so the carry and the fichero agree.
-    """
-    disposition = resolve_modelo_result_disposition(
-        work_unit=work_unit,
-        revision=revision,
-        workflow_profile=workflow_profile,
-        period=period,
-        refund_election=refund_election,
-        payment_election=payment_election,
-    )
-    return result_disposition_is_refund(disposition)
-
-
 def _apply_modelo_303_refund_election(
     declaration_type: ResultDisposition,
     *,
@@ -412,5 +380,4 @@ def _apply_modelo_303_refund_election(
 __all__ = [
     "DECLARATION_TYPE_FALLBACK",
     "resolve_modelo_result_disposition",
-    "revision_is_refund_disposition",
 ]

@@ -26,8 +26,6 @@ application:
           one before continuing.
         operator_completion_required: Ready; requires operator-mediated Cl@ve completion.
     errors:
-      provider_reserved: Authentication provider {provider} is reserved and not yet
-        implemented.
       session_field_not_datetime: Persisted session field {field} must be a datetime
         or ISO-8601 string.
     operator:
@@ -611,9 +609,8 @@ application:
       idempotency_key_conflict: The idempotency key already identifies a stored transaction
         with different details. Use a new idempotency key for a different movement,
         or omit the key to append a deliberate duplicate.
-      purchase_evidence_already_set: 'Ledger transaction already has a purchase_invoice_evidence_id,
-        and it cannot be replaced in place. Detaching evidence is not implemented:
-        remove the transaction and re-add it with the correct evidence.'
+      purchase_evidence_already_set: Purchase invoice evidence is immutable once attached.
+        Remove the ledger transaction and re-add it with the correct evidence.
       transaction_id_prefix_ambiguous: 'transaction id prefix %{prefix} matches %{count}
         transactions: %{matches}'
       transaction_id_prefix_empty: transaction id prefix is empty
@@ -636,12 +633,6 @@ application:
         snapshot_id_blank: Borrador snapshot id must not be blank.
         snapshot_not_found: No borrador snapshot matches the requested id.
         snapshot_prefix_ambiguous: The borrador snapshot prefix matches multiple snapshots.
-    deudas:
-      errors:
-        bucket_id_blank: Deudas bucket id must not be blank.
-        snapshot_id_blank: Deudas snapshot id must not be blank.
-        snapshot_not_found: No deudas snapshot matches the requested id.
-        snapshot_prefix_ambiguous: The deudas snapshot prefix matches multiple snapshots.
     expedientes:
       errors:
         bucket_id_blank: Expedientes bucket id must not be blank.

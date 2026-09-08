@@ -137,61 +137,6 @@ class BootstrapExemption:
     asserts_family_read_only: bool = False
 
 
-@dataclass(frozen=True, slots=True)
-class LoginGatedVerb:
-    """A verb that MUST NEVER be granted a bootstrap exemption.
-
-    The registry's negative space. An exemption list records what is let
-    through; without a companion record of what is deliberately held back, a
-    later sweep that re-derives the admission rule readmits the exception,
-    because the exception was never expressible in that rule.
-
-    Attributes:
-        verb_path: The full verb path this refusal binds to. It may name a verb
-            the tree does not register yet: the refusal is what governs the
-            surface when it lands.
-        reason: Why the mechanical admission rule must not be allowed to
-            readmit it.
-    """
-
-    verb_path: str
-    reason: str
-
-
-#: Verbs the exemption rule must never readmit, with the grounds for refusing.
-#:
-#: **A verb whose OUTPUT leaves the encrypted store must stay login-gated,
-#: because a target-scoped unlock does not establish recency.** The login gate
-#: demands a session whose idle and absolute deadlines have not elapsed. A verb
-#: that names its own target and unlocks that bucket itself satisfies every
-#: mechanical test the target-scoped exemptions are admitted on, and still
-#: establishes nothing about how recently the operator authenticated. What
-#: distinguishes these verbs is their OUTPUT, not their plumbing.
-#:
-#: This principle was carried once by a source comment that justified itself by
-#: citing a test. The test was deleted in an unrelated sweep, then the comment
-#: was deleted with the surrounding block, and the principle survived nowhere.
-#: It is data now, and ``test_login_gated_verbs_never_exempt.py`` enforces it.
-#:
-#: The profile archive surface is `export` / `import` / `inspect`. The path
-#: below is the one the operator-surface contract declares for it; a rename of
-#: the declared command reds the gate rather than silently retiring the
-#: refusal.
-#:
-LOGIN_GATED_VERB_PATHS: tuple[LoginGatedVerb, ...] = (
-    LoginGatedVerb(
-        verb_path="config profile archive export",
-        reason=(
-            "Emits a portable copy of the profile's financial records. It qualifies for a "
-            "target-scoped exemption on the mechanical reading, exactly as its rename and "
-            "duplicate siblings do, which is why the refusal has to be recorded rather than "
-            "merely observed: the reasoning that frees those siblings readmits this verb "
-            "unless something says otherwise. Operator directive, 2026-08-03."
-        ),
-    ),
-)
-
-
 #: Every bootstrap exemption, with its criterion and its checkable citations.
 BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
     BootstrapExemption(
@@ -484,9 +429,7 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
 __all__ = [
     "BOOTSTRAP_EXEMPTIONS",
     "BOOTSTRAP_EXEMPT_VERB_PATHS",
-    "LOGIN_GATED_VERB_PATHS",
     "BootstrapExemption",
     "ExemptionCriterion",
-    "LoginGatedVerb",
     "is_bootstrap_exempt",
 ]

@@ -193,10 +193,8 @@ def _matches_mantenimiento(lowered_body: str, title: str) -> tuple[str, ...]:
 def parse_mantenimiento_banner(
     url: str,
     http_status: int,
-    headers: Mapping[str, str],
     html: str,
     *,
-    rate_limit_retry_after_default: int,
     _lowered: str | None = None,
 ) -> SiteHealthStatus | None:
     """Detect an AEAT maintenance banner or interstitial.
@@ -212,11 +210,7 @@ def parse_mantenimiento_banner(
     Args:
         url: The probe URL.
         http_status: The observed HTTP status code.
-        headers: Case-insensitive mapping of response headers.
         html: The response body.
-        rate_limit_retry_after_default: Ignored here; accepted so the
-            three parsers share a uniform signature wired from the
-            browser session hook.
         _lowered: Optional pre-lowercased body forwarded from
             :func:`evaluate_response` to avoid redundant work. Public
             callers should leave it ``None``.
@@ -225,7 +219,6 @@ def parse_mantenimiento_banner(
         A populated :class:`SiteHealthStatus` or ``None`` when no
         maintenance markers fire.
     """
-    del headers, rate_limit_retry_after_default
     lowered = _lowered if _lowered is not None else html.lower()
     title = _extract_title(html, lowered)
     hits = _matches_mantenimiento(lowered, title)
@@ -252,10 +245,8 @@ def parse_mantenimiento_banner(
 def parse_waf_challenge(
     url: str,
     http_status: int,
-    headers: Mapping[str, str],
     html: str,
     *,
-    rate_limit_retry_after_default: int,
     _lowered: str | None = None,
 ) -> SiteHealthStatus | None:
     """Detect a WAF block / challenge page.
@@ -268,16 +259,13 @@ def parse_waf_challenge(
     Args:
         url: The probe URL.
         http_status: The observed HTTP status code.
-        headers: Case-insensitive mapping of response headers.
         html: The response body.
-        rate_limit_retry_after_default: Ignored; reserved for interface parity.
         _lowered: Pre-computed lowercased ``html``; computed from ``html`` when omitted.
 
     Returns:
         A populated :class:`SiteHealthStatus` or ``None`` when the
         response does not look WAF-blocked.
     """
-    del headers, rate_limit_retry_after_default
     lowered = _lowered if _lowered is not None else html.lower()
     body_hits = tuple(marker for marker in _WAF_BODY_MARKERS if marker in lowered)
     if not body_hits:
@@ -423,19 +411,18 @@ def evaluate_response(
         response (i.e. the response looks healthy).
     """
     lowered = html.lower()
-    for parser in (
-        parse_rate_limit_response,
-        parse_mantenimiento_banner,
-        parse_waf_challenge,
-    ):
-        result = parser(
-            url,
-            http_status,
-            headers,
-            html,
-            rate_limit_retry_after_default=rate_limit_retry_after_default,
-            _lowered=lowered,
-        )
+    result = parse_rate_limit_response(
+        url,
+        http_status,
+        headers,
+        html,
+        rate_limit_retry_after_default=rate_limit_retry_after_default,
+        _lowered=lowered,
+    )
+    if result is not None:
+        return result
+    for parser in (parse_mantenimiento_banner, parse_waf_challenge):
+        result = parser(url, http_status, html, _lowered=lowered)
         if result is not None:
             return result
     return None

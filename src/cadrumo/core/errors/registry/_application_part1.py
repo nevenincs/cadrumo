@@ -88,16 +88,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.auth.operator_results.AuthProviderReservedError",
-        ErrorCode(
-            code="REFUSED_AUTH_PROVIDER_RESERVED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_auth_provider_reserved",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.auth.operator_results.AuthConfigureNoActiveBucketError",
         ErrorCode(
             code="REFUSED_AUTH_CONFIGURE_NO_ACTIVE_BUCKET",

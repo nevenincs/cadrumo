@@ -37,11 +37,15 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
+from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.period import Period
 from ....core.prorrata_register import ProrrataRegisterRegime
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.iva_compensation_casillas import M303_RESULTADO_CASILLA
 from ...calculations.observations_repository import CalculationObservationRepository
 from ...calculations.prorrata_regularizacion import CASILLA_REGULARIZACION_PRORRATA_DEFINITIVA
 from .._prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
@@ -68,9 +72,23 @@ def _seed_prior_year_percentage(obs_repo: CalculationObservationRepository, *, p
         modelo=Modelo.M303.value,
         filing_year=_PRIOR_YEAR,
         period="4T",
-        casilla_values={_PORCENTAJE_ID: percentage},
+        casilla_values={_PORCENTAJE_ID: percentage, M303_RESULTADO_CASILLA: Decimal("1")},
     )
-    obs_repo.save(obs_repo.prepare_observation_envelope(observation, source_kind="aeat_sede_justificante"))
+    obs_repo.save(
+        obs_repo.prepare_observation_envelope(
+            observation,
+            source_kind="aeat_sede_justificante",
+            source_headers=(
+                ObservedHeaderFact(
+                    header_key="declaration_type",
+                    value="I",
+                    source_artefact_kind="submitted_file",
+                    source_locator="test:prorrata-prior-declaration-type",
+                ),
+            ),
+            stamped_revision_id=revision_id_for_observation(observation),
+        ),
+    )
 
 
 def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_path: Path) -> None:
@@ -105,6 +123,34 @@ def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_pat
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
     assert "44" in diagnostic.message
     assert "ingreso" in diagnostic.message
+
+
+def test_advisory_refuses_prior_year_observation_with_stale_registry_stamp(tmp_path: Path) -> None:
+    """The direct prorrata advisory reader re-confirms its persisted coordinate."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        obs_repo = CalculationObservationRepository(objects=profile.repository)
+        _seed_prior_year_percentage(obs_repo, percentage=Decimal("90"))
+        persisted = obs_repo.load_observation(
+            Modelo.M303.value,
+            Period.from_year_and_code(_PRIOR_YEAR, "4T"),
+        )
+        assert persisted is not None
+        obs_repo.save(persisted.model_copy(update={"stamped_revision_id": "persisted-stale-revision"}))
+
+        with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+            collect_prorrata_regularizacion_diagnostics(
+                _revision(),
+                {
+                    _VOLUMEN_TOTAL_ID: Decimal("100000"),
+                    _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
+                    _PORCENTAJE_ID: Decimal("80"),
+                    _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
+                },
+                modelo=Modelo.M303.value,
+                period_token="4T",
+                filing_year=_YEAR,
+                observation_repository=obs_repo,
+            )
 
 
 def test_advisory_fires_pending_when_no_prior_year_observation_exists(tmp_path: Path) -> None:
@@ -197,6 +243,7 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
                         ejercicio=_YEAR,
                         regime=ProrrataRegisterRegime.GENERAL,
                         especial_transition=None,
+                        source_registry_snapshot_refs=(),
                     ),
                 ),
             ),

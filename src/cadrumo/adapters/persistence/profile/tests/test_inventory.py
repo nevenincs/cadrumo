@@ -15,6 +15,7 @@ import pytest
 
 from .....domain.contribuyente.inventory.records import (
     InventoryLedger,
+    InventoryLedgerDocument,
     InventoryLedgerError,
     MovementKind,
     MovementRecord,
@@ -22,7 +23,7 @@ from .....domain.contribuyente.inventory.records import (
 )
 from .....tests.secure_sql import TestRuntimeProfile
 from ...tests.runtime_profile_fixture import _runtime_profile
-from ..inventory import InventoryLedgerRepository, load_inventory, record_movement, save_inventory
+from ..inventory import InventoryLedgerRepository, record_movement
 from ._inventory_acquisition_fixture import (
     acquisition_for as _acquisition_for,
 )
@@ -56,7 +57,8 @@ def test_inventory_persistence_and_real_movement_append() -> None:
         opening_stock=Decimal("150.00"),
         closing_authority_record=None,
     )
-    save_inventory((ledger,))
+    repository = InventoryLedgerRepository()
+    repository.save(InventoryLedgerDocument(ledgers=(ledger,)))
 
     updated = record_movement(
         "retail",
@@ -65,7 +67,7 @@ def test_inventory_persistence_and_real_movement_append() -> None:
     )
 
     assert len(updated.period_movements) == 1
-    assert load_inventory()[0] == updated
+    assert repository.load().ledgers[0] == updated
 
 
 def test_inventory_duplicate_ledger_refusal_is_localized_and_structured() -> None:
@@ -98,7 +100,9 @@ def test_inventory_duplicate_movement_refusal_is_localized_and_structured() -> N
         closing_authority_record=None,
     )
     movement = _movement(MovementKind.PURCHASE, "2", "10", 1)
-    save_inventory((ledger.model_copy(update={"period_movements": (movement,)}),))
+    InventoryLedgerRepository().save(
+        InventoryLedgerDocument(ledgers=(ledger.model_copy(update={"period_movements": (movement,)}),)),
+    )
 
     with pytest.raises(InventoryLedgerError) as exc_info:
         record_movement("retail", movement, year=2025)
@@ -131,7 +135,9 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
 
     from .....tests.secure_sql import read_db_at_rest_bytes
 
-    path = save_inventory((ledger,))
+    repository = InventoryLedgerRepository()
+    repository.save(InventoryLedgerDocument(ledgers=(ledger,)))
+    path = repository.envelope_path
     db_bytes = read_db_at_rest_bytes(_runtime_profile.paths.database_file)
 
     assert not path.exists()

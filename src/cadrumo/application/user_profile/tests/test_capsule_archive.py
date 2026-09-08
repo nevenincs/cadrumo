@@ -32,6 +32,7 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+
 _LABEL = "Archive Roundtrip Subject"
 _PASSPHRASE = "archive-roundtrip-subject-operator-secret"  # noqa: S105 - synthetic test credential
 _TAX_ID = "12345678Z"

@@ -29,7 +29,6 @@ import os
 import re
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -44,8 +43,6 @@ from ....tests.secure_sql import dev_test_database_password, isolated_runtime_pr
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _CREATE_ARGS = [

@@ -36,7 +36,6 @@ accessor re-applied.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -51,9 +50,6 @@ from ..config_state_root import FormerProductStateError
 from ..errors.hierarchy import ActiveProfilePointerError, CoreValidationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"cadrumo.db", "buckets", "db", "active-profile"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def test_constructor_database_url_classifies_as_explicit(tmp_path: Path) -> None:

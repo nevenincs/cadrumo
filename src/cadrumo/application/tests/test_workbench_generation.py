@@ -765,6 +765,7 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
     has nothing outstanding -- offering either as blocked work would send the
     operator at something nothing is waiting on.
     """
+    from ...domain.calculations.registry.authority import bundled_authority
     from ...domain.modelos.verification_report import (
         ModeloVerificationFinding,
         ModeloVerificationFindingKind,
@@ -800,6 +801,9 @@ def test_only_a_blocking_dependency_finding_reads_as_a_blocked_declaration() -> 
                 verified_by="operator",
             ),
             calculation_revision_id="b" * 64,
+            registry_snapshot_ref=bundled_authority()
+            .snapshot("303", filing_year=2026, period="1T")
+            .snapshot_ref,
             completeness_status=status,
             findings=findings,
             run_at=datetime(2026, 9, 4, tzinfo=UTC),

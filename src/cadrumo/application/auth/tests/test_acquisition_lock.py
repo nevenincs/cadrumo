@@ -30,6 +30,7 @@ from ..acquisition_lock import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 _STALE_LOCK_INSPECTION_AT = datetime(2026, 5, 26, 14, 0, 0, tzinfo=UTC)
 
 

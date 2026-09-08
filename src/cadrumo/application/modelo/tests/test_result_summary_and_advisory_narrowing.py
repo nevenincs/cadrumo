@@ -17,12 +17,14 @@ from typing import NoReturn
 import pytest
 
 from ....core.setup_answers import ProjectAnswersNotRegisteredError
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
 from .._verification_predicates import evaluate_advisory_predicate_fires
+from ..action_errors import WorkUnitRevisionDivergenceError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -87,6 +89,12 @@ class TestResultSummaryNarrowing:
         return CalculationRevision(
             calculation_revision_id=revision_id,
             work_unit_id=work_unit_id,
+            registry_snapshot_ref=RegistrySnapshotRef(
+                modelo="303",
+                revision_id="2026-y-siguientes",
+                modelo_year=2026,
+                period="1T",
+            ),
             state=CalculationRevisionState.BORRADOR,
             input_values_by_casilla_id={},
             casilla_values={},
@@ -130,3 +138,18 @@ class TestResultSummaryNarrowing:
 
         with pytest.raises(RuntimeError, match="unexpected db failure"):
             calculation_result_summary(self._revision(), work_unit_resolver=_raising)
+
+    def test_stale_registry_coordinate_refuses_before_summary_projection(self) -> None:
+        """A display fallback cannot expose values from a drifted revision."""
+        from ..result_summary import calculation_result_summary
+
+        revision = self._revision().model_copy(
+            update={
+                "registry_snapshot_ref": self._revision().registry_snapshot_ref.model_copy(
+                    update={"revision_id": "persisted-stale-revision"}
+                )
+            }
+        )
+
+        with pytest.raises(WorkUnitRevisionDivergenceError):
+            calculation_result_summary(revision, work_unit_resolver=lambda _work_unit_id: None)  # type: ignore[arg-type,return-value]

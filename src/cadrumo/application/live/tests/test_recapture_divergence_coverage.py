@@ -35,6 +35,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from ....domain.calculations.registry.errors import RegistrySnapshotError
+from ...calculations.observations_repository import CalculationObservationRepository
 from ...storage.sync_runs.records import SyncRunCoverage
 from ..filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ..filed_data_capture import recapture_divergence_notices
@@ -105,6 +107,20 @@ def test_a_recapture_divergence_is_producible_without_contacting_aeat(tmp_path: 
 
     assert len(notices) == 1, "a corrected filing must raise exactly one recapture advisory"
     assert notices[0].code == "live.filed.pull_all.recapture_divergence"
+
+
+def test_recapture_advisory_refuses_a_divergent_persisted_coordinate(tmp_path: Path) -> None:
+    """Recapture cannot compare new evidence to values interpreted by a stale schema."""
+    prior = _observation(result=_ORIGINAL_RESULT)
+    with _secure_backend(tmp_path):
+        persist_filed_calculation_observation(prior)
+        repository = CalculationObservationRepository()
+        stored = repository.load_observation(prior.modelo, prior.period)
+        assert stored is not None
+        repository.save(stored.model_copy(update={"stamped_revision_id": "persisted-stale-revision"}))
+
+        with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+            recapture_divergence_notices((_observation(result=_CORRECTED_RESULT),), repository=repository)
 
 
 def test_enrolment_reaches_fewer_units_than_absorption_raises_divergences(tmp_path: Path) -> None:

@@ -133,6 +133,7 @@ def build_real_modelo_work_review(
             calculation = CalculationRevision(
                 calculation_revision_id=calculation_revision_id,
                 work_unit_id=work_unit_id,
+                registry_snapshot_ref=snapshot.snapshot_ref,
                 state=CalculationRevisionState.BORRADOR,
                 binding_overrides=binding_overrides,
                 casilla_values=casilla_values,
@@ -183,6 +184,7 @@ def build_real_modelo_work_review(
                     verified_by="modelo-review-tui-test",
                 ),
                 calculation_revision_id=calculation_revision_id,
+                registry_snapshot_ref=snapshot.snapshot_ref,
                 completeness_status=VerificationCompletenessStatus.BLOCKED,
                 findings=findings,
                 run_at=_NOW,

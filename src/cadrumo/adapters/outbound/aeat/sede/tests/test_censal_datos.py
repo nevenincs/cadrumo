@@ -35,7 +35,6 @@ from ..censal_datos import (
     _resolve_dispatched_origin,
     censal_datos_url,
     forbidden_censal_landing_marker,
-    is_forbidden_censal_landing,
     landed_on_censal_path,
     parse_censal_datos,
 )
@@ -218,7 +217,7 @@ class TestNoWriteSurface:
         """
         launcher = f"{_AEAT.domains.sede}{PROCEDIMIENTOINI_PATH_PREFIX_FIXTURE}{code}.shtml"
 
-        assert is_forbidden_censal_landing(launcher)
+        assert forbidden_censal_landing_marker(launcher) is not None
         with pytest.raises(SedeNavigationError):
             _assert_read_landing(launcher)
 
@@ -227,17 +226,15 @@ class TestNoWriteSurface:
         assert _FORBIDDEN_LANDING_MARKERS
         assert all(marker.strip() for marker in _FORBIDDEN_LANDING_MARKERS)
 
-    def test_public_predicate_agrees_with_the_raising_guard(self) -> None:
-        """The exported predicate is the guard's own rule, not a second copy.
+    def test_marker_authority_agrees_with_the_raising_guard(self) -> None:
+        """The exported marker lookup is the guard's own rule, not a second copy.
 
         Conformance gates test through this predicate, so a divergence
         would let them pass while the reader refused differently.
         """
         for landing in _REAL_WRITE_LANDINGS:
-            assert is_forbidden_censal_landing(landing)
             assert forbidden_censal_landing_marker(landing) is not None
         safe = censal_datos_url("Y0000001Z", origin=_AEAT.domains.sede)
-        assert not is_forbidden_censal_landing(safe)
         assert forbidden_censal_landing_marker(safe) is None
 
     def test_landing_guard_admits_the_consulta_itself(self) -> None:

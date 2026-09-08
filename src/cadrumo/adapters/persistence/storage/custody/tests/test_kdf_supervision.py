@@ -42,7 +42,6 @@ from ..kdf_supervision import (
     profile_kdf_grid,
     profile_kdf_is_eligible,
     profile_kdf_lease,
-    propose_profile_kdf_ratchet,
     read_kdf_frame,
     unlock_profile_custody,
     unlock_profile_custody_recovery_material,
@@ -550,36 +549,6 @@ def test_wrong_password_and_canonical_sentinel_substitution_do_not_release_a_dek
             sentinel=substituted,
             settings=_settings(tmp_path),
         )
-
-
-def test_ratcheting_requires_the_real_post_sentinel_unlock_and_never_weakens(tmp_path: Path) -> None:
-    envelope, sentinel = _unlock_inputs()
-    unlock = unlock_profile_custody(
-        envelope,
-        _PASSPHRASE,
-        sentinel=sentinel,
-        settings=_settings(tmp_path),
-    )
-    stronger = ProfileCustodyKdfCalibration(
-        version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
-        parameters=_kdf(memory_mib=32, iterations=3),
-        source="measured",
-        median_seconds=0.3,
-    )
-    weaker = ProfileCustodyKdfCalibration(
-        version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
-        parameters=_kdf(memory_mib=19, iterations=2),
-        source="fallback",
-        median_seconds=None,
-    )
-
-    proposal = propose_profile_kdf_ratchet(unlock, stronger)
-
-    assert proposal is not None
-    assert proposal.profile_id == _PROFILE_ID
-    assert proposal.expected_envelope_digest == envelope.self_digest
-    assert proposal.proposed == stronger.parameters
-    assert propose_profile_kdf_ratchet(unlock, weaker) is None
 
 
 def test_expired_deadline_refuses_and_releases_the_supervised_child_boundary(tmp_path: Path) -> None:

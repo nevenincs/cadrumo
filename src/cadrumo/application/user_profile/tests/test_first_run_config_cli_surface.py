@@ -137,9 +137,9 @@ def test_setup_auth_rejects_unsupported_provider(tmp_path: Path) -> None:
     )
 
     result = invoke_cached_cli(
-        ["config", "auth", "configure", "--provider", "clave_pin"],
+        ["config", "auth", "configure", "--provider", "unknown_provider"],
         env=env,
     )
 
     assert result.exit_code != 0
-    assert "clave_pin" in result.output
+    assert "unknown_provider" in result.output

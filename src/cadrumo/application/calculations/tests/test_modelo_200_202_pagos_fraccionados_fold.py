@@ -22,7 +22,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import RelationId
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..observations_repository import CalculationObservationRepository
 from ..relation_prefill import resolve_relations_from_local_store
@@ -69,7 +69,7 @@ def test_m200_fold_in_credits_modalidad_40_2_instalments(tmp_path: Path) -> None
                 repository.prepare_observation_envelope(
                     _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
                     source_kind="app_filing",
-                )
+                stamped_revision_id=revision_id_for_observation(_m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0"))))
             )
         values = _resolve_m200_pagos_fraccionados(repository)
         # The 40.2 relation captures the modalidad-cuota instalments — the sum of the
@@ -91,7 +91,7 @@ def test_m200_fold_in_credits_modalidad_40_3_instalments(tmp_path: Path) -> None
                 repository.prepare_observation_envelope(
                     _m202_observation(filing_year=2025, period=period, casilla_03=Decimal("0"), casilla_34=amount),
                     source_kind="app_filing",
-                )
+                stamped_revision_id=revision_id_for_observation(_m202_observation(filing_year=2025, period=period, casilla_03=Decimal("0"), casilla_34=amount)))
             )
         values = _resolve_m200_pagos_fraccionados(repository)
         assert values.get(_REL_40_3) == sum(amounts.values(), Decimal("0"))
@@ -147,7 +147,7 @@ def test_is3_first_year_flag_never_overrides_a_filed_m202_value(tmp_path: Path) 
                 repository.prepare_observation_envelope(
                     _m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0")),
                     source_kind="app_filing",
-                )
+                stamped_revision_id=revision_id_for_observation(_m202_observation(filing_year=2025, period=period, casilla_03=amount, casilla_34=Decimal("0"))))
             )
         values = _all_m202_relation_values(repository, first_year_cuota=True)
         # filed value preserved (the sum of the quarterly casilla-03 inputs), NOT zeroed

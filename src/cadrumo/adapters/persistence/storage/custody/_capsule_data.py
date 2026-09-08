@@ -175,38 +175,6 @@ def write_posix_data_files(data_fd: int, data_files: Mapping[str, bytes]) -> Non
             os.close(current_fd)
 
 
-def replace_data_file(
-    data_root: Path,
-    relative_name: str,
-    payload: bytes,
-    *,
-    expected_sha256: str,
-) -> None:
-    """Atomically replace one already-present regular capsule data member.
-
-    Callers must hold their capsule lifecycle lock.  The expected digest is a
-    compare-and-swap witness: the exact authenticated bytes read for a command
-    must still be current at publication, otherwise no mutation is made.
-    """
-    relative_path = validated_data_path(relative_name)
-    if relative_path.as_posix() == PROFILE_CUSTODY_SENTINEL_FILENAME:
-        raise ProfileCustodyRecordError("profile record command cannot replace the DEK sentinel")
-    if len(payload) > PROFILE_CUSTODY_DATA_FILE_MAX_BYTES:
-        raise ProfileCustodyRecordError("profile record command exceeds the data-file byte limit")
-    with ExitStack() as anchors:
-        current = data_root
-        for component in relative_path.parts[:-1]:
-            current = current / component
-            anchor_directory(anchors, current)
-        replace_capsule_file(
-            current,
-            relative_path.name,
-            payload,
-            expected_sha256=expected_sha256,
-            maximum_bytes=PROFILE_CUSTODY_DATA_FILE_MAX_BYTES,
-        )
-
-
 def replace_capsule_file(
     directory: Path,
     filename: str,
@@ -260,7 +228,6 @@ __all__ = [
     "read_password_envelope_fd",
     "read_sentinel",
     "read_sentinel_fd",
-    "replace_data_file",
     "validate_data_file_inventory",
     "validated_data_path",
     "write_data_files",

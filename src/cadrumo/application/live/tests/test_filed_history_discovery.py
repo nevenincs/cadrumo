@@ -15,8 +15,10 @@ data the taxpayer themselves declared.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import re
+from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -30,17 +32,20 @@ from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.period import Period
 from ....core.register_scoping_signal import RegisterScopingSignal
 from ....domain.deadlines.models import TaxpayerProfile
+from ....tests.registry_observations import revision_id_for_observation
+from .. import filed_data_capture as subject
 from ..filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,
     FiledHistoryDiscoveryReport,
     casillas_a_recapture_would_change,
     classify_register_scoping_signal,
+    discover_filed_history,
     expected_filed_declaration_grid,
     filed_history_discovery_report,
-    filed_period_selection_rows,
     recapture_divergence_notices,
 )
+from ._filed_capture_history_support import _registry_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -417,6 +422,33 @@ def test_an_offered_modelo_the_profile_excludes_reads_as_likely_universal() -> N
     assert reading is RegisterScopingSignal.LIKELY_UNIVERSAL
 
 
+def test_discovery_classifies_the_live_offered_options_at_its_owning_boundary(monkeypatch) -> None:
+    profile = _autonomo()
+    excluded = next(iter(sorted(_confidently_excluded(profile))))
+    availability = _availability((excluded, (2025,)))
+
+    async def active_verified_session(*, operation: str):
+        assert operation == "live-expedientes-read"
+        return object(), object()
+
+    @asynccontextmanager
+    async def shared_playwright(_session):
+        yield object()
+
+    async def discover_availability(_session, *, settings, playwright):
+        assert settings is not None
+        assert playwright is not None
+        return availability
+
+    monkeypatch.setattr(subject, "active_verified_session", active_verified_session)
+    monkeypatch.setattr(subject, "shared_playwright", shared_playwright)
+    monkeypatch.setattr(subject, "discover_filed_declaration_availability", discover_availability)
+
+    report = asyncio.run(discover_filed_history(profile=profile, today=_TODAY))
+
+    assert report.scoping_signal is RegisterScopingSignal.LIKELY_UNIVERSAL
+
+
 def test_an_offered_set_avoiding_every_excluded_modelo_reads_as_likely_nif_scoped() -> None:
     """Consistent with a NIF-scoped list -- and only consistent with it.
 
@@ -489,25 +521,7 @@ def test_the_reading_does_not_change_the_walked_grid() -> None:
         assert set(availability.offered_pairs) <= set(report.walk_pairs)
 
 
-# ------------------------------------------- raw register rows versus selection
-
-
-def _declaration_row(*, modelo: str, year: int, period: str, expediente_id: str, presented_at: datetime):
-    from ....adapters.outbound.aeat.sede.declarations_schema import Declaracion
-
-    return Declaracion(
-        modelo=modelo,
-        ejercicio=year,
-        period=Period.from_year_and_code(year, period),
-        expediente_id=expediente_id,
-        estado="ALTA",
-        tipo_solicitud=None,
-        observaciones=None,
-        presented_at=presented_at,
-        justificante_link_text="Ver",
-        archive_link_text="Ver",
-        declaration_copy_link_text=None,
-    )
+# --------------------------------------------------- the re-capture divergence
 
 
 def _filed_130_observation_for_tests():
@@ -556,117 +570,8 @@ def _filed_130_observation_for_tests():
             ),
         ),
         extraction_coverage={"submitted_file": 1.0},
+        registry_snapshot_ref=_registry_snapshot("130", 2026, "1T").snapshot_ref,
     )
-
-
-def test_a_period_with_two_register_rows_reports_two_raw_and_one_selected() -> None:
-    """The collapse the sweep performs becomes visible instead of silent.
-
-    Two filings for one period -- an original and its amendment -- collapse to one
-    persisted observation. That is correct, but unreported it means an operator
-    seeing one observation cannot tell whether AEAT held one filing or four.
-    """
-    rows = filed_period_selection_rows(
-        {
-            ("130", 2026): (
-                _declaration_row(
-                    modelo="130",
-                    year=2026,
-                    period="1T",
-                    expediente_id="13020260410ABCD1234EFGH5678",
-                    presented_at=datetime(2026, 4, 10, tzinfo=UTC),
-                ),
-                _declaration_row(
-                    modelo="130",
-                    year=2026,
-                    period="1T",
-                    expediente_id="13020260420WXYZ9999QRST8888",
-                    presented_at=datetime(2026, 4, 20, tzinfo=UTC),
-                ),
-            ),
-        },
-        (_filed_130_observation_for_tests(),),
-    )
-    (row,) = rows
-    assert row.modelo == "130"
-    assert row.ejercicio == 2026
-    assert row.period == "1T"
-    assert row.raw_row_count == 2
-    assert row.selected_count == 1
-    assert row.superseded_count == 1
-    assert row.held_more_than_one_filing is True
-
-
-def test_a_single_filing_period_reports_no_supersession() -> None:
-    rows = filed_period_selection_rows(
-        {
-            ("130", 2026): (
-                _declaration_row(
-                    modelo="130",
-                    year=2026,
-                    period="1T",
-                    expediente_id="13020260420WXYZ9999QRST8888",
-                    presented_at=datetime(2026, 4, 20, tzinfo=UTC),
-                ),
-            ),
-        },
-        (_filed_130_observation_for_tests(),),
-    )
-    (row,) = rows
-    assert row.raw_row_count == 1
-    assert row.selected_count == 1
-    assert row.superseded_count == 0
-    assert row.held_more_than_one_filing is False
-
-
-def test_the_breakdown_keys_on_period_not_on_the_query_pair() -> None:
-    """One query pair returns several periods, each with its own duplicate count.
-
-    Keying on the pair would sum a duplicated 1T together with a clean 2T and
-    report the pair as duplicated, hiding which period actually held two filings.
-    """
-    rows = filed_period_selection_rows(
-        {
-            ("130", 2026): (
-                _declaration_row(
-                    modelo="130",
-                    year=2026,
-                    period="1T",
-                    expediente_id="13020260410ABCD1234EFGH5678",
-                    presented_at=datetime(2026, 4, 10, tzinfo=UTC),
-                ),
-                _declaration_row(
-                    modelo="130",
-                    year=2026,
-                    period="1T",
-                    expediente_id="13020260420WXYZ9999QRST8888",
-                    presented_at=datetime(2026, 4, 20, tzinfo=UTC),
-                ),
-                _declaration_row(
-                    modelo="130",
-                    year=2026,
-                    period="2T",
-                    expediente_id="13020260710MNOP5555IJKL4444",
-                    presented_at=datetime(2026, 7, 10, tzinfo=UTC),
-                ),
-            ),
-        },
-        (_filed_130_observation_for_tests(),),
-    )
-    by_period = {row.period: row for row in rows}
-    assert by_period["1T"].raw_row_count == 2
-    assert by_period["1T"].held_more_than_one_filing is True
-    assert by_period["1T"].superseded_count == 1
-    assert by_period["2T"].raw_row_count == 1
-    assert by_period["2T"].held_more_than_one_filing is False
-    # 2T returned one row and captured none, which is NOT supersession: with no
-    # winner nothing was displaced. It is an unaccounted row, reported as such so
-    # the operator is never told a filing was superseded by one that never existed.
-    assert by_period["2T"].superseded_count == 0
-    assert by_period["2T"].rows_not_accounted_for == 1
-
-
-# --------------------------------------------------- the re-capture divergence
 
 
 def _stored_130_registry_observation(*, casilla_03: str):
@@ -781,7 +686,17 @@ def test_recapture_divergence_notices_absorbs_a_within_tolerance_change_end_to_e
                     ),
                 ),
                 source_kind="app_filing",
-            ),
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="130",
+                    filing_year=2026,
+                    period="1T",
+                    observations=registry_grounded_observations(
+                        modelo="130",
+                        filing_year=2026,
+                        period="1T",
+                        casilla_values={validated_casilla_id("03"): Decimal("1499.99")},
+                    ),
+                ))),
         )
 
         notices = recapture_divergence_notices((_filed_130_observation_for_tests(),), repository=repo)
@@ -812,7 +727,17 @@ def test_recapture_divergence_notices_fires_beyond_tolerance_end_to_end(tmp_path
                     ),
                 ),
                 source_kind="app_filing",
-            ),
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="130",
+                    filing_year=2026,
+                    period="1T",
+                    observations=registry_grounded_observations(
+                        modelo="130",
+                        filing_year=2026,
+                        period="1T",
+                        casilla_values={validated_casilla_id("03"): Decimal("1499.98")},
+                    ),
+                ))),
         )
 
         notices = recapture_divergence_notices((_filed_130_observation_for_tests(),), repository=repo)

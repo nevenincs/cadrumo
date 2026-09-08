@@ -1,9 +1,8 @@
-"""Payload-contract guard for the declared-unimplemented profile export surface.
+"""Payload-contract guard for the profile archive export transport.
 
 The ``_config_payloads.py`` export / import / subject-access-request /
 rename payload classes are authored CommandSpec result targets for the
-declared-unimplemented keys -- deliberate evidence-keeping of retired
-verbs, not live surfaces. This module pins the canonical result type's
+archive-reconciliation path. This module pins the canonical result type's
 strictness so a permissive shell cannot be reintroduced at the payload
 boundary.
 

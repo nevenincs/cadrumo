@@ -25,6 +25,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.filed_derivation import M303_COMPENSATION_RESULTADO_CASILLA
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -88,6 +89,12 @@ def _revision(work_unit: WorkUnit) -> CalculationRevision:
             source_provenance=(),
         ),
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.PRESENTADO,
         casilla_values=casilla_values,
         observations=(

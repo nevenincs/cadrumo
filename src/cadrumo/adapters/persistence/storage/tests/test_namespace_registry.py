@@ -12,7 +12,8 @@ from pydantic import ValidationError
 from .....core.classification.policies import SensitivityClass
 from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from .....core.product_identity import PRODUCT_IDENTITY
-from .....core.storage_taxonomy import StorageCustodyProfile
+from .....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
+from .....core.storage_taxonomy_locations import storage_location
 from .....tests import (
     ast_for_path,
     leaf_name,
@@ -52,8 +53,6 @@ from ..secure_object_namespaces import (
     LIVE_VERIFY_OBSERVATION_NAMESPACE,
     LLM_CACHE_NAMESPACE,
     LLM_USAGE_NAMESPACE,
-    PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
-    PROFILE_ASSETS_LEDGER_NAMESPACE,
     PROFILE_INVENTORY_LEDGER_NAMESPACE,
     REPAIR_INTEGRITY_DECISION_NAMESPACE,
     SECURE_OBJECT_CATALOGUE_KEY,
@@ -74,7 +73,6 @@ from ..storage_path_definitions import (
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,
     BUCKET_LOCK_FILENAME,
-    BUCKET_MANIFEST_FILENAME,
     BUCKETS_DIRNAME,
     StoragePathDefinition,
 )
@@ -88,8 +86,6 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "user_profile_value",
     "user_profile_snapshot",
     "profile_inventory_ledger",
-    "profile_assets_ledger",
-    "profile_assets_amortization_ledger",
     "profile_bienes_inversion_iva_register",
     "profile_prorrata_register",
     "repair_integrity_decisions",
@@ -120,7 +116,6 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "test_secure_bound_contract",
     "test_runtime_profile",
     "live_expedientes_snapshot",
-    "live_deudas_snapshot",
     "live_notifications_snapshot",
     "live_notification_document",
     "live_justificante_capture_snapshot",
@@ -231,8 +226,6 @@ def test_singleton_object_keys_are_named_registry_values() -> None:
 
 def test_profile_ledger_namespaces_are_registered() -> None:
     inventory = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_inventory_ledger")
-    assets = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_assets_ledger")
-    amortization = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("profile_assets_amortization_ledger")
 
     assert inventory == PROFILE_INVENTORY_LEDGER_NAMESPACE
     assert inventory.namespace == "cadrumo.persistence.profile.inventory"
@@ -240,24 +233,11 @@ def test_profile_ledger_namespaces_are_registered() -> None:
     assert inventory.schema_version == 1
     assert inventory.require_default_object_key() == "default"
 
-    assert assets == PROFILE_ASSETS_LEDGER_NAMESPACE
-    assert assets.namespace == "cadrumo.persistence.profile.assets"
-    assert assets.sensitivity is SensitivityClass.FINANCIAL
-    assert assets.require_default_object_key() == "default"
-
-    assert amortization == PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE
-    assert amortization.namespace == "cadrumo.persistence.profile.assets.amortization"
-    assert amortization.sensitivity is SensitivityClass.FINANCIAL
-    assert amortization.require_default_object_key() == "default"
-
-
 def test_profile_ledger_namespace_registration_coverage_is_present() -> None:
     registered_keys = {definition.key for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
 
     assert {
         "profile_inventory_ledger",
-        "profile_assets_ledger",
-        "profile_assets_amortization_ledger",
         "ledger_classification_rules",
         "invoice_catalogue",
         "application_filing_history",
@@ -656,7 +636,8 @@ def test_the_retired_plaintext_manifest_has_no_path_definition() -> None:
     """
     with pytest.raises(KeyError):
         STORAGE_NAMESPACE_REGISTRY.path_by_key("bucket_manifest")
-    assert BUCKET_MANIFEST_FILENAME not in {path.segment for path in STORAGE_NAMESPACE_REGISTRY.paths}
+    retired_manifest = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
+    assert retired_manifest not in {path.segment for path in STORAGE_NAMESPACE_REGISTRY.paths}
 
 
 # ---------------------------------------------------------------------------
@@ -813,11 +794,11 @@ def test_duplicate_registry_entries_raise_namespace_registry_error() -> None:
 def test_secure_object_logical_path_uses_registered_sql_grammar() -> None:
     path_definition = STORAGE_NAMESPACE_REGISTRY.path_by_key("secure_objects_table")
 
-    marker = secure_object_logical_path("cadrumo.persistence.profile.assets", "default")
+    marker = secure_object_logical_path("cadrumo.persistence.profile.inventory", "default")
 
     assert path_definition.kind is StoragePathKind.LOGICAL_SQL
     assert path_definition.grammar == "db://secure_objects/<namespace>/<object_key>"
-    assert marker.as_posix() == "db:/secure_objects/cadrumo.persistence.profile.assets/default"
+    assert marker.as_posix() == "db:/secure_objects/cadrumo.persistence.profile.inventory/default"
 
 
 def test_secure_object_namespace_logical_path_uses_registered_sql_grammar() -> None:

@@ -261,10 +261,6 @@ auth:
       Permanente identity provider. Headless-automatable for AEAT read paths; requires
       DNI/NIE and password.
     clave_permanente_label: Cl@ve Permanente
-    clave_pin_description: Reserved closed provider slot for Cl@ve PIN.
-    clave_pin_label: Cl@ve PIN
-    dnie_pkcs_description: Reserved closed provider slot for DNI-e PKCS.
-    dnie_pkcs_label: DNI-e PKCS
 categories:
   registry:
     amortizacion_vivienda_afecto:
@@ -629,9 +625,6 @@ live:
       expected_but_not_found: 'Your declared profile expects a filing for {count}
         modelo/ejercicio pair(s) where AEAT''s register returned none: {pairs}. Check
         whether these were filed.'
-      found_more_than_expected: AEAT's register holds {raw_count} filings for modelo
-        {modelo} {period} {ejercicio}; the most recent registration ({expediente})
-        was kept and {superseded} earlier one(s) were superseded.
       recapture_divergence: 'Re-capturing modelo {modelo} {period} {ejercicio} changed
         {count} previously observed casilla value(s): {casillas}. AEAT may hold a
         corrected filing.'

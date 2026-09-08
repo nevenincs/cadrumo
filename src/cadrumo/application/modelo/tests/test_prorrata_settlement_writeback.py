@@ -38,6 +38,7 @@ from ....core.prorrata_register import (
 )
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -110,6 +111,12 @@ def _seed_verified_m303_revision(
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id=revision_id,
+            modelo_year=2026,
+            period=period.registry_token,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={},
         binding_overrides={},
@@ -206,6 +213,9 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
         provisional_percentage=Decimal("80"),
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="303:2025:4T",
+        source_registry_snapshot_refs=(
+            bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref,
+        ),
     )
     sector_entry = ProrrataRegisterEntry(
         ejercicio=2026,
@@ -215,6 +225,7 @@ def test_m303_settlement_preserves_existing_register_facts(tmp_path: Path) -> No
         provisional_percentage=Decimal("60"),
         provisional_provenance=ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
         authorisation_reference="AEAT-AUTH-2026-001",
+        source_registry_snapshot_refs=(),
     )
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -258,6 +269,7 @@ def test_m303_settlement_preserves_existing_activity_rows(tmp_path: Path) -> Non
         ejercicio=2026,
         regime=ProrrataRegisterRegime.GENERAL,
         especial_transition=None,
+        source_registry_snapshot_refs=(),
     )
     activity_row = ProrrataActivityRow(
         ejercicio=2026,

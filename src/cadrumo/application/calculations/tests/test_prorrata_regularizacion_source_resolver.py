@@ -38,13 +38,15 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.resources.bundled_data import bundled_path
+from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile, isolated_two_bucket_runtime
 from ...aggregation import CalculationSourceContext
-from ..observations_repository import CalculationObservationRepository
+from ..iva_compensation_casillas import M303_RESULTADO_CASILLA
+from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..prorrata_regularizacion import ProrrataRegularizacionSourceResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -152,6 +154,9 @@ def _register_with_carried_prior(
                 provisional_percentage=provisional_percentage,
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref=f"{Modelo.M303.value}:{_PRIOR_YEAR}:4T",
+                source_registry_snapshot_refs=(
+                    bundled_authority().snapshot("303", filing_year=_PRIOR_YEAR, period="4T").snapshot_ref,
+                ),
             ),
         ),
     )
@@ -162,16 +167,28 @@ def _save_prior_observation(
     *,
     percentage: Decimal = _MANUAL_PROVISIONAL_PERCENTAGE,
 ) -> None:
+    observation = registry_grounded_modelo_observation(
+        modelo=Modelo.M303.value,
+        filing_year=_PRIOR_YEAR,
+        period="4T",
+        casilla_values={
+            _PORCENTAJE_ID: percentage,
+            M303_RESULTADO_CASILLA: Decimal("1"),
+        },
+    )
     repository.save(
         repository.prepare_observation_envelope(
-            registry_grounded_modelo_observation(
-                modelo=Modelo.M303.value,
-                filing_year=_PRIOR_YEAR,
-                period="4T",
-                casilla_values={_PORCENTAJE_ID: percentage},
-            ),
+            observation,
             source_kind="app_filing",
             captured_at=_CAPTURED_AT,
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.INGRESO,
+                provenance_kind="app_filing",
+                provenance_locator="test:prorrata-prior-local-filing:declaration-type",
+            ),
+            stamped_revision_id=revision_id_for_observation(
+                observation
+            ),
         )
     )
 

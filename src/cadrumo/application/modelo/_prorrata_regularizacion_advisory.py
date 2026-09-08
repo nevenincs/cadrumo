@@ -71,13 +71,17 @@ from ...domain.iva.prorrata_especial_parameters import (
 )
 from ...domain.prorrata_register.register import ProrrataRegisterError
 from ..aggregation import CalculationSourceDiagnostic, compute_annual_deducible_totals_by_regime
-from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.observations_repository import (
+    CalculationObservationRepository,
+    require_observation_envelope_coordinates_current,
+)
 from ..calculations.prorrata_regularizacion import (
     build_prorrata_especial_mandatory_advisory,
     build_prorrata_missing_provisional_advisory,
     build_prorrata_regularizacion_advisory,
     derive_prorrata_applicability,
 )
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 __all__ = ["collect_prorrata_regularizacion_diagnostics"]
@@ -122,6 +126,7 @@ def _prior_year_definitiva_pct(
     prior_year = filing_year - 1
     candidates: list[tuple[tuple[int, datetime], Decimal]] = []
     for payload in repository.iter_modelo(Modelo.M303.value):
+        require_observation_envelope_coordinates_current(payload)
         observation = payload.observation
         if observation.filing_year != prior_year:
             continue
@@ -417,7 +422,7 @@ def _missing_carry_diagnostics(
     )
 
     try:
-        register = ProrrataRegisterRepository(bucket_id=bucket_id).load()
+        register = require_prorrata_register_coordinates_current(ProrrataRegisterRepository(bucket_id=bucket_id).load())
     except ProrrataRegisterError as exc:
         return (
             CalculationSourceDiagnostic(

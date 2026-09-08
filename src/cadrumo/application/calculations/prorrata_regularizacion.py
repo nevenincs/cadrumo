@@ -100,6 +100,7 @@ from ..aggregation import (
     CalculationSourceResolution,
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .observations_repository import CalculationObservationRepository
 from .revision_carry_gate import revision_carry_outcome
 
@@ -725,12 +726,7 @@ def _stamped_prior_year_definitiva(
         percentage = observation.casilla_values.get(_PORCENTAJE_ID)
         if percentage is None:
             continue
-        refused = revision_carry_outcome(
-            payload.stamped_revision_id,
-            source_modelo=observation.modelo,
-            source_filing_year=observation.filing_year,
-            source_period=observation.period,
-        ).refused
+        refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
         if refused:
             continue
         candidates.append(
@@ -767,12 +763,7 @@ def _source_period_feed_from_observations(
             missing_periods.append(period)
             continue
         observation = payload.observation
-        refused = revision_carry_outcome(
-            payload.stamped_revision_id,
-            source_modelo=observation.modelo,
-            source_filing_year=observation.filing_year,
-            source_period=observation.period,
-        ).refused
+        refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
         if refused:
             missing_periods.append(period)
             continue
@@ -953,7 +944,7 @@ class ProrrataRegularizacionSourceResolver:
             )
 
         try:
-            register = self._prorrata_register_repository.load()
+            register = require_prorrata_register_coordinates_current(self._prorrata_register_repository.load())
             prior_definitiva = _stamped_prior_year_definitiva(
                 self._observation_repository,
                 filing_year=context.filing_year,

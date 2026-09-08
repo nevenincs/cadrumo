@@ -55,44 +55,6 @@ class InventoryClosingAuthorityConflictError(RuntimeError):
     )
 
 
-def load_inventory() -> tuple[InventoryLedger, ...]:
-    """Load inventory ledgers from the encrypted ledger.
-
-    Returns:
-        Tuple of :class:`InventoryLedger` records, empty when no envelope exists.
-    """
-    return InventoryLedgerRepository().load().ledgers
-
-
-def save_inventory(ledgers: tuple[InventoryLedger, ...]) -> Path:
-    """Persist ``ledgers`` as a governed FINANCIAL-class secure object.
-
-    The storage contract comes from
-    :data:`adapters.persistence.storage.PROFILE_INVENTORY_LEDGER_NAMESPACE`.
-
-    Args:
-        ledgers: Inventory ledgers to persist.
-
-    Returns:
-        Logical path identifying the secure object.
-    """
-    repository = InventoryLedgerRepository()
-    repository.save(InventoryLedgerDocument(ledgers=ledgers))
-    return repository.envelope_path
-
-
-def create_inventory_ledger(ledger: InventoryLedger) -> InventoryLedgerDocument:
-    """Atomically create ``ledger`` and refuse duplicate (actividad, year) pairs.
-
-    Args:
-        ledger: Inventory ledger to insert.
-
-    Returns:
-        The updated :class:`InventoryLedgerDocument` including the newly inserted ledger.
-    """
-    return InventoryLedgerRepository().create(ledger)
-
-
 def record_movement(
     actividad_id: str,
     movement: MovementRecord,
@@ -383,8 +345,5 @@ class InventoryLedgerRepository:
 __all__ = [
     "InventoryClosingAuthorityConflictError",
     "InventoryLedgerRepository",
-    "create_inventory_ledger",
-    "load_inventory",
     "record_movement",
-    "save_inventory",
 ]

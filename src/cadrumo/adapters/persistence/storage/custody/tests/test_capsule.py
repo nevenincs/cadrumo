@@ -21,12 +21,10 @@ from ......tests.path_obstruction import obstructed_path
 from ..capsule import (
     list_current_profile_custody_capsule_ids,
     list_current_profile_custody_capsule_summary_witnesses,
-    load_committed_profile_custody_summary_witness,
     load_committed_profile_password_material,
     publish_profile_custody_capsule,
     recognize_current_profile_capsule,
 )
-from ..capsule_discovery import detect_retired_profile_custody_member_paths
 from ..capsule_records import ProfileCustodyCapsuleLabel, ProfileCustodyCommit, parse_profile_custody_commit
 from ..envelope import create_profile_custody_password_envelope
 from ..errors import (
@@ -42,8 +40,6 @@ from ..recovery import (
     PROFILE_CUSTODY_RECOVERY_ARTIFACT_MAX_BYTES,
     ProfileCustodyRecoveryEnvelope,
     create_profile_custody_recovery_envelope,
-    parse_profile_custody_recovery_envelope,
-    unlock_profile_custody_recovery,
 )
 from ..recovery_artifact import (
     ProfileCustodyRecoveryArtifact,
@@ -56,6 +52,7 @@ from ..sentinel import PROFILE_CUSTODY_SENTINEL_FILENAME, create_profile_custody
 from ..sentinel_contract import verify_profile_custody_sentinel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
 
 _PROFILE_ID = UUID("327b296d-8377-4be0-b13a-ca4d8f692e1d")
 _DEK = bytes(range(32))
@@ -143,7 +140,6 @@ def test_supervised_password_recovery_and_artifact_paths_prove_the_same_dek(tmp_
     )
     artifact = receipt.artifact
 
-    assert parse_profile_custody_recovery_envelope(recovery.canonical_json_bytes()) == recovery
     assert receipt.warnings
     assert parse_profile_custody_recovery_artifact(artifact_path.read_bytes()) == artifact
     assert (
@@ -155,15 +151,6 @@ def test_supervised_password_recovery_and_artifact_paths_prove_the_same_dek(tmp_
         == artifact
     )
     assert unlock_profile_custody(envelope, _PASSPHRASE, sentinel=sentinel, settings=settings).dek == _DEK
-    assert (
-        unlock_profile_custody_recovery(
-            recovery,
-            _RECOVERY_SECRET,
-            sentinel=sentinel,
-            settings=settings,
-        ).dek
-        == _DEK
-    )
     assert (
         unlock_imported_profile_custody_recovery_artifact(
             artifact,
@@ -368,13 +355,12 @@ def test_capsule_summary_witness_observes_only_validated_commit_and_uuid_bound_l
     (capsule / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME).unlink()
     (capsule / "data" / PROFILE_CUSTODY_SENTINEL_FILENAME).mkdir()
 
-    witness = load_committed_profile_custody_summary_witness(_PROFILE_ID, settings=settings)
+    (witness,) = list_current_profile_custody_capsule_summary_witnesses(settings=settings)
 
     assert witness.profile_id == _PROFILE_ID
     assert witness.capsule_path == capsule
     assert witness.commit.profile_id == witness.label.profile_id == _PROFILE_ID
     assert witness.label == label
-    assert list_current_profile_custody_capsule_summary_witnesses(settings=settings) == (witness,)
     with pytest.raises(FrozenInstanceError):
         type(witness).__setattr__(witness, "capsule_path", tmp_path / "replacement")
 
@@ -399,16 +385,12 @@ def test_capsule_summary_witness_refuses_foreign_or_linked_label_provenance(tmp_
         ProfileCustodyCapsuleLabel.create(profile_id=uuid4(), label="Foreign profile").canonical_json_bytes()
     )
     with pytest.raises(ProfileCustodyRecordError, match="label UUID differs"):
-        load_committed_profile_custody_summary_witness(_PROFILE_ID, settings=settings)
-    with pytest.raises(ProfileCustodyRecordError, match="label UUID differs"):
         list_current_profile_custody_capsule_summary_witnesses(settings=settings)
 
     label_path.unlink()
     outside = tmp_path / "outside-label.json"
     outside.write_bytes(label.canonical_json_bytes())
     os.symlink(outside, label_path)
-    with pytest.raises(ProfileCustodyRecordError, match=r"regular|reparse|unavailable"):
-        load_committed_profile_custody_summary_witness(_PROFILE_ID, settings=settings)
     with pytest.raises(ProfileCustodyRecordError, match=r"regular|reparse|unavailable"):
         list_current_profile_custody_capsule_summary_witnesses(settings=settings)
 
@@ -624,10 +606,6 @@ def test_discovery_refuses_a_retired_manifest_by_stat_only_without_opening_its_b
             opened_retired_paths.append(os.fspath(candidate))
 
     sys.addaudithook(record_open)
-    assert detect_retired_profile_custody_member_paths(
-        tmp_path / "buckets",
-        keystore_root=tmp_path / "keystore",
-    ) == ("manifest.toml",)
     with pytest.raises(ProfileCustodyRefusedError) as captured:
         list_current_profile_custody_capsule_ids(settings=settings)
     with pytest.raises(ProfileCustodyRefusedError):
@@ -671,10 +649,6 @@ def test_discovery_refuses_a_retired_keystore_member_by_stat_only_without_openin
             opened_retired_paths.append(os.fspath(candidate))
 
     sys.addaudithook(record_open)
-    assert detect_retired_profile_custody_member_paths(
-        tmp_path / "buckets",
-        keystore_root=tmp_path / "keystore",
-    ) == ("bucket.dek.json",)
     with pytest.raises(ProfileCustodyRefusedError) as captured:
         list_current_profile_custody_capsule_ids(settings=settings)
 
@@ -779,13 +753,6 @@ def test_a_current_store_with_live_keystore_sidecars_is_not_refused(tmp_path: Pa
     (live_keystore / "session.v2.json").write_bytes(b"{}")
     (live_keystore / "login-throttle.json").write_bytes(b"{}")
 
-    assert (
-        detect_retired_profile_custody_member_paths(
-            tmp_path / "buckets",
-            keystore_root=tmp_path / "keystore",
-        )
-        == ()
-    )
     assert list_current_profile_custody_capsule_ids(settings=settings) == (_PROFILE_ID,)
 
 

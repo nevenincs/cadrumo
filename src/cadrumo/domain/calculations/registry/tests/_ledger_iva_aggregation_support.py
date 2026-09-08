@@ -30,6 +30,7 @@ from .....tests.registry_tree import bundled_registry_tree
 from ....iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
 from ....iva.flow import IvaFlowDirection
 from ....iva.schema import IvaCategory, IvaExemptionArticle, IvaLedgerObservationRole, IvaRateKind
+from ....iva_compensation.filed_derivation import M303CompensationBasis
 from ..authority import bundled_authority
 from ..binding_selector_utils import selector_as_dict
 from ..bindings import (
@@ -311,6 +312,7 @@ def _calculate_390_from_observations_and_303_filings(
                     provenance_kind="app_filing",
                     provenance_locator=f"test-local-filing:{filing_year}:{period}",
                 ),
+                m303_compensation_basis=M303CompensationBasis.RESULTADO,
             ),
         )
         for (period, result), observation in zip(

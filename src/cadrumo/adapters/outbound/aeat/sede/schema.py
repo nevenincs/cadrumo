@@ -71,20 +71,21 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validator
+from pydantic import AnyHttpUrl, BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from .....core.casilla_id import CasillaId
 from .....core.casilla_value_kind import CasillaValueKind
 from .....core.decimal.coercion import coerce_decimal_strict
 from .....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from .....core.filing_year import FilingYear
-from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest, RegistrySnapshotId
+from .....core.identity import AeatCsv, AeatExpedienteId, ContentDigest
 from .....core.modelo import Modelo
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....core.time.utc import UtcInstant
 from .....core.unit_proportion import UnitFraction
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import SedeValidationError
 
 
@@ -452,8 +453,15 @@ class FiledDeclaracionObservation(BaseModel):
     headers: tuple[ObservedHeaderFact, ...] = ()
     metadata: dict[str, str] = Field(default_factory=dict)
     extraction_coverage: dict[str, float] = Field(default_factory=dict)
-    registry_snapshot_id: RegistrySnapshotId | None = Field(default=None)
+    registry_snapshot_ref: RegistrySnapshotRef
     mode: Literal["read"] = "read"
+
+    @model_validator(mode="after")
+    def _registry_coordinate_matches_observation(self) -> FiledDeclaracionObservation:
+        ref = self.registry_snapshot_ref
+        if ref.modelo != self.modelo or ref.modelo_year != self.ejercicio or ref.period != self.period.registry_token:
+            raise ValueError("filed declaration registry_snapshot_ref must match modelo, ejercicio, and period")
+        return self
 
 
 __all__ = [

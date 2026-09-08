@@ -17,6 +17,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -106,6 +107,12 @@ def _revision(
     return CalculationRevision(
         calculation_revision_id=rid,
         work_unit_id=wid,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=modelo,
+            revision_id="r1",
+            modelo_year=2026,
+            period=_P_2026_1T.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         source_transaction_ids=source_ids,
         ledger_filing_snapshot=snapshot,
@@ -182,6 +189,12 @@ def _verified_revision(
     return CalculationRevision(
         calculation_revision_id=rid,
         work_unit_id=wid,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=modelo,
+            revision_id="r1",
+            modelo_year=2026,
+            period=_P_2026_1T.registry_token,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         source_transaction_ids=source_ids,
         ledger_filing_snapshot=snapshot,

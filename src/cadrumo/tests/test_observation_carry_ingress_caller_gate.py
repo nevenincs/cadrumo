@@ -1,4 +1,4 @@
-"""Static author gate for observation-envelope carry normalization callers."""
+"""Static author gate for canonical observation-envelope writers."""
 
 from __future__ import annotations
 
@@ -13,7 +13,6 @@ from ..core.directory_scan import scan_directory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PRODUCTION_ROOT = Path(__file__).resolve().parents[1]
-_NORMALIZE_KEYWORD = "normalize_m303_carry"
 
 
 @dataclass(frozen=True)
@@ -22,19 +21,19 @@ class _Caller:
     function: str
 
 
-_LITERAL_NORMALIZING_CONTROLS = {
+_CANONICAL_WRITE_DOOR_CALLERS = {
     _Caller(
         "application/live/filed_observation_persistence.py",
         "persist_filed_calculation_observation",
     ),
-}
-_CONDITIONAL_NORMALIZING_CONTROLS = {
+    _Caller(
+        "application/modelo/external_import_actions.py",
+        "import_external_filing_evidence",
+    ),
     _Caller(
         "application/modelo/filed_revision_observation.py",
         "persist_filed_revision_observation",
-    ): "work_unit.modelo == Modelo.M303.value",
-}
-_NON_NORMALIZING_CONTROLS = {
+    ),
     _Caller(
         "application/modelo/local_observation_actions.py",
         "record_operator_local_observation",
@@ -74,62 +73,20 @@ def _production_callers() -> dict[_Caller, ast.Call]:
     return callers
 
 
-def _normalization_expression(node: ast.Call) -> ast.expr:
-    keyword = next(
-        (item for item in node.keywords if item.arg == _NORMALIZE_KEYWORD),
-        None,
-    )
-    assert keyword is not None
-    return keyword.value
-
-
-def test_every_production_observation_writer_states_carry_normalization_intent() -> None:
+def test_every_production_observation_writer_uses_the_canonical_write_door() -> None:
     callers = _production_callers()
-    explicit = {
-        caller
-        for caller, node in callers.items()
-        if any(keyword.arg == _NORMALIZE_KEYWORD for keyword in node.keywords)
-    }
-    implicit = set(callers) - explicit
-
-    assert not implicit, (
-        "every production caller of prepare_observation_envelope must pass "
-        f"{_NORMALIZE_KEYWORD}=... explicitly; "
-        f"implicit={sorted(implicit, key=lambda item: (item.path, item.function))}"
-    )
+    assert set(callers) == _CANONICAL_WRITE_DOOR_CALLERS
+    assert all(
+        all(keyword.arg != "normalize_m303_carry" for keyword in node.keywords)
+        for node in callers.values()
+    ), "the canonical observation write door owns M303 normalization"
 
 
 def test_production_observation_writer_population_is_exhaustively_adjudicated() -> None:
     callers = _production_callers()
-    adjudicated = _LITERAL_NORMALIZING_CONTROLS | set(_CONDITIONAL_NORMALIZING_CONTROLS) | _NON_NORMALIZING_CONTROLS
-
-    assert set(callers) == adjudicated, (
+    assert set(callers) == _CANONICAL_WRITE_DOOR_CALLERS, (
         "every production prepare_observation_envelope caller must enter the reviewed "
-        "normalizing or non-normalizing population; "
-        f"unreviewed={sorted(set(callers) - adjudicated, key=lambda item: (item.path, item.function))}, "
-        f"missing={sorted(adjudicated - set(callers), key=lambda item: (item.path, item.function))}"
+        "canonical write-door population; "
+        f"unreviewed={sorted(set(callers) - _CANONICAL_WRITE_DOOR_CALLERS, key=lambda item: (item.path, item.function))}, "
+        f"missing={sorted(_CANONICAL_WRITE_DOOR_CALLERS - set(callers), key=lambda item: (item.path, item.function))}"
     )
-
-
-def test_normalizing_observation_writers_retain_their_adjudicated_intent() -> None:
-    callers = _production_callers()
-
-    for caller in _LITERAL_NORMALIZING_CONTROLS:
-        expression = _normalization_expression(callers[caller])
-        assert isinstance(expression, ast.Constant) and expression.value is True
-
-    for caller, expected_expression in _CONDITIONAL_NORMALIZING_CONTROLS.items():
-        expression = _normalization_expression(callers[caller])
-        assert ast.unparse(expression) == expected_expression
-
-
-def test_operator_manual_writer_remains_explicitly_non_normalizing() -> None:
-    callers = _production_callers()
-
-    for caller in _NON_NORMALIZING_CONTROLS:
-        expression = _normalization_expression(callers[caller])
-        assert isinstance(expression, ast.Constant) and expression.value is False, (
-            "operator-manual observations have neither official declaration headers nor a "
-            "filing-boundary disposition, so opting them into carry normalization would invent "
-            f"or over-refuse evidence: {caller}"
-        )

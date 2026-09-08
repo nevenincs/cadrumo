@@ -36,7 +36,11 @@ from ...core.identity import BucketId, SnapshotId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
+from ...domain.calculations.registry.authority import bundled_authority
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ..calculations.revision_carry_gate import revision_carry_outcome
 from .errors import LiveApplicationInputError
 from .snapshot_base import (
     SnapshotLifecycleState,
@@ -74,6 +78,7 @@ class Borrador100Snapshot(BaseModel):
     modelo: str = Field(pattern=f"^{Modelo.M100.value}$")
     filing_year: FilingYear
     period: Period
+    registry_snapshot_ref: RegistrySnapshotRef
     captured_at: datetime
     source_url: BorradorSourceUrl
     state: SnapshotLifecycleState
@@ -85,6 +90,14 @@ class Borrador100Snapshot(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_state_payload(self) -> Borrador100Snapshot:
+        expected_ref = RegistrySnapshotRef(
+            modelo=self.modelo,
+            revision_id=self.registry_snapshot_ref.revision_id,
+            modelo_year=self.filing_year,
+            period=self.period.registry_token,
+        )
+        if self.registry_snapshot_ref != expected_ref:
+            raise ValueError("borrador registry_snapshot_ref must match modelo, filing_year, and period")
         enforce_snapshot_state_invariants(
             state=self.state,
             has_supersession_pointer=self.superseded_by_snapshot_id is not None,
@@ -99,6 +112,17 @@ class Borrador100Snapshot(BaseModel):
                 context={"blank_key_count": len(blank_keys)},
             )
         return self
+
+
+def require_borrador_100_snapshot_coordinates_current(snapshot: Borrador100Snapshot) -> Borrador100Snapshot:
+    """Return a persisted borrador only when its producing coordinate re-confirms."""
+    outcome = revision_carry_outcome(snapshot.registry_snapshot_ref)
+    if outcome.refused:
+        raise RegistrySnapshotError(
+            "borrador registry coordinate cannot be re-confirmed: "
+            f"{snapshot.registry_snapshot_ref.revision_id}: {outcome.detail}"
+        )
+    return snapshot
 
 
 def borrador_100_snapshot_object_key(bucket_id: str, snapshot_id: str) -> str:
@@ -120,6 +144,7 @@ def derive_borrador_100_snapshot_id(
     *,
     filing_year: int,
     period: Period,
+    registry_snapshot_ref: RegistrySnapshotRef,
     captured_at: datetime,
     source_url: str,
     binding_values: Mapping[BindingId, _BorradorValue],
@@ -130,11 +155,18 @@ def derive_borrador_100_snapshot_id(
     snapshot ids remain valid: the core canonical JSON hash does not change
     the hashed bytes.
     """
+    if (
+        registry_snapshot_ref.modelo != Modelo.M100.value
+        or registry_snapshot_ref.modelo_year != filing_year
+        or registry_snapshot_ref.period != period.registry_token
+    ):
+        raise ValueError("borrador snapshot identity coordinate must match registry_snapshot_ref")
     return content_hash_hex(
         {
             "modelo": Modelo.M100.value,
             "filing_year": filing_year,
             "period": period.registry_token,
+            "registry_snapshot_ref": registry_snapshot_ref.model_dump(mode="json"),
             "captured_at": captured_at.isoformat(),
             "source_url": source_url,
             "binding_values": {
@@ -214,6 +246,7 @@ class _Borrador100CaptureRequest(BaseModel):
 
     filing_year: int
     period: Period
+    registry_snapshot_ref: RegistrySnapshotRef
     captured_at: datetime
     source_url: str
     binding_values: Mapping[BindingId, _BorradorValue]
@@ -246,6 +279,9 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
             _Borrador100CaptureRequest(
                 filing_year=filing_year,
                 period=period,
+                registry_snapshot_ref=bundled_authority()
+                .snapshot(Modelo.M100.value, filing_year=filing_year, period=period.registry_token)
+                .snapshot_ref,
                 captured_at=captured_at,
                 source_url=source_url,
                 binding_values=binding_values,
@@ -262,7 +298,9 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         filing_year: int | None = None,
         state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
     ) -> tuple[Borrador100Snapshot, ...]:
-        snapshots: tuple[Borrador100Snapshot, ...] = super().list_snapshots()
+        snapshots = tuple(
+            require_borrador_100_snapshot_coordinates_current(snapshot) for snapshot in super().list_snapshots()
+        )
         if filing_year is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.filing_year == filing_year)
         if state is not None:
@@ -271,7 +309,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
 
     def show(self, snapshot_id: str) -> Borrador100Snapshot:
         """Execute this public contract operation."""
-        return self.resolve_snapshot(snapshot_id)
+        return require_borrador_100_snapshot_coordinates_current(self.resolve_snapshot(snapshot_id))
 
     def latest_for_year(self, *, filing_year: int, period: Period | None = None) -> Borrador100Snapshot | None:
         """Execute this public contract operation."""
@@ -291,6 +329,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         return derive_borrador_100_snapshot_id(
             filing_year=capture.filing_year,
             period=capture.period,
+            registry_snapshot_ref=capture.registry_snapshot_ref,
             captured_at=capture.captured_at,
             source_url=capture.source_url,
             binding_values=capture.binding_values,
@@ -309,6 +348,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
             modelo=Modelo.M100.value,
             filing_year=capture.filing_year,
             period=capture.period,
+            registry_snapshot_ref=capture.registry_snapshot_ref,
             captured_at=capture.captured_at,
             source_url=capture.source_url,
             state=SnapshotLifecycleState.ACTIVE,
@@ -349,4 +389,5 @@ __all__ = [
     "BorradorSnapshotNotFoundError",
     "borrador_100_snapshot_object_key",
     "derive_borrador_100_snapshot_id",
+    "require_borrador_100_snapshot_coordinates_current",
 ]

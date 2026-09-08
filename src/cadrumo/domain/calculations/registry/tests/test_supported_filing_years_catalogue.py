@@ -31,25 +31,6 @@ def test_supported_year_declaration_refuses_noncanonical_year_sequences(years: t
         SupportedFilingYearsCatalogue(years=years)
 
 
-def test_authority_surfaces_advisory_gaps_with_complete_coordinates() -> None:
-    authority = ValidatedRegistryAuthority.load(
-        bundled_path("registry", "aeat"),
-        source_root=bundled_path(),
-    )
-
-    gaps = authority.supported_filing_year_gaps
-
-    assert gaps
-    assert all(gap.modelo and gap.filing_year and gap.period and gap.missing_prerequisite for gap in gaps)
-    assert any(
-        gap.modelo == "036"
-        and gap.filing_year == 2022
-        and gap.period == "alta"
-        and gap.missing_prerequisite == "law-resolvable revision"
-        for gap in gaps
-    )
-
-
 def test_m303_annual_orden_projection_years_are_driven_by_registry_catalogue() -> None:
     authority = ValidatedRegistryAuthority.load(
         bundled_path("registry", "aeat"),

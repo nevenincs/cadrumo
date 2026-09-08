@@ -97,6 +97,7 @@ from ...domain.prorrata_register.register import ProrrataRegister
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from . import _shared_issue_reasons
 from ._business_proportion import business_proportion
 from .errors import AggregationValidationError, t
@@ -1271,7 +1272,7 @@ def _active_prorrata_apportionment(
     inputs (absent it, no apportionment applies, exactly as for any register
     with no whole-entity entry).
     """
-    register = prorrata_register_repository.load()
+    register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())
     base = _sector_scoped_apportionment(register, ejercicio, sector_id=None)
     if base is None:
         return None

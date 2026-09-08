@@ -1,15 +1,11 @@
 """SQLAlchemy ``TypeDecorator`` set for column-level at-rest encryption.
 
-Four type decorators wrap the AEAD primitives behind SQLAlchemy's
+Two type decorators wrap the AEAD primitives behind SQLAlchemy's
 ``TypeDecorator`` interface so consumer ORM models declare encryption
 at the column level without touching the cipher directly:
 
 - :class:`EncryptedString` — round-trips a Python ``str`` through
   AES-256-GCM. Storage type is ``LargeBinary``.
-- :class:`EncryptedBytes` — round-trips raw ``bytes``. Storage type is
-  ``LargeBinary``.
-- :class:`EncryptedJSON` — JSON-serialises any pydantic-mode-compatible
-  Python value, then encrypts. Storage type is ``LargeBinary``.
 - :class:`HashedLookup` — deterministic HMAC-SHA256 keyed by a
   sub-key derived from the master key plus a stable ``context``.
   Storage type is ``LargeBinary`` (32 bytes). Use this column when
@@ -17,9 +13,7 @@ at the column level without touching the cipher directly:
   :class:`EncryptedString`-shaped value without leaking the
   plaintext.
 
-:class:`EncryptedPayload` validates the decoded JSON result from
-:class:`EncryptedJSON`, while the secure-object helpers bind
-``namespace``, ``object_key`` digest, and ``schema_version`` into
+The secure-object helpers bind ``namespace``, ``object_key`` digest, and ``schema_version`` into
 payload AEAD associated data so ciphertext copied across rows fails
 authentication.
 
@@ -31,26 +25,20 @@ Tests use :class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`,
 whose context manager enters a real session without touching the OS
 keychain or file backend.
 
-The AAD (associated authenticated data) per decorator binds the
-ciphertext to its purpose: a ciphertext minted for an
-:class:`EncryptedString` column will refuse to decrypt as
-:class:`EncryptedBytes` even though the master key is the same.
+The AAD (associated authenticated data) for :class:`EncryptedString` binds its
+ciphertext to that purpose, while secure-object payloads use row-identity AAD.
 """
 
 from __future__ import annotations
 
 import hashlib
 import hmac
-import json
 from typing import override
 
-from pydantic import BaseModel
 from sqlalchemy import LargeBinary
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
-from .....core.hashing import canonical_json_bytes
-from .....core.models import STRICT_FROZEN_CONFIG
 from ..errors import (
     DecryptionError,
 )
@@ -60,25 +48,7 @@ from ..errors import (
 from ..master_key.active_session import get_active_hmac_subkey, get_active_master_key
 from .aead import EncryptedBlob, decrypt_record, encrypt_record
 
-
-class EncryptedPayload(BaseModel):
-    """Validated wrapper for a value decrypted from an :class:`EncryptedJSON` column.
-
-    The single ``data`` field carries the decoded JSON value (dict, list,
-    str, int, float, bool, or None).  Wrapping the raw ``json.loads``
-    result in a typed model ensures the decrypt path is auditable and
-    rejects structurally invalid bytes at the persistence boundary rather
-    than propagating bare ``object`` into domain code.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    data: object
-
-
 _AAD_STRING = b"cadrumo.column.encrypted_string.v1"
-_AAD_BYTES = b"cadrumo.column.encrypted_bytes.v1"
-_AAD_JSON = b"cadrumo.column.encrypted_json.v1"
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"cadrumo.column.hashed_lookup.v1"
 
 
@@ -132,27 +102,6 @@ def decrypt_secure_object_payload(wire: bytes, *, associated_data: bytes) -> byt
     return decrypt_record(blob, key=key, associated_data=associated_data)
 
 
-def decrypt_encrypted_bytes_column(wire: bytes) -> bytes:
-    """Decrypt one ``EncryptedBytes`` on-wire payload under the active master key.
-
-    Exposed so iterator consumers (notably
-    :class:`adapters.persistence.storage.SecureObjectRepository`)
-    can decrypt rows one-by-one inside their own try/except, rather than
-    delegating to SQLAlchemy's column processor whose failure mode aborts
-    the entire result-set materialisation.
-
-    Args:
-        wire: The raw on-wire bytes stored in an ``EncryptedBytes`` column
-            (``nonce || ciphertext_with_tag``).
-
-    Returns:
-        The decrypted plaintext bytes.
-    """
-    blob = EncryptedBlob.from_wire(wire)
-    key = _resolve_master_key()
-    return decrypt_record(blob, key=key, associated_data=_AAD_BYTES)
-
-
 _HASHED_LOOKUP_DIGEST_SIZE = 32
 """HMAC-SHA256 digest size in bytes."""
 
@@ -201,74 +150,6 @@ class EncryptedString(TypeDecorator[str]):
             return plaintext.decode("utf-8")
         except UnicodeDecodeError as exc:
             raise DecryptionError("EncryptedString payload is not valid UTF-8") from exc
-
-
-class EncryptedBytes(TypeDecorator[bytes]):
-    """SQLAlchemy column type that round-trips raw ``bytes`` through AES-256-GCM.
-
-    Storage type is ``LargeBinary``. Useful for opaque binary payloads
-    that must be ciphertext at rest (e.g. SHA-256-derived index
-    tags, certificate thumbprints, encrypted-blob descriptors).
-    """
-
-    impl = LargeBinary
-    cache_ok = True
-
-    @override
-    def process_bind_param(self, value: bytes | None, dialect: Dialect) -> bytes | None:
-        if value is None:
-            return None
-        if not isinstance(value, bytes | bytearray | memoryview):
-            raise _storage_validation_error(f"EncryptedBytes expects bytes-like; got {type(value).__name__}")
-        key = _resolve_master_key()
-        blob = encrypt_record(bytes(value), key=key, associated_data=_AAD_BYTES)
-        return blob.to_wire()
-
-    @override
-    def process_result_value(self, value: bytes | None, dialect: Dialect) -> bytes | None:
-        if value is None:
-            return None
-        key = _resolve_master_key()
-        blob = EncryptedBlob.from_wire(bytes(value))
-        return decrypt_record(blob, key=key, associated_data=_AAD_BYTES)
-
-
-class EncryptedJSON(TypeDecorator[object]):
-    """SQLAlchemy column type that JSON-encodes and then encrypts a value.
-
-    Storage type is ``LargeBinary``. Values must be JSON-serialisable
-    via :func:`json.dumps` with ``ensure_ascii=False``,
-    ``separators=(',', ':')``, ``sort_keys=True`` so the on-wire form
-    is deterministic for identical inputs (modulo nonces).
-    """
-
-    impl = LargeBinary
-    cache_ok = True
-
-    @override
-    def process_bind_param(self, value: object | None, dialect: Dialect) -> bytes | None:
-        if value is None:
-            return None
-        try:
-            serialised = canonical_json_bytes(value)
-        except (TypeError, ValueError) as exc:
-            raise _storage_validation_error(f"EncryptedJSON expects a JSON-serialisable value: {exc}") from exc
-        key = _resolve_master_key()
-        blob = encrypt_record(serialised, key=key, associated_data=_AAD_JSON)
-        return blob.to_wire()
-
-    @override
-    def process_result_value(self, value: bytes | None, dialect: Dialect) -> object | None:
-        if value is None:
-            return None
-        key = _resolve_master_key()
-        blob = EncryptedBlob.from_wire(bytes(value))
-        plaintext = decrypt_record(blob, key=key, associated_data=_AAD_JSON)
-        try:
-            decoded = plaintext.decode("utf-8")
-            return EncryptedPayload(data=json.loads(decoded)).data
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise DecryptionError("EncryptedJSON payload is not valid JSON") from exc
 
 
 class HashedLookup(TypeDecorator[bytes]):

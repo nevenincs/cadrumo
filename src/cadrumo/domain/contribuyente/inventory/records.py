@@ -935,7 +935,7 @@ class InventoryLedgerDocument(BaseModel):
     uniqueness invariant lives here, on the document, because the repository
     had two competing versions of it -- ``create`` and the application service
     refused a second ledger for a pair, while the public
-    ``save``/``save_inventory`` path accepted any document and wrote it without
+    ``InventoryLedgerRepository.save`` path accepted any document and wrote it without
     validating, so a replacement could persist two ledgers for one pair while
     every reader still assumed one.
 

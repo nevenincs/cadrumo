@@ -70,16 +70,6 @@ def register_live_session(session: BucketSession) -> None:
         _live_sessions.add(session)
 
 
-def live_bucket_session_count() -> int:
-    """Return how many registered sessions are still unsealed.
-
-    Diagnostics and tests only; never a control-flow input for the encrypt path.
-    """
-    with _lock:
-        sessions = list(_live_sessions)
-    return sum(1 for session in sessions if not session.sealed)
-
-
 def close_all_live_bucket_sessions() -> int:
     """Close every registered session, zeroising its keys. Returns how many closed.
 
@@ -119,6 +109,5 @@ def close_all_live_bucket_sessions() -> int:
 
 __all__ = [
     "close_all_live_bucket_sessions",
-    "live_bucket_session_count",
     "register_live_session",
 ]

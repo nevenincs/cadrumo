@@ -13,6 +13,8 @@ from pydantic import ValidationError
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.modelo import Modelo
 from ....core.revision_review import RevisionReviewStatus
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
 from ....tests.filing_export_authority import (
     FilingExportEmissionProof,
     FilingExportGenerationProof,
@@ -167,6 +169,7 @@ def test_two_channel_public_receipts_satisfy_without_projecting_a_payload_digest
     coordinate = FilingExportProofCoordinate(
         modelo=modelo.id,
         revision=revision.id,
+        snapshot_ref=_snapshot_for_revision(authority, modelo.id, revision).snapshot_ref,
         layout_ids=tuple(layout.id for layout in revision.export_layouts),
     )
     provenance = _synthetic_public_provenance()
@@ -209,6 +212,12 @@ def test_generic_proof_boundary_refuses_an_expired_secure_replay_receipt() -> No
     coordinate = FilingExportProofCoordinate(
         modelo=Modelo.M100,
         revision="2025",
+        snapshot_ref=RegistrySnapshotRef(
+            modelo=Modelo.M100,
+            revision_id="2025",
+            modelo_year=2026,
+            period="1T",
+        ),
         layout_ids=("test-layout",),
     )
     provenance = _synthetic_public_provenance()
@@ -237,6 +246,8 @@ def test_generic_proof_boundary_refuses_an_expired_secure_replay_receipt() -> No
         snapshot=SimpleNamespace(
             modelo=SimpleNamespace(id=Modelo.M100),
             revision=SimpleNamespace(id="2025", export_layouts=(SimpleNamespace(id="test-layout"),)),
+            filing_year=2026,
+            period="1T",
         ),
         assessment_at=_ATTESTED_AT + timedelta(days=1),
     )
@@ -257,6 +268,7 @@ def test_two_channel_refusals_remain_typed_per_channel(registry_authority) -> No
     coordinate = FilingExportProofCoordinate(
         modelo=modelo.id,
         revision=revision.id,
+        snapshot_ref=_snapshot_for_revision(authority, modelo.id, revision).snapshot_ref,
         layout_ids=tuple(layout.id for layout in revision.export_layouts),
     )
     assessment = FilingExportProofAssessment(
@@ -318,6 +330,20 @@ def _synthetic_public_provenance() -> FilingExportPublicProvenance:
                 length=1,
             ),
         ),
+    )
+
+
+def _snapshot_for_revision(authority, modelo, revision):
+    """Materialise the same first law-selected coordinate used by coverage."""
+    filing_year, period = revision_selection_coordinates(
+        revision,
+        assessment_horizon=coverage_assessment_horizon(authority.catalogues),
+    )[0]
+    return authority.snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period,
+        grade=RegistryAuthorityGrade.FILING,
     )
 
 

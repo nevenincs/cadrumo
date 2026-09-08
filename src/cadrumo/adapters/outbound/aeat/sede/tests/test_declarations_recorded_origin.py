@@ -27,18 +27,12 @@ What changed is that the reason is evidence rather than an assumption.
 
 from __future__ import annotations
 
-import ast
-from collections import Counter
-from pathlib import Path
-
 import pytest
 
 from ......core.config import Settings
-from .. import _declarations_fetch
-from ..declarations import (
+from .._declarations_fetch import (
     SEDE_BASE,
     cotejo_document_url,
-    cotejo_view_url,
     listing_url_for,
     origin_of,
 )
@@ -133,9 +127,8 @@ class TestRecordedUrlsUseTheLandedOrigin:
         assert "EJERCICIO=2024" in built
 
     @pytest.mark.parametrize("origin", _DISPATCH_ORIGINS)
-    def test_cotejo_urls_use_the_given_origin(self, origin: str) -> None:
-        """Both cotejo URLs recorded on a justificante reference name the landed host."""
-        assert cotejo_view_url(origin, "FIXTURECSV1234X7").startswith(origin)
+    def test_cotejo_document_url_uses_the_given_origin(self, origin: str) -> None:
+        """A justificante document URL names the host that served its cotejo page."""
         assert cotejo_document_url(origin, "FIXTURECSV1234X7").startswith(origin)
 
     def test_the_builders_would_fail_if_they_ignored_their_origin(self) -> None:
@@ -150,44 +143,6 @@ class TestRecordedUrlsUseTheLandedOrigin:
         assert foreign != SEDE_BASE, "the discriminating origin must differ from the pinned one"
         for built in (
             listing_url_for(foreign, modelo="130", ejercicio=2025),
-            cotejo_view_url(foreign, "FIXTURECSV1234X7"),
             cotejo_document_url(foreign, "FIXTURECSV1234X7"),
         ):
             assert not built.startswith(SEDE_BASE)
-
-
-class TestDeclarationsUrlPrimitiveAuthority:
-    """The fetch adapter owns each Sede URL primitive exactly once."""
-
-    def test_url_primitives_have_one_module_level_definition(self) -> None:
-        """Prevent a second assignment from silently shadowing the URL authority."""
-        source = Path(_declarations_fetch.__file__).read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        assignments = Counter(
-            target.id
-            for node in tree.body
-            if isinstance(node, (ast.Assign, ast.AnnAssign))
-            for target in (node.targets if isinstance(node, ast.Assign) else (node.target,))
-            if isinstance(target, ast.Name)
-        )
-
-        assert {
-            name: assignments[name]
-            for name in (
-                "SEDE_BASE",
-                "_SEDE_HOST",
-                "_LISTING_URL",
-                "_LISTING_PATH",
-                "_COTEJO_QUERY_PATH",
-                "_COTEJO_DOCUMENT_PATH",
-                "COTEJO_PATH_PREFIX",
-            )
-        } == {
-            "SEDE_BASE": 1,
-            "_SEDE_HOST": 1,
-            "_LISTING_URL": 1,
-            "_LISTING_PATH": 1,
-            "_COTEJO_QUERY_PATH": 1,
-            "_COTEJO_DOCUMENT_PATH": 1,
-            "COTEJO_PATH_PREFIX": 1,
-        }

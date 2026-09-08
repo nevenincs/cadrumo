@@ -19,7 +19,6 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -30,9 +29,6 @@ from ....core.config import override_settings
 from ....tests.secure_sql import dev_test_database_password, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
 from ._registry_cli_support import _BUCKET_ID, _clear_cli_env, _set_cli_env
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _SESSION_OPENED_AT = datetime(2099, 5, 28, 15, 55, tzinfo=UTC)
 

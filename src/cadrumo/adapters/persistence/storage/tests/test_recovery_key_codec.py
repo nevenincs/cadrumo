@@ -6,14 +6,14 @@ refuses anything else by design. Key material held as immutable ``bytes`` or
 memory entirely at the garbage collector's discretion.
 
 That gap is structurally wider on the recovery surface than on the
-steady-state session path, because it opens on every mint and every decode --
-and an enrollment holds a live plaintext key across the operator's
+steady-state session path, because an enrollment holds a live plaintext key
+across the operator's
 *interactive* confirmation, which lasts as long as it takes a human to copy
 down 24 words.
 
-These tests pin the contract that closes it for the BIP-39 primitives: every
-secret they mint or recover comes back in a buffer ``zeroise`` accepts, and
-the container that holds key material across an operation wipes on demand.
+These tests pin the contract that closes it for the BIP-39 primitives: minted
+entropy is held in a buffer ``zeroise`` accepts, and the container that holds
+key material across an operation wipes on demand.
 The refusal test below is what gives the rest their teeth -- it proves
 ``zeroise`` genuinely rejects the immutable shapes, so a regression back to
 ``bytes`` or ``str`` fails these tests rather than passing them vacuously.
@@ -28,7 +28,6 @@ from ..custody.zeroise import zeroise
 from ..errors import StorageValidationError
 from ..recovery_key import (
     RecoveryKey,
-    decode_mnemonic,
     encode_mnemonic,
     generate_recovery_key,
 )
@@ -97,18 +96,6 @@ def test_recovery_key_context_manager_wipes_on_exit() -> None:
     assert recovery_key.raw == bytearray(32)
 
 
-def test_decode_mnemonic_returns_a_buffer_zeroise_accepts() -> None:
-    """The decoded entropy -- the recovery key itself -- is wipeable."""
-    mnemonic = encode_mnemonic(bytes([0x11] * 32))
-
-    entropy = decode_mnemonic(mnemonic)
-
-    assert isinstance(entropy, bytearray)
-    assert entropy == bytearray([0x11] * 32)
-    zeroise(entropy)
-    assert entropy == bytearray(32)
-
-
 def test_recovery_key_cannot_serialise_its_material() -> None:
     """``RecoveryKey`` exposes no serialisation path."""
     recovery_key = generate_recovery_key()
@@ -129,42 +116,8 @@ def test_recovery_key_refuses_empty_mnemonic() -> None:
         RecoveryKey(raw=bytes(32), mnemonic="")
 
 
-def test_mnemonic_roundtrips_every_minted_key() -> None:
-    """A minted key's words decode back to exactly its own entropy.
+def test_mnemonic_encoding_matches_the_canonical_zero_entropy_vector() -> None:
+    """The live one-way encoder matches BIP-39 rather than its own inverse."""
+    expected = " ".join([*("abandon" for _ in range(23)), "art"])
 
-    The codec is the generator behind a per-profile recovery secret, so a
-    round-trip that lost or reordered a single bit would hand the operator
-    24 words that unwrap nothing -- discovered only on the day recovery is
-    the last route left.
-    """
-    for _ in range(8):
-        with generate_recovery_key() as recovery_key:
-            entropy = decode_mnemonic(recovery_key.mnemonic)
-            try:
-                assert bytes(entropy) == bytes(recovery_key.raw)
-            finally:
-                zeroise(entropy)
-
-
-def test_decode_refuses_a_single_substituted_word() -> None:
-    """A transcription error fails the checksum instead of yielding key bytes.
-
-    This is the codec's own anti-tautology arm: it proves the decode is
-    verifying rather than merely reassembling, so the round-trip above
-    cannot be passing on a decoder that accepts anything.
-    """
-    mnemonic = encode_mnemonic(bytes([0x22] * 32)).split()
-    substitute = "zoo" if mnemonic[0] != "zoo" else "abandon"
-    corrupted = " ".join([substitute, *mnemonic[1:]])
-
-    with pytest.raises(StorageValidationError):
-        decode_mnemonic(corrupted)
-
-
-def test_decode_refuses_a_word_outside_the_canonical_list() -> None:
-    """An unknown word names its position rather than failing opaquely."""
-    mnemonic = encode_mnemonic(bytes([0x33] * 32)).split()
-    corrupted = " ".join([*mnemonic[:5], "cadrumo", *mnemonic[6:]])
-
-    with pytest.raises(StorageValidationError, match="position 6"):
-        decode_mnemonic(corrupted)
+    assert encode_mnemonic(bytes(32)) == expected

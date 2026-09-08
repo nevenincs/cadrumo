@@ -65,6 +65,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import (
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.flow import IvaFlowDirection
 from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
+from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -207,7 +208,7 @@ def _save_member_322_observation(
             observation,
             source_kind="app_filing",
             member_nif=member_nif,
-        )
+        stamped_revision_id=revision_id_for_observation(observation))
     )
 
 

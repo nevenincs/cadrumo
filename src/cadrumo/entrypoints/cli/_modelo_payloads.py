@@ -78,6 +78,7 @@ from ...domain.calculations.registry.ids import (
     VerificationExpectationId,
 )
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.withholding_bindings import WithholdingClaveBreakdown
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_amendment import M303RectificativaMotive
@@ -246,6 +247,7 @@ class CalculationRevisionPayload(OutputSchema):
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
+    registry_snapshot_ref: RegistrySnapshotRef
     state: str
     casilla_values: dict[CasillaId, str]  # casilla_id -> str(Decimal)
     observations: tuple[ObservationPayload, ...]
@@ -398,6 +400,7 @@ class VerificationReportPayload(OutputSchema):
 
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
+    registry_snapshot_ref: RegistrySnapshotRef
     completeness_status: VerificationCompletenessStatus
     granted_verificado_completo: bool
     resolved_casilla_ids: list[CasillaId]

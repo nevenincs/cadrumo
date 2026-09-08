@@ -425,7 +425,10 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
             ProrrataRegister(
                 entries=(
                     ProrrataRegisterEntry(
-                        ejercicio=2024, regime=ProrrataRegisterRegime.GENERAL, especial_transition=None
+                        ejercicio=2024,
+                        regime=ProrrataRegisterRegime.GENERAL,
+                        especial_transition=None,
+                        source_registry_snapshot_refs=(),
                     ),
                 ),
                 sector_definitions=(definition,),
@@ -439,6 +442,7 @@ def test_upsert_entry_preserves_sector_definitions(tmp_path: Path) -> None:
                 especial_transition=None,
                 provisional_percentage=Decimal("60"),
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                source_registry_snapshot_refs=(),
             )
         )
 
@@ -504,6 +508,7 @@ def test_upsert_sector_definition_preserves_entries(tmp_path: Path) -> None:
             especial_transition=None,
             provisional_percentage=Decimal("60"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_registry_snapshot_refs=(),
         )
         repository.save(ProrrataRegister(entries=(entry,)))
 
@@ -650,6 +655,7 @@ def test_entry_payload_round_trips_the_especial_transition_kind_as_a_stable_toke
             kind=kind,
             evidence_reference="acta-2024-001",
         ),
+        source_registry_snapshot_refs=(),
     )
 
     payload = _entry_payload(entry)

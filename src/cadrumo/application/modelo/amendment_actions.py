@@ -55,6 +55,7 @@ from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.justificante import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
@@ -115,6 +116,7 @@ from .action_errors import (
     ModeloRecordNotFoundError,
     WorkUnitNotFoundError,
 )
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 
 
@@ -175,6 +177,7 @@ def _load_amendment_baseline[CasillaKey](
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": baseline.calculation_revision_id},
         )
+    require_calculation_revision_coordinates_current(baseline_revision)
     if work_unit.modelo == Modelo.M303.value and baseline_revision.filing_instance_evidence is None:
         raise AmendmentEvidenceMissingError(
             translated_message="errors.error.error_modelo_amendment_evidence_missing",
@@ -401,6 +404,17 @@ def amend_modelo_revision[CasillaKey](
         modelo=str(work_unit.modelo),
         supplied=detail_rows,
     )
+    if (
+        corrected_values == dict(baseline_revision.casilla_values)
+        and amendment_detail_rows == baseline_revision.detail_rows
+    ):
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={
+                "calculation_revision_id": baseline_revision.calculation_revision_id,
+                "state": "no_op_amendment",
+            },
+        )
     new_revision_id = derive_calculation_revision_id(
         work_unit_id=baseline.work_unit_id,
         input_values_by_casilla_id=baseline_revision.input_values_by_casilla_id,
@@ -460,6 +474,7 @@ def amend_modelo_revision[CasillaKey](
 
     amendment_draft = _build_amendment_draft_revision(
         new_revision_id=new_revision_id,
+        registry_snapshot_ref=registry_snapshot.snapshot_ref,
         baseline=baseline,
         baseline_revision=baseline_revision,
         corrected_values=corrected_values,
@@ -561,6 +576,7 @@ def _require_amendment_detail_rows(
 def _build_amendment_draft_revision(
     *,
     new_revision_id: CalculationRevisionId,
+    registry_snapshot_ref: RegistrySnapshotRef,
     baseline: ModeloRecord,
     baseline_revision: CalculationRevision,
     corrected_values: dict[CasillaId, Decimal],
@@ -603,6 +619,7 @@ def _build_amendment_draft_revision(
         {
             "calculation_revision_id": new_revision_id,
             "work_unit_id": baseline.work_unit_id,
+            "registry_snapshot_ref": registry_snapshot_ref,
             "state": CalculationRevisionState.BORRADOR,
             "input_values_by_casilla_id": baseline_revision.input_values_by_casilla_id,
             "binding_overrides": baseline_revision.binding_overrides,

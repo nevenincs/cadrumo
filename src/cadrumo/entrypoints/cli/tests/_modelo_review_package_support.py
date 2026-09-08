@@ -24,6 +24,7 @@ from ....application.modelo.work_addressing import law_selected_revision_for_wor
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -87,6 +88,12 @@ def seed_exportable_modelo_revision(
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=modelo,
+            revision_id=revision_id,
+            modelo_year=filing_year,
+            period=period,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id=inputs,
         created_at=now,

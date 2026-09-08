@@ -45,6 +45,23 @@ from ...domain.prorrata_register.register import (
 )
 
 
+def require_prorrata_register_coordinates_current(register: ProrrataRegister) -> ProrrataRegister:
+    """Re-confirm every registry-derived coordinate before register values are read."""
+    # Lazy to keep the aggregation package's import spine acyclic: aggregation
+    # consumes this prorrata service while calculations also consumes aggregation.
+    from ..calculations.revision_carry_gate import revision_carry_outcome
+
+    for entry in register.entries:
+        for snapshot_ref in entry.source_registry_snapshot_refs:
+            outcome = revision_carry_outcome(snapshot_ref)
+            if outcome.refused:
+                raise ProrrataRegisterValidationError(
+                    "prorrata register source registry coordinate cannot be re-confirmed: "
+                    f"{snapshot_ref.revision_id}: {outcome.detail}"
+                )
+    return register
+
+
 class ProrrataRegisterService:
     """Declare, list, and read cross-period prorrata entries on the active profile."""
 
@@ -61,6 +78,9 @@ class ProrrataRegisterService:
         Returns:
             The updated :class:`ProrrataRegister`.
         """
+        require_prorrata_register_coordinates_current(
+            ProrrataRegister(entries=(entry,), sector_definitions=()),
+        )
         return self._repository.upsert_entry(entry)
 
     def declare_especial_transition(self, entry: ProrrataRegisterEntry) -> ProrrataRegister:
@@ -73,6 +93,9 @@ class ProrrataRegisterService:
         """
         if entry.especial_transition is None:
             raise ProrrataRegisterValidationError("prorrata especial transition declaration requires typed evidence")
+        require_prorrata_register_coordinates_current(
+            ProrrataRegister(entries=(entry,), sector_definitions=()),
+        )
         return self._repository.upsert_entry(entry)
 
     def record_aeat_autorizada(
@@ -104,6 +127,7 @@ class ProrrataRegisterService:
             provisional_percentage=provisional_percentage,
             provisional_provenance=_ProrrataProvisionalProvenance.AEAT_AUTORIZADA,
             authorisation_reference=authorisation_reference,
+            source_registry_snapshot_refs=(),
         )
         return self.declare(entry)
 
@@ -136,6 +160,7 @@ class ProrrataRegisterService:
             provisional_percentage=provisional_percentage,
             provisional_provenance=_ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
             authorisation_reference=proposal_reference,
+            source_registry_snapshot_refs=(),
         )
         return self.declare(entry)
 
@@ -161,7 +186,7 @@ class ProrrataRegisterService:
         Returns:
             A :class:`ProrrataRegister`; empty when nothing has been declared.
         """
-        return self._repository.load()
+        return require_prorrata_register_coordinates_current(self._repository.load())
 
     def get(self, ejercicio: int, *, sector_id: str | None = None) -> ProrrataRegisterEntry | None:
         """Return the entry for a ``(ejercicio, sector)`` key, or ``None`` when absent.
@@ -173,7 +198,7 @@ class ProrrataRegisterService:
         Returns:
             The matching :class:`ProrrataRegisterEntry`, or ``None``.
         """
-        return self._repository.load().entry_for(ejercicio, sector_id=sector_id)
+        return self.list_all().entry_for(ejercicio, sector_id=sector_id)
 
     def resolve_provisional(
         self,
@@ -199,7 +224,7 @@ class ProrrataRegisterService:
         Returns:
             The domain :class:`ProrrataProvisionalResolution`.
         """
-        register = self._repository.load()
+        register = self.list_all()
         persisted = tuple(
             entry for entry in register.entries if entry.ejercicio == ejercicio and entry.sector_id == sector_id
         )
@@ -207,3 +232,6 @@ class ProrrataRegisterService:
             entry for entry in candidate_entries if entry.ejercicio == ejercicio and entry.sector_id == sector_id
         )
         return resolve_provisional_percentage((*persisted, *transient))
+
+
+__all__ = ["ProrrataRegisterService", "require_prorrata_register_coordinates_current"]

@@ -38,16 +38,12 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.storage_taxonomy import StorageCustodyProfile
-from ...core.time.clock import now
 from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import emit_bucket_event
 
 __all__ = [
     "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "UnsupportedBundleSchemaVersionError",
     "deserialize_profile_bundle",
-    "register_imported_profile_bundle",
     "serialize_profile_bundle",
     "validate_bundle_payload",
 ]
@@ -307,61 +303,6 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
 
     restore_carried_objects(bundle.carried_objects, target_bucket_id=target_bucket_id)
     _rebuild_participation_index(target_bucket_id=target_bucket_id)
-
-
-def register_imported_profile_bundle(
-    bundle: UserProfilePortableExport,
-    *,
-    target_bucket_id: str,
-    display_name: str,
-    source_path: str,
-) -> BucketEvent:
-    """Import ``bundle`` into ``target_bucket_id`` and record the operator's import.
-
-    This is the sanctioned entry point for the operator-facing import verb. It
-    pairs the restore with its ``profile.imported`` audit event so the two cannot
-    drift apart, and so the emission stays inside the application layer: an
-    entrypoint that restored a bundle and then appended the event itself would
-    own an application concern, and would be free to omit it.
-
-    The caller still owns bucket provisioning and the live bucket session, exactly
-    as :func:`deserialize_profile_bundle` requires; the event repository resolves
-    against that active session.
-
-    Args:
-        bundle: The validated export bundle to restore.
-        target_bucket_id: The bucket id under which to write the objects.
-        display_name: Operator-facing label the imported profile was registered
-            under, recorded on the event payload.
-        source_path: Filesystem location the bundle was read from, recorded on
-            the event payload as import provenance.
-
-    Returns:
-        The appended :class:`BucketEvent`.
-
-    Raises:
-        UnsupportedBundleSchemaVersionError: Propagated from
-            :func:`deserialize_profile_bundle` for an unsupported bundle version;
-            no event is emitted when the restore refuses.
-    """
-    from .custody_ports import default_profile_bucket_event_history_repository
-
-    deserialize_profile_bundle(bundle, target_bucket_id=target_bucket_id)
-    return emit_bucket_event(
-        repository=default_profile_bucket_event_history_repository(),
-        bucket_id=target_bucket_id,
-        event_type=BucketEventType.PROFILE_IMPORTED,
-        occurred_at=now().replace(microsecond=0),
-        actor=_PROFILE_IMPORT_EVENT_ACTOR,
-        object_type=BucketEventObjectType.PROFILE,
-        object_id=target_bucket_id,
-        payload={
-            "display_name": display_name,
-            "source_path": source_path,
-            "schema_version": str(bundle.bundle_schema_version),
-        },
-        payload_version=_PROFILE_IMPORT_EVENT_PAYLOAD_VERSION,
-    )
 
 
 def _rebuild_participation_index(*, target_bucket_id: str) -> None:

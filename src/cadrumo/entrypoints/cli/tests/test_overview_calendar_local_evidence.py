@@ -15,7 +15,9 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....application.calculations.observations_repository import CalculationObservationRepository
 from ....core.config import load_settings
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests import FIXTURES_DIR
 from ....tests.profile_capsule import open_test_profile_session
@@ -37,6 +39,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _SECOND_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
 
 
+def _registry_snapshot_ref(*, modelo: str, filing_year: int, period: Period) -> RegistrySnapshotRef:
+    return bundled_authority().snapshot(
+        modelo,
+        filing_year=filing_year,
+        period=period.registry_token,
+    ).snapshot_ref
+
+
 def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -> None:
     observation = RegistryModeloObservation(
         modelo="303",
@@ -51,6 +61,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 observation,
                 source_kind="aeat_sede_justificante",
                 captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+                stamped_revision_id=str(
+                    bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id
+                ),
                 source_metadata={
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "12345678901234567890",
@@ -82,6 +95,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
                 authenticated_identity="X1234567L",
                 artefacts=(artefact,),
+                registry_snapshot_ref=_registry_snapshot_ref(
+                    modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "1T")
+                ),
             ),
         )
         store.persist_observation(
@@ -103,6 +119,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                         captured_at=datetime(2025, 7, 16, 12, 1, tzinfo=UTC),
                         storage_ref="secure-object:financial:" + "f" * 64,
                     ),
+                ),
+                registry_snapshot_ref=_registry_snapshot_ref(
+                    modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "2T")
                 ),
             ),
         )
@@ -129,6 +148,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 presented_at=datetime(2025, 10, 15, 9, 30, tzinfo=UTC),
                 authenticated_identity="Y7654321G",
                 artefacts=(wrong_identity_artefact,),
+                registry_snapshot_ref=_registry_snapshot_ref(
+                    modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "3T")
+                ),
             ),
         )
         non_active_body = b"modelo-303-2025-4T-non-active-justificante"
@@ -154,6 +176,9 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                 presented_at=datetime(2026, 1, 15, 9, 30, tzinfo=UTC),
                 authenticated_identity="X1234567L",
                 artefacts=(non_active_artefact,),
+                registry_snapshot_ref=_registry_snapshot_ref(
+                    modelo="303", filing_year=2025, period=Period.from_year_and_code(2025, "4T")
+                ),
             ),
         )
 
@@ -215,6 +240,9 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
                 presented_at=datetime(2026, 4, 18, 9, 30, tzinfo=UTC),
                 authenticated_identity="00000000T",
                 artefacts=(artefact,),
+                registry_snapshot_ref=_registry_snapshot_ref(
+                    modelo="130", filing_year=2026, period=Period.from_year_and_code(2026, "1T")
+                ),
             ),
         )
         store.persist_observation(
@@ -227,6 +255,9 @@ def test_local_calendar_filing_evidence_requires_parseable_matching_filed_justif
                 presented_at=datetime(2026, 7, 18, 9, 30, tzinfo=UTC),
                 authenticated_identity="00000000T",
                 artefacts=(artefact,),
+                registry_snapshot_ref=_registry_snapshot_ref(
+                    modelo="130", filing_year=2026, period=Period.from_year_and_code(2026, "2T")
+                ),
             ),
         )
 

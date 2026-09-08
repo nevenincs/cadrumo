@@ -61,8 +61,6 @@ _SRC_ROOT = Path(__file__).resolve().parents[3]
 _CLI_ROOT = _SRC_ROOT / "entrypoints" / "cli"
 _APPLICATION_OUTPUT_ROOTS = (_SRC_ROOT / "application" / "wizard",)
 
-_EXCLUDED_MODULES: set[Path] = set()
-
 # (module, enclosing function, primitive) -> why this site may reach a stream
 # without passing the redacting renderer. Keep the reason specific enough that a
 # reviewer can re-derive the decision without reading the call site.
@@ -159,9 +157,7 @@ def _production_modules() -> tuple[Path, ...]:
         assert root.is_dir(), f"scanned root {root} does not exist, so this inventory would silently cover less"
         for path in scan_directory(root, pattern="*.py", recursive=True):
             relative = path.relative_to(_SRC_ROOT)
-            if relative in _EXCLUDED_MODULES:
-                continue
-            if path.name.startswith("test_") or path.name == "conftest.py":
+            if "tests" in relative.parts or path.name.startswith("test_") or path.name == "conftest.py":
                 continue
             modules.append(path)
     return tuple(sorted(modules))
@@ -177,6 +173,11 @@ def _call_kind(node: ast.Call) -> str | None:
         if func.attr == "print":
             return "print"
         if func.attr == "write":
+            # ``os.write`` targets a numeric file descriptor. It is transport,
+            # not a file-like operator output stream, despite sharing a method
+            # name with ``sys.stderr.write`` and terminal-device handles.
+            if isinstance(func.value, ast.Name) and func.value.id == "os":
+                return None
             return "write"
     return None
 
@@ -257,6 +258,7 @@ def test_scan_scope_is_non_empty() -> None:
 
     modules = _production_modules()
     assert modules, "output-surface scan selected no production modules"
+    assert all("tests" not in path.relative_to(_SRC_ROOT).parts for path in modules)
 
     calls = _all_discovered_calls()
     assert calls, "output-surface scan found no emit primitives in any scanned module"
@@ -286,6 +288,23 @@ def test_detector_flags_a_bypass_shaped_call() -> None:
         ("entrypoints/cli/_synthetic_bypass.py", "register_command.handler", "typer.echo")
     ]
     assert calls[0].key() not in _ALLOWED_DIRECT_OUTPUTS
+
+
+def test_detector_distinguishes_descriptor_transport_from_stream_output() -> None:
+    """A method name alone must not conflate fd transport with output streams."""
+
+    source = (
+        "import os\n"
+        "import sys\n"
+        "\n"
+        "def handoff(fd, payload):\n"
+        "    os.write(fd, payload)\n"
+        "    sys.stderr.write('failed')\n"
+    )
+
+    calls = _output_calls_in_source(source, Path("entrypoints/cli/_synthetic_transport.py"))
+
+    assert [(call.kind, call.source.strip()) for call in calls] == [("write", "sys.stderr.write('failed')")]
 
 
 def test_every_exemption_states_a_reason() -> None:

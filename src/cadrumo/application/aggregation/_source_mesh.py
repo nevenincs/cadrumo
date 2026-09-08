@@ -57,7 +57,6 @@ from ...domain.modelos.calculation_revision import (
     empty_row_source_identities,
 )
 from ...domain.modelos.row_models import ModeloDetailRow
-from .errors import AggregationValidationError, t
 
 RowBindingValue = str | Decimal | int | bool
 
@@ -278,40 +277,6 @@ def _infer_binding_source(payload: object) -> object:
     return data
 
 
-# Source kinds that are explicitly deferred — known to the closed taxonomy, but
-# no mesh resolver is built yet. A deferred kind must produce a standing
-# advisory on source_diagnostics rather than a silent blank: the boundary gate
-# (in _calculation_actions) accepts it without flagging it as an unknown-novel
-# source, and the safety net (``collect_unhandled_source_diagnostics``) emits the
-# advisory. A deferred kind is never on the ``manual_sources`` allowlist, which
-# would suppress that advisory.
-#
-# The detail-row producers need a row taxonomy, an evidence shape, and a
-# detail-record fold before a resolver can exist. Inventory is absent here
-# because its repository resolver is enrolled by the canonical calculation
-# route; runtime repository construction remains a separate composition step.
-DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
-    {
-        BindingSourceKind.RELATED_PARTY_OPERATION,
-        BindingSourceKind.REFUND_OPERATION,
-        BindingSourceKind.DONATIVO_DONOR,
-        BindingSourceKind.GASTO193_CONTRIBUTOR,
-        BindingSourceKind.WITHHOLDING296,
-    },
-)
-
-# Source kinds reserved-undeclared: a member that exists in the closed taxonomy
-# but carries no registry binding and no resolver yet (counterpart / invoice-shaped
-# headroom). They are neither enrolled nor deferred-with-advisory; the disposition
-# registry records them RESERVED so the parity gate accounts for every member.
-RESERVED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
-    {
-        BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        BindingSourceKind.LEDGER_TRANSACTION,
-    },
-)
-
-
 class CallerOverrideDisposition(StrEnum):
     """Whether the calculate path permits a caller override of a source's value.
 
@@ -411,59 +376,11 @@ def precedence_ladder_sources(disposition: CallerOverrideDisposition) -> frozens
     )
 
 
-class BindingSourceDisposition(StrEnum):
-    """Where a binding source kind resolves on the live calculate mesh.
-
-    The single closed answer to "where does source X resolve" for every
-    :class:`~core.BindingSourceKind` member, replacing the four scattered
-    enrollment structures (the ``merge_source_resolutions`` resolver tuple, the
-    pre-mesh-handled set, ``DEFERRED_SOURCE_KINDS``, and the per-modelo service
-    provider enum).
-    """
-
-    ENROLLED = "enrolled"  # routed by an active resolver / pre-mesh tier on the live calculate path
-    DEFERRED = "deferred"  # known but no resolver yet; emits a standing advisory, never a silent blank
-    RESERVED = "reserved"  # in the taxonomy but no binding and no resolver yet (counterpart/invoice headroom)
-
-
 class CompositeSourceResolverId(StrEnum):
     """Closed identities owned only by source-resolution composition."""
 
     EXCLUSIVE_MESH = "source_mesh"
     PRECEDENCE_MESH = "source_mesh_precedence"
-
-
-def build_binding_source_dispositions(
-    enrolled_sources: frozenset[BindingSourceKind],
-) -> Mapping[BindingSourceKind, BindingSourceDisposition]:
-    """Classify every :class:`BindingSourceKind` member by its live mesh :class:`BindingSourceDisposition`.
-
-    ``enrolled_sources`` is the LIVE enrolled set read at execution time -- the
-    union of every active resolver's ``owned_sources`` plus the pre-mesh tiers and
-    ``manual_input`` -- so no disposition is hard-coded; a newly-enrolled source
-    (e.g. withholding, or profile / borrador now folded into the mesh) is reflected
-    automatically. ``DEFERRED_SOURCE_KINDS`` and ``RESERVED_SOURCE_KINDS`` supply the
-    other two states. Raises if a member is in two states at once, or in none
-    (an unaccounted source kind -- the "neither set contains the other" defect).
-    """
-    dispositions: dict[BindingSourceKind, BindingSourceDisposition] = {}
-    for member in BindingSourceKind:
-        states = (
-            (member in enrolled_sources, BindingSourceDisposition.ENROLLED),
-            (member in DEFERRED_SOURCE_KINDS, BindingSourceDisposition.DEFERRED),
-            (member in RESERVED_SOURCE_KINDS, BindingSourceDisposition.RESERVED),
-        )
-        matched = [disposition for present, disposition in states if present]
-        if len(matched) != 1:
-            raise AggregationValidationError(
-                t("aggregation.source_mesh.errors.ambiguous_source_disposition"),
-                context={
-                    "source_kind": member.value,
-                    "matched_dispositions": [disposition.value for disposition in matched],
-                },
-            )
-        dispositions[member] = matched[0]
-    return MappingProxyType(dispositions)
 
 
 class CalculationSourceContext(BaseModel):
@@ -1197,9 +1114,6 @@ class ModeloSourceResolver(Protocol):
 
 __all__ = [
     "CALLER_OVERRIDE_PRECEDENCE_LADDER",
-    "DEFERRED_SOURCE_KINDS",
-    "RESERVED_SOURCE_KINDS",
-    "BindingSourceDisposition",
     "BorradorSourceProvenance",
     "CalculationSourceContext",
     "CalculationSourceDiagnostic",
@@ -1212,7 +1126,6 @@ __all__ = [
     "RowBindingKey",
     "RowBindingValue",
     "RowSourceIdentity",
-    "build_binding_source_dispositions",
     "out_of_window_summary_message",
     "out_of_window_summary_source_diagnostic",
     "precedence_ladder_sources",
