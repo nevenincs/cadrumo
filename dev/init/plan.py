@@ -5,7 +5,7 @@ here is data: the host tools the workstation must already provide, the steps
 each phase runs, and - the part that is easy to get wrong - the inputs whose
 change makes a phase stale and the artifacts whose absence does the same.
 
-``cadrumo`` already had `just init`, and it was the model the rest of the fleet
+``cadrumo`` already had `just bootstrap`, and it was the model the rest of the fleet
 was standardized onto. This plan does not reimplement it: every step delegates
 to :mod:`dev.env`, which is where the venv provisioning, the exclusive install
 lock, and the `env/.env` materialization already live and where they stay.
@@ -50,7 +50,7 @@ ENV: Final[tuple[str, ...]] = (PY, "-m", "dev.env")
 #:
 #: `node` and `npx` are advisory: only the duplication audit shells out to
 #: `jscpd` through them, and a worktree is entirely usable without it.
-#: `just workstation-tools` remains the recipe that INSTALLS them, opt-in and
+#: `just setup-workstation-tools` remains the recipe that INSTALLS them, opt-in and
 #: separate, because provisioning the host is not `init`'s job.
 REQUIREMENTS: Final[tuple[Requirement, ...]] = (
     Requirement(
@@ -60,13 +60,13 @@ REQUIREMENTS: Final[tuple[Requirement, ...]] = (
     ),
     Requirement(
         command="node",
-        purpose="Only the duplication audit needs it; `just workstation-tools` installs it.",
+        purpose="Only the duplication audit needs it; `just setup-workstation-tools` installs it.",
         install_url="https://nodejs.org/",
         advisory=True,
     ),
     Requirement(
         command="npx",
-        purpose="Only the duplication audit needs it; `just workstation-tools` installs it.",
+        purpose="Only the duplication audit needs it; `just setup-workstation-tools` installs it.",
         install_url="https://nodejs.org/",
         advisory=True,
     ),
@@ -108,7 +108,7 @@ NODE = Phase(
     summary="Restore the pinned Node dependency graph.",
     skip_reason=(
         "this repository has no Node dependency graph; node and npx are probed "
-        "as advisory host tools and installed by `just workstation-tools`"
+        "as advisory host tools and installed by `just setup-workstation-tools`"
     ),
 )
 
@@ -137,7 +137,7 @@ TOOLS = Phase(
 
 #: The phases, keyed by name. The runner reads this and nothing else.
 #:
-#: `just env-playwright` is deliberately absent. Downloading two browser
+#: `just setup-playwright` is deliberately absent. Downloading two browser
 #: channels is minutes of network for a capability most worktrees never
 #: exercise, and CI already invokes it as its own step.
 PHASE_PLAN: Final[dict[str, Phase]] = {

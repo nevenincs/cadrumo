@@ -31,8 +31,9 @@ from dev.exit_codes import (
     INIT_HOST_TOOL_MISSING,
     INIT_LOCKED,
     INIT_STEP_FAILED,
+    OK,
 )
-from dev.init.contract import FAILED, OK, StepResult
+from dev.init.contract import DONE, FAILED, StepResult
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -164,7 +165,7 @@ def run(step: Step, *, cwd: Path, echo: bool = True) -> tuple[StepResult, int]:
             StepResult(
                 name=step.name,
                 argv=step.argv,
-                status=OK if step.advisory else FAILED,
+                status=DONE if step.advisory else FAILED,
                 exit_code=INIT_HOST_TOOL_MISSING,
                 duration_ms=0,
                 output_tail=f"{step.argv[0]}: not found on PATH",
@@ -174,7 +175,7 @@ def run(step: Step, *, cwd: Path, echo: bool = True) -> tuple[StepResult, int]:
         )
     argv = [executable, *step.argv[1:]]
     try:
-        completed = subprocess.run(  # noqa: S603 - argv is declared data, never shell
+        completed = subprocess.run(
             argv,
             cwd=cwd,
             capture_output=True,
@@ -202,7 +203,7 @@ def run(step: Step, *, cwd: Path, echo: bool = True) -> tuple[StepResult, int]:
     result = StepResult(
         name=step.name,
         argv=step.argv,
-        status=OK if code == 0 or step.advisory else FAILED,
+        status=DONE if code == 0 or step.advisory else FAILED,
         exit_code=code,
         duration_ms=duration,
         output_tail=tail(output) if code != 0 else "",

@@ -41,8 +41,10 @@ JSON_ENV: Final = "VAULTSPEC_INIT_JSON"
 #: The environment variable that forces a full run, ignoring the stamp.
 FORCE_ENV: Final = "VAULTSPEC_INIT_FORCE"
 
-#: Statuses a phase or a run can end in.
-OK: Final = "ok"
+#: Statuses a phase or a run can end in. Deliberately NOT named ``OK``: the
+#: exit-code contract already owns that name for the integer 0, and a module
+#: importing both would silently mix a status string into an exit code.
+DONE: Final = "ok"
 SKIPPED: Final = "skipped"
 FRESH: Final = "fresh"
 FAILED: Final = "failed"
@@ -213,13 +215,28 @@ class Emitter:
         print(json.dumps(payload, sort_keys=True), flush=True)
 
 
+@dataclass(frozen=True)
+class Outcome:
+    """How a run ended.
+
+    Attributes:
+        status: The run's overall status.
+        exit_code: The status the process will exit with. It travels WITH the
+            status rather than beside it because the two are one fact: a report
+            claiming success under a non-zero code, or the reverse, is the kind
+            of disagreement a caller cannot recover from.
+    """
+
+    status: str
+    exit_code: int
+
+
 def build_report(
     *,
     repo_root: Path,
     selection: Sequence[str],
     phases: Iterable[PhaseResult],
-    status: str,
-    exit_code: int,
+    outcome: Outcome,
     remediation: Sequence[str],
 ) -> dict[str, object]:
     """Assemble the run report.
@@ -228,8 +245,7 @@ def build_report(
         repo_root: The worktree this run initialized.
         selection: The phases that were asked for.
         phases: The results, in execution order.
-        status: The run's overall status.
-        exit_code: The status the process will exit with.
+        outcome: How the run ended.
         remediation: Actionable lines a human or a provisioner should surface.
 
     Returns:
@@ -242,8 +258,8 @@ def build_report(
         "platform": sys.platform,
         "python": sys.version.split()[0],
         "selection": list(selection),
-        "status": status,
-        "exit_code": exit_code,
+        "status": outcome.status,
+        "exit_code": outcome.exit_code,
         "phases": [phase.as_dict() for phase in phases],
         "remediation": list(remediation),
     }
