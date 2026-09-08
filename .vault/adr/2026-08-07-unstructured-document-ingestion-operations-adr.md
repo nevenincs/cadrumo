@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-08-07'
+modified: '2026-09-08'
 body_schema: 'body-v1'
-body_hash: 'sha256:a42e11433edda9fa9c13ec53448265ba8ca67ba870afd068b38e5cd6acd09df4'
+body_hash: 'sha256:f6ec31253a77dcf0a4685519a12488b2def7b29f42c8b36db6815d0dbd9e1796'
 related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
@@ -276,6 +276,12 @@ provider-side deletion guarantees; a batch daemon or watch-folder mode; MCP
 verbs beyond the existing CLI-shelling surface; multi-operator review
 workflows (one operator per profile is the product's shape); and everything
 the sibling records already scope out.
+
+### 2026-09-08 amendment — withdraw the uncomposed transcription cache
+
+The cache and cache-backed consent re-derivation clauses above are withdrawn. The live ingestion composition never wrote a transcription cache; only tests populated it, while the product exposed a reader, encrypted namespace, adapter, and `consent rederive` command that could not succeed after a real ingestion. Those clauses therefore described a partial future implementation rather than shipped behavior.
+
+Consent withdrawal retains the product facts it can prove: complete consent-ledger history, cloud-derived artefact enumeration, the standing eligibility bar, and the unconditional warning that transmitted bytes cannot be recalled. A future local re-derivation capability requires its own accepted decision and an end-to-end ingestion writer before any cache reader, storage namespace, or operator command is introduced. Batch resume must rely on the live evidence idempotency boundary; it must not claim transcription reuse until such a writer exists.
 
 ## Codification candidates
 
