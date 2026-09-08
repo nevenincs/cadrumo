@@ -28,6 +28,7 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
@@ -441,6 +442,123 @@ class TestNoteGovernedAmountAdjudication:
             validate_note_governed_amount_declarations(
                 (self._declaration(source_sha256=_OTHER_SHA),),
                 _intermediate(source_ref="aeat-dr-390-2025", sha=self._M390_2025_SHA).source,
+            )
+
+
+class TestModelo200NoteGovernedAmounts:
+    """Modelo 200's 2025 design points two amount runs at notes that state no scale.
+
+    Twenty-six ``Deducción resto del grupo`` slots on DP200019 and the
+    ``Incremento porcentual de la plantilla media`` slot on DP200020B carry the
+    bare pointer ``Nota 1`` where their siblings carry no ``Contenido`` at all.
+    DP200019's note names WHO fills the slot; DP200020B's note spells the
+    maximum admissible value together with the seventeen-character wire form it
+    takes, which states fifteen integer positions and two decimals outright.
+    Either way the run's representation is the one this design states for itself
+    in ``DP200001!A121``, and the unscaled integer reading emits euros into a
+    cents field.
+
+    These tests hold the declared adjudication against that design, and hold the
+    boundary that keeps it from travelling: the two notes carry the same label,
+    so a declaration for one sheet must not reach the other.
+    """
+
+    _M200_2025_SHA: Final = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
+    _POINTER: Final = "Nota 1"
+
+    @staticmethod
+    def _joined_amount_field(*, sheet: str, length: int = 17) -> JoinedRecordDesignField:
+        parser_field = RecordDesignIntermediateField.model_validate(
+            {
+                "sheet": sheet,
+                "record_identity": sheet,
+                "source_row": 119,
+                "source_cell": "A119",
+                "ordinal": "114",
+                "offset": 1849,
+                "length": length,
+                "aeat_type": "Num",
+                "normalized_description": "Deducciones I+D+i excluidas de límite - Deducción resto del grupo",
+                "content": TestModelo200NoteGovernedAmounts._POINTER,
+            }
+        )
+        entry = SemanticMapEntry.model_validate(
+            {
+                "anchor": {
+                    "sheet": parser_field.sheet,
+                    "source_row": parser_field.source_row,
+                    "source_cell": parser_field.source_cell,
+                    "ordinal": parser_field.ordinal,
+                    "record_identity": parser_field.record_identity,
+                },
+                "export_field_id": "m200-2025.dp200019.f0114",
+                "kind": "header",
+                "producer_key": FilingProducerKey.M200_DEDUCCION_RESTO_DEL_GRUPO,
+                "legal_refs": ("ley-27-2014:art-39",),
+                "source_refs": ("aeat-dr-200-2025",),
+            }
+        )
+        return JoinedRecordDesignField(parser_field=parser_field, semantic_entry=entry)
+
+    def test_the_live_catalogue_pins_both_pointer_runs_to_the_read_design(self) -> None:
+        declarations = note_governed_amounts_for("aeat-dr-200-2025")
+
+        assert {item.sheet for item in declarations} == {"DP200019", "DP200020B"}
+        for declaration in declarations:
+            assert declaration.source_sha256 == self._M200_2025_SHA
+            assert declaration.published_content == self._POINTER
+            assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
+            assert declaration.note_statement.strip() == declaration.note_statement
+            assert declaration.note_statement
+
+    def test_each_declaration_quotes_the_note_its_own_sheet_defines(self) -> None:
+        by_sheet = {item.sheet: item for item in note_governed_amounts_for("aeat-dr-200-2025")}
+
+        assert by_sheet["DP200019"].note_cell == "A254"
+        assert "grupos mercantiles" in by_sheet["DP200019"].note_statement
+        assert by_sheet["DP200020B"].note_cell == "A106"
+        assert "00000000009999999" in by_sheet["DP200020B"].note_statement
+
+    def test_the_pointer_run_renders_the_scale_its_design_states(self) -> None:
+        derived = _numeric_derivation(
+            self._joined_amount_field(sheet="DP200019"),
+            export_record_id="m200-2025-dp200019",
+            note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+        )
+
+        assert derived.field.data_type == "decimal"
+        assert derived.field.decimals == 2
+        assert derived.derivation_code == "numeric-note-governed-amount-v1"
+
+    def test_the_same_label_on_an_undeclared_sheet_keeps_the_unscaled_reading(self) -> None:
+        derived = _numeric_derivation(
+            self._joined_amount_field(sheet="DP200014B"),
+            export_record_id="m200-2025-dp200014b",
+            note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+        )
+
+        assert derived.field.data_type == "integer"
+        assert derived.field.decimals is None
+        assert derived.derivation_code == "numeric-integer-v1"
+
+    def test_the_declared_scale_cannot_contradict_the_slots_own_width(self) -> None:
+        with pytest.raises(RegistryValidationError, match="content declares 17"):
+            _numeric_derivation(
+                self._joined_amount_field(sheet="DP200019", length=16),
+                export_record_id="m200-2025-dp200019",
+                note_governed_amounts=note_governed_amounts_for("aeat-dr-200-2025"),
+            )
+
+    def test_a_declaration_pinned_to_another_digest_is_refused(self) -> None:
+        stale = tuple(
+            item.model_copy(update={"source_sha256": _OTHER_SHA})
+            for item in note_governed_amounts_for("aeat-dr-200-2025")
+        )
+
+        with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
+            validate_note_governed_amount_declarations(
+                stale,
+                _intermediate(source_ref="aeat-dr-200-2025", sha=self._M200_2025_SHA).source,
             )
 
 

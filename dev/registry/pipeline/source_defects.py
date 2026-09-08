@@ -238,6 +238,58 @@ class NoteGovernedAmountDeclaration(BaseModel):
 
 
 _NOTE_GOVERNED_AMOUNTS_BY_REF: dict[str, tuple[NoteGovernedAmountDeclaration, ...]] = {
+    "aeat-dr-200-2025": (
+        NoteGovernedAmountDeclaration(
+            source_ref="aeat-dr-200-2025",
+            source_sha256="92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
+            sheet="DP200019",
+            published_content="Nota 1",
+            note_cell="A254",
+            note_statement=(
+                "A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles (carácter 00039)"
+            ),
+            integer_digits=15,
+            decimal_digits=2,
+            evidence=(
+                "Twenty-six 'Deducción resto del grupo' slots on DP200019 carry the bare pointer 'Nota 1' where "
+                "their four siblings in each I+D+i year block -- 'Deducción pendiente/generada', 'Deducción "
+                "reducida', 'Aplicado en esta liquidación' and 'Importe abonado por insuficiencia de cuota' -- "
+                "carry no Contenido at all. Read from the workbook itself, every one of the twenty-six is "
+                "aeat_type 'Num' at length 17, exactly like those siblings. The note the pointer names is "
+                "defined at A253/A254 and says who fills the slot, not how a value is written: it withholds "
+                "APPLICABILITY to entities in a grupo mercantil and states no scale, sign or decimal count. "
+                "The representation therefore stands unchanged from the surrounding run, which this design "
+                "settles for itself in DP200001!A121 -- 'NOTA: Los importes son de 15 enteros (o N + 14) y 2 "
+                "decimales' -- the same cell the reviewed width-17 render profile for this modelo, revision and "
+                "digest already cites when it assigns 15 enteros and 2 decimales to every unsigned width-17 "
+                "amount of this design, the untagged siblings of these very rows included. Reading the pointer "
+                "as an unscaled integer instead would emit euros into a cents field."
+            ),
+        ),
+        NoteGovernedAmountDeclaration(
+            source_ref="aeat-dr-200-2025",
+            source_sha256="92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509",
+            sheet="DP200020B",
+            published_content="Nota 1",
+            note_cell="A106",
+            note_statement="Sólo se admitirán valores hasta un máximo de 99999,99 (00000000009999999)",
+            integer_digits=15,
+            decimal_digits=2,
+            evidence=(
+                "The single slot on DP200020B carrying the bare pointer 'Nota 1' is the 'Incremento porcentual "
+                "de la plantilla media total' row, aeat_type 'Num' at length 17 as read from the workbook. The "
+                "note defined at A105/A106 states the representation OUTRIGHT rather than by inference: it "
+                "spells the maximum admissible value twice, once as '99999,99' and once as the wire form that "
+                "value takes, '00000000009999999'. That wire form is seventeen characters, fills the slot the "
+                "same row declares, and places two digits after the comma, which is fifteen integer positions "
+                "and two decimals and nothing else. The design's own general statement in DP200001!A121 -- "
+                "'NOTA: Los importes son de 15 enteros (o N + 14) y 2 decimales' -- and the reviewed width-17 "
+                "render profile that cites it for this digest agree. The note additionally caps the value at "
+                "99999,99; that ceiling is a value domain rather than a representation, is not expressible in "
+                "this declaration, and is deliberately left unasserted here rather than approximated."
+            ),
+        ),
+    ),
     "aeat-dr-390-2025": tuple(
         NoteGovernedAmountDeclaration(
             source_ref="aeat-dr-390-2025",

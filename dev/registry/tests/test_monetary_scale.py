@@ -175,12 +175,14 @@ def test_the_sibling_comparison_is_proven_by_a_live_defect_not_a_fixture(
     assertion says only that nothing outside the named set is reported - which
     still catches an over-firing comparison without freezing the population.
 
-    Both coordinates are live filing-correctness defects with open Steps. When
-    either is corrected this test fails on its own name, which is the correction
-    landing; drop that coordinate and keep the rest. When the last one goes,
-    replace the whole test with a constructed case, because the screen becomes
-    gateable at zero and a detector with no proof is the failure this module
-    exists to avoid.
+    The named coordinate is a live filing-correctness defect. When it is
+    corrected this test fails on its own name, which is the correction landing;
+    drop that coordinate and keep the rest. Modelo 200's casilla 03594 left the
+    set that way: its DP200020B slot pointed at a note stating the wire form
+    outright, the adjudication landed, and the disagreement stopped being
+    reported. When the last one goes, replace the whole test with a constructed
+    case, because the screen becomes gateable at zero and a detector with no
+    proof is the failure this module exists to avoid.
     """
     from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 
@@ -189,6 +191,6 @@ def test_the_sibling_comparison_is_proven_by_a_live_defect_not_a_fixture(
     modelo_ids = tuple(sorted(str(code) for code in registry_modelo_codes()))
     disagreements = [item for item in scale_screen(authority, modelo_ids) if item.kind == "sibling_scale_disagrees"]
     reported = {(item.modelo, str(item.casilla_id)) for item in disagreements}
-    known = {("200", "03594"), ("353", "10")}
+    known = {("353", "10")}
     assert known <= reported, f"a pinned live defect stopped being reported: {sorted(known - reported)}"
     assert reported <= known, f"a sibling-scale disagreement outside the known set: {sorted(reported - known)}"
