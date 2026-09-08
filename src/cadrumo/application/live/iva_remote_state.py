@@ -1,8 +1,7 @@
-"""IVA remote-state, compensation-history, and wallet live actions.
+"""IVA compensation-history and wallet live actions.
 
-The module separates stored-evidence reads from live acquisition. Listing and
-load helpers read encrypted local IVA compensation history, wallet decisions,
-wallet observations, and acquisition manifests without contacting AEAT. Capture
+Listing reads encrypted local IVA compensation history and wallet decisions
+without contacting AEAT. Capture
 helpers enforce the live-read gate, acquire an authenticated
 :class:`~cadrumo.adapters.outbound.aeat.auth.AeatSession`,
 then persist filed-history and wallet evidence before reconciliation consumes it.
@@ -15,8 +14,6 @@ The manifest is redacted operational evidence of the acquisition attempt; it is
 not a remote submission record.
 
 See Also:
-    :class:`~cadrumo.application.live.IvaRemoteStateStoredEvidenceReport`
-        Stored-evidence report returned without a live AEAT read.
     :class:`~cadrumo.application.live.IvaRemoteStateAcquisitionReport`
         Combined read-only acquisition report for filed history and wallet
         surfaces.
@@ -114,13 +111,10 @@ from .remote_state_models import (
     IvaRemoteStateAcquisitionManifest,
     IvaRemoteStateAcquisitionReport,
     IvaRemoteStateAcquisitionSurfaceManifest,
-    IvaRemoteStateStoredEvidenceReport,
     IvaWalletAuthorityDecisionRow,
     IvaWalletCaptureReport,
     LiveIvaReadOutcome,
     LiveIvaReadSurface,
-    StoredIvaRemoteStateAcquisitionRow,
-    StoredIvaWalletObservationRow,
 )
 from .remote_state_outcomes import auth_outcome as _auth_outcome
 from .remote_state_outcomes import evidence_ref as _evidence_ref
@@ -200,41 +194,6 @@ def list_iva_compensation_history(
             unallocated_applied_amount=str(carry_forward.unallocated_applied_amount),
             authority_decision_count=len(authority_decisions),
             authority_decisions=authority_decisions,
-        )
-
-
-def load_iva_remote_state(
-    *,
-    as_of_year: int | None = None,
-    wallet_store: _FiledDeclaracionObservationStore | None = None,
-    repository: _IvaCompensationHistoryRepository | None = None,
-    decision_repository: _IvaWalletDecisionRepository | None = None,
-) -> IvaRemoteStateStoredEvidenceReport:
-    """Reload stored remote IVA evidence from the active profile without contacting AEAT.
-
-    Returns an :class:`IvaRemoteStateStoredEvidenceReport` with the
-    stored compensation history, wallet observations, reconciliation decisions,
-    and redacted acquisition manifests.
-    """
-    with _active_profile_storage_span():
-        history = list_iva_compensation_history(
-            repository=repository,
-            decision_repository=decision_repository,
-            as_of_year=as_of_year,
-        )
-        store = wallet_store if wallet_store is not None else _FiledDeclaracionObservationStore(Path("."))
-        wallet_rows = tuple(
-            _stored_wallet_observation_row(observation) for observation in store.list_iva_wallet_observations()
-        )
-        acquisition_rows = tuple(
-            _stored_acquisition_manifest_row(manifest) for manifest in list_iva_remote_state_acquisition_manifests()
-        )
-        return IvaRemoteStateStoredEvidenceReport(
-            history=history,
-            wallet_observation_count=len(wallet_rows),
-            wallet_observations=wallet_rows,
-            acquisition_manifest_count=len(acquisition_rows),
-            acquisition_manifests=acquisition_rows,
         )
 
 
@@ -450,66 +409,6 @@ def _authority_decision_row(decision: _IvaCompensationReconciliationDecision) ->
         decided_at=decision.decided_at,
         authority_sources=tuple(_authority_source_text(source) for source in decision.authority_sources),
     )
-
-
-def _stored_wallet_observation_row(observation: _IvaCompensationWalletObservation) -> StoredIvaWalletObservationRow:
-    return StoredIvaWalletObservationRow(
-        taxpayer_ref=_taxpayer_ref(observation.taxpayer_nif),
-        target_year=observation.target_year,
-        target_period=observation.target_period,
-        row_count=len(observation.rows),
-        total_pending=str(observation.total_pending),
-        captured_at=observation.captured_at,
-        raw_sha256=observation.raw_sha256,
-    )
-
-
-def _stored_acquisition_manifest_row(
-    manifest: IvaRemoteStateAcquisitionManifest,
-) -> StoredIvaRemoteStateAcquisitionRow:
-    return StoredIvaRemoteStateAcquisitionRow(
-        acquisition_ref=_evidence_ref(manifest.acquisition_id),
-        captured_at=manifest.captured_at,
-        auth_status=manifest.auth.status.value,
-        auth_outcome_mode=manifest.auth.outcome_mode.value,
-        auth_failure_mode=manifest.auth.failure_mode.value if manifest.auth.failure_mode is not None else None,
-        auth_failure_type=manifest.auth.failure_type,
-        auth_diagnostic_ref=manifest.auth.diagnostic_ref,
-        auth_provider_kind=manifest.auth.provider_kind,
-        auth_reused_persisted_session=manifest.auth.reused_persisted_session,
-        year_from=manifest.year_from,
-        year_to=manifest.year_to,
-        target_year=manifest.target_year,
-        target_period=manifest.target_period,
-        filed_history_succeeded=manifest.filed_history_succeeded,
-        wallet_succeeded=manifest.wallet_succeeded,
-        surfaces=tuple(_stored_acquisition_surface_text(surface) for surface in manifest.surfaces),
-    )
-
-
-def _stored_acquisition_surface_text(surface: IvaRemoteStateAcquisitionSurfaceManifest) -> str:
-    parts = [surface.surface.value, f"status={surface.status.value}", f"outcome={surface.outcome_mode.value}"]
-    if surface.failure_mode is not None:
-        parts.append(f"failure_mode={surface.failure_mode.value}")
-    if surface.failure_type is not None:
-        parts.append(f"failure_type={surface.failure_type}")
-    if surface.captured_count is not None:
-        parts.append(f"captured={surface.captured_count}")
-    if surface.calculation_observation_count is not None:
-        parts.append(f"calculation_observations={surface.calculation_observation_count}")
-    if surface.reloaded_history_count is not None:
-        parts.append(f"reloaded_history={surface.reloaded_history_count}")
-    if surface.wallet_row_count is not None:
-        parts.append(f"wallet_rows={surface.wallet_row_count}")
-    if surface.decision_ref is not None:
-        parts.append(f"decision_ref={surface.decision_ref}")
-    if surface.selected_authority is not None:
-        parts.append(f"authority={surface.selected_authority}")
-    if surface.divergence is not None:
-        parts.append(f"divergence={surface.divergence}")
-    if surface.blocked is not None:
-        parts.append(f"blocked={surface.blocked}")
-    return " ".join(parts)
 
 
 def _authority_source_text(source: _IvaCompensationAuthoritySource) -> str:
@@ -952,6 +851,53 @@ async def _capture_iva_compensation_history_by_year_with_session(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _IvaCompensationHistoryAggregate:
+    """Ordered totals and evidence references collected from yearly reports."""
+
+    captured_count: int
+    observation_paths: tuple[str, ...]
+    artefact_refs: tuple[str, ...]
+    casilla_count: int
+    calculation_observation_count: int
+    calculation_observation_keys: tuple[str, ...]
+    failed_declaration_count: int
+    failed_declarations: tuple[str, ...]
+
+
+def _aggregate_history_report_fields(
+    reports: list[IvaCompensationHistoryCaptureReport],
+) -> _IvaCompensationHistoryAggregate:
+    """Accumulate report counts while preserving each report's evidence order."""
+    captured_count = 0
+    observation_paths: list[str] = []
+    artefact_refs: list[str] = []
+    casilla_count = 0
+    calculation_observation_count = 0
+    calculation_observation_keys: list[str] = []
+    failed_declaration_count = 0
+    failed_declarations: list[str] = []
+    for report in reports:
+        captured_count += report.captured_count
+        observation_paths.extend(report.observation_paths)
+        artefact_refs.extend(report.artefact_refs)
+        casilla_count += report.casilla_count
+        calculation_observation_count += report.calculation_observation_count
+        calculation_observation_keys.extend(report.calculation_observation_keys)
+        failed_declaration_count += report.failed_declaration_count
+        failed_declarations.extend(report.failed_declarations)
+    return _IvaCompensationHistoryAggregate(
+        captured_count=captured_count,
+        observation_paths=tuple(observation_paths),
+        artefact_refs=tuple(artefact_refs),
+        casilla_count=casilla_count,
+        calculation_observation_count=calculation_observation_count,
+        calculation_observation_keys=tuple(calculation_observation_keys),
+        failed_declaration_count=failed_declaration_count,
+        failed_declarations=tuple(failed_declarations),
+    )
+
+
 def _aggregate_iva_compensation_history_reports(
     reports: list[IvaCompensationHistoryCaptureReport],
     *,
@@ -961,20 +907,21 @@ def _aggregate_iva_compensation_history_reports(
 ) -> IvaCompensationHistoryCaptureReport:
     """Combine per-year filed-history capture reports into one command report."""
     reloaded = list_iva_compensation_history()
+    aggregate = _aggregate_history_report_fields(reports)
     return IvaCompensationHistoryCaptureReport(
         output_root=str(output_root),
         year_from=year_from,
         year_to=year_to,
-        captured_count=sum(report.captured_count for report in reports),
-        observation_paths=tuple(path for report in reports for path in report.observation_paths),
-        artefact_refs=tuple(ref for report in reports for ref in report.artefact_refs),
-        casilla_count=sum(report.casilla_count for report in reports),
-        calculation_observation_count=sum(report.calculation_observation_count for report in reports),
-        calculation_observation_keys=tuple(key for report in reports for key in report.calculation_observation_keys),
+        captured_count=aggregate.captured_count,
+        observation_paths=aggregate.observation_paths,
+        artefact_refs=aggregate.artefact_refs,
+        casilla_count=aggregate.casilla_count,
+        calculation_observation_count=aggregate.calculation_observation_count,
+        calculation_observation_keys=aggregate.calculation_observation_keys,
         reloaded_history_count=reloaded.row_count,
         reloaded_rows=reloaded.rows,
-        failed_declaration_count=sum(report.failed_declaration_count for report in reports),
-        failed_declarations=tuple(ref for report in reports for ref in report.failed_declarations),
+        failed_declaration_count=aggregate.failed_declaration_count,
+        failed_declarations=aggregate.failed_declarations,
     )
 
 
@@ -1099,32 +1046,6 @@ def persist_iva_remote_state_acquisition_report(
     return manifest
 
 
-def load_iva_remote_state_acquisition_manifest(
-    acquisition_id: str,
-    *,
-    repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
-) -> IvaRemoteStateAcquisitionManifest | None:
-    """Load one encrypted live IVA acquisition manifest by id.
-
-    Returns:
-        :class:`IvaRemoteStateAcquisitionManifest` | None: The loaded manifest, or None.
-    """
-    repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
-    return repo.load(acquisition_id)
-
-
-def list_iva_remote_state_acquisition_manifests(
-    *,
-    repository: IvaRemoteStateAcquisitionManifestRepository | None = None,
-) -> tuple[IvaRemoteStateAcquisitionManifest, ...]:
-    """List encrypted live IVA acquisition manifests for the active profile.
-
-    Returns a tuple of :class:`IvaRemoteStateAcquisitionManifest` records.
-    """
-    repo = repository if repository is not None else IvaRemoteStateAcquisitionManifestRepository()
-    return tuple(sorted(repo.iter_records(), key=lambda item: item.captured_at, reverse=True))
-
-
 def _iva_remote_state_acquisition_manifest(
     report: IvaRemoteStateAcquisitionReport,
     *,
@@ -1203,9 +1124,6 @@ __all__ = [
     "capture_iva_compensation_wallet",
     "capture_iva_remote_state",
     "list_iva_compensation_history",
-    "list_iva_remote_state_acquisition_manifests",
-    "load_iva_remote_state",
-    "load_iva_remote_state_acquisition_manifest",
     "persist_and_reconcile_iva_compensation_wallet",
     "persist_iva_remote_state_acquisition_report",
 ]

@@ -62,9 +62,8 @@ only the anchor property would imply a guarantee the code does not provide, and
 that is exactly how a check ends up trusted for more than it does.
 
 Anchoring bounds fabrication to transcription error. On a vision path there is no
-independent transcription at all -- see
-:func:`ground_self_reported_anchor` -- so the bound is weaker still and the
-outcome says so.
+independent transcription, so the provenance model must keep any self-reported
+anchor explicitly unverified.
 
 See Also:
     :class:`~application.ledger.invoice_draft_records.FieldProvenance`
@@ -102,8 +101,6 @@ __all__ = [
     "AnchorEvaluation",
     "evaluate_anchor",
     "ground_ambiguous_candidates",
-    "ground_anchored_value",
-    "ground_self_reported_anchor",
     "ground_structured_value",
     "normalise_for_anchor_search",
     "printed_excerpt_occurs",
@@ -530,15 +527,14 @@ def ground_structured_value(
 ) -> FieldProvenance:
     """Return the envelope for one value read from a document's own record.
 
-    The structured sibling of :func:`ground_anchored_value`, and here for the same
-    reason: a path that constructs a :class:`FieldProvenance` itself and hand-sets
+    A path that constructs a :class:`FieldProvenance` itself and hand-sets
     ``ANCHORED`` is asserting the check instead of running it. It is a separate
-    entry point rather than a parameter on that one because the transcription this
+    dedicated entry point because the transcription this
     module normally checks against does not exist for a machine-readable document
     -- there are no pages, no reading order and no transcriber -- and a
     :class:`~application.ledger.document_transcription.DocumentTranscription` synthesised to satisfy the
     signature would have to state a page count and a reader that never existed.
-    Both routes run the same two-part check underneath.
+    This route runs the same two-part check as the text evaluator underneath.
 
     **The anchor is the record's own verbatim text, never the element path.** The
     anchor field means the form the value was read from, and a downstream consumer
@@ -623,95 +619,6 @@ def ground_structured_value(
         anchor=anchor if evaluation.anchor_found else None,
         refused_anchor=refused_anchor_of(anchor, evaluation),
         note=f"read from {element_path}; {evaluation.detail}",
-    )
-
-
-def ground_anchored_value(
-    *,
-    field: str,
-    value: Decimal | str,
-    anchor: str,
-    origin: FieldOrigin,
-    transcription: DocumentTranscription,
-) -> FieldProvenance:
-    """Return the provenance envelope for one candidate, anchor-checked.
-
-    The single entry point a reading path uses to turn a proposed value into a
-    reviewable one. A reader that bypasses this and constructs a ``FieldProvenance``
-    with a hand-set ``ANCHORED`` outcome is asserting the check rather than
-    running it, which is the failure this module exists to make unnecessary.
-
-    Args:
-        field: Name of the :class:`~application.ledger.invoice_draft_records.InvoiceDraft` field.
-        value: The typed value proposed.
-        anchor: The verbatim printed form claimed as its source.
-        origin: How the value was obtained.
-        transcription: The acquisition-stage text to check against.
-
-    Returns:
-        The envelope, carrying the verified anchor and the resolved outcome.
-    """
-    evaluation = evaluate_anchor(value=value, anchor=anchor, transcription=transcription)
-    return FieldProvenance(
-        field=field,
-        origin=origin,
-        grounding=evaluation.outcome,
-        # The anchor rides along whenever it was actually located, including on a
-        # CONTRADICTED outcome: the operator resolving a disagreement needs to see
-        # the printed form the reader misread, not merely be told it disagreed.
-        anchor=anchor if evaluation.anchor_found else None,
-        refused_anchor=refused_anchor_of(anchor, evaluation),
-        note=evaluation.detail,
-    )
-
-
-def ground_self_reported_anchor(
-    *,
-    field: str,
-    anchor: str,
-    origin: FieldOrigin,
-    note: str = "",
-) -> FieldProvenance:
-    """Return the envelope for an anchor the reader asserted about its own output.
-
-    The honest verdict for a lane that produces no transcription. The vision path
-    reads image to fields in a single model call, so there is no independently
-    produced text for an anchor to be a substring OF -- the model returns the
-    printed form alongside the value, and that is a CLAIM about the document
-    rather than evidence from it. Substring-matching such a claim against the
-    model's own reply would confirm only that the model is self-consistent, which
-    a fabricating model also is.
-
-    The anchor is still recorded: an operator comparing ``21%`` against the page
-    in front of them is doing exactly the check the machine cannot, and taking
-    the anchor away would remove the one thing that makes that quick. What is
-    withheld is the VERDICT -- the outcome is ``UNANCHORED``, because no
-    independent check ran.
-
-    This is a floor, not a ceiling. When a vision transcription stage lands, that
-    path calls :func:`evaluate_anchor` like the text lane and earns ``ANCHORED``
-    through the real check, with no change to any logic here.
-
-    Args:
-        field: Name of the draft field.
-        anchor: The printed form the reader claims to have read.
-        origin: How the value was obtained.
-        note: Additional operator-facing explanation.
-
-    Returns:
-        An ``UNANCHORED`` envelope carrying the anchor and flagged self-reported.
-    """
-    explanation = (
-        "the reader asserted this anchor about its own output and no independent transcription "
-        "exists to check it against, so the anchor is recorded but not verified"
-    )
-    return FieldProvenance(
-        field=field,
-        origin=origin,
-        grounding=FieldGroundingOutcome.UNANCHORED,
-        anchor=anchor,
-        anchor_self_reported=True,
-        note=f"{note}; {explanation}" if note else explanation,
     )
 
 

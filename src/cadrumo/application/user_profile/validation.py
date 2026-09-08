@@ -526,16 +526,10 @@ def reject_invalid_profile_facts(
 
     service = ProfileValidationService(schema=schema or load_user_profile_schema())
     report = service.validate_facts(profile_id, facts)
-    blocking = [
-        issue
-        for issue in report.issues
-        if issue.severity is BaseSeverity.ERROR and (require_complete or issue.code not in COMPLETENESS_ISSUE_CODES)
-    ]
+    blocking = _blocking_profile_issues(report, require_complete=require_complete)
     if not blocking:
         return
-    named = "; ".join(issue.message for issue in blocking[:_REPORTED_ISSUE_LIMIT])
-    remaining = len(blocking) - _REPORTED_ISSUE_LIMIT
-    detail = f"{named}; and {remaining} more" if remaining > 0 else named
+    detail = _blocking_profile_detail(blocking)
     raise ProfileSchemaValidationError(
         f"{_PROFILE_SCHEMA_VALIDATION_MESSAGE}: {detail}",
         context={
@@ -546,6 +540,26 @@ def reject_invalid_profile_facts(
         },
         translated_message="application.user_profile.errors.lifecycle_schema_validation_failed",
     )
+
+
+def _blocking_profile_issues(
+    report: ProfileValidationReport,
+    *,
+    require_complete: bool,
+) -> tuple[ProfileValidationIssue, ...]:
+    """Select schema issues that block the requested profile lifecycle step."""
+    return tuple(
+        issue
+        for issue in report.issues
+        if issue.severity is BaseSeverity.ERROR and (require_complete or issue.code not in COMPLETENESS_ISSUE_CODES)
+    )
+
+
+def _blocking_profile_detail(blocking: tuple[ProfileValidationIssue, ...]) -> str:
+    """Render the bounded operator detail carried by a schema refusal."""
+    named = "; ".join(issue.message for issue in blocking[:_REPORTED_ISSUE_LIMIT])
+    remaining = len(blocking) - _REPORTED_ISSUE_LIMIT
+    return f"{named}; and {remaining} more" if remaining > 0 else named
 
 
 __all__ = [

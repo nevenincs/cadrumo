@@ -19,7 +19,7 @@ runner's canonical projection.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 from pydantic import BaseModel
 
@@ -69,21 +69,15 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
     Returns a :class:`ProfileValidationResult`.
     """
     entries = _registered_profile_keys()
-    static_required_keys = tuple(
-        entry.key
-        for entry in entries
-        if (entry.requirement is Requirement.REQUIRED or _conditional_requirement_applies(values, entry))
-        and (entry.key != IVA_REGIME_PATH or iva_regime_required(values))
-    )
-    required_keys = tuple(dict.fromkeys((*static_required_keys, *conditional_profile_required_paths(values))))
+    required_keys = _required_profile_keys(values, entries)
     optional_keys = tuple(entry.key for entry in optional_profile_keys())
     known_keys = set(required_keys) | set(optional_keys)
 
     missing_required = tuple(key for key in required_keys if not _has_value(values, key))
-    present_required = tuple(key for key in required_keys if _has_value(values, key))
-    present_optional = tuple(key for key in optional_keys if _has_value(values, key))
-    unknown_keys = tuple(sorted(set(values) - known_keys))
-    present_keys = sum(1 for entry in entries if _has_value(values, entry.key))
+    present_required = _present_profile_keys(values, required_keys)
+    present_optional = _present_profile_keys(values, optional_keys)
+    unknown_keys = _unknown_profile_keys(values, known_keys)
+    present_keys = _count_present_profile_keys(values, entries)
 
     return ProfileValidationResult(
         valid=not missing_required,
@@ -94,6 +88,37 @@ def validate_profile_values(values: Mapping[str, str]) -> ProfileValidationResul
         present_keys=present_keys,
         total_keys=len(entries),
     )
+
+
+def _required_profile_keys(
+    values: Mapping[str, str],
+    entries: tuple[ProfileKey, ...],
+) -> tuple[str, ...]:
+    """Return static and conditional required paths in declaration order."""
+    static_required_keys = tuple(entry.key for entry in entries if _profile_entry_is_required(values, entry))
+    return tuple(dict.fromkeys((*static_required_keys, *conditional_profile_required_paths(values))))
+
+
+def _profile_entry_is_required(values: Mapping[str, str], entry: ProfileKey) -> bool:
+    """Apply the registry requirement and IVA-regime conditional policy."""
+    return (entry.requirement is Requirement.REQUIRED or _conditional_requirement_applies(values, entry)) and (
+        entry.key != IVA_REGIME_PATH or iva_regime_required(values)
+    )
+
+
+def _present_profile_keys(values: Mapping[str, str], keys: Iterable[str]) -> tuple[str, ...]:
+    """Return supplied keys whose values satisfy the canonical presence rule."""
+    return tuple(key for key in keys if _has_value(values, key))
+
+
+def _unknown_profile_keys(values: Mapping[str, str], known_keys: set[str]) -> tuple[str, ...]:
+    """Return input paths absent from both required and optional registries."""
+    return tuple(sorted(set(values) - known_keys))
+
+
+def _count_present_profile_keys(values: Mapping[str, str], entries: Iterable[ProfileKey]) -> int:
+    """Count registered paths carrying a value."""
+    return sum(1 for entry in entries if _has_value(values, entry.key))
 
 
 def list_profile_key_records() -> tuple[ProfileKey, ...]:

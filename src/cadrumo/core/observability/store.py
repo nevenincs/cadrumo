@@ -446,6 +446,50 @@ def load_events(
     return tuple(iter_events(run_id, settings=settings))
 
 
+def _is_listable_run_directory(entry: Path) -> bool:
+    """Return whether ``entry`` is a canonical run directory, logging skips."""
+    try:
+        is_dir = entry.is_dir()
+    except OSError:
+        _logger.warning("iter_runs: skipping unreadable entry %s", entry, exc_info=True)
+        return False
+    if not is_dir:
+        _logger.debug("iter_runs: skipping non-directory entry %s", entry)
+        return False
+    if re.fullmatch(RUN_ID_PATTERN, entry.name) is None:
+        _logger.debug("iter_runs: skipping non-run directory %s", entry.name)
+        return False
+    return True
+
+
+def _load_listable_run_trace(entry: Path) -> RunTrace | None:
+    """Load a listing trace, logging and skipping invalid or incomplete entries."""
+    if not _is_listable_run_directory(entry):
+        return None
+    trace_path = entry / TRACE_FILENAME
+    if not trace_path.exists():
+        _logger.debug("iter_runs: skipping run directory %s without trace.json", entry.name)
+        return None
+    try:
+        trace = RunTrace.model_validate_json(trace_path.read_text(encoding="utf-8"))
+        return _require_trace_identity(trace, expected_run_id=entry.name)
+    except OSError:
+        _logger.warning(
+            "iter_runs: skipping run directory %s — trace.json could not be read",
+            entry.name,
+            exc_info=True,
+        )
+    except ValidationError:
+        _logger.warning(
+            "iter_runs: skipping run directory %s — trace.json failed strict validation",
+            entry.name,
+            exc_info=True,
+        )
+    except RunTraceValidationError as exc:
+        _logger.warning("iter_runs: skipping run directory %s — %s", entry.name, exc)
+    return None
+
+
 def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTrace]]:
     """Yield ``(run_id, RunTrace)`` pairs sorted by ``started_at`` descending.
 
@@ -477,42 +521,9 @@ def iter_runs(*, settings: Settings | None = None) -> Iterator[tuple[str, RunTra
     except OSError as exc:
         _raise_persistence_error("iter_runs", base, exc)
     for entry in entries:
-        try:
-            is_dir = entry.is_dir()
-        except OSError:
-            _logger.warning("iter_runs: skipping unreadable entry %s", entry, exc_info=True)
-            continue
-        if not is_dir:
-            _logger.debug("iter_runs: skipping non-directory entry %s", entry)
-            continue
-        if re.fullmatch(RUN_ID_PATTERN, entry.name) is None:
-            _logger.debug("iter_runs: skipping non-run directory %s", entry.name)
-            continue
-        trace_path = entry / TRACE_FILENAME
-        if not trace_path.exists():
-            _logger.debug("iter_runs: skipping run directory %s without trace.json", entry.name)
-            continue
-        try:
-            trace = RunTrace.model_validate_json(trace_path.read_text(encoding="utf-8"))
-            trace = _require_trace_identity(trace, expected_run_id=entry.name)
-        except OSError:
-            _logger.warning(
-                "iter_runs: skipping run directory %s — trace.json could not be read",
-                entry.name,
-                exc_info=True,
-            )
-            continue
-        except ValidationError:
-            _logger.warning(
-                "iter_runs: skipping run directory %s — trace.json failed strict validation",
-                entry.name,
-                exc_info=True,
-            )
-            continue
-        except RunTraceValidationError as exc:
-            _logger.warning("iter_runs: skipping run directory %s — %s", entry.name, exc)
-            continue
-        pairs.append((entry.name, trace))
+        trace = _load_listable_run_trace(entry)
+        if trace is not None:
+            pairs.append((entry.name, trace))
     pairs.sort(key=lambda item: item[1].started_at, reverse=True)
     yield from pairs
 

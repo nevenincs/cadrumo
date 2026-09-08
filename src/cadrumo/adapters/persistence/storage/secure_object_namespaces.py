@@ -337,18 +337,6 @@ PROFILE_PRORRATA_REGISTER_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
-REPAIR_INTEGRITY_DECISION_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="repair_integrity_decisions",
-    namespace="cadrumo.application.repair_integrity.decisions",
-    owner="cadrumo.application.repair_integrity",
-    sensitivity=SensitivityClass.AUDIT,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{decision_id_sha256_hex}",
-    scope=StorageNamespaceScope.PROFILE_LOCAL,
-    # Host-local storage-repair decisions are bound to the host that made them and
-    # are not portable bucket data; they are not carried by an export.
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
 APPLICATION_FILING_HISTORY_NAMESPACE = SecureObjectNamespaceDefinition(
     key="application_filing_history",
     namespace="cadrumo.application.filing.history",
@@ -529,29 +517,6 @@ LEDGER_PURCHASE_INVOICE_EVIDENCE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="ledger_purchase_invoice_evidence",
     namespace="cadrumo.application.ledger.purchase_invoice_evidence",
     owner="cadrumo.application.ledger",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{bucket_id}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
-)
-LEDGER_EXTRACTED_DOCUMENT_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="ledger_extracted_document_cache",
-    namespace="cadrumo.application.ledger.extracted_document_cache",
-    owner="cadrumo.application.ledger",
-    # FINANCIAL, and the classification is the point rather than a formality.
-    # What this caches is the deterministic text extraction of an invoice --
-    # which IS the invoice, in a shape a grep can read. On disk in the clear it
-    # would be a NEW plaintext store of taxpayer financial data that does not
-    # exist in this tree today, and the secure-storage rule names "on-disk
-    # caches" explicitly among the things the in-memory processing exemption
-    # does not reach.
-    #
-    # Deliberately NOT called a *normalization* cache: whether the pipeline
-    # ends up normalize-then-extract or extract-then-normalize is still open
-    # pending a measurement, and no identifier here may assert a shape that is
-    # still undecided. What is cached is the extraction, which exists under
-    # either shape.
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="{bucket_id}",

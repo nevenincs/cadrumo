@@ -464,17 +464,31 @@ def _locate_header(parsed: list[tuple[int, list[str]]], *, column_count: int) ->
     best_index: int | None = None
     best_score = 0
     for index, (_, cells) in enumerate(islice(parsed, _HEADER_SEARCH_LIMIT)):
-        if len(cells) != column_count:
+        if not _is_header_candidate(cells, column_count=column_count):
             continue
-        next_row = next(
-            (row for _, row in islice(parsed, index + 1, None) if any(cell.strip() for cell in row)),
-            None,
-        )
+        next_row = _next_populated_row(parsed, start=index + 1)
         score = _header_score(cells, next_row=next_row)
         if best_index is None or score > best_score:
             best_index = index
             best_score = score
     return best_index
+
+
+def _is_header_candidate(cells: list[str], *, column_count: int) -> bool:
+    """Return whether a parsed row has the winning rectangle's width."""
+    return len(cells) == column_count
+
+
+def _next_populated_row(
+    parsed: list[tuple[int, list[str]]],
+    *,
+    start: int,
+) -> list[str] | None:
+    """Return the first non-empty row after ``start`` without copying the tail."""
+    return next(
+        (row for _, row in islice(parsed, start, None) if any(cell.strip() for cell in row)),
+        None,
+    )
 
 
 def _is_summary_row(cells: list[str]) -> bool:
@@ -538,52 +552,49 @@ def _detect_decimal_separator(
     return winner, None
 
 
-def normalize_tabular_text(text: str, *, encoding: str, quotechar: str = '"') -> NormalizedTable:
-    """Resolve already-decoded tabular ``text`` into a :class:`NormalizedTable`.
-
-    Args:
-        text: The decoded source.
-        encoding: Codec the text was decoded under, recorded on the dialect.
-        quotechar: Quoting character to honour.
-
-    Returns:
-        The normalized table.
-
-    Raises:
-        TabularSourceError: The source carries no delimited rectangle, or no
-            row in it reads as a header.
-    """
-    notices: list[TabularNotice] = []
+def _require_best_delimiter_parse(
+    text: str,
+    quotechar: str,
+) -> tuple[int, int, str, list[tuple[int, list[str]]]]:
+    """Return the parsed rectangle or refuse text without one."""
     best = _best_delimiter_parse(text, quotechar)
     if best is None:
         raise TabularSourceError(
             f"tabular source carries no delimited rectangle under any of {CANDIDATE_DELIMITERS}",
         )
-    _, column_count, delimiter, parsed = best
+    return best
 
-    header_index = _locate_header(parsed, column_count=column_count)
-    if header_index is None:
-        raise TabularSourceError(
-            f"tabular source has no row of {column_count} fields that reads as a header",
-        )
-    header_line, header_cells = parsed[header_index]
 
+def _preamble_rows(
+    parsed: list[tuple[int, list[str]]],
+    *,
+    header_index: int,
+) -> tuple[list[NormalizedRow], TabularNotice | None]:
+    """Separate non-empty rows above the header and their notice."""
     preamble: list[NormalizedRow] = []
     for line_number, cells in parsed[:header_index]:
         if not any(cell.strip() for cell in cells):
             continue
         preamble.append(NormalizedRow(source_line_number=line_number, cells=tuple(cells)))
-    if preamble:
-        notices.append(
-            TabularNotice(
-                code="preamble_skipped",
-                detail=f"{len(preamble)} metadata row(s) above the header were not read as movements",
-                source_line_number=preamble[0].source_line_number,
-            ),
-        )
+    if not preamble:
+        return preamble, None
+    return preamble, TabularNotice(
+        code="preamble_skipped",
+        detail=f"{len(preamble)} metadata row(s) above the header were not read as movements",
+        source_line_number=preamble[0].source_line_number,
+    )
 
+
+def _data_rows(
+    parsed: list[tuple[int, list[str]]],
+    *,
+    header_index: int,
+    column_count: int,
+) -> tuple[list[NormalizedRow], list[NormalizedRow], list[TabularNotice]]:
+    """Partition data-region rows, preserving row order and structural notices."""
     rows: list[NormalizedRow] = []
     summary_rows: list[NormalizedRow] = []
+    notices: list[TabularNotice] = []
     data_region = parsed[header_index + 1 :]
     for line_number, cells in data_region:
         if not any(cell.strip() for cell in cells):
@@ -615,6 +626,45 @@ def normalize_tabular_text(text: str, *, encoding: str, quotechar: str = '"') ->
                 ),
             )
         rows.append(row)
+    return rows, summary_rows, notices
+
+
+def normalize_tabular_text(text: str, *, encoding: str, quotechar: str = '"') -> NormalizedTable:
+    """Resolve already-decoded tabular ``text`` into a :class:`NormalizedTable`.
+
+    Args:
+        text: The decoded source.
+        encoding: Codec the text was decoded under, recorded on the dialect.
+        quotechar: Quoting character to honour.
+
+    Returns:
+        The normalized table.
+
+    Raises:
+        TabularSourceError: The source carries no delimited rectangle, or no
+            row in it reads as a header.
+    """
+    notices: list[TabularNotice] = []
+    best = _require_best_delimiter_parse(text, quotechar)
+    _, column_count, delimiter, parsed = best
+
+    header_index = _locate_header(parsed, column_count=column_count)
+    if header_index is None:
+        raise TabularSourceError(
+            f"tabular source has no row of {column_count} fields that reads as a header",
+        )
+    header_line, header_cells = parsed[header_index]
+
+    preamble, preamble_notice = _preamble_rows(parsed, header_index=header_index)
+    if preamble_notice is not None:
+        notices.append(preamble_notice)
+
+    rows, summary_rows, data_notices = _data_rows(
+        parsed,
+        header_index=header_index,
+        column_count=column_count,
+    )
+    notices.extend(data_notices)
 
     decimal_separator, decimal_notice = _detect_decimal_separator(
         [(row.source_line_number, list(row.cells)) for row in rows],

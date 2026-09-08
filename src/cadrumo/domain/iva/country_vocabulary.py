@@ -182,6 +182,50 @@ def country_codes_by_alpha3() -> dict[str, str]:
     return _index_country_alpha3(_country_vocabulary_payload(), source=_country_vocabulary_source())
 
 
+def _country_alpha3_fields(record: object, *, target: str) -> tuple[str, str]:
+    """Return one record's validated alpha-2 and alpha-3 identities."""
+    from .errors import IvaCatalogueError
+
+    if not is_str_keyed_mapping(record):
+        raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
+    code = str(record.get("code", "")).strip().upper()
+    if len(code) != _ALPHA2_LENGTH or not code.isalpha():
+        raise IvaCatalogueError(f"{target}: country record names no alpha-2 code: {record!r}")
+    alpha3 = str(record.get("alpha3", "")).strip().upper()
+    if len(alpha3) != _ALPHA3_LENGTH or not alpha3.isalpha():
+        raise IvaCatalogueError(
+            f"{target}: country {code} names no alpha-3 code; the column is required, because an "
+            f"absent correspondence reads downstream as a document stating no country at all",
+        )
+    return code, alpha3
+
+
+def _claim_country_alpha3(
+    resolved: dict[str, str],
+    alpha3_by_code: dict[str, str],
+    *,
+    target: str,
+    code: str,
+    alpha3: str,
+) -> None:
+    """Bind one country identity, refusing either direction of contradiction."""
+    from .errors import IvaCatalogueError
+
+    claimed = resolved.get(alpha3)
+    if claimed is not None and claimed != code:
+        raise IvaCatalogueError(
+            f"{target}: the alpha-3 code {alpha3!r} is claimed by both {claimed} and {code}; "
+            f"a code that cannot name one country cannot establish one",
+        )
+    stated = alpha3_by_code.get(code)
+    if stated is not None and stated != alpha3:
+        raise IvaCatalogueError(
+            f"{target}: country {code} states two different alpha-3 codes, {stated!r} and {alpha3!r}",
+        )
+    resolved[alpha3] = code
+    alpha3_by_code[code] = alpha3
+
+
 def _index_country_alpha3(payload: object, *, source: str) -> dict[str, str]:
     """Index the alpha-3 column, refusing a table that cannot mean one thing.
 
@@ -226,30 +270,8 @@ def _index_country_alpha3(payload: object, *, source: str) -> dict[str, str]:
     resolved: dict[str, str] = {}
     alpha3_by_code: dict[str, str] = {}
     for record in countries:
-        if not is_str_keyed_mapping(record):
-            raise IvaCatalogueError(f"{target}: country record is not a table: {record!r}")
-        code = str(record.get("code", "")).strip().upper()
-        if len(code) != _ALPHA2_LENGTH or not code.isalpha():
-            raise IvaCatalogueError(f"{target}: country record names no alpha-2 code: {record!r}")
-        alpha3 = str(record.get("alpha3", "")).strip().upper()
-        if len(alpha3) != _ALPHA3_LENGTH or not alpha3.isalpha():
-            raise IvaCatalogueError(
-                f"{target}: country {code} names no alpha-3 code; the column is required, because an "
-                f"absent correspondence reads downstream as a document stating no country at all",
-            )
-        claimed = resolved.get(alpha3)
-        if claimed is not None and claimed != code:
-            raise IvaCatalogueError(
-                f"{target}: the alpha-3 code {alpha3!r} is claimed by both {claimed} and {code}; "
-                f"a code that cannot name one country cannot establish one",
-            )
-        stated = alpha3_by_code.get(code)
-        if stated is not None and stated != alpha3:
-            raise IvaCatalogueError(
-                f"{target}: country {code} states two different alpha-3 codes, {stated!r} and {alpha3!r}",
-            )
-        resolved[alpha3] = code
-        alpha3_by_code[code] = alpha3
+        code, alpha3 = _country_alpha3_fields(record, target=target)
+        _claim_country_alpha3(resolved, alpha3_by_code, target=target, code=code, alpha3=alpha3)
     if not resolved:
         raise IvaCatalogueError(f"{target}: the country-name vocabulary carries no alpha-3 correspondence")
     return resolved

@@ -26,8 +26,6 @@ from ..evidence_input import EvidenceInput
 from ..evidence_textlayer import transcribe_text_layer
 from ..grounding_anchor import (
     evaluate_anchor,
-    ground_anchored_value,
-    ground_self_reported_anchor,
     normalise_for_anchor_search,
     strip_printed_unit,
 )
@@ -264,36 +262,6 @@ def test_an_off_document_textual_value_does_not_ground() -> None:
     assert evaluation.outcome is FieldGroundingOutcome.UNANCHORED
 
 
-def test_the_envelope_keeps_the_anchor_even_when_contradicted() -> None:
-    """The operator resolving a disagreement needs the form the reader misread."""
-    envelope = ground_anchored_value(
-        field="taxable_base",
-        value=Decimal("2420.00"),
-        anchor="508,20",
-        origin=FieldOrigin.VISION,
-        transcription=_transcription(_SPANISH_INVOICE_TEXT),
-    )
-
-    assert envelope.grounding is FieldGroundingOutcome.CONTRADICTED
-    assert envelope.anchor == "508,20"
-    assert envelope.field == "taxable_base"
-    assert envelope.origin is FieldOrigin.VISION
-
-
-def test_an_unanchored_envelope_carries_no_anchor() -> None:
-    """A form that was never located must not be recorded as if it had been."""
-    envelope = ground_anchored_value(
-        field="taxable_base",
-        value=Decimal("9999.99"),
-        anchor="9.999,99",
-        origin=FieldOrigin.VISION,
-        transcription=_transcription(_SPANISH_INVOICE_TEXT),
-    )
-
-    assert envelope.grounding is FieldGroundingOutcome.UNANCHORED
-    assert envelope.anchor is None
-
-
 def test_grounding_runs_against_a_transcription_of_a_real_corpus_document() -> None:
     """End-to-end over bundled bytes: the printed form must survive to the check.
 
@@ -326,25 +294,6 @@ def test_grounding_runs_against_a_transcription_of_a_real_corpus_document() -> N
     assert absent.outcome is FieldGroundingOutcome.UNANCHORED
 
 
-def test_a_self_reported_anchor_never_reads_as_verified() -> None:
-    """The vision lane's anchor is a claim, not evidence, and must say so.
-
-    That path reads image to fields in one model call, so there is no
-    independently produced transcription for the anchor to be a substring of.
-    Matching the model's claim against the model's own reply would confirm only
-    self-consistency, which a fabricating model also has.
-    """
-    envelope = ground_self_reported_anchor(
-        field="taxable_base",
-        anchor="766,30",
-        origin=FieldOrigin.VISION,
-    )
-
-    assert envelope.grounding is FieldGroundingOutcome.UNANCHORED
-    assert envelope.anchor_self_reported is True
-    assert envelope.anchor == "766,30", "the anchor is still recorded for the operator to check by eye"
-
-
 def test_a_self_reported_anchor_cannot_be_laundered_into_an_anchored_outcome() -> None:
     """Enforced at the model, so no reading path can bypass it by construction."""
     with pytest.raises(ValidationError, match="self-reported anchor"):
@@ -355,24 +304,6 @@ def test_a_self_reported_anchor_cannot_be_laundered_into_an_anchored_outcome() -
             anchor="766,30",
             anchor_self_reported=True,
         )
-
-
-def test_the_text_lane_anchor_is_not_marked_self_reported() -> None:
-    """Positive control: the flag must discriminate, not be always-on.
-
-    Without this, marking every anchor self-reported would satisfy the two cases
-    above while destroying the distinction they exist to draw.
-    """
-    envelope = ground_anchored_value(
-        field="taxable_base",
-        value=Decimal("2420.00"),
-        anchor="2.420,00",
-        origin=FieldOrigin.TEXT_LAYER,
-        transcription=_transcription(_SPANISH_INVOICE_TEXT),
-    )
-
-    assert envelope.grounding is FieldGroundingOutcome.ANCHORED
-    assert envelope.anchor_self_reported is False
 
 
 # ---------------------------------------------------------------------------
@@ -713,21 +644,3 @@ def test_only_one_trailing_unit_is_stripped() -> None:
     # Exactly one: the remainder must still satisfy the decimal authority alone.
     assert coerce_finite_european_decimal(strip_printed_unit("21%%")) is None
     assert coerce_finite_european_decimal(strip_printed_unit("2%1")) is None
-
-
-def test_the_envelope_keeps_the_verbatim_unit_bearing_anchor() -> None:
-    """The strip applies to the PARSE, never to what is recorded.
-
-    Anchor and value stay explicitly distinct, so a transcription error cannot be
-    laundered into a computed figure by collapsing them into one field.
-    """
-    envelope = ground_anchored_value(
-        field="iva_rate",
-        value=Decimal("21"),
-        anchor="21%",
-        origin=FieldOrigin.TEXT_LAYER,
-        transcription=_transcription(_RATE_TEXT),
-    )
-
-    assert envelope.grounding is FieldGroundingOutcome.ANCHORED
-    assert envelope.anchor == "21%", "the printed form must survive verbatim"

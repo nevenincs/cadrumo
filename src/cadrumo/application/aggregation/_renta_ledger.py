@@ -50,7 +50,7 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
 )
 from ...domain.contribuyente.tax_residence import parse_tax_region
 from ...domain.deadlines.models import IVARegime
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.models import Invoice, InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
@@ -825,24 +825,65 @@ def _purchase_invoice_evidence_payload(
         return _PurchaseInvoiceEvidencePayload()
     invoice = invoices.get(purchase_invoice_evidence_id)
     if invoice is None:
-        # The evidence reference addresses two id spaces and only the invoice
-        # catalogue carries the fiscal totals this fold-in needs, so a miss here is
-        # NOT proof the reference is broken: it is also what a legitimately
-        # registered, not-yet-confirmed evidence record looks like from this side.
-        # Naming both cases keeps the operator from hunting a phantom missing record.
-        return RentaLedgerAggregationIssue(
+        return _missing_purchase_invoice_issue(
             transaction_id=transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
             category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE,
-            detail=(
-                "transaction references no confirmed invoice in the catalogue, so this expense carries no "
-                "invoice totals to fold in; if the reference names a registered evidence record, confirming "
-                "it into an invoice does NOT repoint this transaction, and no verb currently replaces an "
-                "already-set purchase-invoice-evidence reference -- so record the expense against the "
-                "confirmed invoice on a transaction that has no evidence reference yet"
-            ),
         )
+    reference_issue = _purchase_invoice_reference_issue(
+        invoice,
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+        category_id=category_id,
+    )
+    if reference_issue is not None:
+        return reference_issue
+    return _purchase_invoice_payload_for_totals(
+        invoice,
+        transaction_id=transaction_id,
+        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+        category_id=category_id,
+        transaction_amount=transaction_amount,
+    )
+
+
+def _missing_purchase_invoice_issue(
+    *,
+    transaction_id: str,
+    purchase_invoice_evidence_id: str,
+    category_id: str | None,
+) -> RentaLedgerAggregationIssue:
+    """Describe an evidence reference absent from the confirmed invoice catalogue."""
+    # The evidence reference addresses two id spaces and only the invoice
+    # catalogue carries the fiscal totals this fold-in needs, so a miss here is
+    # NOT proof the reference is broken: it is also what a legitimately
+    # registered, not-yet-confirmed evidence record looks like from this side.
+    # Naming both cases keeps the operator from hunting a phantom missing record.
+    return RentaLedgerAggregationIssue(
+        transaction_id=transaction_id,
+        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+        category_id=category_id,
+        reason=RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE,
+        detail=(
+            "transaction references no confirmed invoice in the catalogue, so this expense carries no "
+            "invoice totals to fold in; if the reference names a registered evidence record, confirming "
+            "it into an invoice does NOT repoint this transaction, and no verb currently replaces an "
+            "already-set purchase-invoice-evidence reference -- so record the expense against the "
+            "confirmed invoice on a transaction that has no evidence reference yet"
+        ),
+    )
+
+
+def _purchase_invoice_reference_issue(
+    invoice: Invoice,
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    purchase_invoice_evidence_id: str,
+    category_id: str | None,
+) -> RentaLedgerAggregationIssue | None:
+    """Validate bucket, kind, and reciprocal-link constraints for one invoice."""
     if invoice.bucket_id != bucket_id:
         return RentaLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -875,6 +916,18 @@ def _purchase_invoice_evidence_payload(
             reason=RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE,
             detail="first-slice aggregation only accepts one transaction per purchase invoice evidence record",
         )
+    return None
+
+
+def _purchase_invoice_payload_for_totals(
+    invoice: Invoice,
+    *,
+    transaction_id: str,
+    purchase_invoice_evidence_id: str,
+    category_id: str | None,
+    transaction_amount: Decimal,
+) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
+    """Reconcile EUR totals and project the linked invoice's evidence payload."""
     # invoice.grand_total is denominated in invoice.currency (native), while
     # transaction_amount is the caller's already-EUR-converted eur_amount (see
     # effective_eur_amount). Comparing them directly mixes currencies: a

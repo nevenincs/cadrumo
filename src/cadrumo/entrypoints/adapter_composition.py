@@ -33,7 +33,6 @@ def profile_adapter_composition() -> Generator[None]:
     from ..adapters.outbound.aeat.auth.session_store import build_session_store
     from ..adapters.persistence.profile.buckets import build_bucket_event_history_repository
     from ..adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
-    from ..adapters.persistence.profile.extracted_document_cache import ExtractedDocumentCacheRepository
     from ..adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
     from ..adapters.persistence.profile.justificante import JustificanteRepository
     from ..adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
@@ -55,7 +54,6 @@ def profile_adapter_composition() -> Generator[None]:
     from ..application.auth.providers import bind_auth_provider_selector
     from ..application.bucket_event_repository import bind_bucket_event_history_repository_factory
     from ..application.ledger.confirmation_record import bind_confirmation_record_repository_factory
-    from ..application.ledger.extracted_document_cache import bind_extracted_document_cache_repository_factory
     from ..application.ledger.extraction_draft_store import bind_extraction_draft_repository_factory
     from ..application.ledger.participation_read import bind_transaction_participation_index_repository_factory
     from ..application.ledger.rule_repository import bind_ledger_classification_rule_repository_factory
@@ -82,7 +80,6 @@ def profile_adapter_composition() -> Generator[None]:
         composition.enter_context(bind_bucket_event_history_repository_factory(build_bucket_event_history_repository))
         composition.enter_context(bind_confirmation_record_repository_factory(ConfirmationRecordRepository))
         composition.enter_context(bind_extraction_draft_repository_factory(ExtractionDraftRepository))
-        composition.enter_context(bind_extracted_document_cache_repository_factory(ExtractedDocumentCacheRepository))
         composition.enter_context(
             bind_transaction_participation_index_repository_factory(TransactionParticipationIndexRepository)
         )

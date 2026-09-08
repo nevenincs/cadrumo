@@ -31,6 +31,7 @@ from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ....domain.calculations.registry.relations import (
+    RegistryFoldRequirement,
     relation_requirement_index,
     relation_source_requirements,
 )
@@ -43,7 +44,7 @@ from ....domain.calculations.registry.schema import (
 from ....domain.calculations.registry.schema_formula import LegalParameterDataType
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_rounding import RegistryRoundingCode
-from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ....domain.calculations.registry.schema_surfaces import CasillaDefinition, RelationDefinition
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence
 from ....domain.period import calculation_filing_date
 from ._styling import compute_styling
@@ -737,48 +738,66 @@ def _relation_values_with_registry_grounding(
             period=snapshot.period,
         )
     )
-    values: list[RelationValue] = []
-    for relation_id in layout.relation_cells:
-        relation = relations_by_id[relation_id]
-        supplied = supplied_by_relation.get(relation_id)
-        requirement = requirements_by_relation.get(relation_id)
-        source_modelo = requirement.source_modelo if requirement is not None else relation.source_modelo
-        source_filing_year = (
-            requirement.filing_year
-            if requirement is not None
-            else supplied.source_filing_year
-            if supplied is not None
-            else None
+    values = tuple(
+        _relation_value_with_registry_grounding(
+            relation_id=relation_id,
+            relation=relations_by_id[relation_id],
+            supplied=supplied_by_relation.get(relation_id),
+            requirement=requirements_by_relation.get(relation_id),
         )
-        source_periods = requirement.periods if requirement is not None else relation.source_periods
-        source_casilla_ids = (
-            requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
-        )
-        legal_refs = requirement.legal_refs if requirement is not None else relation.legal_refs
-        source_refs = requirement.source_refs if requirement is not None else relation.source_refs
-        values.append(
-            RelationValue(
-                relation=relation_id,
-                value=supplied.value if supplied is not None else None,
-                provenance=(supplied.provenance if supplied is not None else SheetRelationProvenance.OPERATOR_MANUAL),
-                source_modelo=source_modelo,
-                source_filing_year=source_filing_year,
-                source_periods=source_periods,
-                source_casilla_ids=source_casilla_ids,
-                dependency_treatment=(
-                    (requirement.dependency_treatment or "")
-                    if requirement is not None
-                    else supplied.dependency_treatment
-                    if supplied is not None
-                    else ""
-                ),
-                legal_refs=legal_refs,
-                source_refs=source_refs,
-                resolved_at=supplied.resolved_at if supplied is not None else None,
-                note=supplied.note if supplied is not None else None,
-            ),
-        )
-    return RelationValues(values=tuple(values))
+        for relation_id in layout.relation_cells
+    )
+    return RelationValues(values=values)
+
+
+def _relation_value_with_registry_grounding(
+    *,
+    relation_id: str,
+    relation: RelationDefinition,
+    supplied: RelationValue | None,
+    requirement: RegistryFoldRequirement | None,
+) -> RelationValue:
+    source_modelo = requirement.source_modelo if requirement is not None else relation.source_modelo
+    source_periods = requirement.periods if requirement is not None else relation.source_periods
+    source_casilla_ids = requirement.source_casilla_ids if requirement is not None else (relation.source_casilla_id,)
+    legal_refs = requirement.legal_refs if requirement is not None else relation.legal_refs
+    source_refs = requirement.source_refs if requirement is not None else relation.source_refs
+    return RelationValue(
+        relation=relation_id,
+        value=supplied.value if supplied is not None else None,
+        provenance=supplied.provenance if supplied is not None else SheetRelationProvenance.OPERATOR_MANUAL,
+        source_modelo=source_modelo,
+        source_filing_year=_relation_source_filing_year(requirement, supplied),
+        source_periods=source_periods,
+        source_casilla_ids=source_casilla_ids,
+        dependency_treatment=_relation_dependency_treatment(requirement, supplied),
+        legal_refs=legal_refs,
+        source_refs=source_refs,
+        resolved_at=supplied.resolved_at if supplied is not None else None,
+        note=supplied.note if supplied is not None else None,
+    )
+
+
+def _relation_source_filing_year(
+    requirement: RegistryFoldRequirement | None,
+    supplied: RelationValue | None,
+) -> int | None:
+    if requirement is not None:
+        return requirement.filing_year
+    if supplied is not None:
+        return supplied.source_filing_year
+    return None
+
+
+def _relation_dependency_treatment(
+    requirement: RegistryFoldRequirement | None,
+    supplied: RelationValue | None,
+) -> str:
+    if requirement is not None:
+        return requirement.dependency_treatment or ""
+    if supplied is not None:
+        return supplied.dependency_treatment
+    return ""
 
 
 def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:

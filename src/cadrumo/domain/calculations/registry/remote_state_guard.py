@@ -200,21 +200,17 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             raise RegistryValidationError("authenticated filed-data read policy must require authentication")
 
     def _validate_synthetic_data_consistency(self) -> None:
-        if self.classification == "public_read_surface" and self.synthetic_data_allowed:
-            raise RegistryValidationError("public reads must not use synthetic remote data")
-        if self.classification == "authenticated_read_surface" and self.synthetic_data_allowed:
-            raise RegistryValidationError("authenticated filed-data reads must not use synthetic remote data")
-        if self.classification == "static_official_only" and self.synthetic_data_allowed:
-            raise RegistryValidationError("static official documentation cannot accept synthetic remote data")
-        if self.classification == "forbidden_stateful_surface" and self.synthetic_data_allowed:
-            raise RegistryValidationError("forbidden stateful surface cannot accept synthetic remote data")
-        if self.synthetic_data_allowed:
-            aeat_host = first_aeat_host(self.allowed_hosts)
-            if aeat_host is not None:
-                raise RegistryValidationError(
-                    f"AEAT-hosted policy {self.id!r} declares synthetic_data_allowed = true "
-                    f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces",
-                )
+        if not self.synthetic_data_allowed:
+            return
+        classification_message = _synthetic_data_classification_message(self.classification)
+        if classification_message is not None:
+            raise RegistryValidationError(classification_message)
+        aeat_host = first_aeat_host(self.allowed_hosts)
+        if aeat_host is not None:
+            raise RegistryValidationError(
+                f"AEAT-hosted policy {self.id!r} declares synthetic_data_allowed = true "
+                f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces",
+            )
 
     def _validate_gov_idp_hosts(self) -> None:
         # The field validators admit sanctioned government-IdP hosts syntactically
@@ -302,6 +298,19 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             if not pattern.strip():
                 raise RegistryValidationError("allowed browser action pattern must not be blank")
         return value
+
+
+def _synthetic_data_classification_message(classification: CrossReferenceClassification) -> str | None:
+    """Return the classification-specific synthetic-data refusal, if any."""
+    if classification == "public_read_surface":
+        return "public reads must not use synthetic remote data"
+    if classification == "authenticated_read_surface":
+        return "authenticated filed-data reads must not use synthetic remote data"
+    if classification == "static_official_only":
+        return "static official documentation cannot accept synthetic remote data"
+    if classification == "forbidden_stateful_surface":
+        return "forbidden stateful surface cannot accept synthetic remote data"
+    return None
 
 
 class RemoteOperation(RemoteStateGuardModel):

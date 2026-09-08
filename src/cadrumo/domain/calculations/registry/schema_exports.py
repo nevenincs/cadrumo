@@ -997,6 +997,12 @@ def _validate_xml_dictionary_layout(layout: ExportLayoutDefinition) -> None:
 
 
 def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
+    _validate_non_xml_metadata(layout)
+    _validate_non_xml_envelope(layout)
+
+
+def _validate_non_xml_metadata(layout: ExportLayoutDefinition) -> None:
+    """Reject XML-only metadata on fixed-width and other non-XML layouts."""
     if layout.aux_idioma is not None or layout.aux_version is not None:
         raise RegistryValidationError(
             f"export layout {layout.id!r} declares Aux identity on a {layout.format} layout, which has no Aux block",
@@ -1006,6 +1012,10 @@ def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
             f"export layout {layout.id!r} declares dictionary path overrides on a {layout.format} layout, "
             "which reads no dictionary",
         )
+
+
+def _validate_non_xml_envelope(layout: ExportLayoutDefinition) -> None:
+    """Validate the one optional envelope shape supported by a non-XML layout."""
     envelope = layout.filing_envelope
     auxiliary_header = layout.auxiliary_envelope_header
     if envelope is not None and auxiliary_header is not None:
@@ -1014,17 +1024,31 @@ def _validate_non_xml_layout(layout: ExportLayoutDefinition) -> None:
             "header, which no design composes",
         )
     if envelope is None:
-        if auxiliary_header is None:
-            return
-        if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
-            raise RegistryValidationError(
-                f"export layout {layout.id!r} declares an auxiliary envelope header on a non-fixed-width layout",
-            )
-        if auxiliary_header.source_ref not in layout.source_refs:
-            raise RegistryValidationError(
-                f"export layout {layout.id!r} auxiliary envelope header source must be included in source_refs",
-            )
+        _validate_auxiliary_envelope_header(layout, auxiliary_header)
         return
+
+    _validate_filing_envelope(layout, envelope)
+
+
+def _validate_auxiliary_envelope_header(
+    layout: ExportLayoutDefinition,
+    auxiliary_header: AuxiliaryEnvelopeHeaderDefinition | None,
+) -> None:
+    """Validate an optional total-less auxiliary header."""
+    if auxiliary_header is None:
+        return
+    if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} declares an auxiliary envelope header on a non-fixed-width layout",
+        )
+    if auxiliary_header.source_ref not in layout.source_refs:
+        raise RegistryValidationError(
+            f"export layout {layout.id!r} auxiliary envelope header source must be included in source_refs",
+        )
+
+
+def _validate_filing_envelope(layout: ExportLayoutDefinition, envelope: FilingEnvelopeDefinition) -> None:
+    """Validate the fixed-width filing envelope and its exact record sequence."""
     if layout.format is not ExportLayoutFormat.FIXED_WIDTH:
         raise RegistryValidationError(
             f"export layout {layout.id!r} declares a filing envelope on a non-fixed-width layout",

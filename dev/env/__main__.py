@@ -2,7 +2,6 @@
 
 Usage::
 
-    python -m dev.env init-venv
     python -m dev.env install
     python -m dev.env workstation-tools
     python -m dev.env setup
@@ -17,11 +16,9 @@ import argparse
 
 from dev.env._dotenv import env_setup
 from dev.env._install import install
-from dev.env._venv import ensure
 from dev.env._workstation import workstation_tools
 
 ACTIONS = {
-    "init-venv": ensure,
     "install": install,
     "workstation-tools": workstation_tools,
     "setup": env_setup,

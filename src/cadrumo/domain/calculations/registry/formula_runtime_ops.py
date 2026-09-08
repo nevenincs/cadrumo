@@ -133,40 +133,54 @@ def evaluate_args_op(op: str, args: list[Decimal]) -> Decimal:
 
 def _dispatch_named_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
     """Dispatch non-comparison arithmetic operations for :func:`evaluate_args_op`."""
-    match op:
-        case "subtract":
-            _require_arg_count(op, args, 2)
-            return args[0] - args[1]
-        case "multiply":
-            result = ONE
-            for arg in args:
-                result *= arg
-            return result
-        case "divide":
-            _require_arg_count(op, args, 2)
-            if args[1] == ZERO:
-                raise RegistryValidationError(
-                    "formula expression divides by zero",
-                    translated_message="errors.calc.divide_by_zero",
-                )
-            return args[0] / args[1]
-        case "percent":
-            _require_arg_count(op, args, 2)
-            return args[0] * args[1] / Decimal("100")
-        case "min":
-            _require_non_empty(op, args)
-            return min(args)
-        case "max":
-            _require_non_empty(op, args)
-            return max(args)
-        case "clamp":
-            _require_arg_count(op, args, 3)
-            return max(args[1], min(args[0], args[2]))
-        case "negate":
-            _require_arg_count(op, args, 1)
-            return -args[0]
-        case _:
-            raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
+    if op == "multiply":
+        return _multiply_operands(args)
+    if op in {"subtract", "divide", "percent"}:
+        return _dispatch_binary_arithmetic_op(op, args)
+    if op in {"min", "max"}:
+        return _dispatch_extreme_arithmetic_op(op, args)
+    if op == "clamp":
+        _require_arg_count(op, args, 3)
+        return max(args[1], min(args[0], args[2]))
+    if op == "negate":
+        _require_arg_count(op, args, 1)
+        return -args[0]
+    raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
+
+
+def _multiply_operands(args: list[Decimal]) -> Decimal:
+    """Multiply operands in their declared order."""
+    result = ONE
+    for arg in args:
+        result *= arg
+    return result
+
+
+def _dispatch_binary_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
+    """Evaluate the binary arithmetic operations with their canonical checks."""
+    _require_arg_count(op, args, 2)
+    if op == "subtract":
+        return args[0] - args[1]
+    if op == "divide":
+        if args[1] == ZERO:
+            raise RegistryValidationError(
+                "formula expression divides by zero",
+                translated_message="errors.calc.divide_by_zero",
+            )
+        return args[0] / args[1]
+    if op == "percent":
+        return args[0] * args[1] / Decimal("100")
+    raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
+
+
+def _dispatch_extreme_arithmetic_op(op: str, args: list[Decimal]) -> Decimal:
+    """Select the minimum or maximum from a non-empty operand sequence."""
+    _require_non_empty(op, args)
+    if op == "min":
+        return min(args)
+    if op == "max":
+        return max(args)
+    raise RegistryValidationError(f"formula expression uses unsupported op {op!r}")
 
 
 def _compare(op: str, left: Decimal, right: Decimal) -> bool:
@@ -408,6 +422,16 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
     values, then :func:`domain.calculations.registry._casilla_membership.undeclared_casilla_ids`
     rejects inputs outside the revision's declared casilla set.
     """
+    _reject_non_string_input_keys(inputs)
+    canonical_inputs = _canonicalize_input_keys(inputs)
+    unknown = undeclared_casilla_ids(revision, canonical_inputs)
+    if unknown:
+        raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
+    return _validated_decimal_inputs(canonical_inputs)
+
+
+def _reject_non_string_input_keys[InputKey, InputValue](inputs: Mapping[InputKey, InputValue]) -> None:
+    """Reject non-string keys before canonical casilla-id validation."""
     invalid = tuple(repr(key) for key in inputs if not isinstance(key, str))
     if invalid:
         raise RegistryValidationError(
@@ -415,6 +439,12 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
             translated_message="errors.calc.unknown_input_casillas",
             context={"casilla_ids": ",".join(sorted(invalid))},
         )
+
+
+def _canonicalize_input_keys[InputKey, InputValue](
+    inputs: Mapping[InputKey, InputValue],
+) -> dict[CasillaId, InputValue]:
+    """Validate input key shape while retaining the caller's value sequence."""
     malformed: list[str] = []
     canonical_inputs: dict[CasillaId, InputValue] = {}
     for key in inputs:
@@ -428,9 +458,13 @@ def validated_decimal_input_casilla_ids[InputKey, InputValue](
             translated_message="errors.calc.unknown_input_casillas",
             context={"casilla_ids": ",".join(sorted(malformed))},
         )
-    unknown = undeclared_casilla_ids(revision, canonical_inputs)
-    if unknown:
-        raise RegistryValidationError.for_unknown_input_casilla_ids(casilla_ids=unknown)
+    return canonical_inputs
+
+
+def _validated_decimal_inputs[InputValue](
+    canonical_inputs: Mapping[CasillaId, InputValue],
+) -> dict[CasillaId, Decimal]:
+    """Validate Decimal values after casilla key shape and membership checks."""
     resolved_inputs: dict[CasillaId, Decimal] = {}
     for key, value in canonical_inputs.items():
         if isinstance(value, bool) or not isinstance(value, Decimal):

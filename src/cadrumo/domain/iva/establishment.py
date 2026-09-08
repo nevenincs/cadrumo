@@ -352,17 +352,13 @@ def _carve_out_code(target: object, record: Mapping[str, Any], already_resolved:
 
 
 # KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
-def _carve_out_disposition(
+def _carve_out_disposition_fields(
     target: object,
     record: Mapping[str, Any],
     *,
     code: str,
-) -> tuple[str | None, IvaTerritorialScope | None, bool]:
-    """Return the row's single disposition: assimilation parent, scope, or nothing.
-
-    Exactly one must be declared. A row naming none establishes nothing by
-    accident, and a row naming two states the law twice.
-    """
+) -> tuple[Any, Any, bool]:
+    """Return the raw disposition fields after enforcing their exclusive shape."""
     from .errors import IvaCatalogueError
 
     assimilated = record.get("assimilated_to")
@@ -375,22 +371,49 @@ def _carve_out_disposition(
             f"establishes_nothing; a row naming none establishes nothing by accident and a row "
             f"naming two states the law twice",
         )
+    return assimilated, raw_scope, nothing
 
-    scope: IvaTerritorialScope | None = None
-    if raw_scope is not None:
-        try:
-            scope = IvaTerritorialScope(str(raw_scope))
-        except ValueError as exc:
-            raise IvaCatalogueError(f"{target}: carve-out {code} names no known scope: {raw_scope!r}") from exc
 
-    parent: str | None = None
-    if assimilated is not None:
-        parent = str(assimilated).strip().upper()
-        if len(parent) != _ALPHA2_LENGTH or not parent.isalpha():
-            raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to no alpha-2 code: {assimilated!r}")
-        if parent == code:
-            raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to itself")
-    return parent, scope, nothing
+def _carve_out_scope(target: object, raw_scope: Any, *, code: str) -> IvaTerritorialScope | None:
+    """Decode a declared direct scope, preserving the catalogue diagnostic."""
+    from .errors import IvaCatalogueError
+
+    if raw_scope is None:
+        return None
+    try:
+        return IvaTerritorialScope(str(raw_scope))
+    except ValueError as exc:
+        raise IvaCatalogueError(f"{target}: carve-out {code} names no known scope: {raw_scope!r}") from exc
+
+
+def _carve_out_parent(target: object, assimilated: Any, *, code: str) -> str | None:
+    """Decode an assimilation parent, preserving its shape and self-pointer refusals."""
+    from .errors import IvaCatalogueError
+
+    if assimilated is None:
+        return None
+    parent = str(assimilated).strip().upper()
+    if len(parent) != _ALPHA2_LENGTH or not parent.isalpha():
+        raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to no alpha-2 code: {assimilated!r}")
+    if parent == code:
+        raise IvaCatalogueError(f"{target}: carve-out {code} is assimilated to itself")
+    return parent
+
+
+# KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked by helpers above.
+def _carve_out_disposition(
+    target: object,
+    record: Mapping[str, Any],
+    *,
+    code: str,
+) -> tuple[str | None, IvaTerritorialScope | None, bool]:
+    """Return the row's single disposition: assimilation parent, scope, or nothing.
+
+    Exactly one must be declared. A row naming none establishes nothing by
+    accident, and a row naming two states the law twice.
+    """
+    assimilated, raw_scope, nothing = _carve_out_disposition_fields(target, record, code=code)
+    return _carve_out_parent(target, assimilated, code=code), _carve_out_scope(target, raw_scope, code=code), nothing
 
 
 # KWARGS-ANY-RATIONALE-TOML-PAYLOAD: one raw tomllib-parsed row from the same table; shape-checked inline below.
@@ -555,6 +578,41 @@ def stated_country_code_status(stated_code: str | None) -> StatedCountryCodeStat
     return StatedCountryCodeStatus.UNCATALOGUED
 
 
+def _normalise_country_code_for_scope(country_code: str | None) -> str | None:
+    """Return a well-formed, catalogue-ready country code or ``None``."""
+    if country_code is None:
+        return None
+    candidate = country_code.strip().upper()
+    if len(candidate) != _ALPHA2_LENGTH or not candidate.isalpha():
+        return None
+    return normalise_iso_3166_alpha2_jurisdiction(candidate)
+
+
+def _scope_for_carve_out(carve_out: _CarveOut) -> IvaTerritorialScope | None:
+    """Resolve one carve-out's direct scope, refusal, or assimilation parent."""
+    if carve_out.establishes_nothing:
+        return None
+    if carve_out.scope is not None:
+        return carve_out.scope
+    # Assimilation is resolved by RE-ASKING the country resolver for the parent
+    # rather than reading a scope off the row. The article fixes what a territory
+    # is treated as and never what that parent establishes, so following the
+    # pointer keeps the answer true as the parent's own status changes.
+    return territorial_scope_for_country(carve_out.assimilated_to)
+
+
+def _scope_for_catalogued_country(country_code: str) -> IvaTerritorialScope | None:
+    """Return the scope for a known code, applying statutory carve-outs first."""
+    carve_out = _territory_carve_outs().get(country_code)
+    if carve_out is not None:
+        return _scope_for_carve_out(carve_out)
+    if country_code == SPAIN_COUNTRY_CODE:
+        return None
+    if country_code in _EU_MEMBER_CODES:
+        return IvaTerritorialScope.EU_MEMBER
+    return IvaTerritorialScope.THIRD_COUNTRY
+
+
 def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialScope | None:
     """Return the territorial scope a country code establishes, via the closed vocabulary.
 
@@ -622,44 +680,10 @@ def territorial_scope_for_country(country_code: str | None) -> IvaTerritorialSco
             its one-name-one-country invariant. Propagated rather than softened:
             a corrupt bundled table is a defect, not an unestablished party.
     """
-    if country_code is None:
+    normalised = _normalise_country_code_for_scope(country_code)
+    if normalised is None or normalised not in _catalogued_country_codes():
         return None
-    candidate = country_code.strip().upper()
-    if len(candidate) != _ALPHA2_LENGTH or not candidate.isalpha():
-        return None
-    normalised = normalise_iso_3166_alpha2_jurisdiction(candidate)
-    if normalised is None:
-        return None
-    if normalised not in _catalogued_country_codes():
-        return None
-    # The carve-outs are consulted BEFORE the Member State branch, because that
-    # is the only order that can be right: every one of them is a territory
-    # whose treatment disagrees with the country it sits in or beside, so a
-    # branch reading membership first would answer them all from the very
-    # catalogue LIVA art. 3 overrides.
-    carve_out = _territory_carve_outs().get(normalised)
-    if carve_out is not None:
-        if carve_out.establishes_nothing:
-            return None
-        if carve_out.scope is not None:
-            return carve_out.scope
-        # Assimilation is resolved by RE-ASKING this function for the parent
-        # rather than by reading a scope off the row. The article fixes what a
-        # territory is treated as and never what that parent establishes, so
-        # following the pointer is what keeps the answer true as the parent's
-        # own status changes -- the Isle of Man left the Community without this
-        # row changing a word. The loader refuses a parent no catalogue names
-        # and refuses a chain that closes into a cycle, of which a self-pointer
-        # is the shortest, so this cannot recurse without end. The cycle walk is
-        # what makes that true: excluding a self-pointer and an unknown parent
-        # leaves a two-row ring admissible, and the parent kind the table admits
-        # is exactly the kind that can form one.
-        return territorial_scope_for_country(carve_out.assimilated_to)
-    if normalised == SPAIN_COUNTRY_CODE:
-        return None
-    if normalised in _EU_MEMBER_CODES:
-        return IvaTerritorialScope.EU_MEMBER
-    return IvaTerritorialScope.THIRD_COUNTRY
+    return _scope_for_catalogued_country(normalised)
 
 
 def country_code_for_printed_tax_identifier(printed_identifier: str | None) -> str | None:

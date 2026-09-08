@@ -304,31 +304,6 @@ def page_status(state: FlowState, page_key: str) -> PageStatus:
     return PageStatus.ANSWERED
 
 
-def set_instance_count(definition: FlowDefinition, state: FlowState, group_id: str, count: int) -> FlowState:
-    """Adjust a repeating group's live instance count from the review surface.
-
-    Growing exposes fresh unanswered instances; shrinking marks the
-    orphaned instances' committed answers stale — they stay listed on
-    review until explicitly reset, never silently dropped.
-    """
-    group = _group_by_id(definition, group_id)
-    if group is None:
-        raise FlowNavigationError(
-            translated_message="application.flows.errors.unknown_repeating_group",
-            context={"group_id": group_id, "flow_id": definition.id},
-        )
-    bounded = max(0, min(count, group.max_instances))
-    new_counts = dict(state.instance_counts)
-    new_counts[group_id] = bounded
-    orphaned = _orphaned_instance_keys(group, bounded, state.answers)
-    return state.model_copy(
-        update={
-            "instance_counts": new_counts,
-            "stale": frozenset(set(state.stale) | orphaned),
-        },
-    )
-
-
 def _page_visible(
     page: FlowPage,
     answers: Mapping[str, str],
@@ -490,14 +465,6 @@ def _section_by_id(definition: FlowDefinition, section_id: str) -> FlowSection |
     return None
 
 
-def _group_by_id(definition: FlowDefinition, group_id: str) -> FlowRepeatingGroup | None:
-    for section in definition.sections:
-        for item in section.items:
-            if isinstance(item, FlowRepeatingGroup) and item.id == group_id:
-                return item
-    return None
-
-
 def first_unanswered_key(definition: FlowDefinition, state: FlowState) -> str | None:
     """Return the key of the first visible entry the state has not answered.
 
@@ -523,7 +490,6 @@ __all__ = [
     "page_status",
     "reset_page",
     "restart_flow",
-    "set_instance_count",
     "start_flow",
     "visible_sequence",
 ]

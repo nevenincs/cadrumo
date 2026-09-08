@@ -48,7 +48,6 @@ from ..core.model_catalogue import (
 )
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.optional_extras import LLM_EXTRA, OPTIONAL_EXTRAS, OptionalExtra, optional_extra_available
-from ..core.storage_taxonomy import ExternalPathRole
 
 __all__ = [
     "LOCAL_MODEL_PROVISIONING_SERVICE",
@@ -249,29 +248,13 @@ def _probe_ollama_vision_uncached(*, url: str, model: str) -> DependencyStatus:
     )
 
 
-PLAYWRIGHT_BROWSERS_ROOT_ROLE = ExternalPathRole.THIRD_PARTY_CACHE
-"""Why the Playwright browser cache sits outside the storage taxonomy.
-
-Declared as a positive statement rather than left as the root's plain absence
-from :data:`~core.STORAGE_TAXONOMY` or :data:`~core.EXTERNAL_PATH_SETTINGS_FIELDS`:
-Playwright installs its own Chromium build under a vendor-owned layout
-convention (``PLAYWRIGHT_BROWSERS_PATH`` or a per-OS default cache directory),
-so the application neither chooses this location nor writes the binaries there
--- it fails the choose test :class:`~core.ExternalPathRole` exists to name.
-There is no :class:`~core.config.Settings` field to carry the declaration on
-(the root is resolved from a vendor environment variable and a platform
-default, never a Cadrumo setting), so it lives beside the resolver it
-describes rather than in :data:`~core.EXTERNAL_PATH_SETTINGS_FIELDS`, which is
-keyed by settings field name.
-"""
-
-
 def _playwright_browsers_root(cache_root: Path | None = None, *, env: Mapping[str, str] | None = None) -> Path:
     """Return the directory Playwright installs browser binaries into.
 
     Uses an explicit ``cache_root`` when supplied, otherwise honours
     ``PLAYWRIGHT_BROWSERS_PATH`` then falls back to the per-OS default cache. A
-    filesystem read only — it never launches the Playwright driver (which can
+    vendor-owned cache is intentionally not a Cadrumo storage setting. It performs
+    a filesystem read only — it never launches the Playwright driver (which can
     hang inside the CLI process), so the probe stays fast and non-blocking.
 
     Reads ``env`` (an injectable mapping so the vendor-override precedence is
@@ -280,7 +263,7 @@ def _playwright_browsers_root(cache_root: Path | None = None, *, env: Mapping[st
     a substitute for it: that argument short-circuits resolution entirely, so it
     exercises a different branch than the one the override precedence lives on.
 
-    A third-party-owned cache (see :data:`PLAYWRIGHT_BROWSERS_ROOT_ROLE`): the
+    A third-party-owned cache: the
     application reads this location to probe for an installed build and never
     chooses or writes to it.
     """
@@ -1247,72 +1230,79 @@ def probe_local_model_provisioning(
     """
     resolved = settings if settings is not None else load_settings()
     extra_present = optional_extra_available(LLM_EXTRA)
-    if installed is None and installed_measured:
-        inventory = read_installed_models(resolved)
-    else:
-        inventory = installed if installed_measured else None
+    inventory = _resolve_local_model_inventory(
+        installed,
+        installed_measured=installed_measured,
+        settings=resolved,
+    )
 
     if inventory is None:
-        if extra_present:
-            return DependencyStatus(
-                service=LOCAL_MODEL_PROVISIONING_SERVICE,
-                available=False,
-                facts={"extra": LLM_EXTRA.extra, "extra_importable": True, "installed_model_inventory_readable": False},
-                precondition_verdict=provisioning_no_recovery_verdict(
-                    ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
-                    facts={
-                        "extra": LLM_EXTRA.extra,
-                        "extra_importable": True,
-                        "installed_model_inventory_readable": False,
-                    },
-                ),
-            )
-        return DependencyStatus(
-            service=LOCAL_MODEL_PROVISIONING_SERVICE,
-            available=True,
-            facts={"extra": LLM_EXTRA.extra, "extra_importable": False, "installed_model_inventory_readable": False},
-        )
+        return _unreadable_local_model_inventory_status(extra_present)
 
     selected = cadrumo_selected_models(resolved)
     present = tuple(sorted(row.name for row in inventory if matches_selected_model(row.name, selected)))
+    return _local_model_provisioning_status(
+        extra_present,
+        selected_count=len(selected),
+        present=present,
+    )
 
+
+def _resolve_local_model_inventory(
+    installed: tuple[InstalledModel, ...] | None,
+    *,
+    installed_measured: bool,
+    settings: Settings,
+) -> tuple[InstalledModel, ...] | None:
+    if installed is None and installed_measured:
+        return read_installed_models(settings)
+    return installed if installed_measured else None
+
+
+def _unreadable_local_model_inventory_status(extra_present: bool) -> DependencyStatus:
+    facts: dict[str, ProvisioningFactValue] = {
+        "extra": LLM_EXTRA.extra,
+        "extra_importable": extra_present,
+        "installed_model_inventory_readable": False,
+    }
+    if extra_present:
+        return _local_model_provisioning_refusal(
+            ProvisioningPreconditionCondition.LOCAL_MODEL_INVENTORY_READABLE,
+            facts,
+        )
+    return DependencyStatus(
+        service=LOCAL_MODEL_PROVISIONING_SERVICE,
+        available=True,
+        facts=facts,
+    )
+
+
+def _local_model_provisioning_status(
+    extra_present: bool,
+    *,
+    selected_count: int,
+    present: tuple[str, ...],
+) -> DependencyStatus:
     if extra_present and not present:
-        return DependencyStatus(
-            service=LOCAL_MODEL_PROVISIONING_SERVICE,
-            available=False,
-            facts={
-                "extra": LLM_EXTRA.extra,
-                "extra_importable": True,
-                "selected_model_count": len(selected),
-                "present_selected_model_count": 0,
-            },
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.LOCAL_MODEL_EXTRA_REQUIRES_MODEL,
-                facts={
-                    "extra": LLM_EXTRA.extra,
-                    "extra_importable": True,
-                    "selected_model_count": len(selected),
-                    "present_selected_model_count": 0,
-                },
-            ),
+        facts = {
+            "extra": LLM_EXTRA.extra,
+            "extra_importable": True,
+            "selected_model_count": selected_count,
+            "present_selected_model_count": 0,
+        }
+        return _local_model_provisioning_refusal(
+            ProvisioningPreconditionCondition.LOCAL_MODEL_EXTRA_REQUIRES_MODEL,
+            facts,
         )
     if present and not extra_present:
-        return DependencyStatus(
-            service=LOCAL_MODEL_PROVISIONING_SERVICE,
-            available=False,
-            facts={
-                "extra": LLM_EXTRA.extra,
-                "extra_importable": False,
-                "present_selected_model_count": len(present),
-            },
-            precondition_verdict=provisioning_no_recovery_verdict(
-                ProvisioningPreconditionCondition.LOCAL_MODEL_MODEL_REQUIRES_EXTRA,
-                facts={
-                    "extra": LLM_EXTRA.extra,
-                    "extra_importable": False,
-                    "present_selected_model_count": len(present),
-                },
-            ),
+        facts = {
+            "extra": LLM_EXTRA.extra,
+            "extra_importable": False,
+            "present_selected_model_count": len(present),
+        }
+        return _local_model_provisioning_refusal(
+            ProvisioningPreconditionCondition.LOCAL_MODEL_MODEL_REQUIRES_EXTRA,
+            facts,
         )
     if extra_present:
         return DependencyStatus(
@@ -1328,6 +1318,18 @@ def probe_local_model_provisioning(
         service=LOCAL_MODEL_PROVISIONING_SERVICE,
         available=True,
         facts={"extra": LLM_EXTRA.extra, "extra_importable": False, "present_selected_model_count": 0},
+    )
+
+
+def _local_model_provisioning_refusal(
+    condition: ProvisioningPreconditionCondition,
+    facts: Mapping[str, ProvisioningFactValue],
+) -> DependencyStatus:
+    return DependencyStatus(
+        service=LOCAL_MODEL_PROVISIONING_SERVICE,
+        available=False,
+        facts=facts,
+        precondition_verdict=provisioning_no_recovery_verdict(condition, facts=facts),
     )
 
 

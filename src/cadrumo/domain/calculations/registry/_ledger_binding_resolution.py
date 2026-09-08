@@ -229,34 +229,67 @@ def unrouted_ledger_family_quantities[ObservationT, SelectorT](
     Raises:
         RegistryValidationError: If a screened fact declares no reader. The
             import-time gate
-            (:func:`assert_quantity_readers_cover_independent_facts`) pins the
+        (:func:`assert_quantity_readers_cover_independent_facts`) pins the
             two together, so reaching here means that gate was bypassed.
     """
+    matchers_by_fact = _matchers_by_fact(
+        revision,
+        source_kind=source_kind,
+        parse_selector=parse_selector,
+        build_matcher=build_matcher,
+        read_fact=read_fact,
+    )
+    rows = tuple(observations)
+    unrouted: list[UnroutedLedgerQuantity[ObservationT]] = []
+    for fact in sorted(independent_facts):
+        quantity = _unrouted_quantity_for_fact(
+            fact,
+            rows=rows,
+            matchers_by_fact=matchers_by_fact,
+            readers=readers,
+        )
+        if quantity is not None:
+            unrouted.append(quantity)
+    return tuple(unrouted)
+
+
+def _matchers_by_fact[ObservationT, SelectorT](
+    revision: ModeloRevision,
+    *,
+    source_kind: BindingSourceKind,
+    parse_selector: Callable[[DataBindingDefinition], SelectorT],
+    build_matcher: Callable[[SelectorT], Callable[[ObservationT], bool]],
+    read_fact: Callable[[SelectorT], str],
+) -> dict[str, list[Callable[[ObservationT], bool]]]:
+    """Build one ordered matcher list for every declared screened fact."""
     matchers_by_fact: dict[str, list[Callable[[ObservationT], bool]]] = {}
     for binding in revision.bindings:
         if binding.source != source_kind:
             continue
         selector = parse_selector(binding)
         matchers_by_fact.setdefault(read_fact(selector), []).append(build_matcher(selector))
-    rows = tuple(observations)
-    unrouted: list[UnroutedLedgerQuantity[ObservationT]] = []
-    for fact in sorted(independent_facts):
-        read = readers.get(fact)
-        if read is None:
-            raise RegistryValidationError(
-                f"fact {fact!r} is screened as an independent quantity but declares no reader",
-            )
-        matchers = matchers_by_fact.get(fact, [])
-        carrying = tuple(
-            row for row in rows if read(row) != Decimal("0") and not any(matcher(row) for matcher in matchers)
+    return matchers_by_fact
+
+
+def _unrouted_quantity_for_fact[ObservationT](
+    fact: str,
+    *,
+    rows: tuple[ObservationT, ...],
+    matchers_by_fact: Mapping[str, list[Callable[[ObservationT], bool]]],
+    readers: Mapping[str, Callable[[ObservationT], Decimal]],
+) -> UnroutedLedgerQuantity[ObservationT] | None:
+    """Return the uncovered non-zero rows for one screened quantity fact."""
+    read = readers.get(fact)
+    if read is None:
+        raise RegistryValidationError(
+            f"fact {fact!r} is screened as an independent quantity but declares no reader",
         )
-        if not carrying:
-            continue
-        unrouted.append(
-            UnroutedLedgerQuantity(
-                fact=fact,
-                total=sum((read(row) for row in carrying), Decimal("0")),
-                observations=carrying,
-            ),
-        )
-    return tuple(unrouted)
+    matchers = matchers_by_fact.get(fact, [])
+    carrying = tuple(row for row in rows if read(row) != Decimal("0") and not any(matcher(row) for matcher in matchers))
+    if not carrying:
+        return None
+    return UnroutedLedgerQuantity(
+        fact=fact,
+        total=sum((read(row) for row in carrying), Decimal("0")),
+        observations=carrying,
+    )

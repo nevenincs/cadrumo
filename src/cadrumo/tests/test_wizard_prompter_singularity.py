@@ -614,41 +614,6 @@ def test_rule_two_fires_on_a_handle_laundered_through_first_party_reexports() ->
     assert "'prompt_lib'" in second_hop[0] and "'questionary'" in second_hop[0]
 
 
-def test_rule_two_ignores_ordinary_imports_from_the_canonical_prompt_surfaces() -> None:
-    """A non-prompter symbol re-exported by a sanctioned surface is not a handle.
-
-    This is the live shape in the tree: the flows package imports
-    ``detect_frontend_capability`` and the line frontend imports
-    ``NO_CONSOLE_ERRORS``. Both are locally-defined symbols, not library
-    handles, and flagging them would make rule 2 unusable.
-    """
-    modules = _synthetic_modules(
-        {
-            LINE_FRONTEND_MODULE: "import questionary\n\n\nclass LineFlowFrontend:\n    pass\n",
-            "application/flows/capability.py": (
-                "def detect_frontend_capability():\n    return None\n\n\nNO_CONSOLE_ERRORS = (OSError,)\n"
-            ),
-            "application/flows/__init__.py": (
-                "from .capability import NO_CONSOLE_ERRORS, detect_frontend_capability\n"
-                "from .line_frontend import LineFlowFrontend\n"
-            ),
-        },
-    )
-    exports = prompter_export_map(modules)
-    consumer = SRC_CADRUMO / "application/flows/__init__.py"
-
-    violations = [
-        violation
-        for path, tree in modules
-        if path == consumer
-        for violation in indirect_prompter_binding_violations(
-            aeat_relative(path), path, tree, exports, is_canonical=False
-        )
-    ]
-
-    assert violations == [], f"a locally-defined re-exported symbol is not a prompter handle; got {violations}"
-
-
 def test_rule_three_fires_on_an_ask_shaped_class_in_a_questionary_module() -> None:
     violations = rival_prompter_class_violations(
         "src/cadrumo/entrypoints/cli/_drifted.py", ast.parse(_DRIFTED_COPY), is_canonical=False

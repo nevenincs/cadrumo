@@ -165,22 +165,46 @@ def binding_values_with_absent_by_design_defaults(
     selected target period has no required source period.
     """
     resolved = dict(binding_values)
-    equivalent_groups_by_binding: dict[BindingId, tuple[BindingId, ...]] = {
-        binding_id: group
-        for casilla in revision.casillas
-        if casilla.input_kind == InputKind.BOUND
-        for group in (bound_casilla_binding_ids(casilla),)
-        for binding_id in group
-    }
+    equivalent_groups_by_binding = _equivalent_binding_groups(revision)
     for binding in revision.bindings:
-        if binding.id in resolved:
-            continue
-        equivalent_group = equivalent_groups_by_binding.get(binding.id, (binding.id,))
-        if any(equivalent_id in resolved for equivalent_id in equivalent_group if equivalent_id != binding.id):
-            continue
-        if _binding_is_absent_by_design(binding, target_period=target_period):
+        if _can_default_absent_binding(
+            binding,
+            resolved=resolved,
+            equivalent_groups_by_binding=equivalent_groups_by_binding,
+            target_period=target_period,
+        ):
             resolved[binding.id] = ZERO
     return resolved
+
+
+def _equivalent_binding_groups(
+    revision: ModeloRevision,
+) -> dict[BindingId, tuple[BindingId, ...]]:
+    """Index each bound binding id by its casilla's equivalent binding group."""
+    groups_by_binding: dict[BindingId, tuple[BindingId, ...]] = {}
+    for casilla in revision.casillas:
+        if casilla.input_kind != InputKind.BOUND:
+            continue
+        group = bound_casilla_binding_ids(casilla)
+        for binding_id in group:
+            groups_by_binding[binding_id] = group
+    return groups_by_binding
+
+
+def _can_default_absent_binding(
+    binding: DataBindingDefinition,
+    *,
+    resolved: Mapping[BindingId, Decimal],
+    equivalent_groups_by_binding: Mapping[BindingId, tuple[BindingId, ...]],
+    target_period: str,
+) -> bool:
+    """Return whether ``binding`` may receive an absent-by-design zero."""
+    if binding.id in resolved:
+        return False
+    equivalent_group = equivalent_groups_by_binding.get(binding.id, (binding.id,))
+    if any(equivalent_id in resolved for equivalent_id in equivalent_group if equivalent_id != binding.id):
+        return False
+    return _binding_is_absent_by_design(binding, target_period=target_period)
 
 
 def _reject_unknown_inputs(

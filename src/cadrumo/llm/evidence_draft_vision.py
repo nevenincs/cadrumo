@@ -84,10 +84,8 @@ VISION_TRANSCRIPTION_PROMPT_ID: Final[str] = "ledger-document-vision-transcripti
 VISION_TRANSCRIPTION_PROMPT_VERSION: Final[int] = 1
 """Version of the transcription prompt.
 
-Part of the transcriber's recorded revision, so a prompt change re-keys the
-transcription cache. Two prompts produce two different readings of the same
-pixels, and a cache that could not tell them apart would serve one document's
-text for another document's question.
+Part of the transcriber's recorded revision because two prompts can produce
+different readings of the same pixels.
 """
 
 VISION_TRANSCRIPTION_PROMPT: Final[str] = """\
@@ -230,9 +228,8 @@ class LocalVisionDocumentTranscriber:
 
         The revision folds the prompt version because the prompt is half of what
         produced the text: the same model under different instructions returns a
-        different reading of the same pixels, and the transcription cache keys
-        on this identity. A revision naming only the model would let one
-        prompt's output be served for another prompt's question.
+        different reading of the same pixels. A revision naming only the model
+        would erase which instructions produced the recorded text.
 
         The TRANSPORT is recorded for a different reason, and it is not
         tidiness. A transcription is a durable artefact derived from the

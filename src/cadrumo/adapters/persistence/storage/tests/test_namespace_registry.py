@@ -54,7 +54,6 @@ from ..secure_object_namespaces import (
     LLM_CACHE_NAMESPACE,
     LLM_USAGE_NAMESPACE,
     PROFILE_INVENTORY_LEDGER_NAMESPACE,
-    REPAIR_INTEGRITY_DECISION_NAMESPACE,
     SECURE_OBJECT_CATALOGUE_KEY,
     SECURE_OBJECT_DEFAULT_KEY,
     SECURE_OBJECT_WORKFLOW_STATE_KEY,
@@ -88,7 +87,6 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "profile_inventory_ledger",
     "profile_bienes_inversion_iva_register",
     "profile_prorrata_register",
-    "repair_integrity_decisions",
     "application_filing_history",
     "auth_apoderado_configuration",
     "calculation_observations",
@@ -103,7 +101,6 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "live_iva_remote_state_acquisitions",
     "application_evidence_bundles",
     "ledger_purchase_invoice_evidence",
-    "ledger_extracted_document_cache",
     "ledger_extraction_draft",
     "ledger_confirmation_record",
     "ledger_confirmed_counterparty_facts",
@@ -165,12 +162,8 @@ def test_secure_object_registry_preserves_the_declared_namespace_sequence() -> N
 
 def test_secure_object_registry_names_application_namespaces() -> None:
     expedientes = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("live_expedientes_snapshot")
-    repair = STORAGE_NAMESPACE_REGISTRY.namespace_by_key("repair_integrity_decisions")
 
     assert expedientes == LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE
-    assert repair == REPAIR_INTEGRITY_DECISION_NAMESPACE
-    assert repair.sensitivity is SensitivityClass.AUDIT
-    assert repair.object_key_grammar == "{decision_id_sha256_hex}"
 
 
 def test_secure_object_registry_names_live_m036_declaration_namespace() -> None:

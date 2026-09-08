@@ -57,35 +57,22 @@ class WorkbenchBootstrapV1:
     def __post_init__(self) -> None:
         """Refuse contradictory inventory, selection, and session combinations."""
         choice_ids = tuple(choice.profile_id for choice in self.choices)
-        if len(choice_ids) != len(set(choice_ids)):
-            raise ValueError("workbench bootstrap profile choices must be unique")
-        if self.inventory_state is WorkbenchBootstrapInventoryState.RECOGNIZED:
-            if not self.choices or self.session_state is None or self.reason_code is not None:
-                raise ValueError("recognized workbench bootstrap requires choices and a session state")
-        elif self.choices or self.session_state is not None or self.preselected_profile_id is not None:
-            raise ValueError("empty, concurrent, or degraded workbench bootstrap cannot carry login choices")
-        if (
-            self.inventory_state
-            in {
-                WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE,
-                WorkbenchBootstrapInventoryState.DEGRADED,
-            }
-            and self.reason_code is None
-        ):
-            raise ValueError("unavailable workbench bootstrap requires a safe reason code")
-        if self.inventory_state is WorkbenchBootstrapInventoryState.EMPTY and self.reason_code is not None:
-            raise ValueError("empty workbench bootstrap is not a degraded inventory")
-        if self.preselected_profile_id is not None and self.preselected_profile_id not in choice_ids:
-            raise ValueError("workbench bootstrap preselection is absent from its profile choices")
-        selected = self.selected_profile_id
-        authenticated = self.session_state in {
-            WorkbenchBootstrapSessionState.RESUMED,
-            WorkbenchBootstrapSessionState.AUTHENTICATED,
-        }
-        if authenticated != (selected is not None and self.selected_profile_label is not None):
-            raise ValueError("only an authenticated workbench bootstrap carries a selected profile")
-        if selected is not None and selected not in choice_ids:
-            raise ValueError("authenticated workbench profile is absent from its recognized inventory")
+        _validate_bootstrap_choice_ids(choice_ids)
+        _validate_bootstrap_inventory_payload(
+            inventory_state=self.inventory_state,
+            choices=self.choices,
+            session_state=self.session_state,
+            preselected_profile_id=self.preselected_profile_id,
+            reason_code=self.reason_code,
+        )
+        _validate_bootstrap_reason(self.inventory_state, self.reason_code)
+        _validate_bootstrap_preselection(self.preselected_profile_id, choice_ids)
+        _validate_bootstrap_selection(
+            session_state=self.session_state,
+            selected_profile_id=self.selected_profile_id,
+            selected_profile_label=self.selected_profile_label,
+            choice_ids=choice_ids,
+        )
 
     @property
     def registration_required(self) -> WorkbenchRegistrationRequiredV1 | None:
@@ -117,6 +104,88 @@ def prepare_workbench_bootstrap(
 ) -> WorkbenchBootstrapV1:
     """Inspect profile availability and resume only the exact recognized selection."""
     inventory = inventory_reader()
+    inventory_state = _unavailable_bootstrap_for_inventory(inventory)
+    if inventory_state is not None:
+        return inventory_state
+
+    choices = choice_reader()
+    if not _choices_match_inventory(inventory, choices):
+        return WorkbenchBootstrapV1(
+            inventory_state=WorkbenchBootstrapInventoryState.DEGRADED,
+            reason_code="workbench.bootstrap.profile_inventory_changed",
+        )
+    preselected = _valid_preselection(preselection_reader(None), choices)
+    if preselected is not None and resume_session(bucket_id=preselected) is None:
+        return _resumed_bootstrap(choices, preselected)
+    return _login_required_bootstrap(choices, preselected)
+
+
+def _validate_bootstrap_choice_ids(choice_ids: tuple[str, ...]) -> None:
+    """Require each recognized profile choice to identify one profile once."""
+    if len(choice_ids) != len(set(choice_ids)):
+        raise ValueError("workbench bootstrap profile choices must be unique")
+
+
+def _validate_bootstrap_inventory_payload(
+    *,
+    inventory_state: WorkbenchBootstrapInventoryState,
+    choices: tuple[ProfileLoginChoice, ...],
+    session_state: WorkbenchBootstrapSessionState | None,
+    preselected_profile_id: str | None,
+    reason_code: str | None,
+) -> None:
+    """Validate the fields allowed by each inventory state."""
+    if inventory_state is WorkbenchBootstrapInventoryState.RECOGNIZED:
+        if not choices or session_state is None or reason_code is not None:
+            raise ValueError("recognized workbench bootstrap requires choices and a session state")
+    elif choices or session_state is not None or preselected_profile_id is not None:
+        raise ValueError("empty, concurrent, or degraded workbench bootstrap cannot carry login choices")
+
+
+def _validate_bootstrap_reason(
+    inventory_state: WorkbenchBootstrapInventoryState,
+    reason_code: str | None,
+) -> None:
+    """Validate reason-code requirements for unavailable and empty inventory."""
+    if (
+        inventory_state
+        in {
+            WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE,
+            WorkbenchBootstrapInventoryState.DEGRADED,
+        }
+        and reason_code is None
+    ):
+        raise ValueError("unavailable workbench bootstrap requires a safe reason code")
+    if inventory_state is WorkbenchBootstrapInventoryState.EMPTY and reason_code is not None:
+        raise ValueError("empty workbench bootstrap is not a degraded inventory")
+
+
+def _validate_bootstrap_preselection(preselected_profile_id: str | None, choice_ids: tuple[str, ...]) -> None:
+    """Require a preselected profile to belong to the recognized choices."""
+    if preselected_profile_id is not None and preselected_profile_id not in choice_ids:
+        raise ValueError("workbench bootstrap preselection is absent from its profile choices")
+
+
+def _validate_bootstrap_selection(
+    *,
+    session_state: WorkbenchBootstrapSessionState | None,
+    selected_profile_id: str | None,
+    selected_profile_label: str | None,
+    choice_ids: tuple[str, ...],
+) -> None:
+    """Require selected identity fields exactly when the session is authenticated."""
+    authenticated = session_state in {
+        WorkbenchBootstrapSessionState.RESUMED,
+        WorkbenchBootstrapSessionState.AUTHENTICATED,
+    }
+    if authenticated != (selected_profile_id is not None and selected_profile_label is not None):
+        raise ValueError("only an authenticated workbench bootstrap carries a selected profile")
+    if selected_profile_id is not None and selected_profile_id not in choice_ids:
+        raise ValueError("authenticated workbench profile is absent from its recognized inventory")
+
+
+def _unavailable_bootstrap_for_inventory(inventory: ProfileSummaryInventory) -> WorkbenchBootstrapV1 | None:
+    """Return a terminal bootstrap state for an unrecognized inventory."""
     if inventory.outcome is ProfileSummaryOutcome.CONCURRENT_CHANGE:
         return WorkbenchBootstrapV1(
             inventory_state=WorkbenchBootstrapInventoryState.CONCURRENT_CHANGE,
@@ -129,33 +198,55 @@ def prepare_workbench_bootstrap(
         )
     if not inventory.summaries:
         return WorkbenchBootstrapV1(inventory_state=WorkbenchBootstrapInventoryState.EMPTY)
+    return None
 
-    choices = choice_reader()
+
+def _choices_match_inventory(
+    inventory: ProfileSummaryInventory,
+    choices: tuple[ProfileLoginChoice, ...],
+) -> bool:
+    """Return whether login choices still describe the same inventory."""
     expected = tuple((str(item.profile_id), str(item.label)) for item in inventory.summaries)
     observed = tuple((choice.profile_id, choice.label) for choice in choices)
-    if len(expected) != len(observed) or dict(expected) != dict(observed):
-        return WorkbenchBootstrapV1(
-            inventory_state=WorkbenchBootstrapInventoryState.DEGRADED,
-            reason_code="workbench.bootstrap.profile_inventory_changed",
-        )
-    preselected = preselection_reader(None)
-    if preselected not in {choice.profile_id for choice in choices}:
-        preselected = None
-    if preselected is not None and resume_session(bucket_id=preselected) is None:
-        selected = next(choice for choice in choices if choice.profile_id == preselected)
-        return WorkbenchBootstrapV1(
-            inventory_state=WorkbenchBootstrapInventoryState.RECOGNIZED,
-            session_state=WorkbenchBootstrapSessionState.RESUMED,
-            choices=choices,
-            preselected_profile_id=preselected,
-            selected_profile_id=selected.profile_id,
-            selected_profile_label=selected.label,
-        )
+    return len(expected) == len(observed) and dict(expected) == dict(observed)
+
+
+def _valid_preselection(
+    preselected_profile_id: str | None,
+    choices: tuple[ProfileLoginChoice, ...],
+) -> str | None:
+    """Keep only preselection values present in the recognized choices."""
+    if preselected_profile_id not in {choice.profile_id for choice in choices}:
+        return None
+    return preselected_profile_id
+
+
+def _resumed_bootstrap(
+    choices: tuple[ProfileLoginChoice, ...],
+    preselected_profile_id: str,
+) -> WorkbenchBootstrapV1:
+    """Build the selected state after a persisted session resumed successfully."""
+    selected = next(choice for choice in choices if choice.profile_id == preselected_profile_id)
+    return WorkbenchBootstrapV1(
+        inventory_state=WorkbenchBootstrapInventoryState.RECOGNIZED,
+        session_state=WorkbenchBootstrapSessionState.RESUMED,
+        choices=choices,
+        preselected_profile_id=preselected_profile_id,
+        selected_profile_id=selected.profile_id,
+        selected_profile_label=selected.label,
+    )
+
+
+def _login_required_bootstrap(
+    choices: tuple[ProfileLoginChoice, ...],
+    preselected_profile_id: str | None,
+) -> WorkbenchBootstrapV1:
+    """Build the recognized state that still needs interactive authentication."""
     return WorkbenchBootstrapV1(
         inventory_state=WorkbenchBootstrapInventoryState.RECOGNIZED,
         session_state=WorkbenchBootstrapSessionState.LOGIN_REQUIRED,
         choices=choices,
-        preselected_profile_id=preselected,
+        preselected_profile_id=preselected_profile_id,
     )
 
 

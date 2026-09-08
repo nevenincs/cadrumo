@@ -20,9 +20,7 @@ field never differed.
 
 from __future__ import annotations
 
-import json
 import pickle
-from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -34,7 +32,6 @@ from ..document_transcription import (
     ACQUISITION_ORIGINS,
     DocumentTranscription,
     TranscriberIdentity,
-    TranscriptionCacheEntry,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -115,69 +112,6 @@ def test_the_text_is_excluded_from_repr() -> None:
     assert _DIGEST in rendered, "provenance stays visible; only the contents are withheld"
 
 
-def test_the_sanctioned_cache_route_roundtrips_with_strict_equality() -> None:
-    """Record to entry to JSON to entry to record, asserting model equality.
-
-    The tripwires must not cost the pipeline the ability to cache. This drives
-    the exact conversion the encrypted cache uses, through a real serialization
-    cycle, and asserts the record that comes back equals the one that went in --
-    not a field-by-field subset, which is how a dropped field survives a
-    roundtrip test.
-    """
-    original = _transcription()
-    stamped = datetime(2024, 11, 15, 9, 30, tzinfo=UTC)
-
-    entry = original.to_cache_entry(cached_at=stamped)
-    reloaded_entry = TranscriptionCacheEntry.model_validate_json(entry.model_dump_json())
-
-    assert reloaded_entry == entry, "the serialization cycle must return exactly what crossed it"
-    assert reloaded_entry.to_transcription() == original
-    assert reloaded_entry.cached_at == stamped
-
-
-def test_the_printed_forms_survive_the_cache_route_byte_for_byte() -> None:
-    """`2.420,00` stays `2.420,00`. Nothing on this path may normalise it.
-
-    Separate from the equality roundtrip on purpose: equality would still hold
-    if BOTH sides normalised identically, so this asserts the literal printed
-    form against the source string rather than against the record's own output.
-    """
-    recovered = _transcription().to_cache_entry().to_transcription().text
-
-    assert recovered == _PRINTED_TEXT
-    assert "2.420,00" in recovered
-    assert "2420.00" not in recovered
-
-
-def test_the_transcriber_identity_is_part_of_the_cache_key() -> None:
-    """Two readers of one document key differently, and so does one reader's revision.
-
-    A cache keyed on the bytes alone lets whichever reader ran last answer for
-    every reader, which silently substitutes a probabilistic vision read for a
-    deterministic text-layer one.
-    """
-    vision = _transcription()
-    text_layer = _transcription(
-        transcriber=TranscriberIdentity(
-            transport=LOCAL_TRANSPORT_LABEL,
-            origin=FieldOrigin.TEXT_LAYER,
-            name="pdfplumber-text-layer",
-            revision="0.11.4",
-        ),
-    )
-    newer_revision = _transcription(
-        transcriber=TranscriberIdentity(
-            transport=LOCAL_TRANSPORT_LABEL,
-            origin=FieldOrigin.VISION,
-            name="qwen2.5-vl-7b-instruct",
-            revision="q4_k_m/prompt-r4",
-        ),
-    )
-
-    assert vision.cache_key[0] == text_layer.cache_key[0] == newer_revision.cache_key[0]
-    assert len({vision.cache_key, text_layer.cache_key, newer_revision.cache_key}) == 3
-
-
 @pytest.mark.parametrize(
     "origin",
     [member for member in FieldOrigin if member not in ACQUISITION_ORIGINS],
@@ -237,18 +171,3 @@ def test_an_empty_or_pageless_transcription_is_refused() -> None:
         _transcription(page_count=0)
 
 
-def test_the_persisted_entry_refuses_an_unexpected_key() -> None:
-    """Strict on the way in: a payload written by a shape we do not know is refused.
-
-    The complement of the cache's deletion proof. A boundary that ignores
-    unknown keys accepts a foreign payload and silently discards what it carried.
-    """
-    entry = json.loads(_transcription().to_cache_entry().model_dump_json())
-
-    assert TranscriptionCacheEntry.model_validate_json(json.dumps(entry)) is not None, (
-        "positive control: the unmutated payload must load, or the refusal below proves nothing"
-    )
-
-    entry["unexpected_key"] = "smuggled"
-    with pytest.raises(ValidationError):
-        TranscriptionCacheEntry.model_validate_json(json.dumps(entry))

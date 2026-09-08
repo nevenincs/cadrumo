@@ -10,14 +10,14 @@ was standardized onto. This plan does not reimplement it: every step delegates
 to :mod:`dev.env`, which is where the venv provisioning, the exclusive install
 lock, and the `env/.env` materialization already live and where they stay.
 What `init` adds here is the stamp - so a second run is a no-op rather than a
-full additive reinstall - and the machine-readable report.
+full locked synchronization - and the machine-readable report.
 
 Two of that module's behaviours are load bearing and are preserved exactly:
 
-``uv pip install``, never ``uv sync``
-    A sync prunes before it installs, and on a shared Windows worktree the
-    prune fails against the executable locks held under ``.venv/Scripts``. The
-    additive form leaves a resident session's tools in place.
+``uv sync --locked`` is the sole environment operation
+    The committed lockfile is authoritative, ``uv`` creates ``.venv`` when it
+    is absent, and exact synchronization removes undeclared packages. The
+    live-process guard below prevents Windows executable-lock collisions.
 
 The exclusive, venv-scoped lock
     An ``O_CREAT | O_EXCL`` create, hashed to the resolved environment path so
@@ -86,17 +86,12 @@ PREFLIGHT: Final[tuple[Step, ...]] = (
 
 PYTHON = Phase(
     name="python",
-    summary="Create the pinned environment and install every dependency additively.",
+    summary="Synchronize the pinned environment exactly from uv.lock.",
     steps=(
         Step(
-            name="init-venv",
-            argv=(*ENV, "init-venv"),
-            summary="Create .venv when it is absent, leaving an existing one in place.",
-        ),
-        Step(
-            name="install",
+            name="sync",
             argv=(*ENV, "install"),
-            summary="Additively install runtime, workbook, and dev dependencies.",
+            summary="Run the canonical locked uv project synchronization.",
         ),
     ),
     inputs=("uv.lock", "pyproject.toml", ".python-version"),

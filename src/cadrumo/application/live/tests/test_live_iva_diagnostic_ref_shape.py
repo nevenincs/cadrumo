@@ -24,7 +24,6 @@ from ..remote_state_models import (
     LiveIvaAcquisitionFailureMode,
     LiveIvaAuthOutcome,
     LiveIvaReadStatus,
-    StoredIvaRemoteStateAcquisitionRow,
 )
 from ..remote_state_outcomes import auth_outcome, evidence_ref
 
@@ -105,28 +104,3 @@ def test_a_reference_truncated_to_another_width_is_refused(width: int) -> None:
     with pytest.raises(ValidationError):
         LiveIvaAuthOutcome(**_outcome_fields(), diagnostic_ref=f"sha256:{'a' * width}")
 
-
-def test_the_stored_row_refuses_what_the_outcome_it_copies_refuses() -> None:
-    """The persisted row carries the same value one hop on, so it holds the shape.
-
-    ``auth_diagnostic_ref`` is assigned verbatim from the outcome's
-    ``diagnostic_ref``, so a row admitting a shape the outcome refuses could
-    only ever hold a value that never came from the producer.
-    """
-    with pytest.raises(ValidationError):
-        StoredIvaRemoteStateAcquisitionRow.model_validate(
-            {
-                "acquisition_ref": evidence_ref("acquisition"),
-                "captured_at": "2026-04-01T10:30:00Z",
-                "auth_status": "failed",
-                "auth_outcome_mode": "unknown",
-                "auth_diagnostic_ref": f"sha256:{'a' * 64}",
-                "year_from": 2024,
-                "year_to": 2024,
-                "target_year": 2026,
-                "target_period": "1T",
-                "filed_history_succeeded": False,
-                "wallet_succeeded": False,
-                "surfaces": (),
-            },
-        )

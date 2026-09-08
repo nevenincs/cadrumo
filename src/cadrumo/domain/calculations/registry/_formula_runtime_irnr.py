@@ -428,44 +428,41 @@ def _m210_resolve_base_args(expression: FormulaExpression) -> _M210ResolveBaseAr
         old_rate_arg,
         no_catastral_fraction_arg,
     ) = expression.args
-    if tipo_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[0] to be a casilla leaf")
-    if gross_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[1] to be a casilla leaf")
-    if deductible_expenses_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[2] to be a casilla leaf")
-    if country_arg.binding is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[3] to be a binding leaf")
-    if catastral_value_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[4] to be a casilla leaf")
-    if imputation_coefficient_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[5] to be a casilla leaf")
-    if imputation_days_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[6] to be a casilla leaf")
-    if acquisition_value_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[7] to be a casilla leaf")
-    if administrative_value_arg.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[8] to be a casilla leaf")
-    if recent_rate_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[9] to be a parameter leaf")
-    if old_rate_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[10] to be a parameter leaf")
-    if no_catastral_fraction_arg.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[11] to be a parameter leaf")
     return _M210ResolveBaseArgs(
-        tipo_casilla_id=tipo_arg.casilla_id,
-        gross_casilla_id=gross_arg.casilla_id,
-        deductible_expenses_casilla_id=deductible_expenses_arg.casilla_id,
-        country_binding=country_arg.binding,
-        catastral_value_casilla_id=catastral_value_arg.casilla_id,
-        imputation_coefficient_casilla_id=imputation_coefficient_arg.casilla_id,
-        imputation_days_casilla_id=imputation_days_arg.casilla_id,
-        acquisition_value_casilla_id=acquisition_value_arg.casilla_id,
-        administrative_value_casilla_id=administrative_value_arg.casilla_id,
-        recent_rate_parameter=recent_rate_arg.parameter,
-        old_rate_parameter=old_rate_arg.parameter,
-        no_catastral_fraction_parameter=no_catastral_fraction_arg.parameter,
+        tipo_casilla_id=_required_casilla_leaf(tipo_arg, op=op, index=0),
+        gross_casilla_id=_required_casilla_leaf(gross_arg, op=op, index=1),
+        deductible_expenses_casilla_id=_required_casilla_leaf(deductible_expenses_arg, op=op, index=2),
+        country_binding=_required_binding_leaf(country_arg, op=op, index=3),
+        catastral_value_casilla_id=_required_casilla_leaf(catastral_value_arg, op=op, index=4),
+        imputation_coefficient_casilla_id=_required_casilla_leaf(imputation_coefficient_arg, op=op, index=5),
+        imputation_days_casilla_id=_required_casilla_leaf(imputation_days_arg, op=op, index=6),
+        acquisition_value_casilla_id=_required_casilla_leaf(acquisition_value_arg, op=op, index=7),
+        administrative_value_casilla_id=_required_casilla_leaf(administrative_value_arg, op=op, index=8),
+        recent_rate_parameter=_required_parameter_leaf(recent_rate_arg, op=op, index=9),
+        old_rate_parameter=_required_parameter_leaf(old_rate_arg, op=op, index=10),
+        no_catastral_fraction_parameter=_required_parameter_leaf(no_catastral_fraction_arg, op=op, index=11),
     )
+
+
+def _required_casilla_leaf(expression: FormulaExpression, *, op: str, index: int) -> CasillaId:
+    """Resolve one statutory argument that must reference a casilla leaf."""
+    if expression.casilla_id is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[{index}] to be a casilla leaf")
+    return expression.casilla_id
+
+
+def _required_binding_leaf(expression: FormulaExpression, *, op: str, index: int) -> BindingId:
+    """Resolve one statutory argument that must reference a binding leaf."""
+    if expression.binding is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[{index}] to be a binding leaf")
+    return expression.binding
+
+
+def _required_parameter_leaf(expression: FormulaExpression, *, op: str, index: int) -> ParameterId:
+    """Resolve one statutory argument that must reference a parameter leaf."""
+    if expression.parameter is None:
+        raise RegistryValidationError(f"formula op {op!r} requires args[{index}] to be a parameter leaf")
+    return expression.parameter
 
 
 def _m210_allows_art_24_6_expenses(*, tipo_renta: str, country_code: str) -> bool:
