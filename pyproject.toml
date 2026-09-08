@@ -738,6 +738,9 @@ convention = "google"
 "dev/release/tests/test_readiness.py" = ["S603"]
 "dev/quality/quiet.py" = ["S603"]
 "dev/quality/suite.py" = ["S603", "S607"]
+# The `fix-all` aggregate, exactly as suite.py above it: its argv vectors are
+# module constants, and its drift probe is a read-only `git status`.
+"dev/quality/fixes.py" = ["S603", "S607"]
 "dev/quality/types.py" = ["S603", "S607"]
 # The environment provisioning drivers: every argv is a literal vector built in
 # the module, never from user input, and none uses a shell.

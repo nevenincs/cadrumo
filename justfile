@@ -520,7 +520,8 @@ fix-format:
 
 # Action every automatically-fixable issue in one pass: safe lint fixes then formatting.
 [group('mutations')]
-fix-all: fix-style fix-format
+fix-all:
+    @uv run --no-sync python -m dev.quality.fixes
 
 # Trigger incremental vector re-indexing via the loopback service.
 [group('mutations')]
