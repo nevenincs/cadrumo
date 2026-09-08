@@ -363,10 +363,11 @@ def _sample_svg() -> Path:
     """A real Textual export committed nowhere; produced by the harness run."""
     candidates = sorted((REPO_ROOT / ".tmp-tui-visual-inventory").rglob("svg/*.svg"))
     if not candidates:
-        pytest.skip("no rendered SVG available; run `python -m dev.tui render` first")
+        pytest.fail("the rendered inventory is missing; `just test-tui-render` renders it before running these")
     return candidates[0]
 
 
+@pytest.mark.tui_render
 def test_rasterising_a_real_export_produces_the_declared_cell_grid(tmp_path: Path) -> None:
     """The PNG's pixel size is the terminal grid times the cell size.
 
@@ -394,6 +395,7 @@ def test_rasterising_a_real_export_produces_the_declared_cell_grid(tmp_path: Pat
     assert width == expected_columns * (width // expected_columns)
 
 
+@pytest.mark.tui_render
 def test_raising_the_cell_height_raises_the_resolution_proportionally(tmp_path: Path) -> None:
     """The same frame at a larger cell is the same grid, more pixels."""
     svg = _sample_svg()
@@ -673,11 +675,12 @@ def test_a_glyph_the_pinned_font_lacks_is_detected_as_missing() -> None:
     assert not _raster._is_missing(font, pixels, "ñ"), "accented Spanish text must not read as missing"
 
 
+@pytest.mark.tui_render
 def test_rasterising_the_status_page_reports_its_untranslatable_glyph(tmp_path: Path) -> None:
     """End to end: a frame containing the tofu names it in the result."""
     candidates = sorted((REPO_ROOT / ".tmp-tui-visual-inventory").rglob("svg/status__*.svg"))
     if not candidates:
-        pytest.skip("no rendered status SVG available")
+        pytest.fail("the rendered status export is missing; `just test-tui-render` renders it before running these")
     for svg in candidates:
         if "\u24d8" in svg.read_text(encoding=UTF_8):
             result = _raster.rasterise(svg, tmp_path / "status.png")
@@ -873,6 +876,7 @@ def test_a_manifest_with_no_schema_version_is_refused(tmp_path: Path) -> None:
         read_manifest(tmp_path)
 
 
+@pytest.mark.tui_render
 def test_repainting_a_run_rewrites_only_the_raster_derived_fields(tmp_path: Path) -> None:
     """A repaint must not invent capture data it did not observe.
 
@@ -1035,6 +1039,7 @@ def test_snapshot_overwrite_is_not_the_default() -> None:
     assert parameters["replace"].default is False
 
 
+@pytest.mark.tui_render
 def test_every_declared_background_band_is_actually_painted(tmp_path: Path) -> None:
     """No cell a band covers may fall through to the page colour.
 
