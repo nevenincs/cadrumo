@@ -19,8 +19,12 @@ lib64/
 parts/
 sdist/
 var/
-.logs/*
-!.logs/README.md
+# Local log output and dot-prefixed ad-hoc log variants are ephemeral.
+# The existing tracked README remains tracked; this only prevents new output
+# from being added.
+.logs/
+.log-*
+.log^*
 wheels/
 share/python-wheels/
 *.egg-info/
