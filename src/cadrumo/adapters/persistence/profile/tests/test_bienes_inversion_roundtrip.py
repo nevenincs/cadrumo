@@ -5,8 +5,8 @@ Persists :class:`BienesInversionIvaRegister` under
 
 Anti-tautology: the fixture populates every defaultable field on
 :class:`BienInversionIvaRecord` with non-default values (a non-default
-``art108_elegible`` False on the second record, a populated
-``asset_record_ref``, and a populated :class:`BienInversionDisposal`). The
+``art108_elegible`` False on the second record and a populated
+:class:`BienInversionDisposal`). The
 save-drops-field / load-re-defaults-field regression is caught by two probes:
 one corrupts a persisted value and asserts the strict-equality witness surfaces
 the drift, one deletes a required field and asserts the load path raises.
@@ -43,7 +43,6 @@ def _populated_register() -> BienesInversionIvaRegister:
         prorrata_inicial_pct=Decimal("80"),
         kind=BienInversionKind.MUEBLE,
         art108_elegible=True,
-        asset_record_ref="asset-2022-furgoneta",
         acquisition_ledger_id="ledger-2022-furgoneta",
         disposal=BienInversionDisposal(year=2024, regime=BienInversionDisposalRegime.SUJETA_NO_EXENTA),
     )
@@ -55,7 +54,6 @@ def _populated_register() -> BienesInversionIvaRegister:
         prorrata_inicial_pct=Decimal("65"),
         kind=BienInversionKind.INMUEBLE,
         art108_elegible=False,
-        asset_record_ref="asset-2021-local",
         acquisition_ledger_id="ledger-2021-local",
     )
     return BienesInversionIvaRegister(records=(movable, real_estate))
@@ -75,7 +73,6 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         assert movable.prorrata_inicial_pct == Decimal("80")
         assert movable.kind is BienInversionKind.MUEBLE
         assert movable.art108_elegible is True
-        assert movable.asset_record_ref == "asset-2022-furgoneta"
         assert movable.disposal is not None
         assert movable.disposal.year == 2024
         assert movable.disposal.regime is BienInversionDisposalRegime.SUJETA_NO_EXENTA

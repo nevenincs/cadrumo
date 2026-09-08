@@ -13,28 +13,11 @@ last cohort removed exactly that shape, and re-introducing it here would
 reconnect the TUI to writers through a field the type system would not object
 to.
 
-WHAT AN ACTION IS, and why the denominator is the registered operations rather
-than a hand-listed set: every C4 action is a REGISTERED OPERATION with a
+WHAT AN ACTION IS: every dispatchable action is a REGISTERED OPERATION with a
 definition id, a journal, a lease and a recovery action. Naming the ids here
 means the dispatch table cannot drift from the platform's own registry without
 the id failing to resolve. A hand-listed action set would be a second
 declaration of what exists, free to fall behind the first.
-
-THE DENOMINATOR IS WIDER THAN THIS TABLE, and the gap is declared rather than
-hidden. The action denominator classifies THIRTY-ONE modelo candidates as
-pending C4 mutations. Exactly SIX of those have a registered operation
-definition -- rename, discard, verify, file, export and amend -- so TWENTY-FIVE
-remain undispatchable and are listed in
-:data:`MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS`. Note ``modelo.work.calculate``
-is among the twenty-five: it is classified a pending C4 mutation but has no
-registered definition, so it cannot be dispatched here despite looking like a
-sibling of the six.
-
-The table below holds SEVEN rows, not six, because ``modelo.edit.apply`` is a
-registered operation that is NOT one of the denominator's thirty-one -- it
-arrived with the C3 editor. Seven dispatchable plus twenty-five pending does
-not sum to thirty-one, and that is correct rather than an arithmetic slip:
-the two sets overlap in six members and each holds one the other does not.
 
 See Also:
     :mod:`cadrumo.application.modelo.operation_definitions`
@@ -59,7 +42,6 @@ from ....application.modelo.operation_definitions import (
 from ....application.modelo.workspace_models import ModeloWorkspaceCapabilityName
 
 __all__ = [
-    "MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS",
     "MODELO_ACTION_DISPATCH",
     "ModeloActionPort",
     "ModeloActionView",
@@ -172,44 +154,6 @@ MODELO_ACTION_DISPATCH: Final[dict[str, ModeloActionView]] = {
 Closed: a controller may dispatch what this table names and nothing else. The
 key IS the definition id rather than a parallel enum, so a row cannot name an
 operation the platform does not register.
-"""
-
-
-MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS: Final[tuple[str, ...]] = (
-    "modelo.aggregate",
-    "modelo.audit.export",
-    "modelo.filing_record.import",
-    "modelo.filing_record.observe_local",
-    "modelo.iva_wallet.correct",
-    "modelo.iva_wallet.override",
-    "modelo.iva_wallet.seed",
-    "modelo.m036.alta",
-    "modelo.m036.baja",
-    "modelo.m036.modificacion",
-    "modelo.m145.create",
-    "modelo.m145.export",
-    "modelo.m145.mark_delivered_to_payer",
-    "modelo.m145.mark_locally_completed",
-    "modelo.reconcile.import",
-    "modelo.reconcile.pull",
-    "modelo.review_package.build",
-    "modelo.review_package.counter_sign",
-    "modelo.review_package.decrypt",
-    "modelo.review_package.import_feedback",
-    "modelo.review_package.sign",
-    "modelo.spreadsheet.calculate",
-    "modelo.spreadsheet.pull",
-    "modelo.spreadsheet.push",
-    "modelo.work.calculate",
-)
-"""Modelo mutations classified as pending C4 work that have NO registered operation.
-
-Declared so the dispatch table above cannot be mistaken for the whole surface.
-Each of these is a direct-effect mutation an operator can reach today through
-some other path, running outside the platform that would journal and lease it.
-They are NOT dispatchable here and must not be added to the table until each
-has a registered definition; a row pointing at an unregistered id would submit
-into nothing.
 """
 
 

@@ -122,8 +122,6 @@ _FORBIDDEN_CALLS = {
     "write_text",
     "write_bytes",
     "save_envelope",
-    "save_encrypted_envelope",
-    "load_encrypted_envelope",
     "NamedTemporaryFile",
     "mkstemp",
 }

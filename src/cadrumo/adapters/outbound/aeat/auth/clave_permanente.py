@@ -75,6 +75,10 @@ from .....core.errors.hierarchy import AeatLoginAssertionError
 from .....core.logging import get_logger
 from .....core.remote_authority import canonical_remote_hostname
 from .....core.time.clock import now
+from .....domain.calculations.registry.remote_state_guard import (
+    RemoteOperation,
+    assert_remote_operation_allowed,
+)
 from .._playwright import PlaywrightTimeoutError
 from . import session_store as session_store
 from ._clave_provider_common import (
@@ -89,6 +93,9 @@ from .browser_lifecycle import CloseIntentBarrier
 from .clave_movil_support import classify_identity as _classify_identity
 from .clave_permanente_metadata import ClavePermanenteSessionMetadata
 from .clave_permanente_support import ClavePermanenteFailureMode
+from .clave_permanente_support import (
+    clave_permanente_auth_browser_action_policy as _browser_action_policy,
+)
 from .clave_permanente_support import clave_permanente_configuration_error as _configuration_error
 from .clave_permanente_support import clave_permanente_login_error as _login_error
 from .errors import AuthConfigurationError, AuthProviderCleanupError
@@ -539,6 +546,7 @@ class ClavePermanenteAuthProvider:
         before returning control for the post-auth landing wait.
         """
         surface = self._clave_surface()
+        action_policy = _browser_action_policy(self._settings)
         fill = getattr(page, "fill", None)
         click = getattr(page, "click", None)
         content = getattr(page, "content", None)
@@ -546,12 +554,24 @@ class ClavePermanenteAuthProvider:
             # CAST-RATIONALE-CLAVE-PERMANENTE-FILL: runtime callable narrowing
             # proves the optional Playwright page extension before invocation.
             fill_page = cast(Callable[..., Awaitable[object]], fill)
+            assert_remote_operation_allowed(
+                action_policy,
+                RemoteOperation(kind="browser_action", action="clave-permanente-fill-username"),
+            )
             await fill_page(surface.username_input_selector, dni_nie)
+            assert_remote_operation_allowed(
+                action_policy,
+                RemoteOperation(kind="browser_action", action="clave-permanente-fill-password"),
+            )
             await fill_page(surface.password_input_selector, password)
         if callable(click):
             # CAST-RATIONALE-CLAVE-PERMANENTE-CLICK: runtime callable narrowing
             # proves the optional Playwright page extension before invocation.
             click_page = cast(Callable[..., Awaitable[object]], click)
+            assert_remote_operation_allowed(
+                action_policy,
+                RemoteOperation(kind="browser_action", action="clave-permanente-authenticate"),
+            )
             await click_page(surface.submit_button_selector)
         if not callable(content):
             return

@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 
 if TYPE_CHECKING:
     from ....domain.modelos.verification_report import VerificationReport
@@ -19,6 +20,12 @@ _VERIFICATION_FINDING_CASILLA: CasillaId = validated_casilla_id(
     surface="_VERIFICATION_FINDING_CASILLA",
 )
 _TEST_FINDING_LEGAL_REFS = ("ley-58-2003:art-119",)
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2026-y-siguientes",
+    modelo_year=2026,
+    period="1T",
+)
 
 
 def test_verification_finding_message_resolves_from_each_supported_locale_catalogue() -> None:
@@ -88,6 +95,7 @@ def test_verification_report_lines_preserve_persisted_findings_without_recovery_
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=calc_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
         run_at=run_at,
@@ -157,6 +165,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
             verified_by="test-actor",
         ),
         calculation_revision_id=calculation_revision_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
         run_at=datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC),
@@ -222,6 +231,7 @@ def test_verification_report_lines_omits_recovery_when_granted() -> None:
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=calc_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.COMPLETE,
         run_at=run_at,
         verified_by="test-actor",
@@ -285,6 +295,7 @@ def test_verification_report_view_exposes_finding_legal_and_source_refs() -> Non
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=calc_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
         run_at=run_at,
@@ -347,6 +358,7 @@ def test_verification_report_view_lists_missing_required_casillas() -> None:
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=calc_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.INCOMPLETE,
         missing_required_casilla_ids=missing,
         run_at=run_at,
@@ -410,6 +422,7 @@ def _blocked_report() -> VerificationReport:
             verified_by="test-actor",
         ),
         calculation_revision_id=calculation_revision_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
         run_at=datetime(2026, 5, 27, 10, 0, 0, tzinfo=UTC),

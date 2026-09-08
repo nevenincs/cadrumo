@@ -1,47 +1,32 @@
-"""Public registry-closure native atomic capture over the live coverage composers.
+"""Public registry-closure native atomic capture over filing-export coverage.
 
 This module owns the capture contract over the registry release predicate; it
-computes nothing of its own. ``compose_filing_export_coverage`` and
-``compose_source_connectivity_coverage`` remain the sole owners of their
-respective limb derivations; this module only republishes their combined
-limbs with a currentness coordinate. There is no third limb-deriving path
-here, and the closed ``temporal_coverage`` limb name has no producer yet --
-this capture republishes only the two limb kinds that are actually produced
-today and does not fabricate a third.
+computes nothing of its own. ``compose_filing_export_coverage`` remains the
+sole owner of limb derivation; this module republishes its limbs with a
+currentness coordinate.
 
-Closure state moves independently of the registry snapshot it is scoped to:
-a source-connectivity census entry can expire by calendar date with no
-registry change (``as_of``), a live connectivity proof can flip, and a filing
-byte-evidence check reads corpus files whose content is not tracked by the
-snapshot identity. An independent native generation is therefore required --
-delegating currentness to the registry authority's own coordinate would miss
-every one of those movements. The generation is keyed by the composed limb
-content itself, so any of those independent axes moving is observed without
-this module re-deriving or duplicating what each composer already computed.
+Filing byte-evidence can move independently of the registry snapshot because
+it reads corpus files whose content is not tracked by snapshot identity. An
+independent native generation therefore remains required.
 
 See Also:
     :func:`~cadrumo.application.registry.filing_export_coverage.compose_filing_export_coverage`
-    :func:`~cadrumo.application.registry.source_connectivity_coverage.compose_source_connectivity_coverage`
-        The two sole authorities this module captures without reimplementation.
+        The sole authority this module captures without reimplementation.
 """
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from datetime import date
 from secrets import token_bytes
 from threading import RLock
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
-from ...core.source_connectivity import SourceConnectivityProofAuthority
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ..filing.export_proof import FilingExportProofAuthority
 from .closure import RegistryClosureLimb
 from .filing_export_coverage import compose_filing_export_coverage
-from .source_connectivity import SourceConnectivityCensusManifest
-from .source_connectivity_coverage import compose_source_connectivity_coverage
 
 _closure_capture_process_pid = os.getpid()
 _closure_capture_process_nonce = token_bytes(32)
@@ -57,13 +42,11 @@ class RegistryClosureCaptureError(CadrumoError, RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class RegistryClosureCapture:
-    """Every filing-export and source-connectivity closure limb, and its coordinate.
+    """Every filing-export closure limb and its coordinate.
 
-    ``limbs`` republishes exactly what the two coverage composers returned in
-    ``(modelo, revision)`` order across filing-export then source-connectivity;
-    no field is reconstructed and no third limb family is derived. The census
-    manifest identity and process incarnation are folded into the opaque
-    comparison domain and never exposed.
+    ``limbs`` republishes exactly what the filing-export composer returned in
+    ``(modelo, revision)`` order. No field is reconstructed. The process
+    incarnation is folded into the opaque comparison domain and never exposed.
     """
 
     limbs: tuple[RegistryClosureLimb, ...]
@@ -117,13 +100,12 @@ def _require_closure_process_domain(domain: str) -> None:
         )
 
 
-def _closure_comparison_domain(census: SourceConnectivityCensusManifest) -> str:
+def _closure_comparison_domain() -> str:
     """Mint the non-persisted coordinate domain for the registry-closure owner scope."""
     domain = content_hash_hex(
         {
             "owner": "application.registry.closure_capture",
             "namespace": "registry.closure",
-            "census_id": census.census_id,
             "process_incarnation": _closure_capture_process_nonce.hex(),
         }
     )
@@ -135,19 +117,10 @@ def _closure_comparison_domain(census: SourceConnectivityCensusManifest) -> str:
 def _closure_limbs(
     *,
     authority: ValidatedRegistryAuthority,
-    census: SourceConnectivityCensusManifest,
-    as_of: date,
     filing_proof_authority: FilingExportProofAuthority | None,
-    connectivity_proof_authority: SourceConnectivityProofAuthority | None,
 ) -> tuple[RegistryClosureLimb, ...]:
     filing_report = compose_filing_export_coverage(authority=authority, proof_authority=filing_proof_authority)
-    connectivity_report = compose_source_connectivity_coverage(
-        authority=authority,
-        census=census,
-        as_of=as_of,
-        proof_authority=connectivity_proof_authority,
-    )
-    return (*filing_report.limbs, *connectivity_report.limbs)
+    return filing_report.limbs
 
 
 def _closure_observation(limbs: tuple[RegistryClosureLimb, ...]) -> str:
@@ -170,20 +143,14 @@ def _closure_generation_for(domain: str, observation: str) -> int:
 def read_registry_closure_current_coordinate(
     *,
     authority: ValidatedRegistryAuthority,
-    census: SourceConnectivityCensusManifest,
-    as_of: date,
     filing_proof_authority: FilingExportProofAuthority | None = None,
-    connectivity_proof_authority: SourceConnectivityProofAuthority | None = None,
 ) -> RegistryClosureCurrentCoordinate:
     """Return the typed current coordinate for same-domain capture validation."""
     limbs = _closure_limbs(
         authority=authority,
-        census=census,
-        as_of=as_of,
         filing_proof_authority=filing_proof_authority,
-        connectivity_proof_authority=connectivity_proof_authority,
     )
-    domain = _closure_comparison_domain(census)
+    domain = _closure_comparison_domain()
     return RegistryClosureCurrentCoordinate(
         comparison_domain=domain,
         generation=_closure_generation_for(domain, _closure_observation(limbs)),
@@ -193,28 +160,22 @@ def read_registry_closure_current_coordinate(
 def capture_registry_closure(
     *,
     authority: ValidatedRegistryAuthority,
-    census: SourceConnectivityCensusManifest,
-    as_of: date,
     filing_proof_authority: FilingExportProofAuthority | None = None,
-    connectivity_proof_authority: SourceConnectivityProofAuthority | None = None,
 ) -> RegistryClosureCapture:
-    """Compose both closure limb kinds and stamp them with a currentness coordinate.
+    """Compose filing-export closure and stamp it with a currentness coordinate.
 
     Unlike a shard or catalogue read, composing closure has no concurrent
-    in-process writer to race: ``census`` and ``authority`` are already-loaded
-    immutable values, and the live proof authorities are the read itself, not
+    in-process writer to race: ``authority`` is already loaded and the live
+    proof authority is the read itself, not
     a mutable store a retry could observe settling. A single composition is
     therefore the whole read; the coordinate records what it produced rather
     than reproving it did not move mid-read.
     """
     limbs = _closure_limbs(
         authority=authority,
-        census=census,
-        as_of=as_of,
         filing_proof_authority=filing_proof_authority,
-        connectivity_proof_authority=connectivity_proof_authority,
     )
-    domain = _closure_comparison_domain(census)
+    domain = _closure_comparison_domain()
     return RegistryClosureCapture(
         limbs=limbs,
         comparison_domain=domain,

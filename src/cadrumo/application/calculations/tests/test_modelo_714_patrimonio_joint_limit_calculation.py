@@ -33,7 +33,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
@@ -234,8 +234,8 @@ def test_modelo_714_joint_limit_calculates_from_local_m100_observation(tmp_path:
         repo = CalculationObservationRepository()
         repo.save(
             repo.prepare_observation_envelope(
-                _m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT
-            )
+                _m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT,
+            stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)))
         )
         result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
 
@@ -251,8 +251,8 @@ def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(tmp_path: Pa
             scenario = _SCENARIOS[filing_year]
             repo.save(
                 repo.prepare_observation_envelope(
-                    _m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT
-                )
+                    _m100_observation(scenario), source_kind="app_filing", captured_at=_CAPTURED_AT,
+                stamped_revision_id=revision_id_for_observation(_m100_observation(scenario)))
             )
             result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
             _assert_joint_limit_outputs(result, scenario)

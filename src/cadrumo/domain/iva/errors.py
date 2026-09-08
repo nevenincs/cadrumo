@@ -48,17 +48,6 @@ class IvaRateOverlapError(IvaError):
     """
 
 
-class IvaClassificationError(IvaError):
-    """Raised when :func:`cadrumo.domain.iva.classify_iva` cannot return a deterministic match.
-
-    The classifier exposes a closed first-match-wins table; the only
-    structural failure is when the input criteria cannot be represented under
-    the closed enum set, which is caught at construction time by pydantic.
-    This error is reserved for future extensions such as ambiguous rule
-    rankings.
-    """
-
-
 class IvaValidationError(IvaError, ValueError):
     """Raised on invalid IVA field values. Inherits from ValueError for Pydantic."""
 
@@ -72,13 +61,4 @@ class ProrrataInputError(ProrrataError, ValueError):
 
     Inherits from ``ValueError`` so pydantic surfaces it as a
     ``ValidationError`` when raised from a model validator.
-    """
-
-
-class ProrrataSectorError(ProrrataError):
-    """Raised when sectoral-separation inputs are inconsistent.
-
-    Examples: a sector references an unknown id, two sectors share an
-    activity code, or the sector list is empty when sectoral separation
-    is required (LIVA art. 9.1.c).
     """

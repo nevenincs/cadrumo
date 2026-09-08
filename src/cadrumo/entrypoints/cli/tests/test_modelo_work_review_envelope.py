@@ -131,6 +131,7 @@ def _persist_blocked_review(
         calculation_revision = CalculationRevision(
             calculation_revision_id=calculation_revision_id,
             work_unit_id=work_unit_id,
+            registry_snapshot_ref=snapshot.snapshot_ref,
             state=CalculationRevisionState.BORRADOR,
             created_at=_NOW,
             updated_at=_NOW,
@@ -163,6 +164,7 @@ def _persist_blocked_review(
         report = VerificationReport(
             verification_report_id=verification_report_id,
             calculation_revision_id=calculation_revision_id,
+            registry_snapshot_ref=snapshot.snapshot_ref,
             completeness_status=VerificationCompletenessStatus.BLOCKED,
             findings=(finding,),
             run_at=_NOW,

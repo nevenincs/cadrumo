@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.resources.bundled_data import bundled_path
 from .....domain.deadlines.festivos import shift_deadline
@@ -76,6 +77,22 @@ def test_modelo_193_validates_and_gates_workflow_surfaces_through_snapshot() -> 
         "portal",
         "workflow",
     } <= linked_surfaces
+
+
+@pytest.mark.parametrize("revision_id", ["2024", "2025-y-siguientes"])
+def test_modelo_193_gastos_total_is_explicit_while_rows_keep_their_own_source(revision_id: str) -> None:
+    """No scalar source claim exists without a secure contributor observation owner."""
+    modelo, _catalogues = _committed_modelo("193")
+    revision = modelo.revisions[revision_id]
+    total = next(casilla for casilla in revision.casillas if casilla.id == "decl.gastos-total")
+    gasto_bindings = tuple(
+        binding for binding in revision.bindings if binding.source is BindingSourceKind.GASTO193_CONTRIBUTOR
+    )
+
+    assert total.input_kind == "manual"
+    assert total.binding is None
+    assert gasto_bindings
+    assert all(binding.aggregation.op is BindingAggregationOp.ROWS for binding in gasto_bindings)
 
 
 def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:

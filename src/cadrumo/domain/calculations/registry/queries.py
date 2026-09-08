@@ -164,11 +164,9 @@ class RegistryQueryService:
         source kind, the committed revisions that declare it and the per-revision
         binding count. This is a pure registry introspection surface — it does
         not consult the live calculation mesh — so it stays inside the domain
-        boundary. A caller in the application layer joins this inventory against
-        the disposition registry (``build_binding_source_dispositions``) to
-        prove that every declared source kind is enrolled or explicitly deferred,
-        never silently blank (the ``aeat-calculation-aggregation`` connectivity
-        contract).
+        boundary. Application-layer conformance compares this live inventory
+        directly with executable calculation-route ownership so an unrouted
+        declaration is refused rather than silently blanked.
 
         Returns:
             A :class:`~domain.calculations.registry._query_reports.RegistrySourceInventoryReport`

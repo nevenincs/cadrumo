@@ -15,7 +15,6 @@ from ..declarations_observations import (
     non_numeric_observed_casillas,
     observed_casillas_from_submitted_file,
     observed_header_facts_from_submitted_file,
-    resolve_previous_filing_bindings_from_filed_declarations,
 )
 from ._declarations_support import (
     _COTEJO_DOCUMENT_URL,
@@ -45,6 +44,7 @@ from ._declarations_support import (
     _modelo_snapshot,
     _observed_casillas_from_declaration_pdf,
     _read_guard_policy_from_snapshot,
+    _resolve_previous_filing_from_observations,
     _submitted_file_payload,
     assert_declarations_read_browser_action,
     assert_declarations_read_http,
@@ -307,7 +307,7 @@ class TestSubmittedFileObservation:
                 strict=True,
             )
         }
-        binding_values = resolve_previous_filing_bindings_from_filed_declarations(
+        binding_values = _resolve_previous_filing_from_observations(
             snapshot.revision,
             (
                 _filed_observation(
@@ -527,6 +527,7 @@ class TestSubmittedFileObservation:
             artefacts=(encrypted_artefact,),
             casillas=observed,
             extraction_coverage={"submitted_file": 1.0},
+            registry_snapshot_ref=snapshot.snapshot_ref,
         )
         manifest_path = store.persist_observation(observation)
         loaded = store.load_observation(manifest_path)
@@ -699,7 +700,7 @@ class TestFiledObservationBindings:
             casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)
         }
 
-        resolved = resolve_previous_filing_bindings_from_filed_declarations(
+        resolved = _resolve_previous_filing_from_observations(
             snapshot.revision,
             (
                 _filed_observation(
@@ -741,7 +742,7 @@ class TestFiledObservationBindings:
 
         manifest_path = store.persist_observation(observation)
         loaded = store.load_observation(manifest_path)
-        resolved = resolve_previous_filing_bindings_from_filed_declarations(
+        resolved = _resolve_previous_filing_from_observations(
             snapshot.revision,
             (loaded,),
             filing_year=2026,
@@ -774,7 +775,7 @@ class TestFiledObservationBindings:
         """
         snapshot = _modelo_130_snapshot()
 
-        resolved = resolve_previous_filing_bindings_from_filed_declarations(
+        resolved = _resolve_previous_filing_from_observations(
             snapshot.revision,
             (),
             filing_year=2026,

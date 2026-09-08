@@ -111,16 +111,7 @@ def auth_providers(
 
     report = list_operator_auth_providers()
     result = AuthProvidersResult(providers=list(report.providers))
-    rows: list[str] = []
-    for provider in report.providers:
-        if provider.implemented:
-            status_token = tr("cli.config.auth.providers.status_implemented")
-        else:
-            status_token = (
-                f"{tr('cli.config.auth.providers.status_reserved')}"
-                f" ({tr('cli.config.auth.providers.status_unavailable_gloss')})"
-            )
-        rows.append(f"{provider.id}\t{status_token}\t{tr(str(provider.label))}")
+    rows = [f"{provider.id}\t{tr(str(provider.label))}" for provider in report.providers]
     emit_envelope(ctx, command="config.auth.providers", result=result, lines=tuple(rows))
 
 
@@ -133,18 +124,13 @@ def auth_configure(
     """Configure the active authentication provider."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import configure_operator_auth
-    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError, AuthProviderReservedError
+    from ....application.auth.operator_results import AuthConfigureNoActiveBucketError
 
     try:
         result = configure_operator_auth(provider, certificate_path=file)
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider},
-        ) from exc
-    except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.reserved_provider",
             context={"provider": provider},
         ) from exc
     except AuthConfigureNoActiveBucketError as exc:
@@ -238,7 +224,6 @@ def auth_test(
     """Render auth readiness through the application-owned auth state."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import test_operator_auth
-    from ....application.auth.operator_results import AuthProviderReservedError
     from ..config_payloads import AuthTestPayload
 
     try:
@@ -246,11 +231,6 @@ def auth_test(
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider or ""},
-        ) from exc
-    except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.reserved_provider",
             context={"provider": provider or ""},
         ) from exc
     precondition_action = (
@@ -284,7 +264,6 @@ def auth_login(
     """Acquire or verify a live AEAT session through the configured provider."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.auth.operator import login_operator_auth
-    from ....application.auth.operator_results import AuthProviderReservedError
     from ..config_payloads import AuthLoginPayload
 
     try:
@@ -292,11 +271,6 @@ def auth_login(
     except KeyError as exc:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider or ""},
-        ) from exc
-    except AuthProviderReservedError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.reserved_provider",
             context={"provider": provider or ""},
         ) from exc
     payload = result.model_dump(mode="json")

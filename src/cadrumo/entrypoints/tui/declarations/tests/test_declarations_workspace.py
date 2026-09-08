@@ -28,6 +28,7 @@ from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
 from .....core.period import Period
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -63,6 +64,7 @@ _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _CASILLA = validated_casilla_id("01")
+_REGISTRY_SNAPSHOT_REF = bundled_authority().snapshot("130", filing_year=2026, period="1T").snapshot_ref
 _EXPECTED = {
     OutputLanguage.ES: (
         "Resumen de declaraciones",
@@ -125,7 +127,7 @@ def _projection(
         modelo="130",
         filing_year=2026,
         period=_PERIOD,
-        revision_id="2026",
+        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
     )
     filed_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -163,7 +165,7 @@ def _projection(
         modelo="130",
         filing_year=2026,
         period=_PERIOD,
-        revision_id="2026",
+        revision_id=_REGISTRY_SNAPSHOT_REF.revision_id,
         name="private label",
         created_at=_NOW,
         updated_at=_NOW,
@@ -174,6 +176,7 @@ def _projection(
     filed_revision = CalculationRevision(
         calculation_revision_id=filed_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.PRESENTADO,
         input_values_by_casilla_id={_CASILLA: "10.00"},
         casilla_values={},
@@ -189,6 +192,7 @@ def _projection(
     draft_revision = CalculationRevision(
         calculation_revision_id=draft_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={_CASILLA: "20.00"},
         casilla_values={},
@@ -200,6 +204,7 @@ def _projection(
     later_draft_revision = CalculationRevision(
         calculation_revision_id=later_draft_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={_CASILLA: "30.00"},
         casilla_values={},

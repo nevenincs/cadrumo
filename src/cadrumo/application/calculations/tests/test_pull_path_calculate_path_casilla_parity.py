@@ -109,6 +109,7 @@ from ...modelo.calculation_actions import calculate_modelo_revision_from_bucket_
 from ...modelo.work_lifecycle import create_work_unit
 from ..observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ..relation_prefill import RelationPrefillSourceResolver, resolve_relations_from_local_store
+from ._iva_compensation_history_support import m303_registry_snapshot_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -238,14 +239,15 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
         )
         obs_repo.save(
             obs_repo.prepare_observation_envelope(
-                RegistryModeloObservation(
+                    RegistryModeloObservation(
                     modelo="115",
                     filing_year=_YEAR,
                     period=period,
                     observations=result.observations,
-                ),
-                source_kind="app_filing",
-                captured_at=_T0,
+                    ),
+                    source_kind="app_filing",
+                    stamped_revision_id=snap.revision.id,
+                    captured_at=_T0,
             )
         )
         for output_cid in totals:
@@ -342,10 +344,12 @@ def _m303_wallet_decision() -> IvaCompensationReconciliationDecision:
         taxpayer_nif="12345678Z",
         target_year=_PRORRATA_YEAR,
         target_period=_PRORRATA_PERIOD,
+        target_registry_snapshot_ref=m303_registry_snapshot_ref(_PRORRATA_YEAR, _PRORRATA_PERIOD.registry_token),
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("0.00"),
         wallet_amount=Decimal("0.00"),
-        local_recurrence_amount=Decimal("0.00"),
+        local_recurrence_amount=None,
         override_amount=None,
         divergence="match",
         blocked=False,
@@ -553,6 +557,7 @@ def test_prorrata_apportioned_deducible_casilla_matches_calculate_and_pull_paths
                     provisional_percentage=Decimal("80"),
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                     source_observation_ref="303:2025:4T",
+                    source_registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "4T"),),
                 ),
             ),
         ),

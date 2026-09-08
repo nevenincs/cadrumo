@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from inspect import signature
 from pathlib import Path
 
 import pytest
@@ -24,11 +25,8 @@ def _write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def _settings(root: Path, *, review_required: bool = True) -> Settings:
-    return EnvFileFreeSettings(
-        aeat_manuals_root=root,
-        cadrumo_manuals_review_required=review_required,
-    )
+def _settings(root: Path) -> Settings:
+    return EnvFileFreeSettings(aeat_manuals_root=root)
 
 
 def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
@@ -91,6 +89,10 @@ def _seed_structure(root: Path, *, reviewer: str = "gw") -> None:
 class TestVerify:
     """Verification walks every record and surfaces issues."""
 
+    def test_no_development_review_switch_survives_in_the_product_contract(self) -> None:
+        assert "review_required" not in signature(verify_manual_dir).parameters
+        assert "cadrumo_manuals_review_required" not in Settings.model_fields
+
     def test_missing_part_root_raises(self, tmp_path: Path) -> None:
         """A non-existent part root is a hard error, not a report."""
         settings = _settings(tmp_path)
@@ -145,7 +147,7 @@ class TestVerify:
         payload = json.loads(manual_path.read_text(encoding="utf-8"))
         payload["definition_reviewed_by"] = ""
         manual_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        settings = _settings(root, review_required=True)
+        settings = _settings(root)
         report = verify_manual_dir(
             manual_id=ManualId.IVA,
             year=2025,

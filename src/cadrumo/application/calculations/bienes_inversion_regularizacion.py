@@ -165,12 +165,7 @@ def _current_year_prorrata_from_m303_observation(
         if payload is None:
             continue
         observation = payload.observation
-        refused = revision_carry_outcome(
-            payload.stamped_revision_id,
-            source_modelo=observation.modelo,
-            source_filing_year=observation.filing_year,
-            source_period=observation.period,
-        ).refused
+        refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
         if refused:
             continue
         percentage = observation.casilla_values.get(_CURRENT_YEAR_PRORRATA_ID)

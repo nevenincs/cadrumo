@@ -64,7 +64,7 @@ def test_participation_rebuild_subcommand_is_registered() -> None:
 
 
 def _invoke_participation(*args: str) -> Result:
-    return invoke_cached_cli(["app", "ledger", "participation", *args])
+    return invoke_cached_cli(["--language", "en", "app", "ledger", "participation", *args])
 
 
 def _seed_transaction_id() -> str:

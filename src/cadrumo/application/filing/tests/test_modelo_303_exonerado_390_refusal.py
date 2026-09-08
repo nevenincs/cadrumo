@@ -200,6 +200,7 @@ def test_exonerado_complete_revision_evidence_reaches_withdrawn_layout_without_o
                 ejercicio=period.filing_year,
                 regime=ProrrataRegisterRegime.NINGUNA,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
     )

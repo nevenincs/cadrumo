@@ -31,6 +31,7 @@ from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..filing.draft_review import ModeloApprovalStaleReason
+from ..filing.draft_revision_gate import require_modelo_draft_coordinates_current
 from .enums import ReviewSeverity
 from .errors import ReviewSourceLoadError
 from .models import (
@@ -285,6 +286,7 @@ def drafts_pending(
     items: list[FindingReviewItem] = []
     seen: set[tuple[str, str, str]] = set()
     for path, stored in drafts:
+        stored = require_modelo_draft_coordinates_current(stored)
         if (stored.profile_tax_id or "") != active_tax_id:
             continue
         draft, stale_reasons = _reviewed_against_current_state(stored, bucket_id=bucket_id)
@@ -427,6 +429,7 @@ def load_drafts(settings: Settings, *, bucket_id: str) -> tuple[tuple[Path, Mode
     out: list[tuple[Path, ModeloDraft]] = []
     try:
         for draft in repository.iter_drafts():
+            draft = require_modelo_draft_coordinates_current(draft)
             out.append((repository.envelope_path_for(draft.draft_id), draft))
     except (CadrumoError, ValidationError, OSError, ValueError) as exc:
         raise ReviewSourceLoadError(

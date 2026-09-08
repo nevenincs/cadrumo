@@ -244,6 +244,7 @@ def _covered_prorrata_register(filing_year: int) -> ProrrataRegister:
                 ejercicio=filing_year,
                 regime=ProrrataRegisterRegime.NINGUNA,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
     )
@@ -395,6 +396,7 @@ def _m303_prorrata_transition_arrival(
             kind=transition,
             evidence_reference=f"modelo-303-2026-prorrata-{transition.value}",
         ),
+        source_registry_snapshot_refs=(),
     )
     prior_entries = (
         (
@@ -402,6 +404,7 @@ def _m303_prorrata_transition_arrival(
                 ejercicio=2025,
                 regime=ProrrataRegisterRegime.ESPECIAL,
                 especial_transition=None,
+                source_registry_snapshot_refs=(),
             ),
         )
         if transition is ProrrataEspecialTransitionKind.REVOCACION
@@ -1289,6 +1292,7 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
             kind=ProrrataEspecialTransitionKind.OPCION,
             evidence_reference="operator-evidence:canonical-option",
         ),
+        source_registry_snapshot_refs=(),
     )
     foreign_entry = canonical_entry.model_copy(
         update={

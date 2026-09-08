@@ -34,6 +34,7 @@ from sqlalchemy import select
 from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..iva_compensation_history import IvaCompensationHistoryRepository
@@ -43,6 +44,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _PRESENTED_AT = datetime(2026, 1, 20, 10, 30, tzinfo=UTC)
 _EXPEDIENTE = "202530300000001Z"
 _DIGEST = "b" * 64
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2025",
+    modelo_year=2025,
+    period="4T",
+)
 
 
 def _fully_populated_state() -> IvaCompensationPeriodState:
@@ -52,6 +59,7 @@ def _fully_populated_state() -> IvaCompensationPeriodState:
         provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "4T"),
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         expediente_id=_EXPEDIENTE,
         status="presentada",
         presented_at=_PRESENTED_AT,
@@ -150,6 +158,7 @@ def test_an_operator_declared_state_cannot_carry_an_aeat_expediente() -> None:
             provenance=IvaCompensationStateProvenance.OPERATOR_SEED,
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             expediente_id=_EXPEDIENTE,
             presented_at=_PRESENTED_AT,
             generated_amount=Decimal("0.00"),
@@ -168,6 +177,7 @@ def test_an_aeat_capture_without_an_expediente_refuses() -> None:
             provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             presented_at=_PRESENTED_AT,
             generated_amount=Decimal("0.00"),
             available_end_amount=Decimal("10.00"),
@@ -199,6 +209,7 @@ def test_status_is_refused_on_every_non_aeat_provenance(
             provenance=provenance,
             filing_year=2025,
             period=Period.from_year_and_code(2025, "4T"),
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
             status="presentada",
             presented_at=_PRESENTED_AT,
             generated_amount=Decimal("0.00"),

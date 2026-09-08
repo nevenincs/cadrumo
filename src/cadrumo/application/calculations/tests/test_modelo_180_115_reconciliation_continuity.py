@@ -60,7 +60,7 @@ from ....domain.calculations.registry.bindings import (
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
@@ -238,7 +238,7 @@ def _compute_year_115_totals(
                 _115_observation(filing_year=filing_year, period=period, result=result),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            )
+            stamped_revision_id=revision_id_for_observation(_115_observation(filing_year=filing_year, period=period, result=result)))
         )
         for cid in totals:
             totals[cid] += result.values[cid]

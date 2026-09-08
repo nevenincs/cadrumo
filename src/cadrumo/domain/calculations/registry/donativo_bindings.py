@@ -13,12 +13,9 @@ The family follows the established detail-record shape (
 per-row observation model, a strict frozen selector model requiring the
 ``row_field`` fact with the ``rows`` aggregation op, a build-time validator
 registered in the binding validator dispatch table, and a
-``resolve_donativo_binding_row_values`` row-value resolver. No live mesh
-resolver is enrolled yet; ``BindingSourceKind.DONATIVO_DONOR`` is registered in
-``DEFERRED_SOURCE_KINDS`` (Sheets-pull-only, matching the sibling
-``atribucion_member`` / ``related_party_operation`` /
-``refund_operation`` families) so a calculate-path binding of this source
-surfaces a standing advisory rather than a silent blank.
+``resolve_donativo_binding_row_values`` row-value resolver. No production
+calculation-route resolver owns this source, so a calculate request carrying
+one of these bindings is refused rather than silently blanked.
 """
 
 from __future__ import annotations

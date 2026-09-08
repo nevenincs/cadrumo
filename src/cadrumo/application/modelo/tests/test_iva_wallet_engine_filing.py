@@ -16,6 +16,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ModeloRecordStatus
 from ....tests import general_m303_filing_evidence
 from ....tests.cross_period_seeding import seed_clean_cross_period_sources
+from ...calculations.binding_prefill import BindingPrefillReport
 from ...calculations.iva_compensation_history import IvaCompensationHistoryRepository
 from ...calculations.iva_wallet_balance import query_iva_wallet_balance
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
@@ -58,6 +59,8 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             wallet=_wallet_observation(pending=Decimal("1200.00"), taxpayer_nif=taxpayer_nif),
             repository=CalculationObservationRepository(),
             decided_at=_DECIDED_AT,
+            local_recurrence=None,
+            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
         )
         assert report.decision.selected_authority == "aeat_wallet"
         assert report.decision.divergence == "wallet_only"
@@ -160,6 +163,8 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             repository=CalculationObservationRepository(),
             decided_at=decided_1t_at,
             treat_absent_recurrence_as_first_period=True,
+            local_recurrence=None,
+            prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
         )
         assert report_1t.decision.divergence == "first_period_zero"
 

@@ -23,7 +23,9 @@ import pytest
 
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -51,12 +53,17 @@ _DRAFT_BYTES = b"FICHERO-BOE-BYTES-FOR-REVIEW-PACKAGE-TEST"
 
 def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:
     period = Period.from_year_and_code(2026, "1T")
+    revision_id = bundled_authority().snapshot(
+        "303",
+        filing_year=2026,
+        period=period.registry_token,
+    ).revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
         period=period,
-        revision_id="review-package-revision",
+        revision_id=revision_id,
     )
     return WorkUnit(
         work_unit_id=work_unit_id,
@@ -64,7 +71,7 @@ def _work_unit(*, bucket_id: str = "bucket-review-package") -> WorkUnit:
         modelo=ModeloCode("303"),
         filing_year=2026,
         period=period,
-        revision_id="review-package-revision",
+        revision_id=revision_id,
         name="303-2026-1T",
         created_at=_NOW,
         updated_at=_NOW,
@@ -95,6 +102,12 @@ def _revision(
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=state,
         input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
         casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
@@ -141,6 +154,7 @@ def test_build_review_package_then_verify_clean(tmp_path: Path) -> None:
     assert build_result.manifest.bucket_id == work_unit.bucket_id
     assert build_result.manifest.modelo == "303"
     assert build_result.manifest.filing_year == 2026
+    assert build_result.manifest.registry_snapshot_ref == revision.registry_snapshot_ref
     assert build_result.manifest.has_ledger_evidence is False
     assert build_result.manifest.notes == "shared with accountant for Q1 review"
 

@@ -21,6 +21,7 @@ from ..sql.engine import create_engine_from_settings, dispose_engine
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
+
 _BUCKET_ID = "74747474-7474-4474-8474-747474747474"
 _INSTANT = datetime(2026, 7, 12, 18, 0, tzinfo=UTC)
 

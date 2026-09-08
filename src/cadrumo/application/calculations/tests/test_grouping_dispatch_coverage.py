@@ -24,8 +24,8 @@ import pytest
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ...aggregation import BindingSourceDisposition, InventorySourceResolver
-from ...modelo.calculation_route import CALCULATION_ROUTE_RESOLVER_OWNERSHIP, CALCULATION_ROUTE_SOURCE_DISPOSITIONS
+from ...aggregation import InventorySourceResolver
+from ...modelo.calculation_route import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
 from ..row_set_assembly import _GROUPING_DISPATCH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -128,4 +128,3 @@ def test_mesh_resolved_groupings_have_a_real_enrolled_route_owner() -> None:
         assert owner.resolver_type is InventorySourceResolver, f"{grouping!r} must use InventorySourceResolver"
         assert owner.resolver_id == InventorySourceResolver.resolver_id
         assert source_kind in InventorySourceResolver.owned_sources
-        assert CALCULATION_ROUTE_SOURCE_DISPOSITIONS[source_kind] is BindingSourceDisposition.ENROLLED

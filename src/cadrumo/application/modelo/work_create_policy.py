@@ -30,22 +30,6 @@ from dataclasses import dataclass
 
 from pydantic import ValidationError
 
-from ...core.config import load_settings
-from ...core.modelo import Modelo
-
-STUB_MODELO_LOCALE_KEYS: dict[str, str] = {
-    Modelo.M151.value: "cli.app.modelo.work.create_stub_modelo_151_refused",
-    Modelo.M210.value: "cli.app.modelo.work.create_stub_modelo_210_refused",
-    "600": "cli.app.modelo.work.create_stub_modelo_600_refused",
-    "620": "cli.app.modelo.work.create_stub_modelo_620_refused",
-    "650": "cli.app.modelo.work.create_stub_modelo_650_refused",
-    "660": "cli.app.modelo.work.create_stub_modelo_660_refused",
-    Modelo.M714.value: "cli.app.modelo.work.create_stub_modelo_714_refused",
-    Modelo.M721.value: "cli.app.modelo.work.create_stub_modelo_refused",
-}
-
-STUB_ONLY_MODELOS: frozenset[str] = frozenset(STUB_MODELO_LOCALE_KEYS)
-
 #: Ceded autonomic-tax modelos that are administered by the Comunidades
 #: Autónomas rather than the AEAT, and are therefore absent from the
 #: calculation registry entirely: ITP-AJD (``600``, ``620``) and ISD (``650``,
@@ -94,25 +78,20 @@ class ModeloWorkCreateApplicabilityRefusal:
 
 
 def modelo_work_create_refusal_locale_key(modelo: str) -> str | None:
-    """Return the locale key for a refused stub-modelo create request.
+    """Return the jurisdiction redirect for a ceded autonomic tax, if any.
 
-    The lookup normalises whitespace and returns ``None`` when the modelo is not
-    in :data:`STUB_ONLY_MODELOS`. Modelo 210 is conditionally released when the
-    ``cadrumo_m210_engine_live`` setting is enabled; all other entries remain
-    refused by this policy surface.
+    AEAT modelo capability is deliberately absent from this policy. Registry
+    snapshot, readiness, calculation, and filing boundaries each validate the
+    capability they actually require; a hand-maintained "stub" classification
+    cannot represent those distinct surfaces and inevitably lags them.
 
     See Also:
-        :class:`cadrumo.core.Modelo`:
-            Closed modelo enum used for the core stub-only entries.
+        :func:`ceded_autonomic_modelo_locale_key`:
+            The domain-owned jurisdiction classifier delegated to here.
         :mod:`cadrumo.entrypoints.cli._modelo_work_lifecycle_cli`:
             Converts the locale key into a typed CLI refusal.
     """
-    modelo_code = modelo.strip()
-    if modelo_code not in STUB_ONLY_MODELOS:
-        return None
-    if modelo_code == Modelo.M210 and load_settings().cadrumo_m210_engine_live:
-        return None
-    return STUB_MODELO_LOCALE_KEYS[modelo_code]
+    return ceded_autonomic_modelo_locale_key(modelo)
 
 
 def modelo_work_create_applicability_refusal(
@@ -181,8 +160,6 @@ def guard_active_profile_foral_ccaa() -> None:
 
 __all__ = [
     "CEDED_AUTONOMIC_MODELO_LOCALE_KEYS",
-    "STUB_MODELO_LOCALE_KEYS",
-    "STUB_ONLY_MODELOS",
     "ModeloWorkCreateApplicabilityRefusal",
     "ceded_autonomic_modelo_locale_key",
     "guard_active_profile_foral_ccaa",

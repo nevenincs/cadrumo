@@ -40,7 +40,6 @@ import subprocess
 import sys
 import textwrap
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -49,35 +48,6 @@ from ....tests import REPO_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
-    {"secrets", "master.key", "master.kdf", "master.recovery.key"},
-)
-"""Taxonomy-vocabulary literals this module deliberately pins.
-
-These names outlived the code that wrote them, and that makes the assertions
-STRONGER rather than stale. The shared-master file store was retired, so no
-surviving path can create ``master.key``, ``master.kdf`` or
-``master.recovery.key`` at all: an assertion that they are absent used to mean
-"this flow did not write them" and now also means "nothing could have". Do not
-read these literals as leftovers of a deleted surface and sweep them -- the
-absence they pin is the point, and pinning it by literal is what keeps the
-check independent of the taxonomy accessors it is checking.
-
-``_workspace_secret_store_fingerprint`` targets the real, shared dev-workspace
-secret store (``REPO_ROOT / "var" / "secrets"``), never a taxonomy accessor --
-that is the point of the fingerprint, which exists to catch a cold-process
-test polluting the real workspace. The cold-process CLI assertions in
-``test_cold_process_profile_create_uses_local_storage_secret_store`` set no
-``CADRUMO_SECRET_STORE_DIR`` override, so they check production's real
-DEFAULT-derived location, not an injected value; migrating either to the
-accessor would make the assertion agree with the code path it exists to
-independently confirm. ``"master.key"``, ``"master.kdf"``, and
-``"master.recovery.key"`` are :data:`_SECRET_STORE_FILES`'s three real leaf
-names, checked by the same fingerprint and asserted directly under the
-``"secrets"`` directory (``"salt"`` is the fourth entry but is not a taxonomy
-member: the per-store salt lives inside ``master.kdf``, no standalone file is
-ever written).
-"""
 
 # The internal registration-guard messages that must never reach the operator
 # from the composition root. Each is raised by a core registry-slot accessor

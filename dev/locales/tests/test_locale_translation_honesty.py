@@ -1,36 +1,7 @@
-"""Honesty assertions for the shared locale catalogues.
-
-A locale that ships untranslated content while pretending to be a real
-translation surface is dishonest about its support. This module pins three
-contracts. First, generic application keys under ``ca``, ``es``, and
-``hu`` must differ from the corresponding ``en`` value. Modelo schema keys
-must instead be judged against the official Spanish source, and Spanish
-itself is never treated as a translation target. An exact non-Spanish match
-requires an explicit ``_intentional_identical.json`` reason. Second, no
-catalogue value in ANY locale (``en``
-included) may echo its own dotted key: a key-echo is the scaffold
-placeholder, never a legitimate translation, so it has no per-key
-allowlist — only a shrink-only ``_key_echo_ceiling`` ratchet recorded in
-the same allowlist file.
-
-The Modelo catalogue also contains optional non-Spanish leaves whose value is
-``null`` until a translation is authored. Those absent values are intentional
-Spanish fallback and are excluded from the identical-source comparison;
-authored non-null values remain subject to the same allowlist and ratchet
-rules. The ``_untranslated_ceiling = 0`` metadata therefore grants no bypass
-for a new authored value that merely echoes its canonical source.
-
-The bucket and its ceiling are retained rather than removed because
-neither is hand-editable — ``_intentional_identical.json`` is
-CLI-managed (``aeat-locales-cli``), ``allow-identical`` only ADDS a
-per-key entry, and no verb removes one; ``dev.locales._status``
-also binds the bucket key, so dropping it is a code change rather than
-a data edit.
-"""
+"""Structural honesty assertions for the shared locale catalogues."""
 
 from __future__ import annotations
 
-import json
 import tomllib
 from functools import cache
 
@@ -50,6 +21,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _MODELO_SCHEMA_PREFIX = "modelo.schema."
 _MODELO_SOURCE_SUFFIXES = (".label", ".title", ".official_name")
+
+
+def test_runtime_locale_root_contains_no_development_metadata() -> None:
+    """The shipped locale root contains catalogues, not audit dispositions."""
+
+    assert list(LOCALES_DIR.glob("*.json")) == []
 
 
 def _is_modelo_source_key(key: str) -> bool:
@@ -72,26 +49,6 @@ def _flatten(mapping: dict[str, _LocaleNode], prefix: str = "") -> dict[str, str
             result.update(_flatten(value, sub))
         else:
             result[sub] = value
-    return result
-
-
-def _load_allowlist() -> dict[str, set[str]]:
-    """Return ``{locale: <set of keys explicitly allowed to match en>}``.
-
-    The allowlist uses either per-key justifications OR the wholesale
-    ``untranslated_pending`` bucket. Keys beginning with ``_`` are
-    internal metadata (e.g. ``_untranslated_ceiling``) and are excluded
-    from the returned set.
-    """
-
-    path = LOCALES_DIR / "_intentional_identical.json"
-    raw = json.loads(path.read_text(encoding="utf-8")) or {}
-    data: dict[str, dict[str, str]] = raw if isinstance(raw, dict) else {}
-    result: dict[str, set[str]] = {}
-    for locale, entries in data.items():
-        if isinstance(entries, dict):
-            # Exclude internal metadata keys (prefixed with "_").
-            result[locale] = {str(key) for key in entries if not str(key).startswith("_")}
     return result
 
 
@@ -183,23 +140,6 @@ def _continuity_backing() -> dict[str, str]:
     return backing
 
 
-def _load_metadata_ceiling(locale_code: str, field: str) -> int | None:
-    """Return one integer ``_``-prefixed metadata field for *locale_code*."""
-
-    path = LOCALES_DIR / "_intentional_identical.json"
-    raw = json.loads(path.read_text(encoding="utf-8")) or {}
-    data: dict[str, dict[str, object]] = raw if isinstance(raw, dict) else {}
-    entries = data.get(locale_code, {})
-    ceiling = entries.get(field) if isinstance(entries, dict) else None
-    return int(ceiling) if isinstance(ceiling, int) else None
-
-
-def _load_untranslated_ceiling(locale_code: str) -> int | None:
-    """Return the ``_untranslated_ceiling`` for *locale_code* if set."""
-
-    return _load_metadata_ceiling(locale_code, "_untranslated_ceiling")
-
-
 def _key_echo_offenders(flat_leaves: dict[str, str | None]) -> list[str]:
     """Return keys whose value is the key itself — the scaffold placeholder.
 
@@ -273,34 +213,17 @@ def test_key_echo_offender_detection_discriminates() -> None:
     assert _blank_offenders({"a.b": "", "c.d": "  ", "e.f": "x"}) == ["a.b", "c.d"]
 
 
-def test_key_echo_count_matches_the_pinned_ceiling() -> None:
-    """The committed echo ceiling must equal the observed count, both ways.
-
-    A value equal to its own dotted key is the scaffold's "no translation
-    yet" marker leaking into a shipped catalogue. It is never legitimate,
-    so there is no per-key allowlist; the ``_key_echo_ceiling`` metadata
-    field in ``_intentional_identical.json`` is a pinned statement of the
-    current debt (a missing field means zero). Equality is enforced in
-    BOTH directions: clearing echoes forces the ceiling down in the same
-    change, and new echoes require an explicit, reviewable ceiling raise
-    — shrink-only by structure, not by convention.
-    """
+def test_no_catalogue_value_echoes_its_key() -> None:
+    """A key-echo is a scaffold placeholder and the exact target is zero."""
 
     failures: list[str] = []
     for locale_code in ("ca", "en", "es", "hu"):
         leaves = _catalogue_leaves(locale_code)
         offenders = _key_echo_offenders(leaves)
-        ceiling = _load_metadata_ceiling(locale_code, "_key_echo_ceiling") or 0
-        if len(offenders) < ceiling:
+        if offenders:
             failures.append(
-                f"{locale_code}.yml has {len(offenders)} key-echo value(s) but the pinned ceiling is "
-                f"{ceiling}: the debt shrank, so lower (or remove) '_key_echo_ceiling' in "
-                f"_intentional_identical.json in this same change."
-            )
-        elif len(offenders) > ceiling:
-            failures.append(
-                f"{locale_code}.yml carries {len(offenders)} key-echo value(s) against a pinned ceiling "
-                f"of {ceiling}. A key-echo is the scaffold placeholder, never a translation; author the "
+                f"{locale_code}.yml carries {len(offenders)} key-echo value(s). "
+                f"A key-echo is the scaffold placeholder, never a translation; author the "
                 f"value via `python -m dev.locales set`. First five: {offenders[:5]}"
             )
 
@@ -362,95 +285,3 @@ def test_modelo_spanish_values_are_authority_source() -> None:
         f"es.yml is the mandatory official Modelo source; these schema leaves are blank AND have no "
         f"populated continuity label to fall back to, so they render nothing: {offenders[:10]}"
     )
-
-
-def test_translated_values_differ_from_canonical_source_unless_allowlisted() -> None:
-    """Generic values differ from English; Modelo values differ from Spanish.
-
-    When the wholesale ``untranslated_pending`` bucket is active, the test
-    acts as a ratchet: the number of identical-source keys must not exceed
-    the ``_untranslated_ceiling`` stored in the allowlist.  This prevents
-    regressions that add new untranslated strings while the bulk translation
-    work is in progress.
-
-    To lower the ratchet after a translation pass: update
-    ``_untranslated_ceiling`` in ``_intentional_identical.json`` to the new
-    (lower) observed count.
-    """
-    allowlist = _load_allowlist()
-    en_keys = _catalogue_leaves("en")
-    es_keys = _catalogue_leaves("es")
-    failures: list[str] = []
-
-    for locale_code in ("ca", "es", "hu"):
-        locale_allows = allowlist.get(locale_code, set())
-        locale_keys = _catalogue_leaves(locale_code)
-
-        offenders_by_source: dict[str, list[str]] = {}
-        for key, en_value in en_keys.items():
-            locale_value = locale_keys.get(key)
-            if not isinstance(locale_value, str):
-                continue
-            if key.startswith(_MODELO_SCHEMA_PREFIX):
-                # Spanish is the authority source for the schema. Its own
-                # value is never an untranslated translation, and absent
-                # non-Spanish values deliberately resolve to it at runtime.
-                if locale_code == "es":
-                    continue
-                source_label = "es.yml"
-                source_value = es_keys.get(key)
-            else:
-                source_label = "en.yml"
-                source_value = en_value
-            if not isinstance(source_value, str) or locale_value != source_value or key in locale_allows:
-                continue
-            offenders_by_source.setdefault(source_label, []).append(key)
-
-        for source_label, offenders in offenders_by_source.items():
-            failure = _identical_to_source_failure(
-                locale_code,
-                source_label,
-                offenders,
-                bucket_active="untranslated_pending" in locale_allows,
-            )
-            if failure is not None:
-                failures.append(failure)
-
-    assert failures == [], "\n".join(failures)
-
-
-def _identical_to_source_failure(
-    locale_code: str,
-    source_label: str,
-    offenders: list[str],
-    *,
-    bucket_active: bool,
-) -> str | None:
-    """Render one locale's identical-source verdict, or ``None`` when clean.
-
-    Wholesale-bucket mode enforces the ratchet ceiling instead of requiring
-    per-key allowlist entries; a regression that adds new untranslated
-    strings pushes the count over the ceiling.
-    """
-
-    if not bucket_active:
-        if not offenders:
-            return None
-        return (
-            f"{locale_code}.yml carries {len(offenders)} value(s) identical to {source_label} without an "
-            f"explicit allowlist entry. First five: {offenders[:5]}"
-        )
-    ceiling = _load_untranslated_ceiling(locale_code)
-    if ceiling is None:
-        return (
-            f"{locale_code}: 'untranslated_pending' bucket is active but "
-            f"'_untranslated_ceiling' is missing from _intentional_identical.json. "
-            f"Add the current identical-key count ({len(offenders)}) as the ceiling."
-        )
-    if len(offenders) > ceiling:
-        return (
-            f"{locale_code}.yml has {len(offenders)} key(s) identical to {source_label}, "
-            f"exceeding the ratchet ceiling of {ceiling}. "
-            f"New untranslated keys (first five of overflow): {offenders[ceiling:][:5]}"
-        )
-    return None

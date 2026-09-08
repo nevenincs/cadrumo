@@ -53,9 +53,7 @@ _ENVELOPE_ORIGINS = frozenset(
 _ENVELOPE_LOADER_ORIGINS = frozenset(
     {
         "cadrumo.adapters.persistence.storage.load_envelope",
-        "cadrumo.adapters.persistence.storage.load_encrypted_envelope",
         "cadrumo.adapters.persistence.storage.envelope.load_envelope",
-        "cadrumo.adapters.persistence.storage.envelope.load_encrypted_envelope",
     }
 )
 """Loaders that return an ``Envelope``, so their result is an envelope handle."""

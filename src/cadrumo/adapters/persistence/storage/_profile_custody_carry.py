@@ -32,7 +32,6 @@ from ....application.ledger.extracted_document_cache import (
 from ....application.ledger.extraction_draft_store import ExtractionDraftDocument, extraction_draft_object_key
 from ....application.ledger.rule_repository import ledger_classification_rule_object_key
 from ....application.live.borrador_100 import Borrador100Snapshot, borrador_100_snapshot_object_key
-from ....application.live.deudas import PersistedDeudasSnapshot, deudas_snapshot_object_key
 from ....application.live.expedientes import PersistedExpedientesSnapshot, expedientes_snapshot_object_key
 from ....application.live.iva_remote_state import IvaRemoteStateAcquisitionManifestRepository
 from ....application.live.justificante import JustificanteCaptureSnapshot, justificante_capture_snapshot_object_key
@@ -247,7 +246,7 @@ def _natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers.update(_live_snapshot_natural_key_resolvers())
     resolvers.update(_modelo_natural_key_resolvers())
     resolvers.update(_sede_natural_key_resolvers())
-    resolvers.update(_ledger_extraction_and_live_deudas_natural_key_resolvers())
+    resolvers.update(_ledger_extraction_natural_key_resolvers())
     return resolvers
 
 
@@ -369,7 +368,7 @@ def _sede_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     }
 
 
-def _ledger_extraction_and_live_deudas_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
+def _ledger_extraction_natural_key_resolvers() -> dict[str, NaturalKeyResolver]:
     resolvers: dict[str, NaturalKeyResolver] = {}
 
     def _extracted_document_cache_key(record: SecureObjectRecord, _bucket_id: str) -> str:
@@ -396,14 +395,6 @@ def _ledger_extraction_and_live_deudas_natural_key_resolvers() -> dict[str, Natu
     resolvers["cadrumo.application.ledger.confirmed_counterparty_facts"] = _bound_resolver(
         _confirmed_counterparty_facts_repo,
     )
-
-    def _deudas_payload() -> type[PersistedDeudasSnapshot]:
-        return PersistedDeudasSnapshot
-
-    def _deudas_key(bucket_id: str, snapshot_id: str) -> str:
-        return deudas_snapshot_object_key(bucket_id, snapshot_id)
-
-    resolvers["cadrumo.application.live.deudas_snapshot"] = _snapshot_resolver(_deudas_payload, _deudas_key)
 
     def _evidence_consent_ledger_key(record: SecureObjectRecord, _bucket_id: str) -> str:
         entry_payload = json.loads(record.payload.decode(_UTF_8))["entry"]

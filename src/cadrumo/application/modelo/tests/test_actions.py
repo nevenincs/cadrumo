@@ -24,7 +24,7 @@ from ....domain.calculations.registry.formula_runtime import calculate_registry_
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import DataBindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.calculations.registry.schema_references import PeriodSelector
+from ....domain.calculations.registry.schema_references import PeriodSelector, RegistrySnapshotRef
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
@@ -248,6 +248,10 @@ def _blocked_wallet_decision(
         taxpayer_nif="12345678Z",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "1T"),
+        target_registry_snapshot_ref=bundled_authority()
+        .snapshot("303", filing_year=2026, period="1T")
+        .snapshot_ref,
+        source_registry_snapshot_refs=(),
         selected_authority="missing",
         selected_amount=None,
         divergence=divergence,
@@ -313,6 +317,12 @@ def _minimal_calculation_revision(work_unit: WorkUnit) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         casilla_values={},
@@ -937,6 +947,12 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,

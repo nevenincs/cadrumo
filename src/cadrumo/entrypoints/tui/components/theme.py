@@ -205,9 +205,8 @@ CADRUMO_CSS_TOKENS: Final[Mapping[str, str]] = MappingProxyType(
 )
 """The canonical presentation tokens every Cadrumo surface is built from.
 
-Delivered through :func:`cadrumo_css_variables`, which every Cadrumo ``App``
-returns from ``get_css_variables``. That hook is the only mechanism Textual
-offers that reaches EVERY stylesheet -- app-level ``CSS`` and each widget's
+Delivered through :func:`tokenised` before each Cadrumo stylesheet is handed
+to Textual. Pre-expansion reaches app-level ``CSS`` and each widget's
 ``DEFAULT_CSS`` alike. Theme ``variables`` do not: they are resolved after
 widget default styles are parsed, so a token spent there raises
 ``UnresolvedVariableError`` in exactly the places a design system most needs

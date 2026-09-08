@@ -43,18 +43,6 @@ from .models import (
 )
 from .workspace_injection import LedgerWorkspaceInjection
 
-_IMPLEMENTED_AREAS: Final = frozenset(
-    {
-        LedgerWorkspaceArea.OVERVIEW,
-        LedgerWorkspaceArea.ENTRIES,
-        LedgerWorkspaceArea.REVIEW,
-        LedgerWorkspaceArea.IMPORT,
-        LedgerWorkspaceArea.CLASSIFICATION,
-        LedgerWorkspaceArea.EVIDENCE,
-        LedgerWorkspaceArea.RECONCILIATION,
-    }
-)
-
 _AREA_LOCALE_KEYS: Final = {
     LedgerWorkspaceArea.OVERVIEW: "tui.ledger.area.overview",
     LedgerWorkspaceArea.ENTRIES: "tui.ledger.area.entries",
@@ -226,15 +214,11 @@ class LedgerWorkspaceController:
         missing_door = missing_door or (
             area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
         )
-        if area not in _IMPLEMENTED_AREAS or missing_door:
+        if missing_door:
             return LedgerRouteRefusalV1(
                 target=target,
                 availability=LedgerWorkspaceAvailability.UNAVAILABLE,
-                reason_key=(
-                    "tui.ledger.refusal.submission_unavailable"
-                    if missing_door
-                    else "tui.ledger.refusal.destination_pending"
-                ),
+                reason_key="tui.ledger.refusal.submission_unavailable",
             )
         return None
 

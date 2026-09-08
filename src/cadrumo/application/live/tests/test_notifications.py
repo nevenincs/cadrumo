@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Final
 
 import pytest
 from pydantic import AnyHttpUrl
@@ -30,8 +29,6 @@ from ..notifications import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _AEAT = Settings.external_constants().aeat
 _NOTIFICATIONS_SUMMARY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_summary}"

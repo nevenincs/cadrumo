@@ -51,6 +51,7 @@ from ..application.ledger.actions_manual import update_manual_transaction_fields
 from ..application.ledger.models import ManualLedgerTransactionPatch
 from ..core.casilla_id import CasillaId, validated_casilla_id
 from ..core.period import Period
+from ..domain.calculations.registry.authority import bundled_authority
 from ..domain.iva.schema import IvaCategory
 from ..domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -121,12 +122,17 @@ def _txn(*, taxable_base: Decimal) -> Transaction:
 
 
 def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
+    registry_snapshot_ref = bundled_authority().snapshot(
+        "303",
+        filing_year=_FILING_PERIOD.filing_year,
+        period=_FILING_PERIOD.registry_token,
+    ).snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2025,
         period=_FILING_PERIOD,
-        revision_id="2022",
+        revision_id=registry_snapshot_ref.revision_id,
     )
     filing_instance_evidence = general_m303_filing_evidence(_FILING_PERIOD, reference="test:ledger-modelo-staleness")
     revision_id = derive_calculation_revision_id(
@@ -141,6 +147,7 @@ def _verified_revision(snapshot, tx_id: str) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},
@@ -237,7 +244,7 @@ def test_finalized_modelo_blocks_destructive_ledger_edit(secure_objects: SecureO
         modelo=ModeloCode("303"),
         filing_year=2025,
         period=_FILING_PERIOD,
-        revision_id="2022",
+        revision_id=revision.registry_snapshot_ref.revision_id,
         name="303-2025-1T",
         created_at=_NOW,
         updated_at=_NOW,

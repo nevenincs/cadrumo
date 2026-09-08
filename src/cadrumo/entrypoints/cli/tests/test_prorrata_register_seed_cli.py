@@ -31,6 +31,7 @@ from ....core.modelo import Modelo
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ._cli_surface_profile_fixture import _isolated_backend
@@ -184,6 +185,14 @@ def test_seed_surfaces_the_carried_entry_contradiction_rather_than_succeeding() 
             provisional_percentage=Decimal("42"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
             source_observation_ref=f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}",
+            source_registry_snapshot_refs=(
+                RegistrySnapshotRef(
+                    modelo=Modelo.M303.value,
+                    revision_id=_law_determined_prior_revision_id(),
+                    modelo_year=_PRIOR_YEAR,
+                    period=_SETTLEMENT_PERIOD,
+                ),
+            ),
         )
     )
 

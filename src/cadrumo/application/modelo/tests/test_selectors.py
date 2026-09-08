@@ -16,6 +16,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -29,7 +30,7 @@ from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, U
 from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ..action_errors import CalculationRevisionStateError
+from ..action_errors import CalculationRevisionStateError, WorkUnitRevisionDivergenceError
 from ..selectors import (
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorAmbiguousError,
@@ -174,6 +175,12 @@ def _seed_revision(
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="130",
+            revision_id="2019-y-siguientes",
+            modelo_year=2026,
+            period=_P_2026_1T.registry_token,
+        ),
         state=state,
         input_values_by_casilla_id={_OUTPUT_CASILLA: str(output)},
         casilla_values={_OUTPUT_CASILLA: output},
@@ -194,6 +201,37 @@ def _seed_revision(
     )
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
     return revision
+
+
+def test_revision_selector_refuses_a_persisted_divergent_registry_coordinate(
+    selector_repos: tuple[WorkUnitCatalogueRepository, CalculationRevisionCatalogueRepository],
+) -> None:
+    """Selectors cannot hand a stale persisted value to an interpreting caller."""
+    work_repo, calculation_repo = selector_repos
+    work_unit = _seed_work_unit(work_repo)
+    revision = _seed_revision(
+        calculation_repo,
+        work_unit_id=work_unit.work_unit_id,
+        state=CalculationRevisionState.BORRADOR,
+        created_at=_T0,
+        output=Decimal("1.00"),
+    )
+    stale = revision.model_copy(
+        update={
+            "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
+                update={"revision_id": "persisted-stale-revision"},
+            ),
+        },
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), stale))
+
+    with pytest.raises(WorkUnitRevisionDivergenceError):
+        select_modelo_calculation_revision(
+            work_unit,
+            selector=ModeloCalculationRevisionSelector.EXPLICIT,
+            calculation_revision_id=revision.calculation_revision_id,
+            calculation_repository=calculation_repo,
+        )
 
 
 def test_selector_resolves_active_bucket_when_no_explicit_bucket(work_repo: WorkUnitCatalogueRepository) -> None:

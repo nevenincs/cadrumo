@@ -358,6 +358,10 @@ def project_declarations_workspace(
     observations = _validate_observations(zone_observations)
     units = tuple(work_units.values())
     revisions = tuple(calculation_revisions.values())
+    from .calculation_revision_gate import require_calculation_revision_coordinates_current
+
+    for revision in revisions:
+        require_calculation_revision_coordinates_current(revision)
     filings = tuple(filing_records.records.values())
     _validate_catalogue_joins(
         bucket_id=bucket_id,

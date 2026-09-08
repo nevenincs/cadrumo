@@ -26,6 +26,7 @@ from pydantic import ValidationError
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....application.overview.pipeline_health import ModeloReadinessState
 from ....core.bucket_pointer import resolve_active_bucket_id
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.verification_report import (
     VerificationCompletenessStatus,
     VerificationReport,
@@ -283,6 +284,12 @@ def test_pipeline_distinguishes_persisted_incomplete_from_never_verified(
     report = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=calculation_revision_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="130",
+            revision_id="2019-y-siguientes",
+            modelo_year=2025,
+            period="4T",
+        ),
         completeness_status=VerificationCompletenessStatus.INCOMPLETE,
         findings=(),
         missing_required_casilla_ids=(),

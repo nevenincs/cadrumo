@@ -72,6 +72,10 @@ _ESPECIAL_PARAMS = ProrrataEspecialMandatoryParameters(
 )
 
 
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+
+
 def _especial_params_for(year: int) -> ProrrataEspecialMandatoryParameters:
     """The margin bundle, resolved for ``year``.
 
@@ -150,6 +154,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
                     provisional_percentage=_GENERAL_PERCENTAGE,
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                     source_observation_ref="303:2025:4T",
+                    source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 ),
             ),
         ),

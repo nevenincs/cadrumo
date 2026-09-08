@@ -29,11 +29,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final
 
-from pydantic import AnyHttpUrl
-
 from .....core.config import Settings
-from .....core.external_constants import JSON_MIME_TYPE as _JSON_MIME_TYPE
-from .....core.hashing import sha256_hex
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time.clock import now
@@ -48,12 +44,8 @@ from .._html import parse_html
 from .._playwright import BrowserContext, Locator, Page, Playwright, PlaywrightError
 from ..browser import Profile
 from ..browser.factory import opened_browser_page, shared_playwright_runtime
-from ._adapter_utils import assert_pdf_response as _assert_pdf_response
 from ._adapter_utils import assert_read_landing
 from ._auth_state import storage_state_for_session
-from ._browser_constants import (
-    PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
-)
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_NETWORKIDLE as _WAIT_NETWORKIDLE,
 )
@@ -64,19 +56,13 @@ from ._declarations_diagnostics import (
     declarations_page_shape_context_from_page as _declarations_page_shape_context_from_page,
 )
 from ._declarations_fetch import (
-    COTEJO_PATH_PREFIX,
     READ_GUARD_POLICY,
     SEDE_BASE,
     assert_declarations_read_browser_action,
     assert_declarations_read_http,
-    cotejo_document_url,
-    cotejo_view_url,
     get_buscar_settle_ms,
     get_form_interaction_timeout_ms,
     get_navigation_timeout_ms,
-    get_ver_click_timeout_ms,
-    listing_url_for,
-    origin_of,
 )
 from ._declarations_listbox import _has_class, _parse_listbox, _parse_presented_at
 from .declarations_observations import (
@@ -84,15 +70,12 @@ from .declarations_observations import (
     _read_guard_policy_from_snapshot,
     _registry_snapshot_for_declaration,
 )
-from .declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from .declarations_schema import Declaracion
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 from .schema import (
     FiledDeclaracionObservation,
     FiledDeclarationAvailability,
     FiledDeclarationAvailabilityReport,
-    JustificanteRef,
-    SedeCapture,
 )
 
 if TYPE_CHECKING:
@@ -170,9 +153,8 @@ async def shared_playwright(
 ) -> AsyncGenerator[Playwright]:
     """Yield a long-lived Playwright instance for bulk register sweeps.
 
-    `walk_declarations_register` and `capture_declaration` each spin
-    up their own Playwright + BrowserSession when called standalone,
-    which is fine for one-shot use. Bulk callers
+    Standalone register reads spin up their own Playwright + BrowserSession.
+    Bulk callers
     (e.g. ``aeat sede capture-corpus``) pay ~1s per iteration on
     Playwright startup; wrapping repeated reads in this helper amortises
     that cost across the entire run.
@@ -187,10 +169,11 @@ async def shared_playwright(
                     session, modelo=modelo, ejercicio=ejercicio,
                     playwright=pw,
                 )
-                for declaration in rows:
-                    capture = await capture_declaration(
-                        session, declaration, playwright=pw,
-                    )
+                async with open_declarations_register(
+                    session, playwright=pw,
+                ) as register:
+                    for declaration in rows:
+                        observation = await register.capture_observation(declaration)
 
     Args:
         session: Authenticated AEAT session. Validated upfront so
@@ -445,6 +428,11 @@ class DeclaracionesRegisterSession:
                 omitted, the snapshot is resolved from the declaration coordinates.
             artefact_sink: Optional callable storing each captured artefact.
         """
+        if not (self.session.identity_nif or "").strip():
+            raise SedeNavigationError(
+                "AeatSession.identity_nif is empty; cannot bind live filing observation",
+                translated_message=tr("adapters.sede.errors.empty_identity_nif"),
+            )
         snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
         read_policy = _read_guard_policy_from_snapshot(snapshot)
         if not await _drive_search(
@@ -499,8 +487,8 @@ async def _open_register_page(
 ) -> AsyncGenerator[tuple[Page, BrowserContext]]:
     """Yield a Playwright ``(page, context)`` bound to the AEAT session.
 
-    Both :func:`walk_declarations_register` and :func:`capture_declaration`
-    need the same bringup: validate persisted session state,
+    Standalone register walks and reusable register sessions need the same
+    bringup: validate persisted session state,
     build a :class:`Profile`, spin up Playwright, and create a
     context preloaded with the session cookies. Centralising the
     helper keeps the two callers structurally identical and
@@ -875,150 +863,6 @@ async def _continue_alert_modal(
         await page.wait_for_timeout(500)
 
 
-async def capture_declaration(
-    session: AeatSession,
-    declaration: Declaracion,
-    *,
-    settings: Settings | None = None,
-    playwright: Playwright | None = None,
-) -> SedeCapture:
-    """Fetch the raw justificante PDF behind a :class:`Declaracion`.
-
-    Drives the declaraciones register the same way
-    :func:`walk_declarations_register` does, locates the row whose
-    ``expediente_id`` matches ``declaration.expediente_id``, clicks
-    that row's *Obtención de Justificante* button, captures the
-    CSV from the resulting cotejo URL, and downloads the PDF via
-    :class:`playwright.async_api.APIRequestContext` (so Chrome's PDF viewer never
-    intercepts the response).
-
-    Args:
-        session: Authenticated AEAT session.
-        declaration: The Declaracion row to capture, typically obtained from
-            :func:`walk_declarations_register`.
-        settings: Optional :class:`Settings` override.
-        playwright: Optional pre-started Playwright instance (typically from
-            :func:`shared_playwright`). When ``None`` a fresh instance is started
-            and torn down per call.
-
-    Returns:
-        A :class:`SedeCapture` whose ``ref`` carries the resolved CSV / cotejo URL /
-        PDF URL and whose ``pdf_bytes`` carries the raw response body.
-
-    Raises:
-        SedeNavigationError: When the form drive or row click fails.
-        JustificanteFetchError: When the PDF GET returns a non-2xx status code,
-            an empty body, or an unexpected content type.
-    """
-    read_policy = _read_guard_policy_from_snapshot(_registry_snapshot_for_declaration(declaration))
-    async with _open_register_page(session, settings=settings, playwright=playwright) as (
-        page,
-        context,
-    ):
-        if not await _drive_search(
-            page,
-            modelo=declaration.modelo,
-            ejercicio=declaration.ejercicio,
-            read_policy=read_policy,
-        ):
-            raise SedeNavigationError(
-                f"AEAT declarations register does not offer ejercicio {declaration.ejercicio} "
-                f"for modelo {declaration.modelo}",
-                translated_message=tr("adapters.sede.errors.ejercicio_unavailable"),
-            )
-
-        row_locator = _row_locator_for_expediente(
-            page,
-            expediente_id=declaration.expediente_id,
-        )
-        ver_button = row_locator.locator(
-            '.z-listcell:has-text("Ver") .z-button',
-        ).first
-
-        try:
-            async with context.expect_page(
-                timeout=get_ver_click_timeout_ms(),
-            ) as new_page_info:
-                assert_declarations_read_browser_action("open-cotejo-pdf", policy=read_policy)
-                await ver_button.click(timeout=get_form_interaction_timeout_ms())
-            cotejo_page = await new_page_info.value
-        except PlaywrightError as exc:
-            raise SedeNavigationError(
-                f"clicking Ver for {declaration.expediente_id!r} failed: {exc}",
-                translated_message=tr("adapters.sede.errors.cotejo_nav_failed"),
-            ) from exc
-
-        try:
-            await cotejo_page.wait_for_load_state(
-                _WAIT_DOMCONTENTLOADED,
-                timeout=get_navigation_timeout_ms(),
-            )
-        except PlaywrightError as exc:
-            raise SedeNavigationError(
-                f"cotejo page did not settle for {declaration.expediente_id!r}: {exc}",
-                translated_message=tr("adapters.sede.errors.cotejo_nav_failed"),
-            ) from exc
-
-        cotejo_url = cotejo_page.url
-        if COTEJO_PATH_PREFIX not in cotejo_url:
-            raise SedeNavigationError(
-                f"Ver button for {declaration.expediente_id!r} did not land on a "
-                f"cotejo URL (final URL: {cotejo_url!r}); "
-                "session likely expired mid-walk — run `aeat config auth test` and retry",
-                translated_message=tr("adapters.sede.errors.cotejo_nav_failed"),
-            )
-
-        csv = _extract_csv_from_url(cotejo_url)
-
-        ref = JustificanteRef(
-            csv=csv,
-            expediente_id=declaration.expediente_id,
-            cotejo_url=AnyHttpUrl(cotejo_view_url(origin_of(cotejo_url), csv)),
-            pdf_url=AnyHttpUrl(cotejo_document_url(origin_of(cotejo_url), csv)),
-        )
-
-        assert_declarations_read_http("GET", str(ref.pdf_url), policy=read_policy)
-        pdf_response = await context.request.get(str(ref.pdf_url))
-        content_type = pdf_response.headers.get("content-type", "")
-        body = await pdf_response.body()
-        _assert_pdf_response(
-            status=pdf_response.status,
-            content_type=content_type,
-            body=body,
-            subject=f"CSV={csv!r}",
-        )
-
-        from .schema import Expediente
-
-        sha256 = sha256_hex(body)
-        log.info(
-            "capture_declaration: captured PDF expediente=%s CSV=%s size=%d sha256=%s",
-            declaration.expediente_id,
-            csv,
-            len(body),
-            sha256[:16],
-        )
-        return SedeCapture(
-            expediente=Expediente(
-                expediente_id=declaration.expediente_id,
-                modelo=declaration.modelo,
-                ejercicio=declaration.ejercicio,
-                category_path=("Declaraciones presentadas",),
-                detail_url=AnyHttpUrl(
-                    listing_url_for(
-                        origin_of(cotejo_url),
-                        modelo=declaration.modelo,
-                        ejercicio=declaration.ejercicio,
-                    ),
-                ),
-            ),
-            ref=ref,
-            pdf_bytes=body,
-            pdf_sha256=sha256,
-            captured_at=now(),
-        )
-
-
 def _row_locator_for_expediente(page: Page, *, expediente_id: str) -> Locator:
     """Return a Playwright locator pointing at the listitem whose ``Expediente`` cell text equals ``expediente_id``.
 
@@ -1040,11 +884,9 @@ def _row_locator_for_expediente(page: Page, *, expediente_id: str) -> Locator:
 
 
 __all__ = [
-    "_JSON_MIME_TYPE",
     "Declaracion",
     "DeclaracionesRegisterSession",
     "_parse_presented_at",
-    "capture_declaration",
     "open_declarations_register",
     "shared_playwright",
     "walk_declarations_register",

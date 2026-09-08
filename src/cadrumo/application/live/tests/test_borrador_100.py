@@ -15,6 +15,8 @@ from ....adapters.persistence.storage.secure_object_namespaces import (
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period
+from ....domain.calculations.registry.errors import RegistrySnapshotError
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ..borrador_100 import (
     BORRADOR_100_SNAPSHOT_NAMESPACE,
@@ -34,6 +36,12 @@ _SOURCE = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_aj
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 _WRITTEN_AT = datetime(2026, 4, 3, 10, 5, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2025, "0A")
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="100",
+    revision_id="2025",
+    modelo_year=2025,
+    period="0A",
+)
 
 
 def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
@@ -46,6 +54,7 @@ def test_borrador_100_snapshot_repository_round_trips_active_snapshot(
         modelo="100",
         filing_year=2025,
         period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
@@ -62,6 +71,22 @@ def test_borrador_snapshot_refuses_noncanonical_snapshot_identity(snapshot_id: s
     with pytest.raises(ValidationError):
         Borrador100Snapshot(
             snapshot_id=snapshot_id,
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=_PERIOD,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+            captured_at=_CAPTURED_AT,
+            source_url=_SOURCE,
+            state=SnapshotLifecycleState.ACTIVE,
+            binding_values={},
+        )
+
+
+def test_borrador_snapshot_requires_canonical_registry_coordinate() -> None:
+    with pytest.raises(ValidationError, match="registry_snapshot_ref"):
+        Borrador100Snapshot(
+            snapshot_id="a" * 64,
             bucket_id=_BUCKET_ID,
             modelo="100",
             filing_year=2025,
@@ -83,6 +108,7 @@ def test_borrador_100_snapshot_repository_rejects_payload_id_mismatch(
         modelo="100",
         filing_year=2025,
         period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
@@ -117,6 +143,7 @@ def test_borrador_100_snapshot_repository_lists_bucket_scoped_records(
         modelo="100",
         filing_year=2025,
         period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
@@ -148,6 +175,7 @@ def test_borrador_100_snapshot_repository_resolves_unambiguous_prefix(
         modelo="100",
         filing_year=2025,
         period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         state=SnapshotLifecycleState.ACTIVE,
@@ -176,11 +204,39 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot(
     assert snapshot.snapshot_id == derive_borrador_100_snapshot_id(
         filing_year=2025,
         period=_PERIOD,
+        registry_snapshot_ref=snapshot.registry_snapshot_ref,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         binding_values=values,
     )
     assert repository.load(snapshot.snapshot_id) == snapshot
+
+
+def test_borrador_show_refuses_persisted_registry_revision_divergence(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """The operator-facing show boundary never exposes stale binding values."""
+    repository = Borrador100SnapshotRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
+    snapshot = service.capture(
+        filing_year=2025,
+        period=_PERIOD,
+        captured_at=_CAPTURED_AT,
+        source_url=_SOURCE,
+        binding_values={"renta-2025-modelo-111-retenciones-periodicas": Decimal("15.25")},
+    )
+    repository.save(
+        snapshot.model_copy(
+            update={
+                "registry_snapshot_ref": snapshot.registry_snapshot_ref.model_copy(
+                    update={"revision_id": "persisted-stale-revision"}
+                )
+            }
+        )
+    )
+
+    with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+        service.show(snapshot.snapshot_id)
 
 
 def test_borrador_100_snapshot_service_rejects_non_binding_id_keys(

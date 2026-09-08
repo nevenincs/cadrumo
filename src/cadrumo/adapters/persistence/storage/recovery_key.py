@@ -1,4 +1,4 @@
-"""Recovery-key minting and its BIP-39 mnemonic codec.
+"""Recovery-key minting and its canonical BIP-39 mnemonic encoder.
 
 A recovery secret is an opaque high-entropy string as far as every
 consumer is concerned; this module is the only thing in the substrate
@@ -6,7 +6,7 @@ that can mint one strong enough to resist offline guessing once material
 derived from it has left the machine. A profile's recovery envelope wraps
 that profile's DEK under its own supervised Argon2id parameters against a
 generation-bound associated-data domain, and takes the minted mnemonic as
-its secret. The codec itself is bound to no custody architecture, no file
+its secret. The encoder itself is bound to no custody architecture, no file
 layout and no key schedule.
 
 It sits directly beneath the storage package, sibling to both the custody
@@ -149,9 +149,6 @@ def _load_wordlist() -> tuple[str, ...]:
 
 
 _WORDLIST: Final[tuple[str, ...]] = _load_wordlist()
-_WORD_TO_INDEX: Final[dict[str, int]] = {w: i for i, w in enumerate(_WORDLIST)}
-
-
 def encode_mnemonic(entropy: Buffer) -> str:
     """Encode 32 bytes of entropy as a 24-word BIP-39 English mnemonic.
 
@@ -181,45 +178,6 @@ def encode_mnemonic(entropy: Buffer) -> str:
     return " ".join(_WORDLIST[i] for i in indices)
 
 
-def decode_mnemonic(mnemonic: str) -> bytearray:
-    """Decode a 24-word BIP-39 English mnemonic back into 32 bytes of entropy.
-
-    Args:
-        mnemonic: A space-separated string of exactly 24 words from
-            the BIP-39 English wordlist.
-
-    Returns:
-        The 32-byte entropy in a wipeable ``bytearray`` the caller is
-        expected to :func:`zeroise` once it has finished deriving from it.
-
-    Raises:
-        StorageValidationError: When the mnemonic does not have 24 words, contains
-            an unknown word, or fails the BIP-39 checksum.
-    """
-    words = mnemonic.strip().lower().split()
-    if len(words) != _MNEMONIC_WORD_COUNT:
-        raise _storage_validation_error(
-            f"BIP-39 mnemonic must contain exactly {_MNEMONIC_WORD_COUNT} words; got {len(words)}",
-        )
-    payload_int = 0
-    for position, word in enumerate(words, start=1):
-        index = _WORD_TO_INDEX.get(word)
-        if index is None:
-            raise _storage_validation_error(
-                f"unknown BIP-39 word at position {position}; verify the word against the BIP-39 English wordlist.",
-            )
-        payload_int = (payload_int << 11) | index
-    # Split off the 8-bit checksum.
-    checksum = payload_int & 0xFF
-    entropy_int = payload_int >> 8
-    entropy = bytearray(entropy_int.to_bytes(_RECOVERY_KEY_SIZE, "big"))
-    expected = hashlib.sha256(entropy).digest()[0]
-    if checksum != expected:
-        _zeroise(entropy)
-        raise _storage_validation_error("BIP-39 mnemonic checksum mismatch — verify the words")
-    return entropy
-
-
 def generate_recovery_key() -> RecoveryKey:
     """Mint a fresh :class:`RecoveryKey` with 32-byte entropy and its 24-word mnemonic.
 
@@ -239,7 +197,6 @@ def generate_recovery_key() -> RecoveryKey:
 
 __all__ = [
     "RecoveryKey",
-    "decode_mnemonic",
     "encode_mnemonic",
     "generate_recovery_key",
 ]

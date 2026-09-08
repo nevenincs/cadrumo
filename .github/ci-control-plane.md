@@ -13,10 +13,13 @@ Every self-hosted runner in the `nevenincs` fleet lives on one of two hosts.
 `ci-fleet` is the binding declaration; this file only explains what follows for
 cadrumo's workflows.
 
-| host | shape | notes |
+Hosts are named by role here, not by hostname: `ci-fleet` is where machine
+identity is declared, and what this file needs from a host is its shape.
+
+| role | shape | notes |
 | --- | --- | --- |
-| `gw-workstation` | 12 physical / 24 logical cores, 128 GB | Windows, plus WSL and Docker Desktop. Carries cadrumo's Windows runner AND its Linux X64 container. |
-| `gergelys-macbook-neo` | 6-core laptop | Power-gated by deliberate policy: its runners serve on AC, and clamshell sleep takes them away. Not a fault. |
+| the Windows workstation | 12 physical / 24 logical cores, 128 GB | Windows, plus WSL and Docker Desktop. Carries cadrumo's Windows runner AND its Linux X64 container. |
+| the macOS laptop | 6-core laptop | Power-gated by deliberate policy: its runners serve on AC, and clamshell sleep takes them away. Not a fault. |
 
 Two consequences the pins exist for:
 

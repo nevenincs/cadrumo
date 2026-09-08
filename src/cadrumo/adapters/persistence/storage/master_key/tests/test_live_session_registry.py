@@ -15,14 +15,12 @@ left cleartext key bytes in memory is the failure this guards against.
 from __future__ import annotations
 
 import threading
+import weakref
 
 import pytest
 
 from ......core.time.clock import now
-from .._live_sessions import (
-    close_all_live_bucket_sessions,
-    live_bucket_session_count,
-)
+from .._live_sessions import close_all_live_bucket_sessions
 from ..active_session import (
     activate_session,
     close_active_bucket_session,
@@ -54,17 +52,6 @@ def _dek_bytes(session: BucketSession) -> bytes:
     sweep, not whether the accessor guards them.
     """
     return bytes(session._dek_buffer)
-
-
-def test_open_session_registers_and_close_deregisters() -> None:
-    """A live session is counted; closing it stops counting it."""
-    before = live_bucket_session_count()
-    session = _open_session("bucket-count")
-    try:
-        assert live_bucket_session_count() == before + 1
-    finally:
-        session.close()
-    assert live_bucket_session_count() == before
 
 
 def test_sweep_zeroises_a_session_bound_on_another_thread() -> None:
@@ -113,9 +100,7 @@ def test_sweep_is_idempotent_and_survives_an_already_sealed_session() -> None:
     assert close_all_live_bucket_sessions() >= 1
     assert session.sealed is True
     # Second sweep closes nothing new and must not raise.
-    before = live_bucket_session_count()
     assert close_all_live_bucket_sessions() == 0
-    assert live_bucket_session_count() == before
 
 
 def test_registry_holds_sessions_weakly() -> None:
@@ -126,9 +111,8 @@ def test_registry_holds_sessions_weakly() -> None:
     """
     import gc
 
-    before = live_bucket_session_count()
     session = _open_session("bucket-weak")
-    assert live_bucket_session_count() == before + 1
+    session_ref = weakref.ref(session)
     del session
     gc.collect()
-    assert live_bucket_session_count() == before, "the registry pinned a dropped session"
+    assert session_ref() is None, "the registry pinned a dropped session"

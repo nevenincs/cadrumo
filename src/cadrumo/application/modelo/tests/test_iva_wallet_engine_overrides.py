@@ -11,6 +11,7 @@ import pytest
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.casilla_id import CasillaId
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.reconciliation import IvaCompensationOverride
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -20,6 +21,7 @@ from ....domain.modelos.calculation_revision import (
 )
 from ....domain.modelos.repository import upsert_work_unit
 from ....tests.registry_observations import registry_grounded_observations
+from ...calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import calculate_modelo_revision
@@ -59,6 +61,11 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
         snapshot = _snapshot_303()
+        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=observation_repo,
+            captured_at=_DECIDED_AT,
+        )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
@@ -73,6 +80,8 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
                 recorded_at=_DECIDED_AT,
             ),
             decided_at=_DECIDED_AT,
+            local_recurrence=local_recurrence,
+            prefill_report=prefill_report,
         )
 
         assert report.decision.selected_authority == "taxpayer_override"
@@ -176,6 +185,12 @@ def test_override_refused_when_sealed_303_consumed_the_basis(tmp_path: Path) -> 
                     source_provenance=(),
                 ),
                 "work_unit_id": work_unit.work_unit_id,
+                "registry_snapshot_ref": RegistrySnapshotRef(
+                    modelo=work_unit.modelo,
+                    revision_id=work_unit.revision_id,
+                    modelo_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                ),
                 "state": CalculationRevisionState.VERIFICADO_COMPLETO,
                 "input_values_by_casilla_id": {},
                 "binding_overrides": {},

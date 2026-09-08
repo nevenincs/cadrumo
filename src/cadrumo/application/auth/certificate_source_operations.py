@@ -35,7 +35,7 @@ from __future__ import annotations
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from pydantic import SecretStr
 
@@ -89,7 +89,6 @@ if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEvent, BucketEventType
     from ..workflow.persistence import WorkflowStateRepository
     from ..workflow.state_models import WorkflowState
-    from .models import CertificateSourceRecord
 
 
 def _gate_active_bucket() -> str:
@@ -347,8 +346,8 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
     be selected.
 
     Every named source's passphrase resolves only through
-    :func:`~application.auth.resolve_certificate_source_secret` (the
-    per-source :class:`~application.auth.CertificateSecretBackend`). An
+    :func:`~application.auth.resolve_certificate_source_secret` (through the
+    per-source secure-storage backend). An
     absent secret or secure-storage read failure is projected explicitly
     as ``None`` so the probe fails closed; a named source never inherits
     the global
@@ -412,110 +411,6 @@ def check_operator_certificate_sources(*, settings: Settings | None = None) -> C
                 ),
             )
         return CertificateSourceCheckReport(entries=tuple(entries), has_warnings=has_warnings)
-
-
-class CertificateSubjectNifReader(Protocol):
-    """Reads the subject NIF/NIE out of a PKCS#12 bundle on disk.
-
-    The port exists so this layer can report a certificate's holder without
-    naming a certificate type: PKCS#12 parsing belongs to the outbound AEAT
-    auth adapter, which supplies the concrete reader at the composition root.
-    An unreadable bundle, a wrong password, and a subject with no parseable
-    identifier all come back as ``""``.
-    """
-
-    def __call__(self, *, path: Path, password: SecretStr, friendly_name: str | None = None) -> str:
-        """Return the bundle's subject NIF/NIE, or ``""`` when it cannot be read."""
-        ...
-
-
-def certificate_source_tax_id(
-    *,
-    read_subject_nif: CertificateSubjectNifReader,
-    name: str = "",
-    settings: Settings | None = None,
-) -> str:
-    """Return the taxpayer identifier a registered certificate names, or ``""``.
-
-    An FNMT *persona física* certificate carries its holder's NIF or NIE
-    in the subject, and
-    :func:`~adapters.outbound.aeat.auth.certificate.extract_nif_from_subject`
-    is the one reader of it. The live session already consults that reader
-    to decide whether the certificate belongs to the active profile; this
-    exposes the same fact BEFORE a session, so a setup surface can offer
-    the identifier the operator would otherwise retype from the document
-    the certificate was issued against.
-
-    Reading it costs one PKCS#12 decode against the per-source secret,
-    the same load
-    :func:`~application.auth.check_operator_certificate_sources` performs
-    for its health probe.
-
-    Every ordinary reason the read cannot happen — no source registered,
-    none selected, no stored passphrase, the file moved, an expired or
-    corrupt bundle, a certificate whose subject carries no individual
-    identifier — answers ``""`` rather than raising. This function exists
-    to SEED a field the operator may always type themselves, so a failure
-    to read must degrade to an empty suggestion; raising here would turn
-    a certificate this app cannot open into a setup page that cannot
-    open either. What the certificate is worth for authentication is
-    settled by the health probe and by the session bind, both of which
-    report their failures in their own vocabulary.
-
-    Args:
-        read_subject_nif: Adapter-supplied reader for a PKCS#12 bundle's
-            subject identifier; see :class:`CertificateSubjectNifReader`.
-        name: The registered source to read. Blank reads whichever
-            source is currently selected.
-        settings: Resolved settings, or ``None`` to load them.
-
-    Returns:
-        The uppercase NIF/NIE the certificate's subject carries, or ``""``
-        when it cannot be read.
-    """
-    from ..workflow.persistence import workflow_state_repository
-
-    resolved_settings = settings or load_settings()
-    with active_profile_storage_span(resolved_settings) as active_bucket_id:
-        if active_bucket_id is None:
-            return ""
-        state = workflow_state_repository().load()
-        record = _selected_certificate_record(state, name=name.strip())
-        if record is None:
-            return ""
-        path = Path(record.certificate_path)
-        if not path.is_file():
-            return ""
-        try:
-            secret = resolve_certificate_source_secret(
-                name=record.name,
-                bucket_id=active_bucket_id,
-                settings=resolved_settings,
-            )
-        except (OSError, CadrumoError):
-            return ""
-        if secret is None:
-            return ""
-        return read_subject_nif(
-            path=path,
-            password=secret,
-            friendly_name=record.friendly_name,
-        )
-
-
-def _selected_certificate_record(state: WorkflowState, *, name: str) -> CertificateSourceRecord | None:
-    """Return the named registered source, or the active one when unnamed.
-
-    Returns ``None`` rather than raising for an unknown name, because the
-    only caller is a seeding read whose whole contract is to answer
-    "nothing to suggest" instead of refusing.
-    """
-    if not name:
-        return active_certificate_source(state)
-    for record in list_certificate_sources(state):
-        if record.name == name:
-            return record
-    return None
 
 
 def set_operator_certificate_source_secret(
@@ -838,8 +733,6 @@ def _finalize_certificate_secret_mutation(
 
 
 __all__ = [
-    "CertificateSubjectNifReader",
-    "certificate_source_tax_id",
     "check_operator_certificate_sources",
     "list_operator_certificate_sources",
     "register_operator_certificate_source",

@@ -13,6 +13,7 @@ from ....core.period import Period
 from ....core.refund_election import RefundElection
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import (
     IVARegime,
     M303RegimeComposition,
@@ -88,6 +89,12 @@ def _result_disposition_revision(
     return CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=tuple(

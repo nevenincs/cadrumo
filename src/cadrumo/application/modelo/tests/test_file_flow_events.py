@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....tests.cross_period_seeding import seed_clean_cross_period_sources
+from ..action_errors import WorkUnitRevisionDivergenceError
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -22,6 +25,7 @@ from ._file_flow_support import (
     Decimal,
     Repos,
     calculate_modelo_revision,
+    file_modelo_revision,
     file_revision,
     registry_required_manual_casillas,
     seed_modelo_180_work_unit,
@@ -32,6 +36,45 @@ from ._file_flow_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> None:
+    """The filing decision boundary cannot consume values under a drifted schema."""
+    wu_repo, cr_repo, filing_repo, vr_repo, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T1,
+    )
+    stale = revision.model_copy(
+        update={
+            "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
+                update={"revision_id": "persisted-stale-revision"}
+            ),
+            "state": CalculationRevisionState.VERIFICADO_COMPLETO,
+            "verified_at": T2,
+            "verified_by": "operator-A",
+        }
+    )
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), stale))
+
+    with pytest.raises(WorkUnitRevisionDivergenceError):
+        file_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            filing_repository=filing_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T2,
+        )
 
 
 def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:

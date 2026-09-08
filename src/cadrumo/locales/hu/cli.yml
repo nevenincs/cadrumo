@@ -4,7 +4,6 @@ cli:
       bienes_inversion:
         acquisition_year_help: A jószág beszerzésének éve.
         art108_help: A jószág a LIVA 108. cikk szerint beruházási jószágnak minősül-e.
-        asset_ref_help: Opcionális kereszthivatkozás egy AssetRecord azonosítóra.
         cuota_soportada_help: A beszerzéskor viselt teljes előzetes áfa (pozitív).
         declare_help: Egy áfa-korrekcióhoz nyilvántartott beruházási jószág bejelentése.
         description_help: A jószág leírása.
@@ -176,11 +175,10 @@ cli:
         extract_off_host_provider_is_local: Az --off-host-provider local az alapértelmezés,
           és semmit nem küld el a gépről. Hagyja el a kapcsolót, vagy adjon meg távoli
           szolgáltatót.
-        extract_off_host_unclassified: 'A gépen kívüli olvasás elutasítva: a
-          hozzájárulási kapu {outcome} értéket adott vissza, amelyhez ennek a
-          parancsnak nincs szövege. A fel nem ismert választ elutasításként kezeljük,
-          hogy a bizonyítékok ne hagyhassák el a gépet olyan döntés alapján, amelyet
-          senki sem mondott ki.'
+        extract_off_host_unclassified: 'A gépen kívüli olvasás elutasítva: a hozzájárulási
+          kapu {outcome} értéket adott vissza, amelyhez ennek a parancsnak nincs szövege.
+          A fel nem ismert választ elutasításként kezeljük, hogy a bizonyítékok ne
+          hagyhassák el a gépet olyan döntés alapján, amelyet senki sem mondott ki.'
         extract_provider_without_acknowledge: A dokumentum gépen kívüli beolvasása
           a tartalmát harmadik félnek küldi el. Adja hozzá az --acknowledge-off-host
           kapcsolót ennek az egy beolvasásnak a megerősítéséhez.
@@ -521,12 +519,6 @@ cli:
         state_help: 'Pillanatkép-állapot szűrő: active, superseded, discarded vagy
           all.'
         view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.
-      deudas:
-        app_help: Csak olvasható AEAT tartozás-pillanatképek.
-        latest_help: A legfrissebb tartozás-pillanatkép megjelenítése.
-        list_help: Mentett tartozás-pillanatképek listázása.
-        snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
-        view_help: Egy tartozás-pillanatkép és a benne szereplő összes tartozás megjelenítése.
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.
@@ -1264,12 +1256,12 @@ cli:
         amend_missing_options: 'A módosításhoz minden alábbi beállítás szükséges:
           %{missing}.'
         amend_no_detail_rows_help: Annak kijelentése, hogy ennek a módosításnak nincsenek
-          tételsorai. A 184-es, 232-es, 347-es és 349-es bevallásnál a tételsorok maguk
-          a bevallás, ezért annak kijelentése, hogy nincs egy sem, nem ugyanaz, mint ha
-          semmit sem mondanánk; ha ezt és a --row kapcsolót is elhagyja, a módosítást a
-          rendszer elutasítja, nem pedig kitalálja.
-        amend_rows_contradiction: A --row vagy a --no-detail-rows kapcsolót használja, de
-          ne mindkettőt; a --no-detail-rows azt jelenti ki, hogy nincsenek tételsorok.
+          tételsorai. A 184-es, 232-es, 347-es és 349-es bevallásnál a tételsorok
+          maguk a bevallás, ezért annak kijelentése, hogy nincs egy sem, nem ugyanaz,
+          mint ha semmit sem mondanánk; ha ezt és a --row kapcsolót is elhagyja, a
+          módosítást a rendszer elutasítja, nem pedig kitalálja.
+        amend_rows_contradiction: A --row vagy a --no-detail-rows kapcsolót használja,
+          de ne mindkettőt; a --no-detail-rows azt jelenti ki, hogy nincsenek tételsorok.
         amend_set_required: A --set legalább egyszer kötelező módosításhoz.
         amend_wizard_export_next_action: A helyesbítés belső piszkozatként lett benyújtva.
           Exportáld az AEAT-kompatibilis fichero-BOE fájlt a `aeat app modelo export
@@ -1365,15 +1357,6 @@ cli:
         create_reused_renamed: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
           kombinációra); nem jött létre semmi új. A megadott --name alkalmazva lett
           átnevezésként: %{name}.'
-        create_stub_modelo_151_refused: 'A(z) %{modelo} nyomtatvány (különleges külföldi
-          munkavállalói rendszer, Beckham-törvény) munkafeladat-létrehozása ebben
-          a CLI-ben nem támogatott. Jogi alap: Ley 35/2006 93. cikk LIRPF, RD 439/2007
-          113. cikk, Orden EHA/2887/2008. A bevallást az AEAT Sede felületen kell
-          benyújtani.'
-        create_stub_modelo_210_refused: 'A(z) %{modelo} nyomtatvány (IRNR, nem rezidensek
-          jövedelemadója) munkafeladat-létrehozása ebben a CLI-ben nem támogatott.
-          Jogi alap: RD Legislativo 5/2004 TRLIRNR és Art. 28 TRLIRNR. A bevallást
-          az AEAT Sede G320 eljárásán keresztül kell benyújtani: sede.agenciatributaria.gob.es.'
         create_stub_modelo_600_refused: 'A(z) %{modelo} nyomtatvány (ITP-AJD, vagyonátruházási
           adó és okirati illeték) munkafeladat-létrehozása ebben a CLI-ben nem támogatott.
           Jogalap: Ley 28/1990 és regionális ITPyAJD hatáskör; a megfelelő regionális
@@ -1390,14 +1373,6 @@ cli:
           leltár, a Modelo 650 melléklete) munkafeladat-létrehozása ebben a CLI-ben
           nem támogatott. Jogalap: Ley 29/1987 LISyD; a megfelelő regionális Hacienda
           adóhatóságnál kell benyújtani.'
-        create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvány (vagyonadó) munkafeladat-létrehozása
-          ebben a CLI-ben nem támogatott. Jogi alap: Ley 19/1991 28. cikk és Orden
-          HAC/1023/2021. A bevallást az AEAT Sede felületen kell benyújtani.'
-        create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott
-          virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben
-          a CLI-ben nem támogatott. Jogi alap: Orden HFP/886/2023 és RD 1065/2007
-          Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi
-          kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
         dependencies_help: Keresztidőszaki bevallástörténeti függőségek és az aktuális
           clean-state blokkolók megjelenítése a célbevalláshoz
         dependencies_period_requires_modelo: A --period beállításhoz kötelező a --modelo.
@@ -1823,13 +1798,7 @@ cli:
         NÉV` a hitelesítés konfigurálása előtt.'
       output_language_help: A válasz szövegének nyelve (es, en, ca, hu).
       provider_help: Hitelesítési szolgáltató azonosítója (pl. certificado-electronico).
-      providers:
-        status_implemented: elérhető
-        status_reserved: fenntartva
-        status_unavailable_gloss: még nem elérhető
       providers_help: Támogatott hitelesítési szolgáltatók listázása.
-      reserved_provider: 'A hitelesítési szolgáltató fenntartott, de nem elérhető:
-        %{provider}.'
       reset_all_help: Minden ismert hitelesítési szolgáltató visszaállítása
       reset_help: A helyi szolgáltatóbeállítások, munkamenetek, zárolások, tanúsítvány-regisztrációk
         és tárolt titkok eltávolítása
@@ -2798,9 +2767,9 @@ cli:
       derive_non_derivable: 'A(z) {category} kategóriához nincs egyszerű spanyol kulcs,
         amelyet le lehetne vezetni: {note} Adja meg kézzel a --taxable-base, --iva-rate
         és --iva-amount értékeket ehhez a kategóriához.'
-      derive_substrate_incomplete: 'A(z) {category} kategóriát levezethetőként
-        jelentették, de nem keletkezett áfaalap. Adja meg kézzel a --taxable-base,
-        --iva-rate és --iva-amount értékeket ehhez a kategóriához.'
+      derive_substrate_incomplete: A(z) {category} kategóriát levezethetőként jelentették,
+        de nem keletkezett áfaalap. Adja meg kézzel a --taxable-base, --iva-rate és
+        --iva-amount értékeket ehhez a kategóriához.
       file_exclusive: --file nem kombinálható tranzakció-azonosítóval vagy --classification
         értékkel.
       file_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,
@@ -2810,12 +2779,12 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
-      irpf_category_help: 'IRPF-kategória azonosítója. Nettó szakmai számlákhoz
-        actividad_economica; nettó bérleti díjakhoz arrendamiento_local vagy
-        arrendamiento_vivienda_afecto. A Royalties és az SGAE-bevétel capital
-        mobiliario a LIRPF 25.4. cikke szerint, ha az adózó nem a szerző, és
-        gazdasági tevékenység a LIRPF 27. cikke szerint, ha az, és folytatja a
-        tevékenységet. A teljes katalógushoz futtassa: aeat app ledger categories.'
+      irpf_category_help: 'IRPF-kategória azonosítója. Nettó szakmai számlákhoz actividad_economica;
+        nettó bérleti díjakhoz arrendamiento_local vagy arrendamiento_vivienda_afecto.
+        A Royalties és az SGAE-bevétel capital mobiliario a LIRPF 25.4. cikke szerint,
+        ha az adózó nem a szerző, és gazdasági tevékenység a LIRPF 27. cikke szerint,
+        ha az, és folytatja a tevékenységet. A teljes katalógushoz futtassa: aeat
+        app ledger categories.'
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2923,10 +2892,9 @@ cli:
         Add meg az összeget előjel nélkül, és a folyást a --direction kapcsolóval
         állítsd be (OUTGOING kimenő, INCOMING bejövő, INTERNAL_TRANSFER saját számlák
         között).
-      unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű
-        kategóriaazonosítót adjon meg, például {example!r}, ne kategóriacsalád-
-        előtaggal ellátott vagy összetett kulcsot. A felismert katalógushoz
-        futtassa: aeat app ledger categories.'
+      unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű kategóriaazonosítót
+        adjon meg, például {example!r}, ne kategóriacsalád- előtaggal ellátott vagy
+        összetett kulcsot. A felismert katalógushoz futtassa: aeat app ledger categories.'
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
     exclude:
@@ -2953,9 +2921,9 @@ cli:
       dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
+      file_help: A bankikivonati fájl vagy könyvtár elérési útja.
       file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része
         importálva lett.'
-      file_help: A bankikivonati fájl vagy könyvtár elérési útja.
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor dátuma és összege megegyezik egy már
         a főkönyvben lévő tranzakcióéval, de a leírás eltér, ami ugyanazon mozgás

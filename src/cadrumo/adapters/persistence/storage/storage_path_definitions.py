@@ -46,10 +46,6 @@ BUCKET_DB_DIRNAME = storage_location(StorageCategory.BUCKET_DATABASE).subpath
 #: sibling constant above is the directory that holds it.
 BUCKET_DATABASE_FILENAME = storage_location(StorageCategory.BUCKET_DATABASE_FILE).subpath
 BUCKET_BLOBS_DIRNAME = storage_location(StorageCategory.BUCKET_BLOBS).subpath
-#: Names the RETIRED plaintext bucket manifest, kept to recognise it on a
-#: pre-cutover bucket. It backs no path definition below -- see the note where
-#: one would otherwise sit.
-BUCKET_MANIFEST_FILENAME = storage_location(StorageCategory.BUCKET_MANIFEST).subpath
 BUCKET_LOCK_FILENAME = storage_location(StorageCategory.BUCKET_LOCK).subpath
 BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME = storage_location(StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT).subpath
 KEYSTORE_DIRNAME = storage_location(StorageCategory.BUCKET_KEYSTORE).subpath
@@ -66,13 +62,11 @@ LOGIN_THROTTLE_FILENAME = storage_location(StorageCategory.KEYSTORE_LOGIN_THROTT
 PROFILE_CUSTODY_HOLD_LEGAL_OWNER_SUBPATH = storage_location(StorageCategory.PROFILE_CUSTODY_HOLD_LEGAL_OWNER).subpath
 PROFILE_CUSTODY_HOLD_FILING_OWNER_SUBPATH = storage_location(StorageCategory.PROFILE_CUSTODY_HOLD_FILING_OWNER).subpath
 PROFILE_CUSTODY_HOLD_DERIVED_SUBPATH = storage_location(StorageCategory.PROFILE_CUSTODY_HOLD_DERIVED_EVIDENCE).subpath
-PROFILE_CUSTODY_DIRNAME = storage_location(StorageCategory.PROFILE_CAPSULE_CUSTODY).subpath
 #: Bucket-root-relative nested paths (``custody/envelope.v1.json``), not single
 #: components -- so their definitions below omit ``segment``, matching
 #: ``bucket_database_file``'s treatment of the same shape.
 PROFILE_PASSWORD_ENVELOPE_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE).subpath
 PROFILE_RECOVERY_ENVELOPE_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE).subpath
-PROFILE_DATA_DIRNAME = storage_location(StorageCategory.PROFILE_CAPSULE_DATA).subpath
 PROFILE_COMMIT_FILENAME = storage_location(StorageCategory.PROFILE_CAPSULE_COMMIT).subpath
 ACTIVE_PROFILE_POINTER_FILENAME = storage_location(StorageCategory.ACTIVE_PROFILE_POINTER).subpath
 #: Directory holding the application-owned config-reset journal. The

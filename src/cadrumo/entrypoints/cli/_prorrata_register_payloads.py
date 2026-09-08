@@ -18,6 +18,7 @@ from __future__ import annotations
 from ...core.identity import BucketId
 from ...core.json_contract import OutputSchema
 from ...core.prorrata_register import ProrrataEspecialTransitionKind
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 
 
 class ProrrataEspecialTransitionPayload(OutputSchema):
@@ -47,6 +48,7 @@ class ProrrataEntryPayload(OutputSchema):
     definitive_volume_con_derecho: str | None = None
     definitive_volume_sin_derecho: str | None = None
     source_observation_ref: str | None = None
+    source_registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
     schema_version: str
 
 

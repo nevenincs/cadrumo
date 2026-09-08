@@ -1,7 +1,7 @@
 """Shared file-extension constants for financial-provider detection.
 
 Single authoritative source for the extension sets that route
-``provider_for_extension`` and ``_ordered_candidates``, and for the
+``_ordered_candidates`` and the concrete providers, and for the
 ``FinancialProvider.supported_extensions`` declarations on each concrete
 provider class.
 

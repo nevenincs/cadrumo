@@ -145,18 +145,6 @@ _ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "operator.overview.explain": "tui.search.action.explain_overview",
     "operator.modelo.filing_record.list": "tui.search.action.list_filing_records",
 }
-_SEARCH_LOCALE_KEYS: Final[tuple[str, ...]] = (
-    *_RESULT_LABEL_LOCALE_KEYS.values(),
-    *_RESULT_SOURCE_LOCALE_KEYS.values(),
-    *_RESULT_STATUS_LOCALE_KEYS.values(),
-    *_DESTINATION_LOCALE_KEYS.values(),
-    *_ACTION_LOCALE_KEYS.values(),
-    "tui.search.result.address",
-    "tui.search.destination.unknown",
-    "tui.search.action.available",
-)
-
-
 def _render_locale(key: str, locale: str | None, **values: object) -> str:
     """Render one palette label, optionally under a test-selected locale."""
     if locale is None:

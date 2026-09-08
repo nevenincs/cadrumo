@@ -202,10 +202,14 @@ def _wallet_decision(*, period: str) -> IvaCompensationReconciliationDecision:
         taxpayer_nif=_TAX_ID,
         target_year=_YEAR,
         target_period=Period.from_year_and_code(_YEAR, period),
+        target_registry_snapshot_ref=bundled_authority()
+        .snapshot("303", filing_year=_YEAR, period=period)
+        .snapshot_ref,
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("0.00"),
         wallet_amount=Decimal("0.00"),
-        local_recurrence_amount=Decimal("0.00"),
+        local_recurrence_amount=None,
         override_amount=None,
         divergence="match",
         blocked=False,

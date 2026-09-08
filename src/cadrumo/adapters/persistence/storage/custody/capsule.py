@@ -33,9 +33,6 @@ from ._capsule_data import (
     replace_capsule_file as _replace_capsule_file,
 )
 from ._capsule_data import (
-    replace_data_file as _replace_data_file,
-)
-from ._capsule_data import (
     validate_data_file_inventory as _validate_data_file_inventory,
 )
 from ._capsule_data import (
@@ -420,7 +417,6 @@ def remove_profile_custody_deletion_tombstone(
 # current public custody vocabulary and ensure all later staged helpers use it.
 PROFILE_CUSTODY_INVENTORY_MAX_ENTRIES = _INVENTORY_MAX_ENTRIES
 PROFILE_CUSTODY_INVENTORY_MAX_TOTAL_BYTES = _INVENTORY_MAX_TOTAL_BYTES
-PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES = 4 * 1024 * 1024
 ProfileCustodyInventory = _CanonicalProfileCustodyInventory
 ProfileCustodyInventoryEntry = _CanonicalProfileCustodyInventoryEntry
 
@@ -848,118 +844,6 @@ def load_committed_profile_custody_label_record(
     return _load_profile_custody_label_from_verified_capsule(capsule_path, profile_id=profile_id)
 
 
-def load_committed_profile_custody_summary_witness(
-    profile_id: UUID,
-    *,
-    settings: Settings | None = None,
-    root: Path | None = None,
-) -> ProfileCustodyCapsuleSummaryWitness:
-    """Observe one validated commit and UUID-bound label without custody reads.
-
-    The capsule directory stays identity-anchored while both bounded records are
-    read.  This path deliberately never opens the password envelope, sentinel,
-    recovery material, label head, session state, or encrypted profile facts.
-
-    DECLARED, NOT YET REACHED. Nothing calls this. The write side of the same
-    package is live -- ``write_data_files`` and ``write_posix_data_files`` each
-    carry two production consumers -- so the product commits custody data and
-    never observes a summary witness back. The asymmetry is the point of saying
-    so here: a reader of a package this live has no signal that the observation
-    half is the unreached one.
-    """
-    marker_path = profile_custody_path(
-        profile_id,
-        StorageCategory.PROFILE_CAPSULE_COMMIT,
-        settings=settings,
-        root=root,
-    )
-    capsule_path = marker_path.parent
-    if not _lexists(capsule_path, trace=[]):
-        raise ProfileCustodyRecordError("profile capsule is not committed")
-    label_path = capsule_path / "data" / PROFILE_CUSTODY_LABEL_FILENAME
-    if os.name != "nt":
-        with _posix_directory_fd(capsule_path) as capsule_fd:
-            if not _posix_child_exists(capsule_fd, marker_path.name, display_path=marker_path, trace=[]):
-                raise ProfileCustodyRecordError("profile capsule is not committed")
-            commit_payload = _read_regular_file_fd(
-                capsule_fd,
-                marker_path.name,
-                display_path=marker_path,
-                maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
-                trace=[],
-            )
-            data_fd = _posix_open_child_directory(capsule_fd, "data")
-            try:
-                label_payload = _read_regular_file_fd(
-                    data_fd,
-                    PROFILE_CUSTODY_LABEL_FILENAME,
-                    display_path=label_path,
-                    maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
-                    trace=[],
-                )
-            finally:
-                os.close(data_fd)
-    else:
-        with ExitStack() as anchors:
-            _anchor_directory(anchors, capsule_path)
-            _anchor_directory(anchors, capsule_path / "data")
-            if not _lexists(marker_path, trace=[]):
-                raise ProfileCustodyRecordError("profile capsule is not committed")
-            commit_payload = _read_regular_file(
-                marker_path,
-                maximum_bytes=PROFILE_CUSTODY_COMMIT_MAX_BYTES,
-                trace=[],
-            )
-            label_payload = _read_regular_file(
-                label_path,
-                maximum_bytes=PROFILE_CUSTODY_LABEL_MAX_BYTES,
-                trace=[],
-            )
-    try:
-        commit = parse_profile_custody_commit(commit_payload)
-        label = parse_profile_custody_capsule_label(label_payload)
-    except (ProfileCustodyRecordError, ValueError, TypeError) as exc:
-        raise ProfileCustodyRecordError("profile capsule summary witness is invalid") from exc
-    if commit.profile_id != profile_id:
-        raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
-    if label.profile_id != profile_id:
-        raise ProfileCustodyRecordError("profile capsule label UUID differs from its committed capsule")
-    return ProfileCustodyCapsuleSummaryWitness(capsule_path=capsule_path, commit=commit, label=label)
-
-
-def replace_committed_profile_custody_data_file(
-    profile_id: UUID,
-    relative_name: str,
-    payload: bytes,
-    *,
-    expected_sha256: str,
-    settings: Settings | None = None,
-    root: Path | None = None,
-) -> None:
-    """CAS-replace one physical record only after recognizing its capsule.
-
-    DECLARED, NOT YET REACHED, and the sibling beside it is the evidence: the
-    envelope replace directly below has two production consumers, because a
-    passphrase rotation performs it. This one has none, so no product operation
-    replaces a committed custody DATA file, and a record that needed correcting
-    would have no guarded path to it -- the guard being exactly what this
-    function is, since it refuses unless the capsule is recognized and the
-    digest matches.
-
-    This is deliberately not a generic filesystem write API.  The lifecycle
-    passes the canonical current-record name, holds the profile transaction
-    lock, and supplies the digest of the authenticated record it is replacing.
-    """
-    capsule_path = recognize_current_profile_capsule(profile_id, settings=settings, root=root)
-    if capsule_path is None:
-        raise ProfileCustodyRecordError("profile record command requires a committed capsule")
-    data_path = capsule_path / "data"
-    with ExitStack() as anchors:
-        _anchor_directory(anchors, capsule_path)
-        _anchor_directory(anchors, data_path)
-        _replace_data_file(data_path, relative_name, payload, expected_sha256=expected_sha256)
-
-
 def replace_committed_profile_custody_envelope(
     profile_id: UUID,
     payload: bytes,
@@ -1181,7 +1065,6 @@ __all__ = [
     "PROFILE_CUSTODY_LABEL_FILENAME",
     "PROFILE_CUSTODY_LABEL_MAX_BYTES",
     "PROFILE_CUSTODY_LAYOUT_VERSION",
-    "PROFILE_CUSTODY_PROFILE_RECORD_MAX_BYTES",
     "ProfileCustodyCapsuleSummaryWitness",
     "ProfileCustodyCommit",
     "ProfileCustodyDeletionMarker",
@@ -1192,7 +1075,6 @@ __all__ = [
     "list_current_profile_custody_capsule_ids",
     "list_current_profile_custody_capsule_summary_witnesses",
     "load_committed_profile_custody_label_record",
-    "load_committed_profile_custody_summary_witness",
     "load_committed_profile_password_material",
     "load_staged_profile_custody_label_record",
     "parse_profile_custody_commit",
@@ -1202,7 +1084,6 @@ __all__ = [
     "recognize_current_profile_capsule",
     "remove_profile_custody_deletion_tombstone",
     "rename_profile_custody_capsule_for_deletion",
-    "replace_committed_profile_custody_data_file",
     "verify_profile_custody_deletion_marker",
     "verify_profile_custody_deletion_tombstone",
     "write_profile_custody_deletion_marker",

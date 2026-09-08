@@ -63,7 +63,6 @@ from ._bulk_import_columns import (
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 
 __all__ = [
-    "BULK_INVOICE_IMPORT_ALLOWED_COLUMNS",
     "BULK_INVOICE_IMPORT_REQUIRED_COLUMNS",
     "BulkImportSourceRow",
     "BulkInvoiceImportResult",
@@ -83,21 +82,6 @@ BULK_INVOICE_IMPORT_REQUIRED_COLUMNS: frozenset[str] = frozenset(
         "taxable_base",
     },
 )
-
-BULK_INVOICE_IMPORT_OPTIONAL_COLUMNS: frozenset[str] = frozenset(
-    {
-        "iva_rate",
-        "retencion_amount",
-        "currency",
-        "country_code",
-        "notes",
-    },
-)
-
-BULK_INVOICE_IMPORT_ALLOWED_COLUMNS: frozenset[str] = (
-    BULK_INVOICE_IMPORT_REQUIRED_COLUMNS | BULK_INVOICE_IMPORT_OPTIONAL_COLUMNS
-)
-
 
 class BulkImportSourceRow(BaseModel):
     """One source row, its cells already keyed by the importer field they feed.

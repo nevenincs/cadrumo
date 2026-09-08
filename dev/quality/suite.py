@@ -40,12 +40,22 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
     ("check-imports", ("lint-imports",)),
     ("check-relative-imports", (sys.executable, "-m", "dev.quality.relative_imports")),
+    ("check-modelo-regulatory-literals", (sys.executable, "-m", "dev.quality.modelo_regulatory_literals")),
+    ("check-modelo-regulatory-embeds", (sys.executable, "-m", "dev.quality.modelo_regulatory_embeds")),
     # Aggregated deliberately: the recipe existed in the static-checks group
     # with no row here, so `just check-all` never ran it while the gate table
     # still looked complete. It is a fast pure-Python scan, unlike the six
     # recipes _NOT_AGGREGATED holds out for being heavy, external, or the
     # aggregator itself, so there is no reason for it to sit outside.
     ("check-secure-store-write-path", (sys.executable, "-m", "dev.quality.secure_store_write_path")),
+    # Both of these shipped with a justfile recipe and no row here, repeating
+    # the defect the comment above records. A gate absent from this table is
+    # not a weaker gate, it is an unrun one: its own test suite stays green
+    # while `just check-all` never invokes it. Both are fast pure-Python
+    # scans over declarations already on disk.
+    ("check-narrowing-delegators", (sys.executable, "-m", "dev.quality.narrowing_delegators")),
+    ("check-tui-render-coverage", (sys.executable, "-m", "dev.quality.tui_render_coverage")),
+    ("check-production-metastate", (sys.executable, "-m", "dev.quality.production_metastate")),
     (
         "check-dependencies",
         (
@@ -88,24 +98,24 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
         ),
     ),
     (
-        "check-unreachable-ratchet",
-        (sys.executable, "-m", "dev.quality.unreachable_module_ratchet"),
+        "check-unreachable-module-coverage",
+        (sys.executable, "-m", "dev.quality.unreachable_module_coverage"),
     ),
     (
-        "check-unused-symbol-ratchet",
-        (sys.executable, "-m", "dev.quality.unused_symbol_ratchet"),
+        "check-unused-symbol-coverage",
+        (sys.executable, "-m", "dev.quality.unused_symbol_coverage"),
     ),
     (
-        "check-docstring-reference-ratchet",
-        (sys.executable, "-m", "dev.quality.docstring_reference_ratchet"),
+        "check-docstring-references",
+        (sys.executable, "-m", "dev.quality.docstring_reference_targets"),
     ),
     (
-        "check-unconsumed-export-ratchet",
-        (sys.executable, "-m", "dev.quality.unconsumed_export_ratchet"),
+        "check-unconsumed-export-coverage",
+        (sys.executable, "-m", "dev.quality.unconsumed_export_coverage"),
     ),
     (
-        "check-write-path-backlog",
-        (sys.executable, "-m", "dev.quality.write_path_backlog"),
+        "check-write-path-coverage",
+        (sys.executable, "-m", "dev.quality.write_path_coverage"),
     ),
 )
 

@@ -68,6 +68,10 @@ _INPUT_CUOTA = Decimal("10.50")
 _REVISION = "2022"
 
 
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+
+
 def _raw(provider_id: str) -> RawTransaction:
     return RawTransaction(
         provider_transaction_id=provider_id,
@@ -175,6 +179,7 @@ def test_elect_especial_via_service_makes_art106_apportionment_fire(tmp_path: Pa
                 especial_transition=None,
                 provisional_percentage=general_percentage,
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
             )
         )
         especial = _deducible_cuota(tx_repo)
@@ -225,6 +230,7 @@ def test_declare_sector_via_service_makes_per_sector_apportionment_fire(tmp_path
                     sector_id=sector_id,
                     provisional_percentage=pct,
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )
         sectored = _deducible_cuota(tx_repo)

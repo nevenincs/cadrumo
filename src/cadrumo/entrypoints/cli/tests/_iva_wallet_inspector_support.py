@@ -9,6 +9,7 @@ from ....application.wizard import catalogue as _wizard_catalogue
 from ....application.wizard import persistence as _wizard_persistence
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.user_profile.values import ProfileSetupState
 
@@ -43,6 +44,12 @@ def _state(
         taxpayer_nif=_NIF,
         filing_year=filing_year,
         period=Period.from_year_and_code(filing_year, period),
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2022",
+            modelo_year=filing_year,
+            period=period,
+        ),
         presented_at=datetime(filing_year + 1, 1, 20, 12, 0, tzinfo=UTC),
         prior_pending_amount=None,
         applied_amount=applied,

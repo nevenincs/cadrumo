@@ -25,6 +25,7 @@ from pydantic import ValidationError
 
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..carry_forward import (
     IvaCompensationCarryForwardLot,
     IvaCompensationExpiryReviewState,
@@ -38,6 +39,12 @@ _VALID_NIF = "12345678Z"
 #: real checksum — not a shape or length check — can tell them apart.
 _CHECKSUM_INVALID_NIF = "12345678A"
 _PRESENTED_AT = datetime(2025, 4, 20, tzinfo=UTC)
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2025",
+    modelo_year=2025,
+    period="1T",
+)
 
 
 def _period_state(taxpayer_nif: str) -> IvaCompensationPeriodState:
@@ -46,6 +53,7 @@ def _period_state(taxpayer_nif: str) -> IvaCompensationPeriodState:
         provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         expediente_id="202530300000001Z",
         status="presented",
         presented_at=_PRESENTED_AT,
@@ -107,6 +115,7 @@ def test_period_state_allows_an_explicitly_undeclared_subject() -> None:
         provenance=IvaCompensationStateProvenance.CASILLA_RECONSTRUCTION,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "1T"),
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         presented_at=_PRESENTED_AT,
         generated_amount=Decimal("100.00"),
         available_end_amount=Decimal("100.00"),

@@ -823,11 +823,6 @@ SAL_RESERVA_DOTACION_RATE: Final[Decimal] = Decimal("0.10")
 #: alcance al menos una cifra superior al doble del capital social").
 SAL_RESERVA_CAPITAL_MULTIPLE: Final[Decimal] = Decimal("2")
 
-#: LIVA art. 9.1.c (Ley 37/1992, BOE-A-1992-28740) sectoral-separation threshold:
-#: régimen de sectores diferenciados is mandatory when the spread between the highest
-#: and lowest general prorrata across sectors exceeds fifty percentage points.
-PRORRATA_SECTORAL_SEPARATION_SPREAD_PP: Final[Decimal] = Decimal("50")
-
 #: Ley 39/2015 art. 43.2 (BOE-A-2015-10565) rechazo-tácito window for an electronic
 #: notification: "se entenderá rechazada cuando hayan transcurrido diez días naturales
 #: desde la puesta a disposición de la notificación sin que se acceda a su contenido".

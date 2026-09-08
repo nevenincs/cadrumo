@@ -15,6 +15,7 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -48,6 +49,12 @@ _EVIDENCE_INPUT_CASILLA: CasillaId = validated_casilla_id(
 )
 _LEGAL_REFS = ("ley-37-1992:art-99",)
 _SOURCE_REFS = ("boe-modelo-303-2025-form",)
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2024-hasta-08-y-2t",
+    modelo_year=2024,
+    period="2T",
+)
 
 
 def _evidence_row(transaction_id: str) -> LedgerEvidenceRow:
@@ -87,6 +94,7 @@ def _revision(*, snapshot_ids: tuple[str, ...], evidence_ids: tuple[str, ...]) -
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_EVIDENCE_INPUT_CASILLA: "1"},
         source_transaction_ids=snapshot_ids,
@@ -140,6 +148,7 @@ def test_non_ledger_revision_passes_trivially() -> None:
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={_EVIDENCE_INPUT_CASILLA: "1"},
         created_at=_T0,

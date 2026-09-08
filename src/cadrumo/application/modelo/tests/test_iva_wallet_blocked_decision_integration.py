@@ -11,6 +11,7 @@ import pytest
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....tests import general_m303_filing_evidence
+from ...calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 from ...calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ...calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
 from ..calculation_actions import calculate_modelo_revision
@@ -93,6 +94,11 @@ def _blocked_wallet_decision(
         if wallet_amount is not None
         else None
     )
+    local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+        snapshot,
+        repository=observation_repo,
+        captured_at=_DECIDED_AT,
+    )
     report = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=_TAXPAYER_NIF,
@@ -100,6 +106,8 @@ def _blocked_wallet_decision(
         repository=observation_repo,
         decided_at=_DECIDED_AT,
         max_wallet_age_days=max_wallet_age_days,
+        local_recurrence=local_recurrence,
+        prefill_report=prefill_report,
     )
     return snapshot, report.decision
 
@@ -110,6 +118,11 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("1200.00"))
         snapshot = _snapshot_303()
+        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=observation_repo,
+            captured_at=_DECIDED_AT,
+        )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
@@ -117,6 +130,8 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
             repository=observation_repo,
             decided_at=_DECIDED_AT,
             persist=False,
+            local_recurrence=local_recurrence,
+            prefill_report=prefill_report,
         )
         assert (
             IvaWalletDecisionRepository().load_decision(
@@ -203,18 +218,28 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
         observation_repo = CalculationObservationRepository()
         _store_prior_303_compensation(observation_repo, amount=Decimal("800.00"))
         snapshot = _snapshot_303()
+        local_recurrence, prefill_report = extract_modelo_303_local_iva_compensation_recurrence(
+            snapshot,
+            repository=observation_repo,
+            captured_at=_DECIDED_AT,
+        )
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
             wallet=_wallet_observation(pending=Decimal("1200.00")),
             repository=observation_repo,
             decided_at=_DECIDED_AT,
+            local_recurrence=local_recurrence,
+            prefill_report=prefill_report,
         )
         assert report.decision.blocked is True
 
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(snapshot)
 
-        with pytest.raises(ModeloIvaWalletReconciliationBlocked, match="wallet_higher"):
+        with pytest.raises(
+            ModeloIvaWalletReconciliationBlocked,
+            match="application\\.iva_wallet\\.decision_reason\\.wallet_local_recurrence_divergence",
+        ):
             calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",

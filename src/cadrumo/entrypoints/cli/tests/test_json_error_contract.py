@@ -41,7 +41,6 @@ import subprocess
 import sys
 import textwrap
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -53,15 +52,6 @@ from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["active_profile_isolated_backend"]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs", "cadrumo.log"})
-"""Taxonomy-vocabulary literals this module deliberately pins.
-
-``state_root / "logs" / "cadrumo.log"`` is the real diagnostic-log location a
-crash's traceback must reach; both the directory and the leaf filename are
-asserted directly against the real DEFAULT-derived path, not an injected
-value.
-"""
 
 
 def _object_member(document: dict[str, object], key: str) -> dict[str, object]:

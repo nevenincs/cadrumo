@@ -41,7 +41,11 @@ from ..envelope import create_profile_custody_password_envelope
 from ..errors import ProfileCustodyPasswordError, ProfileCustodyRecordError
 from ..kdf_supervision import unlock_profile_custody
 from ..records import PROFILE_CUSTODY_ENVELOPE_FILENAME, ProfileCustodyKdfParameters
-from ..recovery import create_profile_custody_recovery_envelope, unlock_profile_custody_recovery
+from ..recovery import create_profile_custody_recovery_envelope
+from ..recovery_artifact import (
+    ProfileCustodyRecoveryArtifact,
+    unlock_imported_profile_custody_recovery_artifact,
+)
 from ..sentinel import create_profile_custody_sentinel
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -171,10 +175,12 @@ def test_rotation_leaves_the_sentinel_and_its_recovery_artifact_valid(tmp_path: 
     # The COMMITTED sentinel -- the one on disk, not a freshly minted stand-in --
     # still opens the pre-rotation recovery envelope to the identical data key.
     material = load_committed_profile_password_material(_PROFILE_ID, settings=settings)
-    recovered = unlock_profile_custody_recovery(
-        recovery_secret=_RECOVERY_SECRET,
-        envelope=recovery,
+    recovered = unlock_imported_profile_custody_recovery_artifact(
+        ProfileCustodyRecoveryArtifact.from_recovery_envelope(recovery),
+        _RECOVERY_SECRET,
         sentinel=material.sentinel,
+        expected_profile_id=_PROFILE_ID,
+        expected_dek_epoch=_EPOCH,
     )
     assert bytes(recovered.dek) == _DEK
     assert recovered.dek_epoch == _EPOCH

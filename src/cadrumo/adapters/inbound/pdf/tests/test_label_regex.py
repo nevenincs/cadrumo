@@ -1,10 +1,7 @@
 """Unit tests for the shared label-regex primitive.
 
-Covers the Spanish-decimal parser, the ``SPANISH_AMOUNT_GROUP``
-regex (including its NBSP-thousands acceptance and the column-
-separator rejection guard), the :func:`apply_label_regex`
-first-match-wins / ``match_count`` semantics, and the
-strict + frozen :class:`LabelHit` shape.
+Covers the Spanish-decimal parser and the ``SPANISH_AMOUNT_GROUP`` regex,
+including its NBSP-thousands acceptance and column-separator rejection guard.
 """
 
 from __future__ import annotations
@@ -14,11 +11,9 @@ from decimal import Decimal
 
 import pytest
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..label_regex import SPANISH_AMOUNT_GROUP, LabelHit, apply_label_regex, parse_spanish_decimal
+from ..label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
-_TEST_LABEL_CASILLA: CasillaId = validated_casilla_id("01", surface="_TEST_LABEL_CASILLA")
 
 
 class TestParseSpanishDecimal:
@@ -69,9 +64,9 @@ class TestSpanishAmountGroupRegex:
         )
 
         for case_id, line, expected in cases:
-            hits = apply_label_regex(line, {"01": pattern})
-            assert "01" in hits, f"{case_id}: regex failed to match {line!r}"
-            assert hits["01"].decimal_value == expected, case_id
+            match = pattern.search(line)
+            assert match is not None, f"{case_id}: regex failed to match {line!r}"
+            assert parse_spanish_decimal(match.group(1)) == expected, case_id
 
     def test_regex_does_not_cross_column_ascii_space(self) -> None:
         """ASCII column-separator whitespace must not act as a thousands separator.
@@ -81,47 +76,6 @@ class TestSpanishAmountGroupRegex:
         """
         pattern = re.compile(rf"(?m)^\s*04\s.*?{SPANISH_AMOUNT_GROUP}")
         text = "04 2 por ciento s/casilla 03 400,00"
-        hits = apply_label_regex(text, {"04": pattern})
-        assert hits["04"].decimal_value == Decimal("400.00")
-
-
-class TestApplyLabelRegex:
-    """Dispatch semantics of :func:`apply_label_regex`."""
-
-    def test_first_match_wins(self) -> None:
-        """When a label matches twice, the first hit wins."""
-        pattern = re.compile(rf"(?m)^\s*01\s.*?{SPANISH_AMOUNT_GROUP}")
-        text = "01 Ingresos 10.000,00\n01 Ingresos duplicados 99,99"
-        hits = apply_label_regex(text, {"01": pattern})
-        assert "01" in hits
-        assert hits["01"].raw_value == "10.000,00"
-        assert hits["01"].decimal_value == Decimal("10000.00")
-
-    def test_match_count_reports_ambiguity(self) -> None:
-        """``match_count`` reports the number of regex hits for a label."""
-        pattern = re.compile(rf"(?m)^\s*01\s.*?{SPANISH_AMOUNT_GROUP}")
-        text = "01 Ingresos 10.000,00\n01 Duplicado 99,99"
-        hits = apply_label_regex(text, {"01": pattern})
-        assert hits["01"].match_count == 2
-
-    def test_missing_pattern_absent_from_output(self) -> None:
-        """A label whose pattern matches nothing is absent from the output."""
-        pattern = re.compile(rf"(?m)^\s*02\s.*?{SPANISH_AMOUNT_GROUP}")
-        hits = apply_label_regex("01 Ingresos 10,00", {"02": pattern})
-        assert hits == {}
-
-
-class TestLabelHitShape:
-    """Strict + frozen invariants of :class:`LabelHit`."""
-
-    def test_frozen_dataclass(self) -> None:
-        """Mutating an attribute on a frozen :class:`LabelHit` raises."""
-        hit = LabelHit(
-            casilla_id=_TEST_LABEL_CASILLA,
-            raw_value="10,00",
-            decimal_value=Decimal("10.00"),
-            match_count=1,
-        )
-        _attr = "casilla_id"
-        with pytest.raises(AttributeError, match=r"frozen|cannot|casilla_id"):
-            setattr(hit, _attr, "02")
+        match = pattern.search(text)
+        assert match is not None
+        assert parse_spanish_decimal(match.group(1)) == Decimal("400.00")

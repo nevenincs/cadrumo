@@ -11,7 +11,6 @@ make the assertion compare the settings derivation against itself.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -20,13 +19,6 @@ from ...tests.env_scope import isolated_aeat_env, settings_without_env_file
 from ..config import Settings
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets", "blobs", "live-state"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring.
-
-``"live-state"`` here names the on-disk directory segment
-``cadrumo_live_state_dir`` resolves to (``storage_root / "live-state"``).
-"""
 
 
 def _settings_from_env(**env: str) -> Settings:

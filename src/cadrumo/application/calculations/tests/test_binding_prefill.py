@@ -238,12 +238,12 @@ def test_modelo_390_prefill_compares_annual_totals_to_persisted_periodic_observa
                 repository.prepare_observation_envelope(
                     _registry_observation(filing_year=2025, period=period, result=result),
                     source_kind="app_filing",
+                    stamped_revision_id=_snapshot("303", 2025, period).revision.id,
                     result_disposition=ResultDispositionProjection(
                         disposition=_filing_result_disposition(result),
                         provenance_kind="app_filing",
                         provenance_locator=f"test-local-filing:2025:{period}",
                     ),
-                    normalize_m303_carry=True,
                 )
             )
 
@@ -339,6 +339,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
                 taxpayer_nif="12345678Z",
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "4T"),
+                registry_snapshot_ref=_snapshot("303", 2025, "4T").snapshot_ref,
                 expediente_id="30320254T0000000000",
                 status="presentada",
                 presented_at=datetime(2026, 1, 20, 10, 0, tzinfo=UTC),
@@ -367,6 +368,7 @@ def test_modelo_303_local_iva_recurrence_preserves_filed_history_source_kind(
     assert recurrence.source_modelo == "303"
     assert recurrence.source_filing_year == 2025
     assert recurrence.source_periods == (Period.from_year_and_code(2025, "4T"),)
+    assert recurrence.source_registry_snapshot_refs == (_snapshot("303", 2025, "4T").snapshot_ref,)
     assert report.prefilled
     assert {item.source_kind for item in report.prefilled} == {"aeat_sede_iva_compensation_history"}
 
@@ -400,6 +402,7 @@ def test_iva_history_observation_only_claims_formula_provenance_for_exact_casill
         taxpayer_nif="12345678Z",
         filing_year=2025,
         period=Period.from_year_and_code(2025, "4T"),
+        registry_snapshot_ref=_snapshot("303", 2025, "4T").snapshot_ref,
         expediente_id="30320254T0000000000",
         status="presentada",
         presented_at=datetime(2026, 1, 20, 10, 0, tzinfo=UTC),

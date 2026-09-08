@@ -307,32 +307,16 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
     assert revision.casilla_values[M130_NET_RESULT_CASILLA] == Decimal("7000.00")
 
 
-def test_calculate_refuses_when_registry_snapshot_unresolvable(repos: Repos) -> None:
-    """``calculate_modelo_revision`` runs the formula engine, so it
-    cannot operate on a work unit whose (modelo, year, period) tuple
-    does not resolve a registry snapshot. The action raises
-    ``CalculationRegistryUnavailableError`` rather than persisting a
-    revision that bypasses the engine."""
+def test_work_unit_creation_refuses_unresolvable_registry_snapshot(repos: Repos) -> None:
+    """An unsupported filing coordinate is rejected before calculation state exists."""
 
-    from ..action_errors import CalculationRegistryUnavailableError
+    from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 
-    wu_repo, cr_repo, _, _, bv_repo = repos
-    # Modelo 130 at year 2010 predates the registry's earliest
-    # revision (``2019-y-siguientes``), so the snapshot lookup fails.
-    work_unit = seed_work_unit(wu_repo, filing_year=2010)
-
-    with pytest.raises(CalculationRegistryUnavailableError) as exc_info:
-        calculate_modelo_revision(
-            work_unit.work_unit_id,
-            actor="operator-A",
-            casilla_inputs={M130_INCOME_CASILLA: Decimal("1000")},
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            bucket_event_repository=bv_repo,
-            clock=T1,
-        )
-    assert exc_info.value.translated_message == "application.modelo.errors.calculation_registry_snapshot_unresolved"
+    wu_repo, _, _, _, _ = repos
+    # Modelo 130 at year 2010 predates the registry's earliest revision
+    # (``2019-y-siguientes``), so the sole registry resolver fails closed.
+    with pytest.raises(NoRevisionForPeriodError):
+        seed_work_unit(wu_repo, filing_year=2010)
 
 
 def test_draft_calculation_commits_revision_pointer_and_event_together(

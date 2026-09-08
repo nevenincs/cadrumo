@@ -27,7 +27,7 @@ from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..observations_repository import CalculationObservationRepository
@@ -95,7 +95,7 @@ def test_a_matched_previous_filing_resolves_from_its_applicable_source_casilla(t
             casilla_values={validated_casilla_id(_SOURCE_CASILLAS[0], surface="test fixture"): Decimal("1")},
         )
         repository.save(
-            repository.prepare_observation_envelope(incomplete_observation, source_kind="app_filing"),
+            repository.prepare_observation_envelope(incomplete_observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(incomplete_observation)),
         )
 
         report = resolve_bindings_from_local_store(snapshot, repository=repository)
@@ -114,7 +114,7 @@ def test_a_matched_previous_filing_with_no_declared_source_casilla_still_refuses
             period="0A",
             casilla_values={validated_casilla_id("0670", surface="test fixture"): Decimal("1")},
         )
-        repository.save(repository.prepare_observation_envelope(unrelated_observation, source_kind="app_filing"))
+        repository.save(repository.prepare_observation_envelope(unrelated_observation, source_kind="app_filing", stamped_revision_id=revision_id_for_observation(unrelated_observation)))
 
         with pytest.raises(RegistryValidationError, match="requires at least one observed source casilla"):
             resolve_bindings_from_local_store(snapshot, repository=repository)

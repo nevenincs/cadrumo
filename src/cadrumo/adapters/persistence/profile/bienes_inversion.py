@@ -15,8 +15,8 @@ save/load/equality roundtrip plus an anti-tautology proof.
 See Also:
     :mod:`domain.bienes_inversion`
         Typed register payload models persisted here.
-    :mod:`adapters.persistence.profile.assets`
-        Sibling profile-local secure-object adapter whose shape this mirrors.
+    :mod:`adapters.persistence.profile.inventory`
+        Sibling profile-local secure-object adapter using the same storage kernel.
 """
 
 from __future__ import annotations

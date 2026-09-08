@@ -79,14 +79,6 @@ _ASYNCIO_RUN_EXCLUSIONS: tuple[_DeclaredExclusion, ...] = (
             "event loop for one session is the job it exists to do"
         ),
     ),
-    _DeclaredExclusion(
-        path="src/cadrumo/entrypoints/tui/devtools/replay.py",
-        construct="asyncio.run",
-        reason=(
-            "a diagnostic replay entry point runs standalone against recorded "
-            "input and drives no operator-facing screen"
-        ),
-    ),
 )
 
 
@@ -100,7 +92,13 @@ def _tracked_sources() -> tuple[str, ...]:
         text=True,
         check=True,
     )
-    paths = tuple(sorted(line.strip() for line in completed.stdout.splitlines() if line.strip()))
+    paths = tuple(
+        sorted(
+            path
+            for line in completed.stdout.splitlines()
+            if (path := line.strip()) and (_REPO_ROOT / path).is_file()
+        ),
+    )
     if not paths:
         message = "git tracks no package sources; the census denominator is empty"
         raise AssertionError(message)

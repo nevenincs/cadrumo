@@ -210,12 +210,6 @@ adapters:
             or carries no timezone: {actual_value}.'
   persistence:
     profile:
-      assets:
-        errors:
-          asset_already_exists: That asset already exists in the encrypted asset ledger.
-          load_amortizacion_ledger_failed: Unable to load the encrypted amortization
-            ledger.
-          load_asset_ledger_failed: Unable to load the encrypted asset ledger.
       bienes_inversion:
         errors:
           load_register_failed: Unable to load the encrypted capital-goods IVA regularisation

@@ -10,14 +10,14 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.outbound.aeat.sede.iva_compensation_wallet import (
-    IVA_COMPENSATION_WALLET_URL,
-    parse_iva_compensation_wallet_html,
-)
+from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
+from ....adapters.outbound.aeat.sede.iva_compensation_wallet import parse_iva_compensation_wallet_html
 from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ....adapters.persistence.storage.master_key.active_session import has_active_bucket_session
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -52,6 +52,10 @@ _TAXPAYER_REF = "12345678Z"
 _CAPTURED_AT = datetime(2026, 5, 20, 10, 30, 0, tzinfo=UTC)
 _SESSION_BUCKET_ID = "38383838-3838-4383-8383-383838383838"
 _OTHER_SESSION_BUCKET_ID = "39393939-3939-4393-8393-393939393939"
+
+
+def _snapshot_ref(filing_year: int, period: str) -> RegistrySnapshotRef:
+    return bundled_authority().snapshot("303", filing_year=filing_year, period=period).snapshot_ref
 
 
 def _wallet_html(*, total: str, rows: str, target_year: int, target_period: str) -> str:
@@ -101,7 +105,7 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
             authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "2T"),
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=_CAPTURED_AT,
         )
 
@@ -151,7 +155,7 @@ def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persis
             authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "2T"),
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=_CAPTURED_AT,
         )
 
@@ -179,6 +183,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2022,
                 period=Period.from_year_and_code(2022, "4T"),
+                registry_snapshot_ref=_snapshot_ref(2022, "4T"),
                 expediente_id="202230300000004Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
@@ -194,6 +199,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2024,
                 period=Period.from_year_and_code(2024, "1T"),
+                registry_snapshot_ref=_snapshot_ref(2024, "1T"),
                 expediente_id="202430300000001Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
@@ -208,6 +214,8 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                 taxpayer_nif=_TAXPAYER_REF,
                 target_year=2026,
                 target_period=Period.from_year_and_code(2026, "2T"),
+                target_registry_snapshot_ref=_snapshot_ref(2026, "2T"),
+                source_registry_snapshot_refs=(_snapshot_ref(2024, "1T"),),
                 selected_authority="aeat_wallet",
                 selected_amount=Decimal("90.00"),
                 wallet_amount=Decimal("90.00"),
@@ -224,6 +232,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                         source_kind="aeat_wallet",
                         source_locator="wallet:2026:2T",
                         amount=Decimal("90.00"),
+                        registry_snapshot_refs=(),
                     ),
                     IvaCompensationAuthoritySource(
                         source_kind="filed_history_observation",
@@ -232,6 +241,7 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
                         source_filing_year=2024,
                         source_periods=(Period.from_year_and_code(2024, "1T"),),
                         amount=Decimal("90.00"),
+                        registry_snapshot_refs=(_snapshot_ref(2024, "1T"),),
                     ),
                 ),
             ),
@@ -274,6 +284,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
                 taxpayer_nif=_TAXPAYER_REF,
                 filing_year=2025,
                 period=Period.from_year_and_code(2025, "4T"),
+                registry_snapshot_ref=_snapshot_ref(2025, "4T"),
                 expediente_id="202530300000004Z",
                 status="ALTA",
                 presented_at=_CAPTURED_AT,
@@ -299,7 +310,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
             authenticated_identity=_TAXPAYER_REF,
             target_year=2026,
             target_period=Period.from_year_and_code(2026, "1T"),
-            source_url=IVA_COMPENSATION_WALLET_URL,
+            source_url=WALLET_URL,
             captured_at=_CAPTURED_AT,
         )
         wallet_ref = FiledDeclaracionObservationStore(tmp_path / "remote-iva-evidence").persist_iva_wallet_observation(
@@ -313,6 +324,8 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
                 taxpayer_nif=_TAXPAYER_REF,
                 target_year=2026,
                 target_period=Period.from_year_and_code(2026, "1T"),
+                target_registry_snapshot_ref=_snapshot_ref(2026, "1T"),
+                source_registry_snapshot_refs=(_snapshot_ref(2025, "4T"),),
                 selected_authority="aeat_wallet",
                 selected_amount=Decimal("100.00"),
                 wallet_amount=Decimal("100.00"),
@@ -329,6 +342,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
                         source_kind="aeat_wallet",
                         source_locator=str(wallet_ref),
                         amount=Decimal("100.00"),
+                        registry_snapshot_refs=(),
                         captured_at=_CAPTURED_AT,
                     ),
                     IvaCompensationAuthoritySource(
@@ -338,6 +352,7 @@ def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Pat
                         source_filing_year=2025,
                         source_periods=(Period.from_year_and_code(2025, "4T"),),
                         amount=Decimal("100.00"),
+                        registry_snapshot_refs=(_snapshot_ref(2025, "4T"),),
                         captured_at=_CAPTURED_AT,
                     ),
                 ),
@@ -393,6 +408,7 @@ def test_remote_iva_evidence_reload_opens_active_profile_session_without_cli_boo
                     taxpayer_nif=_TAXPAYER_REF,
                     filing_year=2025,
                     period=Period.from_year_and_code(2025, "4T"),
+                    registry_snapshot_ref=_snapshot_ref(2025, "4T"),
                     expediente_id="202530300000004Z",
                     status="ALTA",
                     presented_at=_CAPTURED_AT,
@@ -421,6 +437,7 @@ def _store_prior_compensation(*, amount: Decimal) -> None:
             taxpayer_nif=_TAXPAYER_REF,
             filing_year=2026,
             period=Period.from_year_and_code(2026, "1T"),
+            registry_snapshot_ref=_snapshot_ref(2026, "1T"),
             expediente_id="202630300000001Z",
             status="ALTA",
             presented_at=_CAPTURED_AT,

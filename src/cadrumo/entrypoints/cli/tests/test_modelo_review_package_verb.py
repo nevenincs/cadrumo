@@ -16,6 +16,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -297,6 +298,12 @@ def test_review_package_build_refuses_draft_revision(tmp_path: Path) -> None:
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="111",
+            revision_id=revision_id,
+            modelo_year=2026,
+            period="1T",
+        ),
         state=CalculationRevisionState.BORRADOR,
         created_at=now,
         updated_at=now,

@@ -14,19 +14,15 @@ core``) and requires each to be declared here, so the set cannot grow silently:
 an author who defers a new cross-layer import to quiet a contract must add a row
 and say which kind of deferral it is.
 
-**What this gate does NOT claim.** The declared rows below are an inventory, not
-a review. This project has no sanctioned inventory of function-local first-party
-edges to diff against, so the baseline was produced from the graph difference
-alone and every inherited row is recorded as
-:attr:`DeferredEdgeStatus.UNADJUDICATED` -- present, running, and judged by
-nobody. Reading a green result here as "these edges are fine" is exactly the
-misreading that status exists to prevent. What green means is narrower, and
-worth stating plainly: **no edge has been added or removed since the inventory
-was taken.**
+**What this gate does NOT claim.** An inherited
+:attr:`DeferredEdgeStatus.UNADJUDICATED` row remains present, running, and judged
+by nobody; green does not promote it into architectural approval. Green means
+the live graph and the checked declaration agree in both directions, every
+reviewed demand load still carries its site-specific reason, and no stale row
+can linger after its edge disappears.
 
-Exemptions are keyed by ``(path, enclosing function)`` rather than line number,
-so ordinary edits above an entry do not invalidate it, and a stale row fails
-instead of lingering.
+Declarations are keyed by ``(path, enclosing function)`` rather than line
+number, so ordinary edits above an entry do not invalidate it.
 """
 
 from __future__ import annotations
@@ -34,6 +30,7 @@ from __future__ import annotations
 import ast
 from enum import StrEnum
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -74,16 +71,12 @@ _DOCUMENTED_LOADERS: frozenset[tuple[str, str]] = frozenset(
         ("core/resources/_repos/holiday_calendars.py", "_load"),
         ("core/resources/_repos/iva_catalogues.py", "_load"),
         ("core/resources/_repos/iva_rate_tables.py", "_load"),
-        ("core/resources/_repos/legal_parameters.py", "_load"),
         ("core/resources/_repos/manuals.py", "_load"),
         ("core/resources/_repos/manuals.py", "_part_is_a_known_volume"),
         ("core/resources/_repos/manuals.py", "catalogue"),
         ("core/resources/_repos/manuals.py", "find_rules"),
         ("core/resources/_repos/manuals.py", "iter_sections"),
-        ("core/resources/_repos/modelos.py", "_load"),
-        ("core/resources/_repos/modelos.py", "_resolve_authority"),
         ("core/resources/_repos/recargo_bands.py", "_load"),
-        ("core/resources/_repos/user_profile.py", "_load"),
     },
 )
 
@@ -94,6 +87,37 @@ _DELIBERATE_DEMAND_LOADS: dict[tuple[str, str], str] = {
         "the concrete calculation catalogue is needed only where a caller injected no "
         "repository; importing it at module scope put an application-to-adapter edge on "
         "every consumer of the ledger action layer"
+    ),
+    ("application/filing/persistence_wiring.py", "modelo_record_repository_for_application"): (
+        "the application port remains importable without constructing or importing its encrypted "
+        "persistence default until a caller actually requests that default"
+    ),
+    ("application/ledger/actions_common.py", "_commit_with_guarded_events"): (
+        "the persistence-specific revision conflict is loaded only on the guarded commit path "
+        "that catches it; ordinary ledger reads do not need the storage error hierarchy"
+    ),
+    ("application/ledger/actions_common.py", "resolve_attachment_store"): (
+        "the concrete attachment-store resolver is needed only when the caller did not inject the application port"
+    ),
+    ("application/ledger/actions_common.py", "resolve_bucket_event_repository"): (
+        "the secure-object runtime repository is needed only to build the permitted persistence "
+        "default when no event repository was injected"
+    ),
+    ("application/modelo/calculation.py", "_calculation_owner_observation"): (
+        "the concrete calculation catalogue is needed only when the caller omitted the repository "
+        "port; injected calculation paths do not load persistence"
+    ),
+    ("application/modelo/taxation_comparison.py", "compare_taxation_for_work_address"): (
+        "the work-unit catalogue is loaded only by the public-address convenience entry point; "
+        "the comparison engine itself consumes an already-loaded catalogue"
+    ),
+    ("application/registry/filed_state.py", "_load_filed_observation"): (
+        "the filed-observation store is required only while verifying an on-disk observation; "
+        "registry command discovery does not load the outbound adapter graph"
+    ),
+    ("application/registry/filed_state.py", "verify_filed_state"): (
+        "the filed-declaration converter is required only by verification; keeping it local avoids "
+        "loading the outbound AEAT and authentication graph during registry command discovery"
     ),
 }
 
@@ -106,38 +130,23 @@ _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
         ("application/auth/operator_probes.py", "_probe_clave_movil_identity"),
         ("application/auth/sessions.py", "_active_profile_auth_facts"),
         ("application/auth/sessions.py", "_build_provider"),
-        ("application/auth/sessions.py", "_ensure_authenticated_aeat_session_locked"),
         ("application/auth/sessions.py", "require_verified_aeat_session"),
-        ("application/bucket_maintenance/service.py", "_assess_retention_floor"),
-        ("application/bucket_maintenance/service.py", "_event_repository_for_bucket"),
-        ("application/bucket_maintenance/service.py", "_preserve_existing_import_target"),
-        ("application/bucket_maintenance/service.py", "browse"),
-        ("application/bucket_maintenance/service.py", "disk_usage"),
-        ("application/bucket_maintenance/service.py", "export"),
-        ("application/bucket_maintenance/service.py", "import_"),
-        ("application/bucket_maintenance/service.py", "inspect"),
         ("application/diagnostic_models.py", "ensure_models_rebuilt"),
         ("application/diagnostics.py", "_is_missing_active_bucket_session"),
         ("application/diagnostics.py", "_ok_site_health_status"),
         ("application/diagnostics.py", "_probe_browser_connectivity"),
         ("application/diagnostics.py", "_probe_secure_objects_integrity"),
-        ("application/diagnostics.py", "build_config_repair_report"),
         ("application/diagnostics.py", "quarantine_unreadable_secure_objects"),
         ("application/filing/draft_review.py", "_load_transaction_catalogue"),
         ("application/filing/persistence_wiring.py", "secure_objects_for_application_filing_bucket"),
         ("application/invoices/catalogue_creation.py", "emit_catalogue_invoice_event"),
-        ("application/ledger/actions_common.py", "_bucket_event_repository"),
-        ("application/ledger/actions_common.py", "_verify_attachment_references"),
         ("application/ledger/actions_common.py", "purchase_invoice_evidence_records"),
         ("application/ledger/actions_import.py", "_resolve_financial_provider"),
         ("application/ledger/actions_import.py", "import_ledger_source"),
-        ("application/ledger/actions_manual.py", "_record_attachment_back_references"),
         ("application/ledger/batch_ingest.py", "_reads_without_a_model"),
         ("application/ledger/evidence_input.py", "_reject_unreadable_bytes"),
         ("application/ledger/evidence_input.py", "document_shape"),
         ("application/ledger/llm_classification.py", "_record_injected_classifier_run"),
-        ("application/live/justificante.py", "capture_justificante_snapshot_outcome"),
-        ("application/live/notifications.py", "capture_notifications"),
         ("application/live/censo.py", "pull_censal_datos"),
         ("application/live/errors.py", "_classify_clave_movil_timeout"),
         ("application/live/errors.py", "_classify_sede_error"),
@@ -160,21 +169,15 @@ _UNADJUDICATED: frozenset[tuple[str, str]] = frozenset(
         ("application/review/_adapters.py", "load_invoices"),
         ("application/review/_adapters.py", "load_transactions"),
         ("application/storage/calc_sheets/parity_harness.py", "verify_modelo_parity"),
-        ("application/user_profile/capabilities.py", "_active_profile_record"),
-        ("application/user_profile/language_resolver.py", "resolve_active_profile_output_language"),
-        ("application/user_profile/language_resolver.py", "resolve_profile_output_language_hint"),
-        ("application/user_profile/repository.py", "_secure_objects_for_bucket"),
-        ("application/workflow/adapters.py", "_live_expedientes_source"),
-        ("application/workflow/adapters.py", "_live_notifications_source"),
-        ("application/workflow/_models.py", "active_transaction_catalogue_repository"),
     },
 )
 
-_DECLARED: dict[tuple[str, str], DeferredEdgeStatus] = {
+PINNED_DEFERRED_CROSS_LAYER_IMPORTS: Final[dict[tuple[str, str], DeferredEdgeStatus]] = {
     **{pair: DeferredEdgeStatus.DOCUMENTED_LOADER for pair in _DOCUMENTED_LOADERS},
     **{pair: DeferredEdgeStatus.UNADJUDICATED for pair in _UNADJUDICATED},
     **{pair: DeferredEdgeStatus.DELIBERATE_DEMAND_LOAD for pair in _DELIBERATE_DEMAND_LOADS},
 }
+"""Live deferred cross-layer sites, checked for undeclared and stale drift below."""
 
 
 def _enclosing_function(parents: dict[ast.AST, ast.AST], node: ast.AST) -> str | None:
@@ -266,11 +269,14 @@ def test_no_undeclared_deferred_cross_layer_import() -> None:
     graph can accumulate cross-layer coupling indefinitely while every declared
     contract stays green.
     """
-    undeclared = sorted(pair for pair in deferred_cross_layer_edges() if pair not in _DECLARED)
+    undeclared = sorted(
+        pair for pair in deferred_cross_layer_edges() if pair not in PINNED_DEFERRED_CROSS_LAYER_IMPORTS
+    )
     assert not undeclared, (
         "function-local imports running against the declared layer direction, with no "
-        "declaration here. If the deferral breaks a genuine import cycle, add the row as "
-        f"UNADJUDICATED and say so; if it exists to quiet a layer contract, remove it: {undeclared}"
+        "declaration here. Classify a genuine cycle break as UNADJUDICATED; give a reviewed "
+        "demand load a site-specific DELIBERATE_DEMAND_LOAD reason; remove an import that only "
+        f"quiets a layer contract: {undeclared}"
     )
 
 
@@ -281,8 +287,14 @@ def test_no_stale_declaration() -> None:
     live row from one kept alive by nothing.
     """
     live = set(deferred_cross_layer_edges())
-    stale = sorted(pair for pair in _DECLARED if pair not in live)
+    stale = sorted(pair for pair in PINNED_DEFERRED_CROSS_LAYER_IMPORTS if pair not in live)
     assert not stale, f"declared deferred edges that no longer exist -- delete these rows: {stale}"
+
+
+def test_deliberate_demand_loads_name_their_site_specific_reason() -> None:
+    """A reviewed demand load is a reasoned declaration, not an allowlist row."""
+    missing = sorted(pair for pair, reason in _DELIBERATE_DEMAND_LOADS.items() if not reason.strip())
+    assert not missing, f"deliberate demand loads without a site-specific reason: {missing}"
 
 
 def test_documented_loaders_stay_where_the_contract_says_they_are() -> None:

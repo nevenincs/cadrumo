@@ -54,6 +54,8 @@ def test_import_ledger_transactions_persists_rows_and_emits_import_events(
 
     assert first_import.summary.imported == 2
     assert first_import.summary.skipped == 0
+    assert "errors" not in type(first_import.summary).model_fields
+    assert "errors" not in first_import.summary.model_dump()
     assert len(first_import.bucket_event_ids) == 2
     assert duplicate_import.summary.imported == 0
     assert duplicate_import.summary.skipped == 1

@@ -3,8 +3,8 @@
 Modelo 193's hoja anexo (registro tipo 2, relación de gastos) carries one row
 per contribuyente for whom the declarante perceived the art. 26.1.a) LIRPF
 gastos de administracion y deposito de valores. This family resolves those
-rows from per-contribuyente gasto observations and feeds the declarante's
-IMPORTE DE GASTOS total (positions 220-234) through the ``gastos_sum`` fact.
+rows from per-contribuyente gasto observations. The required declarante total
+is a separate explicit input until a secure observation owner exists.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....core.aggregation import BindingAggregationOp
+from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.identity import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
@@ -33,7 +33,6 @@ __all__ = [
     "Gasto193Observation",
     "_Gasto193Selector",
     "resolve_gasto193_binding_row_values",
-    "resolve_gasto193_binding_values",
     "validate_gasto193_binding_selector_shape",
 ]
 
@@ -43,7 +42,7 @@ _Gasto193RowField = Literal[
     "representative_tax_id",
     "importe_gastos",
 ]
-_Gasto193Fact = Literal["row_field", "gastos_sum"]
+_Gasto193Fact = Literal["row_field"]
 
 
 class Gasto193Observation(BaseModel):
@@ -102,32 +101,9 @@ def validate_gasto193_binding_selector_shape(binding: DataBindingDefinition) -> 
                 raise RegistryValidationError("gasto193 fact 'row_field' requires a 'row_field' selector key")
             if selector.grouping is None:
                 raise RegistryValidationError("gasto193 fact 'row_field' requires a 'grouping' selector key")
-        elif selector.fact == "gastos_sum":
-            if op != BindingAggregationOp.SUM:
-                raise RegistryValidationError("gasto193 fact 'gastos_sum' requires aggregation op 'sum'")
     except RegistryValidationError as exc:
         return [f"binding {binding.id!r} (source={binding.source!r}) gasto193 invariants violated: {exc}"]
     return []
-
-
-def resolve_gasto193_binding_values(
-    revision: ModeloRevision,
-    observations: Iterable[Gasto193Observation],
-) -> dict[str, Decimal]:
-    """Resolve every ``gasto193`` scalar-sum binding on the revision to its aggregated value."""
-    available = tuple(observations)
-    resolved: dict[str, Decimal] = {}
-    for binding in revision.bindings:
-        if str(getattr(binding, "source", "")) != "gasto193":
-            continue
-        selector = _gasto193_selector(binding)
-        if selector.fact == "row_field":
-            continue
-        resolved[str(binding.id)] = sum(
-            (obs.importe_gastos for obs in available),
-            Decimal("0"),
-        )
-    return resolved
 
 
 def _build_gasto193_rows(
@@ -166,7 +142,7 @@ def resolve_gasto193_binding_row_values(
     rows = _build_gasto193_rows(available)
     resolved: dict[tuple[str, int], Decimal | str] = {}
     for binding in revision.bindings:
-        if str(getattr(binding, "source", "")) != "gasto193":
+        if binding.source is not BindingSourceKind.GASTO193_CONTRIBUTOR:
             continue
         selector = _gasto193_selector(binding)
         if selector.fact != "row_field":

@@ -20,6 +20,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -127,10 +128,14 @@ def _wallet_decision() -> IvaCompensationReconciliationDecision:
         taxpayer_nif=_TAX_ID,
         target_year=_YEAR,
         target_period=Period.from_year_and_code(_YEAR, _PERIOD),
+        target_registry_snapshot_ref=bundled_authority()
+        .snapshot("303", filing_year=_YEAR, period=_PERIOD)
+        .snapshot_ref,
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("0.00"),
         wallet_amount=Decimal("0.00"),
-        local_recurrence_amount=Decimal("0.00"),
+        local_recurrence_amount=None,
         override_amount=None,
         divergence="match",
         blocked=False,
@@ -735,6 +740,12 @@ def test_output_iva_evidence_hint_is_advisory_and_names_current_cli_limit(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         source_transaction_ids=(sale.transaction_id,),
         created_at=_T0,

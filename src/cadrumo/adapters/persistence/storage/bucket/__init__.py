@@ -26,7 +26,7 @@ artifact and never travels as an archive member.
 
 See Also:
     :mod:`directory_layout`
-        Resolves and destroys the per-bucket directory tree.
+        Resolves the per-bucket directory tree without performing lifecycle IO.
     :mod:`export_archive_header`
         Plaintext frontmatter record for sealed bucket-export archives.
     :mod:`sealed_archive_writer`

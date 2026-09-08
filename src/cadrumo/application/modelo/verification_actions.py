@@ -82,6 +82,7 @@ from ...domain.calculations.registry.ids import (
 )
 from ...domain.calculations.registry.schema import DataBindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES
@@ -129,6 +130,7 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
 from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..workflow.engine import WorkflowEngine
 from ..workflow.persistence import WorkflowRunRepository
 from ..workflow.run_models import WorkflowPurpose
@@ -182,6 +184,7 @@ from .action_errors import (
     LedgerEvidenceRecaptureRefusedError,
     WorkUnitNotFoundError,
 )
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
@@ -646,6 +649,7 @@ def _existing_granting_verification_report(
 def _build_verification_report(
     *,
     calculation_revision_id: CalculationRevisionId,
+    registry_snapshot_ref: RegistrySnapshotRef,
     findings: Iterable[ModeloVerificationFinding],
     resolved_casilla_ids: Iterable[CasillaId],
     missing_required_casilla_ids: Iterable[CasillaId],
@@ -665,6 +669,7 @@ def _build_verification_report(
             verified_by=verified_by,
         ),
         calculation_revision_id=calculation_revision_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         completeness_status=completeness,
         findings=frozen_findings,
         resolved_casilla_ids=tuple(resolved_casilla_ids),
@@ -870,6 +875,7 @@ def verify_modelo_revision_with_preconditions(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    require_calculation_revision_coordinates_current(target)
     work_units = wu_repo.load()
     work_unit = work_units.get(target.work_unit_id)
     if work_unit is None:
@@ -893,7 +899,9 @@ def verify_modelo_revision_with_preconditions(
         # A non-draft revision with no granting report is an inconsistent state,
         # so it falls through to the hard refusal below rather than fabricating
         # one. Mirrors the re-file no-op in file_modelo_revision.
-        existing = _existing_granting_verification_report(vr_repo.load(), calculation_revision_id)
+        existing = _existing_granting_verification_report(
+            require_verification_report_coordinates_current(vr_repo.load()), calculation_revision_id
+        )
         if existing is not None:
             return ModeloVerificationResult(
                 report=existing,
@@ -958,6 +966,7 @@ def verify_modelo_revision_with_preconditions(
     now = clock or _utc_now()
     report = _build_verification_report(
         calculation_revision_id=calculation_revision_id,
+        registry_snapshot_ref=target.registry_snapshot_ref,
         findings=findings,
         resolved_casilla_ids=resolved_casilla_ids,
         missing_required_casilla_ids=missing_required_casilla_ids,
@@ -988,7 +997,7 @@ def verify_modelo_revision_with_preconditions(
 
     # Persist the report regardless of outcome — failed attempts
     # are part of the audit trail.
-    vr_repo.save(upsert_verification_report(vr_repo.load(), report))
+    vr_repo.save(upsert_verification_report(require_verification_report_coordinates_current(vr_repo.load()), report))
 
     if granted:
         _persist_verified_revision_evidence(

@@ -63,17 +63,11 @@ from .....domain.buckets.event import (
     BucketEventType,
     derive_bucket_event_id,
 )
+from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.categories.spending_category import SpendingCategory
-from .....domain.contribuyente.assets.records import (
-    AmortizacionEntry,
-    AmortizacionLedger,
-    AssetClass,
-    AssetRecord,
-    AssetsLedgerDocument,
-)
-from .....domain.contribuyente.inventory.records import InventoryLedger, ValuationMethod
+from .....domain.contribuyente.inventory.records import InventoryLedger, InventoryLedgerDocument, ValuationMethod
 from .....domain.filing.schema import (
     ModeloDraft,
     ModeloValue,
@@ -140,8 +134,7 @@ from ....outbound.llm.cache import LLMCache
 from ....outbound.llm.consent_ledger import EvidenceConsentLedger
 from ....outbound.llm.run_telemetry import LLMRunTelemetryRecorder
 from ....outbound.llm.usage import UsageRecorder
-from ...profile.assets import AmortizacionLedgerRepository, AssetsLedgerRepository
-from ...profile.inventory import load_inventory, save_inventory
+from ...profile.inventory import InventoryLedgerRepository
 from ...profile.recipient_replay_guard import RecipientReplayGuardRepository
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
@@ -163,11 +156,7 @@ __all__ = [
     "_BUCKET_B_ATTACHMENT_PAYLOAD",
     "_BUCKET_B_ID",
     "_WALLET_SUBJECT_ID",
-    "AmortizacionLedger",
-    "AmortizacionLedgerRepository",
     "ApoderadoService",
-    "AssetsLedgerDocument",
-    "AssetsLedgerRepository",
     "AttachmentNotFoundError",
     "AttachmentStore",
     "Borrador100SnapshotRepository",
@@ -179,6 +168,8 @@ __all__ = [
     "EvidenceConsentLedger",
     "ExpedienteNotFoundError",
     "FiledDeclaracionObservationStore",
+    "InventoryLedgerDocument",
+    "InventoryLedgerRepository",
     "InvoiceCatalogue",
     "InvoiceCatalogueRepository",
     "IvaCompensationHistoryRepository",
@@ -211,10 +202,8 @@ __all__ = [
     "activate_session",
     "google_session_store",
     "list_auth_diagnostics",
-    "load_inventory",
     "load_usage_ratios",
     "preview_quarantine_unreadable_secure_objects",
-    "save_inventory",
     "save_usage_ratios",
     "secure_object_unreadable_total",
 ]
@@ -301,16 +290,6 @@ def _transaction(label: str) -> Transaction:
     )
     return Transaction.model_validate(
         {"raw": raw, "direction": TransactionDirection.OUTGOING, "group_label": None, "source_jurisdiction": "ES"},
-    )
-
-
-def _asset(identifier: str) -> AssetRecord:
-    return AssetRecord(
-        identifier=identifier,
-        description=f"runtime attached asset {identifier}",
-        asset_class=AssetClass.ELECTRONICA_INFORMATICA,
-        acquisition_date=date(2026, 1, 1),
-        cost_basis=Decimal("1000.00"),
     )
 
 
@@ -549,6 +528,7 @@ def _calculation_catalogue(label: str) -> CalculationRevisionCatalogue:
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=2026, period="1T").snapshot_ref,
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides={},
@@ -641,11 +621,15 @@ def _history(label: str) -> ModeloHistory:
 
 def _iva_state(label: str) -> IvaCompensationPeriodState:
     period = "1T" if label.endswith("a") else "2T"
+    period_value = _Period.from_year_and_code(2026, period)
     return IvaCompensationPeriodState(
         provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
         taxpayer_nif="00000000T",
         filing_year=2026,
-        period=_Period.from_year_and_code(2026, period),
+        period=period_value,
+        registry_snapshot_ref=bundled_authority().snapshot(
+            "303", filing_year=2026, period=period_value.registry_token
+        ).snapshot_ref,
         expediente_id="202610013522456T",
         status="presentada",
         presented_at=datetime(2026, 4, 20, 10, 0, tzinfo=UTC),
@@ -667,11 +651,6 @@ def _inventory_ledger(label: str) -> InventoryLedger:
         opening_stock=Decimal("0.00"),
         closing_authority_record=None,
     )
-
-
-def _amortizacion_ledger(label: str) -> AmortizacionLedger:
-    entry = AmortizacionEntry(asset_id=f"asset-{label}", year=2026, amount=Decimal("1.00"))
-    return AmortizacionLedger(entries=(entry,))
 
 
 def _google_records(label: str) -> tuple[OAuthClient, OAuthToken, OAuthMetadata, DriveConfig]:
@@ -806,14 +785,19 @@ def _repair_decision(label: str) -> RepairRemediationDecision:
 
 
 def _iva_wallet_decision(label: str, *, target_period: str = "2T") -> IvaCompensationReconciliationDecision:
+    period = _Period.from_year_and_code(2026, target_period)
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=_WALLET_SUBJECT_ID,
         target_year=2026,
-        target_period=_Period.from_year_and_code(2026, target_period),
+        target_period=period,
+        target_registry_snapshot_ref=bundled_authority().snapshot(
+            "303", filing_year=2026, period=period.registry_token
+        ).snapshot_ref,
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),
-        local_recurrence_amount=Decimal("1200.00"),
+        local_recurrence_amount=None,
         override_amount=None,
         divergence="match",
         blocked=False,

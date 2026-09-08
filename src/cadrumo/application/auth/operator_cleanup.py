@@ -27,8 +27,8 @@ from .operator_results import AuthOperationScopeConflictError
 from .sessions import delete_persisted_session, persisted_session_exists
 
 
-def implemented_kind(provider_id: str) -> AuthProviderKind | None:
-    """Resolve an implemented provider id without accepting unknown values."""
+def provider_kind(provider_id: str) -> AuthProviderKind | None:
+    """Resolve a provider id without accepting unknown values."""
     try:
         return AuthProviderKind(provider_id)
     except ValueError:
@@ -45,7 +45,7 @@ def delete_scoped_sessions(
     removed = 0
     affected: list[str] = []
     for provider_id in provider_ids:
-        kind = implemented_kind(provider_id)
+        kind = provider_kind(provider_id)
         if kind is None:
             continue
         removed_for_provider = len(delete_persisted_session(settings, kind=kind, bucket_id=bucket_id))
@@ -66,7 +66,7 @@ def clear_scoped_locks(
     cleared = 0
     affected: list[str] = []
     for provider_id in provider_ids:
-        kind = implemented_kind(provider_id)
+        kind = provider_kind(provider_id)
         if kind is None:
             continue
         status = clear_auth_acquisition_lock(
@@ -95,7 +95,7 @@ def clear_operator_auth_acquisition_locks(
     capsule does not reap it, which is why a caller erasing a profile clears it
     explicitly rather than leaving it to the deletion.
 
-    Every implemented provider kind is swept because the workflow state naming
+    Every provider kind is swept because the workflow state naming
     the configured provider lives INSIDE the capsule and is unreadable while the
     profile is locked. Clearing an absent lock is a no-op, so the sweep costs a
     stat per kind and reports only the locks that were actually there.
@@ -197,7 +197,7 @@ def _session_scoped_provider_ids(
     return tuple(
         provider_id
         for provider_id in provider_ids
-        if (kind := implemented_kind(provider_id)) is not None
+        if (kind := provider_kind(provider_id)) is not None
         and persisted_session_exists(settings, kind, bucket_id=bucket_id)
     )
 
@@ -215,7 +215,7 @@ def _lock_scoped_provider_ids(
     return tuple(
         provider_id
         for provider_id in provider_ids
-        if (kind := implemented_kind(provider_id)) is not None
+        if (kind := provider_kind(provider_id)) is not None
         and inspect_auth_acquisition_lock(settings, kind, bucket_id=bucket_id).state
         is not AuthAcquisitionLockState.ABSENT
     )
@@ -529,5 +529,5 @@ __all__ = [
     "clear_scoped_locks",
     "delete_certificate_source_secrets",
     "delete_scoped_sessions",
-    "implemented_kind",
+    "provider_kind",
 ]

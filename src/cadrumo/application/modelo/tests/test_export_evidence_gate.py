@@ -12,6 +12,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -67,6 +68,12 @@ def _revision(
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="gate",
+            modelo_year=2026,
+            period="1T",
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
         casilla_values={_CUOTA_CASILLA: Decimal("21.00")},

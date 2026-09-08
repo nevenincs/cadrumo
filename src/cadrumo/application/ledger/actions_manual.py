@@ -227,8 +227,7 @@ def attach_manual_transaction_evidence(
         and current.purchase_invoice_evidence_id != normalized_purchase_evidence_id
     ):
         raise TransactionValidationError(
-            "ledger transaction already has purchase_invoice_evidence_id and it cannot be "
-            "replaced in place; detaching evidence is not implemented, so remove the "
+            "purchase invoice evidence is immutable once attached; remove the ledger "
             "transaction and re-add it with the correct evidence",
             translated_message="application.ledger.errors.purchase_evidence_already_set",
         )

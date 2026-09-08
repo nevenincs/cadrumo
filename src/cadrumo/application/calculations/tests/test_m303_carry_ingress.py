@@ -22,6 +22,7 @@ from ....domain.iva_compensation.filed_derivation import (
     M303_COMPENSATION_POSTERIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
 )
+from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..m303_carry_ingress import M303CarryIngressError
 from ..observations_repository import (
@@ -97,7 +98,7 @@ def test_under_declared_m303_carry_is_refused_before_repository_mutation(
                 source_kind=source_kind,
                 captured_at=_CAPTURED_AT,
                 source_headers=source_headers,
-                normalize_m303_carry=True,
+                stamped_revision_id=revision_id_for_observation(_carry_observation()),
             )
 
         assert repository.load_observation(Modelo.M303.value, _PERIOD) is None
@@ -147,7 +148,7 @@ def test_current_dispositions_and_normalized_pair_round_trip_through_real_reposi
             captured_at=_CAPTURED_AT,
             source_headers=source_headers,
             result_disposition=projection,
-            normalize_m303_carry=True,
+            stamped_revision_id=revision_id_for_observation(_carry_observation()),
         )
 
         repository.save(prepared)

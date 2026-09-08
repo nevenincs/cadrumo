@@ -36,7 +36,7 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, ClassVar
+from typing import TYPE_CHECKING
 
 from ...core.time.clock import now
 from .models import AuthState, CertificateSourceRecord
@@ -44,14 +44,6 @@ from .operator_results import CertificateSourceNotFoundError
 
 if TYPE_CHECKING:
     from ..workflow.state_models import WorkflowState
-
-
-class CertificateSourceNoActiveBucketError(Exception):
-    """Raised when a certificate-source mutation runs before an active profile bucket exists."""
-
-    __bare_base_rationale__: ClassVar[str] = (
-        "certificate-source mutation precondition signal for an uninitialised local profile bucket"
-    )
 
 
 def auth_state(state: WorkflowState) -> AuthState:
@@ -174,7 +166,6 @@ def remove_certificate_source(state: WorkflowState, *, name: str) -> tuple[Workf
 
 
 __all__ = [
-    "CertificateSourceNoActiveBucketError",
     "active_certificate_source",
     "auth_state",
     "list_certificate_sources",

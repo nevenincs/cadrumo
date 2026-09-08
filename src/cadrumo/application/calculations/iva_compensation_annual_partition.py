@@ -128,6 +128,7 @@ def _period_state_from_303_envelope(envelope: ObservationEnvelopePayload) -> Iva
         provenance=IvaCompensationStateProvenance.CASILLA_RECONSTRUCTION,
         filing_year=observation.filing_year,
         period=period,
+        registry_snapshot_ref=validated.registry_snapshot_ref,
         presented_at=now(),
         prior_pending_amount=None,
         applied_amount=applied,
@@ -197,12 +198,7 @@ def _load_303_observations_for_partition(
         if payload is None:
             continue
         observation = payload.observation
-        refused = revision_carry_outcome(
-            payload.stamped_revision_id,
-            source_modelo=observation.modelo,
-            source_filing_year=observation.filing_year,
-            source_period=observation.period,
-        ).refused
+        refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
         if refused:
             _log.debug(
                 "dropping unreconfirmable m303 observation from iva annual partition stamped_revision_id=%s period=%s",

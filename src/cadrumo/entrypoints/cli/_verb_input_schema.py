@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, ClassVar, Final, Literal, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -128,9 +128,6 @@ class SchemaResolutionError(RuntimeError):
     def __init__(self, failures: tuple[VerbLeafResolutionFailure, ...]) -> None:
         self.failures = failures
         super().__init__("; ".join(f"{item.subject_leaf_key}: {item.reason}" for item in failures))
-
-
-DECLARED_UNIMPLEMENTED_SURFACES: Final[Mapping[str, str]] = dict[str, str]()
 
 
 def _rows() -> dict[str, CommandRegistrationMetadata]:
@@ -262,7 +259,6 @@ def cli_argv_for(schema: VerbInputSchema, arguments: dict[str, object]) -> list[
 
 
 __all__ = [
-    "DECLARED_UNIMPLEMENTED_SURFACES",
     "JsonType",
     "ParameterKind",
     "ResolvedVerbLeaf",

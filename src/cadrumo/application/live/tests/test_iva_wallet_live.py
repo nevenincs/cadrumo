@@ -16,7 +16,6 @@ import asyncio
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -36,9 +35,6 @@ from ...user_profile.projections import record_to_path_values
 from ..iva_remote_state import capture_iva_compensation_wallet
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_application]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"iva-wallet"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def test_live_iva_wallet_capture_persists_reconciles_and_feeds_local_guard() -> None:

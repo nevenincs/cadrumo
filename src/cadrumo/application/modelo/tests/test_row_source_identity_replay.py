@@ -92,6 +92,12 @@ def _revision(
     identities: Mapping[tuple[str, int], RowSourceIdentity],
 ) -> CalculationRevision:
     return CalculationRevision.model_construct(
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="100",
+            revision_id="2025",
+            modelo_year=2025,
+            period="0A",
+        ),
         row_binding_values=rows,
         row_source_identities=identities,
     )

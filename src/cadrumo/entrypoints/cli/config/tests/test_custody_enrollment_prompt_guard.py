@@ -39,7 +39,6 @@ import pathlib
 import subprocess
 import sys
 import textwrap
-from typing import Final
 
 import pytest
 from pydantic import TypeAdapter
@@ -48,12 +47,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"active-profile"})
-"""Taxonomy-vocabulary literals this module deliberately pins.
-
-The active-profile pointer filename is asserted UNCHANGED across the refused
-login: a refusal must not move the operator's selection to the profile it
-declined to unlock."""
 
 # A console-less child that blocks is unbounded, so any finite budget detects
 # the regression; the size only trades against a false failure. The child must

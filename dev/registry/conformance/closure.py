@@ -1,15 +1,14 @@
 """Derived cross-authority closure report for the shipped registry.
 
-This dev-side projection joins the three application-owned closure authorities.
-It does not reinterpret registry, source-connectivity, or export evidence:
-those facts are composed in ``cadrumo.application.registry`` and this module
-only makes their common release predicate explicit, deterministic, and
-blocking.
+This dev-side projection joins the temporal and filing-export authorities. It
+does not reinterpret registry or export evidence: those facts are composed in
+``cadrumo.application.registry`` and this module only makes their common
+release predicate explicit, deterministic, and blocking.
 
-The temporal report is the canonical revision denominator.  A missing source
-or filing limb is therefore reported against the affected temporal coordinate;
-an extra limb remains visible as a top-level join disagreement.  Neither shape
-can be mistaken for a satisfied release condition.
+The temporal report is the canonical revision denominator. A missing filing
+limb is therefore reported against the affected temporal coordinate; an extra
+limb remains visible as a top-level join disagreement. Neither shape can be
+mistaken for a satisfied release condition.
 """
 
 from __future__ import annotations
@@ -32,14 +31,8 @@ from cadrumo.application.registry.filing_export_coverage import (
     FilingExportCoverageReport,
     compose_filing_export_coverage,
 )
-from cadrumo.application.registry.source_connectivity import load_source_connectivity_census
-from cadrumo.application.registry.source_connectivity_coverage import (
-    SourceConnectivityCoverageReport,
-    compose_source_connectivity_coverage,
-)
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.source_connectivity import SourceConnectivityProofAuthority
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
@@ -97,11 +90,11 @@ class _ClosureReportModel(BaseModel):
 
 
 class RegistryClosureJoinDisagreement(_ClosureReportModel):
-    """One source or filing projection that cannot join the temporal denominator."""
+    """One filing projection that cannot join the temporal denominator."""
 
     modelo: str = Field(min_length=1, max_length=32)
     revision: str = Field(min_length=1, max_length=128)
-    limb: Literal["source_connectivity", "filing_export"]
+    limb: Literal["filing_export"]
     kind: RegistryClosureJoinDisagreementKind
     detail: str = Field(min_length=1, max_length=1_024)
 
@@ -133,12 +126,11 @@ class RegistryClosurePredicateRefusal(_ClosureReportModel):
 
 
 class RegistryClosureRevisionReport(_ClosureReportModel):
-    """The three closure limbs and release outcome for one registered revision."""
+    """The temporal and filing closure limbs for one registered revision."""
 
     modelo: str = Field(min_length=1, max_length=32)
     revision: str = Field(min_length=1, max_length=128)
     temporal_coverage: TemporalRevisionCoverageSummary
-    source_connectivity: RegistryClosureLimb | None = None
     filing_export: RegistryClosureLimb | None = None
     join_disagreements: tuple[RegistryClosureJoinDisagreement, ...] = ()
 
@@ -147,10 +139,7 @@ class RegistryClosureRevisionReport(_ClosureReportModel):
         coordinate = (self.modelo, self.revision)
         if (str(self.temporal_coverage.modelo), str(self.temporal_coverage.revision)) != coordinate:
             raise ValueError("temporal coverage coordinate must match its closure-report row")
-        expected = (
-            ("source_connectivity", self.source_connectivity),
-            ("filing_export", self.filing_export),
-        )
+        expected = (("filing_export", self.filing_export),)
         for name, limb in expected:
             disagreements = tuple(item for item in self.join_disagreements if item.limb == name)
             if limb is None:
@@ -179,13 +168,6 @@ class RegistryClosureRevisionReport(_ClosureReportModel):
         refusals: list[RegistryClosurePredicateRefusal] = []
         if self.temporal_coverage.status != "validated":
             refusals.append(_temporal_refusal(self.temporal_coverage))
-        refusals.extend(
-            _limb_or_join_refusal(
-                limb_name="source_connectivity",
-                limb=self.source_connectivity,
-                disagreements=self.join_disagreements,
-            ),
-        )
         refusals.extend(
             _limb_or_join_refusal(
                 limb_name="filing_export",
@@ -281,7 +263,6 @@ class RegistryClosureReleaseResult(_ClosureReportModel):
 def build_registry_closure_report(
     *,
     temporal_coverage: TemporalCoverageReport,
-    source_connectivity: SourceConnectivityCoverageReport,
     filing_export: FilingExportCoverageReport,
     as_of: date,
 ) -> RegistryClosureReport:
@@ -292,7 +273,6 @@ def build_registry_closure_report(
     row-level disagreement and an unexpected limb remains a top-level
     disagreement.  The release predicate therefore stays false in either case.
     """
-    source_by_coordinate = {(str(limb.modelo), str(limb.revision)): limb for limb in source_connectivity.limbs}
     filing_by_coordinate = {(str(limb.modelo), str(limb.revision)): limb for limb in filing_export.limbs}
     temporal_rows = temporal_coverage.revision_summaries
     temporal_coordinates = {(str(row.modelo), str(row.revision)) for row in temporal_rows}
@@ -300,11 +280,8 @@ def build_registry_closure_report(
     rows: list[RegistryClosureRevisionReport] = []
     for temporal in temporal_rows:
         coordinate = (str(temporal.modelo), str(temporal.revision))
-        source_limb = source_by_coordinate.get(coordinate)
         filing_limb = filing_by_coordinate.get(coordinate)
         disagreements: list[RegistryClosureJoinDisagreement] = []
-        if source_limb is None:
-            disagreements.append(_missing_limb_disagreement(coordinate=coordinate, limb="source_connectivity"))
         if filing_limb is None:
             disagreements.append(_missing_limb_disagreement(coordinate=coordinate, limb="filing_export"))
         row_disagreements.extend(disagreements)
@@ -313,21 +290,15 @@ def build_registry_closure_report(
                 modelo=coordinate[0],
                 revision=coordinate[1],
                 temporal_coverage=temporal,
-                source_connectivity=source_limb,
                 filing_export=filing_limb,
                 join_disagreements=tuple(disagreements),
             ),
         )
     extra_disagreements = [
-        _unexpected_limb_disagreement(coordinate=coordinate, limb="source_connectivity")
-        for coordinate in source_by_coordinate
-        if coordinate not in temporal_coordinates
-    ]
-    extra_disagreements.extend(
         _unexpected_limb_disagreement(coordinate=coordinate, limb="filing_export")
         for coordinate in filing_by_coordinate
         if coordinate not in temporal_coordinates
-    )
+    ]
     disagreements = tuple(
         sorted(
             (*row_disagreements, *extra_disagreements),
@@ -356,26 +327,19 @@ def load_registry_closure_report(
     *,
     as_of: date | None = None,
     registry_authority: ValidatedRegistryAuthority | None = None,
-    source_proof_authority: SourceConnectivityProofAuthority | None = None,
     filing_proof_authority: FilingExportProofAuthority | None = None,
 ) -> RegistryClosureReport:
     """Compose the bundled registry's closure report from current evidence.
 
-    Proof authorities are explicit injectable ports.  Passing neither never
-    creates a success claim: connected source rows and filing-grade exports
-    retain their application-owned missing-evidence refusals.  A release caller
-    that has live proof authorities can supply them to this same single join.
+    The filing proof authority is an explicit injectable port. Passing no proof
+    authority never creates a success claim: filing-grade exports retain their
+    application-owned missing-evidence refusals. A release caller that has a
+    live proof authority can supply it to this same single join.
     """
     authority = bundled_authority() if registry_authority is None else registry_authority
     resolved_as_of = date.today() if as_of is None else as_of
     return build_registry_closure_report(
         temporal_coverage=compose_temporal_coverage(authority=authority),
-        source_connectivity=compose_source_connectivity_coverage(
-            authority=authority,
-            census=load_source_connectivity_census(proof_authority=source_proof_authority),
-            as_of=resolved_as_of,
-            proof_authority=source_proof_authority,
-        ),
         filing_export=compose_filing_export_coverage(
             authority=authority,
             proof_authority=filing_proof_authority,
@@ -413,7 +377,6 @@ def render_registry_closure_report(report: RegistryClosureReport) -> str:
             predicate_outcome=row.predicate_outcome,
             temporal_status=row.temporal_coverage.status,
             temporal_failure_code=row.temporal_coverage.failure_code,
-            source_outcome=None if row.source_connectivity is None else row.source_connectivity.outcome,
             filing_outcome=None if row.filing_export is None else row.filing_export.outcome,
             refusal_count=len(row.refusals),
         )
@@ -500,7 +463,7 @@ def _temporal_refusal(coverage: TemporalRevisionCoverageSummary) -> RegistryClos
 
 def _limb_or_join_refusal(
     *,
-    limb_name: Literal["source_connectivity", "filing_export"],
+    limb_name: Literal["filing_export"],
     limb: RegistryClosureLimb | None,
     disagreements: tuple[RegistryClosureJoinDisagreement, ...],
 ) -> tuple[RegistryClosurePredicateRefusal, ...]:
@@ -542,7 +505,7 @@ def _limb_or_join_refusal(
 def _missing_limb_disagreement(
     *,
     coordinate: tuple[str, str],
-    limb: Literal["source_connectivity", "filing_export"],
+    limb: Literal["filing_export"],
 ) -> RegistryClosureJoinDisagreement:
     """Name a missing limb against the law-selected temporal denominator."""
     return RegistryClosureJoinDisagreement(
@@ -557,7 +520,7 @@ def _missing_limb_disagreement(
 def _unexpected_limb_disagreement(
     *,
     coordinate: tuple[str, str],
-    limb: Literal["source_connectivity", "filing_export"],
+    limb: Literal["filing_export"],
 ) -> RegistryClosureJoinDisagreement:
     """Retain a limb coordinate outside the temporal release denominator."""
     return RegistryClosureJoinDisagreement(

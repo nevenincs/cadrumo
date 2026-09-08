@@ -22,7 +22,6 @@ from __future__ import annotations
 import json
 import subprocess
 from pathlib import Path
-from typing import Final
 from uuid import UUID
 
 import pytest
@@ -37,9 +36,6 @@ from ....tests.subprocess_cli import run_cadrumo_subprocess
 from ....tests.user_profile import register_cli_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def _run_cadrumo(

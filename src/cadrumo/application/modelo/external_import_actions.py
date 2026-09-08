@@ -58,6 +58,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
@@ -358,6 +359,7 @@ def _prepare_external_import_revision(
     *,
     repository: CalculationRevisionCatalogueRepositoryProtocol,
     work_unit_id: str,
+    registry_snapshot_ref: RegistrySnapshotRef,
     input_values_by_casilla_id: dict[CasillaId, str],
     outputs: dict[CasillaId, Decimal],
     observations: tuple[CasillaObservation, ...],
@@ -387,6 +389,7 @@ def _prepare_external_import_revision(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.PRESENTADO,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,
@@ -517,6 +520,7 @@ def import_external_filing_evidence[CasillaKey](
     revisions, revisions_revision_id, revision = _prepare_external_import_revision(
         repository=cr_repo,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=snapshot.snapshot_ref,
         input_values_by_casilla_id=input_values_by_casilla_id,
         outputs=outputs,
         observations=observations,

@@ -19,7 +19,6 @@ The literal is the independent oracle. Do not migrate it to the accessor.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -33,16 +32,6 @@ from ..keystore_paths import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"keystore", "buckets", "db"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring.
-
-``"db"`` is the bucket-relative on-disk segment
-``test_rejects_keystore_paths_nested_under_bucket_storage`` asserts a
-configured keystore must never sit beneath (``("buckets", "alpha", "db",
-"stowaway")``), the same independent-oracle discipline as ``"keystore"`` and
-``"buckets"``.
-"""
 
 
 def test_keystore_root_is_sibling_of_buckets(tmp_path: Path) -> None:

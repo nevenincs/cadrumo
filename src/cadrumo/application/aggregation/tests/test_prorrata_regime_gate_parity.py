@@ -26,6 +26,7 @@ from ....core.prorrata_register import (
     ProrrataRegisterRegime,
     regime_apportions_deduction,
 )
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.prorrata_register.register import (
     ProrrataRegister,
     ProrrataRegisterEntry,
@@ -39,6 +40,10 @@ _EJERCICIO = 2026
 _PERCENTAGE = Decimal("64")
 
 
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2025, period="4T").snapshot_ref
+
+
 def _register(regime: ProrrataRegisterRegime) -> ProrrataRegister:
     """A real single-entry register carrying a resolvable provisional percentage."""
     return ProrrataRegister(
@@ -50,6 +55,7 @@ def _register(regime: ProrrataRegisterRegime) -> ProrrataRegister:
                 provisional_percentage=_PERCENTAGE,
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref="303:2025:4T",
+                source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
             ),
         ),
     )
@@ -87,6 +93,7 @@ def test_a_percentage_and_its_provenance_are_resolved_together_or_not_at_all() -
         provisional_percentage=_PERCENTAGE,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref="303:2025:4T",
+        source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
     )
     resolved = resolve_provisional_percentage((entry,))
     assert (resolved.percentage is None) is (resolved.provenance is None)
@@ -112,6 +119,7 @@ def test_an_entry_recording_a_regime_but_no_percentage_yields_no_apportionment()
                 especial_transition=None,
                 provisional_percentage=None,
                 provisional_provenance=None,
+                source_registry_snapshot_refs=(),
             ),
         ),
     )

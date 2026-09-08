@@ -292,6 +292,7 @@ def test_m130_c15_cap_predicate_fires_blocking_rule_when_carry_forward_exceeds_c
     invalid_revision = CalculationRevision(
         calculation_revision_id=invalid_revision_id,
         work_unit_id=revision.work_unit_id,
+        registry_snapshot_ref=revision.registry_snapshot_ref,
         state=revision.state,
         input_values_by_casilla_id=revision.input_values_by_casilla_id,
         binding_overrides=revision.binding_overrides,

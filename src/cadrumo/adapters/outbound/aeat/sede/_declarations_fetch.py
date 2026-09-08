@@ -94,7 +94,6 @@ SEDE_BASE = EXTERNAL.aeat.domains.www6
 _SEDE_HOST = urlsplit(SEDE_BASE).netloc
 _AEAT_HOST_SUFFIX = EXTERNAL.aeat.domains.host_suffix
 _LISTING_PATH = EXTERNAL.aeat.sede_paths.declarations_listing
-_COTEJO_QUERY_PATH = EXTERNAL.aeat.sede_paths.cotejo_query
 _COTEJO_DOCUMENT_PATH = EXTERNAL.aeat.sede_paths.cotejo_document
 COTEJO_PATH_PREFIX = EXTERNAL.aeat.sede_paths.cotejo_query
 
@@ -142,11 +141,6 @@ def origin_of(landed_url: str | None) -> str:
 def listing_url_for(origin: str, *, modelo: str, ejercicio: int) -> str:
     """Return the declarations-listing URL for one query against ``origin``."""
     return f"{origin}{_LISTING_PATH}?MODELO={modelo}&EJERCICIO={ejercicio}"
-
-
-def cotejo_view_url(origin: str, csv: str) -> str:
-    """Return the cotejo view URL for ``csv`` against ``origin``."""
-    return f"{origin}{_COTEJO_QUERY_PATH}?CSV={csv}"
 
 
 def cotejo_document_url(origin: str, csv: str) -> str:

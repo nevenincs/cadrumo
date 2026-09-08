@@ -6,18 +6,12 @@ geometries and under both appearances, so a human can look at them.
 This is development tooling. It ships in no wheel, and the production TUI does
 not know it exists.
 
-## Why it drives the harness instead of importing it
+## Boundary
 
-The accepted TUI architecture decision makes `cadrumo.entrypoints.tui` an
-outermost entrypoint that no development tool may import, load, re-export,
-annotate against, or register from, and places pilot, replay, screenshot and
-surface tooling inside `cadrumo.entrypoints.tui.devtools`. Out-of-process
-execution is the only external reference it sanctions.
-
-So this package owns none of that. It runs the in-boundary harness as a
-subprocess, rasterises the SVG that harness writes, and reads the source tree
-as text to enumerate what exists. A test in `tests/` fails if any module here
-grows an import of the TUI package.
+`dev.tui.harness` owns pilot, replay, screenshot, surface, and fixture tooling.
+It imports the shipped TUI it exercises. Production code has no reverse import
+or discovery path into this package. The inventory runner starts the harness as
+a subprocess so each capture gets isolated process and storage state.
 
 ## Commands
 
@@ -112,4 +106,4 @@ whether a render reached it. Interfaces reached only by a keystroke -- dialogs,
 review screens, field-edit modals -- report as NOT RENDERED, because the
 harness opens a surface and captures its first frame. That is a real gap in
 coverage rather than a state to declare acceptable; closing it means teaching
-the in-boundary harness to walk to those screens.
+the development harness to walk to those screens.

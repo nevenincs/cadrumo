@@ -16,7 +16,6 @@ from ._command_schema import (
     command_schema_types,
 )
 from ._verb_input_schema import (
-    DECLARED_UNIMPLEMENTED_SURFACES,
     ResolvedVerbLeaf,
     SchemaResolutionError,
     VerbInputSchema,
@@ -44,7 +43,6 @@ def command_spec_for_path(path: tuple[str, ...]) -> CommandSpec:
 
 
 __all__ = [
-    "DECLARED_UNIMPLEMENTED_SURFACES",
     "ArgumentSpec",
     "CommandExecutionPolicy",
     "CommandSpec",

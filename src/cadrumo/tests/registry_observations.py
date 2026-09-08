@@ -8,13 +8,40 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 from decimal import Decimal
+from functools import cache
 
 from ..core.authority_grade import RegistryAuthorityGrade
 from ..core.casilla_id import CasillaId
 from ..core.resources.bundled_data import bundled_path
 from ..domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ..domain.calculations.registry.temporal import select_revision
 from ..tests.registry_tree import bundled_registry_tree
 from .registry_snapshot import build_snapshot
+
+
+@cache
+def revision_id_for_coordinates(*, modelo: str, filing_year: int, period: str) -> str:
+    """Resolve the law-selected revision used by a persisted test observation."""
+
+    modelos, _catalogues = bundled_registry_tree()
+    modelo_definition = next(candidate for candidate in modelos if candidate.id == modelo)
+    return str(
+        select_revision(
+            modelo_definition,
+            filing_year=filing_year,
+            period=period,
+        ).id
+    )
+
+
+def revision_id_for_observation(observation: RegistryModeloObservation) -> str:
+    """Return the canonical revision stamp for an observation's filing coordinates."""
+
+    return revision_id_for_coordinates(
+        modelo=observation.modelo,
+        filing_year=observation.filing_year,
+        period=observation.period,
+    )
 
 
 def registry_grounded_observations(

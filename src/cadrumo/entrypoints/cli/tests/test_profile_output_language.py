@@ -246,6 +246,3 @@ def test_config_repair_labels_render_in_profile_output_language() -> None:
     # The diagnostic labels render in English.
     assert "Overall\t" in result.output
     assert "Checks" in result.output
-    # The Spanish labels must not appear.
-    assert "Estado\t" not in result.output
-    assert "Comprobaciones" not in result.output

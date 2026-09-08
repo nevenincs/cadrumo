@@ -28,6 +28,7 @@ from ..calculations.observations_repository import (
     CalculationObservationRepository,
     ObservationEnvelopePayload,
     PriorDomiciliationElectionProjection,
+    require_observation_envelope_coordinates_current,
 )
 from .action_errors import ModeloPriorDomiciliationElectionRefusedError
 
@@ -114,6 +115,7 @@ def _require_official_baseline_observation(
             "prior domiciliation cancellation/modification requires an official baseline filed observation",
             context={"baseline_filing_record_id": baseline_id},
         )
+    require_observation_envelope_coordinates_current(observation)
     if (
         observation.observation.filing_year != baseline.filing_year
         or observation.observation.period != baseline.period.registry_token

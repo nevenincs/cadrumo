@@ -11,9 +11,9 @@ Verbs:
 
 * ``report`` -- every conformance axis, one row per modelo revision.
 * ``coverage`` -- per-axis measured counts against their real populations.
-* ``closure [--check]`` -- the derived temporal, source, and filing release
-  predicate. ``--check`` blocks a shipped-completeness claim while any limb is
-  refused or the three denominators disagree.
+* ``closure [--check]`` -- the derived temporal and filing release predicate.
+  ``--check`` blocks a shipped-completeness claim while any limb is refused or
+  the two denominators disagree.
 * ``stamp`` -- write a revision's DECLARED governance provenance. It cannot
   write ``operator_reviewed``: this CLI is agent-driven, and an agent recording
   an operator's signoff is the exact dishonesty the feature exists to detect.
@@ -61,7 +61,7 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -155,49 +155,36 @@ def closure(
             "--check",
             help=(
                 "Gate: exit 1 unless every law-selectable revision satisfies temporal coverage, "
-                "source connectivity, and filing export with no join disagreement."
+                "filing export with no join disagreement."
             ),
         ),
     ] = False,
-    as_of: Annotated[
-        str | None,
-        typer.Option(
-            "--as-of",
-            help="Date used to evaluate expiring source-connectivity evidence; defaults to today.",
-        ),
-    ] = None,
     as_json: _AsJson = False,
     offline: Annotated[
         bool,
         typer.Option(
             "--offline",
-            help="Evaluate without live source-connectivity or filing-export proof authorities.",
+            help="Evaluate without a live filing-export proof authority.",
         ),
     ] = False,
 ) -> None:
     """Render the derived cross-authority release report and optional blocking gate.
 
-    The default report derives temporal, source, and filing facts through the
-    canonical live authorities. ``--offline`` is the explicit no-proof mode.
-    Command context cannot replace either authority with pre-authorized claims.
-    Neither mode treats absent proof as a pass: the affected limb remains an
-    owned refusal, and ``--check`` blocks the release claim.
+    The default report derives temporal and filing facts through the canonical
+    live authority. ``--offline`` is the explicit no-proof mode. Command
+    context cannot replace the authority with a pre-authorized claim. Neither
+    mode treats absent proof as a pass: the filing limb remains an owned
+    refusal, and ``--check`` blocks the release claim.
     """
-    try:
-        as_of_date = None if as_of is None else date.fromisoformat(as_of)
-    except ValueError as error:
-        raise typer.BadParameter("must be an ISO calendar date (YYYY-MM-DD)") from error
     if offline:
-        report = load_registry_closure_report(as_of=as_of_date)
+        report = load_registry_closure_report()
     else:
         repository_root = Path(__file__).resolve().parents[3]
-        with canonical_live_registry_closure_authorities(repository_root) as authorities:
-            report = load_registry_closure_report(
-                as_of=as_of_date,
-                registry_authority=authorities.registry,
-                source_proof_authority=authorities.source_connectivity,
-                filing_proof_authority=authorities.filing_export,
-            )
+        authorities = canonical_live_registry_closure_authorities(repository_root)
+        report = load_registry_closure_report(
+            registry_authority=authorities.registry,
+            filing_proof_authority=authorities.filing_export,
+        )
     emit_registry_closure_command(report, check=check, as_json=as_json)
 
 

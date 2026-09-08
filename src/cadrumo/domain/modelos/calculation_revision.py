@@ -66,6 +66,7 @@ from ...core.time.utc import validate_utc_aware
 from ..calculations.registry.bindings import CasillaObservation
 from ..calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ..calculations.registry.ids import BindingId, RelationId
+from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculations.row_casilla import DirectRowMaterializationProvenance, RowCasillaKey
 from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity, CalculationRevisionAmendmentKind
@@ -601,6 +602,8 @@ class CalculationRevision(BaseModel):
             and casilla outputs. Content-addressed: structurally
             identical re-runs produce the same id.
         work_unit_id: Parent work unit id (also content-addressed).
+        registry_snapshot_ref: Complete registry coordinate selected for the
+            parent work unit and used to materialize this revision.
         state: Lifecycle state from
             :class:`CalculationRevisionState`.
         input_values_by_casilla_id: Mapping of canonical input casilla values
@@ -662,6 +665,7 @@ class CalculationRevision(BaseModel):
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
+    registry_snapshot_ref: RegistrySnapshotRef
     state: CalculationRevisionState
     input_values_by_casilla_id: Mapping[CasillaId, str] = Field(default_factory=dict)
     binding_overrides: Mapping[BindingId, str] = Field(default_factory=dict)

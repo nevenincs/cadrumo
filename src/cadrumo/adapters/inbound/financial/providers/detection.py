@@ -50,29 +50,6 @@ def _exact_layout_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     return (CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
 
 
-def provider_for_extension(path: Path) -> FinancialProvider | None:
-    """Return a :class:`FinancialProvider` keyed strictly off ``path``'s suffix.
-
-    Cheap fallback used by CLI command surfaces when content-aware
-    detection (:func:`detect_provider`) returns ``None`` but the path's
-    suffix is unambiguous. Unlike :func:`detect_provider` this does not
-    open the file or sniff its bytes.
-
-    Returns ``None`` for every extension the project does not recognise
-    (PDF among them — :class:`PdfN26Provider` requires content-aware
-    detection because the bare ``.pdf`` suffix carries no statement
-    flavour information).
-    """
-    suffix = path.suffix.lower()
-    if suffix in CSV_EXTENSIONS:
-        return CsvProvider()
-    if suffix == XLSX_EXTENSION:
-        return XlsxProvider()
-    if suffix in OFX_EXTENSIONS:
-        return OfxProvider()
-    return None
-
-
 def detect_provider(path: Path) -> FinancialProvider | None:
     """Return the first provider that validates the source successfully.
 

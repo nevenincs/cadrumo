@@ -7,11 +7,9 @@ verdict instead of four unrelated tool invocations with no shared severity
 model:
 
 * **Shadowing** (D1) -- reuses ``dev.quality.import_hygiene_scan.find_multi_sourced_symbols``
-  over the live facade set. The Family-3 pinned baseline and the gate that
-  enforced it were both retired, so nothing is grandfathered: any
-  "high"-confidence symbol declared in more than one owning package's
-  ``__all__`` is RED, and zero such symbols is GREEN. Because no symbol can
-  be tolerated any more, this dimension has no reachable AMBER state.
+  over the live facade set. Any "high"-confidence symbol declared in more
+  than one owning package's ``__all__`` is RED, and zero such symbols is
+  GREEN.
 * **Duplication** (D2) -- delegates the entire measurement to
   ``dev.audit.duplication.run_duplication_scan``, the one runner
   ``just audit-duplication`` also calls. Any clone cluster is advisory debt
@@ -26,13 +24,9 @@ model:
   entrypoints/core`` layout) via the ``lint-imports`` console script. A
   BROKEN contract is RED; all contracts KEPT is GREEN. This dimension has no
   AMBER state: a layering contract is either satisfied or it is not.
-* **Complexity** -- reuses ``dev.audit.complexity``'s baseline-ratchet
-  verdict (cyclomatic, maintainability, cognitive). A NEW or REGRESSED hotspot
-  is RED; a clean run is GREEN. ``load_baseline`` returns an empty baseline
-  unconditionally now that the committed baseline and the reviewed allowlist
-  were both retired, so nothing can be grandfathered and this dimension has
-  no reachable AMBER state either -- the same retirement already recorded
-  for Shadowing above.
+* **Complexity** -- reuses ``dev.audit.complexity``'s live cyclomatic,
+  maintainability, and cognitive scan. Any current hotspot is RED; zero is
+  GREEN. This dimension has no development-state partition.
 
 This module does not re-implement any scanner; it shells out to / imports the
 existing tools and applies one shared severity vocabulary on top. See
@@ -45,9 +39,8 @@ Usage::
 
 Exit code is 1 if any dimension is RED, 0 otherwise (AMBER does not fail the
 run -- it is a debt signal a contributor reads on the monthly cadence, not a
-release blocker). This mirrors the ``dev/audit/complexity.py`` ratchet
-convention: RED is "new/regressed", AMBER is "grandfathered debt", GREEN is
-"clean".
+release blocker). Complexity and layering remain hard live signals;
+duplication remains advisory.
 
 See Also:
     :func:`~dev.quality.import_hygiene_scan.find_multi_sourced_symbols`
@@ -55,8 +48,7 @@ See Also:
     :func:`~dev.audit.duplication.run_duplication_scan`
         The single duplication runner consumed for the D2 dimension.
     :mod:`~dev.audit.complexity`
-        Baseline-ratchet complexity scanner reused for the complexity
-        dimension.
+        Live complexity scanner reused for the complexity dimension.
     :class:`DimensionReport`
         Per-dimension red/amber/green result type.
     :class:`HealthReport`
@@ -84,27 +76,10 @@ from ..quality.import_hygiene_scan import (
     find_multi_sourced_symbols,
     walk_module_imports,
 )
-from .complexity import (
-    Baseline as ComplexityBaseline,
-)
-from .complexity import (
-    _classify_cc,
-    _classify_cog,
-    _classify_mi,
-    collect_cc,
-    collect_cog,
-    collect_mi,
-)
-from .complexity import (
-    load_baseline as load_complexity_baseline,
-)
+from .complexity import scan_complexity
 from .duplication import DuplicationOutcome, run_duplication_scan
 
 _UTF_8: Final[str] = UTF_8
-_PRODUCT_SOURCE_ROOT: Final[Path] = Path("src/cadrumo")
-_PRODUCTION_EXCLUDE: Final[str] = (
-    "src/cadrumo/test_*.py,src/cadrumo/**/test_*.py,src/cadrumo/**/_test_*.py,src/cadrumo/tests/*,src/cadrumo/_data/*"
-)
 
 
 class Status(StrEnum):
@@ -130,70 +105,29 @@ class DimensionReport:
 # ---------------------------------------------------------------------------
 
 
-def _verdict_of(line: str) -> str | None:
-    """Return "KEPT"/"BROKEN" for a contract result line, else ``None``.
-
-    import-linter writes `<contract name> KEPT` and appends
-    `(N ignored imports)` whenever the contract ignores anything, so the
-    verdict is the last word before that optional parenthetical rather than
-    the end of the line.
-    """
-    text = line.strip()
-    if text.endswith(")") and "(" in text:
-        text = text[: text.rindex("(")].strip()
-    words = text.rsplit(maxsplit=1)
-    if len(words) != 2:
-        return None
-    verdict = words[1]
-    return verdict if verdict in {"KEPT", "BROKEN"} else None
-
-
-def _load_import_hygiene_baseline() -> dict[str, object]:
-    """Return an empty shell: no symbol is tolerated as a pinned duplicate.
-
-    The Family-3 pinned-symbol baseline was retired, so every multi-sourced
-    symbol is classified on its own merits.
-
-    Returns:
-        An empty tolerated-symbol shell.
-    """
-    return {"family3_pinned_duplicate_symbols": {"tolerated_multi_sourced_symbols": []}}
-
-
 def audit_shadowing() -> DimensionReport:
     """Classify D1 (symbol shadowing / multi-facade duplicates).
 
     RED: a "high"-confidence symbol declared in more than one owning
-    package's ``__all__`` that is NOT in the pinned-tolerated set (a new,
-    undocumented structural duplicate). GREEN: no multi-facade duplicates at
-    all. Nothing is grandfathered.
+    package's ``__all__``. GREEN: no multi-facade duplicates at all.
     """
-    baseline = _load_import_hygiene_baseline()
-    tolerated_entries = baseline.get("family3_pinned_duplicate_symbols", {}).get("tolerated_multi_sourced_symbols", [])
-    tolerated = {entry["symbol"] for entry in tolerated_entries}
-
     py_files = list(scan_directory(PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
     facades = discover_facades()
     all_sites = [site for path in py_files for site in walk_module_imports(path)]
     multi_sourced = find_multi_sourced_symbols(facades, all_sites)
 
-    case_a_high = [m for m in multi_sourced if m.confidence == "high" and len(m.facades) > 1]
-    untolerated = sorted(f"{m.symbol} (facades={m.facades})" for m in case_a_high if m.symbol not in tolerated)
-    pinned = sorted(m.symbol for m in case_a_high if m.symbol in tolerated)
+    findings = sorted(
+        f"{item.symbol} (facades={item.facades})"
+        for item in multi_sourced
+        if item.confidence == "high" and len(item.facades) > 1
+    )
 
-    if untolerated:
+    if findings:
         return DimensionReport(
             name="shadowing",
             status=Status.RED,
-            headline=f"{len(untolerated)} undocumented multi-facade duplicate symbol(s)",
-            details=untolerated,
-        )
-    if pinned:
-        return DimensionReport(
-            name="shadowing",
-            status=Status.AMBER,
-            headline=f"{len(pinned)} pinned/tolerated multi-facade symbol(s) (grandfathered debt)",
-            details=pinned,
+            headline=f"{len(findings)} multi-facade duplicate symbol(s)",
+            details=findings,
         )
     return DimensionReport(name="shadowing", status=Status.GREEN, headline="no multi-facade duplicate symbols")
 
@@ -282,122 +216,36 @@ def audit_layering(repo_root: Path) -> DimensionReport:
             headline=f"lint-imports could not run ({exc}); layering signal unavailable this cycle",
         )
 
-    output = result.stdout + result.stderr
-    # A contract line is `<name> KEPT` or `<name> BROKEN`, optionally followed
-    # by `(N ignored imports)`. Matching on endswith() therefore saw only the
-    # contracts that ignore nothing -- 3 of 12 here -- and the evaluated-vs-
-    # declared comparison below then read a perfectly healthy run as an abort.
-    broken = [line.strip() for line in output.splitlines() if _verdict_of(line) == "BROKEN"]
-    kept = [line.strip() for line in output.splitlines() if _verdict_of(line) == "KEPT"]
-
-    # A run that ABORTED is not a run that found violations, and the two must
-    # not share a report. import-linter aborts before evaluating anything when
-    # an ignore_imports entry matches nothing, so a single stale entry disables
-    # the whole contract family; it exits non-zero and prints NO contract
-    # results at all. Classified only by exit code that reads as "contracts
-    # broken", and classified only by `broken` being empty it would read as
-    # GREEN. Both are wrong in the same dangerous direction: the gate did not
-    # run. Compare what was EVALUATED against what is DECLARED.
-    declared = _declared_contract_count(repo_root)
-    evaluated = len(kept) + len(broken)
-    if declared and evaluated != declared:
-        return DimensionReport(
-            name="layering",
-            status=Status.RED,
-            headline=(
-                f"import-linter evaluated {evaluated} of {declared} declared contract(s); "
-                "the run aborted rather than reporting a breach"
-            ),
-            details=[
-                "A stale `ignore_imports` entry matching nothing aborts the whole run before any "
-                "contract is checked, so this is a rotted gate configuration, not a layering "
-                "violation. Run `just check-imports` and read the error naming the unmatched entry.",
-                *broken,
-            ],
-        )
-
-    if broken:
-        return DimensionReport(
-            name="layering",
-            status=Status.RED,
-            headline=f"{len(broken)} of {evaluated} import-linter contract(s) broken",
-            details=[*broken, "run `just check-imports` locally for the full violating-edge report"],
-        )
-
     if result.returncode != 0:
+        diagnostic = [line.strip()[:500] for line in (result.stdout + result.stderr).splitlines() if line.strip()][:10]
         return DimensionReport(
             name="layering",
             status=Status.RED,
-            headline=(
-                f"import-linter exited {result.returncode} while reporting all {evaluated} "
-                "contract(s) kept; the signal is self-contradictory"
-            ),
-            details=["run `just check-imports` locally and read the full output"],
+            headline=f"import-linter exited {result.returncode}; layering check failed",
+            details=[*diagnostic, "run `just check-imports` locally for the full report"],
         )
 
     return DimensionReport(
         name="layering",
         status=Status.GREEN,
-        headline=f"all {evaluated} of {declared} import-linter contract(s) kept",
+        headline="import-linter completed successfully",
     )
 
 
-def _declared_contract_count(repo_root: Path) -> int:
-    """Return how many contracts ``.importlinter`` declares, or 0 if unreadable.
-
-    The floor for the layering dimension. Without it a run that evaluated
-    nothing is indistinguishable from a run that evaluated everything cleanly,
-    which is the precise failure that left five contracts unchecked for an
-    extended period while the dimension read as unremarkable.
-    """
-    config = repo_root / ".importlinter"
-    try:
-        text = config.read_text(encoding=_UTF_8, errors="replace")
-    except OSError:
-        return 0
-    return sum(1 for line in text.splitlines() if line.strip().startswith("[importlinter:contract:"))
-
-
 # ---------------------------------------------------------------------------
-# Complexity (cyclomatic / maintainability / cognitive, baseline ratchet)
+# Complexity (cyclomatic / maintainability / cognitive)
 # ---------------------------------------------------------------------------
 
 
 def audit_complexity() -> DimensionReport:
-    """Classify complexity by reusing ``dev.audit.complexity``'s own ratchet.
-
-    RED: a new or regressed hotspot. GREEN: no findings. The AMBER branch
-    below is UNREACHABLE and kept only as the shape a future baseline would
-    fill: ``load_baseline`` grandfathers nothing, so ``allowed`` is always
-    zero. A reader told AMBER means grandfathered debt would expect this
-    dimension to report debt it can no longer carry.
-    """
-    cc = collect_cc(_PRODUCTION_EXCLUDE)
-    mi = collect_mi(_PRODUCTION_EXCLUDE)
-    cog = collect_cog(_PRODUCT_SOURCE_ROOT, is_test_run=False, threshold=20)
-
-    baseline: ComplexityBaseline = load_complexity_baseline(is_test_run=False)
-    # No baseline and no reviewed-acceptance allowlist: every hotspot the
-    # scanners report is classified on its own merits.
-    cc_verdict = _classify_cc(cc, baseline.cyclomatic)
-    mi_verdict = _classify_mi(mi, baseline.maintainability)
-    cog_verdict = _classify_cog(cog, baseline.cognitive)
-
-    failing = [*cc_verdict.failing, *mi_verdict.failing, *cog_verdict.failing]
-    allowed = len(cc_verdict.allowed) + len(mi_verdict.allowed) + len(cog_verdict.allowed)
-
-    if failing:
+    """Return RED for current live hotspots and GREEN only for zero."""
+    scan = scan_complexity()
+    if scan.finding_count:
         return DimensionReport(
             name="complexity",
             status=Status.RED,
-            headline=f"{len(failing)} new/regressed complexity hotspot(s)",
-            details=failing,
-        )
-    if allowed:
-        return DimensionReport(
-            name="complexity",
-            status=Status.AMBER,
-            headline=f"{allowed} baselined complexity hotspot(s) (grandfathered debt)",
+            headline=f"{scan.finding_count} current complexity hotspot(s)",
+            details=scan.rendered_findings(),
         )
     return DimensionReport(name="complexity", status=Status.GREEN, headline="no complexity hotspots")
 

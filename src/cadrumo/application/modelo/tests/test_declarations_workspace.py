@@ -11,6 +11,8 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.buckets.event import BucketEventType
+from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -26,6 +28,7 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ..action_errors import WorkUnitRevisionDivergenceError
 from ..declarations_workspace import (
     DECLARATION_LIFECYCLE_EVENT_KINDS,
     DECLARATION_LIFECYCLE_EXCLUDED_EVENTS,
@@ -69,12 +72,13 @@ def _revision_id(work_unit_id: str, *, amount: str = _PRIVATE_AMOUNT) -> str:
 
 def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, ModeloRecordCatalogue]:
     period = Period.from_year_and_code(2026, "1T")
+    registry_revision_id = bundled_authority().snapshot("130", filing_year=2026, period="1T").revision.id
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET,
         modelo="130",
         filing_year=2026,
         period=period,
-        revision_id="2026",
+        revision_id=registry_revision_id,
     )
     calculation_revision_id = _revision_id(work_unit_id)
     filing_record_id = derive_filing_record_id(
@@ -89,7 +93,7 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
         modelo="130",
         filing_year=2026,
         period=period,
-        revision_id="2026",
+        revision_id=registry_revision_id,
         name=_PRIVATE_NAME,
         created_at=_T0,
         updated_at=_T2,
@@ -100,6 +104,12 @@ def _filed_snapshot() -> tuple[WorkUnitCatalogue, CalculationRevisionCatalogue, 
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=unit.modelo,
+            revision_id=unit.revision_id,
+            modelo_year=unit.filing_year,
+            period=unit.period.registry_token,
+        ),
         state=CalculationRevisionState.PRESENTADO,
         input_values_by_casilla_id={_CASILLA: _PRIVATE_AMOUNT},
         casilla_values={},
@@ -210,6 +220,29 @@ def test_projection_preserves_exact_zone_source_state_and_count_matrix() -> None
     assert filing.local_status.value == "vigente"
     assert filing.aeat_accepted is True
     assert filing.evidence_kind is ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF
+
+
+def test_projection_refuses_a_divergent_persisted_calculation_coordinate() -> None:
+    """The TUI-facing declarations projection cannot expose stale revision data."""
+    work, revisions, filings = _filed_snapshot()
+    calculation_revision_id, revision = next(iter(revisions.revisions.items()))
+    stale = revision.model_copy(
+        update={
+            "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
+                update={"revision_id": "persisted-stale-revision"}
+            )
+        }
+    )
+
+    with pytest.raises(WorkUnitRevisionDivergenceError):
+        project_declarations_workspace(
+            bucket_id=_BUCKET,
+            work_units=work,
+            calculation_revisions=CalculationRevisionCatalogue(revisions={calculation_revision_id: stale}),
+            filing_records=filings,
+            lifecycle_facts=(),
+            zone_observations=_observations(),
+        )
 
 
 def test_sensitive_payload_and_protected_identities_never_serialize_or_repr() -> None:
@@ -515,9 +548,7 @@ class TestLifecycleVocabularyReconciliation:
         whether it belongs to this lifecycle fails here, rather than being
         quietly dropped by a surface that never hears about it.
         """
-        taxonomy = {
-            event_type for event_type in BucketEventType if event_type.name.startswith("MODELO_")
-        }
+        taxonomy = {event_type for event_type in BucketEventType if event_type.name.startswith("MODELO_")}
 
         assert set(DECLARATION_LIFECYCLE_EVENT_KINDS) | set(DECLARATION_LIFECYCLE_EXCLUDED_EVENTS) == taxonomy
 

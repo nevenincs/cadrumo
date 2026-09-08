@@ -31,19 +31,17 @@ import pytest
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.errors import SecureObjectRowIdentityError
 from ....core.external_constants import UTF_8_ENCODING
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..observations_repository import (
-    CalculationObservationRepository,
-    ObservationEnvelopePayload,
-    observation_key,
-)
+from ..iva_compensation_casillas import M303_RESULTADO_CASILLA
+from ..observations_repository import CalculationObservationRepository, ObservationEnvelopePayload, observation_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CAPTURED_AT = datetime(2026, 5, 28, 11, 35, tzinfo=UTC)
-_FOREIGN_REVISION_ID = "revision-from-the-other-period"
 
 
 def _observation(filing_year: int) -> RegistryModeloObservation:
@@ -58,6 +56,12 @@ def _observation(filing_year: int) -> RegistryModeloObservation:
                 legal_refs=("ley-37-1992:art-21",),
                 source_refs=("aeat-iva-2026",),
             ),
+            CasillaObservation(
+                casilla_id=M303_RESULTADO_CASILLA,
+                value=Decimal("1.00"),
+                legal_refs=("ley-37-1992:art-21",),
+                source_refs=("aeat-iva-2026",),
+            ),
         ),
     )
 
@@ -68,12 +72,20 @@ def _write_under_key(
     *,
     object_key: str,
 ) -> None:
-    """Persist ``observation`` under an arbitrary key, bypassing the writer."""
-    payload = ObservationEnvelopePayload(
-        observation=observation,
+    """Persist canonical ``observation`` under an arbitrary key."""
+    payload = repository.prepare_observation_envelope(
+        observation,
         captured_at=_CAPTURED_AT,
         source_kind="aeat_sede_justificante",
-        stamped_revision_id=_FOREIGN_REVISION_ID,
+        source_headers=(
+            ObservedHeaderFact(
+                header_key="declaration_type",
+                value="I",
+                source_artefact_kind="submitted_file",
+                source_locator="test:observation-scan:declaration-type",
+            ),
+        ),
+        stamped_revision_id=revision_id_for_observation(observation),
     )
     envelope = Envelope[ObservationEnvelopePayload](
         schema_version=repository.schema_version,
@@ -118,7 +130,16 @@ def test_iter_modelo_yields_an_observation_filed_under_its_own_key(
                 _observation(2025),
                 source_kind="aeat_sede_justificante",
                 captured_at=_CAPTURED_AT,
-            )
+                source_headers=(
+                    ObservedHeaderFact(
+                        header_key="declaration_type",
+                        value="I",
+                        source_artefact_kind="submitted_file",
+                        source_locator="test:observation-scan:declaration-type",
+                    ),
+                ),
+                stamped_revision_id=revision_id_for_observation(_observation(2025)),
+            ),
         )
 
         scanned = tuple(repository.iter_modelo("303"))

@@ -55,6 +55,7 @@ from ..operations.registry import (
     OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
+    OperationSchemaBindingV1,
 )
 from ..storage.calc_sheets.engine import build_export_plan
 from ..storage.calc_sheets.records import OperatorInputs, RelationValues, SheetExportPlan
@@ -434,10 +435,19 @@ def build_google_sheets_export_service(
 def build_google_sheets_export_operation_registration(
     definition: OperationDefinition,
 ) -> OperationPublicDefinitionRegistrationV1:
-    """Bind the operation request to its stable public schema identity."""
-    return OperationPublicDefinitionRegistrationV1.compose_request_only(
+    """Bind the operation request and safe settled result to public identities."""
+    return OperationPublicDefinitionRegistrationV1.compose(
         definition=definition,
-        request_schema_id=f"{GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID}.request",
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID}.request",
+            schema_version=1,
+            model_type=GoogleSheetsExportOperationRequest,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id=f"{GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID}.result",
+            schema_version=1,
+            model_type=GoogleSheetsExportOperationResult,
+        ),
     )
 
 

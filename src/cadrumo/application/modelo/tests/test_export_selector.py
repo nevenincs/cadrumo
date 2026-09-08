@@ -14,6 +14,7 @@ __all__ = ["isolated_backend"]
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -63,6 +64,12 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
     verified = CalculationRevision(
         calculation_revision_id=verified_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_M130_INPUT_CASILLA: "10"},
         casilla_values={_M130_INPUT_CASILLA: Decimal("10")},
@@ -82,6 +89,12 @@ def test_exportable_selector_refuses_verified_fallback_when_current_draft_confli
     draft = CalculationRevision(
         calculation_revision_id=draft_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={_M130_INPUT_CASILLA: "20"},
         casilla_values={_M130_INPUT_CASILLA: Decimal("20")},

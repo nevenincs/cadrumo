@@ -12,6 +12,7 @@ from ....application.modelo.result_summary import calculation_result_summary
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.config import override_settings
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -30,6 +31,12 @@ _PROFILE_ID = "33333333-3333-4333-8333-333333333333"
 _NOW = datetime(2026, 7, 2, 12, 0, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _REVISION_ID = "2019-y-siguientes"
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="130",
+    revision_id=_REVISION_ID,
+    modelo_year=2026,
+    period="1T",
+)
 
 _isolated_backend = active_profile_isolated_backend_fixture(bucket_id=_PROFILE_ID, dispose_engine_around=True)
 
@@ -74,6 +81,7 @@ def _m130_revision(work_unit: WorkUnit) -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=registry_grounded_observations(

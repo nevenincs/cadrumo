@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -47,7 +47,6 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...registry.closure_capture import capture_registry_closure
-from ...registry.source_connectivity import load_source_connectivity_census
 from ...state_projection import ModeloReadinessRequest, capture_modelo_readiness
 from ..work_addressing import ModeloVisibleFilingTarget
 from ..workspace import (
@@ -73,9 +72,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
-#: Fixed observation instant for the closure capture, so a limb set does not
-#: shift under the suite because a census entry expired between runs.
-_CLOSURE_AS_OF = date(2026, 8, 24)
 _MODELO = ModeloCode("130")
 _FILING_YEAR = 2026
 
@@ -191,8 +187,6 @@ def test_graded_snapshot_result_strict_round_trip_and_anti_tautology(repos) -> N
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
@@ -263,8 +257,6 @@ def test_assembled_results_each_carry_exactly_their_own_admissions_contributor_s
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(graded_result, ModeloWorkspaceGradedSnapshotResultV1)
@@ -278,16 +270,14 @@ def test_graded_closure_limbs_equal_the_canonical_capture_narrowed_to_the_target
     """The projection's closure limbs are the closure authority's own, selected by coordinate.
 
     Proven the way the work review is proven against its sole public producer:
-    the canonical producer is invoked independently, over the same census and
-    the same observation instant, and the assembled facet must equal that
+    the canonical producer is invoked independently, and the assembled facet
+    must equal that
     producer's output narrowed to this target's ``(modelo, revision)``. A
     limb the projection carries that the authority did not publish, or one it
     dropped that the authority did, fails here.
     """
     work_repo, calculation_repo, _filing_repo, verification_repo, _bucket_event_repo = repos
     _work_unit, _revision = _seed_and_calculate(repos)
-    census = load_source_connectivity_census()
-
     result = resolve_graded_snapshot_result(
         _visible_target(),
         required_grade=RegistryAuthorityGrade.CALCULATION,
@@ -296,17 +286,11 @@ def test_graded_closure_limbs_equal_the_canonical_capture_narrowed_to_the_target
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
-        census=census,
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
 
-    canonical = capture_registry_closure(
-        authority=bundled_authority(),
-        census=census,
-        as_of=_CLOSURE_AS_OF,
-    )
+    canonical = capture_registry_closure(authority=bundled_authority())
     # Narrowed HERE, independently of the production selector. Routing this
     # through ``graded_snapshot_closure_limbs`` would compare the assembler's
     # output against the same function that produced it, so a selector that
@@ -318,6 +302,8 @@ def test_graded_closure_limbs_equal_the_canonical_capture_narrowed_to_the_target
         if limb.modelo == target.modelo and limb.revision == target.law_selected_revision_id
     )
     assert expected, "the bundled closure report must publish limbs for this target"
+    assert {limb.name for limb in canonical.limbs} == {"filing_export"}
+    assert {limb.name for limb in expected} == {"filing_export"}
 
     assert result.projection.registry_closure_limbs == expected
     # The selection is real: the authority publishes limbs for other revisions
@@ -349,8 +335,6 @@ def test_graded_readiness_equals_the_canonical_readiness_producers_report(repos)
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
@@ -441,8 +425,6 @@ def test_resolved_target_is_isolated_from_a_work_unit_mutation_after_capture(rep
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
     assert isinstance(result, ModeloWorkspaceGradedSnapshotResultV1)
@@ -525,8 +507,6 @@ def test_calculation_and_bounded_review_ports_are_each_captured_exactly_once(
         calculation_repository=calculation_repo,
         verification_repository=verification_repo,
         authority=bundled_authority(),
-        census=load_source_connectivity_census(),
-        as_of=_CLOSURE_AS_OF,
         output_language=OutputLanguage.ES,
     )
 

@@ -6,7 +6,6 @@ import pytest
 import yaml
 
 from cadrumo.application.operator_surface.contract import MOUNTED_COMMAND_FAMILIES
-from cadrumo.application.operator_surface.models import FamilyMountState
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from cadrumo.tests.cli_runner import invoke_typer_app
@@ -109,27 +108,15 @@ _CUSTODY_PASSPHRASE_NOTICE_LEAVES = ("no_active_profile",)
 _CUSTODY_PASSPHRASE_NOTICE_IDENTITY_TOKENS = frozenset({"aeat"})
 
 
-def _declared_family_mount_state(namespace: tuple[str, ...]) -> FamilyMountState:
-    """Resolve a ``cli.<root>.<child>`` catalogue namespace to its family's mount state.
-
-    Whether a family's strings are live, held, or gone is the operator surface's
-    ruling, not this test's. ``MOUNTED_COMMAND_FAMILIES`` is that ruling, so the
-    namespace is mapped to the family identity and the answer is read from
-    :class:`FamilyMountState` rather than judged from the catalogue's contents.
-
-    A namespace resolving to no declared family is a hard failure. Retirement is a
-    deletion from the register, and the expectation here must be deleted in the
-    same move rather than left asserting against a family that no longer exists.
-    """
-
+def _assert_declared_command_family(namespace: tuple[str, ...]) -> None:
+    """Require a catalogue namespace to belong to one live declared family."""
     matches = [family for family in MOUNTED_COMMAND_FAMILIES if ("cli", family.root.value, family.child) == namespace]
     assert matches, (
         f"{'.'.join(namespace)} resolves to no declared command family. "
         "Either the family was retired without removing this expectation, or the "
         "catalogue namespace no longer matches the family's root and child tokens."
     )
-    (family,) = matches
-    return family.mount_state
+    assert len(matches) == 1
 
 
 def _assert_command_family_catalogue_strings(
@@ -148,56 +135,28 @@ def _assert_command_family_catalogue_strings(
     on a mounted family -- the exact masking this module exists to catch.
     """
 
-    _assert_catalogue_strings_for_state(
-        data,
-        namespace,
-        _declared_family_mount_state(namespace),
-        leaves=leaves,
-        expected=expected,
-    )
+    _assert_declared_command_family(namespace)
+    _assert_catalogue_strings(data, namespace, leaves=leaves, expected=expected)
 
 
-def _assert_catalogue_strings_for_state(
+def _assert_catalogue_strings(
     data: dict[str, LocaleNode],
     namespace: tuple[str, ...],
-    state: FamilyMountState,
     *,
     leaves: tuple[str, ...],
     expected: frozenset[str],
 ) -> None:
-    """Assert catalogue strings for one explicitly supplied mount state.
-
-    A ``MOUNTED`` family is on the wire, so every string it renders must exist and
-    must satisfy the naming contract.
-
-    A ``DECLARED_UNIMPLEMENTED`` family holds its strings: the operator surface
-    declares the family and states the capability it is waiting on, but nothing
-    reaches those strings, so their absence is not a defect and their presence is
-    not stale residue to prune. Presence is therefore not asserted; the naming
-    contract still binds whatever is present. The day the capability ships and the
-    family flips to ``MOUNTED``, this demands the strings back without an edit here.
-    """
-
-    held = state is FamilyMountState.DECLARED_UNIMPLEMENTED
-
+    """Assert that a live family's catalogue strings exist and obey naming."""
     node: LocaleNode = data
     for key in namespace:
         if not isinstance(node, dict) or key not in node:
-            assert held, (
-                f"{'.'.join(namespace)} is absent from the catalogue while its command "
-                f"family is {state.value}: a family the tree reaches must carry every string it renders."
-            )
-            return
+            raise AssertionError(f"{'.'.join(namespace)} is absent from the catalogue for a live command family.")
         node = node[key]
 
     assert isinstance(node, dict), f"expected a namespace node at {'.'.join(namespace)}"
     for leaf in leaves:
         if leaf not in node:
-            assert held, (
-                f"{'.'.join((*namespace, leaf))} is absent from the catalogue while its "
-                f"command family is {state.value}."
-            )
-            continue
+            raise AssertionError(f"{'.'.join((*namespace, leaf))} is absent from the catalogue.")
         _assert_identity_contract(data, *namespace, leaf, expected=expected)
 
 
@@ -532,26 +491,10 @@ def test_root_heading_identity_contract_refuses_a_product_rename() -> None:
             )
 
 
-def test_a_mounted_family_may_not_hold_its_catalogue_strings() -> None:
-    """Absence is tolerated for a held family and refused for a mounted one.
-
-    Anti-vacuity for the held branch: without this, a catalogue that lost every
-    command family's strings would pass the four locale tests unchanged.
-    """
-
-    mounted = next(family for family in MOUNTED_COMMAND_FAMILIES if family.mount_state is FamilyMountState.MOUNTED)
+def test_a_live_family_may_not_omit_its_catalogue_strings() -> None:
+    """Anti-vacuity: missing family namespaces and leaves are refused."""
+    mounted = next(iter(MOUNTED_COMMAND_FAMILIES))
     mounted_namespace = ("cli", mounted.root.value, mounted.child)
-
-    # No family in the register is DECLARED_UNIMPLEMENTED -- test_contract.py's
-    # test_no_family_is_left_declared_unimplemented gates that emptiness -- so the
-    # held branch has no live example and the state is supplied directly.
-    _assert_catalogue_strings_for_state(
-        {},
-        _CUSTODY_PASSPHRASE_NAMESPACE,
-        FamilyMountState.DECLARED_UNIMPLEMENTED,
-        leaves=_CUSTODY_PASSPHRASE_HELP_LEAVES,
-        expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
-    )
 
     with pytest.raises(AssertionError, match="absent from the catalogue"):
         _assert_command_family_catalogue_strings(
@@ -568,29 +511,6 @@ def test_a_mounted_family_may_not_hold_its_catalogue_strings() -> None:
             mounted_namespace,
             leaves=("some_prompt",),
             expected=frozenset({"Cadrumo"}),
-        )
-
-
-def test_a_held_family_string_still_carries_the_naming_contract() -> None:
-    """Held is not unchecked: a present string still answers to the contract.
-
-    The held state is supplied directly because no family in the register carries
-    it. Passing every named leaf PRESENT is what makes this test bite: absence
-    would be tolerated under held and prove nothing, so the string has to be
-    there and wrong for the naming contract to be the thing under test.
-    """
-
-    catalogue: dict[str, LocaleNode] = {
-        "cli": {"config": {"passphrase": {"help": "Manage the cadrumo profile passphrase."}}},
-    }
-
-    with pytest.raises(AssertionError, match="carries identity tokens"):
-        _assert_catalogue_strings_for_state(
-            catalogue,
-            _CUSTODY_PASSPHRASE_NAMESPACE,
-            FamilyMountState.DECLARED_UNIMPLEMENTED,
-            leaves=("help",),
-            expected=_CUSTODY_PASSPHRASE_HELP_IDENTITY_TOKENS,
         )
 
 
@@ -1039,16 +959,16 @@ def test_ast_scanner_collects_locale_key_constant_registries(tmp_path: Path) -> 
 
     (tmp_path / "policy_surface.py").write_text(
         "REFUSAL_LOCALE_KEYS = {\n"
-        "    '151': 'cli.app.modelo.work.create_stub_modelo_151_refused',\n"
-        "    '721': 'cli.app.modelo.work.create_stub_modelo_refused',\n"
+        "    'a': 'cli.example.policy.first_refused',\n"
+        "    'b': 'cli.example.policy.second_refused',\n"
         "}\n"
         "PLAIN_VALUES = {'not-a-locale-key': 'cli.app.modelo.work.dead_extra'}\n",
         encoding="utf-8",
     )
 
     keys = scan_source_tree(tmp_path)
-    assert "cli.app.modelo.work.create_stub_modelo_151_refused" in keys
-    assert "cli.app.modelo.work.create_stub_modelo_refused" in keys
+    assert "cli.example.policy.first_refused" in keys
+    assert "cli.example.policy.second_refused" in keys
     assert "cli.app.modelo.work.dead_extra" not in keys
 
 

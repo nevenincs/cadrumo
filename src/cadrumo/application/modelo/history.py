@@ -69,6 +69,7 @@ from ...domain.modelos.protocols import (
     VerificationReportCatalogueRepositoryProtocol,
 )
 from ...domain.modelos.work_unit import WorkUnitCatalogue
+from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from .action_errors import WorkUnitNotFoundError
 from .work_addressing import (
     ModeloWorkResolution,
@@ -185,7 +186,7 @@ def assemble_work_unit_history(
     revision_ids = {
         revision.calculation_revision_id for revision in revisions.values() if revision.work_unit_id == work_unit_id
     }
-    verifications = vr_repo.load()
+    verifications = require_verification_report_coordinates_current(vr_repo.load())
     for report in verifications.values():
         if report.calculation_revision_id not in revision_ids:
             continue

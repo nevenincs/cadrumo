@@ -55,7 +55,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingAggregationOp, BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.identity import CalculationRevisionId
 from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210GrossIncomeSourceMode
@@ -165,13 +165,11 @@ from .action_errors import (
 )
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
+from .calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
-from .calculation_source_policy import (
-    ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS,
-    BUCKET_AGGREGATION_LOCK_SOURCES,
-    CALLER_OVERRIDABLE_CARRY_SOURCES,
-)
+from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from .m303_regimen_simplificado_scope import m303_regimen_simplificado_annual_summary_applies
 from .preconditions import build_modelo_precondition_failure
 from .revision_persistence import persist_calculation_revision, require_filing_instance_evidence_for_work_unit
@@ -570,6 +568,7 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     now = clock or _utc_now()
     return persist_calculation_revision(
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=snapshot.snapshot_ref,
         work_unit=work_unit,
         work_units=work_units,
         work_units_revision_id=prepared.work_units_revision_id,
@@ -1718,16 +1717,18 @@ def _require_m303_regimen_simplificado_annual_summary_arrival_values(
 def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
     """Raise if any binding source kind is unknown to the live mesh (the boundary gate).
 
-    A binding whose ``source`` is not in the enrolled-resolver union, the
-    explicitly-deferred set, or ``manual_input`` would silently blank on every
-    calculation.  This gate converts that silent blank into a loud
+    A scalar binding whose ``source`` is not in the executable resolver union
+    would silently blank on every calculation. Row-producing bindings travel
+    through the detail-row and export channel instead, so requiring a scalar
+    resolver for them conflates two executable mechanisms. This gate converts
+    a genuinely unrouted scalar source into a loud
     :exc:`ModeloAggregationBindingError` at calculation time so a novel TOML
     source cannot compile into a silently-zero revision.
 
     The accepted set is:
 
-    * ``ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS`` — enrolled resolvers plus
-      explicitly deferred advisory sources.
+    * ``CALCULATION_ROUTE_ENROLLED_SOURCES`` — executable resolver and
+      intrinsic production-channel ownership.
 
     Args:
         revision: The :class:`ModeloRevision` whose binding source kinds are
@@ -1735,13 +1736,14 @@ def assert_no_novel_source_kinds(revision: ModeloRevision) -> None:
 
     Raises:
         ModeloAggregationBindingError: When a binding carries a source kind
-            absent from both the enrolled and the deferred sets.
+            absent from executable production ownership.
     """
     novel = sorted(
         {
             str(binding.source)
             for binding in revision.bindings
-            if str(binding.source) not in ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS
+            if getattr(getattr(binding, "aggregation", None), "op", None) is not BindingAggregationOp.ROWS
+            and str(binding.source) not in CALCULATION_ROUTE_ENROLLED_SOURCES
         },
     )
     if novel:
@@ -1843,6 +1845,8 @@ def list_calculation_revisions(
     revisions = tuple(
         revision for revision in catalogue if work_unit_id is None or revision.work_unit_id == work_unit_id
     )
+    for revision in revisions:
+        require_calculation_revision_coordinates_current(revision)
     return tuple(sorted(revisions, key=lambda r: (r.work_unit_id, r.created_at)))
 
 
@@ -1882,6 +1886,7 @@ def _calculation_revision_in_repository_bucket(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    require_calculation_revision_coordinates_current(revision)
     work_unit = work_unit_repository.load().get(revision.work_unit_id)
     expected_buckets = {
         bucket_id

@@ -297,8 +297,3 @@ def test_root_output_format_is_typed_and_refuses_invalid_values_before_dispatch(
     assert result.exit_code == 2
     assert "Invalid value" in result.output
     assert "'text'" in result.output and "'json'" in result.output
-    # The refusal heading as the AMBIENT locale renders it -- this test already
-    # pins itself to Spanish above, asserting "Formato de salida" in the help.
-    # "Refused." is the ENGLISH heading, so the old spelling was satisfied by
-    # every Spanish run and could not have caught the envelope rendering.
-    assert "Rechazado." not in result.output

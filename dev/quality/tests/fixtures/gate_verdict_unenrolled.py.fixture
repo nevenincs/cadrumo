@@ -1,5 +1,0 @@
-"""Documents lint-imports and its KEPT/BROKEN verdicts without consuming them."""
-
-
-def ordinary_state(value: str) -> bool:
-    return value.endswith("KEPT")

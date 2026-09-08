@@ -21,11 +21,7 @@ from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError, StorageValidationError
 from ..aead import encrypt_record
 from ..encrypted_columns import (
-    _AAD_JSON,
     _AAD_STRING,
-    EncryptedBytes,
-    EncryptedJSON,
-    EncryptedPayload,
     EncryptedString,
     HashedLookup,
 )
@@ -37,15 +33,6 @@ _ENCRYPTED_STRING_CASES = (
     "movimientos bancarios — autónomo año 2025",
     None,
 )
-_ENCRYPTED_BYTES_CASES = (
-    bytes(range(64)),
-    b"",
-)
-_ENCRYPTED_JSON_CASES = (
-    {"nombre": "Juan", "edad": 42, "tags": ["a", "b"]},
-    [{"k": 1}, {"k": 2}],
-    None,
-)
 
 
 class _TestBase(DeclarativeBase):
@@ -54,8 +41,6 @@ class _TestBase(DeclarativeBase):
 
 _intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
 _secret_text = Annotated[str | None, mapped_column(EncryptedString, nullable=True)]
-_secret_bytes = Annotated[bytes | None, mapped_column(EncryptedBytes, nullable=True)]
-_secret_json = Annotated[object | None, mapped_column(EncryptedJSON, nullable=True)]
 _lookup_key = Annotated[bytes | None, mapped_column(HashedLookup, nullable=True, index=True)]
 
 
@@ -66,8 +51,6 @@ class _CryptoRow(_TestBase):
 
     id: Mapped[_intpk]
     secret_text: Mapped[_secret_text]
-    secret_bytes: Mapped[_secret_bytes]
-    secret_json: Mapped[_secret_json]
     lookup_key: Mapped[_lookup_key]
 
 
@@ -123,76 +106,7 @@ class TestEncryptedString:
         assert len(raw_value) >= 12 + 16
 
 
-class TestEncryptedBytes:
-    def test_round_trips(self, session: Session) -> None:
-        rows = [_CryptoRow(secret_bytes=value) for value in _ENCRYPTED_BYTES_CASES]
-        session.add_all(rows)
-        session.commit()
-        session.expire_all()
-        loaded = session.scalars(select(_CryptoRow).order_by(_CryptoRow.id)).all()
-        assert [row.secret_bytes for row in loaded] == list(_ENCRYPTED_BYTES_CASES)
-
-
-class TestEncryptedJSON:
-    def test_round_trips(self, session: Session) -> None:
-        rows = [_CryptoRow(secret_json=value) for value in _ENCRYPTED_JSON_CASES]
-        session.add_all(rows)
-        session.commit()
-        session.expire_all()
-        loaded = session.scalars(select(_CryptoRow).order_by(_CryptoRow.id)).all()
-        assert [row.secret_json for row in loaded] == list(_ENCRYPTED_JSON_CASES)
-
-    def test_rejects_unserialisable(self, session: Session) -> None:
-        from sqlalchemy.exc import StatementError
-
-        class _NotJSON:
-            pass
-
-        session.add(_CryptoRow(secret_json=_NotJSON()))
-        with pytest.raises(StatementError):
-            session.flush()
-
-    def test_invalid_bind_value_carries_storage_validation_locale_key(self, engine: Engine) -> None:
-        with pytest.raises(StorageValidationError) as excinfo:
-            EncryptedJSON().process_bind_param({object(): "not-json"}, engine.dialect)
-        assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
-
-    def test_invalid_stored_json_is_decryption_error(self, engine: Engine, fixed_master_key: bytes) -> None:
-        wire = encrypt_record(
-            b"{",
-            key=fixed_master_key,
-            associated_data=_AAD_JSON,
-        ).to_wire()
-
-        with pytest.raises(DecryptionError):
-            EncryptedJSON().process_result_value(wire, engine.dialect)
-
-
-class TestCrossTypeReplayPrevention:
-    """Ciphertext minted for one column-type AAD must refuse to decrypt as another."""
-
-    def test_string_ciphertext_does_not_decrypt_as_bytes(
-        self,
-        engine: Engine,
-        session: Session,
-    ) -> None:
-        session.add(_CryptoRow(secret_text="payload"))
-        session.commit()
-        with engine.connect() as conn:
-            ciphertext = conn.exec_driver_sql(
-                "SELECT secret_text FROM encrypted_column_smoke",
-            ).scalar()
-            assert ciphertext is not None
-            conn.exec_driver_sql(
-                "INSERT INTO encrypted_column_smoke (secret_bytes) VALUES (?)",
-                (ciphertext,),
-            )
-            conn.commit()
-        with pytest.raises(DecryptionError):
-            session.execute(
-                select(_CryptoRow.secret_bytes).where(_CryptoRow.secret_bytes.is_not(None)),
-            ).all()
-
+class TestEncryptedStringInvalidPayload:
     def test_encrypted_string_result_rejects_invalid_utf8(self, engine: Engine, fixed_master_key: bytes) -> None:
         wire = encrypt_record(
             b"\xff\xfe",
@@ -272,56 +186,6 @@ class TestHashedLookup:
         assert excinfo.value.translated_message == "errors.integrity.integrity_storage_validation"
 
 
-class TestEncryptedPayload:
-    """``EncryptedPayload`` validates the boundary output of :class:`EncryptedJSON`."""
-
-    def test_roundtrip_dict_produces_encrypted_payload(self, session: Session) -> None:
-        """Saving a dict via EncryptedJSON and reloading must round-trip the value.
-
-        The EncryptedJSON.process_result_value path wraps the decrypted JSON in
-        EncryptedPayload internally before returning .data.  The caller sees the
-        original value; this test confirms the validated payload equals the stored dict.
-        """
-        payload = {"nombre": "Ana", "importe": 1234, "tags": ["iva", "irpf"]}
-        session.add(_CryptoRow(secret_json=payload))
-        session.commit()
-        session.expire_all()
-        loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_json == payload
-
-    def test_encrypted_payload_validates_json_value(self) -> None:
-        """EncryptedPayload must accept any JSON-compatible value."""
-        assert EncryptedPayload(data={"k": 1}).data == {"k": 1}
-        assert EncryptedPayload(data=[1, 2, 3]).data == [1, 2, 3]
-        assert EncryptedPayload(data="text").data == "text"
-        assert EncryptedPayload(data=42).data == 42
-        assert EncryptedPayload(data=None).data is None
-
-    def test_encrypted_payload_rejects_missing_data_field(self) -> None:
-        """EncryptedPayload.model_validate must raise ValidationError when 'data' is absent."""
-        from pydantic import ValidationError
-
-        with pytest.raises(ValidationError):
-            EncryptedPayload.model_validate({})
-
-    def test_encrypted_columns_write_encrypted_bytes_on_disk(self, engine: Engine) -> None:
-        """The stored wire bytes must NOT contain the plaintext JSON for EncryptedJSON.
-
-        This is an anti-tautology proof: decrypt path wraps in EncryptedPayload,
-        so if the plaintext leaked to disk the round-trip contract would be broken.
-        """
-        payload = {"secret": "should-not-appear-in-storage"}
-        with Session(engine) as sess:
-            sess.add(_CryptoRow(secret_json=payload))
-            sess.commit()
-        with engine.connect() as conn:
-            raw = conn.exec_driver_sql(
-                "SELECT secret_json FROM encrypted_column_smoke",
-            ).scalar()
-        assert raw is not None
-        assert b"should-not-appear-in-storage" not in raw
-
-
 class TestNullSafety:
     """Every decorator's bind/result handler returns None for None inputs."""
 
@@ -331,6 +195,4 @@ class TestNullSafety:
         session.expire_all()
         loaded = session.execute(select(_CryptoRow)).scalar_one()
         assert loaded.secret_text is None
-        assert loaded.secret_bytes is None
-        assert loaded.secret_json is None
         assert loaded.lookup_key is None

@@ -5,7 +5,7 @@ operator is more CELLS, not larger ones, so the axis that decides whether a
 layout survives a small screen is the column/row grid. The pixel size of the
 artefact is a separate, purely cosmetic scale applied at raster time.
 
-Three landscape shapes mirror the sizes the shipped in-boundary appearance
+Three landscape shapes mirror the sizes the development appearance
 gate already renders at (``test_visual_verification._SIZES``): 80x24 is the
 floor a real terminal can be and the size at which an overflowing layout
 stops being cosmetic and starts hiding controls, 120x40 is an ordinary
@@ -80,7 +80,7 @@ class Viewport:
 
     @property
     def label(self) -> str:
-        """The ``WxH`` token the in-boundary harness accepts."""
+        """The ``WxH`` token the development harness accepts."""
         return f"{self.columns}x{self.rows}"
 
 

@@ -47,6 +47,7 @@ from ....core.logging import get_logger
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ....domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
@@ -57,6 +58,7 @@ from ....domain.modelos.calculation_revision_aggregate import (
     CalculationRevisionAggregateContext,
 )
 from ....domain.modelos.errors import raise_catalogue_integrity_error
+from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
@@ -250,7 +252,40 @@ class CalculationRevisionCatalogueRepository:
         # surfaces here on load rather than shipping an unexplainable casilla.
         for revision in envelope.payload.values():
             assert_revision_snapshot_evidence_coverage(revision)
+        self._require_parent_coordinates(envelope.payload, work_units=aggregate_context.work_units)
         return envelope.payload
+
+    def _require_parent_coordinates(
+        self,
+        catalogue: CalculationRevisionCatalogue,
+        *,
+        work_units: WorkUnitCatalogue | None = None,
+    ) -> None:
+        """Refuse revisions whose stamps differ from their persisted parent WorkUnits."""
+        if work_units is None:
+            from .modelos_work_units import WorkUnitCatalogueRepository
+
+            work_units = WorkUnitCatalogueRepository(objects=self._objects).load()
+        for revision in catalogue.values():
+            work_unit = work_units.get(revision.work_unit_id)
+            if work_unit is None:
+                raise CalculationRevisionPersistenceError(
+                    "calculation revision has no persisted parent WorkUnit",
+                    translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
+                    context={"reason": "missing_parent_work_unit", "work_unit_id": revision.work_unit_id},
+                )
+            expected = RegistrySnapshotRef(
+                modelo=work_unit.modelo,
+                revision_id=work_unit.revision_id,
+                modelo_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            )
+            if revision.registry_snapshot_ref != expected:
+                raise CalculationRevisionPersistenceError(
+                    "calculation revision registry coordinate disagrees with its parent WorkUnit",
+                    translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
+                    context={"reason": "parent_registry_coordinate_mismatch", "work_unit_id": revision.work_unit_id},
+                )
 
     def _calculation_revision_aggregate_context(self) -> CalculationRevisionAggregateContext:
         """Load every persisted authority needed to revalidate rectificativa revisions."""
@@ -293,6 +328,7 @@ class CalculationRevisionCatalogueRepository:
             catalogue: The :class:`CalculationRevisionCatalogue` to serialise and
                 store.
         """
+        self._require_parent_coordinates(catalogue)
         self._storage.save(catalogue)
 
     def load_revisioned(self) -> tuple[CalculationRevisionCatalogue, str]:
@@ -305,7 +341,9 @@ class CalculationRevisionCatalogueRepository:
         revision another run added in between. A dropped calculation revision
         is a dropped tax computation.
         """
-        return self._storage.load_revisioned()
+        catalogue, revision_id = self._storage.load_revisioned()
+        self._require_parent_coordinates(catalogue)
+        return catalogue, revision_id
 
     def to_secure_object_write(
         self,
@@ -326,6 +364,7 @@ class CalculationRevisionCatalogueRepository:
         catalogue was DERIVED from a read; omitting it writes the whole
         singleton row back unconditionally.
         """
+        self._require_parent_coordinates(catalogue)
         return self._storage.to_secure_object_write(catalogue, expected_revision_id=expected_revision_id)
 
     def save_with_secure_object_writes(

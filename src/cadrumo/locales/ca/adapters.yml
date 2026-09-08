@@ -241,12 +241,6 @@ adapters:
             interpretar o no indica zona horària: {actual_value}.'
   persistence:
     profile:
-      assets:
-        errors:
-          asset_already_exists: Aquest actiu ja existeix al llibre xifrat d'actius.
-          load_amortizacion_ledger_failed: No s'ha pogut carregar el llibre xifrat
-            d'amortització.
-          load_asset_ledger_failed: No s'ha pogut carregar el llibre xifrat d'actius.
       bienes_inversion:
         errors:
           load_register_failed: No es pot carregar el registre xifrat de regularització

@@ -66,7 +66,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...aggregation import (
     CallerOverrideDisposition,
     RetencionObservation,
@@ -171,7 +171,17 @@ def _seed_quarterly_filing(
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=source_modelo,
+                filing_year=_YEAR,
+                period=period,
+                observations=registry_grounded_observations(
+                    modelo=source_modelo,
+                    filing_year=_YEAR,
+                    period=period,
+                    casilla_values={casilla_id: value},
+                ),
+            )))
     )
 
 
@@ -216,7 +226,17 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo="100",
+                filing_year=_YEAR - 1,
+                period=_ANNUAL_PERIOD,
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_YEAR - 1,
+                    period=_ANNUAL_PERIOD,
+                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                ),
+            )))
     )
 
 

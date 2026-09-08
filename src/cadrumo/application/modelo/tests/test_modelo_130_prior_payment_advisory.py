@@ -48,17 +48,21 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.errors import RegistrySnapshotError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceDiagnostic
 from ...calculations.observations_repository import CalculationObservationRepository
-from .._prior_payment_advisory import collect_prior_payment_not_deducted_diagnostics
+from .._prior_payment_advisory import (
+    collect_prior_payment_minoracion_not_captured_diagnostics,
+    collect_prior_payment_not_deducted_diagnostics,
+)
 from ..calculation_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -194,6 +198,24 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository) -> None:
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
+            stamped_revision_id=revision_id_for_observation(
+                RegistryModeloObservation(
+                    modelo="100",
+                    filing_year=_PRIOR_YEAR,
+                    period="0A",
+                    observations=registry_grounded_observations(
+                        modelo="100",
+                        filing_year=_PRIOR_YEAR,
+                        period="0A",
+                        casilla_values={
+                            _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                            _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                            _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                        },
+                    ),
+                )
+            ),
         )
     )
 
@@ -240,9 +262,36 @@ def _seed_prior_1t_m130_filing(
         ),
     )
     obs_repo.save(
-        obs_repo.prepare_observation_envelope(observation, source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
+        obs_repo.prepare_observation_envelope(
+            observation,
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+            stamped_revision_id=revision_id_for_observation(observation),
+        )
     )
     return observation
+
+
+def test_minoracion_advisory_refuses_a_divergent_persisted_coordinate(
+    objects: SecureObjectRepository,
+) -> None:
+    """The advisory never interprets prior-payment values through a stale schema."""
+    repository = CalculationObservationRepository(objects=objects)
+    _seed_prior_1t_m130_filing(repository)
+    period = Period.from_year_and_code(_YEAR, "1T")
+    stored = repository.load_observation("130", period)
+    assert stored is not None
+    repository.save(stored.model_copy(update={"stamped_revision_id": "persisted-stale-revision"}))
+    target_period = "2T"
+
+    with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
+        collect_prior_payment_minoracion_not_captured_diagnostics(
+            _m130_revision(target_period),
+            modelo="130",
+            period_token=target_period,
+            filing_year=_YEAR,
+            observation_repository=repository,
+        )
 
 
 def _income_transaction(objects: SecureObjectRepository) -> None:

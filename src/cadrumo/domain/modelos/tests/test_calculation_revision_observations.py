@@ -28,9 +28,16 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
     from datetime import UTC, datetime
 
     from ...calculations.registry.bindings import CasillaObservation
+    from ...calculations.registry.schema_references import RegistrySnapshotRef
     from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "d" * 64
+    registry_snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
+        period="1T",
+    )
     casilla_values = {
         _OBSERVATION_CASILLA_100: Decimal("250.00"),
         _OBSERVATION_CASILLA_200: Decimal("-75.50"),
@@ -61,6 +68,7 @@ def test_observations_consistency_validator_accepts_matching_projection() -> Non
     rev = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         observations=observations,
@@ -82,9 +90,16 @@ def test_observations_consistency_validator_rejects_drift() -> None:
     import pydantic
 
     from ...calculations.registry.bindings import CasillaObservation
+    from ...calculations.registry.schema_references import RegistrySnapshotRef
     from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "e" * 64
+    registry_snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
+        period="1T",
+    )
     casilla_values = {_OBSERVATION_CASILLA_100: Decimal("250.00")}
     # observations encodes a DIFFERENT value for the same casilla — the
     # validator must refuse to construct.
@@ -109,6 +124,7 @@ def test_observations_consistency_validator_rejects_drift() -> None:
         CalculationRevision(
             calculation_revision_id=revision_id,
             work_unit_id=work_unit_id,
+            registry_snapshot_ref=registry_snapshot_ref,
             state=CalculationRevisionState.BORRADOR,
             casilla_values=casilla_values,
             observations=observations,
@@ -125,9 +141,16 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
 
     import pydantic
 
+    from ...calculations.registry.schema_references import RegistrySnapshotRef
     from ..calculation_revision import CalculationRevision, CalculationRevisionState
 
     work_unit_id = "f" * 64
+    registry_snapshot_ref = RegistrySnapshotRef(
+        modelo="303",
+        revision_id="2026-y-siguientes",
+        modelo_year=2026,
+        period="1T",
+    )
     casilla_values = {_OBSERVATION_CASILLA_100: Decimal("250.00")}
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
@@ -142,6 +165,7 @@ def test_observations_consistency_validator_rejects_non_empty_values_without_obs
         CalculationRevision(
             calculation_revision_id=revision_id,
             work_unit_id=work_unit_id,
+            registry_snapshot_ref=registry_snapshot_ref,
             state=CalculationRevisionState.BORRADOR,
             casilla_values=casilla_values,
             created_at=created,

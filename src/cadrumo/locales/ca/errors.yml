@@ -232,8 +232,6 @@ errors:
       o validar.
     error_financial_iva_category_not_found: No s'ha trobat la categoria d'IVA sol·licitada
       al catàleg.
-    error_financial_iva_classification: No s'ha pogut classificar l'IVA de manera
-      determinista.
     error_financial_iva_rate_not_found: No s'ha trobat cap tipus d'IVA per a l'estat
       membre i el tipus sol·licitats.
     error_financial_iva_rate_overlap: Dos tipus d'IVA comparteixen una finestra de
@@ -252,8 +250,6 @@ errors:
     error_iva_prorrata: S'ha produït un error en el càlcul de la prorrata de l'IVA.
     error_iva_prorrata_input: Les dades d'entrada de la prorrata de l'IVA infringeixen
       les seves invariants.
-    error_iva_prorrata_sector: Les dades de separació sectorial de la prorrata de
-      l'IVA són inconsistents.
     error_iva_validation: Un valor de l'IVA no és vàlid.
     error_justificante: S'ha produït un error relacionat amb el justificant.
     error_justificante_csv_not_found: El PDF no conté un Codi Segur de Verificació.
@@ -312,8 +308,6 @@ errors:
     error_portals_validation: Les metadades d'un portal no han superat la validació.
     error_profile_amortization_ledger: Una operació del llibre d'amortitzacions del
       perfil no és vàlida.
-    error_profile_asset_record: Un registre d'actiu del perfil té una estructura no
-      vàlida.
     error_profile_bienes_inversion_record: Un registre de regularització d'IVA per
       béns d'inversió no és estructuralment vàlid.
     error_profile_inventory_ledger: Una operació del llibre d'inventari del perfil
@@ -410,9 +404,9 @@ errors:
       de sessió desat d'aquest perfil; encara és al disc.
     fail_access_gate_authorization_manifest: No s'ha pogut carregar el manifest d'autorització
       de models o conté una entrada d'habilitació no vàlida.
-    fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
     fail_borrador_parse: No s'ha pogut interpretar el PDF de l'esborrany del Model
       100 com una declaració.
+    fail_browser_evasion: No s'ha pogut aplicar la configuració d'evasió del navegador.
     fail_browser_session_browser: S'ha produït un error en la sessió del navegador.
     fail_browser_validation: Els paràmetres del navegador no han superat la validació.
     fail_certificado_censal_parse: No s'ha pogut llegir el document del Certificado
@@ -875,8 +869,6 @@ errors:
       deshabilitades.
     refused_auth_login_precondition: La precondició per a l'inici de sessió d'autenticació
       no es compleix.
-    refused_auth_provider_reserved: El proveïdor d'autenticació seleccionat està reservat
-      però no implementat.
     refused_calculations_casilla_constraint: Un valor de casella calculat queda fora
       dels límits declarats per a aquesta casella. Revisa les dades d'entrada del
       càlcul.
@@ -957,7 +949,8 @@ errors:
       no s''ha pogut interpretar com a decimal.'
     refused_iva_compensation_year_range: 'Refusat: l''exercici de compensació d''IVA
       és fora del rang acceptat.'
-    refused_iva_prorrata_especial_margin_ungrounded: El marge de prorrata especial obligatòria no es pot fonamentar per a aquest exercici.
+    refused_iva_prorrata_especial_margin_ungrounded: El marge de prorrata especial
+      obligatòria no es pot fonamentar per a aquest exercici.
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comproveu la configuració
       d'antiguitat de la cartera i torneu-ho a intentar.
@@ -974,8 +967,6 @@ errors:
       amb l'identificador indicat.
     refused_live_borrador_snapshot_not_found: No existeix cap instantània de l'esborrany
       del Model 100 amb l'identificador indicat.
-    refused_live_deudas_snapshot_not_found: No existeix cap instantània de deudas
-      amb l'identificador indicat.
     refused_live_expedientes_snapshot_not_found: No existeix cap instantània d'expedients
       amb l'identificador indicat.
     refused_live_justificante_capture_snapshot_not_found: No existeix cap captura
@@ -1003,9 +994,9 @@ errors:
       una correcció que redueixi el deute.
     refused_modelo_amendment_detail_rows_required: En aquest model els registres de
       detall són la declaració mateixa, de manera que una rectificació els ha d'indicar.
-      Aporta els registres que declara la rectificació (només els afegits en una
-      complementària, el conjunt corregit complet en una substitutiva) o un conjunt
-      buit per declarar que no n'hi ha cap.
+      Aporta els registres que declara la rectificació (només els afegits en una complementària,
+      el conjunt corregit complet en una substitutiva) o un conjunt buit per declarar
+      que no n'hi ha cap.
     refused_modelo_amendment_kind_not_permitted: El tipus de rectificació sol·licitat
       no està legalment disponible per al període de declaració resolt. El conjunt
       de tipus acceptats figura en el context de l'error.
@@ -1053,11 +1044,10 @@ errors:
     refused_pension_reduccion_computation: Una entrada del càlcul de reducció fiscal
       per pensions ha incomplert una condició numèrica; corregeix els imports indicats.
     refused_profile_already_exists: Ja existeix un perfil amb aquestes dades.
-    refused_profile_asset_validation: Un registre d'actiu del perfil no ha superat
-      la validació.
     refused_profile_basis_cap_exceeded: L'amortització acumulada superaria la base
       de cost de l'actiu.
-    refused_profile_bienes_inversion_parameters: La revisió activa no declara els imports de regularització de béns d'inversió per a aquest context de declaració.
+    refused_profile_bienes_inversion_parameters: La revisió activa no declara els
+      imports de regularització de béns d'inversió per a aquest context de declaració.
     refused_profile_bienes_inversion_validation: Un registre de regularització d'IVA
       per béns d'inversió no ha superat la validació.
     refused_profile_binding_resolution: Una dada del perfil necessària per al càlcul

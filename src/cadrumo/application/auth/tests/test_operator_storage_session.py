@@ -190,21 +190,6 @@ def test_auth_scope_conflict_has_explicit_no_recovery() -> None:
     assert build_error_envelope(error).action is None
 
 
-def test_reserved_provider_reset_is_an_idempotent_noop(tmp_path: Path) -> None:
-    """Known reserved providers are valid targets and never clear another configured provider."""
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        _create_profile(_PROFILE_A, provider="certificate")
-
-        first = _reset(provider="clave_pin")
-        second = _reset(provider="clave_pin")
-        with open_test_profile_session(_PROFILE_A):
-            state = workflow_state_repository().load()
-
-        assert first.cleared_provider_configuration is False
-        assert second == first
-        assert state.auth.provider == "certificate"
-
-
 def test_logout_deletes_real_clave_permanente_session(tmp_path: Path) -> None:
     """Cl@ve Permanente uses its production storage stem and is deleted by logout."""
     with isolated_profile_storage_root(tmp_path=tmp_path):

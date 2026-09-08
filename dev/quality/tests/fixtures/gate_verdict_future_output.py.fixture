@@ -1,9 +1,0 @@
-import subprocess
-
-LINT_IMPORTS_COMMAND = "lint-imports"
-EXPECTED = "KEPT"
-
-
-def audit() -> None:
-    output.endswith("KEPT")
-    output = subprocess.run([LINT_IMPORTS_COMMAND]).stdout

@@ -93,11 +93,13 @@ def _pulled_filed_values(
     never pulled"; neither is an error and neither should produce a finding.
     """
     from ..calculations.observations_repository import CalculationObservationRepository as _Repository
+    from ..calculations.observations_repository import require_observation_envelope_coordinates_current
 
     repo = repository if repository is not None else _Repository()
     stored = repo.load_observation(str(work_unit.modelo), work_unit.period)
     if stored is None:
         return None
+    require_observation_envelope_coordinates_current(stored)
     return dict(stored.observation.casilla_values)
 
 

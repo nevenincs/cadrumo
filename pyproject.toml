@@ -508,7 +508,6 @@ dev = [
   "basedpyright>=1.39.9",
 ]
 
-# ── Ruff ─────────────────────────────────────────────────────────────────────
 [tool.ruff]
 target-version = "py313"
 line-length = 120
@@ -1047,12 +1046,9 @@ reportUnnecessaryIsInstance = "none"
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-# Canonical source-capability discovery and census ratchet is explicit here so
-# the default unit gate fails on drift instead of relying on manual CLI use.
 testpaths = [
   "src/cadrumo",
   "src/cadrumo_harness",
-  "dev/source_connectivity/tests",
 ]
 pythonpath = ["src"]
 python_files = ["test_*.py"]

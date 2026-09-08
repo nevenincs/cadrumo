@@ -84,8 +84,8 @@ _MIN_ACQUISITION_YEAR = 2000
 class BienInversionKind(StrEnum):
     """LIVA art. 107 regularisation-window taxonomy for a capital good.
 
-    Distinct from the LIS art. 12 :class:`domain.contribuyente.assets.AssetClass`
-    amortization taxonomy: this axis is the mueble-4yr / inmueble-9yr LIVA
+    Distinct from an activity-asset LIS art. 12 amortization taxonomy: this axis
+    is the mueble-4yr / inmueble-9yr LIVA
     regularisation window (art. 107.Uno vs art. 107.Tres), not a depreciation
     coefficient family.
     """
@@ -144,9 +144,8 @@ class BienInversionIvaRecord(BaseModel):
 
     Strict, frozen, no extra fields. Carries the taxpayer facts the art-109
     annual compute needs (acquisition year, cuota soportada, initial-year
-    definitive prorrata percentage, mueble/inmueble window) plus an optional
-    cross-reference to an :class:`domain.contribuyente.assets.AssetRecord`
-    to avoid double data-entry, and the art-108 concept-eligibility flag.
+    definitive prorrata percentage, mueble/inmueble window) plus the art-108
+    concept-eligibility flag.
 
     Attributes:
         identifier: Stable natural key chosen by the operator.
@@ -163,9 +162,6 @@ class BienInversionIvaRecord(BaseModel):
             LIVA art. 108 (value at/above the escaso-valor threshold, normally
             used over a year as an instrument of work). ``False`` marks a good
             the operator recorded but which is excluded from regularisation.
-        asset_record_ref: Optional identifier of the sibling
-            :class:`domain.contribuyente.assets.AssetRecord`. Cross-reference
-            only; this register — not the assets ledger — is the LIVA authority.
         disposal: Optional :class:`BienInversionDisposal` (art-110). When present,
             the good is routed through the art-110 single ("única")
             regularización (:func:`compute_registro_transmisiones`) in its
@@ -182,7 +178,6 @@ class BienInversionIvaRecord(BaseModel):
     prorrata_inicial_pct: Percentage
     kind: BienInversionKind
     art108_elegible: bool = True
-    asset_record_ref: str | None = Field(default=None, min_length=1)
     acquisition_ledger_id: str = Field(min_length=1, max_length=128)
     prorrata_sector_id: str | None = Field(default=None, min_length=1, max_length=64)
     disposal: BienInversionDisposal | None = None

@@ -8,12 +8,10 @@ materialises filed rows as provenance-bearing
 :class:`CasillaObservation` records.
 
 See Also:
-    :func:`~adapters.outbound.aeat.sede.declarations_capture.capture_filed_declaration_observation`
+    :meth:`~adapters.outbound.aeat.sede.declarations.DeclaracionesRegisterSession.capture_observation`
         Browser capture surface that produces filed-declaration observations.
     :func:`registry_observation_from_filed_declaration`
         Conversion boundary from Sede observations to registry observations.
-    :func:`resolve_previous_filing_bindings_from_filed_declarations`
-        Resolver that folds filed observations into previous-filing bindings.
 """
 
 from __future__ import annotations
@@ -40,7 +38,6 @@ from .....core.time.clock import now
 from .....domain.calculations.export_field_kind import CasillaFieldKind
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
-from .....domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -51,11 +48,6 @@ from .....domain.calculations.registry.export_parse import (
     ParsedExportFieldValue,
     parse_export_payload,
 )
-from .....domain.calculations.registry.ids import (
-    BindingId,
-    RelationId,
-)
-from .....domain.calculations.registry.relations import resolve_relation_values_from_observations
 from .....domain.calculations.registry.remote_state_guard import (
     RemoteStateGuardPolicy,
     remote_state_policy_from_cross_reference,
@@ -85,7 +77,6 @@ from .schema import (
 
 if TYPE_CHECKING:
     from .....domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from .....domain.calculations.registry.schema import ModeloRevision
 
 __all__ = [
     "FiledDeclaracionArtefactSink",
@@ -102,8 +93,6 @@ __all__ = [
     "non_numeric_observed_casillas",
     "observed_casillas_from_submitted_file",
     "registry_observation_from_filed_declaration",
-    "resolve_previous_filing_bindings_from_filed_declarations",
-    "resolve_relation_values_from_filed_declarations",
 ]
 
 EXTERNAL = Settings.external_constants()
@@ -821,57 +810,3 @@ def _with_derived_303_compensation_available_observation(
         confidence=1.0,
     )
     return observation.model_copy(update={"casillas": (*observation.casillas, derived)})
-
-
-def resolve_previous_filing_bindings_from_filed_declarations(
-    revision: ModeloRevision,
-    observations: tuple[FiledDeclaracionObservation, ...],
-    *,
-    filing_year: int,
-    period: Period,
-) -> dict[BindingId, Decimal]:
-    """Resolve registry previous-filing bindings from filed AEAT observations.
-
-    The :class:`ModeloRevision` supplies the
-    previous-filing binding selectors and the :class:`~core.Period` selects
-    the target filing period. Filed Sede
-    :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
-    are converted to
-    :class:`~domain.calculations.registry.RegistryModeloObservation` before
-    :func:`~domain.calculations.registry.resolve_previous_filing_binding_values`
-    folds their casilla values into :class:`~domain.calculations.registry.BindingId`
-    outputs.
-    """
-    return resolve_previous_filing_binding_values(
-        revision,
-        (registry_observation_from_filed_declaration(observation) for observation in observations),
-        filing_year=filing_year,
-        period=period.registry_token,
-    )
-
-
-def resolve_relation_values_from_filed_declarations(
-    revision: ModeloRevision,
-    observations: tuple[FiledDeclaracionObservation, ...],
-    *,
-    filing_year: int,
-    period: Period,
-) -> dict[RelationId, Decimal]:
-    """Resolve registry cross-model relation values from filed AEAT observations.
-
-    The :class:`ModeloRevision` supplies the
-    relation declarations and the :class:`~core.Period` selects the target
-    filing period. Filed Sede
-    :class:`~adapters.outbound.aeat.sede.FiledDeclaracionObservation` rows
-    are converted to
-    :class:`~domain.calculations.registry.RegistryModeloObservation` before
-    :func:`~domain.calculations.registry.resolve_relation_values_from_observations`
-    folds their casilla values into :class:`~domain.calculations.registry.RelationId`
-    outputs.
-    """
-    return resolve_relation_values_from_observations(
-        revision,
-        (registry_observation_from_filed_declaration(observation) for observation in observations),
-        filing_year=filing_year,
-        period=period.registry_token,
-    )

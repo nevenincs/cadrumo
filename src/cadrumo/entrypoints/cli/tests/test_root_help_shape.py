@@ -20,7 +20,6 @@ import subprocess
 import sys
 from contextlib import suppress
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -43,9 +42,6 @@ from ._isolated_profile_storage_fixtures import _isolated_state
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_state"]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"logs"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def _invoke(args: list[str], *, pin_language: str | None = "en"):

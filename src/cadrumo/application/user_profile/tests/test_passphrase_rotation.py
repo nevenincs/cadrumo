@@ -17,8 +17,11 @@ import pytest
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from ....adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
 from ....adapters.persistence.storage.custody.recovery import (
-    parse_profile_custody_recovery_envelope,
-    unlock_profile_custody_recovery,
+    ProfileCustodyRecoveryEnvelope,
+)
+from ....adapters.persistence.storage.custody.recovery_artifact import (
+    ProfileCustodyRecoveryArtifact,
+    unlock_imported_profile_custody_recovery_artifact,
 )
 from ....core.credentials import (
     PROFILE_PASSWORD_MAX_SCALARS,
@@ -177,10 +180,16 @@ def test_an_outstanding_recovery_phrase_still_opens_the_profile_afterwards(tmp_p
         assert rotated.recovery_enrollment_retained is True
 
         material = load_committed_profile_password_material(profile_id)
-        recovery = parse_profile_custody_recovery_envelope(
+        recovery = ProfileCustodyRecoveryEnvelope.model_validate_json(
             profile_custody_recovery_envelope_path(material.capsule_path).read_bytes(),
         )
-        proved = unlock_profile_custody_recovery(recovery, handed[0], sentinel=material.sentinel)
+        proved = unlock_imported_profile_custody_recovery_artifact(
+            ProfileCustodyRecoveryArtifact.from_recovery_envelope(recovery),
+            handed[0],
+            sentinel=material.sentinel,
+            expected_profile_id=profile_id,
+            expected_dek_epoch=material.envelope.dek_epoch,
+        )
 
         assert proved.dek == unlock_profile_custody_password(material, password=_REPLACEMENT).dek
 

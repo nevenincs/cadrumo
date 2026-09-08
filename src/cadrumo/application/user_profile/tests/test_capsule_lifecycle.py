@@ -13,7 +13,6 @@ import pytest
 
 from ....adapters.persistence.storage.custody.capsule import (
     load_committed_profile_custody_label_record,
-    replace_committed_profile_custody_data_file,
 )
 from ....adapters.persistence.storage.custody.capsule_records import ProfileCustodyCapsuleLabel
 from ....adapters.persistence.storage.custody.errors import (
@@ -29,6 +28,7 @@ from ....adapters.persistence.storage.custody.records import (
 )
 from ....adapters.persistence.storage.custody.sentinel import create_profile_custody_sentinel
 from ....adapters.persistence.storage.custody.sentinel_contract import ProfileCustodySentinelRecord
+from ....adapters.persistence.storage.custody.tests.support import replace_test_profile_custody_label_file
 from ....core.bucket_pointer import read_pointer
 from ....domain.buckets.event import BucketEventType
 from ....domain.user_profile.errors import ProfileNotFoundError
@@ -52,6 +52,7 @@ from ..profile_repository import CommittedProfileRepository
 from ..recovery_custody import mint_profile_creation_recovery
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
 
 _PROFILE_ID = UUID("327b296d-8377-4be0-b13a-ca4d8f692e1d")
 
@@ -124,9 +125,8 @@ def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -
             current_label=current,
             replacement_label=replacement,
         )
-        replace_committed_profile_custody_data_file(
+        replace_test_profile_custody_label_file(
             profile_id,
-            "profile-label.v1.json",
             replacement.canonical_json_bytes(),
             expected_sha256=f"sha256:{sha256(current.canonical_json_bytes()).hexdigest()}",
             root=root,

@@ -79,15 +79,11 @@ def test_scaffold_invalidates_the_conformance_snapshot_cache_only_when_it_writes
     first = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
     assert first.written
     after_write = load_locale_coverage_index()
-    assert after_write is not primed, (
-        "a scaffold that wrote must have dropped the conformance snapshot cache"
-    )
+    assert after_write is not primed, "a scaffold that wrote must have dropped the conformance snapshot cache"
 
     second = manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
     assert not second.written
-    assert load_locale_coverage_index() is after_write, (
-        "a no-op scaffold must leave the cache intact"
-    )
+    assert load_locale_coverage_index() is after_write, "a no-op scaffold must leave the cache intact"
 
 
 def test_scaffold_force_overwrites_existing_placeholders(tmp_path: Path) -> None:

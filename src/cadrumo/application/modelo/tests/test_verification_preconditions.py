@@ -8,6 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -53,6 +54,12 @@ def _blocked_report(findings: tuple[ModeloVerificationFinding, ...]) -> Verifica
             verified_by="operator",
         ),
         calculation_revision_id=_CALCULATION_REVISION_ID,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2026-y-siguientes",
+            modelo_year=2026,
+            period="1T",
+        ),
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
         run_at=datetime(2026, 8, 10, 12, tzinfo=UTC),

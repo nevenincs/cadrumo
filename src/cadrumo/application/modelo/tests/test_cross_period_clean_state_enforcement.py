@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from ....domain.calculations.registry.authority import bundled_authority
+from ....tests.registry_observations import revision_id_for_observation
 from ...tests.wizard_catalogue_fixtures import register_wizard_catalogue
 
 __all__ = ["register_wizard_catalogue"]
@@ -19,6 +20,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import (
     CrossPeriodGroupMemberRoster,
@@ -253,6 +255,12 @@ def _seed_verified_revision(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         binding_overrides=binding_overrides,
         casilla_values=casilla_values,
@@ -335,6 +343,12 @@ def _seed_draft_revision(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         binding_overrides=resolved_binding_overrides,
         relation_overrides=resolved_relation_overrides,
@@ -656,6 +670,12 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(tm
                         CalculationRevision(
                             calculation_revision_id=calculation_revision_id,
                             work_unit_id=source_work_unit.work_unit_id,
+                            registry_snapshot_ref=RegistrySnapshotRef(
+                                modelo=source_work_unit.modelo,
+                                revision_id=source_work_unit.revision_id,
+                                modelo_year=source_work_unit.filing_year,
+                                period=source_work_unit.period.registry_token,
+                            ),
                             state=CalculationRevisionState.PRESENTADO,
                             casilla_values=casilla_values,
                             observations=registry_observations,
@@ -773,7 +793,20 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(tmp_p
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
                 member_nif="A00000000",
-            )
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="322",
+                    filing_year=2026,
+                    period="12",
+                    observations=registry_grounded_observations(
+                        modelo="322",
+                        filing_year=2026,
+                        period="12",
+                        casilla_values={
+                            casilla_id: Decimal(index + 1)
+                            for index, casilla_id in enumerate(requirement.source_casilla_ids)
+                        },
+                    ),
+                )))
         )
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,
@@ -830,7 +863,20 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(tmp_path: P
                 source_kind="aeat_sede_justificante",
                 captured_at=_CLOCK,
                 member_nif="A00000000",
-            )
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="322",
+                    filing_year=2026,
+                    period="12",
+                    observations=registry_grounded_observations(
+                        modelo="322",
+                        filing_year=2026,
+                        period="12",
+                        casilla_values={
+                            casilla_id: Decimal(index + 1)
+                            for index, casilla_id in enumerate(requirement.source_casilla_ids)
+                        },
+                    ),
+                )))
         )
         revision_id = _seed_verified_revision(
             bucket_id=profile.bucket_id,

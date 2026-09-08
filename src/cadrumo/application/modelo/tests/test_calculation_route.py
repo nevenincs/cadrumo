@@ -8,13 +8,11 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....core.calculation_route import ModeloCalculationRouteId
-from ...aggregation import AggregationValidationError, BindingSourceDisposition
 from ...calculations.m303_regimen_simplificado_annual_summary import M303RegimenSimplificadoAnnualSummarySourceResolver
 from ..calculation_route import (
     CALCULATION_ROUTE_ENROLLED_SOURCES,
     CALCULATION_ROUTE_ID,
     CALCULATION_ROUTE_RESOLVER_OWNERSHIP,
-    CALCULATION_ROUTE_SOURCE_DISPOSITIONS,
     DESIGN_CONSTANT_RESOLVER_ID,
     MANUAL_INPUT_RESOLVER_ID,
     CalculationRouteDesignConstantOwnership,
@@ -26,23 +24,12 @@ from ..calculation_route import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-def test_production_route_is_the_total_unique_source_disposition_authority() -> None:
-    assert set(CALCULATION_ROUTE_SOURCE_DISPOSITIONS) == set(BindingSourceKind)
+def test_production_route_derives_its_unique_routable_sources_from_executable_owners() -> None:
     declared_sources = tuple(
         source for ownership in CALCULATION_ROUTE_RESOLVER_OWNERSHIP for source in ownership.owned_sources
     )
     assert len(declared_sources) == len(set(declared_sources))
     assert frozenset(declared_sources) == CALCULATION_ROUTE_ENROLLED_SOURCES
-    assert {
-        source
-        for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
-        if disposition is BindingSourceDisposition.ENROLLED
-    } == set(declared_sources)
-    assert all(
-        source not in declared_sources
-        for source, disposition in CALCULATION_ROUTE_SOURCE_DISPOSITIONS.items()
-        if disposition in {BindingSourceDisposition.DEFERRED, BindingSourceDisposition.RESERVED}
-    )
 
 
 def test_route_reads_class_level_identity_and_declares_every_stage_and_manual_owner() -> None:
@@ -93,7 +80,7 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
         validate_calculation_route_resolver_ownership(
             (first, replace(second, owned_sources=first.owned_sources), *remaining),
         )
-    with pytest.raises(AggregationValidationError):
+    with pytest.raises(RuntimeError, match="exactly one design-constant"):
         validate_calculation_route_resolver_ownership(CALCULATION_ROUTE_RESOLVER_OWNERSHIP[:-1])
     invented = CalculationRouteManualOwnership(
         stage="manual",
@@ -103,7 +90,7 @@ def test_route_refuses_duplicate_ids_duplicate_sources_omission_and_invented_own
     )
     object.__setattr__(invented, "resolver_id", "invented-deferred-owner")
     object.__setattr__(invented, "owned_sources", (BindingSourceKind.RELATED_PARTY_OPERATION,))
-    with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
+    with pytest.raises(RuntimeError, match="manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership((*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented))
 
 
@@ -120,7 +107,7 @@ def test_route_refuses_resolver_class_identity_mutations() -> None:
         )
     invented = replace(profile)
     object.__setattr__(invented, "resolver_type", None)
-    with pytest.raises(RuntimeError, match="contains an invented resolver"):
+    with pytest.raises(RuntimeError, match="every canonical executable resolver"):
         validate_calculation_route_resolver_ownership(
             (invented, *remaining),
         )
@@ -134,7 +121,7 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
     )
     invented_pseudo_owner = replace(manual)
     object.__setattr__(invented_pseudo_owner, "resolver_id", "second-manual-owner")
-    with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
+    with pytest.raises(RuntimeError, match="manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
             (*CALCULATION_ROUTE_RESOLVER_OWNERSHIP, invented_pseudo_owner),
         )
@@ -148,7 +135,7 @@ def test_route_refuses_additional_or_typed_manual_pseudo_owners() -> None:
     # Swap the canonical manual owner for the typed one by IDENTITY. Slicing
     # the last row off would drop the design-constant sibling instead and
     # leave a duplicate id, so the refusal under test would never be reached.
-    with pytest.raises(RuntimeError, match="only the canonical manual-input pseudo-owner"):
+    with pytest.raises(RuntimeError, match="manual-input pseudo-owner"):
         validate_calculation_route_resolver_ownership(
             tuple(typed_manual_owner if row is manual else row for row in CALCULATION_ROUTE_RESOLVER_OWNERSHIP),
         )

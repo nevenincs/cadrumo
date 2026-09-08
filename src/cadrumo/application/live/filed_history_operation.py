@@ -11,7 +11,6 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
-from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.operations import (
     OperationCancellation,
@@ -63,7 +62,6 @@ from .filed_data_capture import (
     FILED_HISTORY_STAGE_REFUSAL_CODE,
     FiledHistoryOnboardingRun,
     FiledHistoryPairOutcome,
-    FiledPeriodSelectionRow,
     pull_filed_history,
 )
 
@@ -242,30 +240,6 @@ def _project_pair_outcome(pair: FiledHistoryPairOutcome) -> FiledHistoryPairOutc
     )
 
 
-class FiledPeriodSelectionPublicRowV1(BaseModel):
-    """Safe public projection of one period's register-versus-kept row count."""
-
-    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
-
-    modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: FilingYear
-    period: str = Field(min_length=1, max_length=8)
-    raw_row_count: NonNegativeInt
-    selected_count: NonNegativeInt
-    winning_expediente_id: AeatExpedienteId | None = None
-
-
-def _project_selection_row(row: FiledPeriodSelectionRow) -> FiledPeriodSelectionPublicRowV1:
-    return FiledPeriodSelectionPublicRowV1(
-        modelo=row.modelo,
-        ejercicio=row.ejercicio,
-        period=row.period,
-        raw_row_count=row.raw_row_count,
-        selected_count=row.selected_count,
-        winning_expediente_id=row.winning_expediente_id,
-    )
-
-
 class FiledHistoryPublicResultV1(BaseModel):
     """Safe public projection of one settled :class:`FiledHistoryOnboardingRun`.
 
@@ -293,7 +267,6 @@ class FiledHistoryPublicResultV1(BaseModel):
     evidence_notices: tuple[FiledHistoryEvidenceNoticeV1, ...]
     recapture_notices: tuple[FiledHistoryEvidenceNoticeV1, ...]
     pairs: tuple[FiledHistoryPairOutcomePublicV1, ...]
-    selection_rows: tuple[FiledPeriodSelectionPublicRowV1, ...]
 
 
 def _project_filed_history_result(
@@ -320,7 +293,6 @@ def _project_filed_history_result(
         evidence_notices=tuple(_project_evidence_notice(notice) for notice in run.evidence_notices),
         recapture_notices=tuple(_project_evidence_notice(notice) for notice in run.recapture_notices),
         pairs=tuple(_project_pair_outcome(pair) for pair in run.pairs),
-        selection_rows=tuple(_project_selection_row(row) for row in run.selection_rows),
     )
 
 
@@ -472,7 +444,6 @@ __all__ = [
     "FiledHistoryPublicResultV1",
     "FiledHistoryPull",
     "FiledHistorySyncRunRepositoryFactory",
-    "FiledPeriodSelectionPublicRowV1",
     "build_filed_history_operation_definition",
     "build_filed_history_operation_registration",
 ]

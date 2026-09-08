@@ -216,7 +216,6 @@ errors:
       or validated.
     error_financial_iva_category_not_found: The requested IVA category was not found
       in the catalogue.
-    error_financial_iva_classification: The IVA could not be classified deterministically.
     error_financial_iva_rate_not_found: No IVA rate was found for the requested member
       state and kind.
     error_financial_iva_rate_overlap: Two IVA rates share an effective-date window.
@@ -231,8 +230,6 @@ errors:
     error_invoice_validation: An invoice record failed validation.
     error_iva_prorrata: An error occurred in the IVA prorrata calculation.
     error_iva_prorrata_input: The IVA prorrata inputs violate their invariants.
-    error_iva_prorrata_sector: The sectoral-separation inputs for the IVA prorrata
-      are inconsistent.
     error_iva_validation: A IVA field value is not valid.
     error_justificante: A receipt-related error occurred.
     error_justificante_csv_not_found: The PDF does not contain a Código Seguro de
@@ -284,7 +281,6 @@ errors:
     error_portals_validation: A portal's metadata failed validation.
     error_profile_amortization_ledger: A profile amortization ledger operation is
       not valid.
-    error_profile_asset_record: A profile asset record is structurally invalid.
     error_profile_bienes_inversion_record: A capital-goods IVA regularisation record
       is structurally invalid.
     error_profile_inventory_ledger: A profile inventory ledger operation is not valid.
@@ -369,8 +365,8 @@ errors:
       for this profile; it is still on disk.
     fail_access_gate_authorization_manifest: The modelo authorization manifest could
       not be loaded or contains an invalid enrollment entry.
-    fail_browser_evasion: Browser evasion setup could not be applied.
     fail_borrador_parse: The Modelo 100 borrador PDF could not be parsed into a filing.
+    fail_browser_evasion: Browser evasion setup could not be applied.
     fail_browser_session_browser: A browser session error occurred.
     fail_browser_validation: The browser parameters failed validation.
     fail_certificado_censal_parse: Could not read the Certificado de Situación Censal
@@ -802,8 +798,6 @@ errors:
       Use one of the valid operator phone-state values.
     refused_auth_login_live_tests_disabled: Live authentication tests are disabled.
     refused_auth_login_precondition: Authentication login precondition is not met.
-    refused_auth_provider_reserved: The selected authentication provider is reserved
-      and unavailable.
     refused_calculations_casilla_constraint: A computed casilla value falls outside
       the limits declared for that casilla. Review the calculation inputs.
     refused_cli_boundary: The command refused the request.
@@ -878,7 +872,8 @@ errors:
       not be parsed as a decimal.'
     refused_iva_compensation_year_range: 'Refused: IVA compensation year is outside
       the accepted range.'
-    refused_iva_prorrata_especial_margin_ungrounded: The mandatory prorrata especial margin cannot be grounded for that ejercicio.
+    refused_iva_prorrata_especial_margin_ungrounded: The mandatory prorrata especial
+      margin cannot be grounded for that ejercicio.
     refused_iva_wallet_reconciliation_invariant: The IVA wallet reconciliation inputs
       violate a required invariant. Check the wallet age configuration and retry.
     refused_ledger_confirmation_blocked: This document has findings a human must answer
@@ -894,8 +889,6 @@ errors:
       identifier provided.
     refused_live_borrador_snapshot_not_found: No Modelo 100 borrador snapshot exists
       with the identifier provided.
-    refused_live_deudas_snapshot_not_found: No deudas snapshot exists with the identifier
-      provided.
     refused_live_expedientes_snapshot_not_found: No expedientes snapshot exists with
       the identifier provided.
     refused_live_justificante_capture_snapshot_not_found: No captured justificante
@@ -939,8 +932,8 @@ errors:
       no charge account is recorded.
     refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
       be re-bundled because the contributing ledger rows have changed since it was
-      sealed. Recalculate the return instead; recapture only picks up evidence
-      attached to unchanged rows.
+      sealed. Recalculate the return instead; recapture only picks up evidence attached
+      to unchanged rows.
     refused_modelo_m303_rectificativa_motive: Modelo 303 rectificativa amendments
       require exactly one canonical motive on an applicable reviewed record design;
       the motive is forbidden elsewhere.
@@ -970,10 +963,10 @@ errors:
     refused_pension_reduccion_computation: A pension reducción computation input violated
       a numeric pre-condition. Correct the supplied amounts.
     refused_profile_already_exists: A profile with those details already exists.
-    refused_profile_asset_validation: A profile asset record failed validation.
     refused_profile_basis_cap_exceeded: The cumulative amortization would exceed the
       asset's cost basis.
-    refused_profile_bienes_inversion_parameters: The active revision declares no capital-goods regularisation figures for this filing context.
+    refused_profile_bienes_inversion_parameters: The active revision declares no capital-goods
+      regularisation figures for this filing context.
     refused_profile_bienes_inversion_validation: A capital-goods IVA regularisation
       record failed validation.
     refused_profile_binding_resolution: A profile fact required for the calculation

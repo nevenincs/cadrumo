@@ -39,7 +39,7 @@ from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ..multi_year import PreviousFilingSourceResolver
@@ -133,7 +133,21 @@ def _seed_prior_quarter(secure_objects: SecureObjectRepository) -> None:
             ),
             source_kind=ObservationSourceKind.APP_FILING,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=Modelo.M130.value,
+                filing_year=_YEAR,
+                period=_PRIOR_QUARTER,
+                observations=registry_grounded_observations(
+                    modelo=Modelo.M130.value,
+                    filing_year=_YEAR,
+                    period=_PRIOR_QUARTER,
+                    casilla_values={
+                        _M130_C07: Decimal("412.55"),
+                        _M130_C16: Decimal("0"),
+                        _M130_SALDO_NEGATIVO: Decimal("0"),
+                    },
+                ),
+            )))
     )
     # The cross-modelo prior-year net-income carry reads Modelo 100. Once ANY
     # observation is present the registry resolver refuses a still-absent
@@ -154,7 +168,17 @@ def _seed_prior_quarter(secure_objects: SecureObjectRepository) -> None:
             ),
             source_kind=ObservationSourceKind.APP_FILING,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=Modelo.M100.value,
+                filing_year=_YEAR - 1,
+                period="0A",
+                observations=registry_grounded_observations(
+                    modelo=Modelo.M100.value,
+                    filing_year=_YEAR - 1,
+                    period="0A",
+                    casilla_values=dict.fromkeys(_M100_NET_INCOME_CASILLAS, Decimal("0")),
+                ),
+            )))
     )
 
 

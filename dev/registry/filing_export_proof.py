@@ -76,10 +76,6 @@ from cadrumo.domain.filing.errors import FilingExportError
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
-from cadrumo.tests.filing_export_authority import (
-    FilingExportProof,
-    FilingExportProofConflictError,
-)
 
 from .diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
@@ -103,7 +99,6 @@ from .pipeline._semantic_map_join import join_record_design_semantics
 from .pipeline._semantic_map_loader import load_semantic_map
 
 __all__ = [
-    "CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES",
     "CanonicalTwoChannelFilingExportProofAuthority",
     "FilingExportConformanceEnrollmentReport",
     "FilingExportConformanceProvenanceCandidate",
@@ -112,11 +107,9 @@ __all__ = [
     "FilingExportConformanceVectorBuilder",
     "FilingExportLiveProofEntry",
     "FilingExportOfficialOffsetProbe",
-    "LiveFilingExportProofAuthority",
     "ModeloSociedadesConformanceVectorBuilder",
     "build_pinned_conformance_evidence",
     "canonical_filing_export_conformance_vectors",
-    "canonical_live_filing_export_proof_authority",
     "canonical_two_channel_filing_export_proof_authority",
     "derive_diagnostic_filing_export_conformance_enrollment",
     "derive_filing_export_conformance_enrollment",
@@ -236,12 +229,6 @@ class FilingExportLiveProofEntry:
         probe_identities = tuple((probe.record_id, probe.field_id) for probe in self.official_offset_probes)
         if len(probe_identities) != len(set(probe_identities)):
             raise ValueError("filing export live proof official-offset probes must identify distinct fields")
-
-
-# Live filing proof is enrolled only after a revision has independently reviewed
-# generation inputs and emitted bytes.  An empty tuple is an honest authority
-# with no successful entries; it is not permission to infer proof from layouts.
-CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES: tuple[FilingExportLiveProofEntry, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -1216,14 +1203,21 @@ class CanonicalTwoChannelFilingExportProofAuthority:
             design_epoch=evidence.provenance.design_epoch,
             filing_year=evidence.filing_year,
         )
-        verifier = LiveFilingExportProofAuthority(
-            workspace_root=self._workspace_root,
-            registry_root=self._registry_root,
+        modelo = self._authority.modelo(generation_entry.modelo)
+        inspection = RegistryRevisionInspection.from_revision(
+            modelo=modelo,
+            revision=modelo.revisions[generation_entry.revision],
             source_root=self._source_root,
-            authority=self._authority,
-            entries=(),
+            sources=self._authority.catalogues.sources,
+            legal_ref_ids=frozenset(self._authority.catalogues.legal),
         )
-        manifest, manifest_path = verifier._verify_generation(entry=generation_entry, layout=layout)
+        manifest, manifest_path = _verify_generated_revision(
+            workspace_root=self._workspace_root,
+            source_root=self._source_root,
+            inspection=inspection,
+            entry=generation_entry,
+            layout=layout,
+        )
         actual_provenance = FilingExportPublicProvenance(
             official_source_ref=manifest.source_ref,
             official_source_sha256=manifest.source_sha256,
@@ -1349,93 +1343,6 @@ def _verify_generated_revision(
 def _require_unique_coordinates(coordinates: tuple[FilingExportProofCoordinate, ...], *, channel: str) -> None:
     if len(coordinates) != len(set(coordinates)):
         raise ValueError(f"filing export {channel} proof coordinates must be unique")
-
-
-class LiveFilingExportProofAuthority:
-    """Recompute generator and production-writer evidence on every lookup."""
-
-    def __init__(
-        self,
-        *,
-        workspace_root: Path,
-        registry_root: Path,
-        source_root: Path,
-        authority: ValidatedRegistryAuthority,
-        entries: tuple[FilingExportLiveProofEntry, ...],
-    ) -> None:
-        """Bind canonical roots, validated authority, and unique proof entries."""
-        if not isinstance(authority, ValidatedRegistryAuthority):
-            raise TypeError("live filing proof requires a validated registry authority")
-        coordinates = tuple((entry.modelo, entry.revision) for entry in entries)
-        if len(coordinates) != len(set(coordinates)):
-            raise ValueError("filing export live proof coordinates must be unique")
-        self._workspace_root = workspace_root.resolve()
-        self._registry_root = registry_root.resolve()
-        self._source_root = source_root.resolve()
-        self._authority = authority
-        self._entries = entries
-
-    def proof_for(
-        self,
-        *,
-        modelo: ModeloId,
-        revision: RevisionId,
-        layout_ids: tuple[str, ...],
-    ) -> FilingExportProof | None:
-        """Return proof only after live canonical generation and export checks."""
-        entry = next(
-            (candidate for candidate in self._entries if candidate.modelo == modelo and candidate.revision == revision),
-            None,
-        )
-        if entry is None:
-            return None
-        raise FilingExportProofConflictError(
-            "legacy single-channel filing proof is disabled; two-channel source and custody authorities are required",
-        )
-
-    def _verify_generation(
-        self,
-        *,
-        entry: FilingExportLiveProofEntry,
-        layout: ExportLayoutDefinition,
-    ):
-        modelo = self._authority.modelo(entry.modelo)
-        inspection = RegistryRevisionInspection.from_revision(
-            modelo=modelo,
-            revision=modelo.revisions[entry.revision],
-            source_root=self._source_root,
-            sources=self._authority.catalogues.sources,
-            legal_ref_ids=frozenset(self._authority.catalogues.legal),
-        )
-        return _verify_generated_revision(
-            workspace_root=self._workspace_root,
-            source_root=self._source_root,
-            inspection=inspection,
-            entry=_ConformanceGenerationEntry(
-                modelo=entry.modelo,
-                revision=entry.revision,
-                design_epoch=entry.design_epoch,
-                filing_year=entry.filing_year,
-            ),
-            layout=layout,
-        )
-
-
-def canonical_live_filing_export_proof_authority(
-    *,
-    workspace_root: Path,
-    registry_root: Path,
-    source_root: Path,
-    authority: ValidatedRegistryAuthority,
-) -> LiveFilingExportProofAuthority:
-    """Bind the canonical live verifier to the currently enrolled proof entries."""
-    return LiveFilingExportProofAuthority(
-        workspace_root=workspace_root,
-        registry_root=registry_root,
-        source_root=source_root,
-        authority=authority,
-        entries=CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES,
-    )
 
 
 def canonical_two_channel_filing_export_proof_authority(

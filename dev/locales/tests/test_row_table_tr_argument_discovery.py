@@ -71,6 +71,19 @@ def render():
         return tr(right)
 """
 
+_INLINE_ITERABLE = """
+def notice(locale_key):
+    return tr(locale_key)
+
+
+def render(rows):
+    for selected, code, locale_key in (
+        ((row for row in rows if row), "machine.route.first", "cli.notice.first"),
+        ((row for row in rows if not row), "machine.route.second", "cli.notice.second"),
+    ):
+        emit(selected, code=code, message=notice(locale_key))
+"""
+
 
 def _framework_tree() -> ast.Module:
     return ast.parse(_FRAMEWORK_MODULE.read_text(encoding="utf-8"))
@@ -120,3 +133,12 @@ def test_a_row_table_never_read_by_the_translator_is_not_discovered() -> None:
 def test_a_prose_table_read_by_the_translator_yields_no_keys() -> None:
     """A column that is prose in any row is not a key column."""
     assert not scan_source_text(_PROSE, filename="prose.py")
+
+
+def test_an_inline_for_iterable_discovers_only_the_key_column_reaching_a_sink() -> None:
+    """Inline row tables need no production-only registry for discovery."""
+
+    discovered = scan_source_text(_INLINE_ITERABLE, filename="inline_iterable.py")
+
+    assert discovered >= {"cli.notice.first", "cli.notice.second"}
+    assert not {"machine.route.first", "machine.route.second"} & discovered

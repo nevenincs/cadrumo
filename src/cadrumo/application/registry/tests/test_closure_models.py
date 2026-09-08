@@ -106,18 +106,18 @@ def test_unmeasured_limb_cannot_disguise_a_refusal_as_a_measurement_gap() -> Non
         RegistryClosureLimb(
             modelo="303",
             revision="2025",
-            name="source_connectivity",
+            name="temporal_coverage",
             outcome="unmeasured",
-            refusal=_refusal(limb="source_connectivity", reason="missing_evidence"),
+            refusal=_refusal(limb="temporal_coverage", reason="missing_evidence"),
         )
 
     with pytest.raises(ValidationError, match="cannot use the unmeasured refusal reason"):
         RegistryClosureLimb(
             modelo="303",
             revision="2025",
-            name="source_connectivity",
+            name="temporal_coverage",
             outcome="refused",
-            refusal=_refusal(limb="source_connectivity", reason="unmeasured"),
+            refusal=_refusal(limb="temporal_coverage", reason="unmeasured"),
         )
 
 
@@ -135,7 +135,7 @@ def test_not_applicable_is_a_filing_only_non_capability_state() -> None:
         RegistryClosureLimb(
             modelo=limb.modelo,
             revision=limb.revision,
-            name="source_connectivity",
+            name="temporal_coverage",
             outcome="not_applicable",
         )
     with pytest.raises(ValidationError, match="cannot carry capability evidence"):
@@ -164,13 +164,13 @@ def test_active_closure_refusal_cannot_claim_a_resolved_owner_disposition(
     outcome: RegistryClosureLimbOutcome,
     reason: RegistryClosureRefusalReason,
 ) -> None:
-    refusal = _refusal(limb="source_connectivity", reason=reason).model_copy(
+    refusal = _refusal(limb="temporal_coverage", reason=reason).model_copy(
         update={
             "disposition": RegistryClosureOwnerDisposition(
-                limb="source_connectivity",
+                limb="temporal_coverage",
                 state="resolved",
                 owner="registry release owner",
-                work_item="source-connectivity-adjudication",
+                work_item="temporal-coverage-adjudication",
                 reconsideration_condition="Measure the selected revision against current evidence.",
             ),
         },
@@ -180,7 +180,7 @@ def test_active_closure_refusal_cannot_claim_a_resolved_owner_disposition(
         RegistryClosureLimb(
             modelo="303",
             revision="2025",
-            name="source_connectivity",
+            name="temporal_coverage",
             outcome=outcome,
             refusal=refusal,
         )

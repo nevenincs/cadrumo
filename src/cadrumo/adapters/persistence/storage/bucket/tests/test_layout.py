@@ -25,7 +25,6 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import Final
 
 import pytest
 from pydantic import ValidationError
@@ -42,8 +41,6 @@ from ..errors import BucketAlreadyPresentError, BucketPathTooLongError, BucketVa
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"buckets", "db", "blobs"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _LAYOUT_MODULE = Path(__file__).resolve().parent.parent / "directory_layout.py"
 

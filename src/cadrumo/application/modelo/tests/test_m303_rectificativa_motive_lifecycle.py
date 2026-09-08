@@ -34,6 +34,7 @@ from ....domain.calculations.registry.m303_orden_manifest import load_m303_annua
 from ....domain.calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
 from ....domain.calculations.registry.m303_orden_resolution import m303_annual_orden_snapshot_from_projection
 from ....domain.calculations.registry.schema import RegistrySnapshot
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScope, M303RegimenSimplificadoScopeDecision
 from ....domain.justificante import Justificante
@@ -152,6 +153,12 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
     baseline_revision = CalculationRevision(
         calculation_revision_id=baseline_revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id={},
         binding_overrides={},
@@ -223,6 +230,7 @@ def _authorities(*, motive: M303RectificativaMotive = M303RectificativaMotive.RE
         {
             "calculation_revision_id": revision_id,
             "work_unit_id": work_unit_id,
+            "registry_snapshot_ref": snapshot.snapshot_ref,
             "state": CalculationRevisionState.BORRADOR,
             "input_values_by_casilla_id": {},
             "binding_overrides": {},

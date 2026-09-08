@@ -35,6 +35,7 @@ from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva.m303_settlement import m303_annual_settlement_order_key
 from ...domain.prorrata_register.register import ProrrataRegisterEntry
 from ..calculations.cross_period_clean_state import CrossPeriodCleanStateBlocker
@@ -116,10 +117,12 @@ def evaluate_carried_prior_definitiva_seed(
     prior_year = ejercicio - 1
     for source in _prior_settlement_observations(repository, prior_year=prior_year):
         revision_outcome = revision_carry_outcome(
-            source.stamped_revision_id,
-            source_modelo=Modelo.M303.value,
-            source_filing_year=source.source_filing_year,
-            source_period=source.source_period,
+            RegistrySnapshotRef(
+                modelo=Modelo.M303.value,
+                revision_id=source.stamped_revision_id,
+                modelo_year=source.source_filing_year,
+                period=source.source_period,
+            )
         )
         if revision_outcome.refused:
             return ProrrataPriorDefinitivaSeedEvaluation(
@@ -211,6 +214,14 @@ def _seed_from_source(
         provisional_percentage=source.percentage,
         provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
         source_observation_ref=_source_observation_ref(source),
+        source_registry_snapshot_refs=(
+            RegistrySnapshotRef(
+                modelo=Modelo.M303.value,
+                revision_id=source.stamped_revision_id,
+                modelo_year=source.source_filing_year,
+                period=source.source_period,
+            ),
+        ),
     )
     return ProrrataPriorDefinitivaSeed(
         entry=entry,

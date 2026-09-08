@@ -1,14 +1,14 @@
 """Typed catalogue for ``aeat config auth providers``.
 
 :class:`AuthProviderListing` records feed :data:`AUTH_PROVIDER_CATALOGUE`; the
-query helpers expose implemented and reserved provider ids to the operator
-auth command surface.
+catalogue is derived from the executable :class:`AuthProviderKind` authority.
 """
 
 from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from ...core.auth_provider import AuthProviderKind
 from ...core.i18n import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
@@ -33,9 +33,6 @@ class AuthProviderListing(BaseModel):
     id: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_-]*$")
     label: tr
     description: tr
-    implemented: bool = True
-
-
 AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
     AuthProviderListing(
         id="certificate",
@@ -48,24 +45,15 @@ AUTH_PROVIDER_CATALOGUE: tuple[AuthProviderListing, ...] = (
         description=tr("auth.catalogue.clave_movil_description"),
     ),
     AuthProviderListing(
-        id="clave_pin",
-        label=tr("auth.catalogue.clave_pin_label"),
-        description=tr("auth.catalogue.clave_pin_description"),
-        implemented=False,
-    ),
-    AuthProviderListing(
         id="clave_permanente",
         label=tr("auth.catalogue.clave_permanente_label"),
         description=tr("auth.catalogue.clave_permanente_description"),
     ),
-    AuthProviderListing(
-        id="dnie_pkcs",
-        label=tr("auth.catalogue.dnie_pkcs_label"),
-        description=tr("auth.catalogue.dnie_pkcs_description"),
-        implemented=False,
-    ),
 )
 """Catalogue of auth provider entries in display order."""
+
+if tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE) != tuple(kind.value for kind in AuthProviderKind):
+    raise RuntimeError("auth provider catalogue must match AuthProviderKind in declaration order")
 
 
 def list_auth_providers() -> tuple[AuthProviderListing, ...]:
@@ -79,13 +67,8 @@ def list_auth_providers() -> tuple[AuthProviderListing, ...]:
     return AUTH_PROVIDER_CATALOGUE
 
 
-def implemented_auth_provider_ids() -> tuple[str, ...]:
-    """Return provider ids accepted by auth commands that need an implementation."""
-    return tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE if entry.implemented)
-
-
 def known_auth_provider_ids() -> tuple[str, ...]:
-    """Return every recognized provider id, including reserved slots."""
+    """Return every executable provider id."""
     return tuple(entry.id for entry in AUTH_PROVIDER_CATALOGUE)
 
 
@@ -118,7 +101,6 @@ __all__ = [
     "AUTH_PROVIDER_CATALOGUE",
     "AuthProviderListing",
     "get_auth_provider",
-    "implemented_auth_provider_ids",
     "known_auth_provider_ids",
     "list_auth_providers",
 ]

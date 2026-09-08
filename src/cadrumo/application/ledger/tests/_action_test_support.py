@@ -45,6 +45,7 @@ from ....core.period import Period
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
 from ....domain.attachments.models import Attachment
 from ....domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
@@ -308,12 +309,17 @@ def _persist_verified_revision_citing_transaction(
 ) -> None:
     source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
     period = Period.from_year_and_code(2026, "1T")
+    registry_snapshot_ref = bundled_authority().snapshot(
+        "303",
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    ).snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo="303",
         filing_year=2026,
         period=period,
-        revision_id="2022",
+        revision_id=registry_snapshot_ref.revision_id,
     )
     filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-action-support")
     revision_id = derive_calculation_revision_id(
@@ -331,7 +337,7 @@ def _persist_verified_revision_citing_transaction(
         modelo=ModeloCode("303"),
         filing_year=2026,
         period=period,
-        revision_id="2022",
+        revision_id=registry_snapshot_ref.revision_id,
         name="303-2026-1T",
         created_at=datetime(2026, 5, 1, 8, 0, tzinfo=UTC),
         updated_at=datetime(2026, 5, 2, 8, 0, tzinfo=UTC),
@@ -340,6 +346,7 @@ def _persist_verified_revision_citing_transaction(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},

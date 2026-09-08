@@ -46,7 +46,7 @@ from ....domain.calculations.registry.bindings import (
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
@@ -120,7 +120,21 @@ def _seed_prior_saldo_final(*, source_year: int, obs_repo: CalculationObservatio
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo=_MODELO_200,
+                filing_year=source_year,
+                period="0A",
+                observations=registry_grounded_observations(
+                    modelo=_MODELO_200,
+                    filing_year=source_year,
+                    period="0A",
+                    casilla_values={
+                        _SALDO_FINAL_NO_CUMPLIDO: stock[_SALDO_FINAL_NO_CUMPLIDO],
+                        _SALDO_FINAL_CUMPLIDO: stock[_SALDO_FINAL_CUMPLIDO],
+                    },
+                    grade=RegistryAuthorityGrade.CALCULATION,
+                ),
+            )))
     )
 
 

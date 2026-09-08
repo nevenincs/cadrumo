@@ -62,6 +62,7 @@ from ...domain.calculations.registry.bindings_previous_filing import (
     previous_filing_observation_requirements,
     resolve_previous_filing_binding_values,
 )
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import (
     BindingId,
     RevisionId,
@@ -71,6 +72,7 @@ from ...domain.calculations.registry.loader import load_registry_tree
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.runtime_graph import expression_casilla_refs
 from ...domain.calculations.registry.schema import FormulaDefinition, RegistrySnapshot
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
@@ -144,13 +146,7 @@ def _revision_carry_outcome(payload: ObservationEnvelopePayload) -> bool:
     clean-state, and relation-prefill carry reads share one law-determined
     re-confirmation rather than three parallel copies.
     """
-    obs = payload.observation
-    return revision_carry_outcome(
-        payload.stamped_revision_id,
-        source_modelo=obs.modelo,
-        source_filing_year=obs.filing_year,
-        source_period=obs.period,
-    ).refused
+    return revision_carry_outcome(payload.registry_snapshot_ref).refused
 
 
 class _GatheredObservation(BaseModel):
@@ -159,6 +155,7 @@ class _GatheredObservation(BaseModel):
     model_config = _STRICT_FROZEN
 
     observation: RegistryModeloObservation
+    registry_snapshot_ref: RegistrySnapshotRef
     source_kind: str
     casilla_source_kinds: Mapping[CasillaId, str]
 
@@ -166,10 +163,12 @@ class _GatheredObservation(BaseModel):
 def _gathered_observation(
     observation: RegistryModeloObservation,
     *,
+    registry_snapshot_ref: RegistrySnapshotRef,
     source_kind: str,
 ) -> _GatheredObservation:
     return _GatheredObservation(
         observation=observation,
+        registry_snapshot_ref=registry_snapshot_ref,
         source_kind=source_kind,
         casilla_source_kinds={item.casilla_id: source_kind for item in observation.observations},
     )
@@ -209,8 +208,14 @@ def _merge_gathered_observations(
     }
     source_kinds = {primary.source_kind, overlay.source_kind}
     source_kind = primary.source_kind if len(source_kinds) == 1 else _MIXED_OBSERVATION_SOURCE_KIND
+    if primary.registry_snapshot_ref != overlay.registry_snapshot_ref:
+        raise BindingPrefillTypeError(
+            translated_message="application.calculations.binding_prefill.errors.observation_merge_key_conflict",
+            context={"detail": "same-period observations carry different registry coordinates"},
+        )
     return _GatheredObservation(
         observation=primary.observation.model_copy(update={"observations": tuple(observations_by_casilla.values())}),
+        registry_snapshot_ref=primary.registry_snapshot_ref,
         source_kind=source_kind,
         casilla_source_kinds=casilla_source_kinds,
     )
@@ -243,6 +248,7 @@ class PrefilledBinding(BaseModel):
     source_modelo: str
     source_filing_year: int
     source_periods: tuple[str, ...]
+    source_registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
     resolved_at: datetime
 
 
@@ -300,6 +306,7 @@ class LocalIvaCompensationRecurrence(BaseModel):
     source_modelo: str
     source_filing_year: int
     source_periods: tuple[Period, ...]
+    source_registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
     resolved_at: datetime
     source_locator: str | None = None
 
@@ -331,6 +338,7 @@ def _gather_grouped_member_observations(
         seen_member[req_key] = member_idx + 1
         needed[(obs.modelo, obs.filing_year, obs.period, member_idx)] = _gathered_observation(
             obs,
+            registry_snapshot_ref=payload.registry_snapshot_ref,
             source_kind=payload.source_kind,
         )
 
@@ -346,6 +354,7 @@ def _gathered_from_payload(payload: ObservationEnvelopePayload | None) -> _Gathe
         return None
     return _gathered_observation(
         payload.observation,
+        registry_snapshot_ref=payload.registry_snapshot_ref,
         source_kind=payload.source_kind,
     )
 
@@ -377,6 +386,7 @@ def _gather_single_key_observation(
         if state is not None:
             history_gathered = _gathered_observation(
                 _observation_from_iva_compensation_history(state),
+                registry_snapshot_ref=state.registry_snapshot_ref,
                 source_kind=_IVA_COMPENSATION_HISTORY_SOURCE_KIND,
             )
             gathered = (
@@ -780,6 +790,15 @@ def _prefilled_bindings(
                 source_modelo=source_modelo,
                 source_filing_year=source_filing_year,
                 source_periods=source_periods,
+                source_registry_snapshot_refs=tuple(
+                    dict.fromkeys(
+                        item.registry_snapshot_ref
+                        for item in observations
+                        if item.observation.modelo == source_modelo
+                        and item.observation.filing_year == source_filing_year
+                        and item.observation.period in set(source_periods)
+                    )
+                ),
                 dependency_treatment=dependency_treatment,
                 resolved_at=resolved_at,
             ),
@@ -956,18 +975,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
         None,
     )
     if prefilled is None:
-        source_modelo, source_year, source_periods, _dependency_treatment = _requirements_by_binding(snapshot)[
-            MODELO_303_IVA_COMPENSATION_BINDING_ID
-        ]
-        resolved_at = captured_at if captured_at is not None else now()
-        prefilled = PrefilledBinding(
-            binding_id=MODELO_303_IVA_COMPENSATION_BINDING_ID,
-            value=Decimal(amount),
-            source_modelo=source_modelo,
-            source_filing_year=source_year,
-            source_periods=source_periods,
-            resolved_at=resolved_at,
-        )
+        raise RegistrySnapshotError("resolved IVA compensation recurrence lacks canonical source registry coordinates")
     return (
         LocalIvaCompensationRecurrence(
             binding_id=prefilled.binding_id,
@@ -978,6 +986,7 @@ def extract_modelo_303_local_iva_compensation_recurrence(
             source_periods=tuple(
                 Period.from_year_and_code(prefilled.source_filing_year, period) for period in prefilled.source_periods
             ),
+            source_registry_snapshot_refs=prefilled.source_registry_snapshot_refs,
             resolved_at=prefilled.resolved_at,
         ),
         report,

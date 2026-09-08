@@ -357,3 +357,41 @@ def test_runner_rejects_a_trajectory_that_never_reaches_the_halt_boundary() -> N
     assert result.contradiction_confirmed
     assert not result.halt_boundary_resolved
     assert any("never reaches the point" in failure for failure in result.failures)
+
+
+def test_every_lifecycle_stage_is_carried_by_the_mutating_roster() -> None:
+    """The roster must contain every stage the product's own lifecycle declares.
+
+    ``_MUTATING_COMMANDS`` is this scenario's vocabulary, and it is deliberately
+    NOT the full set of mutating commands -- the live manifest carries well over
+    a hundred, and demanding all of them here would make the scenario meaningless.
+    But it restates ``LIFECYCLE_STAGE_ORDER`` with one addition, and nothing
+    joined the two. A stage added to the product's lifecycle would leave this
+    roster behind, and the scenario would go on certifying a handoff while no
+    longer watching the stage that was added.
+
+    A SUBSET, not equality: the roster carries ``modelo.work.file`` beyond the
+    lifecycle on purpose, and may carry more. Only the direction that can go
+    silent is pinned. Each stage is also checked to be genuinely non-read-only
+    on the live manifest, so the roster cannot be satisfied by a stage that does
+    not mutate anything.
+    """
+    from cadrumo_harness.mcp import build_tool_descriptors
+
+    from .._models import LIFECYCLE_STAGE_ORDER
+
+    stages = set(LIFECYCLE_STAGE_ORDER)
+    roster = set(_MUTATING_COMMANDS)
+
+    assert stages, "the product declares no lifecycle stages, so this join would compare nothing"
+    assert stages <= roster, (
+        "the scenario's mutating roster has fallen behind the product's lifecycle, so a stage "
+        f"nothing watches can be reached during a handoff: missing={sorted(stages - roster)}"
+    )
+
+    by_key = {descriptor.command_key: descriptor for descriptor in build_tool_descriptors()}
+    read_only = sorted(stage for stage in stages if by_key[stage].annotations.read_only_hint)
+    assert not read_only, (
+        f"these lifecycle stages are read-only on the live manifest, so the roster is carrying "
+        f"commands that mutate nothing: {read_only}"
+    )

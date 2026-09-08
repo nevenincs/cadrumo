@@ -52,7 +52,7 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_observations
+from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ...calculations.observations_repository import CalculationObservationRepository
 from ..calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from ..filed_revision_observation import APP_FILING_SOURCE_KIND
@@ -120,7 +120,17 @@ def _seed_m130_quarters(
                 ),
                 source_kind=APP_FILING_SOURCE_KIND,
                 captured_at=_T0,
-            )
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="130",
+                    filing_year=_YEAR,
+                    period=period,
+                    observations=registry_grounded_observations(
+                        modelo="130",
+                        filing_year=_YEAR,
+                        period=period,
+                        casilla_values={_M130_SOURCE_CASILLA_ID: value},
+                    ),
+                )))
         )
         total += value
     return total
@@ -142,7 +152,17 @@ def _seed_prior_year_m100_zero_carry(secure_objects: SecureObjectRepository) -> 
             ),
             source_kind=APP_FILING_SOURCE_KIND,
             captured_at=_T0,
-        )
+        stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                modelo="100",
+                filing_year=_YEAR - 1,
+                period=_M100_ANNUAL_PERIOD,
+                observations=registry_grounded_observations(
+                    modelo="100",
+                    filing_year=_YEAR - 1,
+                    period=_M100_ANNUAL_PERIOD,
+                    casilla_values={_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: Decimal("0")},
+                ),
+            )))
     )
 
 

@@ -752,9 +752,12 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
 
 def test_extra_roots_join_the_declared_console_scripts() -> None:
     """A ``python -m`` surface can be admitted as a root for one run without editing packaging."""
-    spec = ShippedTreeSpec.from_repository(REPO_ROOT, extra_roots=("cadrumo.entrypoints.tui.devtools.__main__:main",))
+    spec = ShippedTreeSpec.from_repository(
+        REPO_ROOT,
+        extra_roots=("cadrumo.entrypoints.tui.components.form_screen:run_form_tui",),
+    )
 
-    assert spec.entry_points[-1] == EntryPoint("cadrumo.entrypoints.tui.devtools.__main__", "main")
+    assert spec.entry_points[-1] == EntryPoint("cadrumo.entrypoints.tui.components.form_screen", "run_form_tui")
 
 
 def test_entry_point_parse_rejects_malformed_specs() -> None:

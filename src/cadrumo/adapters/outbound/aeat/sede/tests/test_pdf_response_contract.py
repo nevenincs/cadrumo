@@ -6,9 +6,8 @@ what a casilla value is defended with later. So "is this response a PDF"
 is an evidence question, not a formatting one, and every capture path must
 answer it identically.
 
-Three paths fetch a CSV-keyed PDF — the row-capture branch in
-``_declarations_fetch``, ``declarations.capture_declaration``, and
-``walker.capture_justificante``. They previously carried three
+Two owning paths fetch a CSV-keyed PDF — the normalized row-capture branch in
+``_declarations_fetch`` and ``walker.capture_justificante``. They previously carried
 hand-written copies of the same status / body / content-type checks, and
 the copies had drifted apart: the row-capture branch accepted any header
 merely CONTAINING ``"pdf"``. This module pins the single contract and the
@@ -26,7 +25,7 @@ import pytest
 
 from ......core.directory_scan import scan_directory
 from ......core.external_constants import PDF_MIME_TYPE
-from .. import _declarations_fetch, declarations, walker
+from .. import _declarations_fetch, walker
 from .._adapter_utils import assert_pdf_response, response_media_type
 from ..errors import JustificanteFetchError
 
@@ -208,13 +207,12 @@ class TestEveryCapturePathRoutesThroughTheContract:
 
     _CAPTURE_SITES = (
         (_declarations_fetch, "capture_row_pdf_artefact"),
-        (declarations, "capture_declaration"),
         (walker, "capture_justificante"),
     )
 
     @pytest.mark.parametrize(("module", "function"), _CAPTURE_SITES)
     def test_the_capture_path_calls_the_canonical_validator(self, module: object, function: str) -> None:
-        """Each of the three paths delegates to ``assert_pdf_response``."""
+        """Each owning path delegates to ``assert_pdf_response``."""
         source = inspect.getsource(getattr(module, function))
         assert "_assert_pdf_response(" in source, (
             f"{function} does not route its PDF response through the canonical validator"

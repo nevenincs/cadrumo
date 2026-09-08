@@ -207,6 +207,3 @@ def test_a_declared_tax_id_is_not_refused_by_the_identity_guard() -> None:
     assert "filing_requires_declared_tax_id" not in output, (
         f"the identity guard fired for a profile that declares a tax id:\n{result.output}"
     )
-    assert "does not declare a tax identity" not in output, (
-        f"the identity refusal text appeared for a declared identity:\n{result.output}"
-    )

@@ -43,7 +43,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, TypedDict
 
-from pydantic import BaseModel, Field, NonNegativeInt, field_validator
+from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.outbound.aeat.sede.declarations import (
     DeclaracionesRegisterSession,
@@ -66,7 +66,6 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
 from ...core.i18n import tr
-from ...core.identity import AeatExpedienteId
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
@@ -1256,12 +1255,22 @@ async def discover_filed_history(
             settings=settings,
             playwright=playwright,
         )
+    resolved_today = today or today_madrid()
     expected = (
-        expected_filed_declaration_grid(profile, today=today or today_madrid())
+        expected_filed_declaration_grid(profile, today=resolved_today)
         if profile is not None
         else ExpectedFiledDeclarationGrid()
     )
-    return filed_history_discovery_report(expected=expected, availability=availability)
+    scoping_signal = (
+        classify_register_scoping_signal(profile, availability, today=resolved_today)
+        if profile is not None
+        else RegisterScopingSignal.INCONCLUSIVE
+    )
+    return filed_history_discovery_report(
+        expected=expected,
+        availability=availability,
+        scoping_signal=scoping_signal,
+    )
 
 
 class ExpectedFiledDeclarationGrid(BaseModel):
@@ -1384,6 +1393,7 @@ class FiledHistoryDiscoveryReport(BaseModel):
     pairs: tuple[FiledHistoryDiscoveryPair, ...] = ()
     profile_year_span_determined: bool = False
     register_options_read: bool = False
+    scoping_signal: RegisterScopingSignal = RegisterScopingSignal.INCONCLUSIVE
 
     @property
     def walk_pairs(self) -> tuple[tuple[str, int], ...]:
@@ -1472,126 +1482,6 @@ def expected_filed_declaration_grid(
         ejercicios=ejercicios,
         activity_start_declared=start is not None,
         activity_end_declared=end is not None,
-    )
-
-
-class FiledPeriodSelectionRow(BaseModel):
-    """How many register rows one period offered, versus the one that was kept.
-
-    The register can carry several filings for a single period -- an original and
-    its later amendments -- and exactly one is promoted to calculation history by
-    the shared selection authority. That collapse is correct and is not reported
-    anywhere today, so an operator seeing one persisted observation cannot tell
-    whether AEAT held one filing or four.
-
-    Computed from the tuples the sweep already holds before finalisation, so it
-    touches no persistence boundary and adds no read.
-
-    Attributes:
-        modelo: Modelo code.
-        ejercicio: Filing year.
-        period: Registry period token.
-        raw_row_count: Rows the register returned for the period.
-        selected_count: Observations actually captured from them.
-        winning_expediente_id: The expediente whose filing was kept, when known.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    modelo: str = Field(min_length=1, max_length=8)
-    ejercicio: FilingYear
-    period: str = Field(min_length=1, max_length=8)
-    raw_row_count: NonNegativeInt
-    selected_count: NonNegativeInt
-    winning_expediente_id: AeatExpedienteId | None = None
-
-    @property
-    def held_more_than_one_filing(self) -> bool:
-        """Whether the register itself offered more than one filing for this period.
-
-        Keyed on the RAW count alone, deliberately. Deriving it from
-        ``raw_row_count - selected_count`` conflates two different facts: a period
-        AEAT held several filings for, and a period whose single filing was not
-        captured (a per-row failure, or a ``limit`` cut). The second is not
-        supersession, and reporting it as such would tell the operator their
-        filing was superseded by one that never existed.
-        """
-        return self.raw_row_count > 1
-
-    @property
-    def superseded_count(self) -> int:
-        """Return how many of the period's filings the kept one displaced.
-
-        Zero when nothing was captured: with no winner, no filing was superseded
-        — the rows are simply unaccounted for, which the count mismatch between
-        :attr:`raw_row_count` and :attr:`selected_count` already shows.
-        """
-        if self.selected_count == 0:
-            return 0
-        return max(self.raw_row_count - self.selected_count, 0)
-
-    @property
-    def rows_not_accounted_for(self) -> int:
-        """Return rows the register returned that produced no observation at all.
-
-        Distinct from :attr:`superseded_count`: this is the count that needs
-        explaining, not the count the selection authority deliberately collapsed.
-        """
-        return max(self.raw_row_count - self.selected_count, 0) if self.selected_count == 0 else 0
-
-
-def filed_period_selection_rows(
-    declarations_by_pair: Mapping[tuple[str, int], tuple[Declaracion, ...]],
-    selected: tuple[FiledDeclaracionObservation, ...],
-) -> tuple[FiledPeriodSelectionRow, ...]:
-    """Project raw register rows against the observations actually captured.
-
-    Keyed on ``(modelo, ejercicio, period)`` because the collapse the sweep
-    performs is per PERIOD, not per pair: one ``(modelo, ejercicio)`` query can
-    return several periods, each with its own duplicate count.
-
-    DECLARED, NOT YET REACHED. Nothing calls this.
-    ``FiledHistoryOnboardingRun.selection_rows`` defaults to an empty tuple and
-    neither construction site fills it, so the operator's selection table is
-    always empty rather than showing what the sweep collapsed. Wiring it needs
-    ``declarations_by_pair`` and ``selected`` carried up to the composition
-    site, and neither survives the capture stage today.
-
-    Args:
-        declarations_by_pair: The register rows each walked pair returned.
-        selected: The observations captured from them.
-
-    Returns:
-        One row per period the register returned rows for, in modelo then
-        descending-ejercicio then period order.
-    """
-    raw: dict[tuple[str, int, str], int] = {}
-    for (modelo, ejercicio), declarations in declarations_by_pair.items():
-        for declaration in declarations:
-            raw[(modelo, ejercicio, declaration.period.registry_token)] = (
-                raw.get((modelo, ejercicio, declaration.period.registry_token), 0) + 1
-            )
-    kept: dict[tuple[str, int, str], list[FiledDeclaracionObservation]] = {}
-    for observation in selected:
-        kept.setdefault(
-            (observation.modelo, observation.ejercicio, observation.period.registry_token),
-            [],
-        ).append(observation)
-
-    return tuple(
-        FiledPeriodSelectionRow(
-            modelo=modelo,
-            ejercicio=ejercicio,
-            period=period,
-            raw_row_count=count,
-            selected_count=len(kept.get((modelo, ejercicio, period), ())),
-            winning_expediente_id=(
-                kept[(modelo, ejercicio, period)][0].expediente_id if (modelo, ejercicio, period) in kept else None
-            ),
-        )
-        for (modelo, ejercicio, period), count in sorted(
-            raw.items(), key=lambda item: (item[0][0], -item[0][1], item[0][2])
-        )
     )
 
 
@@ -1686,14 +1576,6 @@ def classify_register_scoping_signal(
     answer -- see :class:`~core.RegisterScopingSignal`, whose members are all
     hedges precisely so that it cannot be.
 
-    DECLARED, NOT YET REACHED. Nothing calls this either. Both construction
-    sites pass ``RegisterScopingSignal.INCONCLUSIVE`` literally, which is a
-    hedge and so not untrue, but it is the LEAST informative hedge and the one
-    the product would report even where this discriminator could say more.
-    Wiring it needs the availability report carried on
-    :class:`FiledHistoryDiscoveryReport`, which consumes it and does not retain
-    it.
-
     The evidence is asymmetric, and so is the confidence.
     :attr:`~core.RegisterScopingSignal.LIKELY_UNIVERSAL` is a positive
     observation: an excluded modelo was offered. Its counterpart is only ever the
@@ -1727,6 +1609,7 @@ def filed_history_discovery_report(
     *,
     expected: ExpectedFiledDeclarationGrid,
     availability: FiledDeclarationAvailabilityReport | None = None,
+    scoping_signal: RegisterScopingSignal = RegisterScopingSignal.INCONCLUSIVE,
 ) -> FiledHistoryDiscoveryReport:
     """Union the two discovery signals into one provenance-tagged walk grid.
 
@@ -1742,6 +1625,8 @@ def filed_history_discovery_report(
         availability: The register's offered option set, or ``None`` when the
             option lists were not read (no live session). ``None`` is a supported
             mode, not a degraded one.
+        scoping_signal: Hedged reading derived while both the taxpayer profile
+            and offered register options are available.
 
     Returns:
         The :class:`FiledHistoryDiscoveryReport` walk grid.
@@ -1763,6 +1648,7 @@ def filed_history_discovery_report(
         ),
         profile_year_span_determined=expected.activity_start_declared,
         register_options_read=availability is not None,
+        scoping_signal=scoping_signal,
     )
 
 
@@ -1817,7 +1703,6 @@ class FiledHistoryOnboardingRun(BaseModel):
     model_config = _STRICT_FROZEN
 
     pairs: tuple[FiledHistoryPairOutcome, ...] = ()
-    selection_rows: tuple[FiledPeriodSelectionRow, ...] = ()
     dry_run: bool = False
     captured_count: int = Field(default=0, ge=0)
     #: Units this sweep REACHED, from the accumulator tally counted in every
@@ -1916,53 +1801,6 @@ def expected_but_not_found_notice(run: FiledHistoryOnboardingRun) -> Notice | No
     )
 
 
-def found_more_than_expected_notices(run: FiledHistoryOnboardingRun) -> tuple[Notice, ...]:
-    """Inform for every period the register held more than one filing for.
-
-    INFO rather than WARNING, and that is the whole judgement. Several filings
-    for one period is the NORMAL shape of a corrected return: AEAT itself permits
-    a complementaria, so the operator is being told what their own history looks
-    like, not that something is wrong. Raising it as a warning would put a red
-    flag on lawful behaviour.
-
-    This composes with the re-capture divergence diff rather than duplicating it.
-    They answer different questions: this one says the register held more filings
-    than were kept for a period, the diff says a kept value CHANGED between two
-    captures of the same filing. A period can trigger either, both, or neither.
-    """
-    return tuple(
-        Notice(
-            severity=NoticeSeverity.INFO,
-            code="live.filed.pull_all.found_more_than_expected",
-            message=tr(
-                "live.filed.pull_all.found_more_than_expected",
-                default=(
-                    "AEAT's register holds {raw_count} filings for modelo {modelo} {period} {ejercicio}; "
-                    "the most recent registration ({expediente}) was kept and {superseded} earlier one(s) "
-                    "were superseded."
-                ),
-                raw_count=row.raw_row_count,
-                modelo=row.modelo,
-                period=row.period,
-                ejercicio=row.ejercicio,
-                expediente=row.winning_expediente_id or "unknown",
-                superseded=row.superseded_count,
-            ),
-            context={
-                "modelo": row.modelo,
-                "ejercicio": str(row.ejercicio),
-                "period": row.period,
-                "raw_row_count": str(row.raw_row_count),
-                "selected_count": str(row.selected_count),
-                "superseded_count": str(row.superseded_count),
-                "winning_expediente_id": row.winning_expediente_id or "",
-            },
-        )
-        for row in run.selection_rows
-        if row.held_more_than_one_filing
-    )
-
-
 def recapture_divergence_notices(
     captured: tuple[FiledDeclaracionObservation, ...],
     *,
@@ -1979,6 +1817,7 @@ def recapture_divergence_notices(
     Read BEFORE the capture is persisted; afterwards the prior values are gone.
     """
     from ..calculations.observations_repository import CalculationObservationRepository as _Repository
+    from ..calculations.observations_repository import require_observation_envelope_coordinates_current
 
     repo = repository if repository is not None else _Repository()
     notices: list[Notice] = []
@@ -1986,6 +1825,7 @@ def recapture_divergence_notices(
         stored = repo.load_observation(observation.modelo, observation.period)
         if stored is None:
             continue
+        require_observation_envelope_coordinates_current(stored)
         try:
             snapshot = bundled_authority().snapshot(
                 observation.modelo,
@@ -2245,7 +2085,7 @@ async def pull_filed_history(
             pairs=(),
             dry_run=dry_run,
             carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
-            scoping_signal=RegisterScopingSignal.INCONCLUSIVE,
+            scoping_signal=discovery.scoping_signal,
             stage_failures=("discovery: no modelo/ejercicio pair to walk",),
         )
 
@@ -2281,7 +2121,7 @@ async def pull_filed_history(
         dry_run=dry_run,
         captured_count=capture.captured_count,
         reached_count=capture.reached_count,
-        scoping_signal=RegisterScopingSignal.INCONCLUSIVE,
+        scoping_signal=discovery.scoping_signal,
         carries_a_taxpayer_specific_denominator=discovery.carries_a_taxpayer_specific_denominator,
         iva_wallet_status=iva_wallet.status,
         iva_wallet_divergence=iva_wallet.divergence,
@@ -2309,7 +2149,6 @@ __all__ = [
     "FiledHistoryDiscoveryReport",
     "FiledHistoryOnboardingRun",
     "FiledHistoryPairOutcome",
-    "FiledPeriodSelectionRow",
     "capture_filed_data",
     "capture_filed_data_bulk",
     "capture_report_path",
@@ -2321,8 +2160,6 @@ __all__ = [
     "expected_filed_declaration_grid",
     "filed_data_capture_failure_row",
     "filed_history_discovery_report",
-    "filed_period_selection_rows",
-    "found_more_than_expected_notices",
     "list_filed_data",
     "list_filed_data_bulk",
     "pull_filed_history",

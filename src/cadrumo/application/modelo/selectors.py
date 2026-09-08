@@ -24,6 +24,7 @@ from ...domain.modelos.calculation_revision import CalculationRevision, Calculat
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit import WorkUnit
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
 
 class ModeloCalculationRevisionSelector(StrEnum):
@@ -298,7 +299,10 @@ def _revisions_for_work_unit(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
 ) -> tuple[CalculationRevision, ...]:
     catalogue = (calculation_repository or CalculationRevisionCatalogueRepository()).load()
-    return tuple(sorted(catalogue.for_work_unit(work_unit.work_unit_id), key=lambda revision: revision.created_at))
+    revisions = tuple(sorted(catalogue.for_work_unit(work_unit.work_unit_id), key=lambda revision: revision.created_at))
+    for revision in revisions:
+        require_calculation_revision_coordinates_current(revision)
+    return revisions
 
 
 def _explicit_revision_for_work_unit(
@@ -318,6 +322,7 @@ def _explicit_revision_for_work_unit(
         raise ModeloCalculationRevisionSelectorStateError(
             translated_message="errors.refused.modelo_calculation_revision_selector_state",
         )
+    require_calculation_revision_coordinates_current(revision)
     return revision
 
 

@@ -29,8 +29,7 @@ wall; the module-level string check in the sede write-surface gate is
 the weaker second one.
 
 Public surface: :func:`parse_censal_datos`,
-:func:`fetch_censal_datos`, :func:`censal_datos_url`, and the landing
-predicates :func:`is_forbidden_censal_landing` and
+:func:`fetch_censal_datos`, :func:`censal_datos_url`, and
 :func:`forbidden_censal_landing_marker`, exported so conformance gates
 exercise the real refusal rule instead of mirroring it.
 """
@@ -663,18 +662,6 @@ def forbidden_censal_landing_marker(landing_url: str) -> str | None:
     return None
 
 
-def is_forbidden_censal_landing(landing_url: str) -> bool:
-    """Return whether a landing is a censal modification surface.
-
-    Args:
-        landing_url: The URL AEAT actually served, after redirects.
-
-    Returns:
-        ``True`` when the reader must refuse the landing.
-    """
-    return forbidden_censal_landing_marker(landing_url) is not None
-
-
 def _assert_read_landing(landing_url: str) -> None:
     """Refuse a landing on a censal modification surface.
 
@@ -717,7 +704,6 @@ __all__ = [
     "censal_datos_url",
     "fetch_censal_datos",
     "forbidden_censal_landing_marker",
-    "is_forbidden_censal_landing",
     "landed_on_censal_path",
     "parse_censal_datos",
 ]

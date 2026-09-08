@@ -23,11 +23,15 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....domain.buckets.event import BucketEventType
 from ....tests.secure_sql import isolated_runtime_profile
 from ....tests.write_unit_recorder import WriteUnitRecorder
+from ...calculations.revision_carry_gate import RevisionCarryOutcome
+from .. import m145_communication_records as m145_records_module
 from ..m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordState,
+    M145CommunicationRecordValidationError,
     _m145_communication_record_repository,
     create_m145_communication_record,
+    list_m145_communication_records,
     mark_m145_communication_record_delivered_to_payer,
     mark_m145_communication_record_locally_completed,
     read_m145_communication_record,
@@ -101,6 +105,30 @@ def test_m145_communication_record_transitions_are_idempotent_after_success(tmp_
     assert completed.locally_completed_at >= completed.delivered_to_payer_at
     assert completed_retry == completed
     assert delivered_after_completion == completed
+
+
+def test_m145_list_transition_and_existing_create_refuse_divergent_registry_coordinate(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        command = M145CommunicationCreateCommand(communication_year=2026, field_values=_field_values())
+        created = create_m145_communication_record(command, bucket_id=runtime.bucket_id)
+        monkeypatch.setattr(
+            m145_records_module,
+            "revision_carry_outcome",
+            lambda _ref: RevisionCarryOutcome(refused=True, selected_revision_id=None, detail="diverged"),
+        )
+
+        with pytest.raises(M145CommunicationRecordValidationError):
+            list_m145_communication_records(bucket_id=runtime.bucket_id)
+        with pytest.raises(M145CommunicationRecordValidationError):
+            mark_m145_communication_record_delivered_to_payer(
+                created.communication_record_id,
+                bucket_id=runtime.bucket_id,
+            )
+        with pytest.raises(M145CommunicationRecordValidationError):
+            create_m145_communication_record(command, bucket_id=runtime.bucket_id)
 
 
 def test_mark_m145_communication_record_locally_completed_requires_prior_delivery(tmp_path: Path) -> None:

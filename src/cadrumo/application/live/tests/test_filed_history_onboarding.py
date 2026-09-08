@@ -28,9 +28,7 @@ from ....core.register_scoping_signal import RegisterScopingSignal
 from ..filed_data_capture import (
     FiledHistoryOnboardingRun,
     FiledHistoryPairOutcome,
-    FiledPeriodSelectionRow,
     expected_but_not_found_notice,
-    found_more_than_expected_notices,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -150,82 +148,6 @@ def test_the_warning_names_every_missing_pair_not_just_a_count() -> None:
     # The register-only pair is absent from the named set.
     assert "100/2023" not in named
     assert notice.context["missing_count"] == "2"
-
-
-# ------------------------------------------------- found-more-than-expected tier
-
-
-def _selection_row(*, raw: int, selected: int = 1, period: str = "1T") -> FiledPeriodSelectionRow:
-    return FiledPeriodSelectionRow(
-        modelo="130",
-        ejercicio=2026,
-        period=period,
-        raw_row_count=raw,
-        selected_count=selected,
-        winning_expediente_id="13020260420WXYZ9999QRST8888",
-    )
-
-
-def test_a_period_with_several_filings_is_reported_as_info_never_warning() -> None:
-    """A complementaria is lawful, so this is information, not a problem.
-
-    Pinned explicitly because the natural instinct is to warn on a duplicate, and
-    warning here would put a red flag on behaviour AEAT itself permits.
-    """
-    notices = found_more_than_expected_notices(
-        FiledHistoryOnboardingRun(selection_rows=(_selection_row(raw=3),)),
-    )
-    assert len(notices) == 1
-    assert notices[0].severity is NoticeSeverity.INFO
-    assert notices[0].severity is not NoticeSeverity.WARNING
-
-
-def test_a_single_filing_period_raises_no_notice() -> None:
-    assert found_more_than_expected_notices(FiledHistoryOnboardingRun(selection_rows=(_selection_row(raw=1),))) == ()
-
-
-def test_the_notice_names_the_winner_and_the_superseded_count() -> None:
-    (notice,) = found_more_than_expected_notices(
-        FiledHistoryOnboardingRun(selection_rows=(_selection_row(raw=3),)),
-    )
-    assert notice.context is not None
-    assert notice.context["raw_row_count"] == "3"
-    assert notice.context["superseded_count"] == "2"
-    assert notice.context["winning_expediente_id"] == "13020260420WXYZ9999QRST8888"
-    assert notice.context["modelo"] == "130"
-
-
-def test_one_notice_per_duplicated_period() -> None:
-    notices = found_more_than_expected_notices(
-        FiledHistoryOnboardingRun(
-            selection_rows=(
-                _selection_row(raw=2, period="1T"),
-                _selection_row(raw=1, period="2T"),
-                _selection_row(raw=4, period="3T"),
-            ),
-        ),
-    )
-    assert {notice.context["period"] for notice in notices if notice.context} == {"1T", "3T"}
-
-
-def test_the_two_advisories_compose_rather_than_duplicate() -> None:
-    """They answer different questions and can fire independently.
-
-    The found-more notice says the register held more filings than were kept for a
-    period; the divergence diff says a kept VALUE changed between two captures.
-    Neither implies the other, so neither may be derived from the other.
-    """
-    run = FiledHistoryOnboardingRun(
-        pairs=(_pair(modelo="130", ejercicio=2026, row_count=1),),
-        selection_rows=(_selection_row(raw=2),),
-    )
-    found_more = found_more_than_expected_notices(run)
-    not_found = expected_but_not_found_notice(run)
-    assert len(found_more) == 1
-    # The period produced rows, so the missing-filing warning is silent even
-    # though the found-more notice fired: the two are independent.
-    assert not_found is None
-    assert found_more[0].code != "live.filed.pull_all.expected_but_not_found"
 
 
 # ------------------------------------------------------- the denominator note

@@ -137,6 +137,7 @@ from ..filing.producer_snapshot import (
     resolve_m303_filing_facts,
 )
 from ..filing.runtime import RegistrySchemaAccessor, build_runtime_schema_provider, filing_profile_from_taxpayer
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ._export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from ._ledger_evidence_gate import deductible_iva_evidence_gap_transaction_ids
 from ._prior_domiciliation import resolve_prior_domiciliation_election
@@ -157,6 +158,7 @@ from .action_errors import (
     ModeloPriorDomiciliationElectionRefusedError,
     WorkUnitNotFoundError,
 )
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
@@ -851,7 +853,7 @@ def _resolve_m303_filing_facts_for_export(
             f"work unit {work_unit.work_unit_id!r} carries no filing-instance evidence valid for its revision",
         )
     prorrata_register_repository = ProrrataRegisterRepository(bucket_id=work_unit.bucket_id)
-    prorrata_register = prorrata_register_repository.load()
+    prorrata_register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())
     iva_aggregation = aggregate_iva_ledger_observations_from_repositories(
         bucket_id=work_unit.bucket_id,
         period=work_unit.period,
@@ -1207,6 +1209,7 @@ def _load_modelo_export_authorities(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": command.calculation_revision_id},
         )
+    require_calculation_revision_coordinates_current(revision)
     work_unit = work_unit_repository.load().get(revision.work_unit_id)
     if work_unit is None:
         raise WorkUnitNotFoundError(

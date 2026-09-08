@@ -74,6 +74,7 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
     validate_m303_regimen_simplificado_annual_summary_target_revision,
 )
 from ..calculations.observations_repository import CalculationObservationRepository
+from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..workflow.engine import WorkflowEngine
 from ..workflow.persistence import WorkflowRunRepository
 from ._ledger_evidence_gate import raise_if_deductible_iva_evidence_missing
@@ -89,6 +90,7 @@ from .action_errors import (
     VerificationReportNotFoundError,
     WorkUnitNotFoundError,
 )
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
@@ -305,6 +307,7 @@ def file_modelo_revision(
             translated_message="application.modelo.errors.calculation_revision_not_found",
             context={"calculation_revision_id": calculation_revision_id},
         )
+    require_calculation_revision_coordinates_current(target)
     work_units = wu_repo.load()
     work_unit = work_units.get(target.work_unit_id)
     if work_unit is None:
@@ -558,7 +561,7 @@ def list_verification_reports(
     ``(calculation_revision_id, run_at)``.
     """
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    catalogue = vr_repo.load()
+    catalogue = require_verification_report_coordinates_current(vr_repo.load())
     reports = tuple(
         r
         for r in catalogue.reports.values()
@@ -580,7 +583,7 @@ def get_verification_report(
     boundaries.
     """
     vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    catalogue = vr_repo.load()
+    catalogue = require_verification_report_coordinates_current(vr_repo.load())
     report = catalogue.get(verification_report_id)
     if report is None:
         raise VerificationReportNotFoundError(

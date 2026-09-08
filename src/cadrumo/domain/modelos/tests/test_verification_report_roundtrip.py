@@ -22,6 +22,7 @@ from ....adapters.persistence.storage.secure_object_namespaces import MODELO_VER
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....tests.secure_sql import isolated_runtime_profile
+from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
@@ -64,6 +65,12 @@ _FUTURE_ENVELOPE_WRITTEN_AT = datetime(2026, 5, 28, 11, 20, 0, tzinfo=UTC)
 
 _WORK_UNIT_ID = "9" * 64
 _REVISION_CREATED_AT = datetime(2026, 5, 28, 10, 0, 0, tzinfo=UTC)
+_REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
+    modelo="303",
+    revision_id="2026-y-siguientes",
+    modelo_year=2026,
+    period="1T",
+)
 
 
 def _persist_parent_revision() -> str:
@@ -85,6 +92,7 @@ def _persist_parent_revision() -> str:
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=_WORK_UNIT_ID,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         created_at=_REVISION_CREATED_AT,
         updated_at=_REVISION_CREATED_AT,
@@ -130,6 +138,7 @@ def _populated_report(revision_id: str) -> VerificationReport:
             verified_by=verified_by,
         ),
         calculation_revision_id=revision_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
         resolved_casilla_ids=_IVA_RESOLVED_CASILLA_IDS,
@@ -254,6 +263,7 @@ def test_verification_report_rejects_legacy_casilla_list_keys() -> None:
             {
                 "verification_report_id": report_id,
                 "calculation_revision_id": revision_id,
+                "registry_snapshot_ref": _REGISTRY_SNAPSHOT_REF,
                 "completeness_status": VerificationCompletenessStatus.BLOCKED,
                 "findings": (),
                 "resolved_casillas": _IVA_RESOLVED_CASILLA_IDS,
@@ -389,6 +399,7 @@ def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
     report_early = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=revision_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
         run_at=datetime(2026, 1, 1, 9, 0, tzinfo=UTC),
@@ -398,6 +409,7 @@ def test_report_id_is_clock_free_for_an_identical_outcome() -> None:
     report_late = VerificationReport(
         verification_report_id=report_id,
         calculation_revision_id=revision_id,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
         completeness_status=VerificationCompletenessStatus.BLOCKED,
         findings=findings,
         run_at=datetime(2026, 12, 31, 23, 59, tzinfo=UTC),

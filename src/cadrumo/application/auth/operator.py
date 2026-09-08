@@ -88,7 +88,6 @@ from .operator_results import (
     AuthLoginResult,
     AuthLogoutResult,
     AuthOperationRequiresCustodySessionError,
-    AuthProviderReservedError,
     AuthProvidersReport,
     AuthResetResult,
     AuthStatusResult,
@@ -117,7 +116,7 @@ if TYPE_CHECKING:
 
 
 def list_operator_auth_providers() -> AuthProvidersReport:
-    """Return the :class:`AuthProvidersReport` enumerating implemented and reserved auth provider slots."""
+    """Return the report enumerating executable authentication providers."""
     return AuthProvidersReport(providers=list_auth_providers())
 
 
@@ -140,7 +139,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
 
     Args:
         provider: The auth provider identifier to configure (e.g.
-            ``"certificate"``). Must be an implemented provider id.
+            ``"certificate"``).
         certificate_path: Optional filesystem path to the operator's
             certificate file. Recorded in the event payload when supplied.
 
@@ -163,7 +162,7 @@ def configure_operator_auth(provider: str, *, certificate_path: Path | None = No
     from ..workflow.persistence import workflow_state_repository
     from ..workflow.profile_health import RECORD_FAULT_STATUSES, assess_active_profile_health
 
-    listing = _implemented_provider(provider)
+    listing = _provider_listing(provider)
     resolved_settings = load_settings()
     occurred_at = now()
     payload: dict[str, str] = {"provider_id": listing.id}
@@ -529,7 +528,7 @@ async def login_operator_auth(
             raise AuthLoginPreconditionError(
                 translated_message="application.auth.operator.errors.provider_not_configured",
             )
-        _implemented_provider(provider_kind.value)
+        _provider_listing(provider_kind.value)
 
         from ...core.access_gate.errors import AeatLiveReadNotEnabledError
         from ...core.access_gate.gate import AeatAccessGate
@@ -1002,20 +1001,14 @@ def _assert_login_precondition(
             )
 
 
-def _implemented_provider(provider: str) -> AuthProviderListing:
-    listing = get_auth_provider(provider)
-    if not listing.implemented:
-        raise AuthProviderReservedError(
-            translated_message="application.auth.errors.provider_reserved",
-            context={"provider": provider},
-        )
-    return listing
+def _provider_listing(provider: str) -> AuthProviderListing:
+    return get_auth_provider(provider)
 
 
 def _provider_kind_or_none(provider: str | None) -> AuthProviderKind | None:
     if provider is None:
         return None
-    listing = _implemented_provider(provider)
+    listing = _provider_listing(provider)
     return AuthProviderKind(listing.id)
 
 

@@ -2,8 +2,8 @@
 
 WHAT THIS GATE IS FOR, AND WHAT IT MUST NOT BE MISTAKEN FOR.
 
-It asserts that `AssetsLedgerRepository.add`, `InventoryLedgerRepository.create`
-and `InventoryLedgerRepository.record_movement` still ROUTE through
+It asserts that `InventoryLedgerRepository.create` and
+`InventoryLedgerRepository.record_movement` still ROUTE through
 `ProfileBareModelSecurePersistence.mutate`. It does NOT assert that the guard
 WORKS -- the concurrency regressions in `test_assets_concurrent_add.py` and
 `test_inventory_concurrent_write.py` do that, and a reader who treats this file
@@ -48,7 +48,6 @@ from collections.abc import Callable
 import pytest
 
 from .._revision_guarded_singleton_mutation import mutate_revision_guarded_singleton
-from ..assets import AssetsLedgerRepository
 from ..inventory import InventoryLedgerRepository
 from ..invoices import InvoiceCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
@@ -79,7 +78,6 @@ _GUARDED_KERNEL_HELPER = "mutate_revision_guarded_singleton("
 
 #: Every public verb that mutates a profile singleton document in place.
 _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (
-    ("AssetsLedgerRepository.add", AssetsLedgerRepository.add),
     ("InventoryLedgerRepository.create", InventoryLedgerRepository.create),
     ("InventoryLedgerRepository.record_movement", InventoryLedgerRepository.record_movement),
     ("InventoryLedgerRepository.remove", InventoryLedgerRepository.remove),

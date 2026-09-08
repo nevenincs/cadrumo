@@ -42,7 +42,7 @@ from ......tests.aeat_literal_fixtures import (
     aeat_url,
     configured_path,
 )
-from ..censal_datos import is_forbidden_censal_landing
+from ..censal_datos import forbidden_censal_landing_marker
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -100,7 +100,7 @@ def _forbidden_landing_markers() -> tuple[str, ...]:
 class TestForbiddenLandingMarkers:
     """The reader's own landing rule must discriminate write surfaces from read ones.
 
-    These exercise ``is_forbidden_censal_landing``, which is the single
+    These exercise ``forbidden_censal_landing_marker``, which is the single
     matching rule the runtime guard calls - not a copy of it. An earlier
     draft of this gate mirrored the reader's fold-and-substring matching
     locally, and that mirror was the weakness worth naming: a test that
@@ -114,14 +114,14 @@ class TestForbiddenLandingMarkers:
     @pytest.mark.parametrize("landing_url", _WRITE_LANDINGS)
     def test_every_known_write_surface_is_refused(self, landing_url: str) -> None:
         """A landing on any real censal write surface must be refused."""
-        assert is_forbidden_censal_landing(landing_url), (
+        assert forbidden_censal_landing_marker(landing_url) is not None, (
             f"{landing_url} is a censal write surface and the reader's landing rule allows it"
         )
 
     @pytest.mark.parametrize("landing_url", _READ_LANDINGS)
     def test_read_surfaces_are_not_refused(self, landing_url: str) -> None:
         """The consulta landing and sibling read surfaces must stay reachable."""
-        assert not is_forbidden_censal_landing(landing_url), (
+        assert forbidden_censal_landing_marker(landing_url) is None, (
             f"{landing_url} is a read surface and the reader's landing rule rejects it"
         )
 

@@ -20,9 +20,11 @@ from ...core.decimal.constants import ZERO
 from ...core.filing_year import FilingYear
 from ...core.identity import AeatExpedienteId, ContentDigest, SubjectTaxId
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
+from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind, StandardPeriodCode
 from ...core.time.utc import UtcInstant
+from ..calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import (
     IvaCompensationCarryForwardPolicyError,
     IvaCompensationYearRangeError,
@@ -69,6 +71,7 @@ class IvaCompensationPeriodState(BaseModel):
     )
     filing_year: FilingYear
     period: Period
+    registry_snapshot_ref: RegistrySnapshotRef
     provenance: IvaCompensationStateProvenance = Field(
         description=(
             "Which of the five supplying paths built this row. Required with no "
@@ -150,6 +153,12 @@ class IvaCompensationPeriodState(BaseModel):
     def _period_year_matches(self) -> IvaCompensationPeriodState:
         if self.period.filing_year != self.filing_year:
             raise ValueError("period.filing_year must match filing_year")
+        if (
+            self.registry_snapshot_ref.modelo != Modelo.M303.value
+            or self.registry_snapshot_ref.modelo_year != self.filing_year
+            or self.registry_snapshot_ref.period != self.period.registry_token
+        ):
+            raise ValueError("registry_snapshot_ref must match the Modelo 303 period state coordinate")
         return self
 
 

@@ -20,19 +20,23 @@ from ._export_test_support import isolated_backend
 __all__ = ["isolated_backend"]
 from pydantic import ValidationError
 
+from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....core.config import override_settings
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.errors import ModeloExportError
 from ..action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
     ModeloCrossPeriodCleanStateError,
+    WorkUnitRevisionDivergenceError,
 )
 from ..export import (
     ModeloExportCommand,
@@ -169,6 +173,8 @@ def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locato
         taxpayer_nif="synthetic-sensitive-marker",
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
+        target_registry_snapshot_ref=bundled_authority().snapshot("303", filing_year=2026, period="2T").snapshot_ref,
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("1200.00"),
         wallet_amount=Decimal("1200.00"),
@@ -185,6 +191,7 @@ def test_iva_wallet_export_provenance_redacts_taxpayer_amounts_and_source_locato
                 amount=Decimal("1200.00"),
                 source_locator="aeat-wallet-reference-containing-synthetic-sensitive-marker",
                 captured_at=decided_at,
+                registry_snapshot_refs=(),
             ),
         ),
         decided_at=decided_at,
@@ -272,6 +279,36 @@ def test_export_refuses_borrador_revision(
         "calculation_revision_id": calc_rev_id,
         "state": CalculationRevisionState.BORRADOR.value,
     }
+
+
+def test_export_refuses_persisted_registry_revision_divergence(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """Export cannot replay stored values against a different registry schema."""
+    bucket_id = _seed_profile()
+    _, calc_rev_id = _seed_revision(bucket_id=bucket_id, state=CalculationRevisionState.BORRADOR)
+    repository = CalculationRevisionCatalogueRepository()
+    revision = repository.load().get(calc_rev_id)
+    assert revision is not None
+    stale = revision.model_copy(
+        update={
+            "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
+                update={"revision_id": "persisted-stale-revision"}
+            )
+        }
+    )
+    repository.save(upsert_calculation_revision(repository.load(), stale))
+
+    with pytest.raises(WorkUnitRevisionDivergenceError):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=calc_rev_id,
+                output_path=tmp_path / "out.txt",
+                actor="operator",
+            ),
+            workflow_profile=_profile(),
+        )
 
 
 def test_export_reaches_modelo_100_xml_dictionary_path_before_later_readiness_gate(

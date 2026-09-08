@@ -198,7 +198,7 @@ class SecureBoundRepository[T: BaseModel]:
         """Parse one stored payload and enforce the repository's envelope gates.
 
         The single classification/version gate behind both read paths. ``load``
-        and :meth:`_iter_validated_envelopes` applied the same two checks
+        and the former iterator path applied the same two checks
         independently and differed only in how they named the row, so a change
         to either gate had to be made twice. ``subject`` carries that naming --
         ``"namespace/identifier"`` for a single load, ``"namespace iterator

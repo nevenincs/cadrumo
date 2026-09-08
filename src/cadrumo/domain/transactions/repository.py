@@ -21,7 +21,7 @@ and the membership-index key with :func:`transaction_index_object_key`.
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field, NonNegativeInt
+from pydantic import BaseModel, NonNegativeInt
 
 from ...core.identity import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -100,8 +100,6 @@ class ImportSummary(BaseModel):
             (:func:`derive_import_fingerprint`) is already present —
             the fingerprint is stamped at import and survives both
             later edits and a re-export in a different file format.
-        errors: Reserved for future per-row error counts; today the
-            repository raises on any error rather than tallying.
         likely_duplicate_refs: Rows that were imported but share an
             effective date and amount with an existing transaction
             while carrying a divergent narrative — a probable, but
@@ -115,7 +113,6 @@ class ImportSummary(BaseModel):
 
     imported: NonNegativeInt
     skipped: NonNegativeInt
-    errors: int = Field(default=0, ge=0)
     bucket_id: BucketId
     imported_refs: tuple[BucketTransactionRef, ...] = ()
     skipped_refs: tuple[BucketTransactionRef, ...] = ()

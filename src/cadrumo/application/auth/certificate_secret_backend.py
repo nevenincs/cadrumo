@@ -40,7 +40,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import TYPE_CHECKING
 
 from pydantic import SecretStr, TypeAdapter
 
@@ -73,52 +73,6 @@ the secret explicitly via the same verb.
 _MUTATION_OPERATION_ID_METADATA_KEY = "certificate_secret_mutation_operation_id"
 
 
-@runtime_checkable
-class CertificateSecretBackend(Protocol):
-    """Typed seam for reading, writing, and removing a named certificate secret.
-
-    Every method is keyed by the certificate source's registered
-    ``name`` (the key carried by
-    :class:`~application.auth.models.CertificateSourceRecord`), scoping the
-    secret to that one source. The sole implementation
-    (:class:`~application.auth.SecureStorageCertificateSecretBackend`)
-    scopes storage to the active profile bucket so two profiles never share
-    a namespace.
-    """
-
-    def get(self, name: str) -> SecretStr | None:
-        """Return the persisted passphrase for source ``name``, or ``None`` when absent."""
-        ...
-
-    def set(
-        self,
-        name: str,
-        secret: SecretStr,
-        *,
-        operation_id: str | None = None,
-        occurred_at: datetime | None = None,
-    ) -> None:
-        """Persist ``secret`` for ``name`` with an optional recovery witness."""
-        ...
-
-    def remove(self, name: str) -> bool:
-        """Remove the persisted secret for source ``name``.
-
-        Returns:
-            ``True`` when a secret was removed, ``False`` when none was
-            registered (a no-op, not an error).
-        """
-        ...
-
-    def mutation_operation_id(self, name: str) -> str | None:
-        """Return the non-secret operation id stamped on ``name``, when present."""
-        ...
-
-    def request_witness(self, name: str, secret: SecretStr) -> str:
-        """Return a master-keyed witness for matching a retried set request."""
-        ...
-
-
 def _secret_store_key(*, bucket_id: str, name: str) -> str:
     """Return the :class:`~adapters.persistence.storage.SecretStore` natural key for ``name``.
 
@@ -138,7 +92,7 @@ def _secret_store_key(*, bucket_id: str, name: str) -> str:
 
 
 class SecureStorageCertificateSecretBackend:
-    """The sole :class:`~application.auth.CertificateSecretBackend`, backed by storage.
+    """The sole named-certificate secret backend, backed by secure storage.
 
     Persists each certificate passphrase as a
     :class:`~adapters.persistence.storage.SecretRecord` at
@@ -241,6 +195,5 @@ class SecureStorageCertificateSecretBackend:
 
 
 __all__ = [
-    "CertificateSecretBackend",
     "SecureStorageCertificateSecretBackend",
 ]

@@ -72,6 +72,7 @@ from ..registration import register_profile_with_credentials
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+
 _PASSWORD_A = "login-handover-password-a"  # noqa: S105 - real test credential
 _PASSWORD_B = "login-handover-password-b"  # noqa: S105 - real test credential
 

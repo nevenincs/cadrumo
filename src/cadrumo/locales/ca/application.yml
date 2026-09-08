@@ -28,8 +28,6 @@ application:
         operator_completion_required: Preparat; requereix finalització de Cl@ve mediada
           per l'operador.
     errors:
-      provider_reserved: El proveïdor d'autenticació {provider} està reservat i no
-        està implementat.
       session_field_not_datetime: El camp {field} de la sessió persistent ha de ser
         una data-hora o cadena ISO-8601.
     operator:
@@ -667,9 +665,9 @@ application:
       idempotency_key_conflict: La clau d'idempotència ja identifica una transacció
         emmagatzemada amb dades diferents. Useu una clau d'idempotència nova per a
         un moviment diferent, o ometeu la clau per afegir un duplicat deliberat.
-      purchase_evidence_already_set: 'La transacció del llibre ja té un purchase_invoice_evidence_id
-        i no es pot substituir in situ. Desvincular l''evidència no està implementat:
-        elimineu la transacció i torneu a afegir-la amb l''evidència correcta.'
+      purchase_evidence_already_set: L'evidència de la factura de compra és immutable
+        un cop adjuntada. Elimineu la transacció del llibre i torneu a afegir-la amb
+        l'evidència correcta.
       transaction_id_prefix_ambiguous: 'el prefix d''id de transacció %{prefix} coincideix
         amb %{count} transaccions: %{matches}'
       transaction_id_prefix_empty: el prefix d'id de transacció és buit
@@ -697,15 +695,6 @@ application:
           sol·licitat.
         snapshot_prefix_ambiguous: El prefix del snapshot de l'esborrany coincideix
           amb diversos snapshots.
-    deudas:
-      errors:
-        bucket_id_blank: L'identificador del bucket de deudas no pot estar buit.
-        snapshot_id_blank: L'identificador de la instantània de deutes no pot estar
-          buit.
-        snapshot_not_found: No hi ha cap instantània de deutes que coincideixi amb
-          l'identificador sol·licitat.
-        snapshot_prefix_ambiguous: El prefix de la instantània de deutes coincideix
-          amb diverses instantànies.
     expedientes:
       errors:
         bucket_id_blank: L'identificador del bucket d'expedients no pot estar buit.

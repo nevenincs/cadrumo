@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime
+from inspect import signature
 from pathlib import Path
 from typing import Any
 
@@ -109,9 +110,7 @@ def test_mantenimiento_fixtures_classify() -> None:
         single = parse_mantenimiento_banner(
             _PROBE_URL,
             http_status,
-            headers,
             body,
-            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
         )
         assert single is not None, path.name
         assert single.state is SiteHealthState.MANTENIMIENTO, path.name
@@ -133,9 +132,7 @@ def test_waf_fixtures_classify() -> None:
         single = parse_waf_challenge(
             _PROBE_URL,
             http_status,
-            headers,
             body,
-            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
         )
         assert single is not None, path.name
         assert single.state is SiteHealthState.WAF_CHALLENGE, path.name
@@ -155,9 +152,7 @@ def test_waf_evidence_fragment_is_centrally_redacted() -> None:
     status = parse_waf_challenge(
         _PROBE_URL,
         403,
-        {},
         html,
-        rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
     )
 
     assert status is not None
@@ -170,6 +165,19 @@ def test_waf_evidence_fragment_is_centrally_redacted() -> None:
     assert "https://example.test" in fragment
     assert _JWT not in fragment
     assert "token:sha256:" in fragment
+
+
+def test_each_parser_accepts_only_the_evidence_it_evaluates() -> None:
+    mantenimiento = signature(parse_mantenimiento_banner).parameters
+    waf = signature(parse_waf_challenge).parameters
+    rate_limit = signature(parse_rate_limit_response).parameters
+
+    assert "headers" not in mantenimiento
+    assert "rate_limit_retry_after_default" not in mantenimiento
+    assert "headers" not in waf
+    assert "rate_limit_retry_after_default" not in waf
+    assert "headers" in rate_limit
+    assert "rate_limit_retry_after_default" in rate_limit
 
 
 def test_rate_limited_fixtures_classify() -> None:
@@ -244,9 +252,7 @@ class TestMantenimientoTitleOnlyGuard:
         status = parse_mantenimiento_banner(
             _PROBE_URL,
             200,
-            {},
             html,
-            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
         )
         assert status is None
 
@@ -282,9 +288,7 @@ class TestMantenimientoTitleOnlyGuard:
             parse_mantenimiento_banner(
                 _PROBE_URL,
                 200,
-                {},
                 html,
-                rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
             )
             is None
         )
@@ -316,9 +320,7 @@ class TestMantenimientoTitleOnlyGuard:
         status = parse_mantenimiento_banner(
             _PROBE_URL,
             503,
-            {},
             html,
-            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
         )
 
         assert status is not None
@@ -352,9 +354,7 @@ class TestMantenimientoTitleOnlyGuard:
         status = parse_mantenimiento_banner(
             _PROBE_URL,
             503,
-            {},
             html,
-            rate_limit_retry_after_default=_RATE_LIMIT_DEFAULT,
         )
         assert status is not None
         assert status.state is SiteHealthState.MANTENIMIENTO

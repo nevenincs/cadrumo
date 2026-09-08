@@ -14,6 +14,7 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.prorrata_register.register import ProrrataRegisterEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -30,6 +31,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = SECURE_OBJECTS_BUCKET_ID
 _ANNUAL_2025 = _period(2025, "0A")
 _M100_ASESORIA_CASILLA = "0199"
+
+
+def _prior_m303_snapshot_ref():
+    return bundled_authority().snapshot("303", filing_year=2024, period="4T").snapshot_ref
 
 
 def _raw_transaction(
@@ -173,6 +178,7 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
             especial_transition=None,
             provisional_percentage=Decimal("70"),
             provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         ),
     )
 
@@ -209,7 +215,12 @@ def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_
         TransactionCatalogue.from_transactions((row,)),
     )
     ProrrataRegisterRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).upsert_entry(
-        ProrrataRegisterEntry(ejercicio=2025, regime=ProrrataRegisterRegime.NINGUNA, especial_transition=None),
+        ProrrataRegisterEntry(
+            ejercicio=2025,
+            regime=ProrrataRegisterRegime.NINGUNA,
+            especial_transition=None,
+            source_registry_snapshot_refs=(),
+        ),
     )
 
     result = aggregate_renta_ledger_expenses_from_repositories(
@@ -267,6 +278,7 @@ def test_repository_wrapper_uses_the_explicit_secondary_prorrata_store_while_pri
                     especial_transition=None,
                     provisional_percentage=Decimal("80"),
                     provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+                    source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )
 

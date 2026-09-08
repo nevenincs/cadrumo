@@ -37,7 +37,6 @@ from collections.abc import Mapping
 import pytest
 from pydantic import ValidationError
 
-from .....application.aggregation import DEFERRED_SOURCE_KINDS
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..binding_selector_utils import selector_as_dict
@@ -49,7 +48,6 @@ from ..bindings import (
     validate_binding_selector_shape,
 )
 from ..schema import DataBindingDefinition
-from ._registry_schema_support import _committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -72,16 +70,6 @@ _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id(
     "iva.cuota-deducible-total",
     surface="_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA",
 )
-
-
-def _deferred_selector_exemptions(
-    *,
-    deferred: set[BindingSourceKind],
-    declared: set[BindingSourceKind],
-    implemented: set[BindingSourceKind],
-) -> set[BindingSourceKind]:
-    """Return only sources that are deferred, undeclared, and selectorless."""
-    return deferred - declared - implemented
 
 
 _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = validated_casilla_id(
@@ -145,64 +133,6 @@ def _assert_selector_refused_at_construction(
     message = str(excinfo.value)
     for substring in expected_substrings:
         assert substring in message, f"expected {substring!r} in construction refusal:\n{message}"
-
-
-def test_binding_selector_registry_covers_typed_sources() -> None:
-    """Every registry-declared source kind has exactly one typed selector.
-
-    Derived from :class:`BindingSourceKind` rather than restated as a member
-    list: a hand-written expected set has to be edited by hand every time a kind
-    is added, and when that edit is missed the gate fails for a bookkeeping
-    reason while reporting a coverage one. This gate went red exactly that way
-    when ``m303_regimen_simplificado_annual_summary`` was registered with a
-    selector and a validator but never added here.
-
-    Canonical members that are mesh-only or deferred without a selector are
-    outside this gate. The production-derived deferral exemption disappears as
-    soon as the selector is added or the source leaves deferral.
-    """
-    # BORRADOR resolves a whole pre-filled declaration rather than a selected
-    # slice, and IVA_WALLET_DECISION is settled by the wallet decision rather
-    # than by a selector; neither carries a selector map to validate.
-    selectorless = {BindingSourceKind.BORRADOR, BindingSourceKind.IVA_WALLET_DECISION}
-    modelos, _ = _committed_registry_tree()
-    declared = {
-        binding.source for modelo in modelos for revision in modelo.revisions.values() for binding in revision.bindings
-    }
-    deferred_without_selector = _deferred_selector_exemptions(
-        deferred=set(DEFERRED_SOURCE_KINDS),
-        declared=declared,
-        implemented=set(_BINDING_SELECTOR_REGISTRY),
-    )
-    expected = set(BindingSourceKind) - selectorless - deferred_without_selector
-
-    assert set(_BINDING_SELECTOR_REGISTRY) == expected
-    assert all(isinstance(source, BindingSourceKind) for source in _BINDING_SELECTOR_REGISTRY)
-
-
-@pytest.mark.parametrize("ratchet", ["binding", "selector", "deferral"])
-def test_inventory_selector_exemption_disappears_on_each_enrollment_ratchet(ratchet: str) -> None:
-    """Any declaration, selector, or end of deferral removes the exemption."""
-    inventory = BindingSourceKind.INVENTORY
-    deferred = {inventory}
-    declared: set[BindingSourceKind] = set()
-    implemented: set[BindingSourceKind] = set()
-    assert inventory in _deferred_selector_exemptions(
-        deferred=deferred,
-        declared=declared,
-        implemented=implemented,
-    )
-    if ratchet == "binding":
-        declared.add(inventory)
-    elif ratchet == "selector":
-        implemented.add(inventory)
-    else:
-        deferred.remove(inventory)
-    assert inventory not in _deferred_selector_exemptions(
-        deferred=deferred,
-        declared=declared,
-        implemented=implemented,
-    )
 
 
 def test_construction_gate_dispatches_through_selector_model_for_source() -> None:

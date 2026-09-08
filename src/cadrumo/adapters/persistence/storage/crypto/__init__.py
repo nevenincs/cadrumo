@@ -7,11 +7,10 @@ primitives (:func:`encrypt_record`, :func:`decrypt_record`,
 :data:`KEY_SIZE` / :data:`NONCE_SIZE` / :data:`GCM_TAG_SIZE` constants), or
 :mod:`~cadrumo.adapters.persistence.storage.crypto.encrypted_columns` for
 the SQLAlchemy ``TypeDecorator`` set (:class:`EncryptedString`,
-:class:`EncryptedBytes`, :class:`EncryptedJSON`, :class:`HashedLookup`),
-the :class:`EncryptedPayload` JSON guard, and
+:class:`HashedLookup`), and
 :func:`secure_object_key_digest` / :func:`secure_object_payload_aad` /
 :func:`encrypt_secure_object_payload` / :func:`decrypt_secure_object_payload`
-/ :func:`decrypt_encrypted_bytes_column` for secure-object row handling.
+for secure-object row handling.
 
 This package previously carried a PEP 562 lazy re-export map so an AEAD-only
 caller did not pay for importing SQLAlchemy and reaching back into

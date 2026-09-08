@@ -195,6 +195,7 @@ def _elect(
             provisional_percentage=percentage,
             provisional_provenance=resolved_provenance,
             authorisation_reference=resolved_reference,
+            source_registry_snapshot_refs=(),
         )
     except (ProrrataRegisterValidationError, ValidationError) as exc:
         raise bad(str(exc)) from exc

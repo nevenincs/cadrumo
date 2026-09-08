@@ -28,9 +28,15 @@ from typing import TYPE_CHECKING
 from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import content_hash_hex
 from .calculation_actions import get_calculation_revision
+from .calculation_revision_gate import require_calculation_revision_coordinates_current
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+    from decimal import Decimal
+
+    from ...core.casilla_id import CasillaId
     from ...core.identity import CalculationRevisionId
+    from ...domain.calculations.registry.bindings import CasillaObservation
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 
@@ -207,10 +213,34 @@ def capture_modelo_calculation(
     )
 
 
+def visible_calculation_casilla_values(revision: CalculationRevision) -> Mapping[CasillaId, Decimal]:
+    """Return the casilla values of a persisted revision that an operator should see.
+
+    The write path has already removed registry-declared row templates. The read
+    path first re-confirms the persisted canonical coordinate and never guesses
+    semantic membership from an identifier prefix.
+    """
+    require_calculation_revision_coordinates_current(revision)
+    return revision.casilla_values
+
+
+def visible_calculation_observations(revision: CalculationRevision) -> tuple[CasillaObservation, ...]:
+    """Return the observations of a persisted revision that an operator should see.
+
+    This is the observation-stream counterpart of
+    :func:`visible_calculation_casilla_values` and applies the same canonical
+    revision re-confirmation before returning the write-time materialization.
+    """
+    require_calculation_revision_coordinates_current(revision)
+    return revision.observations
+
+
 __all__ = [
     "ModeloCalculationCapture",
     "ModeloCalculationCaptureError",
     "ModeloCalculationCurrentCoordinate",
     "capture_modelo_calculation",
     "read_modelo_calculation_current_coordinate",
+    "visible_calculation_casilla_values",
+    "visible_calculation_observations",
 ]

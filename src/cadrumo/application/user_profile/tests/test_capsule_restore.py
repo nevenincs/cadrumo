@@ -13,7 +13,7 @@ from uuid import UUID
 import pytest
 
 from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
-from ....adapters.persistence.storage.custody.recovery import parse_profile_custody_recovery_envelope
+from ....adapters.persistence.storage.custody.recovery import ProfileCustodyRecoveryEnvelope
 from ....tests.secure_sql import isolated_profile_storage_root
 from ..capsule_restore import (
     ProfileCapsuleSourceError,
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+
 
 _LABEL = "Capsule Restore Subject"
 _PASSPHRASE = "capsule-restore-subject-operator-secret"  # noqa: S105 - synthetic test credential
@@ -121,7 +122,7 @@ def test_a_lost_password_is_recovered_through_the_artifact_and_the_source(tmp_pa
         )
 
         material = load_committed_profile_password_material(UUID(profile_id))
-        recovery_envelope = parse_profile_custody_recovery_envelope(
+        recovery_envelope = ProfileCustodyRecoveryEnvelope.model_validate_json(
             profile_custody_recovery_envelope_path(capsule).read_bytes()
         )
         receipt = export_profile_recovery_artifact(

@@ -52,8 +52,10 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.resources.bundled_data import bundled_path
 from ...core.time.clock import now
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids
 from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.carry_forward import (
     IvaCompensationCarryForwardReport,
@@ -85,6 +87,7 @@ from .iva_compensation_casillas import (
     M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA as _M390_COMPENSACION_ULTIMO_PERIODO_97_CASILLA,
 )
 from .observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
+from .revision_carry_gate import revision_carry_outcome
 
 
 class IvaCompensationAnnualSummary(BaseModel):
@@ -200,7 +203,10 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         when a record exists, or ``None`` when none has been persisted for the
         given period.
         """
-        return self.load(iva_compensation_period_key(period))
+        state = self.load(iva_compensation_period_key(period))
+        if state is not None:
+            _require_period_state_registry_coordinate_current(state)
+        return state
 
     def save_period(self, state: IvaCompensationPeriodState) -> None:
         """Persist latest stored state for one period."""
@@ -216,11 +222,37 @@ class IvaCompensationHistoryRepository(SecureBoundRepository[IvaCompensationPeri
         def _sort_key(item: IvaCompensationPeriodState) -> tuple[int, tuple[int, str]]:
             return (item.filing_year, iva_compensation_period_sort_key(item.period))
 
-        return tuple(sorted(self.iter_records(), key=_sort_key))
+        states = tuple(sorted(self.iter_records(), key=_sort_key))
+        for state in states:
+            _require_period_state_registry_coordinate_current(state)
+        return states
+
+
+def _require_period_state_registry_coordinate_current(state: IvaCompensationPeriodState) -> None:
+    outcome = revision_carry_outcome(state.registry_snapshot_ref)
+    if outcome.refused:
+        raise IvaCompensationModeloError(
+            "persisted IVA compensation period state registry coordinate cannot be re-confirmed: "
+            f"{state.registry_snapshot_ref.revision_id}: {outcome.detail}"
+        )
 
 
 _SEED_SOURCE_OBS_PREFIX = "303:seed"
 _CORRECTED_SOURCE_OBS_PREFIX = "303:correction"
+
+
+def _registry_snapshot_ref_for_m303_period(period: Period) -> RegistrySnapshotRef:
+    inspection = bundled_authority().inspect_revision(
+        Modelo.M303.value,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    )
+    return RegistrySnapshotRef(
+        modelo=Modelo.M303.value,
+        revision_id=inspection.revision_id,
+        modelo_year=period.filing_year,
+        period=period.registry_token,
+    )
 
 
 def seed_iva_compensation_period(
@@ -261,6 +293,7 @@ def seed_iva_compensation_period(
         provenance=IvaCompensationStateProvenance.OPERATOR_SEED,
         filing_year=period.filing_year,
         period=period,
+        registry_snapshot_ref=_registry_snapshot_ref_for_m303_period(period),
         presented_at=when,
         prior_pending_amount=None,
         applied_amount=None,
@@ -323,6 +356,7 @@ def correct_iva_compensation_period(
         provenance=IvaCompensationStateProvenance.OPERATOR_CORRECTION,
         filing_year=period.filing_year,
         period=period,
+        registry_snapshot_ref=_registry_snapshot_ref_for_m303_period(period),
         presented_at=when,
         prior_pending_amount=None,
         applied_amount=None,
@@ -367,6 +401,7 @@ def iva_compensation_state_from_observation_envelope(
         provenance=provenance,
         filing_year=observation.filing_year,
         period=period,
+        registry_snapshot_ref=validated.registry_snapshot_ref,
         expediente_id=expediente_id,
         status=status,
         presented_at=validated.captured_at,

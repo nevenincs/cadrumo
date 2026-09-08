@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.casilla_id import CasillaId
+from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....tests.cross_period_seeding import seed_clean_cross_period_sources
 from ...workflow.run_models import WorkflowDeadlineContextDetails
+from ..action_errors import WorkUnitRevisionDivergenceError
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
@@ -24,7 +25,6 @@ from ._file_flow_support import (
     M111_TOTAL_WITHHELD_CASILLA,
     M130_CARRY_FORWARD_CASILLA,
     M130_INCOME_CASILLA,
-    M180_PERCEPTOR_BASE_CASILLA,
     T1,
     T2,
     T3,
@@ -63,6 +63,41 @@ from ._file_flow_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> None:
+    """Verification cannot interpret a stored calculation under a different schema."""
+    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    work_unit = seed_work_unit(wu_repo)
+    revision = calculate_modelo_revision(
+        work_unit.work_unit_id,
+        casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+        binding_values=DEFAULT_130_BINDING_VALUES,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=bv_repo,
+        clock=T1,
+    )
+    stale = revision.model_copy(
+        update={
+            "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
+                update={"revision_id": "persisted-stale-revision"}
+            )
+        }
+    )
+    cr_repo.save(upsert_calculation_revision(cr_repo.load(), stale))
+
+    with pytest.raises(WorkUnitRevisionDivergenceError):
+        verify_modelo_revision(
+            revision.calculation_revision_id,
+            actor="operator-A",
+            workflow_profile=workflow_profile(),
+            work_unit_repository=wu_repo,
+            calculation_repository=cr_repo,
+            verification_repository=vr_repo,
+            bucket_event_repository=bv_repo,
+            clock=T1,
+        )
 
 
 def test_mark_verificado_completo_requires_borrador_state(repos: Repos) -> None:
@@ -431,86 +466,20 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     assert persisted.granted_verificado_completo is False
 
 
-def test_verify_emits_blocking_rule_when_registry_unresolved_real_registry(
-    repos: Repos,
-) -> None:
-    """Real e2e: a work unit anchored to a year that predates modelo
-    180's earliest revision (``valid_from=2019``) cannot resolve a
-    registry snapshot. The verifier surfaces a BLOCKING_RULE finding
-    and refuses the transition. The revision stays DRAFT."""
+def test_work_unit_creation_refuses_unresolvable_registry_snapshot_before_verify(repos: Repos) -> None:
+    """An unsupported coordinate cannot create state for a later verify path."""
 
-    wu_repo, cr_repo, _, vr_repo, bv_repo = repos
+    from ....domain.calculations.registry.errors import NoRevisionForPeriodError
 
-    work_unit = seed_work_unit(
-        wu_repo,
-        modelo=VERIFY_MODELO,
-        filing_year=2010,
-        period=VERIFY_PERIOD,
-        revision_id=VERIFY_REVISION,
-    )
-    # Direct-seed a DRAFT revision because ``calculate_modelo_revision``
-    # now runs the formula engine and would refuse the unresolvable
-    # snapshot at calculate time. This test exercises verify's
-    # BLOCKING_RULE path explicitly: the work unit was anchored at a
-    # year that predates the modelo's earliest revision, so verify's
-    # registry-snapshot resolution still fails.
-    from ....domain.calculations.registry.bindings import CasillaObservation
-    from ....domain.modelos.calculation_repository import upsert_calculation_revision
-    from ....domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id
-
-    inputs: dict[CasillaId, str] = {M180_PERCEPTOR_BASE_CASILLA: "1"}
-    overrides_map: dict[str, str] = {}
-    casillas: dict[CasillaId, Decimal] = {M180_PERCEPTOR_BASE_CASILLA: Decimal("1")}
-    rid = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id=inputs,
-        binding_overrides=overrides_map,
-        casilla_values=casillas,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    revision = CalculationRevision(
-        calculation_revision_id=rid,
-        work_unit_id=work_unit.work_unit_id,
-        state=CalculationRevisionState.BORRADOR,
-        input_values_by_casilla_id=inputs,
-        binding_overrides=overrides_map,
-        casilla_values=casillas,
-        observations=(
-            CasillaObservation(
-                casilla_id=M180_PERCEPTOR_BASE_CASILLA,
-                value=Decimal("1"),
-                legal_refs=("ley-58-2003:art-93",),
-                source_refs=("verify-unresolved-registry-test",),
-            ),
-        ),
-        created_at=T1,
-        updated_at=T1,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
-
-    report = verify_modelo_revision(
-        revision.calculation_revision_id,
-        actor="operator-A",
-        workflow_profile=workflow_profile(),
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-    )
-
-    assert report.granted_verificado_completo is False
-    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
-    assert any(f.kind is ModeloVerificationFindingKind.BLOCKING_RULE for f in report.findings)
-
-    refreshed = get_calculation_revision(
-        revision.calculation_revision_id,
-        calculation_repository=cr_repo,
-    )
-    assert refreshed.state is CalculationRevisionState.BORRADOR
+    wu_repo, _, _, _, _ = repos
+    with pytest.raises(NoRevisionForPeriodError):
+        seed_work_unit(
+            wu_repo,
+            modelo=VERIFY_MODELO,
+            filing_year=2010,
+            period=VERIFY_PERIOD,
+            revision_id=VERIFY_REVISION,
+        )
 
 
 def test_verify_reverify_collapses_to_existing_report_real_registry(repos: Repos) -> None:
@@ -807,7 +776,7 @@ def test_mark_verificado_completo_refuses_a_ledger_derived_revision(repos: Repos
             clock=T3,
         )
 
-    assert "2" in str(refusal.value)
+    assert refusal.value.context["source_transaction_count"] == 2
     reloaded = cr_repo.load().get(ledger_derived.calculation_revision_id)
     assert reloaded is not None
     assert reloaded.state is CalculationRevisionState.BORRADOR

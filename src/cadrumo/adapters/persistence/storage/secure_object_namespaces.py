@@ -25,7 +25,6 @@ from .storage_path_definitions import (
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
 SECURE_OBJECT_SCHEMA_VERSION_V2 = 2
-SECURE_OBJECT_SCHEMA_VERSION_V3 = 3
 SECURE_OBJECT_SCHEMA_VERSION_V4 = 4
 _WORKFLOW_RUN_SCHEMA_VERSION_V3 = 3
 SECURE_OBJECT_CATALOGUE_KEY = "catalogue"
@@ -309,28 +308,6 @@ PROFILE_INVENTORY_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
     key="profile_inventory_ledger",
     namespace="cadrumo.persistence.profile.inventory",
     owner="cadrumo.adapters.persistence.profile.inventory",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="default",
-    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
-)
-PROFILE_ASSETS_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="profile_assets_ledger",
-    namespace="cadrumo.persistence.profile.assets",
-    owner="cadrumo.adapters.persistence.profile.assets",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="default",
-    default_object_key=SECURE_OBJECT_DEFAULT_KEY,
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
-)
-PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="profile_assets_amortization_ledger",
-    namespace="cadrumo.persistence.profile.assets.amortization",
-    owner="cadrumo.adapters.persistence.profile.assets",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="default",
@@ -735,16 +712,6 @@ LIVE_EXPEDIENTES_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
     object_key_grammar="expedientes-snapshot:{bucket_id}:{snapshot_id}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
-)
-LIVE_DEUDAS_SNAPSHOT_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="live_deudas_snapshot",
-    namespace="cadrumo.application.live.deudas_snapshot",
-    owner="cadrumo.application.live",
-    sensitivity=SensitivityClass.FINANCIAL,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="deudas-snapshot:{bucket_id}:{snapshot_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.FULL_CUSTODY_ONLY,
 )

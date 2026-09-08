@@ -8,11 +8,10 @@ store, the secret store, and the schema-version envelope all consume
 :func:`encrypt_record`, :func:`decrypt_record`, and :func:`derive_key`.
 
 The on-wire shape of :class:`EncryptedBlob` is deliberately minimal —
-``nonce || ciphertext_with_tag``. The AEAD identifier and any version
-metadata live in the envelope record (see :mod:`adapters.persistence.storage`'s
-:class:`EncryptionMetadata`), so a future swap to e.g. ChaCha20-Poly1305
-or an Argon2id-derived KEK can define a new current envelope contract
-without changing this primitive blob shape.
+``nonce || ciphertext_with_tag``. JSON callers encode it through
+:class:`~cadrumo.adapters.persistence.storage.envelope.contract.EncryptionMetadata`;
+a future primitive can define a new current metadata contract without changing
+this raw blob shape.
 """
 
 from __future__ import annotations

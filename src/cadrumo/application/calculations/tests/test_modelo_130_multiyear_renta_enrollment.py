@@ -56,7 +56,7 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo.calculation_actions import calculate_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
@@ -233,7 +233,17 @@ def _seed_prior_year_m100(obs_repo: CalculationObservationRepository, *, filing_
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        )
+        stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
+                modelo="100",
+                filing_year=filing_year,
+                period="0A",
+                casilla_values={
+                    _M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA: _PRIOR_YEAR_NET_INCOME,
+                    _M100_RENDIMIENTO_SOURCE_1479_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1553_CASILLA: Decimal("0"),
+                    _M100_RENDIMIENTO_SOURCE_1577_CASILLA: Decimal("0"),
+                },
+            )))
     )
 
 

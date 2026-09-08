@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
@@ -18,7 +19,11 @@ from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
-from ....tests.registry_observations import registry_grounded_modelo_observation, registry_grounded_observations
+from ....tests.registry_observations import (
+    registry_grounded_modelo_observation,
+    registry_grounded_observations,
+    revision_id_for_observation,
+)
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ..iva_compensation_annual_partition import (
@@ -26,7 +31,11 @@ from ..iva_compensation_annual_partition import (
     resolve_iva_compensation_annual_partition_binding_values,
 )
 from ..m303_carry_ingress import M303CarryIngressError
-from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
+from ..observations_repository import (
+    CalculationObservationRepository,
+    ObservationEnvelopePayload,
+    ResultDispositionProjection,
+)
 from ..relation_prefill import resolve_relations_from_local_store
 from ._iva_compensation_history_support import (
     _BOX_97_BINDING,
@@ -66,7 +75,7 @@ def _save_normalized_m303_carry_observation(
                 provenance_kind="app_filing",
                 provenance_locator=f"test-local-filing:{observation.filing_year}:{observation.period}",
             ),
-            normalize_m303_carry=True,
+            stamped_revision_id=revision_id_for_observation(observation),
         )
     )
 
@@ -76,33 +85,54 @@ def _prepare_m303_carry_envelope(
     *,
     period: str,
     casilla_values: Mapping[CasillaId, Decimal],
-    disposition: ResultDisposition | None,
+    disposition: ResultDisposition,
     source_kind: str = "app_filing",
     provenance_kind: Literal["source_header", "app_filing"] = "app_filing",
     source_headers: tuple[ObservedHeaderFact, ...] = (),
-    normalize: bool = True,
-):
+) -> ObservationEnvelopePayload:
     """Build test filing evidence through the production envelope ingress."""
+    observation = registry_grounded_modelo_observation(
+        modelo="303",
+        filing_year=2025,
+        period=period,
+        casilla_values=casilla_values,
+    )
     return repository.prepare_observation_envelope(
-        registry_grounded_modelo_observation(
-            modelo="303",
-            filing_year=2025,
-            period=period,
-            casilla_values=casilla_values,
-        ),
+        observation,
         source_kind=source_kind,
         captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
         source_headers=source_headers,
-        result_disposition=(
-            ResultDispositionProjection(
-                disposition=disposition,
-                provenance_kind=provenance_kind,
-                provenance_locator=f"test-filing:2025:{period}",
-            )
-            if disposition is not None
-            else None
+        result_disposition=ResultDispositionProjection(
+            disposition=disposition,
+            provenance_kind=provenance_kind,
+            provenance_locator=f"test-filing:2025:{period}",
         ),
-        normalize_m303_carry=normalize,
+        stamped_revision_id=revision_id_for_observation(observation),
+    )
+
+
+def _raw_m303_carry_envelope(
+    *,
+    period: str,
+    casilla_values: Mapping[CasillaId, Decimal],
+    result_disposition: ResultDispositionProjection | None,
+    source_kind: str = "app_filing",
+    source_headers: tuple[ObservedHeaderFact, ...] = (),
+) -> ObservationEnvelopePayload:
+    """Attempt a malformed M303 payload; canonical model validation rejects it."""
+    observation = registry_grounded_modelo_observation(
+        modelo="303",
+        filing_year=2025,
+        period=period,
+        casilla_values=casilla_values,
+    )
+    return ObservationEnvelopePayload(
+        observation=observation,
+        source_kind=source_kind,
+        captured_at=datetime(2027, 1, 30, 12, 0, tzinfo=UTC),
+        source_headers=source_headers,
+        result_disposition=result_disposition,
+        stamped_revision_id=revision_id_for_observation(observation),
     )
 
 
@@ -275,7 +305,7 @@ def test_relation_prefill_fifo_state_refuses_printed_number_compensation_referen
                 provenance_kind="app_filing",
                 provenance_locator="test-local-filing:2025:4T",
             ),
-            normalize_m303_carry=True,
+            stamped_revision_id=revision_id_for_observation(valid_observation),
         )
         observation = envelope.observation.model_copy(
             update={
@@ -383,61 +413,42 @@ def test_annual_partition_keeps_refunded_credit_out_of_both_m390_carry_boxes(tmp
         assert refunded_values[_BOX_662_BINDING] == Decimal("0.00")
 
 
-def test_annual_partition_refuses_legacy_and_conflicting_disposition_evidence(tmp_path: Path) -> None:
+def test_annual_partition_refuses_underdeclared_and_conflicting_disposition_evidence(tmp_path: Path) -> None:
     """Missing or conflicting filing disposition cannot participate in FIFO."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID):
-        repository = CalculationObservationRepository()
-        legacy = _prepare_m303_carry_envelope(
-            repository,
+        with pytest.raises(ValidationError, match="requires canonical result disposition"):
+            _raw_m303_carry_envelope(
+                period="4T",
+                casilla_values={
+                    _M303_RESULTADO_CASILLA: Decimal("-25.00"),
+                    _M303_GENERADA_CASILLA: Decimal("25.00"),
+                },
+                result_disposition=None,
+            )
+        conflicting = _prepare_m303_carry_envelope(
+            CalculationObservationRepository(),
             period="4T",
             casilla_values={
                 _M303_RESULTADO_CASILLA: Decimal("-25.00"),
                 _M303_GENERADA_CASILLA: Decimal("25.00"),
             },
-            disposition=None,
-            normalize=False,
+            disposition=ResultDisposition.COMPENSACION,
+        ).model_copy(
+            update={
+                "source_headers": (
+                    ObservedHeaderFact(
+                        header_key="declaration_type",
+                        value="D",
+                        source_artefact_kind="submitted_file",
+                        source_locator="modelo-303:test:declaration_type:13:1",
+                    ),
+                ),
+            },
         )
-        repository.save(legacy)
-        snapshot = _modelo_390_annual_snapshot()
 
         with pytest.raises(M303CarryIngressError):
-            IvaCompensationAnnualPartitionSourceResolver(
-                repository=repository,
-                registry_snapshot=snapshot,
-            ).resolve(
-                CalculationSourceContext(
-                    bucket_id=_FIFO_BUCKET_ID,
-                    modelo="390",
-                    filing_year=2025,
-                    period=Period.from_year_and_code(2025, "0A"),
-                    revision=snapshot.revision,
-                ),
+            resolve_iva_compensation_annual_partition_binding_values(
+                _modelo_390_annual_snapshot().revision,
+                (conflicting,),
+                filing_year=2025,
             )
-
-    conflicting = _prepare_m303_carry_envelope(
-        CalculationObservationRepository(),
-        period="4T",
-        casilla_values={
-            _M303_RESULTADO_CASILLA: Decimal("-25.00"),
-            _M303_GENERADA_CASILLA: Decimal("25.00"),
-        },
-        disposition=ResultDisposition.COMPENSACION,
-        source_kind="aeat_sede_live_capture",
-        provenance_kind="source_header",
-        source_headers=(
-            ObservedHeaderFact(
-                header_key="declaration_type",
-                value="D",
-                source_artefact_kind="submitted_file",
-                source_locator="modelo-303:test:declaration_type:13:1",
-            ),
-        ),
-        normalize=False,
-    )
-
-    with pytest.raises(M303CarryIngressError):
-        resolve_iva_compensation_annual_partition_binding_values(
-            _modelo_390_annual_snapshot().revision,
-            (conflicting,),
-            filing_year=2025,
-        )

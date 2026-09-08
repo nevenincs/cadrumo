@@ -18,6 +18,7 @@ from ._preflight_support import clave_movil_provider, deadline_checker, modelo_d
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+
 _SUBMITTED_AT = datetime(2026, 5, 28, 12, 55, 0, tzinfo=UTC)
 
 

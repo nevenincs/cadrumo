@@ -35,7 +35,7 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import seed_test_profile_record
-from ....tests.registry_observations import registry_grounded_modelo_observation
+from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...modelo.calculation_actions import calculate_modelo_revision
 from ...modelo.work_lifecycle import create_work_unit
@@ -128,7 +128,12 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
             ),
             source_kind="app_filing",
             captured_at=_CLOCK,
-        )
+        stamped_revision_id=revision_id_for_observation(registry_grounded_modelo_observation(
+                modelo=_MODELO,
+                filing_year=_FILING_YEAR - 1,
+                period=_PERIOD,
+                casilla_values={_PRIOR_NEGATIVE_BASE_CASILLA: saldo},
+            )))
     )
 
 

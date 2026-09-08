@@ -957,14 +957,4 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
-    (
-        "cadrumo.domain.iva.errors.ProrrataSectorError",
-        ErrorCode(
-            code="ERROR_IVA_PRORRATA_SECTOR",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_iva_prorrata_sector",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
 )

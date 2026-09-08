@@ -231,6 +231,7 @@ def _parsed_303_submitted_file_observation(
         casillas=observed,
         headers=headers,
         extraction_coverage={"submitted_file": 1.0},
+        registry_snapshot_ref=_registry_snapshot("303", year, period).snapshot_ref,
     )
 
 
@@ -310,6 +311,7 @@ def _stored_justificante_observation(
         presented_at=_CAPTURED_AT,
         authenticated_identity=authenticated_identity,
         artefacts=(artefact,),
+        registry_snapshot_ref=_registry_snapshot(modelo, 2026, period.registry_token).snapshot_ref,
     )
 
 
@@ -507,7 +509,7 @@ def _prior_303_observation(
         ),
         headers=headers,
         extraction_coverage={"submitted_file": 1.0},
-        registry_snapshot_id=f"303:2022:{year}:{period}",
+        registry_snapshot_ref=_registry_snapshot("303", year, period).snapshot_ref,
     )
 
 

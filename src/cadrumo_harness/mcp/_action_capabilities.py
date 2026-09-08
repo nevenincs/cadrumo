@@ -35,7 +35,6 @@ from cadrumo.application.operator_surface.manifest import (
     resolve_action_catalogue,
 )
 from cadrumo.entrypoints.cli.command_api import (
-    DECLARED_UNIMPLEMENTED_SURFACES,
     VerbInputSchema,
     build_verb_input_schemas,
 )
@@ -147,13 +146,7 @@ def resolve_mcp_action_capabilities(
             raise ValueError(f"duplicate MCP result-schema identity: {schema_ref.command}")
         schema_ref_by_key[schema_ref.command] = schema_ref
 
-    # A declared-unimplemented surface has a result schema and, by construction,
-    # no input schema: there is no verb to read parameters from. Excluding it
-    # here is the same declaration honoured a second time rather than a second
-    # exemption -- were it demanded, the build would still fail on the very keys
-    # the declaration exists to hold open, and the gap would have to be hidden
-    # by deleting the result schema, which is the outcome it prevents.
-    result_keys = frozenset(schema_ref_by_key) - frozenset(DECLARED_UNIMPLEMENTED_SURFACES)
+    result_keys = frozenset(schema_ref_by_key)
     input_keys = frozenset(verb_schemas)
     if result_keys != input_keys:
         missing_input = tuple(sorted(result_keys - input_keys))

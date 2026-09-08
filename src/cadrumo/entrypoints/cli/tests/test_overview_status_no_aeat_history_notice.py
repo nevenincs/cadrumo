@@ -99,6 +99,7 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
     """The predicate stays official-source membership, not a Sociedades-only exemption."""
     from ....application.calculations.observations_repository import CalculationObservationRepository
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
+    from ....domain.calculations.registry.authority import bundled_authority
     from ....domain.calculations.registry.bindings import RegistryModeloObservation
 
     _seed_profile("webco-with-history", **_M303_READY_FACTS, **_LEGAL_ENTITY_FACTS)
@@ -111,6 +112,7 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
             repository.prepare_observation_envelope(
                 RegistryModeloObservation(modelo="303", filing_year=2025, period="1T"),
                 source_kind="aeat_sede_justificante",
+                stamped_revision_id=str(bundled_authority().snapshot("303", filing_year=2025, period="1T").revision.id),
             ),
         )
 

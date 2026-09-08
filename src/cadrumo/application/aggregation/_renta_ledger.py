@@ -73,6 +73,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.loader import load_user_profile_schema
 from ...domain.user_profile.values import UserProfileRecord
+from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import fact_value, profile_fact_index
 from . import _shared_issue_reasons
@@ -329,7 +330,7 @@ def resolve_iva_deduction_ratio(
             if regime is IVARegime.EXENTO:
                 return Decimal("0")
 
-    register = prorrata_register_repository.load()
+    register = require_prorrata_register_coordinates_current(prorrata_register_repository.load())
     entry = register.entry_for(ejercicio, sector_id=None)
     if entry is None or not regime_apportions_deduction(entry.regime):
         return None

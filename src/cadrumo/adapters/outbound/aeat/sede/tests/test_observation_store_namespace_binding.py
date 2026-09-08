@@ -31,6 +31,7 @@ from sqlalchemy import select
 
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.authority import bundled_authority
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
@@ -39,7 +40,7 @@ from .....persistence.storage.secure_object_namespaces import (
 )
 from .....persistence.storage.sql import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
-from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
+from .._iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
     FiledDeclaracionArtefact,
@@ -76,6 +77,7 @@ def _observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservat
         presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(artefact,),
+        registry_snapshot_ref=bundled_authority().snapshot("100", filing_year=2023, period="0A").snapshot_ref,
     )
 
 
@@ -96,7 +98,7 @@ def _iva_wallet_observation() -> IvaCompensationWalletObservation:
             ),
         ),
         total_pending=Decimal("1200"),
-        source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
+        source_url=AnyHttpUrl(WALLET_URL),
         captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
         raw_sha256="b" * 64,
     )

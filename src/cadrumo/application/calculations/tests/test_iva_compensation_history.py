@@ -18,14 +18,33 @@ from ....domain.iva_compensation.carry_forward import (
     enforce_iva_compensation_four_year_window,
 )
 from ....domain.iva_compensation.errors import IvaCompensationCarryForwardPolicyError
+from ....domain.iva_compensation.reconciliation import IvaCompensationAuthoritySource
 from ....tests.secure_sql import isolated_runtime_profile
 from ..iva_compensation_history import IvaCompensationHistoryRepository, iva_compensation_period_key
 from ..iva_wallet_reconciliation import reconcile_iva_compensation_wallet
-from ._iva_compensation_history_support import _TAXPAYER_REF, _state, _wallet
+from ._iva_compensation_history_support import _TAXPAYER_REF, _state, _wallet, m303_registry_snapshot_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _HISTORY_BUCKET_ID = "30330300-0000-4000-8000-000000000305"
+
+
+def _local_recurrence_source_for_test(
+    amount: Decimal,
+    *,
+    source_filing_year: int,
+    source_period: str,
+) -> IvaCompensationAuthoritySource:
+    return IvaCompensationAuthoritySource(
+        source_kind="local_recurrence",
+        amount=amount,
+        source_locator="local-recurrence:modelo-303-compensacion-pendiente-anteriores",
+        captured_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
+        source_modelo="303",
+        source_filing_year=source_filing_year,
+        source_periods=(Period.from_year_and_code(source_filing_year, source_period),),
+        registry_snapshot_refs=(m303_registry_snapshot_ref(source_filing_year, source_period),),
+    )
 
 
 def test_iva_compensation_carry_forward_report_tracks_source_age_application_and_remaining_balance() -> None:
@@ -56,8 +75,8 @@ def test_iva_compensation_carry_forward_report_tracks_source_age_application_and
 
 def test_iva_compensation_carry_forward_report_marks_expired_review_required() -> None:
     report = build_iva_compensation_carry_forward_report(
-        (_state(filing_year=2021, period="4T", generated=Decimal("100.00")),),
-        as_of_year=2026,
+        (_state(filing_year=2022, period="4T", generated=Decimal("100.00")),),
+        as_of_year=2027,
     )
 
     assert report.lots[0].age_years == 5
@@ -76,18 +95,18 @@ def test_iva_compensation_carry_forward_report_preserves_unallocated_application
 
 def test_iva_compensation_four_year_window_blocks_expired_remaining_lot() -> None:
     report = build_iva_compensation_carry_forward_report(
-        (_state(filing_year=2021, period="4T", generated=Decimal("100.00")),),
-        as_of_year=2026,
+        (_state(filing_year=2022, period="4T", generated=Decimal("100.00")),),
+        as_of_year=2027,
     )
 
     with pytest.raises(IvaCompensationCarryForwardPolicyError) as excinfo:
         enforce_iva_compensation_four_year_window(report)
 
     # The refusal now renders its registered key; the expired lot it names rides
-    # in machine facts, which is where the 2021/4T identity has to be readable.
+    # in machine facts, which is where the 2022/4T identity has to be readable.
     assert str(excinfo.value) == "errors.refused.refused_filing_calculate"
     context = excinfo.value.context or {}
-    assert context["source_filing_year"] == "2021"
+    assert context["source_filing_year"] == "2022"
     assert context["source_period"] == "4T"
     assert context["remaining_balance_expired"] is True
 
@@ -95,10 +114,10 @@ def test_iva_compensation_four_year_window_blocks_expired_remaining_lot() -> Non
 def test_iva_compensation_four_year_window_allows_fully_applied_expired_lot() -> None:
     report = build_iva_compensation_carry_forward_report(
         (
-            _state(filing_year=2021, period="4T", generated=Decimal("100.00")),
+            _state(filing_year=2022, period="4T", generated=Decimal("100.00")),
             _state(filing_year=2024, period="1T", applied=Decimal("100.00")),
         ),
-        as_of_year=2026,
+        as_of_year=2027,
     )
 
     assert enforce_iva_compensation_four_year_window(report) is report
@@ -124,8 +143,14 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
+        target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
         wallet=_wallet(Decimal("80.00")),
         local_recurrence_amount=source_lot.remaining_amount,
+        local_recurrence_source=_local_recurrence_source_for_test(
+            source_lot.remaining_amount,
+            source_filing_year=source_lot.source_filing_year,
+            source_period=source_lot.source_period.registry_token,
+        ),
         decided_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
     )
     assert divergent.divergence == "wallet_higher"
@@ -135,8 +160,14 @@ def test_multiyear_compensation_flow_covers_expiry_boundary_wallet_divergence_an
         taxpayer_nif=_TAXPAYER_REF,
         target_year=2026,
         target_period=Period.from_year_and_code(2026, "2T"),
+        target_registry_snapshot_ref=m303_registry_snapshot_ref(2026, "2T"),
         wallet=None,
         local_recurrence_amount=source_lot.remaining_amount,
+        local_recurrence_source=_local_recurrence_source_for_test(
+            source_lot.remaining_amount,
+            source_filing_year=source_lot.source_filing_year,
+            source_period=source_lot.source_period.registry_token,
+        ),
         decided_at=datetime(2026, 5, 19, 10, 0, tzinfo=UTC),
     )
     assert fallback.selected_authority == "local_recurrence"

@@ -163,12 +163,7 @@ def _gather_observations_for_snapshot(
             # stamp is dropped from the fold rather than silently injecting a
             # stale value into the relation.
             obs = payload.observation
-            refused = revision_carry_outcome(
-                payload.stamped_revision_id,
-                source_modelo=obs.modelo,
-                source_filing_year=obs.filing_year,
-                source_period=obs.period,
-            ).refused
+            refused = revision_carry_outcome(payload.registry_snapshot_ref).refused
             if refused:
                 continue
             key = (obs.modelo, obs.filing_year, obs.period)

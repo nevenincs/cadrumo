@@ -229,6 +229,13 @@ def test_observe_local_exposes_and_executes_explicit_official_evidence_replaceme
                 ),
                 source_kind="aeat_sede_justificante",
                 captured_at=datetime(2026, 4, 1, 9, 30, tzinfo=UTC),
+                stamped_revision_id=str(
+                    bundled_authority().snapshot(
+                        "303",
+                        filing_year=period.filing_year,
+                        period=period.registry_token,
+                    ).revision.id
+                ),
                 source_metadata={
                     "aeat_register_status": "ALTA",
                     "aeat_expediente_id": "202530300000001Z",

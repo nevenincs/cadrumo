@@ -38,6 +38,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import OperatorActionAxis
 from ...core.time.utc import UtcInstant, validate_utc_aware
 from ..calculations.registry.ids import LegalRefId, SourceRefId, VerificationExpectationId
+from ..calculations.registry.schema_references import RegistrySnapshotRef
 from .errors import ModeloValidationError
 from .filing_text import ModeloActorLabel
 
@@ -251,6 +252,7 @@ class VerificationReport(BaseModel):
 
     verification_report_id: VerificationReportId
     calculation_revision_id: CalculationRevisionId
+    registry_snapshot_ref: RegistrySnapshotRef
     completeness_status: VerificationCompletenessStatus
     findings: tuple[ModeloVerificationFinding, ...] = Field(default_factory=tuple)
     resolved_casilla_ids: tuple[CasillaId, ...] = Field(default_factory=tuple)

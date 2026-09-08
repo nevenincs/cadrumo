@@ -51,6 +51,7 @@ from .....core.period import Period
 from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import bundled_authority
+from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.repository import upsert_work_unit
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -120,6 +121,17 @@ def _seed_work_unit(*, modelo: str = "130", filing_year: int = 2026, period: str
     return work_unit_id
 
 
+def _registry_snapshot_ref_for_work_unit(work_unit_id: str) -> RegistrySnapshotRef:
+    work_unit = WorkUnitCatalogueRepository().load().get(work_unit_id)
+    assert work_unit is not None
+    return RegistrySnapshotRef(
+        modelo=work_unit.modelo,
+        revision_id=work_unit.revision_id,
+        modelo_year=work_unit.filing_year,
+        period=work_unit.period.registry_token,
+    )
+
+
 def _reconcile(work_unit_id: str) -> None:
     modelo_reconcile(
         ModeloReconciliationCommand(
@@ -151,6 +163,7 @@ def _fully_populated_record(
         bucket_event_id=bucket_event_id,
         bucket_id=_active_bucket_id(),
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=_registry_snapshot_ref_for_work_unit(work_unit_id),
         source_kind=ModeloReconciliationEvidenceKind.DECLARATION,
         source_ref="/operator/evidence/modelo-100-2024-declaracion.pdf",
         verdict=ModeloReconciliationVerdict.MISMATCHES,
@@ -212,6 +225,16 @@ def test_record_roundtrips_with_every_defaultable_field_populated_non_default() 
     assert len(loaded.advisories) == 1
     assert loaded.advisories[0].context == {"reason": "no_persisted_revision", "modelo": "100"}
     assert loaded.source_ref.endswith("modelo-100-2024-declaracion.pdf")
+
+
+def test_record_requires_the_canonical_registry_snapshot_reference() -> None:
+    work_unit_id = _seed_work_unit()
+    record = _fully_populated_record(work_unit_id=work_unit_id, bucket_event_id="7" * 64)
+    payload = record.model_dump()
+    del payload["registry_snapshot_ref"]
+
+    with pytest.raises(ValidationError, match="registry_snapshot_ref"):
+        ModeloReconciliationRecord.model_validate(payload)
 
 
 def test_anti_tautology_stored_payload_with_a_deleted_field_refuses_on_load() -> None:
@@ -359,16 +382,17 @@ def test_grounded_diffs_survive_the_persist_and_read_back_cycle() -> None:
     assert entry.diffs[0].source_refs == ("aeat-dr-100-2024-dictionary",)
 
 
-def test_finalise_reconciliation_issues_exactly_one_batched_save() -> None:
-    """The write path hands BOTH writes to a single ``save_many`` call.
+def test_finalise_reconciliation_issues_exactly_one_atomic_persistence_call() -> None:
+    """The write path hands BOTH writes to one atomic persistence call.
 
     The companion runtime test below proves that a batch rolls back as a unit.
-    That property only protects the reconcile write if the reconcile write
-    actually is one batch, and no runtime observation distinguishes one batched
-    save from two sequential ones on the success path — the rows look identical
-    either way. So the composition is gated structurally, by reading the source
-    of the function that performs it: exactly one ``save_many``, carrying a
-    two-element tuple. Splitting it into two sequential saves reopens the
+    The application owns the one-call composition through its persistence port;
+    the adapter owns the concrete ``save_many`` batch. Keeping that boundary
+    explicit prevents the application from reaching through the port to a
+    storage implementation while still refusing a split event/record write.
+    The composition is gated structurally, by reading the source of the
+    function that performs it: exactly one ``persist_with_event`` call carrying
+    both objects. Splitting it into two sequential calls reopens the
     desynchronisation window and reds this test, which a rollback test alone
     does not.
     """
@@ -380,26 +404,16 @@ def test_finalise_reconciliation_issues_exactly_one_batched_save() -> None:
 
     source = inspect.getsource(reconcile_module._finalise_reconciliation)
     tree = ast.parse(textwrap.dedent(source))
-    batched_saves = [
+    atomic_calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "save_many"
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "persist_with_event"
     ]
 
-    assert len(batched_saves) == 1, "the record and the event must be committed in ONE batched save, not two"
-    (batched,) = batched_saves
-    assert len(batched.args) == 1
-    written = batched.args[0]
-    assert isinstance(written, ast.Tuple)
-    assert len(written.elts) == 2, "the one batch must carry both the event-catalogue write and the record write"
-    # Nothing else may commit inside this function: a stray single-row save
-    # would be a second transaction wearing a different name.
-    stray_saves = [
-        node
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "save"
-    ]
-    assert stray_saves == []
+    assert len(atomic_calls) == 1, "the record and event must use ONE atomic persistence call, not two"
+    (atomic_call,) = atomic_calls
+    assert len(atomic_call.args) == 2
+    assert {keyword.arg for keyword in atomic_call.keywords} == set()
 
 
 def test_a_failed_write_in_the_batch_rolls_the_whole_batch_back() -> None:

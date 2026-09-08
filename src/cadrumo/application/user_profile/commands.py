@@ -20,10 +20,9 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...core.prose_elision import ElidedProse
 from ...domain.calculations.registry.ids import RevisionId
-from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from ...domain.user_profile.values import UserProfileFact
 
 __all__ = [
-    "ProfileImportResult",
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfileSnapshot",
@@ -152,18 +151,3 @@ class ProfileStaleCheckReport(BaseModel):
 # Portable export / import
 # ---------------------------------------------------------------------------
 
-
-class ProfileImportResult(BaseModel):
-    """Outcome of importing a portable bundle.
-
-    Attributes:
-        profile: The imported :class:`UserProfileRecord`.
-        imported_at: The timestamp of import.
-        issues: Any validation issues.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    profile: UserProfileRecord
-    imported_at: datetime
-    issues: tuple[ProfileValidationIssue, ...] = ()

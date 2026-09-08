@@ -3,32 +3,27 @@
 from __future__ import annotations
 
 import base64
-import json
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, ClassVar, Final, Literal, cast
+from typing import TYPE_CHECKING, ClassVar, Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import (
     bounded_canonical_json_bytes,
     canonical_json_digest,
-    reject_duplicate_json_members,
-    reject_json_constant,
     validate_prefixed_digest,
 )
 from .....core.identity import canonical_profile_bucket_id
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .digest_model import CustodyDigestModel
 from .errors import ProfileCustodyRecordError
-from .kdf_supervision import unlock_profile_custody_recovery_material, wrap_profile_custody_recovery_material
+from .kdf_supervision import wrap_profile_custody_recovery_material
 from .records import (
     PROFILE_CUSTODY_PASSWORD_GENERATION_MAX,
     ProfileCustodyKdfParameters,
     ProfileCustodyWrappedDek,
 )
-from .sentinel_contract import ProfileCustodySentinelRecord
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -154,43 +149,6 @@ class ProfileCustodyRecoveryEnvelope(_RecoveryPayload, CustodyDigestModel):
             raise ProfileCustodyRecordError("cannot construct a valid profile recovery envelope") from exc
 
 
-def parse_profile_custody_recovery_envelope(value: bytes) -> ProfileCustodyRecoveryEnvelope:
-    """Parse exactly one bounded canonical recovery envelope."""
-    if len(value) > PROFILE_CUSTODY_RECOVERY_MAX_BYTES:
-        raise ProfileCustodyRecordError("profile recovery envelope exceeds its canonical byte limit")
-    try:
-        parsed = json.loads(
-            value.decode(_UTF_8_ENCODING, errors="strict"),
-            object_pairs_hook=reject_duplicate_json_members,
-            parse_constant=reject_json_constant,
-        )
-        if not isinstance(parsed, dict):
-            raise ValueError("profile recovery envelope must be a JSON object")
-        envelope = ProfileCustodyRecoveryEnvelope.model_validate_json(
-            bounded_canonical_json_bytes(
-                cast(dict[str, object], parsed),
-                maximum_bytes=PROFILE_CUSTODY_RECOVERY_MAX_BYTES,
-                subject="profile recovery envelope",
-            ),
-        )
-        if envelope.canonical_json_bytes() != value:
-            raise ValueError("profile recovery envelope is not canonical")
-        return envelope
-    except (UnicodeDecodeError, ValidationError, ValueError, TypeError) as exc:
-        raise ProfileCustodyRecordError("profile recovery envelope is not a valid current-format record") from exc
-
-
-def profile_custody_recovery_aad(envelope: ProfileCustodyRecoveryEnvelope) -> bytes:
-    """Derive the one closed recovery-wrapper AAD domain from its record."""
-    return profile_custody_recovery_aad_for(
-        profile_id=envelope.profile_id,
-        dek_epoch=envelope.dek_epoch,
-        recovery_generation=envelope.recovery_generation,
-        kdf=envelope.kdf,
-        aad=envelope.aad,
-    )
-
-
 def create_profile_custody_recovery_envelope(
     *,
     profile_id: UUID,
@@ -263,32 +221,6 @@ class ProfileCustodyRecoveryUnlock:
     dek: bytes
 
 
-def unlock_profile_custody_recovery(
-    envelope: ProfileCustodyRecoveryEnvelope,
-    recovery_secret: str,
-    *,
-    sentinel: ProfileCustodySentinelRecord,
-    settings: Settings | None = None,
-) -> ProfileCustodyRecoveryUnlock:
-    """Use the supervised unwrap boundary for an explicit recovery secret."""
-    dek = unlock_profile_custody_recovery_material(
-        profile_id=envelope.profile_id,
-        dek_epoch=envelope.dek_epoch,
-        kdf=envelope.kdf,
-        wrapped_dek=envelope.wrapped_dek,
-        secret=recovery_secret,
-        associated_data=profile_custody_recovery_aad(envelope),
-        sentinel=sentinel,
-        settings=settings,
-    )
-    return ProfileCustodyRecoveryUnlock(
-        profile_id=envelope.profile_id,
-        dek_epoch=envelope.dek_epoch,
-        recovery_digest=envelope.self_digest,
-        dek=dek,
-    )
-
-
 __all__ = [
     "PROFILE_CUSTODY_RECOVERY_FILENAME",
     "PROFILE_CUSTODY_RECOVERY_MAX_BYTES",
@@ -297,7 +229,4 @@ __all__ = [
     "ProfileCustodyRecoveryEnvelope",
     "ProfileCustodyRecoveryUnlock",
     "create_profile_custody_recovery_envelope",
-    "parse_profile_custody_recovery_envelope",
-    "profile_custody_recovery_aad",
-    "unlock_profile_custody_recovery",
 ]

@@ -23,13 +23,14 @@ from ....domain.calculations.registry.schema import ModeloRevision
 from .._operator_override_advisory import collect_operator_override_divergence_diagnostics
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_actions import _reject_caller_overrides_of_source_bindings, _source_owned_bound_casilla_ids
-from ..calculation_source_policy import BUCKET_AGGREGATION_OWNED_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
+from ..calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
+from ..calculation_source_policy import CALLER_OVERRIDABLE_CARRY_SOURCES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 #: The casilla-override guard's effective set: every bucket-owned source kind
 #: except those a caller is explicitly allowed to carry.
-_GUARDED_SOURCES = frozenset(BUCKET_AGGREGATION_OWNED_SOURCES) - frozenset(CALLER_OVERRIDABLE_CARRY_SOURCES)
+_GUARDED_SOURCES = frozenset(CALCULATION_ROUTE_ENROLLED_SOURCES) - frozenset(CALLER_OVERRIDABLE_CARRY_SOURCES)
 
 
 @pytest.fixture(scope="module")

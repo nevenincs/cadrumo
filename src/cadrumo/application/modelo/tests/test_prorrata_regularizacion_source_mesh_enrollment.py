@@ -133,6 +133,9 @@ def _register_with_carried_prior() -> ProrrataRegister:
                 provisional_percentage=_MANUAL_PROVISIONAL_PERCENTAGE,
                 provisional_provenance=ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
                 source_observation_ref=f"303:{_PRIOR_YEAR}:4T",
+                source_registry_snapshot_refs=(
+                    bundled_authority().snapshot("303", filing_year=_PRIOR_YEAR, period="4T").snapshot_ref,
+                ),
             ),
         ),
     )
@@ -168,7 +171,6 @@ def _save_current_year_source_observations(repository: CalculationObservationRep
                     provenance_kind="app_filing",
                     provenance_locator=f"test-local-filing:{_FILING_YEAR}:{period}",
                 ),
-                normalize_m303_carry=True,
             )
         )
 

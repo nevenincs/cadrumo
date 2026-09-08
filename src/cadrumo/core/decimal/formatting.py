@@ -1,8 +1,8 @@
 """Canonical :class:`~decimal.Decimal` formatting helpers for the AEAT domain.
 
 Consolidates the four independent ``_format_decimal`` copies that previously
-lived in :mod:`_censo_live`, :mod:`_reconcile`, :mod:`_projection`, and
-:mod:`_translator`. All call-sites must import from this module.
+lived in ``_censo_live``, ``_reconcile``, ``_projection``, and
+``_translator``. All call-sites must import from this module.
 """
 
 from __future__ import annotations

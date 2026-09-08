@@ -279,6 +279,7 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
     from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ....core.bucket_pointer import resolve_active_bucket_id
     from ....core.period import Period
+    from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
     from ....domain.modelos.calculation_revision import (
         CalculationRevision,
         CalculationRevisionCatalogue,
@@ -337,6 +338,12 @@ def test_modification_refused_when_row_feeds_finalized_modelo() -> None:
                 revision_id: CalculationRevision(
                     calculation_revision_id=revision_id,
                     work_unit_id=work_unit_id,
+                    registry_snapshot_ref=RegistrySnapshotRef(
+                        modelo="303",
+                        revision_id="2022",
+                        modelo_year=2025,
+                        period="1T",
+                    ),
                     state=CalculationRevisionState.VERIFICADO_COMPLETO,
                     input_values_by_casilla_id={_REVISION_CASILLA: "1"},
                     binding_overrides={},

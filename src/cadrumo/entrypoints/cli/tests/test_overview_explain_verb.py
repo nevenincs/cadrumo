@@ -95,7 +95,7 @@ def test_explain_721_returns_structured_payload_not_crash() -> None:
     """
 
     result = invoke_cached_cli(
-        ["app", "overview", "explain", "721", "--year", "2024"],
+        ["--language", "en", "app", "overview", "explain", "721", "--year", "2024"],
     )
     assert result.exit_code == 0, result.output
     assert "OverviewExplainError" not in result.output, result.output

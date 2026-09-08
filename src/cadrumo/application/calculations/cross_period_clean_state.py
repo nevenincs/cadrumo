@@ -35,6 +35,7 @@ from ...domain.calculations.registry.relations import (
     source_presence_gaps,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
 from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
@@ -71,6 +72,7 @@ from .observations_repository import (
     is_official_aeat_observation_source,
 )
 from .revision_carry_gate import revision_carry_outcome
+from .verification_report_gate import require_verification_report_coordinates_current
 
 
 def cross_period_dependency_requirements(snapshot: RegistrySnapshot) -> tuple[CrossPeriodDependencyRequirement, ...]:
@@ -459,7 +461,7 @@ def evaluate_cross_period_clean_state(
     """
     filing_catalogue = filing_repository.load()
     calculation_catalogue = calculation_repository.load()
-    verification_catalogue = verification_repository.load()
+    verification_catalogue = require_verification_report_coordinates_current(verification_repository.load())
     resolved_justificante_repository = justificante_repository or JustificanteRepository()
     expected_member_sets_by_key = _expected_member_sets_by_key(expected_member_sets)
     non_filer_modelos = _non_filer_modelos(
@@ -657,10 +659,12 @@ def _revision_carry_check(
     law-determined re-confirmation.
     """
     refused = revision_carry_outcome(
-        stamped_revision_id,
-        source_modelo=source_modelo,
-        source_filing_year=source_filing_year,
-        source_period=source_period.registry_token,
+        RegistrySnapshotRef(
+            modelo=source_modelo,
+            revision_id=stamped_revision_id,
+            modelo_year=source_filing_year,
+            period=source_period.registry_token,
+        )
     ).refused
     if refused:
         return [CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE]
@@ -985,6 +989,9 @@ def _filing_revision_blockers(
     if revision is None:
         blockers.append(CrossPeriodCleanStateBlocker.MISSING_CALCULATION_REVISION)
     else:
+        if revision_carry_outcome(revision.registry_snapshot_ref).refused:
+            blockers.append(CrossPeriodCleanStateBlocker.REGISTRY_REVISION_DIVERGENCE)
+            return None, blockers
         revision_state = revision.state
         if revision.state is not CalculationRevisionState.PRESENTADO:
             blockers.append(CrossPeriodCleanStateBlocker.UNFILED_CALCULATION_REVISION)

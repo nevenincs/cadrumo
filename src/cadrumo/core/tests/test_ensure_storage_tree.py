@@ -19,7 +19,6 @@ from __future__ import annotations
 import os
 import stat
 from pathlib import Path
-from typing import Final
 
 import pytest
 
@@ -29,11 +28,6 @@ from ..errors.hierarchy import CoreValidationError
 from ..storage_materialization import ensure_storage_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
-    {"tokens", "secrets", "blobs", "live-state", "logs", "cache", "drafts"},
-)
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 
 def test_settings_and_derived_path_reads_do_not_materialise_storage(tmp_path: Path) -> None:

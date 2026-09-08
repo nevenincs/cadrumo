@@ -5,7 +5,6 @@ cli:
         acquisition_year_help: Any d'adquisició del bé.
         art108_help: Si el bé té la consideració de bé d'inversió segons LIVA art.
           108.
-        asset_ref_help: Referència creuada opcional a un identificador d'AssetRecord.
         cuota_soportada_help: IVA suportat total en l'adquisició (positiu).
         declare_help: Declara un bé d'inversió per a la seva regularització d'IVA.
         description_help: Descripció del bé.
@@ -529,12 +528,6 @@ cli:
         state_help: 'Filtre d''estat del snapshot: active, superseded, discarded o
           all'
         view_help: Mostrar un snapshot de l'esborrany del model 100
-      deudas:
-        app_help: Snapshots de deutes AEAT de només lectura
-        latest_help: Mostra el snapshot de deutes més recent
-        list_help: Llista els snapshots de deutes desats
-        snapshot_id_help: Id del snapshot (o prefix no ambigu)
-        view_help: Mostra un snapshot de deutes i cada deute pendent que conté
       expediente_help: Identificador d'expedient AEAT
       expedientes:
         app_help: Snapshots d'expedients AEAT de només lectura
@@ -1265,8 +1258,7 @@ cli:
         amend_no_detail_rows_help: Declarar que aquesta esmena no té registres de
           detall. En els models 184, 232, 347 i 349 els registres són la declaració,
           de manera que declarar que no n'hi ha cap no és el mateix que no dir res;
-          si s'ometen aquesta opció i --row, l'esmena es rebutja en lloc de
-          suposar-se.
+          si s'ometen aquesta opció i --row, l'esmena es rebutja en lloc de suposar-se.
         amend_rows_contradiction: Feu servir --row o --no-detail-rows, però no tots
           dos; --no-detail-rows declara que no hi ha registres de detall.
         amend_set_required: --set és obligatori almenys una vegada per a una complementària.
@@ -1371,14 +1363,6 @@ cli:
         create_reused_renamed: S'ha retornat la unitat de treball existent (idempotent
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
-        create_stub_modelo_151_refused: 'El model %{modelo} (règim especial d impatriats,
-          Llei Beckham) no està suportat per crear unitats de treball en aquest CLI.
-          Base legal: Llei 35/2006 art. 93 LIRPF, RD 439/2007 art. 113, Ordre EHA/2887/2008.
-          Presenta la declaració a la Seu de l AEAT.'
-        create_stub_modelo_210_refused: 'El model %{modelo} (IRNR, impost sobre la
-          renda de no residents) no està suportat per crear unitats de treball en
-          aquest CLI. Base legal: RD legislatiu 5/2004 TRLIRNR i art. 28 TRLIRNR.
-          Presenta la declaració mitjançant el tràmit G320 de la Seu de l AEAT a sede.agenciatributaria.gob.es.'
         create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD, transmissions
           patrimonials i actes juridics documentats) no està suportat per crear unitats
           de treball en aquest CLI. Fonament legal: Ley 28/1990 i competència autonòmica
@@ -1395,15 +1379,6 @@ cli:
           acompanya el Model 650) no està suportat per crear unitats de treball en
           aquest CLI. Fonament legal: Ley 29/1987 LISyD; presenteu-lo davant la Hacienda
           autonòmica competent.'
-        create_stub_modelo_714_refused: 'El model %{modelo} (impost sobre el patrimoni)
-          no està suportat per crear unitats de treball en aquest CLI. Base legal:
-          Llei 19/1991 art. 28 i Ordre HAC/1023/2021. Presenta la declaració a la
-          Seu de l AEAT.'
-        create_stub_modelo_refused: 'El model %{modelo} (declaració informativa sobre
-          monedes virtuals situades a l estranger) no està suportat per crear unitats
-          de treball en aquest CLI. Autoritat legal: Ordre HFP/886/2023 i RD 1065/2007
-          art. 42 quàter; el llindar informatiu és de 50.000 EUR a 31 de desembre.
-          Presenta la declaració a la Seu de l AEAT quan hi hagi obligació legal.'
         dependencies_help: Mostra dependències d'historial de presentacions entre
           models i els bloquejos clean-state actuals per a una presentació objectiu
         dependencies_period_requires_modelo: L'opció --period requereix --modelo.
@@ -1830,13 +1805,7 @@ cli:
         NAME' abans de configurar l'autenticació.
       output_language_help: Idioma del text de sortida (es, en, ca, hu).
       provider_help: Identificador del proveïdor (p.ex. certificado-electronico)
-      providers:
-        status_implemented: disponible
-        status_reserved: reservat
-        status_unavailable_gloss: no disponible encara
       providers_help: Llistar proveïdors d'autenticació suportats
-      reserved_provider: 'Proveïdor d''autenticació reservat però no implementat:
-        %{provider}.'
       reset_all_help: Restablir tots els proveïdors d autenticació coneguts
       reset_help: Retirar la configuració local del proveïdor, les sessions, els bloquejos,
         els certificats registrats i els secrets desats
@@ -2815,11 +2784,11 @@ cli:
         domestic_current). Obligatori perquè la quota suportada es dedueixi; la taxonomia
         no s'infereix.
       derive_non_derivable: '{category} no té un tipus espanyol simple que es pugui
-        derivar: {note} Indiqueu --taxable-base, --iva-rate i --iva-amount a mà per a
-        aquesta categoria.'
+        derivar: {note} Indiqueu --taxable-base, --iva-rate i --iva-amount a mà per
+        a aquesta categoria.'
       derive_substrate_incomplete: '{category} es va declarar derivable però no ha
-        produït cap base d''IVA. Indiqueu --taxable-base, --iva-rate i --iva-amount a mà
-        per a aquesta categoria.'
+        produït cap base d''IVA. Indiqueu --taxable-base, --iva-rate i --iva-amount
+        a mà per a aquesta categoria.'
       file_exclusive: --file no pot combinar-se amb un id de transacció ni --classification.
       file_help: Ruta a un fitxer CSV amb columnes transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -2828,14 +2797,13 @@ cli:
       help: Classificar un moviment del llibre al perfil actiu
       id_help: Id del moviment del llibre a classificar
       id_required: Cal un id de transacció quan no s'usa --file.
-      irpf_category_help: 'Identificador de categoria d''IRPF. Les factures
-        professionals cobrades en net fan servir actividad_economica; els lloguers
-        pagats en net fan servir arrendamiento_local o
-        arrendamiento_vivienda_afecto. Royalties i els ingressos de la SGAE són
-        capital mobiliario segons l''art. 25.4 LIRPF quan el contribuent no és
-        l''autor, i activitat econòmica segons l''art. 27 LIRPF quan sí que ho és i
-        exerceix l''activitat. Executeu aeat app ledger categories per veure el
-        catàleg complet.'
+      irpf_category_help: Identificador de categoria d'IRPF. Les factures professionals
+        cobrades en net fan servir actividad_economica; els lloguers pagats en net
+        fan servir arrendamiento_local o arrendamiento_vivienda_afecto. Royalties
+        i els ingressos de la SGAE són capital mobiliario segons l'art. 25.4 LIRPF
+        quan el contribuent no és l'autor, i activitat econòmica segons l'art. 27
+        LIRPF quan sí que ho és i exerceix l'activitat. Executeu aeat app ledger categories
+        per veure el catàleg complet.
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2945,10 +2913,9 @@ cli:
       negative_amount: L'--amount %{raw} ha de ser una magnitud no negativa. Indica
         l'import sense signe i defineix el flux amb --direction (OUTGOING per a sortides,
         INCOMING per a entrades, INTERNAL_TRANSFER entre els teus propis comptes).
-      unknown_category: '--category-id {category!r} no reconegut. Indica un
-        identificador de categoria sense prefix, com {example!r}, no una clau
-        composta ni amb prefix de família. Executeu aeat app ledger categories per
-        veure el catàleg reconegut.'
+      unknown_category: --category-id {category!r} no reconegut. Indica un identificador
+        de categoria sense prefix, com {example!r}, no una clau composta ni amb prefix
+        de família. Executeu aeat app ledger categories per veure el catàleg reconegut.
       unknown_provider: 'Proveïdor d''importació --provider {provider!r} desconegut.
         Proveïdors reconeguts: {providers}.'
     exclude:
@@ -2976,9 +2943,9 @@ cli:
         són una vista prèvia del que una importació real afegiria i ometria.'
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
+      file_help: Ruta a l'arxiu de l'extracte bancari o directori
       file_refused: 'Extracte rebutjat i omès: {file}. La resta de la carpeta s''ha
         importat.'
-      file_help: Ruta a l'arxiu de l'extracte bancari o directori
       help: Importar extractes bancaris o registres al llibre comptable
       likely_duplicates: '{count} fila(es) importada(es) comparteixen data i import
         amb una transacció ja present al llibre, però tenen una descripció diferent,

@@ -58,7 +58,6 @@ class BienInversionDeclarationCommand(BaseModel):
     prorrata_inicial_pct: Decimal
     kind: BienInversionKind
     art108_elegible: bool = True
-    asset_record_ref: str | None = None
     prorrata_sector_id: str | None = None
     disposal_year: NonNegativeInt | None = None
     disposal_regime: BienInversionDisposalRegime | None = None
@@ -125,7 +124,6 @@ def declare_bien_inversion(
         prorrata_inicial_pct=command.prorrata_inicial_pct,
         kind=command.kind,
         art108_elegible=command.art108_elegible,
-        asset_record_ref=command.asset_record_ref,
         acquisition_ledger_id=command.acquisition_ledger_id,
         prorrata_sector_id=command.prorrata_sector_id,
         disposal=resolve_bien_inversion_disposal(

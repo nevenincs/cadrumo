@@ -17,6 +17,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ..calculations.registry.ids import RevisionId
 from ..calculations.registry.m303_orden_projection_models import M303RegimenSimplificadoSnapshot
+from ..calculations.registry.schema_references import RegistrySnapshotRef
 from ..filing_evidence import FilingEvidenceReference
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from ..iva.refund_eligibility import is_last_filing_period_of_year
@@ -88,6 +89,26 @@ class M303RegimenSimplificadoAnnualSummaryHandoff(BaseModel):
     values: Mapping[CasillaId, Decimal]
     target_calculation_revision_id: CalculationRevisionId | None = None
     digest: ContentDigest
+
+    @property
+    def source_registry_snapshot_ref(self) -> RegistrySnapshotRef:
+        """Canonical source registry coordinate carried by the distributed fields."""
+        return RegistrySnapshotRef(
+            modelo=self.source_modelo,
+            revision_id=self.source_registry_revision_id,
+            modelo_year=self.source_filing_year,
+            period=self.source_period.registry_token,
+        )
+
+    @property
+    def target_registry_snapshot_ref(self) -> RegistrySnapshotRef:
+        """Canonical target registry coordinate carried by the distributed fields."""
+        return RegistrySnapshotRef(
+            modelo=self.target_modelo,
+            revision_id=self.target_registry_revision_id,
+            modelo_year=self.target_filing_year,
+            period=self.target_period.registry_token,
+        )
 
     @classmethod
     def assembled(

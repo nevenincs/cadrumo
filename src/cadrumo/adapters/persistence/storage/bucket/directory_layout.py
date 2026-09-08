@@ -6,7 +6,7 @@ and carries exactly two subdirectories:
 - ``db/``    relational state (SQLite database files).
 - ``blobs/`` opaque artefact storage (sealed ciphertext blobs).
 
-This module RESOLVES that layout and destroys it; it does not create it. A
+This module RESOLVES that layout; it does not create or destroy it. A
 bucket root comes into existence exactly once, by capsule publication's atomic
 no-replace rename, and a second creator here would target the very directory
 that rename must claim -- measured, ``bucket_paths(...).bucket_dir`` and the
@@ -19,39 +19,15 @@ never compose the layout themselves.
 
 from __future__ import annotations
 
-import gc
-import secrets
-import shutil
-from enum import StrEnum
 from pathlib import Path, PureWindowsPath
-from typing import Literal
 
 from pydantic import BaseModel
 
 from .....core.identity import BucketId
-from .....core.logging import get_logger
 from .....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .errors import BucketValidationError
-
-_log = get_logger(__name__)
-
-
-class TreeRemovalErrorPolicy(StrEnum):
-    """What a recursive removal does when the filesystem refuses.
-
-    ``RAISE`` surfaces the error to the caller; ``IGNORE`` proceeds and leaves whatever
-    could not be removed. The choice is a deletion-safety decision, so it is named
-    rather than passed as one of two bare strings through two signatures.
-    """
-
-    RAISE = "raise"
-    IGNORE = "ignore"
-
-
-TreeRemovalErrorPolicyValue = Literal[TreeRemovalErrorPolicy.RAISE, TreeRemovalErrorPolicy.IGNORE]
-"""The same policy where a boundary parameter must accept the plain token."""
 
 
 class BucketPaths(BaseModel):
@@ -156,68 +132,8 @@ def bucket_paths(root: Path, bucket_id: str) -> BucketPaths:
     )
 
 
-def trash_rename_and_remove(
-    target: Path,
-    *,
-    on_trash_cleanup_error: TreeRemovalErrorPolicyValue = TreeRemovalErrorPolicy.RAISE,
-) -> None:
-    """Trash-rename ``target`` then recursively remove it.
-
-    The directory is first renamed to a same-parent ``.trash-<name>-<hex>``
-    sibling so a crashed removal leaves a recoverable on-disk trace, then
-    recursively deleted. When the rename itself is refused (Windows denies
-    renaming a directory whose SQLite file was only just closed), a garbage
-    collection pass releases lingering handles and the directory is removed
-    in place instead — the exact same fallback shape either way, just
-    against a different path.
-
-    ``on_trash_cleanup_error`` governs only the final ``rmtree`` step (never
-    the rename): ``"raise"`` (the default) lets a genuine :class:`OSError`
-    from the recursive removal propagate — load-bearing for a create-rollback
-    caller that must surface a cleanup failure alongside the original create
-    failure. ``"ignore"`` removes best-effort and returns normally regardless
-    of outcome — leftover trash litter is an acceptable outcome for an
-    ordinary delete. A caller on ``"ignore"`` that must still know whether the
-    directory genuinely disappeared checks ``target.exists()`` itself
-    afterward and raises its own (possibly domain-typed) error.
-
-    Callers check ``target.exists()`` before calling; this function does not
-    special-case an already-absent target.
-
-    Args:
-        target: The bucket directory (or any directory) to trash-rename and
-            remove.
-        on_trash_cleanup_error: The final-removal error policy described
-            above.
-    """
-    trash = target.with_name(f".trash-{target.name}-{secrets.token_hex(4)}")
-    try:
-        target.rename(trash)
-    except OSError:
-        # The crash-safe rename was refused (a file handle still held, most
-        # often on Windows); release lingering handles and remove the
-        # original directory in place instead of the trash sibling.
-        gc.collect()
-        _remove_tree(target, on_error=on_trash_cleanup_error)
-        return
-    _remove_tree(trash, on_error=on_trash_cleanup_error)
-
-
-def _remove_tree(path: Path, *, on_error: TreeRemovalErrorPolicyValue) -> None:
-    """``rmtree`` under the given error policy; see :func:`trash_rename_and_remove`."""
-    if on_error == TreeRemovalErrorPolicy.IGNORE:
-        shutil.rmtree(path, ignore_errors=True)
-        return
-    try:
-        shutil.rmtree(path)
-    except OSError:
-        _log.debug("trash_rename_and_remove: could not remove %s", path, exc_info=True)
-        raise
-
-
 __all__ = [
     "BucketPaths",
     "bucket_paths",
-    "trash_rename_and_remove",
     "validate_path_component",
 ]

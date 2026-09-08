@@ -5,7 +5,6 @@ cli:
         acquisition_year_help: Year the good was acquired.
         art108_help: Whether the good qualifies as a bien de inversión under LIVA
           art. 108.
-        asset_ref_help: Optional cross-reference to an AssetRecord identifier.
         cuota_soportada_help: Total input IVA borne on acquisition (positive).
         declare_help: Declare one capital good tracked for IVA regularización.
         description_help: Human description of the good.
@@ -164,10 +163,10 @@ cli:
           of reading it on-host.
         extract_off_host_provider_is_local: --off-host-provider local is the default
           and reads nothing off-host. Omit the flag, or name a hosted provider.
-        extract_off_host_unclassified: 'Refusing this off-host read: the consent
-          gate returned {outcome}, which this command has no wording for. An
-          unrecognised answer is treated as a refusal so evidence cannot leave
-          this host on a decision nobody stated.'
+        extract_off_host_unclassified: 'Refusing this off-host read: the consent gate
+          returned {outcome}, which this command has no wording for. An unrecognised
+          answer is treated as a refusal so evidence cannot leave this host on a decision
+          nobody stated.'
         extract_provider_without_acknowledge: Reading this document off-host sends
           its contents to a third party. Add --acknowledge-off-host to confirm that,
           for this one read.
@@ -485,12 +484,6 @@ cli:
         snapshot_id_help: Snapshot id (or unambiguous prefix)
         state_help: 'Snapshot state filter: active, superseded, discarded, or all'
         view_help: Show one Modelo 100 borrador snapshot
-      deudas:
-        app_help: Read-only AEAT deudas snapshots
-        latest_help: Show the most recent deudas snapshot
-        list_help: List saved deudas snapshots
-        snapshot_id_help: Snapshot id (or unambiguous prefix)
-        view_help: Show one deudas snapshot and every outstanding liability it holds
       expediente_help: AEAT expediente identifier
       expedientes:
         app_help: Read-only AEAT expediente snapshots
@@ -1183,9 +1176,9 @@ cli:
         amend_missing_options: 'An amendment requires every one of these options:
           %{missing}.'
         amend_no_detail_rows_help: Declare that this amendment has no detail rows.
-          For M184, M232, M347 and M349 the rows are the declaration, so stating
-          none is different from saying nothing; omit both this and --row and the
-          amendment is refused rather than guessed.
+          For M184, M232, M347 and M349 the rows are the declaration, so stating none
+          is different from saying nothing; omit both this and --row and the amendment
+          is refused rather than guessed.
         amend_rows_contradiction: Pass either --row or --no-detail-rows, not both;
           --no-detail-rows declares that there are no rows.
         amend_set_required: --set is required at least once for an amendment.
@@ -1281,14 +1274,6 @@ cli:
         create_reused_renamed: Existing work unit returned (idempotent on modelo/year/period/revision);
           nothing new was created. The supplied --name was applied as a rename to
           %{name}.
-        create_stub_modelo_151_refused: 'Modelo %{modelo} (special expatriate regime,
-          Beckham Law) is not supported for work-unit creation in this CLI. Legal
-          basis: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
-          File the return at AEAT Sede.'
-        create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR, Non-Resident Income
-          Tax) is not supported for work-unit creation in this CLI. Legal basis: RD
-          Legislativo 5/2004 TRLIRNR and Art. 28 TRLIRNR. File the return through
-          AEAT Sede procedure G320 at sede.agenciatributaria.gob.es.'
         create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, Transfer Tax and
           Stamp Duty) is not supported for work-unit creation in this CLI. Legal basis:
           Ley 28/1990 and regional ITPyAJD competence; file with the relevant regional
@@ -1304,14 +1289,6 @@ cli:
         create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD estate inventory, accompanying
           Modelo 650) is not supported for work-unit creation in this CLI. Legal basis:
           Ley 29/1987 LISyD; file with the competent regional Hacienda tax authority.'
-        create_stub_modelo_714_refused: 'Modelo %{modelo} (Wealth Tax) is not supported
-          for work-unit creation in this CLI. Legal basis: Ley 19/1991 Art. 28 and
-          Orden HAC/1023/2021. File the return at AEAT Sede.'
-        create_stub_modelo_refused: 'Modelo %{modelo} (informative declaration of
-          virtual currencies held abroad) is not supported for work-unit creation
-          in this CLI. Legal authority: Orden HFP/886/2023 and RD 1065/2007 Art. 42
-          quater; the reporting threshold is 50,000 EUR at 31 December. File through
-          AEAT Sede when legally required.'
         dependencies_help: Show cross-period filing-history dependencies and current
           clean-state blockers for a target filing
         dependencies_period_requires_modelo: The --period option requires --modelo.
@@ -1714,12 +1691,7 @@ cli:
         configuring authentication.
       output_language_help: Output language for the response text (es, en, ca, hu).
       provider_help: Authentication provider id (e.g. certificado-electronico)
-      providers:
-        status_implemented: available
-        status_reserved: reserved
-        status_unavailable_gloss: not available yet
       providers_help: List supported authentication providers
-      reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
       reset_all_help: Reset every known authentication provider
       reset_help: Remove local provider configuration, sessions, locks, certificate
         registrations, and stored certificate secrets
@@ -2618,9 +2590,9 @@ cli:
         is not inferred.
       derive_non_derivable: '{category} has no simple Spanish rate to derive: {note}
         Supply --taxable-base, --iva-rate and --iva-amount by hand for this category.'
-      derive_substrate_incomplete: '{category} was reported derivable but produced no
-        IVA substrate. Supply --taxable-base, --iva-rate and --iva-amount by hand for
-        this category.'
+      derive_substrate_incomplete: '{category} was reported derivable but produced
+        no IVA substrate. Supply --taxable-base, --iva-rate and --iva-amount by hand
+        for this category.'
       file_exclusive: --file cannot be combined with a transaction id or --classification.
       file_help: Path to a CSV file with columns transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
@@ -2629,12 +2601,11 @@ cli:
       help: Classify one ledger transaction in the active profile
       id_help: Ledger transaction id to classify
       id_required: A transaction id is required when --file is not provided.
-      irpf_category_help: 'IRPF category id. Net-paid professional invoices use
-        actividad_economica; net-paid rents use arrendamiento_local or
-        arrendamiento_vivienda_afecto. Royalties and SGAE income are capital
-        mobiliario under LIRPF art. 25.4 when the taxpayer is not the author, and
-        actividad economica under LIRPF art. 27 when they are and carry on the
-        activity. Run aeat app ledger categories for the full catalogue.'
+      irpf_category_help: IRPF category id. Net-paid professional invoices use actividad_economica;
+        net-paid rents use arrendamiento_local or arrendamiento_vivienda_afecto. Royalties
+        and SGAE income are capital mobiliario under LIRPF art. 25.4 when the taxpayer
+        is not the author, and actividad economica under LIRPF art. 27 when they are
+        and carry on the activity. Run aeat app ledger categories for the full catalogue.
       iva_amount_help: IVA amount
       iva_category_help: Explicit IVA category override for this transaction (e.g.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2737,9 +2708,9 @@ cli:
       negative_amount: The --amount %{raw} must be a non-negative magnitude. Pass
         the amount without a sign and set the flow with --direction (OUTGOING for
         money out, INCOMING for money in, INTERNAL_TRANSFER between your own accounts).
-      unknown_category: 'Unrecognised --category-id {category!r}. Supply a bare
-        category id such as {example!r}, not a family-prefixed or compound key. Run
-        aeat app ledger categories for the recognised catalogue.'
+      unknown_category: Unrecognised --category-id {category!r}. Supply a bare category
+        id such as {example!r}, not a family-prefixed or compound key. Run aeat app
+        ledger categories for the recognised catalogue.
       unknown_provider: 'Unknown import --provider {provider!r}. Recognised providers:
         {providers}.'
     exclude:
@@ -2765,8 +2736,9 @@ cli:
       dry_run_preview: 'Dry run: no rows were saved. The counts above are a preview
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
-      file_refused: 'Statement refused and skipped: {file}. The rest of the folder was imported.'
       file_help: Path to the bank statement file or directory
+      file_refused: 'Statement refused and skipped: {file}. The rest of the folder
+        was imported.'
       help: Import bank statements or records into the accounting ledger
       likely_duplicates: '{count} imported row(s) share a date and amount with a transaction
         already in the ledger but have a different description, indicating a likely

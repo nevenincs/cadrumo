@@ -336,7 +336,7 @@ def test_prose_scanner_stays_silent_on_product_vault_vocabulary(tmp_path: Path) 
 @pytest.mark.parametrize(
     ("name", "line", "tree"),
     [
-        pytest.param("census.toml", 'reference = "dev/source_connectivity/discovery.py"', "dev", id="toml-dev-locator"),
+        pytest.param("census.toml", 'reference = "dev/audit/discovery.py"', "dev", id="toml-dev-locator"),
         pytest.param("census.toml", 'reference = ".vault/adr/x-adr.md"', ".vault", id="toml-vault-locator"),
         pytest.param("manifest.json", '{"rules": ".vaultspec/rules/a.md"}', ".vaultspec", id="json-harness-locator"),
         pytest.param("notes.md", "Grounded in dev/registry/pipeline.py today.", "dev", id="markdown-prose"),

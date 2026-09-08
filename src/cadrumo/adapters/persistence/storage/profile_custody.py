@@ -44,7 +44,6 @@ from ....application.user_profile.custody_ports import (
     ProfileRecordCryptoError,
     ProfileRecordCryptoPort,
     ProfileRecordEncryptedBlob,
-    ProfileSecureObjectInventoryPort,
     ProfileSnapshotPersistencePort,
 )
 from ....core.classification.policies import SensitivityClass
@@ -164,7 +163,6 @@ from .master_key.kdf_params import (
 from .master_key.master_key_derivation import derive_kek_with_params
 from .recovery_key import generate_recovery_key
 from .runtime_repository import (
-    secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
     secure_object_repository_for_staged_bucket,
 )
@@ -259,19 +257,6 @@ class _PersistenceProfileBucketStorage:
 
     def release_lock(self, paths: ProfileBucketStoragePathsPort) -> None:
         release_lock(paths)
-
-
-class _PersistenceProfileSecureObjectInventory:
-    def __init__(self) -> None:
-        repository = secure_object_repository_for_active_bucket()
-        self._list_namespaces = repository.list_namespaces
-        self._list_keys = repository.list_keys
-
-    def list_namespaces(self) -> tuple[str, ...]:
-        return self._list_namespaces()
-
-    def list_keys(self, namespace: str) -> tuple[str, ...]:
-        return self._list_keys(namespace)
 
 
 class _PersistenceProfileSnapshotStore:
@@ -784,9 +769,6 @@ class _PersistenceProfileCustody:
             storage_root=storage_root,
             bucket_id=bucket_id,
         )
-
-    def secure_object_inventory(self) -> ProfileSecureObjectInventoryPort:
-        return _PersistenceProfileSecureObjectInventory()
 
     def collect_profile_custody_carry(
         self,

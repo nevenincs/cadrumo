@@ -19,13 +19,17 @@ from pydantic import ValidationError
 
 from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
 from ....core.period import Period
-from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.iva_compensation.reconciliation import (
+    IvaCompensationAuthoritySource,
+    IvaCompensationReconciliationDecision,
+)
 from ..errors import ObservationKeyError
 from ..observations_repository import (
     iva_wallet_decision_event_key,
     iva_wallet_decision_key,
     observation_key,
 )
+from ._iva_compensation_history_support import m303_registry_snapshot_ref
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -146,10 +150,23 @@ def _make_decision(*, taxpayer_nif: str) -> IvaCompensationReconciliationDecisio
         taxpayer_nif=taxpayer_nif,
         target_year=2024,
         target_period=Period.from_year_and_code(2024, "1T"),
+        target_registry_snapshot_ref=m303_registry_snapshot_ref(2024, "1T"),
+        source_registry_snapshot_refs=(m303_registry_snapshot_ref(2024, "1T"),),
         selected_authority="local_recurrence",
         selected_amount=Decimal("1234.56"),
         wallet_amount=None,
         local_recurrence_amount=Decimal("1234.56"),
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="local_recurrence",
+                amount=Decimal("1234.56"),
+                source_locator="test:local-recurrence:2024:1T",
+                source_modelo="303",
+                source_filing_year=2024,
+                source_periods=(Period.from_year_and_code(2024, "1T"),),
+                registry_snapshot_refs=(m303_registry_snapshot_ref(2024, "1T"),),
+            ),
+        ),
         override_amount=None,
         divergence="match",
         blocked=False,
@@ -207,10 +224,23 @@ def test_load_decision_returns_hashed_key_record(tmp_path: Path) -> None:
         taxpayer_nif="87654321B",
         target_year=2025,
         target_period=Period.from_year_and_code(2025, "2T"),
+        target_registry_snapshot_ref=m303_registry_snapshot_ref(2025, "2T"),
+        source_registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "2T"),),
         selected_authority="local_recurrence",
         selected_amount=Decimal("500.00"),
         wallet_amount=None,
         local_recurrence_amount=Decimal("500.00"),
+        authority_sources=(
+            IvaCompensationAuthoritySource(
+                source_kind="local_recurrence",
+                amount=Decimal("500.00"),
+                source_locator="test:local-recurrence:2025:2T",
+                source_modelo="303",
+                source_filing_year=2025,
+                source_periods=(Period.from_year_and_code(2025, "2T"),),
+                registry_snapshot_refs=(m303_registry_snapshot_ref(2025, "2T"),),
+            ),
+        ),
         override_amount=None,
         divergence="match",
         blocked=False,

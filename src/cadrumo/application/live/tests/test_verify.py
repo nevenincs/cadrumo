@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Final
 
 import pytest
 from pydantic import ValidationError
@@ -33,8 +32,7 @@ from ..verify import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"live"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
+
 _BUCKET_A_ID = "60606060-6060-4060-8060-606060606060"
 _BUCKET_B_ID = "61616161-6161-4161-8161-616161616161"
 

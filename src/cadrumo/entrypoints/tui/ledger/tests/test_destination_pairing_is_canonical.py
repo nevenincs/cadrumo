@@ -29,7 +29,6 @@ from __future__ import annotations
 import pytest
 
 from .....application.ledger.workspace import LedgerWorkspaceArea
-from ..controller import _IMPLEMENTED_AREAS
 from ..models import (
     LEDGER_DESTINATION_BY_AREA,
     declared_ledger_destination_ids,
@@ -164,40 +163,7 @@ def test_the_controller_reads_the_canonical_pairing_rather_than_a_copy() -> None
     assert produced == dict(LEDGER_DESTINATION_BY_AREA)
 
 
-def test_the_two_declarations_of_which_areas_have_a_body_agree() -> None:
-    """The controller refuses a bodiless area; the catalogue decides which those are.
-
-    Two modules state the same fact. The controller's ``_IMPLEMENTED_AREAS``
-    is what makes ``refusal_for`` return a typed placeholder for an area with
-    no read body, and the route catalogue's screen map is what actually
-    decides whether one exists. The catalogue cannot import the controller's
-    copy -- it imports the controller itself -- so nothing joins them at
-    import.
-
-    Drift in one direction is the dangerous one. Defer an area by giving it no
-    screen while leaving it listed as implemented, and ``refusal_for`` returns
-    ``None``, resolution falls through to a factory that is not there, and the
-    operator gets a raise where the design intends a placeholder. The reverse
-    merely hides a working screen.
-
-    Both clauses are inert today -- every area has a body, so the controller's
-    membership test is always true -- which is exactly why this is worth
-    pinning: an inert guard is indistinguishable from a correct one until the
-    day it has to fire.
-    """
-    with_bodies = frozenset(area for area, factory in _SCREEN_BY_AREA.items() if factory is not None)
-
-    assert with_bodies == _IMPLEMENTED_AREAS
-
-
-def test_every_route_that_survives_refusal_has_a_factory_to_call() -> None:
-    """Stated over the pair rather than either side, so neither can drift alone.
-
-    ``resolve_ledger_screen`` raises when a route it was not asked to refuse
-    carries no factory. That raise is unreachable only while the two
-    declarations above agree, so this says the same thing the resolver
-    assumes.
-    """
-    for route in LEDGER_ROUTES:
-        if route.area in _IMPLEMENTED_AREAS:
-            assert route.factory is not None, f"{route.area.value} is implemented but has no read body"
+def test_every_area_has_exactly_one_callable_body() -> None:
+    """The executable catalogue itself proves body coverage without a status list."""
+    assert frozenset(_SCREEN_BY_AREA) == frozenset(LedgerWorkspaceArea)
+    assert all(callable(route.factory) for route in LEDGER_ROUTES)

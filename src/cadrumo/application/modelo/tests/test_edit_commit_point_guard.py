@@ -21,6 +21,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.errors import SecureObjectRevisionConflictError
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
@@ -156,6 +157,12 @@ def test_a_real_conflicting_write_inside_the_reconfirm_to_commit_window_is_refus
         with pytest.raises(SecureObjectRevisionConflictError):
             persist_calculation_revision(
                 work_unit_id=work_unit.work_unit_id,
+                registry_snapshot_ref=RegistrySnapshotRef(
+                    modelo=work_unit.modelo,
+                    revision_id=work_unit.revision_id,
+                    modelo_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                ),
                 work_unit=racing_unit,
                 work_units=work_units,
                 work_units_revision_id=work_units_revision_id,

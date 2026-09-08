@@ -46,7 +46,6 @@ _FORBIDDEN_STORE_CALLS = {
     "secure_object_repository_for_active_bucket",
     "secure_object_repository_for_bucket",
     "save_envelope",
-    "save_encrypted_envelope",
 }
 _FORBIDDEN_TOKENS = (
     "NamedTemporaryFile",

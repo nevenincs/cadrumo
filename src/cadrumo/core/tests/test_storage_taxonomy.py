@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
 
 import pytest
 from pydantic import ValidationError
@@ -41,55 +40,6 @@ from ..storage_taxonomy import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset(
-    {
-        "registry",
-        "cache",
-        "buckets",
-        "keystore",
-        "tokens",
-        "db",
-        "manifest.toml",
-        "session.v2.json",
-        "login-throttle.json",
-        "blobs",
-        "active-profile",
-    },
-)
-"""Taxonomy-vocabulary literals this module deliberately pins.
-
-``"blobs"`` is the shared on-disk name
-``test_the_duplicated_name_resolves_to_distinct_members`` asserts both the
-root and bucket-relative members resolve to, independent of the accessor
-under test. ``"live-state"`` pins the renamed runtime state root, and
-``"active-profile"`` is the fixed-layout member's leaf name in
-``test_storage_path_falls_back_to_the_root_for_a_fieldless_member``.
-
-This module is the taxonomy's own accessor test: ``storage_path``,
-``bucket_scoped_storage_path``, and ``storage_tree_targets`` are the functions
-under test, so an assertion comparing their output against a hand-typed leaf
-name (``root / "buckets"``, ``keystore_tree / "session.v2.json"``, ...) *is*
-the oracle for what those accessors must resolve to. Re-deriving the expected
-side from ``storage_location(...).subpath`` would make the assertion compare
-the accessor against itself and pass for any subpath at all.
-
-``root / "cache" / "registry"`` in
-``test_tree_targets_skip_fixed_layout_and_absent_opt_in_members`` is the
-independent oracle for ``storage_tree_targets``'s own composition -- the
-negative membership assertion it defends (an unset opt-in override must not
-be materialised) would be tautological if re-derived from the same
-accessor. Not to be confused with the CALCULATION registry's bundled TOML
-authoring tree (``_data/registry/aeat/...``), an unrelated concept several
-other modules in this corpus also spell ``"registry"``.
-
-The ``root / "buckets" / "primary" / "keystore"`` composition in
-``test_the_production_separation_check_still_refuses_a_nested_keystore`` is a
-refusal-guard literal: it is deliberately the WRONG (nested) shape
-``validate_keystore_separation`` must reject, so it must stay a literal for the
-same reason every other refusal-guard pin in this corpus does -- an accessor
-resolving to the wrong location would leave the refusal trivially satisfied.
-"""
 
 
 def _axis_members(axis: type[StrEnum]) -> set[str]:

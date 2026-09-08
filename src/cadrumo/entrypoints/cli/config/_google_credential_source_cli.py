@@ -21,10 +21,10 @@ Two commands:
   :class:`~adapters.outbound.google.GoogleCredentialSourceSelection` /
   :class:`~adapters.outbound.google.GoogleImpersonationConfig` validators
   enforce the pairing.
-- ``show`` — report the persisted selection for the active profile
-  (:func:`~adapters.outbound.google.describe_impersonation_target` renders the
-  exact SA email an operator would grant IAM roles to before doing so),
-  falling back to reporting the
+- ``show`` — report the persisted selection for the active profile, reading
+  :attr:`~adapters.outbound.google.GoogleImpersonationConfig.target_principal`
+  directly to render the exact SA email an operator would grant IAM roles to,
+  and falling back to reporting the
   :attr:`~core.GoogleCredentialSourceKind.OAUTH_DESKTOP` default when no
   selection has been persisted.
 

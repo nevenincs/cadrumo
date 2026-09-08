@@ -30,6 +30,7 @@ from ....core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from ....core.register_scoping_signal import RegisterScopingSignal
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....tests.offline_aeat_register import aeat_sede_fixture, open_routed_declarations_register
 from ....tests.secure_sql import isolated_runtime_profile
@@ -174,7 +175,10 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
     return pull
 
 
-def _composition_discovery(*pairs: FiledHistoryDiscoveryPair) -> FiledHistoryDiscoveryPort:
+def _composition_discovery(
+    *pairs: FiledHistoryDiscoveryPair,
+    scoping_signal: RegisterScopingSignal = RegisterScopingSignal.INCONCLUSIVE,
+) -> FiledHistoryDiscoveryPort:
     """Supply strict discovery facts to the canonical composition boundary."""
 
     async def discover(
@@ -187,6 +191,7 @@ def _composition_discovery(*pairs: FiledHistoryDiscoveryPair) -> FiledHistoryDis
             pairs=pairs,
             register_options_read=True,
             profile_year_span_determined=False,
+            scoping_signal=scoping_signal,
         )
 
     return discover
@@ -220,6 +225,17 @@ def test_canonical_composition_preserves_every_discovered_pair_and_refusal(tmp_p
     assert run.evidence_notices == ()
 
 
+def test_canonical_composition_preserves_the_discovery_scoping_signal(tmp_path: Path) -> None:
+    discovery = _composition_discovery(
+        _composition_pair("303"),
+        scoping_signal=RegisterScopingSignal.LIKELY_UNIVERSAL,
+    )
+
+    run = asyncio.run(pull_filed_history(output_root=tmp_path, discover=discovery))
+
+    assert run.scoping_signal is RegisterScopingSignal.LIKELY_UNIVERSAL
+
+
 def test_canonical_composition_dry_run_preserves_scope_without_provenance(tmp_path: Path) -> None:
     pairs = (_composition_pair("100"), _composition_pair("303"))
     normal = _run_composition(*pairs, tmp_path=tmp_path)
@@ -235,9 +251,11 @@ def test_canonical_composition_dry_run_preserves_scope_without_provenance(tmp_pa
 
 
 def test_canonical_composition_empty_discovery_short_circuits_truthfully(tmp_path: Path) -> None:
-    run = _run_composition(tmp_path=tmp_path)
+    discovery = _composition_discovery(scoping_signal=RegisterScopingSignal.LIKELY_NIF_SCOPED)
+    run = asyncio.run(pull_filed_history(output_root=tmp_path, discover=discovery))
 
     assert run.pairs == ()
+    assert run.scoping_signal is RegisterScopingSignal.LIKELY_NIF_SCOPED
     assert run.stage_failures == ("discovery: no modelo/ejercicio pair to walk",)
 
 
@@ -575,7 +593,6 @@ def test_frontend_projects_the_public_result_without_the_private_type(tmp_path: 
         assert isinstance(projection.pairs, tuple) and projection.pairs
         assert projection.pairs[0].refused is True
         assert projection.pairs[0].failure_type
-        assert isinstance(projection.selection_rows, tuple)
 
     source = textwrap.dedent(inspect.getsource(test_frontend_projects_the_public_result_without_the_private_type))
     tree = ast.parse(source)

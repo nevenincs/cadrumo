@@ -261,7 +261,6 @@ def persist_filed_revision_observation(
         stamped_revision_id=work_unit.revision_id,
         result_disposition=disposition_projection,
         prior_domiciliation_election=prior_domiciliation_election,
-        normalize_m303_carry=work_unit.modelo == Modelo.M303.value,
     )
     if history_repo is not None and taxpayer_nif is not None:
         filing_ref = filing_record_id or key

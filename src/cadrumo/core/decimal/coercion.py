@@ -1,7 +1,7 @@
 """Canonical :class:`~decimal.Decimal` coercion helpers for the AEAT domain.
 
 Consolidates three independent ``_coerce_decimal`` copies that previously
-lived in :mod:`_calc_sheets_pull`, :mod:`_row_set_assembly`, and
+lived in ``_calc_sheets_pull``, ``_row_set_assembly``, and
 :mod:`invoices.models`. All call-sites use :func:`coerce_decimal`,
 :func:`coerce_decimal_strict`, or :func:`normalize_decimal_separators` from this
 module rather than open-coding decimal parsing.

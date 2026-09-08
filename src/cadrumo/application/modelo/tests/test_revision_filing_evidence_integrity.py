@@ -12,6 +12,7 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.period import Period
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -45,6 +46,12 @@ def _m303_revision() -> CalculationRevision:
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo="303",
+            revision_id="2026-y-siguientes",
+            modelo_year=2026,
+            period="1T",
+        ),
         state=CalculationRevisionState.BORRADOR,
         input_values_by_casilla_id=inputs,
         binding_overrides={},

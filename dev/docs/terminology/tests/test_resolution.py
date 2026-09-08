@@ -22,6 +22,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
+from ...._paths import REPO_ROOT
 from .._resolution import ChunkHit, TargetResolver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -251,6 +252,26 @@ def test_package_init_resolves_to_the_package_stub(resolver: TargetResolver) -> 
     assert out.record.target == "api/cadrumo.domain.calculations.registry.html"
 
 
+def _cli_reference_source(relpath: str) -> Path:
+    """Return one generated CLI-reference page, refusing by name when it is unbuilt.
+
+    ``docs/cli`` is a gitignored build product. Read directly, an unbuilt tree
+    surfaces as a bare ``FileNotFoundError`` from ``pathlib``, which blames the
+    reader rather than naming the tree that was never generated or how to
+    generate it. This refuses once, at the read, with both.
+    """
+    from .._resolution import _require_built_cli_reference
+
+    _require_built_cli_reference(REPO_ROOT)
+    path = Path(relpath)
+    if not path.is_file():
+        pytest.fail(
+            f"the generated CLI reference tree is built but does not hold {relpath!r}; "
+            "rebuild it with `just docs` if the command tree changed",
+        )
+    return path
+
+
 def test_cli_navigation_page_is_dropped_without_an_emitted_record(
     resolver: TargetResolver,
 ) -> None:
@@ -304,8 +325,7 @@ def test_emitted_cli_option_resolves_to_its_exact_page_anchor(
 
     command_path = tuple(emitted.metadata.command_path.split(" "))
     page_stem = cli_reference_page_for_command(command_path)
-    source_path = Path("docs") / f"{page_stem}.rst"
-    assert source_path.is_file(), f"CLI reference source is missing: {source_path}"
+    source_path = _cli_reference_source(f"docs/{page_stem}.rst")
 
     source_lines = source_path.read_text(encoding="utf-8").splitlines()
     command_locator_line = next(
@@ -365,8 +385,7 @@ def test_emitted_nested_cli_command_resolves_to_its_exact_page_anchor(
 
     command_path = tuple(emitted.metadata.command_path.split())
     page_stem = cli_reference_page_for_command(command_path)
-    source_path = Path("docs") / f"{page_stem}.rst"
-    assert source_path.is_file(), f"CLI reference source is missing: {source_path}"
+    source_path = _cli_reference_source(f"docs/{page_stem}.rst")
     source_lines = source_path.read_text(encoding="utf-8").splitlines()
     command_locator_line = next(
         line_number
@@ -391,7 +410,7 @@ def test_cli_output_schema_prose_is_dropped_without_a_parameter_locator(
     """Output-schema prose is not a parameter source locator."""
     from .._resolution import DroppedHit, DropReason
 
-    source_path = Path("docs/cli/app/diagnostics.rst")
+    source_path = _cli_reference_source("docs/cli/app/diagnostics.rst")
     source_lines = source_path.read_text(encoding="utf-8").splitlines()
     output_schema_line = next(
         line_number
@@ -415,7 +434,7 @@ def test_cli_source_range_past_file_end_is_dropped(resolver: TargetResolver) -> 
     """A CLI locator range beyond the real source file cannot resolve."""
     from .._resolution import DroppedHit, DropReason
 
-    source_path = Path("docs/cli/config.rst")
+    source_path = _cli_reference_source("docs/cli/config.rst")
     source_line_count = len(source_path.read_text(encoding="utf-8").splitlines())
     assert source_line_count >= 172
 
@@ -431,7 +450,7 @@ def test_ambiguous_cli_source_range_is_dropped(resolver: TargetResolver) -> None
     """A range spanning two generated parameters cannot pick one CLI record."""
     from .._resolution import DroppedHit, DropReason
 
-    source_path = Path("docs/cli/app/diagnostics.rst")
+    source_path = _cli_reference_source("docs/cli/app/diagnostics.rst")
     source_lines = source_path.read_text(encoding="utf-8").splitlines()
     command_locator_line = next(
         line_number
@@ -551,6 +570,58 @@ def test_resolver_reuse_avoids_reprojection() -> None:
     second = resolve_chunk_hits((_hit("docs/how-to/quickstart.md"),), resolver=shared)
     assert first.resolved_count == 1
     assert second.resolved_count == 1
+
+
+def _write_cli_pages(root: Path, count: int) -> None:
+    """Write ``count`` generator-shaped pages into a checkout root's docs/cli tree."""
+    tree = root / "docs" / "cli"
+    tree.mkdir(parents=True, exist_ok=True)
+    for index in range(count):
+        (tree / f"page{index}.rst").write_text(
+            f"page{index}\n=======\n\n**Command path:** ``aeat app page{index}``\n",
+            encoding="utf-8",
+        )
+
+
+def test_absent_generated_cli_reference_tree_is_refused_not_dropped(tmp_path: Path) -> None:
+    """An unbuilt docs/cli tree refuses by name; it does not become a per-hit drop.
+
+    docs/cli is a gitignored build product, so a clean checkout does not have
+    it. Without this refusal every CLI hit read through it fails alike and is
+    reported as an ordinary unresolvable hit -- an absent input laundered into
+    a corpus finding, which is the failure this gate exists to make impossible.
+    """
+    from .._resolution import UnbuiltGeneratedInputError, _require_built_cli_reference
+
+    with pytest.raises(UnbuiltGeneratedInputError) as refusal:
+        _require_built_cli_reference(tmp_path)
+    message = str(refusal.value)
+    assert "docs/cli" in message, "the refusal must name the root that is missing"
+    assert "just docs" in message, "the refusal must name the remedy that writes it"
+
+
+def test_short_generated_cli_reference_tree_is_refused_like_an_absent_one(tmp_path: Path) -> None:
+    """A one-page docs/cli tree is a partial artefact and is refused too.
+
+    An interrupted or partial generator run leaves a tree that exists and reads
+    cleanly, so an existence check alone passes over it while every hit outside
+    the single emitted page still drops. Short and absent fail the same way and
+    are refused the same way.
+    """
+    from .._resolution import UnbuiltGeneratedInputError, _require_built_cli_reference
+
+    _write_cli_pages(tmp_path, 1)
+    with pytest.raises(UnbuiltGeneratedInputError) as refusal:
+        _require_built_cli_reference(tmp_path)
+    assert "1 page(s)" in str(refusal.value)
+
+
+def test_a_complete_generated_cli_reference_tree_is_accepted(tmp_path: Path) -> None:
+    """The refusal has to let a real generator run through, or it proves nothing."""
+    from .._resolution import _MIN_CLI_REFERENCE_PAGES, _require_built_cli_reference
+
+    _write_cli_pages(tmp_path, _MIN_CLI_REFERENCE_PAGES)
+    _require_built_cli_reference(tmp_path)
 
 
 def test_chunk_hit_and_resolved_target_are_frozen() -> None:

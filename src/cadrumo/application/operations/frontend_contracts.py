@@ -322,6 +322,7 @@ class OperationPublicProjectionV1(BaseModel):
     pending_interaction: OperationPublicPendingInteractionV1
     result_ref: OperationReference | None
     refusal_ref: OperationReference | None
+    failure_ref: OperationReference | None
     diagnostic_ref: OperationDiagnosticReference | None
 
     @model_validator(mode="after")
@@ -380,13 +381,16 @@ class OperationPublicProjectionV1(BaseModel):
                 raise ValueError("public REVIEW reference does not match the registered projection schema")
             if pending.response_schema != contract.interaction_response_schema:
                 raise ValueError("public REVIEW interaction does not match the registered response schema")
-        if self.result_ref is not None and self.refusal_ref is not None:
-            raise ValueError("public projection cannot expose result and refusal references together")
+        references = (self.result_ref, self.refusal_ref, self.failure_ref)
+        if sum(value is not None for value in references) > 1:
+            raise ValueError("public projection cannot expose multiple settlement references")
         if self.terminal_condition is OperationTerminalCondition.SUCCEEDED and self.result_ref is None:
             raise ValueError("successful public projection requires a result reference")
         if self.terminal_condition is OperationTerminalCondition.REFUSED and self.refusal_ref is None:
             raise ValueError("refused public projection requires a refusal reference")
-        if not terminal and (self.result_ref is not None or self.refusal_ref is not None):
+        if self.terminal_condition is not OperationTerminalCondition.FAILED and self.failure_ref is not None:
+            raise ValueError("public failure reference requires a failed terminal condition")
+        if not terminal and any(value is not None for value in references):
             raise ValueError("nonterminal public projection cannot expose settlement references")
         if self.progress is not None:
             if self.progress.event_sequence > self.anchor_cursor or self.progress.revision > self.revision:
@@ -508,6 +512,7 @@ class OperationPublicTerminalEventV1(_OperationPublicEventBase):
     effect: OperationEffect
     result_ref: OperationReference | None
     refusal_ref: OperationReference | None
+    failure_ref: OperationReference | None
     diagnostic_ref: OperationDiagnosticReference | None
 
     @model_validator(mode="after")
@@ -516,6 +521,7 @@ class OperationPublicTerminalEventV1(_OperationPublicEventBase):
             condition=self.condition,
             result_ref=self.result_ref,
             refusal_ref=self.refusal_ref,
+            failure_ref=self.failure_ref,
         )
         return self
 

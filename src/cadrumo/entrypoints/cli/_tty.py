@@ -24,7 +24,7 @@ from collections.abc import Callable
 from ...core.click_context import current_cli_flag
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
-from ...core.tty import stderr_is_tty, stdin_is_tty, stdout_is_tty
+from ...core.tty import stderr_is_tty, stdout_is_tty
 
 
 class NonTtyRefusedError(CadrumoError):
@@ -95,19 +95,8 @@ def should_show_rich_progress(
     return stdout_is_tty() and stderr_is_tty()
 
 
-def refuse_if_stdin_non_tty() -> None:
-    """Raise a typed refusal when interactive stdin is unavailable.
-
-    Raises:
-        NonTtyRefusedError: When stdin is not a TTY.
-    """
-    if not stdin_is_tty():
-        raise NonTtyRefusedError()
-
-
 __all__ = [
     "NonTtyRefusedError",
-    "refuse_if_stdin_non_tty",
     "should_show_rich_progress",
     "should_use_color",
 ]

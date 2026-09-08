@@ -38,14 +38,8 @@ from ..cli import THEMES, _resolve_themes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_HARNESS_SOURCE = REPO_ROOT / "src" / "cadrumo" / "entrypoints" / "tui" / "devtools" / "__main__.py"
-"""The renderer this tool shells out to, read as TEXT.
-
-Never imported: the architecture decision bars this package from importing the
-TUI entrypoint, and running it as a subprocess is the one reference it
-sanctions. A text read is not an import edge, which is why the boundary check
-over this package still passes with this file in it.
-"""
+_HARNESS_SOURCE = REPO_ROOT / "dev" / "tui" / "harness" / "__main__.py"
+"""The development renderer this tool shells out to, read as text."""
 
 
 def _frame(theme: str) -> RenderedFrame:
@@ -68,7 +62,7 @@ def _frame(theme: str) -> RenderedFrame:
 
 
 def _harness_theme_choices() -> tuple[str, ...]:
-    """What the in-boundary harness's ``--theme`` option actually accepts."""
+    """What the development harness's ``--theme`` option actually accepts."""
     source = _HARNESS_SOURCE.read_text(encoding=UTF_8)
     found = re.search(r'add_argument\(\s*"--theme".*?choices=\[(?P<choices>[^\]]*)\]', source, flags=re.DOTALL)
     assert found is not None, "the harness no longer declares a --theme choice set"

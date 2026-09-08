@@ -27,7 +27,7 @@ from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
 from ...calculations.registry.schema_base import ThresholdComparison
-from ..errors import ProrrataInputError, ProrrataSectorError
+from ..errors import ProrrataInputError
 from ..prorrata import (
     InputClassification,
     ProrrataInputDeduction,
@@ -36,13 +36,10 @@ from ..prorrata import (
     ProrrataReference,
     ProrrataRegime,
     ProrrataResult,
-    ProrrataSector,
     classify_input_deduction,
     compute_prorrata_general,
-    compute_sectoral_prorrata,
     especial_mandatory_rule,
     is_especial_mandatory,
-    requires_sectoral_separation,
     sum_deductible_amounts,
     validate_prorrata_reference,
 )
@@ -127,12 +124,6 @@ _ACCEPTED_PRORRATA_REFERENCE_CASES = (
         "sector-retail",
     ),
 )
-
-_INVALID_SECTOR_ID_CASES = (
-    ("", "empty id"),
-    ("has spaces and unicode ñ", "bad pattern"),
-)
-
 
 # ---------------------------------------------------------------------------
 # Identity / boundary tests — anchored in the LIVA formula's mathematical
@@ -386,93 +377,6 @@ def test_is_especial_mandatory_rejects_out_of_range_year() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Sectoral separation (LIVA art. 9.1.c).
-# ---------------------------------------------------------------------------
-
-
-def _sector(sector_id: str, *, con_derecho: str, sin_derecho: str) -> ProrrataSector:
-    return ProrrataSector(
-        sector_id=sector_id,
-        name=f"sector-{sector_id}",
-        inputs=ProrrataInputs(
-            operaciones_con_derecho_deduccion=Decimal(con_derecho),
-            operaciones_sin_derecho_deduccion=Decimal(sin_derecho),
-        ),
-    )
-
-
-def test_sectoral_separation_required_when_spread_exceeds_50_points() -> None:
-    """LIVA art. 9.1.c: sectoral separation required when general
-    prorratas across sectors differ by more than 50 percentage points."""
-
-    # Sector A: 95% deductible operations → general prorrata 95%.
-    # Sector B: 20% deductible operations → general prorrata 20%.
-    # Spread: 75 points, well above the 50-point threshold.
-    sectors = (
-        _sector("A", con_derecho="95000", sin_derecho="5000"),
-        _sector("B", con_derecho="20000", sin_derecho="80000"),
-    )
-    assert requires_sectoral_separation(sectors) is True
-
-
-def test_sectoral_separation_not_required_when_spread_at_or_below_50_points() -> None:
-    """LIVA art. 9.1.c boundary at exactly 50 points: not required.
-
-    Sector A: 100% deductible → general 100%.
-    Sector B: 50% deductible → general 50%.
-    Spread: exactly 50 points → not required (rule is "more than 50").
-    """
-
-    sectors = (
-        _sector("A", con_derecho="100000", sin_derecho="0"),
-        _sector("B", con_derecho="50000", sin_derecho="50000"),
-    )
-    assert requires_sectoral_separation(sectors) is False
-
-
-def test_sectoral_separation_returns_false_for_single_sector() -> None:
-    sectors = (_sector("only", con_derecho="100", sin_derecho="0"),)
-    assert requires_sectoral_separation(sectors) is False
-
-
-def test_sectoral_separation_returns_false_for_empty_sector_list() -> None:
-    assert requires_sectoral_separation(()) is False
-
-
-def test_sectoral_separation_rejects_duplicate_sector_ids() -> None:
-    sectors = (
-        _sector("duplicate", con_derecho="100", sin_derecho="0"),
-        _sector("duplicate", con_derecho="50", sin_derecho="50"),
-    )
-    with pytest.raises(ProrrataSectorError, match=r"duplicate sector_id"):
-        requires_sectoral_separation(sectors)
-
-
-def test_compute_sectoral_prorrata_produces_one_result_per_sector() -> None:
-    sectors = (
-        _sector("retail", con_derecho="800000", sin_derecho="200000"),
-        _sector("rental", con_derecho="0", sin_derecho="100000"),
-    )
-    results = compute_sectoral_prorrata(
-        sectors,
-        year=2026,
-        kind=ProrrataKind.DEFINITIVA,
-    )
-    assert len(results) == len(sectors)
-    assert tuple(r.sector_id for r in results) == ("retail", "rental")
-    # Retail: 800,000 / 1,000,000 = 80% exact → 80.
-    # Rental: 0 / 100,000 = 0% → 0.
-    assert results[0].percentage == Decimal("80")
-    assert results[1].percentage == Decimal("0")
-    assert all(r.regime is ProrrataRegime.GENERAL for r in results)
-
-
-def test_compute_sectoral_prorrata_rejects_empty_input() -> None:
-    with pytest.raises(ProrrataSectorError, match=r"sectors sequence must not be empty"):
-        compute_sectoral_prorrata((), year=2026, kind=ProrrataKind.DEFINITIVA)
-
-
-# ---------------------------------------------------------------------------
 # Schema / validation / error-path tests.
 # ---------------------------------------------------------------------------
 
@@ -625,19 +529,6 @@ def test_classify_input_rejects_out_of_range_general_percentage() -> None:
         )
 
 
-def test_sector_rejects_invalid_sector_ids() -> None:
-    for sector_id, name in _INVALID_SECTOR_ID_CASES:
-        with pytest.raises(ValidationError, match=r"sector_id"):
-            ProrrataSector(
-                sector_id=sector_id,
-                name=name,
-                inputs=ProrrataInputs(
-                    operaciones_con_derecho_deduccion=Decimal("100"),
-                    operaciones_sin_derecho_deduccion=Decimal("0"),
-                ),
-            )
-
-
 # ---------------------------------------------------------------------------
 # Aggregation helper (sum_deductible_amounts) — Python primitive contract.
 # ---------------------------------------------------------------------------
@@ -695,8 +586,8 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
 
     Walk the source tree and assert that ``compute_prorrata_general``,
     ``classify_input_deduction``, ``is_especial_mandatory``, and
-    ``requires_sectoral_separation`` exist exclusively in the canonical
-    module. Any other module declaring a function with the same name is
+    ``is_especial_mandatory`` exist exclusively in the canonical module. Any
+    other module declaring a function with the same name is
     a duplicate implementation and must be removed before this test
     re-passes.
     """
@@ -715,8 +606,6 @@ def test_no_parallel_prorrata_implementation_exists() -> None:
         "compute_prorrata_general",
         "classify_input_deduction",
         "is_especial_mandatory",
-        "requires_sectoral_separation",
-        "compute_sectoral_prorrata",
     )
 
     for py_file in scan_directory(source_root, pattern="*.py", recursive=True, require_root=True):

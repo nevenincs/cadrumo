@@ -28,8 +28,6 @@ application:
         operator_completion_required: Preparado; requiere finalización de Cl@ve mediada
           por el operador.
     errors:
-      provider_reserved: El proveedor de autenticación {provider} está reservado y
-        no está implementado.
       session_field_not_datetime: El campo {field} de sesión persistida debe ser una
         fecha-hora o cadena ISO-8601.
     operator:
@@ -665,9 +663,9 @@ application:
       idempotency_key_conflict: La clave de idempotencia ya identifica una transacción
         almacenada con datos distintos. Use una clave de idempotencia nueva para un
         movimiento diferente, u omita la clave para añadir un duplicado deliberado.
-      purchase_evidence_already_set: 'La transacción del libro ya tiene un purchase_invoice_evidence_id
-        y no puede reemplazarse en su sitio. Desvincular la evidencia no está implementado:
-        elimine la transacción y vuelva a añadirla con la evidencia correcta.'
+      purchase_evidence_already_set: La evidencia de factura de compra es inmutable
+        una vez adjuntada. Elimine la transacción del libro y vuelva a añadirla con
+        la evidencia correcta.
       transaction_id_prefix_ambiguous: 'el prefijo de id de transacción %{prefix}
         coincide con %{count} transacciones: %{matches}'
       transaction_id_prefix_empty: el prefijo de id de transacción está vacío
@@ -695,15 +693,6 @@ application:
           solicitado.
         snapshot_prefix_ambiguous: El prefijo del snapshot del borrador coincide con
           varios snapshots.
-    deudas:
-      errors:
-        bucket_id_blank: El identificador del bucket de deudas no puede estar vacío.
-        snapshot_id_blank: El identificador de la instantánea de deudas no puede estar
-          vacío.
-        snapshot_not_found: No hay ninguna instantánea de deudas que coincida con
-          el identificador solicitado.
-        snapshot_prefix_ambiguous: El prefijo de la instantánea de deudas coincide
-          con varias instantáneas.
     expedientes:
       errors:
         bucket_id_blank: El identificador del bucket de expedientes no puede estar

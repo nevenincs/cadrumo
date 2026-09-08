@@ -59,6 +59,7 @@ from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+
 _STARTED = datetime(2026, 8, 13, 20, tzinfo=UTC)
 
 

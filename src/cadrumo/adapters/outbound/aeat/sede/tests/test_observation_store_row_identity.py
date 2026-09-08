@@ -32,9 +32,10 @@ from pydantic import AnyHttpUrl
 
 from ......core.config import Settings
 from ......core.period import Period
+from ......domain.calculations.registry.authority import bundled_authority
 from ......tests.secure_sql import isolated_runtime_profile
+from .._iva_compensation_wallet_parsing import WALLET_URL
 from ..errors import SedeValidationError
-from ..iva_compensation_wallet import IVA_COMPENSATION_WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
     FiledDeclaracionArtefact,
@@ -71,6 +72,7 @@ def _observation(expediente_id: str, artefact: FiledDeclaracionArtefact) -> File
         presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
         authenticated_identity="12345678Z",
         artefacts=(artefact,),
+        registry_snapshot_ref=bundled_authority().snapshot("100", filing_year=2023, period="0A").snapshot_ref,
     )
 
 
@@ -88,7 +90,7 @@ def _wallet(target_year: int, captured_at: datetime) -> IvaCompensationWalletObs
             ),
         ),
         total_pending=Decimal("1234.56"),
-        source_url=AnyHttpUrl(IVA_COMPENSATION_WALLET_URL),
+        source_url=AnyHttpUrl(WALLET_URL),
         captured_at=captured_at,
     )
 

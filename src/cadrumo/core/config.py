@@ -467,13 +467,6 @@ class Settings(CadrumoLlmSettings):
         default_factory=lambda: bundled_path("corpus", "manuals"),
         description="Root directory for the structured AEAT Manual práctico corpus",
     )
-    cadrumo_manuals_review_required: bool = Field(
-        default=True,
-        description=(
-            "When True, manual corpus verification rejects any Manual/Section/Rule record "
-            "missing definition-review metadata; when False the rejection is downgraded to a warning"
-        ),
-    )
     aeat_normatives_root: Path = Field(
         default_factory=lambda: bundled_path("corpus", "normatives"),
         description="Root directory for the bundled legal normatives corpus",
@@ -853,17 +846,6 @@ class Settings(CadrumoLlmSettings):
             "If true, build_draft raises FilingValidationError when any WARNING- or ERROR-severity finding is produced"
         ),
     )
-    cadrumo_m210_engine_live: bool = Field(
-        default=False,
-        description=(
-            "Gate the M210 IRNR engine, which currently covers only TRLIRNR Art. 25 "
-            "letters a, b, and f. When False (default) `aeat app modelo "
-            "work create --modelo 210` emits the Path-B refusal stub. When True "
-            "the stub guard is skipped and the engine path runs (irnr_resolve_tipo_gravamen "
-            "dispatch + representante-fiscal predicate + cuota composition)."
-        ),
-    )
-
     # ── Status reader ───────────────────────────────────────────────────────
     aeat_status_detail_url_template: str = Field(
         default_factory=_default_status_detail_url_template,

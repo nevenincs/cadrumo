@@ -26,6 +26,7 @@ from ...core.json_contract import OutputSchema
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...domain.calculations.registry.ids import BindingId, FormulaId, RelationId
 from ...domain.calculations.registry.schema_base import LegalRefs, SourceRefs
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 
 
 class DetailRowPayload(OutputSchema):
@@ -144,6 +145,7 @@ class CalculationRevisionProjectionFields(OutputSchema):
 
     calculation_revision_id: CalculationRevisionId
     work_unit_id: WorkUnitId
+    registry_snapshot_ref: RegistrySnapshotRef
     state: str
     casilla_values: dict[CasillaId, str]
     observations: tuple[ObservationPayload, ...]

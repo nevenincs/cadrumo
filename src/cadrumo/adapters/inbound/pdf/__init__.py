@@ -8,8 +8,8 @@ Where the contracts live:
 - Casilla-bearing records -- ``extracted_casilla``, defining
   :class:`ExtractedCasilla`: one casilla ID plus the printed value and the
   extraction provenance read off a casilla-complete PDF.
-- Label-anchored extraction -- ``label_regex``, defining :class:`LabelHit`,
-  ``apply_label_regex``, ``parse_spanish_decimal``, and the ``EJERCICIO_LABEL``,
+- Label-anchored primitives -- ``label_regex``, defining
+  ``parse_spanish_decimal`` and the ``EJERCICIO_LABEL``,
   ``MODELO_LABEL``, ``PRESENTADOR_NIF_LABEL``, ``SPANISH_AMOUNT_GROUP`` and
   ``TEXT_VALUE_GROUP`` fragments the declaracion parser anchors on.
 - Page text -- ``page_text_extraction``, defining the pdfplumber-backed

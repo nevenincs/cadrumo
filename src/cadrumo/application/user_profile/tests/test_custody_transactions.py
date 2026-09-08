@@ -68,6 +68,7 @@ from ..profile_pointer import ActiveProfilePointerTransactionError, active_profi
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
+
 _PROFILE_ID = UUID("327b296d-8377-4be0-b13a-ca4d8f692e1d")
 _OTHER_PROFILE_ID = UUID("57c9594e-65de-470b-b768-4a4dd1323597")
 _INSTANT = datetime(2026, 8, 13, 12, 34, 56, tzinfo=UTC)

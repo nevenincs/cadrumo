@@ -33,10 +33,7 @@ from cadrumo.domain.calculations.registry.temporal import (
     revision_selection_coordinates,
 )
 
-from ..filing_export_proof import (
-    CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES,
-    canonical_two_channel_filing_export_proof_authority,
-)
+from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -150,10 +147,8 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
         assert limb.refusal.disposition.reconsideration_condition
 
 
-def test_an_empty_canonical_live_proof_cannot_turn_a_declared_layout_into_emitted_byte_evidence() -> None:
-    """A real layout plus the real empty proof authority stays visibly refused."""
-    assert not CANONICAL_LIVE_FILING_EXPORT_PROOF_ENTRIES
-
+def test_missing_secure_replay_cannot_turn_a_declared_layout_into_emitted_byte_evidence() -> None:
+    """A real layout without operator-custodied replay stays visibly refused."""
     authority, proof_authority = _canonical_filing_authority()
     modelo, revision = next(
         (modelo, revision) for modelo, revision in _filing_revisions(authority) if revision.export_layouts

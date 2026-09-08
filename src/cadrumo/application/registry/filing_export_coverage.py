@@ -28,7 +28,7 @@ from ...domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
-from ...domain.calculations.registry.schema_references import SourceReference
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef, SourceReference
 from ...domain.calculations.registry.temporal import (
     coverage_assessment_horizon,
     revision_selection_coordinates,
@@ -332,6 +332,12 @@ class _FilingExportSnapshotLike(Protocol):
     @property
     def revision(self) -> _FilingExportSnapshotRevision: ...
 
+    @property
+    def filing_year(self) -> int: ...
+
+    @property
+    def period(self) -> str: ...
+
 
 def _filing_export_proof(
     *,
@@ -349,6 +355,12 @@ def _filing_export_proof(
     coordinate = FilingExportProofCoordinate(
         modelo=snapshot.modelo.id,
         revision=snapshot.revision.id,
+        snapshot_ref=RegistrySnapshotRef(
+            modelo=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+            modelo_year=snapshot.filing_year,
+            period=snapshot.period,
+        ),
         layout_ids=layout_ids,
     )
     try:

@@ -33,17 +33,16 @@ from ..audit.unreachable_code import EntryPoint, ShippedTreeSpec
 from ..audit.write_path_coverage import (
     PersistenceSurfaceSpec,
     WritePathOutcome,
-    run_write_path_scan,
     scan_write_path_coverage,
 )
-from ..quality.write_path_backlog import WritePathBaseline, evaluate, run_gate
+from ..quality.write_path_coverage import run_gate
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.timeout(600)]
 """The 600-second budget is contention, not a slow test.
 
 Measured at 207.31s under the repository's default `-n auto`
 parallelism - 69% of the 300-second ceiling - for
-``test_the_live_shipped_tree_write_path_backlog_is_reported_truthfully``.
+``test_the_live_shipped_tree_has_no_writerless_persistence_surface``.
 
 The ceiling is wall clock and its expiry does not fail the test: the
 thread method kills the worker, and every sibling scheduled on it is
@@ -257,36 +256,6 @@ def test_a_lost_anchor_refuses_rather_than_reporting_clean(tmp_path: Path) -> No
     assert "Renamed" in result.reason
 
 
-def test_a_baselined_surface_passes_while_it_remains_writerless(tmp_path: Path) -> None:
-    """An accepted entry is not a failure; that is what makes the backlog workable."""
-    spec = _planted_tree(tmp_path, with_writer=False)
-    result = scan_write_path_coverage(spec, _SURFACE)
-
-    verdict = evaluate(result, WritePathBaseline(allowed=frozenset({"pkg.store:LedgerService"})))
-
-    assert verdict.is_clean, verdict.report()
-
-
-def test_a_repaired_surface_still_named_by_the_baseline_is_reported_as_stale(tmp_path: Path) -> None:
-    """Once the writer is back, the entry must go, so the backlog cannot rot."""
-    spec = _planted_tree(tmp_path, with_writer=True)
-    result = scan_write_path_coverage(spec, _SURFACE)
-
-    verdict = evaluate(result, WritePathBaseline(allowed=frozenset({"pkg.store:LedgerService"})))
-
-    assert verdict.stale == ("pkg.store:LedgerService",)
-    assert not verdict.is_clean
-
-
-def test_a_malformed_baseline_entry_is_refused(tmp_path: Path) -> None:
-    """Configuration must not turn an unreadable exception into a pass."""
-    baseline_path = tmp_path / "baseline.toml"
-    baseline_path.write_text('allowed = ["pkg.store"]\n', encoding="utf-8")
-
-    with pytest.raises(ValueError, match="module:ClassName"):
-        WritePathBaseline.load(baseline_path)
-
-
 def test_an_unscannable_tree_refuses_rather_than_reporting_clean(tmp_path: Path) -> None:
     """A gate that cannot parse the tree must fail loudly, not pass by default."""
     _write(
@@ -298,24 +267,18 @@ def test_an_unscannable_tree_refuses_rather_than_reporting_clean(tmp_path: Path)
     )
     _write(tmp_path, "src/cadrumo/__init__.py")
     _write(tmp_path, "src/cadrumo/cli.py", "def main(:\n")
-    baseline = tmp_path / "baseline.toml"
-    baseline.write_text("allowed = []\n", encoding="utf-8")
-
-    with pytest.raises(RuntimeError, match="backlog unproven"):
-        run_gate(tmp_path, baseline_path=baseline)
+    with pytest.raises(RuntimeError, match="coverage unproven"):
+        run_gate(tmp_path)
 
 
-def test_the_live_shipped_tree_write_path_backlog_is_reported_truthfully() -> None:
-    """The real gate. A new writerless surface, or a repaired one, fails here.
+def test_the_live_shipped_tree_has_no_writerless_persistence_surface() -> None:
+    """The real zero-target gate: every readable surface has a writer.
 
     A scan that cannot see the tree raises rather than passing, so a silent
     breakage of the lifecycle anchor or of the import graph can never
     masquerade as a healthy data path.
     """
-    result = run_write_path_scan()
+    result = run_gate()
     assert result.outcome is not WritePathOutcome.ERROR, result.reason
     assert result.surfaces_examined
-
-    verdict = evaluate(result, WritePathBaseline.load())
-
-    assert verdict.is_clean, verdict.report()
+    assert result.is_green, result.headline()

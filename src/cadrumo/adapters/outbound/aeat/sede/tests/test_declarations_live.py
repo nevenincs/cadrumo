@@ -24,9 +24,10 @@ import pytest
 
 from ......core.aeat_csv import is_aeat_csv
 from ......tests.live_gate import requires_live_enabled
-from ..declarations import Declaracion, capture_declaration, walk_declarations_register
+from ..declarations import Declaracion, open_declarations_register, walk_declarations_register
+from ..declarations_remote import extract_csv_from_url
 from ..errors import SedeError
-from ..schema import SedeCapture
+from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 
@@ -92,14 +93,12 @@ async def test_walk_modelo_100_returns_at_least_one_declaration() -> None:
 
 
 @pytest.mark.asyncio
-async def test_capture_declaration_returns_pdf_bytes() -> None:
-    """The full walk → capture path lands a valid PDF body.
+async def test_register_session_capture_observation_returns_pdf_bytes() -> None:
+    """The normalized register capture path lands a valid PDF body.
 
-    Drives the same Modelo 100 / 2022 surface as the walker test,
-    picks the first row, and asserts that capture_declaration
-    yields a :class:`SedeCapture` carrying a non-empty PDF body
-    plus a shape-valid CSV. Read-only by construction — the
-    capture path issues GETs only (cotejo URL + CotejoDocIdSv).
+    Drives the same Modelo 100 / 2022 surface as the walker test and captures
+    the first row through the production session owner. The sink observes the
+    exact bytes handed to persistence without adding a second fetch path.
     """
     requires_live_enabled()
     session = await _load_active_clave_session()
@@ -114,16 +113,25 @@ async def test_capture_declaration_returns_pdf_bytes() -> None:
 
     assert declarations, "no Modelo 100 / 2022 declaration on this account; capture cannot run without a live row"
 
+    bodies: dict[str, bytes] = {}
+
+    def retain_body(
+        _observation_key: object,
+        artefact: FiledDeclaracionArtefact,
+        body: bytes,
+    ) -> FiledDeclaracionArtefact:
+        bodies[artefact.kind] = body
+        return artefact
+
     try:
-        capture = await capture_declaration(session, declarations[0])
+        async with open_declarations_register(session) as register:
+            observation = await register.capture_observation(declarations[0], artefact_sink=retain_body)
     except SedeError as exc:
         pytest.fail(f"live capture failed after live opt-in: {exc}")
 
-    assert isinstance(capture, SedeCapture)
-    assert capture.pdf_bytes  # non-empty body
-    assert capture.pdf_bytes.startswith(b"%PDF-")  # PDF magic header
-    assert capture.pdf_sha256  # populated
-    assert len(capture.pdf_sha256) == 64  # sha256 hex digest
-    # The CSV passed canonical validation during extraction; verify the
-    # round-trip carries that same canonical shape through SedeCapture.
-    assert is_aeat_csv(capture.ref.csv)
+    assert isinstance(observation, FiledDeclaracionObservation)
+    justificante = next(artefact for artefact in observation.artefacts if artefact.kind == "justificante_pdf")
+    assert bodies["justificante_pdf"].startswith(b"%PDF-")
+    assert justificante.byte_count == len(bodies["justificante_pdf"])
+    assert len(justificante.sha256) == 64
+    assert is_aeat_csv(extract_csv_from_url(str(justificante.source_url)))

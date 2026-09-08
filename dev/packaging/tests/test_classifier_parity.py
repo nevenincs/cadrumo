@@ -155,3 +155,87 @@ def test_the_roster_covers_every_packaging_manifest_on_disk(tmp_path: Path) -> N
         "cadrumo_data_official",
         "cadrumo_data_forms",
     }
+
+
+#: ``requires-python`` is the field that actually gates installation, and it is
+#: the one cohort metadata field joined to nothing. The inventory calls
+#: ``minimum_minor`` "the package floor", but no package reads it: the value is
+#: consumed only inside its own module, to shape the stable sequence. So the
+#: floor is declared twice over -- once in the inventory, once per manifest --
+#: and the two spellings are free to disagree.
+#:
+#: The reachable way in is a routine floor bump, not sabotage. When a dependency
+#: drops a minor, the author raises ``minimum_minor``, raises the root manifest,
+#: and is FORCED to fix the classifiers by the parity gate above. Nothing
+#: mentions the companions. Their wheels keep advertising the old floor, stay
+#: installable on a runtime the root now refuses, and no job fails: a wheel that
+#: installs is not an error anywhere. The cohort splits in the direction only a
+#: user on the dropped runtime can see.
+_REQUIRES_PYTHON_RE = re.compile(r"^>=\s*(?P<minor>3\.\d+)$")
+
+
+def _extract_requires_python(pyproject_path: Path) -> str:
+    """Return the ``project.requires-python`` specifier declared by a manifest."""
+    with pyproject_path.open("rb") as fh:
+        data = tomllib.load(fh)
+    declared = data.get("project", {}).get("requires-python")
+    assert isinstance(declared, str) and declared, (
+        f"{pyproject_path}: declares no `project.requires-python` floor to compare"
+    )
+    return declared
+
+
+def _assert_requires_python_policy(declared: Mapping[str, str], *, minimum_minor: str) -> None:
+    """Enforce one installation floor across the cohort, joined to the inventory.
+
+    The specifier is parsed rather than string-compared so a legitimate
+    respelling reds nothing, while an upper bound -- which would make a
+    published wheel refuse a runtime the inventory proves -- still cannot pass.
+    """
+    floors: dict[str, str] = {}
+    for name, specifier in sorted(declared.items()):
+        match = _REQUIRES_PYTHON_RE.fullmatch(specifier.strip())
+        assert match is not None, f"{name}: requires-python must be a bare '>=3.N' floor, got {specifier!r}"
+        floors[name] = match.group("minor")
+    unique_floors = set(floors.values())
+    assert len(unique_floors) == 1, "installation floors diverge across cohort distributions:\n" + "\n".join(
+        f"  {name}: {value}" for name, value in sorted(floors.items())
+    )
+    claimed = next(iter(unique_floors), "")
+    assert claimed == minimum_minor, (
+        "the cohort installation floor must equal the inventory's declared minimum: "
+        f"claimed={claimed!r}, minimum_minor={minimum_minor!r}"
+    )
+
+
+def test_requires_python_floor_is_shared_and_matches_the_inventory_minimum() -> None:
+    """Every cohort manifest names the floor the runtime inventory declares."""
+    inventory = load_runtime_inventory(_INVENTORY_PATH)
+    declared = {name: _extract_requires_python(path) for name, path in _PYPROJECTS.items()}
+
+    _assert_requires_python_policy(declared, minimum_minor=inventory.minimum_minor)
+
+
+def test_the_floor_gate_detects_a_companion_left_behind_by_a_bump() -> None:
+    """The routine defect: the root is raised and a companion is not."""
+    declared = {name: ">=3.14" for name in _PYPROJECTS}
+    declared["cadrumo_data_manuals"] = ">=3.13"
+
+    with pytest.raises(AssertionError, match="floors diverge"):
+        _assert_requires_python_policy(declared, minimum_minor="3.14")
+
+
+def test_the_floor_gate_detects_a_cohort_that_agrees_but_lags_the_inventory() -> None:
+    """Unanimity is not correctness: every manifest can be stale together."""
+    declared = {name: ">=3.13" for name in _PYPROJECTS}
+
+    with pytest.raises(AssertionError, match="equal the inventory"):
+        _assert_requires_python_policy(declared, minimum_minor="3.14")
+
+
+def test_the_floor_gate_refuses_an_upper_bound_that_would_cap_a_proven_runtime() -> None:
+    """A capped specifier refuses a runtime the inventory proves, so it cannot pass."""
+    declared = {name: ">=3.13,<3.14" for name in _PYPROJECTS}
+
+    with pytest.raises(AssertionError, match=r"bare '>=3\.N' floor"):
+        _assert_requires_python_policy(declared, minimum_minor="3.13")

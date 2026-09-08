@@ -77,13 +77,6 @@ DESCENDANT_DOOR_FLOW_ID = "descendiente-door"
 _FLOW_TITLE_LOCALE_KEY = "wizard.setup.descendientes.title"
 _FLOW_DESCRIPTION_LOCALE_KEY = "cli.config.profile.descendiente.help"
 
-#: Every locale key this module references, for the scaffold gate.
-DESCENDANT_DOOR_LOCALE_KEYS: tuple[str, ...] = (
-    _FLOW_TITLE_LOCALE_KEY,
-    _FLOW_DESCRIPTION_LOCALE_KEY,
-)
-
-
 class DescendantDoorAnswers(BaseModel):
     """The door's declared ``answers_model``: the group carries every answer.
 
@@ -230,7 +223,6 @@ def run_descendant_door(
 
 __all__ = [
     "DESCENDANT_DOOR_FLOW_ID",
-    "DESCENDANT_DOOR_LOCALE_KEYS",
     "DescendantDoorAnswers",
     "build_descendant_door",
     "build_descendant_door_definition",

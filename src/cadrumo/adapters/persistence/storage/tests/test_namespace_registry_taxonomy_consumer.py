@@ -18,21 +18,18 @@ from pathlib import Path
 
 import pytest
 
-from .....core.storage_taxonomy import StorageCategory, StorageScope
-from .....core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_location
+from .....core.storage_taxonomy import StorageCategory
+from .....core.storage_taxonomy_locations import storage_location
 from ..storage_path_definitions import (
     BUCKET_BLOBS_DIRNAME,
     BUCKET_DATABASE_FILENAME,
     BUCKET_DB_DIRNAME,
     BUCKET_LOCK_FILENAME,
-    BUCKET_MANIFEST_FILENAME,
     BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME,
     BUCKETS_DIRNAME,
     KEYSTORE_DIRNAME,
     LOGIN_THROTTLE_FILENAME,
     PROFILE_COMMIT_FILENAME,
-    PROFILE_CUSTODY_DIRNAME,
-    PROFILE_DATA_DIRNAME,
     PROFILE_PASSWORD_ENVELOPE_FILENAME,
     PROFILE_RECOVERY_ENVELOPE_FILENAME,
     PROFILE_SESSION_FILENAME,
@@ -50,17 +47,14 @@ _BOUND_CONSTANTS = (
     (BUCKET_DB_DIRNAME, StorageCategory.BUCKET_DATABASE),
     (BUCKET_DATABASE_FILENAME, StorageCategory.BUCKET_DATABASE_FILE),
     (BUCKET_BLOBS_DIRNAME, StorageCategory.BUCKET_BLOBS),
-    (BUCKET_MANIFEST_FILENAME, StorageCategory.BUCKET_MANIFEST),
     (BUCKET_LOCK_FILENAME, StorageCategory.BUCKET_LOCK),
     (BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME, StorageCategory.BUCKET_OUTPUT_LANGUAGE_HINT),
     (KEYSTORE_DIRNAME, StorageCategory.BUCKET_KEYSTORE),
     (PROFILE_SESSION_FILENAME, StorageCategory.KEYSTORE_PROFILE_SESSION),
     (PROFILE_SESSION_RETIREMENT_FILENAME, StorageCategory.KEYSTORE_PROFILE_SESSION_RETIREMENT),
     (LOGIN_THROTTLE_FILENAME, StorageCategory.KEYSTORE_LOGIN_THROTTLE),
-    (PROFILE_CUSTODY_DIRNAME, StorageCategory.PROFILE_CAPSULE_CUSTODY),
     (PROFILE_PASSWORD_ENVELOPE_FILENAME, StorageCategory.PROFILE_CAPSULE_PASSWORD_ENVELOPE),
     (PROFILE_RECOVERY_ENVELOPE_FILENAME, StorageCategory.PROFILE_CAPSULE_RECOVERY_ENVELOPE),
-    (PROFILE_DATA_DIRNAME, StorageCategory.PROFILE_CAPSULE_DATA),
     (PROFILE_COMMIT_FILENAME, StorageCategory.PROFILE_CAPSULE_COMMIT),
 )
 
@@ -69,18 +63,6 @@ _BOUND_CONSTANTS = (
 def test_each_exported_name_is_its_taxonomy_member(constant: str, category: StorageCategory) -> None:
     """A constant that merely agrees with the declaration today is still a copy."""
     assert constant == storage_location(category).subpath
-
-
-def test_every_scoped_taxonomy_member_is_exported_here() -> None:
-    """Both directions: a member added to the layout must surface as a constant.
-
-    Without this, a new per-bucket file could be declared in core and quietly
-    fail to reach the storage callers that resolve names through this module --
-    the taxonomy would describe a layout nobody provisions.
-    """
-    scoped = {location.category for location in STORAGE_TAXONOMY.values() if location.scope is not StorageScope.ROOT}
-    assert scoped, "the fixed layout must be declared, or this asserts nothing"
-    assert scoped == {category for _constant, category in _BOUND_CONSTANTS if category in scoped}
 
 
 def test_the_layout_names_are_resolved_not_re_typed() -> None:

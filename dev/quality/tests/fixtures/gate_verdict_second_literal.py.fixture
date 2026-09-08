@@ -1,5 +1,0 @@
-"""The first string is the module docstring."""
-
-"lint-imports"
-EXPECTED_VERDICT = "KEPT"
-NON_ASCII_SENTINEL = "ā"

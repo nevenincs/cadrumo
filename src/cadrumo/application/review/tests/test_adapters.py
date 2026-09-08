@@ -23,6 +23,7 @@ from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n import Translatable as tr
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.filing.schema import (
     ModeloDraft,
@@ -89,11 +90,18 @@ def _summary(text: str = "demo") -> tr:
     return tr("translation")
 
 
-_TEST_REVISION_ID = "test-revision"
+def _snapshot_ref(modelo: str, period: Period) -> RegistrySnapshotRef:
+    """Return the law-selected coordinate used by the live draft gate."""
+
+    return bundled_authority().snapshot(
+        modelo,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+    ).snapshot_ref
 
 
-def _schema_version(modelo: str = "130") -> str:
-    return registry_schema_version(modelo=modelo, revision_id=_TEST_REVISION_ID)
+def _schema_version(modelo: str = "130", period: Period = _PERIOD) -> str:
+    return registry_schema_version(modelo=modelo, revision_id=_snapshot_ref(modelo, period).revision_id)
 
 
 def _case_profile_id(index: int) -> str:
@@ -420,12 +428,7 @@ def _draft(
             source="test",
         ),
     )
-    snapshot_ref = RegistrySnapshotRef(
-        modelo=modelo,
-        revision_id=_TEST_REVISION_ID,
-        modelo_year=period.filing_year,
-        period=period.registry_token,
-    )
+    snapshot_ref = _snapshot_ref(modelo, period)
     return ModeloDraft(
         draft_id=compute_modelo_draft_id(
             modelo=modelo,
@@ -444,7 +447,7 @@ def _draft(
         findings=findings,
         created_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
         updated_at=datetime(2026, 4, 14, 9, 0, tzinfo=UTC),
-        schema_version=_schema_version(modelo),
+        schema_version=_schema_version(modelo, period),
     )
 
 

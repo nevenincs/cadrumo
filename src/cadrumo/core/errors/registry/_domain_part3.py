@@ -58,26 +58,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.domain.contribuyente.assets.records.AssetRecordError",
-        ErrorCode(
-            code="ERROR_PROFILE_ASSET_RECORD",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_profile_asset_record",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.domain.contribuyente.assets.records.AssetValidationError",
-        ErrorCode(
-            code="REFUSED_PROFILE_ASSET_VALIDATION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_profile_asset_validation",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.domain.bienes_inversion.register.BienInversionRecordError",
         ErrorCode(
             code="ERROR_PROFILE_BIENES_INVERSION_RECORD",

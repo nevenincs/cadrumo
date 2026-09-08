@@ -37,34 +37,27 @@ from .._viewports import DEFAULT_VIEWPORTS, VIEWPORTS, resolve
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_PACKAGE = Path(__file__).resolve().parents[1]
+_PRODUCT_PACKAGE = REPO_ROOT / "src" / "cadrumo"
 
 
 _REVISION = "a" * 64
 """A settled source fingerprint: both ends of a coherent run report it."""
 
 
-def _tui_importers(root: Path) -> list[str]:
-    """Every module under ``root`` that imports the TUI entrypoint package."""
+def _development_importers(root: Path) -> list[str]:
+    """Every module under ``root`` that imports repository development code."""
     offenders: list[str] = []
     for module in sorted(root.rglob("*.py")):
         source = module.read_text(encoding=UTF_8)
-        for match in re.finditer(r"^\s*(?:from|import)\s+(cadrumo[\w.]*)", source, flags=re.MULTILINE):
-            if match.group(1).startswith("cadrumo.entrypoints.tui"):
+        for match in re.finditer(r"^\s*(?:from|import)\s+(dev(?:\.[\w.]+)?)", source, flags=re.MULTILINE):
+            if match.group(1) == "dev" or match.group(1).startswith("dev."):
                 offenders.append(f"{module.name}: {match.group(0).strip()}")
     return offenders
 
 
-def test_no_module_in_this_package_imports_the_tui_entrypoint() -> None:
-    """The architecture decision bars a development tool from importing the TUI.
-
-    Checked as text over every module here rather than by importing them: an
-    import-time check would only catch a top-level import, and the rule covers
-    annotations and deferred imports too. The harness module is allowed to
-    NAME the module path, because running it as a subprocess is the one
-    external reference the decision sanctions.
-    """
-    assert _tui_importers(_PACKAGE) == []
+def test_no_product_module_imports_repository_development_code() -> None:
+    """The product never discovers or depends on the development harness."""
+    assert _development_importers(_PRODUCT_PACKAGE) == []
 
 
 def test_the_boundary_check_catches_an_import_that_does_violate_it(tmp_path: Path) -> None:
@@ -76,15 +69,15 @@ def test_the_boundary_check_catches_an_import_that_does_violate_it(tmp_path: Pat
     """
     (tmp_path / "innocent.py").write_text("from cadrumo.core import Modelo\n", encoding=UTF_8)
     (tmp_path / "offender.py").write_text(
-        "from cadrumo.entrypoints.tui.devtools.surfaces import SURFACES\n",
+        "from dev.tui.harness.surfaces import SURFACES\n",
         encoding=UTF_8,
     )
     (tmp_path / "deferred.py").write_text(
-        "def build():\n    import cadrumo.entrypoints.tui.launcher\n",
+        "def build():\n    import dev.tui.harness\n",
         encoding=UTF_8,
     )
 
-    caught = _tui_importers(tmp_path)
+    caught = _development_importers(tmp_path)
     assert any(entry.startswith("offender.py") for entry in caught)
     assert any(entry.startswith("deferred.py") for entry in caught), "a function-local import is still an import edge"
     assert not any(entry.startswith("innocent.py") for entry in caught)
@@ -175,8 +168,7 @@ def test_import_aliases_and_same_named_bases_cannot_escape_the_inventory(
     assert found["AliasedScreen"].kind == "screen"
     assert found["ImportedChild"].kind == "screen"
     assert found["Shared"].module.endswith(".first")
-    with pytest.raises(_coverage.CoverageError, match="unclassified interface"):
-        _coverage.check(interfaces, (), classifications={}, rendered_table={})
+    assert {interface.name for interface in interfaces} == {"AliasedApp", "AliasedScreen", "ImportedChild", "Shared"}
 
 
 def test_a_manifest_naming_a_kind_of_interface_that_does_not_exist_is_refused() -> None:
@@ -218,142 +210,51 @@ def test_the_inventory_excludes_test_trees_and_locates_real_source() -> None:
         assert interface.line >= 1
 
 
-def test_the_coverage_table_only_names_interfaces_that_exist() -> None:
-    """A rename must break the table loudly, not quietly drop coverage."""
-    known = {interface.qualname for interface in _inventory.scan()}
-    mapped = {qualname for qualnames in _coverage.RENDERED_BY.values() for qualname in qualnames}
-    assert mapped <= known, f"coverage names interfaces the tree does not define: {sorted(mapped - known)}"
-    assert set(_coverage.NOTES) <= known
-
-
-def test_every_discovered_interface_has_one_stable_explicit_classification() -> None:
-    """New interfaces and stale registrations both make the inventory fail."""
+def test_coverage_is_derived_without_a_classification_inventory() -> None:
+    """Every result follows from class shape and an executable registry row."""
     interfaces = _inventory.scan()
-    discovered = {interface.qualname for interface in interfaces}
-    assert discovered == set(_coverage.CLASSIFICATIONS)
-    assert len(interfaces) == 60
+    leaf = next(interface for interface in interfaces if not interface.is_base)
+    table = {"fixture": (leaf.qualname,)}
 
-    counts = {
-        disposition: sum(
-            classification.disposition is disposition for classification in _coverage.CLASSIFICATIONS.values()
+    _coverage.check(interfaces, ("fixture",), rendered_table=table)
+    derived = _coverage.notes(interfaces, ("fixture",), rendered_table=table)
+
+    assert set(derived) == {interface.qualname for interface in interfaces}
+    assert derived[leaf.qualname] == "rendered"
+    assert all(derived[interface.qualname] == "structural base" for interface in interfaces if interface.is_base)
+
+
+def test_coverage_check_bites_on_unknown_surfaces_and_interfaces() -> None:
+    """Detector teeth for both sides of the live registry join."""
+    interfaces = _inventory.scan()
+    known = interfaces[0].qualname
+
+    with pytest.raises(_coverage.CoverageError, match="unknown surface"):
+        _coverage.check(interfaces, ("fixture",), rendered_table={"removed": (known,)})
+    with pytest.raises(_coverage.CoverageError, match="unknown interface"):
+        _coverage.check(
+            interfaces,
+            ("fixture",),
+            rendered_table={"fixture": ("cadrumo.entrypoints.tui.removed.StaleScreen",)},
         )
-        for disposition in _coverage.InventoryDisposition
-    }
-    assert counts == {
-        _coverage.InventoryDisposition.COVERED: 5,
-        _coverage.InventoryDisposition.FIXTURE_NEEDED: 44,
-        _coverage.InventoryDisposition.ABSTRACT_BASE: 9,
-        _coverage.InventoryDisposition.DEVELOPMENT_ONLY: 2,
-    }
 
 
-def test_every_concrete_review_surface_has_a_stable_fixture_identity() -> None:
+def test_unrendered_reports_only_concrete_leaf_interfaces() -> None:
     interfaces = _inventory.scan()
-    needed = _coverage.fixture_needed(interfaces)
-    assert len(needed) == 44
-    for interface in interfaces:
-        classification = _coverage.CLASSIFICATIONS[interface.qualname]
-        if classification.disposition in {
-            _coverage.InventoryDisposition.COVERED,
-            _coverage.InventoryDisposition.FIXTURE_NEEDED,
-        }:
-            assert classification.surface_id is not None
-            assert re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", classification.surface_id)
-        else:
-            assert classification.surface_id is None
+    leaves = tuple(interface for interface in interfaces if not interface.is_base)
+    painted = leaves[0]
 
-
-def test_a_fixture_identity_is_injective_over_the_concrete_census() -> None:
-    """A surface id must identify ONE screen, or it identifies nothing.
-
-    The sibling above asserts that every concrete interface HAS a surface id and
-    that the id is shaped like a slug. Neither assertion reads the id, so the
-    whole identity population is unconstrained: collapsing all 44
-    ``FIXTURE_NEEDED`` ids to the single literal ``"x"`` left every gate in this
-    module green, and so did merging just one screen onto a sibling's id. The
-    census count, the per-disposition counts and the classified-set equality all
-    range over INTERFACES, so they cannot see two interfaces sharing one review
-    identity -- which is the defect that makes a fixture, once written, silently
-    stand in for a screen nobody reviewed.
-
-    ``_coverage.check`` binds a COVERED id to a live harness surface, so those
-    five are already content-checked. The 44 awaiting fixtures have no artefact
-    to read back yet, so injectivity is the strongest claim available over them,
-    and it is asserted here at single-member granularity.
-
-    Reuse is sanctioned in exactly one shape: the App host that exists only to
-    paint its Screen shares that Screen's identity. Asserted as a rule about the
-    pair rather than as a list of the three live pairs, so a fourth such host is
-    a one-line classification edit and any other collision is a failure.
-    """
-    concrete = {
-        qualname: classification.surface_id
-        for qualname, classification in _coverage.CLASSIFICATIONS.items()
-        if classification.disposition
-        in {_coverage.InventoryDisposition.COVERED, _coverage.InventoryDisposition.FIXTURE_NEEDED}
-    }
-    # Vacuity floor: the loop below is a claim about collisions, and an empty or
-    # collapsed concrete census yields no collision and reads as clean. Live: 49.
-    assert len(concrete) >= 40, (
-        f"only {len(concrete)} concrete interface(s) carry a review identity; the "
-        "injectivity claim below ranges over almost none of the census"
+    missing = _coverage.unrendered(
+        interfaces,
+        ("fixture",),
+        rendered_table={"fixture": (painted.qualname,)},
     )
 
-    by_id: dict[str, list[str]] = {}
-    for qualname, surface_id in concrete.items():
-        assert surface_id is not None
-        by_id.setdefault(surface_id, []).append(qualname)
-
-    collisions = []
-    for surface_id, qualnames in sorted(by_id.items()):
-        if len(qualnames) == 1:
-            continue
-        stems = {qualname.removesuffix("App").removesuffix("Screen") for qualname in qualnames}
-        if len(qualnames) == 2 and len(stems) == 1:
-            stem = next(iter(stems))
-            if set(qualnames) == {f"{stem}App", f"{stem}Screen"}:
-                continue
-        collisions.append(f"{surface_id}: {sorted(qualnames)}")
-    assert collisions == [], (
-        "a review identity is claimed by interfaces that are not one App/Screen "
-        "pair, so a fixture written for it reviews one screen and silently "
-        "answers for the others:\n  " + "\n  ".join(collisions)
-    )
-
-
-def test_every_derived_base_is_explicitly_classified_as_a_base() -> None:
-    by_name = {interface.qualname: interface for interface in _inventory.scan()}
-    abstract_bases = {
-        qualname
-        for qualname, classification in _coverage.CLASSIFICATIONS.items()
-        if classification.disposition is _coverage.InventoryDisposition.ABSTRACT_BASE
+    assert painted not in missing
+    assert all(not interface.is_base for interface in missing)
+    assert {interface.qualname for interface in missing} == {
+        interface.qualname for interface in leaves if interface is not painted
     }
-    assert len(abstract_bases) == 9
-    assert all(by_name[qualname].is_base for qualname in abstract_bases)
-
-
-def test_coverage_check_bites_on_unclassified_and_stale_classifications() -> None:
-    interfaces = _inventory.scan()
-    surfaces = tuple(_coverage.RENDERED_BY)
-    missing = dict(_coverage.CLASSIFICATIONS)
-    missing.pop(interfaces[0].qualname)
-    with pytest.raises(_coverage.CoverageError, match="unclassified interface"):
-        _coverage.check(interfaces, surfaces, classifications=missing)
-
-    stale = dict(_coverage.CLASSIFICATIONS)
-    stale["cadrumo.entrypoints.tui.removed.StaleScreen"] = _coverage.InterfaceClassification(
-        _coverage.InventoryDisposition.FIXTURE_NEEDED,
-        "removed-stale",
-    )
-    with pytest.raises(_coverage.CoverageError, match="stale classification"):
-        _coverage.check(interfaces, surfaces, classifications=stale)
-
-
-def test_coverage_check_refuses_a_surface_the_harness_does_not_offer() -> None:
-    interfaces = _inventory.scan()
-    with pytest.raises(_coverage.CoverageError) as refusal:
-        _coverage.check(interfaces, surfaces=("registration",))
-    assert "unknown surface" in str(refusal.value)
 
 
 def _manifest(frames=(), failures=(), skipped=()) -> Manifest:

@@ -6,14 +6,12 @@ from typing import TYPE_CHECKING
 
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings
-from .....core.i18n import tr
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from .....domain.calculations.registry.errors import RegistryValidationError
 from .....domain.calculations.registry.relations import relation_source_requirements, source_presence_gaps
 from .....domain.calculations.registry.schema import RegistrySnapshot
-from .....domain.calculations.registry.snapshot_coordinate import registry_snapshot_id
 from .._playwright import BrowserContext, Locator, Page, Playwright
 from ._declarations_fetch import (
     capture_row_pdf_artefact,
@@ -43,46 +41,6 @@ if TYPE_CHECKING:
     from .....domain.calculations.registry.schema import ModeloRevision
 
 
-async def capture_filed_declaration_observation(
-    session: AeatSession,
-    declaration: Declaracion,
-    *,
-    registry_snapshot: RegistrySnapshot | None = None,
-    settings: Settings | None = None,
-    playwright: Playwright | None = None,
-    artefact_sink: FiledDeclaracionArtefactSink | None = None,
-) -> FiledDeclaracionObservation:
-    """Capture a :class:`FiledDeclaracionObservation` with read-only evidence.
-
-    The observation begins with the register row and captures each artefact AEAT
-    exposes for it: the justificante/declaration PDF and, when present, the
-    submitted-file download. Submitted files are parsed through the registry
-    export layout selected for the declaration snapshot.
-
-    Args:
-        session: Authenticated AEAT session.
-        declaration: Register row to observe.
-        registry_snapshot: Optional pre-built snapshot for the declaration.
-        settings: Optional settings override.
-        playwright: Optional pre-started Playwright instance.
-        artefact_sink: Optional callable storing each captured artefact.
-    """
-    authenticated_identity = (session.identity_nif or "").strip()
-    if not authenticated_identity:
-        raise SedeNavigationError(
-            "AeatSession.identity_nif is empty; cannot bind live filing observation",
-            translated_message=tr("adapters.sede.errors.empty_identity_nif"),
-        )
-    from .declarations import open_declarations_register
-
-    async with open_declarations_register(session, settings=settings, playwright=playwright) as register:
-        return await register.capture_observation(
-            declaration,
-            registry_snapshot=registry_snapshot,
-            artefact_sink=artefact_sink,
-        )
-
-
 def _record_submitted_file_extraction_error(
     metadata: dict[str, str],
     error: RegistryValidationError | SedeParseError,
@@ -102,11 +60,6 @@ async def capture_filed_declaration_observation_from_row(
     artefact_sink: FiledDeclaracionArtefactSink | None,
 ) -> FiledDeclaracionObservation:
     authenticated_identity = (session.identity_nif or "").strip()
-    if not authenticated_identity:
-        raise SedeNavigationError(
-            "AeatSession.identity_nif is empty; cannot bind live filing observation",
-            translated_message="adapters.sede.errors.empty_identity_nif",
-        )
     snapshot = registry_snapshot or _registry_snapshot_for_declaration(declaration)
     read_policy = _read_guard_policy_from_snapshot(snapshot)
     filing_period = declaration.period
@@ -223,12 +176,7 @@ async def capture_filed_declaration_observation_from_row(
         headers=headers,
         metadata=metadata,
         extraction_coverage=extraction_coverage,
-        registry_snapshot_id=registry_snapshot_id(
-            modelo=snapshot.modelo.id,
-            revision_id=snapshot.revision.id,
-            filing_year=declaration.ejercicio,
-            period=declaration.period.registry_token,
-        ),
+        registry_snapshot_ref=snapshot.snapshot_ref,
     )
 
 
@@ -353,7 +301,6 @@ def _select_authoritative_declaration(
 
 
 __all__ = [
-    "capture_filed_declaration_observation",
     "capture_previous_filing_observations",
     "capture_relation_source_observations",
 ]

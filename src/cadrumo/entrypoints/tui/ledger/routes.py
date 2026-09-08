@@ -39,7 +39,7 @@ type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], Ledge
 
 
 class LedgerUnavailableScreen(LedgerWorkspaceScreen):
-    """Typed placeholder for an unavailable application area or deferred body."""
+    """Typed placeholder for an area unavailable in application state."""
 
     def __init__(self, controller: LedgerWorkspaceController, refusal: LedgerRouteRefusalV1) -> None:
         """Retain the typed refusal without resolving its protected reason code."""
@@ -75,17 +75,17 @@ class LedgerUnavailableScreen(LedgerWorkspaceScreen):
 
 @dataclass(frozen=True, slots=True)
 class LedgerRouteV1:
-    """One internal destination and its optional implemented read body."""
+    """One internal destination and its read body."""
 
     destination: LedgerDestinationIdV1
     area: LedgerWorkspaceArea
-    factory: LedgerInternalScreenFactoryV1 | None
+    factory: LedgerInternalScreenFactoryV1
 
 
 #: Which read body each area opens. Only the screens are declared here; the
 #: destination each area resolves to comes from the canonical pairing, so this
 #: catalogue cannot disagree with the controller about where an area leads.
-_SCREEN_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerInternalScreenFactoryV1 | None]] = {
+_SCREEN_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerInternalScreenFactoryV1]] = {
     LedgerWorkspaceArea.OVERVIEW: LedgerOverviewScreen,
     LedgerWorkspaceArea.ENTRIES: LedgerEntriesScreen,
     LedgerWorkspaceArea.REVIEW: LedgerReviewScreen,
@@ -96,7 +96,7 @@ _SCREEN_BY_AREA: Final[dict[LedgerWorkspaceArea, LedgerInternalScreenFactoryV1 |
 }
 
 LEDGER_ROUTES: Final[tuple[LedgerRouteV1, ...]] = tuple(
-    LedgerRouteV1(destination, area, _SCREEN_BY_AREA.get(area))
+    LedgerRouteV1(destination, area, _SCREEN_BY_AREA[area])
     for area, destination in LEDGER_DESTINATION_BY_AREA.items()
 )
 _ROUTES_BY_ID: Final = {route.destination: route for route in LEDGER_ROUTES}
@@ -132,10 +132,7 @@ def resolve_ledger_screen(
     refusal = controller.refusal_for(route.area)
     if refusal is not None:
         return LedgerUnavailableScreen(controller, refusal)
-    factory = route.factory
-    if factory is None:  # pragma: no cover - controller refuses every deferred area
-        raise ValueError("Ledger route has no implemented screen")
-    return factory(controller)
+    return route.factory(controller)
 
 
 def ledger_screen_factory(

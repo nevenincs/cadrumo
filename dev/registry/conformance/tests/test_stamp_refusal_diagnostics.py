@@ -265,7 +265,7 @@ def test_toml_decode_refusal_names_the_manifest_and_stays_a_stamp_error() -> Non
 # ── Cross-site regression guard ─────────────────────────────────────────────
 
 
-def test_none_of_the_three_refusal_sites_reach_pydantics_raw_input_dump() -> None:
+def test_none_of_the_three_refusal_sites_reach_pydantics_raw_input_dump(tmp_path: Path) -> None:
     """One assertion spanning all three sites, so a regression in any of them fails loudly.
 
     Each branch below reproduces the malformed input the corresponding
@@ -284,6 +284,10 @@ def test_none_of_the_three_refusal_sites_reach_pydantics_raw_input_dump() -> Non
     with pytest.raises(StampError) as schema_excinfo:
         _assert_schema_accepts("2019-y-siguientes", schema_resolved)
 
+    modelo_dir = _modelo_130_with_a_short_unattributed_reviewer(tmp_path, reviewed_by=leak_prone_reviewer)
+    with pytest.raises(StampError) as load_excinfo:
+        _assert_revision_is_compiled(modelo_dir, modelo="130", revision="2019-y-siguientes")
+
     with pytest.raises(StampError) as toml_excinfo:
         _declared_governance(
             Path("revision.toml"),
@@ -291,7 +295,7 @@ def test_none_of_the_three_refusal_sites_reach_pydantics_raw_input_dump() -> Non
             "2019-y-siguientes",
         )
 
-    for excinfo in (schema_excinfo, toml_excinfo):
+    for excinfo in (schema_excinfo, load_excinfo, toml_excinfo):
         message = str(excinfo.value)
         assert leak_prone_reviewer not in message
         assert "input_value" not in message

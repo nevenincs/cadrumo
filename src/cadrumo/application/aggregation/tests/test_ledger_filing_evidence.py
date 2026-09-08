@@ -21,6 +21,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -132,12 +133,13 @@ def test_capture_projects_tax_facts_and_binds_fingerprint() -> None:
 
 def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> CalculationRevision:
     period = Period.from_year_and_code(2025, "1T")
+    registry_snapshot_ref = bundled_authority().snapshot("303", filing_year=2025, period="1T").snapshot_ref
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
         filing_year=2025,
         period=period,
-        revision_id="2022",
+        revision_id=registry_snapshot_ref.revision_id,
     )
     filing_instance_evidence = general_m303_filing_evidence(period, reference="test:ledger-filing-evidence")
     revision_id = derive_calculation_revision_id(
@@ -152,6 +154,7 @@ def _revision_with_evidence(*, evidence: LedgerFilingEvidence, tx_id: str) -> Ca
     return CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_REVISION_CASILLA: "1"},
         binding_overrides={},

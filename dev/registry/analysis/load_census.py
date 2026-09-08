@@ -46,13 +46,9 @@ What this cannot see, stated rather than assumed away:
   reference.
 - **Reflective lookup.** ``getattr(registry, name)`` over a computed name.
 
-A module the reference map finds nowhere is therefore a dead CANDIDATE, never a
-dead verdict; :func:`unreferenced_modules` returns candidates, and the reviewed
-call lives in :mod:`dev.registry.analysis.load_census_classification`. The first run of
-this scanner produced two candidates -- ``_constructs`` and ``_handoff_paths`` --
-and both turned out to be consumed by registry gates importing them through the
-facade, which module-level importer counting could not see. That is the whole
-reason the reference map exists.
+A module the reference map finds nowhere is reported directly as a live graph
+difference. There is no reviewed classification table: a real missing edge is
+fixed at its owner and an inference error is fixed in this scanner.
 """
 
 from __future__ import annotations
@@ -822,54 +818,40 @@ def trace_regime(regime: str) -> frozenset[str]:
 
 @dataclass(frozen=True)
 class CensusReport:
-    """One census run: the derived universe, the reviewed classification, the residue."""
+    """One census run containing only mechanically derived graph signals."""
 
     universe: frozenset[str]
     closure: frozenset[str]
     registry_modules: frozenset[str]
-    unclassified: tuple[str, ...]
-    stale_rules: tuple[str, ...]
     dead_candidates: frozenset[str]
-    undeclared_dead_candidates: tuple[str, ...]
     unresolved_dynamic_sites: tuple[DynamicImportSite, ...]
 
     @property
     def clean(self) -> bool:
-        """Whether every derived member carries exactly one reviewed classification.
-
-        Returns:
-            ``True`` when nothing is unclassified, no rule is stale, and every
-            dead candidate has been adjudicated.
-        """
-        return not (self.unclassified or self.stale_rules or self.undeclared_dead_candidates)
+        """Whether the live registry graph carries no unresolved difference."""
+        return not self.dead_candidates and not any(
+            site.module.startswith(REGISTRY_PACKAGE) for site in self.unresolved_dynamic_sites
+        )
 
 
 def run_census() -> CensusReport:
     """Compute the census against the working tree.
 
     Returns:
-        The report. Trace measurements are deliberately excluded: classification
-        completeness is a static property, and binding a gate to a two-regime
-        load trace would make it slow without making it stricter.
+        The report. Trace measurements are deliberately excluded from this fast
+        structural census.
     """
-    from .load_census_classification import classify_universe, stale_rules
-
     graph = build_runtime_graph()
     closure = static_load_closure(graph)
     registry_modules = registry_package_modules()
     universe = census_universe(graph)
     reference_map = build_reference_map()
     candidates = unreferenced_modules(graph, reference_map)
-    classified = classify_universe(universe)
-    declared_dead = {module for module, entry in classified.items() if entry.classification == "dead"}
     return CensusReport(
         universe=universe,
         closure=closure,
         registry_modules=registry_modules,
-        unclassified=tuple(sorted(m for m in universe if m not in classified)),
-        stale_rules=stale_rules(universe),
         dead_candidates=candidates,
-        undeclared_dead_candidates=tuple(sorted(candidates - declared_dead)),
         unresolved_dynamic_sites=tuple(site for site in dynamic_import_sites() if not site.resolved),
     )
 
@@ -879,20 +861,13 @@ def _render(report: CensusReport, traces: Mapping[str, frozenset[str]]) -> str:
         f"static load closure          : {len(report.closure)}",
         f"registry package modules     : {len(report.registry_modules)}",
         f"census universe              : {len(report.universe)}",
-        f"unclassified                 : {len(report.unclassified)}",
-        f"stale classification rules   : {len(report.stale_rules)}",
         f"dead candidates              : {len(report.dead_candidates)}",
         f"unresolved dynamic sites     : {len(report.unresolved_dynamic_sites)}",
     ]
     for regime, executed in traces.items():
         registry_executed = {m for m in executed if m.startswith(REGISTRY_PACKAGE)}
         lines.append(f"trace[{regime}]: {len(executed)} modules, {len(registry_executed)} in the registry package")
-    for label, members in (
-        ("UNCLASSIFIED", report.unclassified),
-        ("STALE RULE", report.stale_rules),
-        ("DEAD CANDIDATE NOT ADJUDICATED", report.undeclared_dead_candidates),
-    ):
-        lines.extend(f"  {label}: {member}" for member in members)
+    lines.extend(f"  UNREFERENCED REGISTRY MODULE: {member}" for member in report.dead_candidates)
     lines.extend(
         f"  UNRESOLVED DYNAMIC IMPORT: {site.module}:{site.lineno}" for site in report.unresolved_dynamic_sites
     )
@@ -906,7 +881,7 @@ def main(argv: list[str] | None = None) -> int:
         argv: Command-line arguments; ``sys.argv`` when omitted.
 
     Returns:
-        ``0`` when every derived member is classified, ``1`` otherwise.
+        ``0`` when the derived registry graph has no unresolved difference.
     """
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--trace", action="store_true", help="also run the load traces (slow; cold rebuilds caches)")
@@ -922,10 +897,7 @@ def main(argv: list[str] | None = None) -> int:
                     "closure": sorted(report.closure),
                     "registry_modules": sorted(report.registry_modules),
                     "universe": sorted(report.universe),
-                    "unclassified": list(report.unclassified),
-                    "stale_rules": list(report.stale_rules),
                     "dead_candidates": sorted(report.dead_candidates),
-                    "undeclared_dead_candidates": list(report.undeclared_dead_candidates),
                     "unresolved_dynamic_sites": [
                         {"module": s.module, "lineno": s.lineno} for s in report.unresolved_dynamic_sites
                     ],

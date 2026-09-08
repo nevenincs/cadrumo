@@ -84,19 +84,6 @@ source_ref = "aeat-modelo-193-procedure"
 required_text = ["modelo 193"]
 
 [[revisions."2024".bindings]]
-id = "modelo-193-gastos-total"
-# Design positions 220-234: the sum of the gastos-relationship rows' importe de gastos.
-source = "gasto193_contributor"
-selector = { fact = "gastos_sum" }
-aggregation = { op = "sum" }
-legal_refs = ["ley-35-2006:art-25", "orden-eha-3377-2011:art-1", "rd-439-2007:art-108", "rd-439-2007:art-90", "ley-35-2006:art-101", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
-
-[[revisions."2024".bindings.source_citations]]
-source_ref = "aeat-modelo-193-procedure"
-required_text = ["modelo 193"]
-
-[[revisions."2024".bindings]]
 id = "modelo-193-perceptor-row-nif-representante"
 # Design 27-35: the minor perceptor's legal representative NIF; spaces elsewhere.
 source = "withholding"

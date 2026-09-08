@@ -498,29 +498,6 @@ class ModeloEditBaselineV1(EditModel):
         return self
 
 
-class ModeloEditPermittedSurfacePageRequestV1(EditModel):
-    """One continuation request for an application-issued permitted-surface page.
-
-    Echoes the baseline, schema fingerprint, and surface digest; a mismatch on
-    read invalidates the whole admission rather than returning a partial page.
-    """
-
-    baseline_id: ModeloEditBaselineId
-    schema_fingerprint: ContentDigest
-    permitted_surface_digest: ContentDigest
-    cursor: _BoundedText | None = None
-
-
-class ModeloEditPermittedSurfacePageV1(EditModel):
-    """One bounded page of a baseline's permitted edit surface."""
-
-    baseline_id: ModeloEditBaselineId
-    schema_fingerprint: ContentDigest
-    permitted_surface_digest: ContentDigest
-    entries: Annotated[tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=_MAX_SURFACE_ENTRIES)]
-    next_cursor: _BoundedText | None = None
-
-
 class ModeloEditAdmissionRequestV1(EditModel):
     """One request to admit an edit baseline for a target and mutation family."""
 
@@ -985,8 +962,6 @@ __all__ = [
     "ModeloEditParseResultV1",
     "ModeloEditParsedValueV1",
     "ModeloEditPermittedSurfaceEntryV1",
-    "ModeloEditPermittedSurfacePageRequestV1",
-    "ModeloEditPermittedSurfacePageV1",
     "ModeloEditPreflightEvaluatedV1",
     "ModeloEditPreflightRequestV1",
     "ModeloEditPreflightResultV1",

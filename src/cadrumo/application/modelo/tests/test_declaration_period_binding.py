@@ -119,6 +119,10 @@ def _iva_compensation_zero_decision(*, filing_year: int, period: str) -> IvaComp
         taxpayer_nif=_TAXPAYER_NIF,
         target_year=filing_year,
         target_period=Period.from_year_and_code(filing_year, period),
+        target_registry_snapshot_ref=bundled_authority()
+        .snapshot("303", filing_year=filing_year, period=period)
+        .snapshot_ref,
+        source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
         selected_amount=Decimal("0"),
         wallet_amount=Decimal("0"),

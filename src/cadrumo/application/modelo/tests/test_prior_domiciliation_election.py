@@ -19,6 +19,7 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionAmendmentIdentity,
@@ -35,6 +36,7 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations.m303_carry_ingress import M303_DECLARATION_TYPE_HEADER_KEY
 from .._prior_domiciliation import resolve_prior_domiciliation_election
@@ -133,6 +135,12 @@ def _revision(
             amendment_identity=amendment_identity,
         ),
         work_unit_id=work_unit.work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         created_at=_WHEN,
         updated_at=_WHEN,
@@ -347,7 +355,11 @@ def test_cancel_or_modify_refuses_every_missing_baseline_u_link(
                 source_metadata={"aeat_justificante_csv": metadata_csv},
                 source_headers=source_headers,
                 result_disposition=result_disposition,
-            )
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=2025,
+                    period="1T",
+                )))
         )
         revision = _revision(
             work_unit,
@@ -385,7 +397,11 @@ def test_cancel_or_modify_persists_only_join_safe_baseline_u_provenance(tmp_path
                 source_metadata={"aeat_justificante_csv": _EVIDENCE_REFERENCE},
                 source_headers=(_submitted_file_declaration_type("U"),),
                 result_disposition=_source_header_disposition(ResultDisposition.DOMICILIACION),
-            )
+            stamped_revision_id=revision_id_for_observation(RegistryModeloObservation(
+                    modelo="303",
+                    filing_year=2025,
+                    period="1T",
+                )))
         )
         revision = _revision(
             work_unit,

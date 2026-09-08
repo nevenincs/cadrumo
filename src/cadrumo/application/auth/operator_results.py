@@ -34,10 +34,6 @@ from .catalogue import AuthProviderListing
 from .probes import ProviderProbeResult
 
 
-class AuthProviderReservedError(CadrumoError, ValueError):
-    """Raised when a known provider slot is reserved but not implemented."""
-
-
 class AuthConfigureNoActiveBucketError(CadrumoError):
     """Raised when auth configuration runs before an active profile bucket exists."""
 
@@ -426,7 +422,6 @@ __all__ = [
     "AuthOperationRequiresCustodySessionError",
     "AuthOperationScopeConflictError",
     "AuthProviderNotConfiguredError",
-    "AuthProviderReservedError",
     "AuthProvidersReport",
     "AuthResetResult",
     "AuthStatusResult",

@@ -47,6 +47,7 @@ from ..recovery_custody import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
+
 _PASSWORD = "an operator chosen passphrase that clears the verifier minimum"  # noqa: S105 - real test credential
 
 

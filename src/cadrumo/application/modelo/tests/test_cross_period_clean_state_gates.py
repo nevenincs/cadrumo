@@ -21,6 +21,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
+from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.justificante import Justificante
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
@@ -142,6 +143,12 @@ def _persist_390_draft(
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
+        registry_snapshot_ref=RegistrySnapshotRef(
+            modelo=work_unit.modelo,
+            revision_id=work_unit.revision_id,
+            modelo_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+        ),
         state=CalculationRevisionState.BORRADOR,
         casilla_values=casilla_values,
         created_at=_CLOCK,
@@ -290,6 +297,12 @@ def _seed_source_filing_record_without_import_flow(
             CalculationRevision(
                 calculation_revision_id=revision_id,
                 work_unit_id=work_unit.work_unit_id,
+                registry_snapshot_ref=RegistrySnapshotRef(
+                    modelo=work_unit.modelo,
+                    revision_id=work_unit.revision_id,
+                    modelo_year=work_unit.filing_year,
+                    period=work_unit.period.registry_token,
+                ),
                 state=CalculationRevisionState.PRESENTADO,
                 casilla_values=casilla_values,
                 observations=registry_grounded_observations(

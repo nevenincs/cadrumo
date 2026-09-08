@@ -234,29 +234,6 @@ def professional_activity_retencion_rates() -> frozenset[Decimal]:
     return frozenset({rates.general_rate, rates.inicio_actividad_rate})
 
 
-def sectoral_activity_retencion_rates() -> frozenset[Decimal]:
-    """Return the art. 95.4/95.5/95.6.1.º rates, minus any art. 95.1 figure.
-
-    The subtraction matters and is not defensive: if a sectoral apartado ever
-    came to fix a value art. 95.1 also fixes, a caller testing "did this match
-    ONLY sectoral rates?" would otherwise treat the shared figure as sectoral
-    and weaken a claim that should stay strong. Membership of the professional
-    set always wins.
-
-    DECLARED, NOT YET REACHED. No classifier asks the question this set exists
-    to answer. The neighbours around it are consulted -- the professional and
-    statutory sets and the supported-rate ceiling all reach the withholding
-    inference -- so a reader of this module has no signal that the sectoral
-    apartados are the one classification the product does not perform. A
-    retención matching 2 % or 1 % is therefore classified by whatever general
-    rule applies, not as art. 95.4/95.5/95.6.1.º.
-
-    Returns:
-        The distinct sectoral rates, currently 2 % and 1 %.
-    """
-    return statutory_activity_retencion_rates() - professional_activity_retencion_rates()
-
-
 def maximum_supported_activity_retencion_rate() -> Decimal:
     """Return the upper bound the withheld-amount inference is capped at.
 
@@ -392,6 +369,5 @@ __all__ = [
     "maximum_supported_activity_retencion_rate",
     "professional_activity_retencion_rates",
     "rirpf_art95_retencion_legal_refs",
-    "sectoral_activity_retencion_rates",
     "statutory_activity_retencion_rates",
 ]

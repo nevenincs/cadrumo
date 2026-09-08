@@ -10,7 +10,6 @@ from ..catalogue import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
     get_auth_provider,
-    implemented_auth_provider_ids,
     known_auth_provider_ids,
     list_auth_providers,
 )
@@ -22,20 +21,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_catalogue_carries_supported_entries() -> None:
     ids = {entry.id for entry in AUTH_PROVIDER_CATALOGUE}
-    assert ids == {"certificate", "clave_movil", "clave_pin", "clave_permanente", "dnie_pkcs"}
+    assert ids == {"certificate", "clave_movil", "clave_permanente"}
 
 
-def test_catalogue_distinguishes_implemented_and_reserved_slots() -> None:
-    assert implemented_auth_provider_ids() == ("certificate", "clave_movil", "clave_permanente")
+def test_catalogue_matches_executable_provider_ids() -> None:
     assert known_auth_provider_ids() == (
         "certificate",
         "clave_movil",
-        "clave_pin",
         "clave_permanente",
-        "dnie_pkcs",
     )
-    reserved = {entry.id for entry in AUTH_PROVIDER_CATALOGUE if not entry.implemented}
-    assert reserved == {"clave_pin", "dnie_pkcs"}
 
 
 def test_list_auth_providers_returns_a_non_empty_immutable_catalogue() -> None:
@@ -101,7 +95,7 @@ class TestCliEnvelopeParity:
     ``AuthProvidersResult.providers`` was redeclared as
     ``list[dict[str, object]]``, so the envelope accepted shapes the report it
     wraps rejects outright — an empty row, an empty label, a non-boolean
-    ``implemented``, an unknown provider id. Nesting the canonical
+    an unknown provider id. Nesting the canonical
     :class:`AuthProviderListing` makes the two contracts one declaration.
     """
 
@@ -116,16 +110,14 @@ class TestCliEnvelopeParity:
         result = self._envelope()(providers=list(report.providers))
 
         assert [row.id for row in result.providers] == [row.id for row in report.providers]
-        assert [row.implemented for row in result.providers] == [row.implemented for row in report.providers]
 
     @pytest.mark.parametrize(
         "row",
         [
             {},
-            {"id": "", "label": {"key": "k"}, "description": {"key": "k"}, "implemented": True},
-            {"id": "Certificate", "label": {"key": "k"}, "description": {"key": "k"}, "implemented": True},
-            {"id": "certificate", "label": {"key": "k"}, "description": {"key": "k"}, "implemented": "yes"},
-            {"id": "certificate", "description": {"key": "k"}, "implemented": True},
+            {"id": "", "label": {"key": "k"}, "description": {"key": "k"}},
+            {"id": "Certificate", "label": {"key": "k"}, "description": {"key": "k"}},
+            {"id": "certificate", "description": {"key": "k"}},
         ],
     )
     def test_the_envelope_refuses_what_the_report_refuses(self, row: dict[str, object]) -> None:

@@ -6,32 +6,34 @@ different packages and drift independently: a new importer column added without
 a matching role leaves that column unreachable through the mapping step, and
 nothing else in the tree notices.
 
-The importer sets are read from their owning facades rather than restated here.
-A copy would pass while the real column set moved underneath it, which is the
-whole failure this gate exists to catch.
+The invoice columns are derived from the live row model and the classification
+columns from their runtime validation authority rather than restated here. A
+copy would pass while a real importer moved underneath it, which is the whole
+failure this gate exists to catch.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ...application.invoices.bulk_import import BULK_INVOICE_IMPORT_ALLOWED_COLUMNS
+from ...application.invoices.bulk_import import BulkInvoiceImportRow
 from ...application.ledger.models import BULK_CLASSIFY_ALLOWED_COLUMNS
 from ...core.field_role import FieldRole
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-_IMPORTER_COLUMNS: frozenset[str] = BULK_INVOICE_IMPORT_ALLOWED_COLUMNS | BULK_CLASSIFY_ALLOWED_COLUMNS
+_BULK_INVOICE_IMPORT_COLUMNS = frozenset(BulkInvoiceImportRow.model_fields)
+_IMPORTER_COLUMNS: frozenset[str] = _BULK_INVOICE_IMPORT_COLUMNS | BULK_CLASSIFY_ALLOWED_COLUMNS
 
 
 def test_the_derived_importer_column_set_is_populated() -> None:
     """Guard the denominator before asserting coverage over it.
 
-    If either facade constant were emptied or renamed to something falsy, the
-    coverage assertion below would pass over nothing at all.
+    If either live contract were emptied, the coverage assertion below would
+    pass over an incomplete population.
     """
-    assert BULK_INVOICE_IMPORT_ALLOWED_COLUMNS
+    assert _BULK_INVOICE_IMPORT_COLUMNS
     assert BULK_CLASSIFY_ALLOWED_COLUMNS
     assert len(_IMPORTER_COLUMNS) >= len(BULK_CLASSIFY_ALLOWED_COLUMNS)
 

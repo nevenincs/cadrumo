@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import ast
 import collections
+import importlib
 import pathlib
 from collections.abc import Iterable
 from typing import Final
@@ -38,6 +39,7 @@ import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 
 from ...quality.unread_inputs import report_unread
 from ..analysis.casilla_id_grammar import screen_authority as grammar_screen
@@ -61,6 +63,43 @@ def authority() -> ValidatedRegistryAuthority:
 @pytest.fixture(scope="module")
 def modelo_ids() -> tuple[str, ...]:
     return tuple(sorted(str(code) for code in registry_modelo_codes()))
+
+
+def _python_target_resolves(target: str) -> bool:
+    """Return whether a registry-owned ``cadrumo`` target resolves."""
+    parts = target.split(".")
+    for boundary in range(len(parts), 1, -1):
+        try:
+            value: object = importlib.import_module(".".join(parts[:boundary]))
+        except ModuleNotFoundError:
+            continue
+        for attribute in parts[boundary:]:
+            if not hasattr(value, attribute):
+                return False
+            value = getattr(value, attribute)
+        return True
+    return False
+
+
+def test_every_filed_observation_application_link_consumer_resolves(
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """Every portal contract for filed observations resolves its callable owner."""
+    unresolved = [
+        f"{modelo.id}/{revision_id}/{link.id} -> {link.consumer}"
+        for modelo in authority.modelos
+        for revision_id, revision in modelo.revisions.items()
+        for link in revision.application_links
+        if link.surface is ApplicationLinkSurface.PORTAL
+        and str(link.id).endswith("filed-declarations-observation")
+        and not _python_target_resolves(link.consumer)
+    ]
+    assert not unresolved, "application links name missing Python consumers: " + ", ".join(unresolved)
+
+
+def test_a_missing_filed_observation_consumer_is_rejected() -> None:
+    """The resolution predicate is able to fail on a stale dotted target."""
+    assert not _python_target_resolves("cadrumo.application.deleted_registry_consumer")
 
 
 def test_every_declared_export_ref_is_carried_by_the_resolved_surface(

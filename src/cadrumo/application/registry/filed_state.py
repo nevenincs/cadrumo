@@ -31,6 +31,7 @@ from ...domain.calculations.registry.bindings_previous_filing import (
     resolve_previous_filing_binding_values as _resolve_previous_filing_binding_values,
 )
 from ...domain.calculations.registry.casilla_membership import undeclared_casilla_ids as _undeclared_casilla_ids
+from ...domain.calculations.registry.errors import RegistrySnapshotError as _RegistrySnapshotError
 from ...domain.calculations.registry.filed_state import RegistryFiledStateComparison as _RegistryFiledStateComparison
 from ...domain.calculations.registry.filed_state import (
     compare_calculation_to_filed_observation as _compare_calculation_to_filed_observation,
@@ -48,6 +49,7 @@ from ...domain.calculations.registry.verification_tolerance import (
     verification_tolerance_or_exact as _verification_tolerance_or_exact,
 )
 from ...domain.period import calculation_filing_date as _calculation_filing_date
+from ..calculations.revision_carry_gate import revision_carry_outcome as _revision_carry_outcome
 from .errors import RegistryPreconditionCondition, registry_terminal_refusal
 
 
@@ -146,6 +148,13 @@ def verify_filed_state(
         filing_year=filed_observation.ejercicio,
         period=filing_period_token,
     )
+    for observation in (filed_observation, *source_observations):
+        outcome = _revision_carry_outcome(observation.registry_snapshot_ref, authority=authority)
+        if outcome.refused:
+            raise _RegistrySnapshotError(
+                "filed-state observation registry coordinate cannot be re-confirmed: "
+                f"{observation.registry_snapshot_ref.revision_id}: {outcome.detail}"
+            )
     requested_required_casilla_ids = _verified_required_casilla_ids(required_casilla_ids, snapshot=snapshot)
     binding_values = _resolve_previous_filing_binding_values(
         snapshot.revision,

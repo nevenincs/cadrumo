@@ -38,9 +38,9 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from enum import StrEnum
-from typing import ClassVar, Literal, override
+from typing import ClassVar, Literal, cast, override
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ...adapters.persistence.storage.envelope.contract import Envelope
 from ...adapters.persistence.storage.envelope.secure_bound_repository import SecureBoundRepository
@@ -68,6 +68,7 @@ from ...domain.calculations.registry.casilla_membership import undeclared_casill
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.loader import load_registry_tree
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.temporal import select_revision
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -78,6 +79,19 @@ from .errors import (
     ObservationKeyError,
     calculation_no_recovery_verdict,
 )
+from .revision_carry_gate import revision_carry_outcome
+
+
+def _require_decision_registry_coordinates_current(decision: IvaCompensationReconciliationDecision) -> None:
+    """Refuse a persisted IVA decision whose target or source revision diverges."""
+    for snapshot_ref in (decision.target_registry_snapshot_ref, *decision.source_registry_snapshot_refs):
+        outcome = revision_carry_outcome(snapshot_ref)
+        if outcome.refused:
+            raise RegistrySnapshotError(
+                "persisted IVA compensation decision registry coordinate cannot be re-confirmed: "
+                f"{snapshot_ref.modelo}/{snapshot_ref.modelo_year}/{snapshot_ref.period}/"
+                f"{snapshot_ref.revision_id}: {outcome.detail}"
+            )
 
 
 class ObservationSourceKind(StrEnum):
@@ -264,6 +278,18 @@ class ObservationEnvelopePayload(BaseModel):
             "the externally evidenced baseline U declaration. This is never bank data."
         ),
     )
+
+    @property
+    def registry_snapshot_ref(self) -> RegistrySnapshotRef:
+        """Return the one canonical coordinate represented by this envelope."""
+        observation = self.observation
+        return RegistrySnapshotRef(
+            modelo=observation.modelo,
+            revision_id=self.stamped_revision_id,
+            modelo_year=observation.filing_year,
+            period=observation.period,
+        )
+
     m303_compensation_basis: M303CompensationBasisValue | None = Field(
         default=None,
         description=(
@@ -277,6 +303,38 @@ class ObservationEnvelopePayload(BaseModel):
     def _parse_source_kind(cls, value: object) -> ObservationSourceKind:
         """Parse encrypted JSON provenance into the closed source taxonomy."""
         return ObservationSourceKind(value)
+
+    @model_validator(mode="after")
+    def _require_canonical_m303_shape(self, info: ValidationInfo) -> ObservationEnvelopePayload:
+        """Reject persisted M303 envelopes that predate canonical carry ingress."""
+        if str(self.observation.modelo) != "303":
+            return self
+        ingress_candidate = False
+        if isinstance(info.context, Mapping):
+            context = cast(Mapping[str, object], info.context)
+            ingress_candidate = context.get("canonical_m303_ingress_candidate") is True
+        if ingress_candidate:
+            return self
+        if self.result_disposition is None or self.m303_compensation_basis is None:
+            raise RegistrySnapshotError(
+                "Modelo 303 observation requires canonical result disposition and compensation basis"
+            )
+        return self
+
+
+def require_observation_envelope_coordinates_current(
+    payload: ObservationEnvelopePayload,
+) -> ObservationEnvelopePayload:
+    """Return a persisted observation only when its producing coordinate re-confirms."""
+    outcome = revision_carry_outcome(payload.registry_snapshot_ref)
+    if outcome.refused:
+        snapshot_ref = payload.registry_snapshot_ref
+        raise RegistrySnapshotError(
+            "persisted observation registry coordinate cannot be re-confirmed: "
+            f"{snapshot_ref.modelo}/{snapshot_ref.modelo_year}/{snapshot_ref.period}/"
+            f"{snapshot_ref.revision_id}: {outcome.detail}"
+        )
+    return payload
 
 
 class IvaWalletDecisionEnvelopePayload(BaseModel):
@@ -529,14 +587,13 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         observation: RegistryModeloObservation,
         *,
         source_kind: ObservationSourceKind | str,
+        stamped_revision_id: RevisionId,
         captured_at: datetime | None = None,
         member_nif: str | None = None,
-        stamped_revision_id: RevisionId | None = None,
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
-        normalize_m303_carry: bool = False,
         replace_official_evidence: bool = False,
     ) -> ObservationEnvelopePayload:
         """Build one validated observation envelope without writing it.
@@ -553,13 +610,10 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         overwriting — the cross-member fan-in the 353<-322 ``per_grupo_member``
         aggregation enumerates. When ``None`` the single-filer key is unchanged.
 
-        ``stamped_revision_id`` is the registry revision id the source filing
-        resolved to at capture time. Producers that hold a
-        :class:`~domain.calculations.registry.RegistrySnapshot` MUST pass
-        ``snapshot.revision.id`` here. If omitted, the repository resolves the
-        law-determined revision from the observation's ``(modelo, filing_year,
-        period)`` before persisting; the persisted payload always carries a
-        required, non-null stamp.
+        ``stamped_revision_id`` is the required registry revision id the source
+        filing resolved to at capture time. There is no inferred or legacy
+        fallback: every producer must pass its authoritative coordinate, which
+        this boundary checks against the law-determined revision.
 
         ``source_metadata`` is source-specific encrypted provenance. It is never
         part of repository keys and must only contain data that belongs inside
@@ -574,35 +628,41 @@ class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelope
         the header projection was landing at capture and vanishing before
         persistence.
 
-        ``normalize_m303_carry`` is the explicit canonical ingress used by the
-        official filed-capture and local-filing routes. It refuses incomplete or
-        conflicting declaration-disposition evidence before persisting a
-        carry-capable Modelo 303 row. Generic observation storage intentionally
-        remains readable for legacy evidence and unrelated consumers. Callers
-        that co-emit this envelope with a history projection use
+        Every Modelo 303 envelope crosses the canonical disposition-aware
+        normalization ingress. Incomplete or conflicting evidence is refused;
+        there is no generic unnormalized storage shape. Callers that co-emit
+        this envelope with a history projection use
         ``to_secure_object_write`` and the storage backend's batch boundary
         so the pair cannot half-persist.
         """
         law_revision_id = _validate_observation_casilla_ids(observation)
+        if stamped_revision_id != law_revision_id:
+            raise RegistrySnapshotError(
+                "observation stamp differs from the law-determined registry revision: "
+                f"stamped={stamped_revision_id!r}, selected={law_revision_id!r}"
+            )
         resolved_source_kind = ObservationSourceKind(source_kind)
         when = captured_at if captured_at is not None else now()
-        payload = ObservationEnvelopePayload(
-            observation=observation,
-            captured_at=when,
-            source_kind=resolved_source_kind,
-            member_nif=member_nif,
-            stamped_revision_id=law_revision_id if stamped_revision_id is None else stamped_revision_id,
-            source_metadata=dict(source_metadata or {}),
-            source_headers=source_headers,
-            result_disposition=result_disposition,
-            prior_domiciliation_election=prior_domiciliation_election,
+        payload = ObservationEnvelopePayload.model_validate(
+            {
+                "observation": observation,
+                "captured_at": when,
+                "source_kind": resolved_source_kind,
+                "member_nif": member_nif,
+                "stamped_revision_id": stamped_revision_id,
+                "source_metadata": dict(source_metadata or {}),
+                "source_headers": source_headers,
+                "result_disposition": result_disposition,
+                "prior_domiciliation_election": prior_domiciliation_election,
+            },
+            context={"canonical_m303_ingress_candidate": True},
         )
-        if normalize_m303_carry:
-            # Keep the serialisable envelope model independent from the
-            # application policy that normalizes it.
-            from .m303_carry_ingress import normalize_m303_carry_observation_envelope
+        # Keep the serialisable envelope model independent from the application
+        # policy that normalizes it, while making this sole write door canonical.
+        from .m303_carry_ingress import normalize_m303_carry_observation_envelope
 
-            payload = normalize_m303_carry_observation_envelope(payload)
+        payload = normalize_m303_carry_observation_envelope(payload)
+        payload = ObservationEnvelopePayload.model_validate(payload.model_dump())
         # Checked HERE, and here only, because every writer prepares its
         # envelope through this method. The operator verb persists the returned
         # payload through the inherited repository save; the live capture and
@@ -742,6 +802,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         decision that cannot be audited. The substrate already owns the
         transaction boundary; this composes both writes into it.
         """
+        _require_decision_registry_coordinates_current(decision)
         payload = IvaWalletDecisionEnvelopePayload(decision=decision)
         latest_write = self.to_secure_object_write(payload)
         history_envelope = Envelope[IvaWalletDecisionEnvelopePayload](
@@ -767,7 +828,10 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
     ) -> IvaCompensationReconciliationDecision | None:
         """Return the latest persisted :class:`IvaCompensationReconciliationDecision` for the given period."""
         payload = super().load(iva_wallet_decision_key(taxpayer_nif, target_period))
-        return payload.decision if payload is not None else None
+        if payload is None:
+            return None
+        _require_decision_registry_coordinates_current(payload.decision)
+        return payload.decision
 
     def list_decisions(self) -> tuple[IvaCompensationReconciliationDecision, ...]:
         """Return the latest persisted IVA wallet decisions in target-period order.
@@ -784,7 +848,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
         scan recomputes the hashed key from each payload and refuses a
         mismatch.
         """
-        return tuple(
+        decisions = tuple(
             sorted(
                 (payload.decision for payload in self.iter_records()),
                 key=lambda decision: (
@@ -795,6 +859,9 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
                 ),
             ),
         )
+        for decision in decisions:
+            _require_decision_registry_coordinates_current(decision)
+        return decisions
 
     def load_decision_history(
         self,
@@ -817,6 +884,7 @@ class IvaWalletDecisionRepository(SecureBoundRepository[IvaWalletDecisionEnvelop
             )
             decision = envelope.payload.decision
             if same_tax_identifier(decision.taxpayer_nif, taxpayer_nif) and decision.target_period == filing_period:
+                _require_decision_registry_coordinates_current(decision)
                 decisions.append(decision)
         return tuple(sorted(decisions, key=lambda item: (item.decided_at, item.wallet_captured_at or item.decided_at)))
 

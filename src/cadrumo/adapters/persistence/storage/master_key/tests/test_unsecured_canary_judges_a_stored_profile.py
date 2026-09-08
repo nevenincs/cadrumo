@@ -12,28 +12,27 @@ guard was a structural gate asserting the call EXISTS and unit tests of the
 predicate in isolation. Neither runs the path where a stored profile is
 decrypted and judged.
 
-These do. A profile envelope is encrypted through the same ``EncryptedBytes``
-column the repository writes with, stored as a real row in a real bucket
-database, and read back by the canary under an active unsecured session. The
+These do. A profile envelope is encrypted through the production secure-object
+repository, stored as a real row in a real bucket database, and read back by
+the canary under an active unsecured session. The
 only difference between the two cases is the tax id in the payload.
 """
 
 from __future__ import annotations
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 import pytest
-from sqlalchemy.engine.default import DefaultDialect
 
-from ......core.config import load_settings, override_settings
+from ......core.config import Settings, load_settings, override_settings
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import bucket_scoped_storage_path
-from ...crypto.encrypted_columns import EncryptedBytes
 from ...errors import UnsecuredModeRefusedError
 from ...secure_object_namespaces import USER_PROFILE_VALUE_NAMESPACE
+from ...sql import SecureObjectRepository
+from ...sql.engine import create_engine_from_settings
 from ..active_session import activate_session
 from ..bucket_session import BucketSession
 from ..master_key import refuse_unsecured_bucket_with_real_profile
@@ -64,25 +63,24 @@ def _unsecured_session(root: Path) -> BucketSession:
 def _store_profile_row(tax_id: str) -> None:
     """Encrypt a profile envelope and store it as a real secure-objects row.
 
-    Encryption goes through the same column type the repository binds with, so
-    the bytes on disk are produced the way production produces them rather
-    than by a fixture's own idea of the format.
+    Encryption goes through the production repository, including the row
+    identity AAD, so the fixture cannot drift from the live wire contract.
     """
     document = json.dumps({"payload": {"facts": [{"path": "identity.tax_id", "value": tax_id}]}})
-    wire = EncryptedBytes().process_bind_param(document.encode("utf-8"), DefaultDialect())
-
     database = bucket_scoped_storage_path(StorageCategory.BUCKET_DATABASE_FILE, _BUCKET_ID, settings=load_settings())
     database.parent.mkdir(parents=True, exist_ok=True)
-    connection = sqlite3.connect(database)
+    engine = create_engine_from_settings(Settings(cadrumo_database_url=f"sqlite:///{database.as_posix()}"))
     try:
-        connection.execute("CREATE TABLE IF NOT EXISTS secure_objects (namespace TEXT, payload BLOB)")
-        connection.execute(
-            "INSERT INTO secure_objects (namespace, payload) VALUES (?, ?)",
-            (USER_PROFILE_VALUE_NAMESPACE.namespace, wire),
+        SecureObjectRepository(engine=engine).save(
+            namespace=USER_PROFILE_VALUE_NAMESPACE.namespace,
+            object_key=f"user-profile:{_BUCKET_ID}",
+            classification=USER_PROFILE_VALUE_NAMESPACE.sensitivity,
+            schema_version=USER_PROFILE_VALUE_NAMESPACE.schema_version,
+            written_at=datetime.now(UTC),
+            payload=document.encode("utf-8"),
         )
-        connection.commit()
     finally:
-        connection.close()
+        engine.dispose()
 
 
 def test_a_stored_real_tax_id_refuses_the_published_key(tmp_path: Path) -> None:

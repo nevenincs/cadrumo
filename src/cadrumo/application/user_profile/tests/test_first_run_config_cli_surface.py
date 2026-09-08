@@ -20,6 +20,7 @@ def _env(tmp_path: Path) -> dict[str, str]:
     return {
         "CADRUMO_SECRET_STORE_BACKEND": SecretStoreBackend.AUTO.value,
         "CADRUMO_SECRET_PASSPHRASE": dev_test_database_password(),
+        "CADRUMO_OUTPUT_LANGUAGE": "en",
         "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "storage"),
         "CADRUMO_RUNS_DIR": str(tmp_path / "probe-runs"),
         "CADRUMO_FINANCIAL_TXS_DIR": str(tmp_path / "txs"),
@@ -136,9 +137,9 @@ def test_setup_auth_rejects_unsupported_provider(tmp_path: Path) -> None:
     )
 
     result = invoke_cached_cli(
-        ["config", "auth", "configure", "--provider", "clave_pin"],
+        ["config", "auth", "configure", "--provider", "unknown_provider"],
         env=env,
     )
 
     assert result.exit_code != 0
-    assert "clave_pin" in result.output
+    assert "unknown_provider" in result.output

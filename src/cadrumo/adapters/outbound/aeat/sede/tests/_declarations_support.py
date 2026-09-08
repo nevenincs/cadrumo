@@ -20,11 +20,16 @@ from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.authority import bundled_authority
+from ......domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.export_parse import parse_export_payload
 from ......domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ......domain.calculations.registry.relations import relation_source_requirements
+from ......domain.calculations.registry.ids import BindingId, RelationId
+from ......domain.calculations.registry.relations import (
+    relation_source_requirements,
+    resolve_relation_values_from_observations,
+)
 from ......domain.calculations.registry.schema_input_kind import InputKind
 from ......tests import FIXTURES_DIR
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
@@ -34,7 +39,6 @@ from ..declarations import (
     Declaracion,
     SedeParseError,
     _declarations_page_shape_context,
-    _extract_csv_from_url,
     _parse_listbox,
     _parse_presented_at,
     _select_combobox_value,
@@ -49,6 +53,7 @@ from ..declarations_observations import (
     _with_derived_303_compensation_available_observation,
     registry_observation_from_filed_declaration,
 )
+from ..declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
@@ -87,6 +92,8 @@ __all__ = [
     "_parse_presented_at",
     "_read_guard_policy_from_snapshot",
     "_renta_2025_relation_observations",
+    "_resolve_previous_filing_from_observations",
+    "_resolve_relations_from_observations",
     "_select_authoritative_declaration",
     "_select_combobox_value",
     "_submitted_file_payload",
@@ -126,6 +133,7 @@ _REGISTER_DOWNLOAD_URL = f"{_AEAT.domains.www6}{_DECLARATIONS_LISTING_BASE_PATH}
 
 if TYPE_CHECKING:
     from ......application.auth.session_types import AeatSession
+    from ......domain.calculations.registry.schema import ModeloRevision
 
 
 # Prevents filed-observation store tests from writing into the active profile DB.
@@ -135,6 +143,39 @@ _isolate_secure_object_backend = bucket_scoped_runtime_profile_fixture(
 
 
 _FIXTURE_ROOT = FIXTURES_DIR / "aeat-sede"
+
+
+def _resolve_previous_filing_from_observations(
+    revision: ModeloRevision,
+    observations: tuple[FiledDeclaracionObservation, ...],
+    *,
+    filing_year: int,
+    period: Period,
+) -> dict[BindingId, Decimal]:
+    """Exercise the domain resolver with normalized fixture observations."""
+    return resolve_previous_filing_binding_values(
+        revision,
+        map(registry_observation_from_filed_declaration, observations),
+        filing_year=filing_year,
+        period=period.registry_token,
+    )
+
+
+def _resolve_relations_from_observations(
+    revision: ModeloRevision,
+    observations: tuple[FiledDeclaracionObservation, ...],
+    *,
+    filing_year: int,
+    period: Period,
+) -> dict[RelationId, Decimal]:
+    """Exercise the domain relation owner with normalized fixture observations."""
+    return resolve_relation_values_from_observations(
+        revision,
+        map(registry_observation_from_filed_declaration, observations),
+        filing_year=filing_year,
+        period=period.registry_token,
+    )
+
 
 _SUBMITTED_FILE_130_2026_1T = _FIXTURE_ROOT / "submitted-files" / "modelo-130-2026-1T-redacted.txt"
 
@@ -360,6 +401,7 @@ def _filed_observation(
             for casilla_id, value in casilla_values.items()
         ),
         extraction_coverage=coverage,
+        registry_snapshot_ref=_modelo_snapshot(modelo, filing_year=ejercicio, period=period).snapshot_ref,
     )
 
 

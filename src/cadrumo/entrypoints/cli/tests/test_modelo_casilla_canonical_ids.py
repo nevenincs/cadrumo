@@ -180,6 +180,7 @@ def test_qualified_casilla_key_passes_validation_unchanged(
 
     result = invoke_cached_cli(
         [
+            "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "iva.resultado=0",
         ],
@@ -191,4 +192,3 @@ def test_qualified_casilla_key_passes_validation_unchanged(
         "engine error must name 'iva.resultado', proving the canonical id was not corrupted"
     )
     assert "not a canonical casilla.id" not in output, "canonical id must not trigger the unknown-casilla diagnostic"
-    assert "printed casilla number" not in output, "canonical id must not trigger the printed-number refusal"

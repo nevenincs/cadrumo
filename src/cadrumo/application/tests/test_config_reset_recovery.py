@@ -19,7 +19,6 @@ import subprocess
 import sys
 from pathlib import Path
 from textwrap import dedent
-from typing import Final
 
 import pytest
 
@@ -36,8 +35,6 @@ from .test_config_reset import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-PINNED_TAXONOMY_LITERALS: Final[frozenset[str]] = frozenset({"secrets"})
-"""Taxonomy-vocabulary literals this module deliberately pins. See the module docstring."""
 
 _CRASH_EXIT_CODE = 91
 _BOUNDARIES = (

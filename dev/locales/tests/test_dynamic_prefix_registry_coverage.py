@@ -1150,6 +1150,28 @@ def test_a_local_bound_to_a_registry_is_left_to_the_registry_rules() -> None:
     )
 
 
+def test_a_mapping_get_literal_fallback_reaching_translation_is_discovered() -> None:
+    """A runtime fallback needs no scanner-only aggregate registry."""
+    from .._ast_scanner import scan_source_text
+
+    source = chr(10).join(
+        (
+            "LABELS = {'known': 'tui.search.destination.known'}",
+            "def render(token):",
+            "    key = LABELS.get(token, 'tui.search.destination.unknown')",
+            "    return tr(key)",
+            "def route(token):",
+            "    destination = LABELS.get(token, 'workbench.destination.unknown')",
+            "    return navigate(destination)",
+        )
+    )
+
+    keys = scan_source_text(source, filename="fallback.py")
+
+    assert "tui.search.destination.unknown" in keys
+    assert "workbench.destination.unknown" not in keys
+
+
 def test_a_guard_that_admits_only_authored_keys_declares_them(tmp_path) -> None:
     """Incident 16: the keys are declared in one module and rendered in another.
 

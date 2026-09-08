@@ -2,9 +2,8 @@
 
 Defines :class:`TaxResidenceProfileError` and its concrete failures
 surfaced to RENTA verification, plus :class:`ProfileKeysRegistrationError`
-for the profile-key registry. The ledger error hierarchies live with their
-records in :mod:`domain.contribuyente.assets` (asset) and
-:mod:`domain.contribuyente.inventory` (inventory and amortizacion). Every
+for the profile-key registry. The inventory ledger error hierarchy lives with
+its records in :mod:`domain.contribuyente.inventory`. Every
 class derives from :class:`core.errors.CadrumoError` so the shared
 error-code registration hook applies.
 """

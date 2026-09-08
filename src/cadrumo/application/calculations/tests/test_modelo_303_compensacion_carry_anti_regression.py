@@ -45,6 +45,7 @@ from ....domain.calculations.registry.bindings import (
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
+from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..observations_repository import CalculationObservationRepository
 from ..relation_prefill import resolve_relations_from_local_store
@@ -183,7 +184,7 @@ def _run_carry_chain(
                 _registry_observation(filing_year=_YEAR_N, period="4T", result=result_n),
                 source_kind="app_filing",
                 captured_at=_CLOCK,
-            )
+            stamped_revision_id=revision_id_for_observation(_registry_observation(filing_year=_YEAR_N, period="4T", result=result_n)))
         )
 
         snapshot_n1 = bundled_authority().snapshot(_MODELO, filing_year=_YEAR_N_PLUS_1, period="1T")

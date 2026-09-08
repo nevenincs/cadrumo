@@ -26,6 +26,7 @@ from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, Fil
 from ....application.overview.calendar_evidence import calendar_filing_evidence_from_sources
 from ....application.user_profile.projections import projection_for_taxpayer
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_authority
 from ....tests.aeat_literal_fixtures import FILED_ARTEFACT_PATH_FIXTURE, aeat_url
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -54,6 +55,11 @@ def _filed_observation() -> FiledDeclaracionObservation:
                 captured_at=datetime(2024, 4, 15, 10, 5, tzinfo=UTC),
             ),
         ),
+        registry_snapshot_ref=bundled_authority().snapshot(
+            "303",
+            filing_year=2024,
+            period=_PERIOD.registry_token,
+        ).snapshot_ref,
     )
 
 

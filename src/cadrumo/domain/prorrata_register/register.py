@@ -54,6 +54,7 @@ from ...core.prorrata_register import ProrrataEspecialTransitionKind as _Prorrat
 from ...core.prorrata_register import ProrrataProvisionalProvenance as _ProrrataProvisionalProvenance
 from ...core.prorrata_register import ProrrataRegisterRegime as _ProrrataRegisterRegime
 from ...core.prorrata_register import SectorDiferenciadoLetra as _SectorDiferenciadoLetra
+from ..calculations.registry.schema_references import RegistrySnapshotRef
 
 
 class ProrrataRegisterError(_CadrumoError):
@@ -270,6 +271,7 @@ class ProrrataRegisterEntry(BaseModel):
     definitive_volume_con_derecho: Decimal | None = Field(default=None, ge=Decimal("0"))
     definitive_volume_sin_derecho: Decimal | None = Field(default=None, ge=Decimal("0"))
     source_observation_ref: str | None = Field(default=None, min_length=1)
+    source_registry_snapshot_refs: tuple[RegistrySnapshotRef, ...]
     schema_version: str = PRORRATA_REGISTER_SCHEMA_VERSION
 
     @field_validator("schema_version")
@@ -287,6 +289,7 @@ class ProrrataRegisterEntry(BaseModel):
         _validate_provisional_field_coupling(self)
         _validate_settlement_field_coupling(self)
         _validate_source_observation_provenance(self)
+        _validate_registry_snapshot_coordinates(self)
         _validate_especial_transition_regime(self)
         return self
 
@@ -349,6 +352,13 @@ def _validate_source_observation_provenance(entry: ProrrataRegisterEntry) -> Non
         raise ProrrataRegisterValidationError(
             "source_observation_ref is permitted only for a carried_prior_definitiva entry"
         )
+
+
+def _validate_registry_snapshot_coordinates(entry: ProrrataRegisterEntry) -> None:
+    """Require the producing registry coordinate for every derived percentage."""
+    carries_prior_definitive = entry.provisional_provenance is _ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    if carries_prior_definitive and not entry.source_registry_snapshot_refs:
+        raise ProrrataRegisterValidationError("carried-prior prorrata values require source_registry_snapshot_refs")
 
 
 def _validate_especial_transition_regime(entry: ProrrataRegisterEntry) -> None:

@@ -57,25 +57,15 @@ def _current_operator_surface_input_schemas() -> tuple[
     tuple[str, ...],
     Mapping[str, VerbInputSchema],
 ]:
-    """Collect the live result-schema and verb input-schema projections.
-
-    A key in :data:`~._verb_input_schema.DECLARED_UNIMPLEMENTED_SURFACES` carries
-    a graph-declared result schema while its verb is knowingly absent, so the live
-    tree walk resolves no leaf for it and it takes part in no live
-    reconciliation row. Those keys are dropped from BOTH projections here rather
-    than half-dropped downstream; every OTHER divergence between the graph
-    and the walk is drift and still raises.
-    """
+    """Collect the live result-schema and verb input-schema projections."""
     from ._command_schema import command_schema_refs
-    from ._verb_input_schema import DECLARED_UNIMPLEMENTED_SURFACES, build_verb_input_schemas
+    from ._verb_input_schema import build_verb_input_schemas
 
     graph_references = command_schema_refs()
     graph_keys = tuple(reference.command for reference in graph_references)
     if len(set(graph_keys)) != len(graph_keys):
         raise ValueError("current CommandSpec graph has duplicate command identities")
-    schema_references = tuple(
-        reference for reference in graph_references if reference.command not in DECLARED_UNIMPLEMENTED_SURFACES
-    )
+    schema_references = graph_references
     command_keys = tuple(reference.command for reference in schema_references)
     input_schemas = build_verb_input_schemas(tuple(sorted(command_keys)))
     if set(input_schemas) != set(command_keys):
@@ -168,7 +158,6 @@ def _current_operator_surface_schema_rows(
                 root=family.root.value,
                 child=family.child,
                 provenance="OperatorSurfaceContract.command_families",
-                unimplemented_reason=family.unimplemented_reason,
             )
             for family in get_operator_surface_contract().command_families
         ),
