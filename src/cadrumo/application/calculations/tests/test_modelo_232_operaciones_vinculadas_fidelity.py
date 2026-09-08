@@ -24,7 +24,7 @@ obligation); RD 634/2015 art. 13 (€100,000 threshold); Orden HFP/816/2017 arts
 
 Implementation note — observation retrieval:
 Uses iter_modelo (full-scan + Python filter). See test_modelo_347_informativa_fidelity.py
-for the rationale (EncryptedString column, iter_records bugfix required).
+for the repository-contract rationale.
 """
 
 from __future__ import annotations

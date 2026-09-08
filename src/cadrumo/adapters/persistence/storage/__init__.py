@@ -25,7 +25,7 @@ Where the contracts live:
   ``secret_store`` and ``crypto``, defining :class:`Envelope`,
   :class:`EncryptedBlobStore`, :class:`SecretStore`,
   :class:`MasterKeyProvider` and the column-level helpers
-  :class:`EncryptedString` and :class:`HashedLookup`.
+  :class:`HashedLookup` and the secure-object row-bound AEAD helpers.
 - Runtime and custody boundary — ``runtime`` and ``runtime_readiness`` for
   :class:`StorageRuntime` and :class:`StorageRuntimeReadiness`,
   ``runtime_repository`` for the repository factories, ``custody`` for the

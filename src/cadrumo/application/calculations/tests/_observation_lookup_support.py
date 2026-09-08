@@ -16,9 +16,8 @@ def find_observation(
     """Scan ``iter_modelo`` and return the envelope matching (filing_year, period) or None.
 
     The production retrieval path: ``iter_modelo`` performs a full-scan over the
-    namespace, decrypting and filtering in Python. The SQL ``WHERE object_key = ?``
-    path cannot match the stored ciphertext since ``EncryptedString`` uses
-    AES-256-GCM with a random nonce.
+    namespace, decrypting and filtering in Python. Tests use that public
+    repository surface instead of depending on its storage-key representation.
     """
     for payload in repo.iter_modelo(modelo):
         obs = payload.observation
