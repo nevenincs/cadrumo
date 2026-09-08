@@ -51,12 +51,6 @@ __all__ = [
 if TYPE_CHECKING:
     from ...domain.user_profile.portable_export import UserProfilePortableExport
 
-# Import is an operator handoff, so the trail names the operator rather than the
-# emitting module. The payload version tracks the import event's own key set.
-_PROFILE_IMPORT_EVENT_ACTOR = "operator"
-_PROFILE_IMPORT_EVENT_PAYLOAD_VERSION = 1
-
-
 #: Current bundle write version. Every export stamps this.
 BUNDLE_SCHEMA_VERSION: Final[int] = 3
 

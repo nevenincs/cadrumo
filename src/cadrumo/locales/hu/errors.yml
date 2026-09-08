@@ -301,14 +301,6 @@ errors:
       rendszerben nyilvántartott munkavállalóknak jövedelemszinttől függetlenül IRPF-bevallást
       kell benyújtaniuk (Ley 35/2006 96. cikk, BOE-A-2006-20764).'
     error_renta_validation: Egy RENTA-mezőérték érvénytelen.
-    error_rental_amortization_cap_exceeded: A halmozott amortizáció meghaladná a bérleti
-      vagyonelem jogszabályi felső határát.
-    error_rental_contract_not_found: A megadott bérleti szerződés nem található.
-    error_rental_finca_not_found: A megadott ingatlan nem található.
-    error_rental_register: Hiba történt a bérleti nyilvántartásban.
-    error_rental_tier_resolution: A bérleti szerződés adatai ellentmondásosak, és
-      az alkalmazandó csökkentési szint nem oldható fel.
-    error_rental_validation: Egy bérleti rekord nem ment át az érvényesítésen.
     error_resources_backend: Hiba történt a csomagolt alkalmazásadatok olvasása során.
     error_resources_load: Egy csomagolt alkalmazás-erőforrás nem tölthető be.
     error_resources_not_found: A kért csomagolt erőforrás nem található.

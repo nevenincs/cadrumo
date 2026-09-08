@@ -26,10 +26,9 @@ LIRPF arts. 87-89 (atribución de rentas regime); Ley 58/2003 LGT art. 93
 (informativa obligation).
 
 Implementation note — observation retrieval pattern:
-The ``CalculationObservationRepository`` persists envelopes with an encrypted
-``object_key`` column (``EncryptedString``) for at-rest key privacy. The
-production retrieval path is ``iter_modelo`` (full-scan + in-Python filter by
-modelo) rather than a SQL ``WHERE object_key = ?`` query. These tests follow
+The ``CalculationObservationRepository`` persists envelopes behind an opaque
+storage key. The production retrieval path is ``iter_modelo`` rather than a
+test-owned SQL query. These tests follow
 the production pattern: save then scan with ``iter_modelo``, filtering by
 ``(filing_year, period)`` to locate the expected envelope.
 """

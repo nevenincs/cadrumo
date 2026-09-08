@@ -40,7 +40,6 @@ from ...core.identity import (
 )
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.time.clock import now
 from ...core.time.utc import validate_utc_aware
 from ...domain.user_profile.values import ProfileSetupState
 from ..auth_credentials import ActiveCertificateCredentials
@@ -331,55 +330,6 @@ def persisted_session_exists(
     if kind not in _STEM_BY_KIND:
         return False
     return _get_session_store().exists(storage_state_paths(kind, bucket_id=bucket_id).storage_state)
-
-
-async def require_verified_aeat_session(
-    settings: Settings,
-    *,
-    kind: AuthProviderKind | None = None,
-    target_url: str | None = None,
-) -> AeatSession:
-    """Return a verified active session without exposing provider mechanics."""
-    provider_kind = _resolve_provider_kind(settings, kind)
-    settings, expected_identity = _prepare_clave_auth(settings, provider_kind)
-    persisted = load_persisted_session(settings, provider_kind)
-    if persisted is None:
-        raise AuthSessionUnavailableError(
-            translated_message="application.auth.sessions.errors.no_session",
-        )
-    if persisted.is_expired(now()):
-        raise AuthSessionUnavailableError(
-            translated_message="application.auth.sessions.errors.session_expired",
-        )
-    paths = storage_state_paths(persisted.provider_kind)
-    if not _get_session_store().exists(paths.storage_state):
-        raise AuthSessionUnavailableError(
-            translated_message="application.auth.sessions.errors.state_missing",
-        )
-
-    from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
-
-    provider = select_provider(
-        persisted.provider_kind,
-        settings=settings,
-        browser_session_factory=default_browser_session_factory,
-    )
-    async with _provider_lifecycle(provider):
-        try:
-            refreshed_session, assertion = await _probe_existing_session(provider, target_url=target_url)
-        except AuthSessionUnavailableError:
-            raise
-        except Exception as exc:
-            raise AuthSessionUnavailableError(
-                translated_message="application.auth.sessions.errors.verify_failed",
-            ) from exc
-
-    if not bool(getattr(assertion, "is_valid", False)):
-        raise AuthSessionUnavailableError(
-            translated_message="application.auth.sessions.errors.sede_rejected",
-        )
-    _assert_session_identity_matches_expected(refreshed_session.identity_nif, expected_identity)
-    return refreshed_session
 
 
 async def ensure_authenticated_aeat_session(
@@ -1179,7 +1129,6 @@ __all__ = [
     "ensure_authenticated_aeat_session",
     "load_persisted_session",
     "persisted_session_exists",
-    "require_verified_aeat_session",
     "resolve_clave_credentials",
     "storage_state_paths",
 ]

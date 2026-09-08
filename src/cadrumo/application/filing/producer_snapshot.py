@@ -722,12 +722,10 @@ class Modelo210ProfileFacts(BaseModel):
     contribuyente, the representante, the inmueble and the refund account all rendered
     blank on a filed return.
 
-    Each scope declares its own FLAT members rather than sharing one address or account
-    model. That is the decision recorded in :mod:`cadrumo.core.address_components`:
-    AEAT reuses one address GRAMMAR but not one address SHAPE -- modelo 210 identifies the
-    municipio by INE code where modelo 360 writes its name -- so a shared type would assert
-    two shapes are interchangeable when they are not. The vocabulary fixes what the leaves
-    are CALLED; it does not merge them.
+    Each scope declares its own flat members rather than sharing one address or account
+    model. AEAT reuses one address grammar but not one address shape: modelo 210 identifies
+    the municipio by INE code where modelo 360 writes its name, so a shared type would assert
+    two shapes are interchangeable when they are not.
 
     Every field is optional and absent stays absent: AEAT writes an alphanumeric header
     field with no content to blancos, so an unsupplied scope is a legal filing rather than
@@ -1036,6 +1034,11 @@ class FilingProducerSnapshot(BaseModel):
 
 
 def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
+    _validate_snapshot_cross_model_facts(snapshot)
+    _validate_snapshot_modelo_profile(snapshot)
+
+
+def _validate_snapshot_cross_model_facts(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is not Modelo.M303 and snapshot.m303_filing_facts is not None:
         raise ValueError("M303FilingFacts are valid only for modelo 303")
     if snapshot.modelo is not Modelo.M390 and snapshot.m390_filing_facts is not None:
@@ -1046,6 +1049,9 @@ def _validate_snapshot_model_profile(snapshot: FilingProducerSnapshot) -> None:
         and snapshot.amendment_evidence.m303_rectificativa_motive is not None
     ):
         raise ValueError("M303 rectificativa motive is valid only for modelo 303")
+
+
+def _validate_snapshot_modelo_profile(snapshot: FilingProducerSnapshot) -> None:
     if snapshot.modelo is Modelo.M111:
         _validate_modelo_111_snapshot(snapshot)
         return

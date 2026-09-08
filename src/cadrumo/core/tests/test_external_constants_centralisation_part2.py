@@ -220,24 +220,11 @@ _MIN_LITERAL_IDS = ("deduccion-maternidad",)
 
 _DECIMAL_CONSTANT_CASES: tuple[tuple[str, str], ...] = (
     ("DEFAULT_IVA_GENERAL_RATE_PCT", "21.00"),
-    ("AMORTIZACION_INMUEBLE_RATE", "0.03"),
     ("REBECA_MARITIME_EXEMPTION_FRACTION", "0.50"),
 )
-_DECIMAL_CONSTANT_IDS = ("default-iva-general-rate", "amortizacion-inmueble-rate", "rebeca-maritime-fraction")
+_DECIMAL_CONSTANT_IDS = ("default-iva-general-rate", "rebeca-maritime-fraction")
 
 _DECIMAL_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
-    (
-        "cadrumo.domain.fincas.amortization_ledger",
-        "AMORTIZACION_INMUEBLE_RATE",
-        "AMORTIZACION_INMUEBLE_RATE",
-        "_amortization_ledger must import AMORTIZACION_INMUEBLE_RATE from cadrumo.core.external_constants",
-    ),
-    (
-        "cadrumo.domain.fincas.amortization_ledger",
-        "ART_23_1_F_RATE",
-        "AMORTIZACION_INMUEBLE_RATE",
-        "_amortization_ledger must expose ART_23_1_F_RATE alias",
-    ),
     (
         "cadrumo.domain.renta.maritime_exemption",
         "REBECA_MARITIME_EXEMPTION_FRACTION",
@@ -245,16 +232,9 @@ _DECIMAL_ALIAS_CASES: tuple[tuple[str, str, str, str], ...] = (
         "_maritime_exemption must import REBECA_MARITIME_EXEMPTION_FRACTION from cadrumo.core.external_constants",
     ),
 )
-_DECIMAL_ALIAS_IDS = ("amortization-rate", "amortization-art-23-alias", "rebeca-fraction")
+_DECIMAL_ALIAS_IDS = ("rebeca-fraction",)
 
 _DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str, str, str], ...] = (
-    (
-        "src/cadrumo/domain/fincas/amortization_ledger.py",
-        "amortization_ledger.py",
-        "0.03",
-        "AMORTIZACION_INMUEBLE_RATE",
-        "Bare Decimal('0.03') amortization literals found",
-    ),
     (
         "src/cadrumo/domain/renta/maritime_exemption.py",
         "_maritime_exemption.py",
@@ -263,7 +243,7 @@ _DECIMAL_LITERAL_CASES: tuple[tuple[str, str, str, str, str], ...] = (
         "Bare Decimal('0.50') REBECA literals found",
     ),
 )
-_DECIMAL_LITERAL_IDS = ("amortization-rate", "rebeca-fraction")
+_DECIMAL_LITERAL_IDS = ("rebeca-fraction",)
 
 
 # ---------------------------------------------------------------------------
@@ -304,32 +284,6 @@ def test_default_iva_general_rate_pct_matches_registry() -> None:
 
     registry_rate = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, date(2026, 1, 1))
     assert registry_rate.pct == DEFAULT_IVA_GENERAL_RATE_PCT
-
-
-def test_amortizacion_inmueble_rate_matches_registry() -> None:
-    """``AMORTIZACION_INMUEBLE_RATE`` equals the dated Modelo 100 rental amortización parameter.
-
-    Binds the constant to the registry parameter that already declares the RIRPF
-    art. 14.2.a rate across every supported revision, so the two cannot silently
-    diverge. Without this the constant sat behind a literal restatement of
-    itself, which detects an edit to the constant but never a divergence from
-    the registry it duplicates.
-    """
-
-    from datetime import date
-
-    from ...core.modelo import Modelo
-    from ...domain.calculations.registry.formula_runtime_ops import read_parameter
-    from ..external_constants import AMORTIZACION_INMUEBLE_RATE
-
-    for period_year in (2024, 2025):
-        registry_rate = read_parameter(
-            Modelo.M100.value,
-            str(period_year),
-            f"renta-{period_year}-rental-amortizacion-rate",
-            date_context={"filing_period": date(period_year, 12, 31)},
-        )
-        assert registry_rate == AMORTIZACION_INMUEBLE_RATE, period_year
 
 
 def test_minimo_familiar_conditions_match_registry() -> None:

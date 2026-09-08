@@ -483,7 +483,7 @@ class SecureBoundRepository[T: BaseModel]:
         ``list_records`` rather than routing through :meth:`load`.  The SQL
         ``WHERE object_key = ?`` lookup inside :meth:`load` cannot
         match the stored ciphertext when ``object_key`` is an
-        ``EncryptedString`` column (AES-256-GCM uses a random nonce, so
+        randomized ciphertext column (AES-256-GCM uses a random nonce, so
         the bind-parameter ciphertext differs from the stored ciphertext
         every time).  Iterating directly over the decrypted rows is the
         correct pattern for full-scan enumeration.

@@ -67,8 +67,8 @@ class AeatSyncOperationHandoffV1(Protocol):
 
     The workspace only selects and admits the exact public action/operation
     pair.  The installed host must resolve that request to the canonical
-    ``OperationController`` and present it through ``present_operation_modal``;
-    that existing modal owns progress, partial/failure outcomes, detach and
+    ``OperationController`` and mount the canonical ``OperationModal``;
+    that modal owns progress, partial/failure outcomes, detach and
     cancellation.  Implementations must not execute the operation inline.
     """
 

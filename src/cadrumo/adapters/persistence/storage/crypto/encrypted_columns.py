@@ -1,17 +1,9 @@
-"""SQLAlchemy ``TypeDecorator`` set for column-level at-rest encryption.
+"""SQLAlchemy deterministic lookup type and secure-object AEAD helpers.
 
-Two type decorators wrap the AEAD primitives behind SQLAlchemy's
-``TypeDecorator`` interface so consumer ORM models declare encryption
-at the column level without touching the cipher directly:
-
-- :class:`EncryptedString` — round-trips a Python ``str`` through
-  AES-256-GCM. Storage type is ``LargeBinary``.
-- :class:`HashedLookup` — deterministic HMAC-SHA256 keyed by a
+:class:`HashedLookup` provides deterministic HMAC-SHA256 keyed by a
   sub-key derived from the master key plus a stable ``context``.
   Storage type is ``LargeBinary`` (32 bytes). Use this column when
-  consumers need ``WHERE column = ?`` lookups against an
-  :class:`EncryptedString`-shaped value without leaking the
-  plaintext.
+  consumers need ``WHERE column = ?`` lookups without leaking plaintext.
 
 The secure-object helpers bind ``namespace``, ``object_key`` digest, and ``schema_version`` into
 payload AEAD associated data so ciphertext copied across rows fails
@@ -25,8 +17,7 @@ Tests use :class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`,
 whose context manager enters a real session without touching the OS
 keychain or file backend.
 
-The AAD (associated authenticated data) for :class:`EncryptedString` binds its
-ciphertext to that purpose, while secure-object payloads use row-identity AAD.
+Secure-object payloads use row-identity AAD.
 """
 
 from __future__ import annotations
@@ -40,15 +31,11 @@ from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
 
 from ..errors import (
-    DecryptionError,
-)
-from ..errors import (
     storage_validation_error as _storage_validation_error,
 )
 from ..master_key.active_session import get_active_hmac_subkey, get_active_master_key
 from .aead import EncryptedBlob, decrypt_record, encrypt_record
 
-_AAD_STRING = b"cadrumo.column.encrypted_string.v1"
 _HKDF_CONTEXT_COLUMN_LOOKUP = b"cadrumo.column.hashed_lookup.v1"
 
 
@@ -118,40 +105,6 @@ def _resolve_master_key() -> bytes:
     return get_active_master_key()
 
 
-class EncryptedString(TypeDecorator[str]):
-    """SQLAlchemy column type that round-trips ``str`` through AES-256-GCM.
-
-    Storage type is ``LargeBinary``; values stored on disk are
-    ``nonce || ciphertext_with_tag`` bytes. Plaintext is encoded as
-    UTF-8 before encryption.
-    """
-
-    impl = LargeBinary
-    cache_ok = True
-
-    @override
-    def process_bind_param(self, value: str | None, dialect: Dialect) -> bytes | None:
-        if value is None:
-            return None
-        if not isinstance(value, str):
-            raise _storage_validation_error(f"EncryptedString expects str; got {type(value).__name__}")
-        key = _resolve_master_key()
-        blob = encrypt_record(value.encode("utf-8"), key=key, associated_data=_AAD_STRING)
-        return blob.to_wire()
-
-    @override
-    def process_result_value(self, value: bytes | None, dialect: Dialect) -> str | None:
-        if value is None:
-            return None
-        key = _resolve_master_key()
-        blob = EncryptedBlob.from_wire(bytes(value))
-        plaintext = decrypt_record(blob, key=key, associated_data=_AAD_STRING)
-        try:
-            return plaintext.decode("utf-8")
-        except UnicodeDecodeError as exc:
-            raise DecryptionError("EncryptedString payload is not valid UTF-8") from exc
-
-
 class HashedLookup(TypeDecorator[bytes]):
     """Deterministic HMAC-SHA256 keyed by a master-key-derived sub-key.
 
@@ -169,8 +122,7 @@ class HashedLookup(TypeDecorator[bytes]):
 
     - Indexable lookup of an encrypted natural key (e.g. a secret
       identifier whose plaintext lives in a sibling
-      :class:`EncryptedString` column). Consumers query
-      ``WHERE lookup_column = "plaintext"`` (the str is digested at
+      separately encrypted payload). Consumers query ``WHERE lookup_column = "plaintext"`` (the str is digested at
       bind time) or ``WHERE lookup_column = HashedLookup.compute(...)``.
     - Idempotency keys keyed by sensitive content where the digest is
       acceptable as the storage key.

@@ -185,15 +185,14 @@ def test_portals_show_refuses_unknown_portal() -> None:
     )
 
 
-def test_portals_list_refuses_malformed_modelo_with_a_typed_envelope() -> None:
+def test_portals_list_refuses_malformed_modelo_at_the_typed_boundary() -> None:
     modelo = "not-a-modelo"
     result = invoke_cached_cli(["--format", "json", "app", "live", "portals", "list", "--modelo", modelo])
 
-    _assert_exact_terminal_action(
-        result,
-        condition_id="portals.registry.modelo_code.recognised",
-        evidence={"modelo": modelo, "modelo_code_recognised": False},
-    )
+    assert result.exit_code == 2, result.output
+    payload = json.loads(result.output)
+    assert payload["command"] == "app.live.portals.list"
+    assert payload["error"]["code"] == "REFUSED_CLI_BOUNDARY"
 
 
 def test_portal_integrity_refusal_reaches_the_cli_boundary_as_safety() -> None:

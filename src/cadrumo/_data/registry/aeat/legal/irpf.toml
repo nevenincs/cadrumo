@@ -91,7 +91,7 @@ effective_from = 2007-04-01
 review_status = "operator_reviewed"
 reviewed_at = 2026-06-10
 reviewed_by = "operator"
-notes = "RIRPF art 14: gastos de amortizacion de los rendimientos del capital inmobiliario. Fija la efectividad de la amortizacion de inmuebles arrendados en el 3 por ciento sobre el mayor del coste de adquisicion satisfecho o el valor catastral, excluido el suelo. Provision reglamentaria que establece el tipo del 3 por ciento citado por la seccion rendimientos_capital_inmobiliario > gastos_deducibles > amortizacion del Modelo 100 y por AMORTIZACION_INMUEBLE_RATE. Base sustantiva: articulo 23 LIRPF."
+notes = "RIRPF art 14: gastos de amortizacion de los rendimientos del capital inmobiliario. Fija la efectividad de la amortizacion de inmuebles arrendados en el 3 por ciento sobre el mayor del coste de adquisicion satisfecho o el valor catastral, excluido el suelo. Provision reglamentaria que establece el tipo del 3 por ciento citado por la seccion rendimientos_capital_inmobiliario > gastos_deducibles > amortizacion del Modelo 100. Base sustantiva: articulo 23 LIRPF."
 required_text = [
     "Gastos de amortización de los rendimientos del capital inmobiliario",
     "3 por ciento",

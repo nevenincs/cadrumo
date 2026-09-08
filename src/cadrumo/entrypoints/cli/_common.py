@@ -72,24 +72,6 @@ MODELO_CODE_CHOICE: typer_click_types.ParamType = cast(
     click.Choice([modelo.value for modelo in Modelo if modelo not in NON_REGISTRY_MODELOS]),
 )
 
-# The FULL modelo taxonomy, including the codes that have no registry definition.
-# Use this only where a command legitimately addresses a retired or non-registry
-# modelo: the portal catalogue ships an entry for the suppressed Modelo 037, so a
-# portal filter pinned to MODELO_CODE_CHOICE would refuse a code the application
-# deliberately supports. It is a separate constant rather than a widening of
-# MODELO_CODE_CHOICE because the registry-resolving surfaces must keep refusing
-# those codes.
-#
-# CAST-RATIONALE-TYPER-CLICK-PARAMTYPE-DUALITY: typer vendors its own click, so
-# click.Choice's click.types.ParamType and typer's typer._click.types.ParamType
-# are the same runtime object behind two static names; the cast bridges only that
-# static duality, with no Any escape.
-MODELO_CODE_CHOICE_ALL: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    click.Choice([modelo.value for modelo in Modelo]),
-)
-
-
 # The application- and domain-layer symbols below are imported lazily,
 # inside the helpers that use them at runtime. A module-level import
 # would pull the application layer — and transitively the registry

@@ -259,7 +259,7 @@ def test_error_registry_logger_is_module_level() -> None:
 def test_error_registry_debug_log_scrubs_sensitive_context(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """resolve_output_language debug record must not leak i18n exception detail with token shapes.
+    """Error-registry debug records must not leak token-shaped exception detail.
 
     The registry logger uses logging.getLogger(__name__) to avoid the
     circular import through cadrumo.core.logging.configure_logging → config →
@@ -275,7 +275,7 @@ def test_error_registry_debug_log_scrubs_sensitive_context(
     sensitive_fragment = "oauth_refresh_token=abc-secret-xyz"
     with caplog.at_level(logging.DEBUG, logger=_registry_logger.name):
         _registry_logger.debug(
-            "resolve_output_language: i18n resolution failed; falling back to 'es' (%s)",
+            "i18n resolution failed (%s)",
             sensitive_fragment,
         )
 
@@ -302,7 +302,7 @@ def test_error_registry_debug_log_scrubs_nif_in_context(
     nif = "12345678Z"
     with caplog.at_level(logging.DEBUG, logger=_registry_logger.name):
         _registry_logger.debug(
-            "resolve_output_language: resolution failed for tax_id=%s",
+            "error rendering failed for tax_id=%s",
             nif,
         )
 

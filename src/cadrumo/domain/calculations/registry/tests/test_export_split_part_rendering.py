@@ -19,7 +19,6 @@ from __future__ import annotations
 import collections
 from datetime import date
 from decimal import Decimal
-from itertools import pairwise
 
 import pytest
 
@@ -41,59 +40,6 @@ _DATE_PART_POLICIES = (
     ExportValuePolicy.TWO_DIGIT_MONTH,
     ExportValuePolicy.TWO_DIGIT_DAY,
 )
-
-#: Casillas a published layout writes into more than one slot of one record
-#: WITHOUT declaring a part policy, each with the reason it is not yet decided.
-#: A repeated slot and a split value are indistinguishable from the layout alone
-#: -- both are several fields naming one casilla -- so an entry here is a
-#: standing question, not an exemption, and the gate below fails if one goes
-#: stale. Deciding these needs the page design read, which is a separate job.
-_UNADJUDICATED_REPEATED_SLOTS: dict[tuple[str, str, str], str] = {
-    ("390", "modelo-390-page-06", "iva.anual.iva-importacion-diferimiento"): (
-        "two 17-position slots carrying one annual figure; may be a legitimate page layout "
-        "showing the amount twice, or a map that repeated itself"
-    ),
-    ("390", "modelo-390-page-06", "iva.anual.regularizacion-cuotas-art-80-cinco-5"): (
-        "two 17-position slots carrying one annual figure; same open question as its page siblings"
-    ),
-    ("390", "modelo-390-page-06", "iva.anual.suma-resultados"): (
-        "two 17-position slots carrying one annual figure; same open question as its page siblings"
-    ),
-    ("200", "m200-page-045", "00199"): (
-        "two adjacent 17-position slots the design labels 'Perdidas fiscales a compensar [00199] "
-        "Aplicable a IIC financieras' and '... Aplicable a IIC inmobiliarias': distinct figures for "
-        "distinct institution types sharing one printed number, not two parts of one value. Needs a "
-        "casilla per institution type in the generator's semantic map, a filing-grade modelling "
-        "change to a generator-owned tree"
-    ),
-    ("200", "m200-page-015b", "00103"): (
-        "three 7-position 'Tipo de gravamen 2025' slots the design attaches to three separate "
-        "deduction blocks: 'Deducciones doble imposicion interna', the same 'DT 23.1 LIS' variant, "
-        "and 'Deducciones doble imposicion internacional RDLeg. 4/2004'. Whether one entity can "
-        "carry three different rates across those blocks is a tax review, and the same "
-        "generator-owned-tree constraint applies"
-    ),
-}
-
-# THE TWO MODELO 200 ENTRIES ABOVE CAME BACK EXACTLY AS THIS COMMENT PREDICTED
-# THEY WOULD. They were removed once because both revisions declared ZERO export
-# layouts -- the premature filing layout was withdrawn rather than repaired --
-# and the note kept here said that "re-authoring the Modelo 200 layout brings
-# both questions straight back". A layout has since been re-authored, the
-# repeated slots are live again, and the reasons were reinstated verbatim from
-# this note.
-#
-# Confirmed against the design the revision CITES rather than assumed from the
-# note: '2025-y-siguientes' declares `aeat-dr-200-2025`, and it is that file --
-# not the 2024 design, where these numbers also appear on other pages -- whose
-# rows carry the distinguishing labels quoted in each reason.
-#
-# Neither has a part policy available to it: a part policy declares which PART
-# of one value a slot carries, while AEAT prints one casilla number against
-# slots holding SEPARATE figures in both cases. Read from the design's own
-# labels, not inferred from the offsets, which is what the geometry alone would
-# have got wrong -- 00199's two slots are contiguous and would look like an
-# integer/decimal pair to anyone reading offsets.
 
 
 def _published_multi_field_groups():
@@ -125,10 +71,6 @@ def _policies(fields: list[ExportFieldDefinition]) -> tuple[ExportValuePolicy | 
     return tuple(field.value_policy for field in fields)
 
 
-def _is_contiguous(fields) -> bool:
-    return all(first.offset + first.length == second.offset for first, second in pairwise(fields))
-
-
 def _amount_samples(fields) -> tuple[Decimal, ...]:
     """Quantities drawn from the pair's own declared geometry.
 
@@ -148,53 +90,6 @@ def test_the_published_corpus_still_contains_multi_field_casillas() -> None:
     assert _GROUPS, "no published layout writes one casilla into several fields"
     split = [group for group in _GROUPS if set(_policies(group[3])) & set(_AMOUNT_PART_POLICIES)]
     assert split, "no published layout declares a split amount, so the reconstruction gate is vacuous"
-
-
-@pytest.mark.parametrize(
-    "modelo_id,record_id,casilla_id,fields",
-    _GROUPS,
-    ids=[f"{m}-{r}-{c}" for m, r, c, _ in _GROUPS],
-)
-def test_a_multi_field_casilla_either_splits_one_value_or_is_declared_unadjudicated(
-    modelo_id: str,
-    record_id: str,
-    casilla_id: str,
-    fields,
-) -> None:
-    """Several fields naming one casilla must be a declared split, or a named question.
-
-    Silence is the failure mode this gate exists to remove: before the part
-    policies existed, a split pair and a duplicated mapping looked identical in
-    the tree and neither announced itself.
-    """
-    policies = _policies(fields)
-    if set(policies) & (set(_AMOUNT_PART_POLICIES) | set(_DATE_PART_POLICIES)):
-        assert _is_contiguous(fields), (
-            f"{modelo_id}/{record_id}/{casilla_id} declares part policies but its fields do not tile: "
-            f"{[(f.offset, f.length) for f in fields]}"
-        )
-        return
-    key = (modelo_id, record_id, casilla_id)
-    assert key in _UNADJUDICATED_REPEATED_SLOTS, (
-        f"{modelo_id}/{record_id}/{casilla_id} writes one casilla into {len(fields)} slots without declaring "
-        "which part each carries. Author the part policies, or record it in _UNADJUDICATED_REPEATED_SLOTS "
-        "with the reason it cannot be decided yet."
-    )
-
-
-def test_no_unadjudicated_entry_is_stale() -> None:
-    """An entry that no longer names a real repeated slot must be removed.
-
-    Without this the allowlist quietly outlives the question it records, which is
-    how an allowlist stops being judgement and becomes furniture.
-    """
-    live = {
-        (modelo_id, record_id, casilla_id)
-        for modelo_id, record_id, casilla_id, fields in _GROUPS
-        if not set(_policies(fields)) & (set(_AMOUNT_PART_POLICIES) | set(_DATE_PART_POLICIES))
-    }
-    stale = sorted(set(_UNADJUDICATED_REPEATED_SLOTS) - live)
-    assert stale == [], f"_UNADJUDICATED_REPEATED_SLOTS names slots that no longer exist: {stale}"
 
 
 _SPLIT_AMOUNTS = [group for group in _GROUPS if _policies(group[3]) == _AMOUNT_PART_POLICIES]

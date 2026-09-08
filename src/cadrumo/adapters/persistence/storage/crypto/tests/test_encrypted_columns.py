@@ -1,4 +1,4 @@
-"""Tests for the encrypted-column TypeDecorator set.
+"""Tests for the hashed-lookup TypeDecorator.
 
 The tests run against a real in-memory SQLAlchemy session bound to
 a deliberately-isolated declarative base so we never touch the live
@@ -18,21 +18,10 @@ from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 from ......tests.master_key import EphemeralMasterKeyProvider
-from ...errors import DecryptionError, StorageValidationError
-from ..aead import encrypt_record
-from ..encrypted_columns import (
-    _AAD_STRING,
-    EncryptedString,
-    HashedLookup,
-)
+from ...errors import StorageValidationError
+from ..encrypted_columns import HashedLookup
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
-
-_ENCRYPTED_STRING_CASES = (
-    "hello world",
-    "movimientos bancarios — autónomo año 2025",
-    None,
-)
 
 
 class _TestBase(DeclarativeBase):
@@ -40,17 +29,15 @@ class _TestBase(DeclarativeBase):
 
 
 _intpk = Annotated[int, mapped_column(primary_key=True, autoincrement=True)]
-_secret_text = Annotated[str | None, mapped_column(EncryptedString, nullable=True)]
 _lookup_key = Annotated[bytes | None, mapped_column(HashedLookup, nullable=True, index=True)]
 
 
 class _CryptoRow(_TestBase):
-    """One mapper class exercising every encrypted column type."""
+    """One mapper class exercising the hashed lookup type."""
 
     __tablename__ = "encrypted_column_smoke"
 
     id: Mapped[_intpk]
-    secret_text: Mapped[_secret_text]
     lookup_key: Mapped[_lookup_key]
 
 
@@ -76,46 +63,6 @@ def engine() -> Iterator[Engine]:
 def session(engine: Engine) -> Iterator[Session]:
     with Session(engine) as sess:
         yield sess
-
-
-class TestEncryptedString:
-    """``EncryptedString`` round-trips str values and stores ciphertext on disk."""
-
-    def test_round_trips(self, session: Session) -> None:
-        rows = [_CryptoRow(secret_text=value) for value in _ENCRYPTED_STRING_CASES]
-        session.add_all(rows)
-        session.commit()
-        session.expire_all()
-        loaded = session.scalars(select(_CryptoRow).order_by(_CryptoRow.id)).all()
-        assert [row.secret_text for row in loaded] == list(_ENCRYPTED_STRING_CASES)
-
-    def test_storage_is_ciphertext(self, engine: Engine) -> None:
-        plaintext = "extremely-sensitive-secret-value"
-        with Session(engine) as sess:
-            sess.add(_CryptoRow(secret_text=plaintext))
-            sess.commit()
-        # Inspect the raw stored bytes via a fresh connection and confirm
-        # they do NOT contain the plaintext anywhere.
-        with engine.connect() as conn:
-            raw_value = conn.exec_driver_sql(
-                "SELECT secret_text FROM encrypted_column_smoke",
-            ).scalar()
-        assert raw_value is not None
-        assert plaintext.encode("utf-8") not in raw_value
-        # nonce(12) + min ciphertext(0) + tag(16) = 28 bytes minimum.
-        assert len(raw_value) >= 12 + 16
-
-
-class TestEncryptedStringInvalidPayload:
-    def test_encrypted_string_result_rejects_invalid_utf8(self, engine: Engine, fixed_master_key: bytes) -> None:
-        wire = encrypt_record(
-            b"\xff\xfe",
-            key=fixed_master_key,
-            associated_data=_AAD_STRING,
-        ).to_wire()
-
-        with pytest.raises(DecryptionError):
-            EncryptedString().process_result_value(wire, engine.dialect)
 
 
 class TestHashedLookup:
@@ -187,12 +134,11 @@ class TestHashedLookup:
 
 
 class TestNullSafety:
-    """Every decorator's bind/result handler returns None for None inputs."""
+    """The decorator's bind/result handlers return None for None inputs."""
 
     def test_string_none(self, session: Session) -> None:
         session.add(_CryptoRow())
         session.commit()
         session.expire_all()
         loaded = session.execute(select(_CryptoRow)).scalar_one()
-        assert loaded.secret_text is None
         assert loaded.lookup_key is None

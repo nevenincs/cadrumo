@@ -13,6 +13,7 @@ from typing import TypedDict
 import typer
 
 from ...core.i18n.render import tr
+from ...core.modelo import Modelo
 from ...domain.portals.categories import PortalCategory
 from ...domain.portals.errors import PortalRegistryError
 from ...domain.portals.metadata import PortalMetadata
@@ -75,7 +76,7 @@ def _portal_row(metadata: PortalMetadata) -> _PortalRow:
 def portals_list(
     ctx: typer.Context,
     category: PortalCategory | None = None,
-    modelo: str | None = None,
+    modelo: Modelo | None = None,
 ) -> None:
     """List local AEAT portal registry entries, optionally filtered by category or modelo.
 

@@ -62,12 +62,6 @@ class CommandCapabilityClass:
 
 
 @dataclass(frozen=True, slots=True)
-class SchemaModuleLoadFailure:
-    module: str
-    error: str
-
-
-@dataclass(frozen=True, slots=True)
 class CommandParameterMetadata:
     name: str
     kind: ParameterKind
@@ -403,7 +397,6 @@ __all__ = [
     "MachineSecretPayloadMetadata",
     "MachineSecretVariantConditionMetadata",
     "ProfileAuthenticationContractMetadata",
-    "SchemaModuleLoadFailure",
     "command_registration_metadata",
     "command_registration_policy",
     "command_registration_projection",

@@ -32,11 +32,9 @@ counterparty); RD 1065/2007 art. 31 (quarterly breakdown fields);
 Orden HAC/1431/2025 (2025 revision of the form layout).
 
 Implementation note — observation retrieval pattern:
-The ``CalculationObservationRepository`` persists envelopes with an encrypted
-``object_key`` column (``EncryptedString``) for at-rest key privacy. The
-production retrieval path is ``iter_modelo`` (full-scan + in-Python filter by
-modelo) rather than a SQL ``WHERE object_key = ?`` query (which cannot match
-the stored ciphertext since AES-256-GCM uses a random nonce). These tests
+The ``CalculationObservationRepository`` persists envelopes behind an opaque
+storage key. The production retrieval path is ``iter_modelo`` rather than a
+test-owned SQL query, so these tests exercise the repository contract. They
 follow the production pattern: save then scan with ``iter_modelo``, filtering
 by ``(filing_year, period)`` to locate the expected envelope.
 """

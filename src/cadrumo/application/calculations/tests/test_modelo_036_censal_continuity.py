@@ -28,9 +28,8 @@ revision effective 2025-02-03).
 
 Implementation note — observation retrieval:
 Uses iter_modelo (full-scan + Python filter) rather than load_observation. See
-test_modelo_347_informativa_fidelity.py for the rationale (EncryptedString column
-means SQL WHERE lookup cannot match stored ciphertext; the fixed iter_records path
-in SecureBoundRepository is the correct retrieval surface).
+test_modelo_347_informativa_fidelity.py for why the repository iterator is the
+correct retrieval surface.
 """
 
 from __future__ import annotations
