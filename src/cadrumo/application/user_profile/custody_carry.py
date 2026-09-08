@@ -8,8 +8,6 @@ custody port.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
-
 from ...core.storage_taxonomy import StorageCustodyProfile
 from ...domain.user_profile.errors import ProfileExportError
 from ...domain.user_profile.portable_export import CarriedSecureObject, CoverageManifest
@@ -66,22 +64,7 @@ def build_secure_object_custody_payload(
     return material.carried_objects, coverage_manifest
 
 
-def restore_carried_objects(
-    carried_objects: Iterable[CarriedSecureObject],
-    *,
-    target_bucket_id: str,
-) -> None:
-    """Atomically restore carried rows through the bound custody aggregate."""
-    carried = tuple(carried_objects)
-    if carried:
-        profile_custody_port().restore_profile_custody_carry(
-            carried,
-            target_bucket_id=target_bucket_id,
-        )
-
-
 __all__ = [
     "build_secure_object_custody_payload",
     "normalize_storage_custody_profile",
-    "restore_carried_objects",
 ]

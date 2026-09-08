@@ -25,7 +25,7 @@ from .legal import verify_legal_reference
 from .period_selector_match import registry_period_for_request
 from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot, filing_period_from_scope
 from .schema_base import DateAxis
-from .schema_references import LegalReference, governed_period_span
+from .schema_references import LegalReference, SourceReference, governed_period_span
 from .schema_surfaces import CasillaDefinition
 from .temporal import select_revision
 from .validate_cross_domain_snapshot import REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES
@@ -596,17 +596,39 @@ def _legal_window_failure(
     if reference.kind in _SUBSTANTIVE_LAW_KINDS and _historical_carrier_admits(reference, carried_spans):
         return None
     if reference.kind not in _SUBSTANTIVE_LAW_KINDS:
-        if reference.effective_to is not None and reference.effective_to < applicability_window.starts_on:
-            return (
-                f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
-                f"revision applicability starts_on {applicability_window.starts_on.isoformat()}"
-            )
-        if applicability_window.closes_on is not None:
-            return (
-                f"legal reference {legal_id!r} effective_from {reference.effective_from.isoformat()} is after "
-                f"revision applicability closes_on {applicability_window.closes_on.isoformat()}"
-            )
-        return None
+        return _procedural_legal_window_failure(
+            legal_id,
+            reference,
+            applicability_window=applicability_window,
+        )
+    return _substantive_legal_window_failure(legal_id, reference, revision=revision)
+
+
+def _procedural_legal_window_failure(
+    legal_id: str,
+    reference: LegalReference,
+    *,
+    applicability_window: RevisionLegalApplicabilityWindow,
+) -> str | None:
+    if reference.effective_to is not None and reference.effective_to < applicability_window.starts_on:
+        return (
+            f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
+            f"revision applicability starts_on {applicability_window.starts_on.isoformat()}"
+        )
+    if applicability_window.closes_on is not None:
+        return (
+            f"legal reference {legal_id!r} effective_from {reference.effective_from.isoformat()} is after "
+            f"revision applicability closes_on {applicability_window.closes_on.isoformat()}"
+        )
+    return None
+
+
+def _substantive_legal_window_failure(
+    legal_id: str,
+    reference: LegalReference,
+    *,
+    revision: ModeloRevision,
+) -> str | None:
     if reference.effective_to is not None and reference.effective_to < revision.valid_from:
         return (
             f"legal reference {legal_id!r} effective_to {reference.effective_to.isoformat()} is before "
@@ -725,6 +747,19 @@ def _check_revision_scoped_source_windows(
         RegistryValidationError: If any revision-scoped source window fails to
             overlap the revision's own validity window.
     """
+    failures = _revision_scoped_source_window_failures(modelo, revision, catalogues)
+    if failures:
+        raise RegistryValidationError(
+            f"modelo {modelo.id} revision {revision.id} cites sources outside their applicability window:\n"
+            + "\n".join(f" - {failure}" for failure in failures),
+        )
+
+
+def _revision_scoped_source_window_failures(
+    modelo: ModeloDefinition,
+    revision: ModeloRevision,
+    catalogues: RegistryCatalogues,
+) -> list[str]:
     _revision_legal_ids, revision_source_ids = collect_snapshot_ref_ids(modelo, revision)
     _elsewhere_legal_ids, elsewhere_source_ids = collect_snapshot_ref_ids(
         modelo,
@@ -737,32 +772,45 @@ def _check_revision_scoped_source_windows(
     deadline_spans = _deadline_window_source_spans(revision)
     failures: list[str] = []
     for source_id in sorted(scoped_source_ids):
-        source = catalogues.sources.get(source_id)
-        if source is None:
-            continue
-        if source.applies_across(revision.valid_from, revision.valid_to):
-            continue
-        if source_id not in elsewhere_source_ids and any(
-            source.applies_across(opens_on, closes_on) for opens_on, closes_on in deadline_spans.get(source_id, ())
-        ):
-            continue
-        if source.applies_to is not None and source.applies_to < revision.valid_from:
-            failures.append(
-                f"source {source_id!r} applies_to {source.applies_to.isoformat()} is before "
-                f"revision valid_from {revision.valid_from.isoformat()}",
-            )
-        else:
-            failures.append(
-                f"source {source_id!r} applies_from "
-                f"{source.applies_from.isoformat() if source.applies_from else '-'} is after "
-                f"revision valid_to "
-                f"{revision.valid_to.isoformat() if revision.valid_to else '-'}",
-            )
-    if failures:
-        raise RegistryValidationError(
-            f"modelo {modelo.id} revision {revision.id} cites sources outside their applicability window:\n"
-            + "\n".join(f" - {failure}" for failure in failures),
+        failure = _source_window_failure(
+            source_id,
+            catalogues.sources.get(source_id),
+            revision=revision,
+            elsewhere_source_ids=elsewhere_source_ids,
+            deadline_spans=deadline_spans,
         )
+        if failure is not None:
+            failures.append(failure)
+    return failures
+
+
+def _source_window_failure(
+    source_id: str,
+    source: SourceReference | None,
+    *,
+    revision: ModeloRevision,
+    elsewhere_source_ids: set[str],
+    deadline_spans: Mapping[str, tuple[tuple[date, date], ...]],
+) -> str | None:
+    if source is None:
+        return None
+    if source.applies_across(revision.valid_from, revision.valid_to):
+        return None
+    if source_id not in elsewhere_source_ids and any(
+        source.applies_across(opens_on, closes_on) for opens_on, closes_on in deadline_spans.get(source_id, ())
+    ):
+        return None
+    if source.applies_to is not None and source.applies_to < revision.valid_from:
+        return (
+            f"source {source_id!r} applies_to {source.applies_to.isoformat()} is before "
+            f"revision valid_from {revision.valid_from.isoformat()}"
+        )
+    return (
+        f"source {source_id!r} applies_from "
+        f"{source.applies_from.isoformat() if source.applies_from else '-'} is after "
+        f"revision valid_to "
+        f"{revision.valid_to.isoformat() if revision.valid_to else '-'}"
+    )
 
 
 def collect_snapshot_ref_ids(

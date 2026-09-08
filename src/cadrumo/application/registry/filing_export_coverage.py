@@ -35,6 +35,7 @@ from ...domain.calculations.registry.temporal import (
 )
 from ..filing.export_proof import (
     FilingExportProof,
+    FilingExportProofAssessment,
     FilingExportProofAuthority,
     FilingExportProofChannel,
     FilingExportProofCoordinate,
@@ -156,69 +157,22 @@ def _compose_revision_limb(
             work_item="aeat-export-fragment-generator-authority:reviewed-layout",
             reconsideration_condition="Record a valid review for the exact revision and its official layout authority.",
         )
-    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
-    coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
-    snapshots: list[RegistrySnapshot] = []
-    evidence_by_locator: dict[tuple[str, str], RegistryClosureEvidence] = {}
-    expected_layout_ids: tuple[str, ...] | None = None
-    for filing_year, period in coordinates:
-        try:
-            admitted_revision_id = authority.admitted_revision_id(
-                modelo_id,
-                filing_year=filing_year,
-                period=period,
-                grade=RegistryAuthorityGrade.FILING,
-            )
-        except (RegistrySnapshotError, RegistryValidationError) as exc:
-            return _refused_limb(
-                modelo_id=modelo_id,
-                revision_id=revision.id,
-                reason="missing_evidence",
-                detail=f"{filing_year}/{period}: {_failure_detail(exc)}",
-                work_item="aeat-export-fragment-generator-authority:filing-layout",
-                reconsideration_condition=(
-                    "Supply the exact official layout evidence required by the filing snapshot boundary."
-                ),
-            )
-        if admitted_revision_id != revision.id:
-            return _refused_limb(
-                modelo_id=modelo_id,
-                revision_id=revision.id,
-                reason="cross_limb_disagreement",
-                detail=(
-                    f"{filing_year}/{period}: filing snapshot selected revision {admitted_revision_id!r} instead "
-                    f"of the registered revision {revision.id!r}"
-                ),
-                work_item="registry-temporal-coverage:law-selection",
-                reconsideration_condition=(
-                    "Reconcile the filing snapshot selection with the revision's declared temporal scope."
-                ),
-            )
-        if expected_layout_ids is not None:
-            continue
-        snapshot = authority.snapshot(
-            modelo_id,
-            filing_year=filing_year,
-            period=period,
-            grade=RegistryAuthorityGrade.FILING,
+    layout_result = _filing_layout_evidence(
+        authority=authority,
+        modelo_id=modelo_id,
+        revision=revision,
+    )
+    if isinstance(layout_result, _FilingLayoutFailure):
+        return _refused_limb(
+            modelo_id=modelo_id,
+            revision_id=revision.id,
+            reason=layout_result.reason,
+            detail=layout_result.detail,
+            work_item=layout_result.work_item,
+            reconsideration_condition=layout_result.reconsideration_condition,
+            filing_channels=layout_result.filing_channels,
         )
-        expected_layout_ids = tuple(layout.id for layout in snapshot.revision.export_layouts)
-        evidence, evidence_failure = _layout_byte_evidence(authority=authority, snapshot=snapshot)
-        if evidence_failure is not None:
-            return _refused_limb(
-                modelo_id=modelo_id,
-                revision_id=revision.id,
-                reason=evidence_failure.reason,
-                detail=f"{filing_year}/{period}: {evidence_failure.detail}",
-                work_item="aeat-export-fragment-generator-authority:official-layout-evidence",
-                reconsideration_condition=(
-                    "Restore byte-exact official layout evidence for every emitted filing layout."
-                ),
-            )
-        evidence_by_locator.update({(item.authority, item.locator): item for item in evidence})
-        snapshots.append(snapshot)
-    snapshot = snapshots[0]
-    evidence = tuple(evidence_by_locator.values())
+    snapshot, evidence = layout_result
     proof, proof_failure = _filing_export_proof(
         proof_authority=proof_authority,
         snapshot=snapshot,
@@ -339,6 +293,50 @@ class _FilingExportSnapshotLike(Protocol):
     def period(self) -> str: ...
 
 
+def _filing_export_coordinate(snapshot: _FilingExportSnapshotLike) -> FilingExportProofCoordinate:
+    """Derive the proof coordinate from the law-selected snapshot identity."""
+    return FilingExportProofCoordinate(
+        modelo=snapshot.modelo.id,
+        revision=snapshot.revision.id,
+        snapshot_ref=RegistrySnapshotRef(
+            modelo=snapshot.modelo.id,
+            revision_id=snapshot.revision.id,
+            modelo_year=snapshot.filing_year,
+            period=snapshot.period,
+        ),
+        layout_ids=tuple(layout.id for layout in snapshot.revision.export_layouts),
+    )
+
+
+def _filing_assessment_refusal(assessment: FilingExportProofAssessment) -> _LayoutEvidenceFailure:
+    """Translate per-channel proof refusals into the closure failure shape."""
+    channel_refusals = tuple(
+        RegistryClosureFilingChannelRefusal(
+            channel=refusal.channel.value,
+            reason=refusal.reason.value,
+            authority_id=refusal.authority_id,
+        )
+        for refusal in assessment.refusals
+    )
+    conflicting_reasons = {"identity_mismatch", "provenance_mismatch"}
+    reason = (
+        "conflicting_evidence"
+        if any(item.reason in conflicting_reasons for item in channel_refusals)
+        else "missing_evidence"
+    )
+    detail = "; ".join(f"{item.channel}:{item.reason}" for item in channel_refusals)
+    return _LayoutEvidenceFailure(
+        reason=reason,
+        detail=f"two-channel filing export assessment refused: {detail}",
+        filing_channels=channel_refusals,
+    )
+
+
+def _secure_replay_is_current(proof: FilingExportProof, assessment_at: UtcInstant) -> bool:
+    """Return whether the secure replay receipt covers the assessment instant."""
+    return proof.secure_replay.attested_at <= assessment_at < proof.secure_replay.valid_until
+
+
 def _filing_export_proof(
     *,
     proof_authority: FilingExportProofAuthority | None,
@@ -351,18 +349,7 @@ def _filing_export_proof(
             reason="missing_evidence",
             detail="no canonical two-channel filing-export proof authority was supplied",
         )
-    layout_ids = tuple(layout.id for layout in snapshot.revision.export_layouts)
-    coordinate = FilingExportProofCoordinate(
-        modelo=snapshot.modelo.id,
-        revision=snapshot.revision.id,
-        snapshot_ref=RegistrySnapshotRef(
-            modelo=snapshot.modelo.id,
-            revision_id=snapshot.revision.id,
-            modelo_year=snapshot.filing_year,
-            period=snapshot.period,
-        ),
-        layout_ids=layout_ids,
-    )
+    coordinate = _filing_export_coordinate(snapshot)
     try:
         assessment = proof_authority.assess_for(coordinate)
     except (OSError, RuntimeError, ValueError) as exc:
@@ -373,28 +360,9 @@ def _filing_export_proof(
             detail="filing export assessment identity does not match the law-selected registry snapshot",
         )
     if assessment.proof is None:
-        channel_refusals = tuple(
-            RegistryClosureFilingChannelRefusal(
-                channel=refusal.channel.value,
-                reason=refusal.reason.value,
-                authority_id=refusal.authority_id,
-            )
-            for refusal in assessment.refusals
-        )
-        conflicting_reasons = {"identity_mismatch", "provenance_mismatch"}
-        reason = (
-            "conflicting_evidence"
-            if any(item.reason in conflicting_reasons for item in channel_refusals)
-            else "missing_evidence"
-        )
-        detail = "; ".join(f"{item.channel}:{item.reason}" for item in channel_refusals)
-        return None, _LayoutEvidenceFailure(
-            reason=reason,
-            detail=f"two-channel filing export assessment refused: {detail}",
-            filing_channels=channel_refusals,
-        )
+        return None, _filing_assessment_refusal(assessment)
     proof = assessment.proof
-    if not proof.secure_replay.attested_at <= assessment_at < proof.secure_replay.valid_until:
+    if not _secure_replay_is_current(proof, assessment_at):
         return None, _LayoutEvidenceFailure(
             reason="stale_evidence",
             detail="secure replay receipt is not current at the closure assessment instant",
@@ -446,6 +414,81 @@ class _LayoutEvidenceFailure:
     reason: RegistryClosureRefusalReason
     detail: str
     filing_channels: tuple[RegistryClosureFilingChannelRefusal, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class _FilingLayoutFailure:
+    """One layout-admission failure with its owner-facing refusal contract."""
+
+    reason: RegistryClosureRefusalReason
+    detail: str
+    work_item: str
+    reconsideration_condition: str
+    filing_channels: tuple[RegistryClosureFilingChannelRefusal, ...] = ()
+
+
+def _filing_layout_evidence(
+    *,
+    authority: ValidatedRegistryAuthority,
+    modelo_id: str,
+    revision: ModeloRevision,
+) -> tuple[RegistrySnapshot, tuple[RegistryClosureEvidence, ...]] | _FilingLayoutFailure:
+    """Admit each coordinate and collect byte evidence from its first snapshot."""
+    assessment_horizon = coverage_assessment_horizon(authority.catalogues)
+    coordinates = revision_selection_coordinates(revision, assessment_horizon=assessment_horizon)
+    snapshots: list[RegistrySnapshot] = []
+    evidence_by_locator: dict[tuple[str, str], RegistryClosureEvidence] = {}
+    for filing_year, period in coordinates:
+        try:
+            admitted_revision_id = authority.admitted_revision_id(
+                modelo_id,
+                filing_year=filing_year,
+                period=period,
+                grade=RegistryAuthorityGrade.FILING,
+            )
+        except (RegistrySnapshotError, RegistryValidationError) as exc:
+            return _FilingLayoutFailure(
+                reason="missing_evidence",
+                detail=f"{filing_year}/{period}: {_failure_detail(exc)}",
+                work_item="aeat-export-fragment-generator-authority:filing-layout",
+                reconsideration_condition=(
+                    "Supply the exact official layout evidence required by the filing snapshot boundary."
+                ),
+            )
+        if admitted_revision_id != revision.id:
+            return _FilingLayoutFailure(
+                reason="cross_limb_disagreement",
+                detail=(
+                    f"{filing_year}/{period}: filing snapshot selected revision {admitted_revision_id!r} instead "
+                    f"of the registered revision {revision.id!r}"
+                ),
+                work_item="registry-temporal-coverage:law-selection",
+                reconsideration_condition=(
+                    "Reconcile the filing snapshot selection with the revision's declared temporal scope."
+                ),
+            )
+        if snapshots:
+            continue
+        snapshot = authority.snapshot(
+            modelo_id,
+            filing_year=filing_year,
+            period=period,
+            grade=RegistryAuthorityGrade.FILING,
+        )
+        evidence, evidence_failure = _layout_byte_evidence(authority=authority, snapshot=snapshot)
+        if evidence_failure is not None:
+            return _FilingLayoutFailure(
+                reason=evidence_failure.reason,
+                detail=f"{filing_year}/{period}: {evidence_failure.detail}",
+                work_item="aeat-export-fragment-generator-authority:official-layout-evidence",
+                reconsideration_condition=(
+                    "Restore byte-exact official layout evidence for every emitted filing layout."
+                ),
+                filing_channels=evidence_failure.filing_channels,
+            )
+        evidence_by_locator.update({(item.authority, item.locator): item for item in evidence})
+        snapshots.append(snapshot)
+    return snapshots[0], tuple(evidence_by_locator.values())
 
 
 def _refused_limb(

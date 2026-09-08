@@ -420,15 +420,8 @@ def _decimal(raw: str | None) -> Decimal | None:
     return coerce_decimal(raw)
 
 
-def _iva_id(party: Element) -> str | None:
-    """Return the party's IVA number, never a SIRET or Steuernummer.
-
-    Prefers an element explicitly scheme-tagged as ``VAT``. Falls back to a value
-    carrying a two-letter country prefix, which is the EU IVA-id shape and
-    which a SIRET (9 or 14 bare digits) and a Steuernummer (bare digits and
-    slashes) both fail. Returns ``None`` rather than the first identifier when
-    neither test passes -- an absent id is recoverable, a wrong one is not.
-    """
+def _iva_id_candidate_values(party: Element) -> tuple[str | None, tuple[str, ...]]:
+    """Collect candidate identifiers while retaining the first explicit VAT id."""
     candidates: list[str] = []
     for node in party.iter():
         text = (node.text or "").strip()
@@ -439,12 +432,35 @@ def _iva_id(party: Element) -> str | None:
             continue
         scheme = (node.get("schemeID") or node.get("schemeAgencyID") or "").strip().lower()
         if scheme in _IVA_SCHEME_TOKENS:
-            return text
+            return text, tuple(candidates)
         candidates.append(text)
+    return None, tuple(candidates)
+
+
+def _prefixed_iva_id(text: str) -> str | None:
+    """Return a candidate's compact EU IVA shape, or ``None`` when it is not one."""
+    compact = text.replace(" ", "").replace("-", "")
+    if len(compact) > 2 and compact[:2].isalpha() and any(ch.isdigit() for ch in compact[2:]):
+        return compact
+    return None
+
+
+def _iva_id(party: Element) -> str | None:
+    """Return the party's IVA number, never a SIRET or Steuernummer.
+
+    Prefers an element explicitly scheme-tagged as ``VAT``. Falls back to a value
+    carrying a two-letter country prefix, which is the EU IVA-id shape and
+    which a SIRET (9 or 14 bare digits) and a Steuernummer (bare digits and
+    slashes) both fail. Returns ``None`` rather than the first identifier when
+    neither test passes -- an absent id is recoverable, a wrong one is not.
+    """
+    explicit, candidates = _iva_id_candidate_values(party)
+    if explicit is not None:
+        return explicit
     for text in candidates:
-        compact = text.replace(" ", "").replace("-", "")
-        if len(compact) > 2 and compact[:2].isalpha() and any(ch.isdigit() for ch in compact[2:]):
-            return compact
+        candidate = _prefixed_iva_id(text)
+        if candidate is not None:
+            return candidate
     return None
 
 
@@ -561,23 +577,63 @@ def _ubl_invoice_number(root: Element) -> str | None:
     return None
 
 
+def _ubl_header_child_values(
+    child: Element,
+    *,
+    existing_regime_legend: str | None,
+) -> tuple[str | None, str | None, str | None]:
+    """Read one UBL root child, including its document-level statutory mention.
+
+    A document-level cbc:Note is where UBL carries the statutory mention an issuer
+    prints (EN16931 BT-22). It is read as free text in the document's OWN language,
+    never matched against a Spanish phrase list: an intra-community invoice states
+    its exemption in the issuer's language, and a phrase match would silently
+    recover nothing there while appearing to work on every domestic document.
+    """
+    name = _local(child.tag)
+    invoice_date = child.text.strip() if name == "IssueDate" and child.text else None
+    currency = child.text.strip() if name == "DocumentCurrencyCode" and child.text else None
+    regime_legend = existing_regime_legend
+    if name == "Note" and child.text and regime_legend is None:
+        regime_legend = child.text.strip() or None
+    return invoice_date, currency, regime_legend
+
+
+def _ubl_document_header_values(
+    root: Element,
+    *,
+    existing_regime_legend: str | None,
+) -> tuple[str | None, str | None, str | None]:
+    """Read UBL header values while preserving root order and existing legend state."""
+    invoice_date: str | None = None
+    currency: str | None = None
+    regime_legend = existing_regime_legend
+    for child in root:
+        child_date, child_currency, regime_legend = _ubl_header_child_values(
+            child,
+            existing_regime_legend=regime_legend,
+        )
+        if child_date is not None:
+            invoice_date = child_date
+        if child_currency is not None:
+            currency = child_currency
+    if regime_legend is None:
+        regime_legend = _first_text(root, "TaxExemptionReason")
+    return invoice_date, currency, regime_legend
+
+
 def _apply_ubl_document_header(root: Element, parsed: ParsedEInvoice) -> None:
     """Read the issue date, currency and statutory mention off the root's children."""
-    for child in root:
-        if _local(child.tag) == "IssueDate" and child.text:
-            parsed.invoice_date = child.text.strip()
-        if _local(child.tag) == "DocumentCurrencyCode" and child.text:
-            parsed.currency = child.text.strip()
-        # A document-level cbc:Note is where UBL carries the statutory mention
-        # an issuer prints (EN16931 BT-22). Read as free text in the document's
-        # OWN language, never matched against a Spanish phrase list: an
-        # intra-community invoice states its exemption in the issuer's
-        # language, and a phrase match would silently recover nothing there
-        # while appearing to work on every domestic document.
-        if _local(child.tag) == "Note" and child.text and parsed.regime_legend is None:
-            parsed.regime_legend = child.text.strip() or None
-    if parsed.regime_legend is None:
-        parsed.regime_legend = _first_text(root, "TaxExemptionReason")
+    invoice_date, currency, regime_legend = _ubl_document_header_values(
+        root,
+        existing_regime_legend=parsed.regime_legend,
+    )
+    if invoice_date is not None:
+        parsed.invoice_date = invoice_date
+    if currency is not None:
+        parsed.currency = currency
+    if regime_legend is not None:
+        parsed.regime_legend = regime_legend
 
 
 def _apply_ubl_parties(root: Element, parsed: ParsedEInvoice) -> None:
@@ -793,6 +849,25 @@ def _facturae_header_tax_nodes(invoice: Element) -> list[Element]:
     return header_taxes
 
 
+def _facturae_tax_band(
+    tax: Element,
+) -> tuple[Decimal | None, Decimal | None, Decimal | None, tuple[Decimal, ...]]:
+    """Read one Facturae tax band and all of its stated surcharge amounts."""
+    rate = _decimal(_first_text(tax, "TaxRate"))
+    base = None
+    amount = None
+    for base_node in _find_all(tax, "TaxableBase"):
+        base = _decimal(_first_text(base_node, "TotalAmount"))
+    for amount_node in _find_all(tax, "TaxAmount"):
+        amount = _decimal(_first_text(amount_node, "TotalAmount"))
+    surcharges: list[Decimal] = []
+    for surcharge_node in _find_all(tax, "EquivalenceSurchargeAmount"):
+        surcharge = _decimal(_first_text(surcharge_node, "TotalAmount"))
+        if surcharge is not None:
+            surcharges.append(surcharge)
+    return rate, base, amount, tuple(surcharges)
+
+
 def _apply_facturae_tax_bands(
     invoice: Element,
     parsed: ParsedEInvoice,
@@ -804,20 +879,11 @@ def _apply_facturae_tax_bands(
     band_cuotas: list[Decimal] = []
     band_recargos: list[Decimal] = []
     for tax in header_taxes:
-        rate = _decimal(_first_text(tax, "TaxRate"))
-        base = None
-        amount = None
-        for base_node in _find_all(tax, "TaxableBase"):
-            base = _decimal(_first_text(base_node, "TotalAmount"))
-        for amount_node in _find_all(tax, "TaxAmount"):
-            amount = _decimal(_first_text(amount_node, "TotalAmount"))
+        rate, base, amount, surcharges = _facturae_tax_band(tax)
         if amount is not None:
             band_cuotas.append(amount)
         parsed.iva_breakdown.append((rate, base, amount))
-        for surcharge_node in _find_all(tax, "EquivalenceSurchargeAmount"):
-            surcharge = _decimal(_first_text(surcharge_node, "TotalAmount"))
-            if surcharge is not None:
-                band_recargos.append(surcharge)
+        band_recargos.extend(surcharges)
     # Summed, never last-wins: a document charging two rates surcharges each
     # band separately, so keeping only the final node silently under-reports the
     # recargo -- and it under-reports it into a term the printed-total identity

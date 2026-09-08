@@ -304,20 +304,48 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         CertificateLoadError: PKCS#12 bytes cannot be parsed.
         CertificateExpiredError: Certificate's validity has elapsed.
     """
+    raw_password = _require_certificate_password(bundle)
+    raw_bytes = _read_pkcs12_bytes(bundle)
+    parsed = _decode_pkcs12(bundle, raw_bytes, raw_password)
+    parsed_cert = _require_end_entity_certificate(parsed, bundle)
+    loaded = _build_loaded_certificate(
+        bundle,
+        parsed_cert.certificate,
+        friendly_name=_resolve_friendly_name(bundle.friendly_name, parsed_cert.friendly_name),
+    )
+    _attach_private_material(loaded, raw_bytes=raw_bytes, bundle=bundle, private_key=parsed.key)
+    _raise_if_expired(loaded)
+    log.info("loaded PKCS#12 certificate: thumbprint=%s", loaded.sha256_thumbprint)
+    return loaded
+
+
+def _require_certificate_password(bundle: CertificateBundle) -> str:
+    """Materialise and validate the passphrase immediately before loading."""
     raw_password = bundle.password.get_secret_value()
     if not raw_password:
         raise CertificatePasswordError(
             f"passphrase for PKCS#12 bundle at {bundle.path} is empty; "
             "construct CertificateBundle with a non-empty SecretStr password.",
         )
+    return raw_password
 
+
+def _read_pkcs12_bytes(bundle: CertificateBundle) -> bytes:
+    """Read the bundle bytes, translating filesystem failures."""
     try:
-        raw_bytes = bundle.path.read_bytes()
+        return bundle.path.read_bytes()
     except OSError as exc:
         raise CertificateLoadError(f"could not read PKCS#12 bundle at {bundle.path}: {exc}") from exc
 
+
+def _decode_pkcs12(
+    bundle: CertificateBundle,
+    raw_bytes: bytes,
+    raw_password: str,
+) -> pkcs12.PKCS12KeyAndCertificates:
+    """Decode PKCS#12 bytes and preserve password/load error classification."""
     try:
-        parsed = pkcs12.load_pkcs12(raw_bytes, raw_password.encode(UTF_8_ENCODING))
+        return pkcs12.load_pkcs12(raw_bytes, raw_password.encode(UTF_8_ENCODING))
     except ValueError as exc:
         message = str(exc).lower()
         if "invalid password" in message or "mac verify" in message:
@@ -326,42 +354,65 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
             ) from exc
         raise CertificateLoadError(f"could not parse PKCS#12 bundle at {bundle.path}: malformed bytes") from exc
 
+
+def _require_end_entity_certificate(
+    parsed: pkcs12.PKCS12KeyAndCertificates,
+    bundle: CertificateBundle,
+) -> pkcs12.PKCS12Certificate:
+    """Require the end-entity certificate returned by the PKCS#12 decoder."""
     if parsed.cert is None:
         raise CertificateLoadError(f"PKCS#12 bundle at {bundle.path} contains no end-entity certificate")
+    return parsed.cert
 
-    x509_cert = parsed.cert.certificate
-    not_before = coerce_utc_aware(x509_cert.not_valid_before_utc)
-    not_after = coerce_utc_aware(x509_cert.not_valid_after_utc)
 
-    friendly_name: str | None = bundle.friendly_name
-    if friendly_name is None and parsed.cert.friendly_name is not None:
+def _resolve_friendly_name(explicit_name: str | None, encoded_name: bytes | None) -> str | None:
+    """Prefer the operator label and decode the bundle label when available."""
+    if explicit_name is None and encoded_name is not None:
         try:
-            friendly_name = parsed.cert.friendly_name.decode(UTF_8_ENCODING)
+            return encoded_name.decode(UTF_8_ENCODING)
         except UnicodeDecodeError:
-            friendly_name = None
+            return None
+    return explicit_name
 
-    loaded = LoadedCertificate(
+
+def _build_loaded_certificate(
+    bundle: CertificateBundle,
+    x509_cert: x509.Certificate,
+    *,
+    friendly_name: str | None,
+) -> LoadedCertificate:
+    """Project decoded X.509 metadata into the safe public record."""
+    return LoadedCertificate(
         subject=x509_cert.subject.rfc4514_string(),
         issuer=x509_cert.issuer.rfc4514_string(),
-        not_before=not_before,
-        not_after=not_after,
+        not_before=coerce_utc_aware(x509_cert.not_valid_before_utc),
+        not_after=coerce_utc_aware(x509_cert.not_valid_after_utc),
         serial_number=format(x509_cert.serial_number, "x"),
         sha256_thumbprint=x509_cert.fingerprint(hashes.SHA256()).hex(),
         source_path=bundle.path,
         friendly_name=friendly_name,
     )
 
+
+def _attach_private_material(
+    loaded: LoadedCertificate,
+    *,
+    raw_bytes: bytes,
+    bundle: CertificateBundle,
+    private_key: object | None,
+) -> None:
+    """Attach decoded private material only to the model's private fields."""
     object.__setattr__(loaded, "_pkcs12_bytes", raw_bytes)
     object.__setattr__(loaded, "_password", bundle.password)
-    object.__setattr__(loaded, "_private_key_handle", parsed.key)
+    object.__setattr__(loaded, "_private_key_handle", private_key)
 
+
+def _raise_if_expired(loaded: LoadedCertificate) -> None:
+    """Refuse an expired certificate after metadata and private material load."""
     if loaded.is_expired():
         raise CertificateExpiredError(
             f"certificate for subject {loaded.subject!r} expired at {loaded.not_after.isoformat()}",
         )
-
-    log.info("loaded PKCS#12 certificate: thumbprint=%s", loaded.sha256_thumbprint)
-    return loaded
 
 
 # ── Pre-expiry health evaluator ─────────────────────────────────────────────

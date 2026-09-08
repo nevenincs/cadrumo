@@ -5,8 +5,8 @@ a REAL encrypted :class:`~adapters.persistence.storage.SecureObjectRepository`-b
 :class:`~adapters.persistence.profile.buckets.BucketEventHistoryRepository`
 (:func:`~tests.secure_sql.isolated_runtime_profile` -- a genuine
 ``BUCKET_DEK_V1`` bucket, no mocks): every collaboration boundary (recipient
-registered/removed, package encrypted/decrypted, review-only workspace
-opened, package counter-signed) appends a typed
+registered/removed, package encrypted/decrypted, and package counter-signed)
+appends a typed
 :class:`~domain.buckets.BucketEvent` that survives the encrypted
 save/load roundtrip with the exact event type, object type, and payload this
 module promises.
@@ -18,8 +18,6 @@ See Also:
         Trust-boundary event emitted when a package is sealed for a recipient.
     :func:`~application.modelo.emit_collab_package_decrypted_event`
         Privacy event emitted after decrypted package bytes are read.
-    :func:`~application.modelo.emit_collab_review_only_workspace_opened_event`
-        Privacy event emitted when the review-only workspace opens.
     :func:`~application.modelo.emit_collab_package_counter_signed_event`
         Collaboration event emitted when the recipient counter-signs.
     :class:`~domain.buckets.BucketEventType`
@@ -60,15 +58,12 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
-from .._review_package_review_only_workspace import open_review_only_workspace
-from ..review_package import verify_review_package
 from ..review_package_collab_audit import (
     emit_collab_package_counter_signed_event,
     emit_collab_package_decrypted_event,
     emit_collab_package_encrypted_event,
     emit_collab_recipient_registered_event,
     emit_collab_recipient_removed_event,
-    emit_collab_review_only_workspace_opened_event,
 )
 from ..review_package_counter_sign import counter_sign_review_package
 from ..review_package_recipient_encryption import (
@@ -237,43 +232,6 @@ def test_package_encrypted_and_decrypted_events_roundtrip(tmp_path: Path) -> Non
         stored_types = {event.event_type for event in reloaded.events.values()}
         assert BucketEventType.COLLAB_PACKAGE_ENCRYPTED_FOR_RECIPIENT in stored_types
         assert BucketEventType.COLLAB_PACKAGE_DECRYPTED in stored_types
-
-
-def test_review_only_workspace_opened_event_roundtrip(tmp_path: Path) -> None:
-    package_bytes = _build_package_bytes(tmp_path, bucket_id="26662b29-2bf4-4599-85a7-7918c4af96f9")
-    package_path = tmp_path / "review-package.zip"
-    package_path.write_bytes(package_bytes)
-    manifest = verify_review_package(package_path).manifest
-
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="26662b29-2bf4-4599-85a7-7918c4af96f9") as profile:
-        event_repository = BucketEventHistoryRepository(objects=profile.repository)
-
-        recipient_private_key = X25519PrivateKey.generate()
-        recipient_public_key_hex = public_key_hex_from_raw_bytes(
-            recipient_private_key.public_key().public_bytes_raw(),
-        )
-        envelope = encrypt_review_package_for_recipient(
-            package_bytes,
-            recipient_public_key_hex=recipient_public_key_hex,
-            review_only=True,
-        )
-        decrypted = decrypt_review_package_for_recipient(envelope, recipient_private_key=recipient_private_key)
-        workspace = open_review_only_workspace(decrypted, manifest=manifest, opened_at=_NOW)
-
-        opened_event = emit_collab_review_only_workspace_opened_event(
-            workspace,
-            bucket_id="26662b29-2bf4-4599-85a7-7918c4af96f9",
-            repository=event_repository,
-            occurred_at=_NOW,
-        )
-        assert opened_event.event_type is BucketEventType.COLLAB_REVIEW_ONLY_WORKSPACE_OPENED
-        assert opened_event.object_type is BucketEventObjectType.CALCULATION_REVISION
-        assert opened_event.object_id == manifest.calculation_revision_id
-        assert opened_event.payload["review_only"] == "true"
-
-        reloaded = BucketEventHistoryRepository(objects=profile.repository).load()
-        stored_types = {event.event_type for event in reloaded.events.values()}
-        assert BucketEventType.COLLAB_REVIEW_ONLY_WORKSPACE_OPENED in stored_types
 
 
 def test_package_counter_signed_event_roundtrip(tmp_path: Path) -> None:

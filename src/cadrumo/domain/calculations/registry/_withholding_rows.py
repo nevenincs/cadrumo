@@ -1229,6 +1229,68 @@ def _finalise_193_instrument_fields(
     )
 
 
+def _finalise_pension_prestacion_fields(
+    row: Mapping[str, Decimal | str],
+    finalised: dict[str, Decimal | str],
+    *,
+    required_fields: frozenset[str],
+    is_clave_b01: bool,
+    perceptor_tax_id: str,
+    clave: str,
+) -> None:
+    """Validate and serialise the Modelo 190 B.01 pension flags."""
+    for pension_field in _PENSION_PRESACION_TYPE_FIELDS:
+        if pension_field not in required_fields:
+            continue
+        value = row.get(pension_field)
+        if value is not None and not is_clave_b01:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
+                f"{pension_field}, which design campo 38 declares only for clave B.01",
+            )
+        if value is None and is_clave_b01:
+            raise RegistryValidationError(
+                f"withholding rows for perceptor {perceptor_tax_id!r} clave B.01 require "
+                f"{pension_field} (design campo 38): each prestacion type's 0/1 flag is always "
+                "recorded, and the 0 for a type not paid is a recorded fact",
+            )
+        finalised[pension_field] = str(value) if value is not None else " "
+
+
+def _finalise_190_identity_defaults(
+    finalised: dict[str, Decimal | str],
+    *,
+    birth_year: Decimal | str | None,
+    situacion: Decimal | str | None,
+    disability: Decimal | str | None,
+    contract: Decimal | str | None,
+    titular: Decimal | str | None,
+    mobility: Decimal | str | None,
+    spouse: Decimal | str | None,
+    is_clave_a: bool,
+    is_clave_l29: bool,
+) -> None:
+    """Write Modelo 190 identity defaults and clave-scoped one-digit fields."""
+    finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
+    finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
+    finalised["disability_clave"] = str(disability) if disability is not None else " "
+    finalised["contract_relation_clave"] = str(contract) if is_clave_a else " "
+    finalised["unit_convivencia_titular_clave"] = str(titular) if is_clave_l29 else " "
+    finalised["geographic_mobility_clave"] = str(mobility) if is_clave_a else " "
+    finalised["spouse_or_unit_titular_tax_id"] = spouse if spouse is not None else " " * 9
+
+
+def _finalise_representative_and_accrual_defaults(
+    row: Mapping[str, Decimal | str],
+    finalised: dict[str, Decimal | str],
+) -> None:
+    """Write the representative NIF and accrual-year no-content defaults."""
+    representative = row.get("representative_tax_id")
+    finalised["representative_tax_id"] = representative if representative is not None else " " * 9
+    accrual_year = row.get("accrual_year")
+    finalised["accrual_year"] = str(accrual_year) if accrual_year is not None else "0000"
+
+
 def _finalise_row_defaults(
     row: Mapping[str, Decimal | str],
     *,
@@ -1249,35 +1311,27 @@ def _finalise_row_defaults(
     mobility = row.get("geographic_mobility_clave")
 
     is_clave_b01 = clave == "B" and subclave == "01"
-    for pension_field in _PENSION_PRESACION_TYPE_FIELDS:
-        if pension_field not in required_fields:
-            continue
-        value = row.get(pension_field)
-        if value is not None and not is_clave_b01:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave {clave} carry "
-                f"{pension_field}, which design campo 38 declares only for clave B.01",
-            )
-        if value is None and is_clave_b01:
-            raise RegistryValidationError(
-                f"withholding rows for perceptor {perceptor_tax_id!r} clave B.01 require "
-                f"{pension_field} (design campo 38): each prestacion type's 0/1 flag is always "
-                "recorded, and the 0 for a type not paid is a recorded fact",
-            )
-        finalised[pension_field] = str(value) if value is not None else " "
-
-    finalised["perceptor_birth_year"] = str(birth_year) if birth_year is not None else "0000"
-    finalised["perceptor_situacion_familiar"] = str(situacion) if situacion is not None else "0"
-    finalised["disability_clave"] = str(disability) if disability is not None else " "
-    finalised["contract_relation_clave"] = str(contract) if is_clave_a else " "
-    finalised["unit_convivencia_titular_clave"] = str(titular) if is_clave_l29 else " "
-    finalised["geographic_mobility_clave"] = str(mobility) if is_clave_a else " "
-    finalised["spouse_or_unit_titular_tax_id"] = spouse if spouse is not None else " " * 9
-
-    representative = row.get("representative_tax_id")
-    finalised["representative_tax_id"] = representative if representative is not None else " " * 9
-    accrual_year = row.get("accrual_year")
-    finalised["accrual_year"] = str(accrual_year) if accrual_year is not None else "0000"
+    _finalise_pension_prestacion_fields(
+        row,
+        finalised,
+        required_fields=required_fields,
+        is_clave_b01=is_clave_b01,
+        perceptor_tax_id=perceptor_tax_id,
+        clave=clave,
+    )
+    _finalise_190_identity_defaults(
+        finalised,
+        birth_year=birth_year,
+        situacion=situacion,
+        disability=disability,
+        contract=contract,
+        titular=titular,
+        mobility=mobility,
+        spouse=spouse,
+        is_clave_a=is_clave_a,
+        is_clave_l29=is_clave_l29,
+    )
+    _finalise_representative_and_accrual_defaults(row, finalised)
 
 
 def _numeric_slot(row: Mapping[str, Decimal | str], field: str) -> Decimal:

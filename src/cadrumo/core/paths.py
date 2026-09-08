@@ -30,8 +30,9 @@ grammar of a layer above it.
 
 from __future__ import annotations
 
+import os
 import sys
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
 from stat import S_ISREG
@@ -516,34 +517,53 @@ def directory_byte_total(
         encountered. Directories and other non-regular entries among the
         candidates are silently skipped (not an error).
     """
-    if entries is None and not directory.is_dir():
-        return 0, 0
-    candidates = (
-        iter(entries)
-        if entries is not None
-        else iter_directory(directory, recursive=True, select=DirectoryEntryKind.FILES)
-    )
+    candidates = _byte_total_candidates(directory, entries)
     total_bytes = 0
     file_count = 0
     while True:
-        try:
-            candidate = next(candidates)
-        except StopIteration:
+        has_candidate, candidate = _next_byte_total_candidate(candidates, tolerate_errors=tolerate_errors)
+        if not has_candidate:
             break
-        except OSError:
-            if not tolerate_errors:
-                raise
-            break
-        try:
-            candidate_stat = candidate.stat()
-        except OSError:
-            if not tolerate_errors:
-                raise
+        candidate_stat = _stat_byte_total_candidate(candidate, tolerate_errors=tolerate_errors)
+        if candidate_stat is None:
             continue
         if S_ISREG(candidate_stat.st_mode):
             total_bytes += candidate_stat.st_size
             file_count += 1
     return total_bytes, file_count
+
+
+def _byte_total_candidates(directory: Path, entries: Iterable[Path] | None) -> Iterator[Path]:
+    """Return supplied candidates or a fresh recursive file-only directory walk."""
+    if entries is not None:
+        return iter(entries)
+    if not directory.is_dir():
+        return iter(())
+    return iter_directory(directory, recursive=True, select=DirectoryEntryKind.FILES)
+
+
+def _next_byte_total_candidate(candidates: Iterator[Path], *, tolerate_errors: bool) -> tuple[bool, Path | None]:
+    """Advance a candidate iterator, stopping on its tolerated traversal error."""
+    try:
+        return True, next(candidates)
+    except StopIteration:
+        return False, None
+    except OSError:
+        if not tolerate_errors:
+            raise
+        return False, None
+
+
+def _stat_byte_total_candidate(candidate: Path | None, *, tolerate_errors: bool) -> os.stat_result | None:
+    """Stat one candidate, skipping only its tolerated stat failure."""
+    if candidate is None:
+        return None
+    try:
+        return candidate.stat()
+    except OSError:
+        if not tolerate_errors:
+            raise
+        return None
 
 
 class _RetentionTimestamp(Protocol):

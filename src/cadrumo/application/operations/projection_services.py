@@ -1053,6 +1053,40 @@ async def _inspect_response_authority(
         )
 
 
+def _response_for_mutation(
+    request: OperationResponseMutationRequestV1,
+    pending: OperationPendingInteraction,
+    response_token: OperationResponseToken,
+) -> OperationApplyResponse | OperationRejectResponse:
+    """Materialize the exact response payload accepted by the supervisor."""
+    if isinstance(request, OperationResponseApplyRequestV1):
+        if pending.baseline_digest is None or pending.proposed_effect_digest is None:
+            raise ValueError("pending REVIEW lacks APPLY digests")
+        return OperationApplyResponse(
+            interaction_id=pending.request.interaction_id,
+            operation_id=pending.request.identity.operation_id,
+            revision=pending.request.revision,
+            response_token=response_token,
+            continuation_digest=pending.request.continuation_digest,
+            reviewed_proposal_digest=pending.reviewed_proposal_digest,
+            actor_ref=request.actor_ref,
+            responded_at=request.responded_at,
+            baseline_digest=pending.baseline_digest,
+            proposed_effect_digest=pending.proposed_effect_digest,
+        )
+    return OperationRejectResponse(
+        interaction_id=pending.request.interaction_id,
+        operation_id=pending.request.identity.operation_id,
+        revision=pending.request.revision,
+        response_token=response_token,
+        continuation_digest=pending.request.continuation_digest,
+        reviewed_proposal_digest=pending.reviewed_proposal_digest,
+        actor_ref=request.actor_ref,
+        responded_at=request.responded_at,
+        reason_code=request.reason_code,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class OperationResponseControlService:
     """Inspect and execute safe REVIEW response control at the public boundary."""
@@ -1109,34 +1143,7 @@ class OperationResponseControlService:
         pending = snapshot.pending_interaction
         try:
             response_token = await self.authority.response_token(request, pending, intent)
-            response: OperationApplyResponse | OperationRejectResponse
-            if isinstance(request, OperationResponseApplyRequestV1):
-                if pending.baseline_digest is None or pending.proposed_effect_digest is None:
-                    raise ValueError("pending REVIEW lacks APPLY digests")
-                response = OperationApplyResponse(
-                    interaction_id=pending.request.interaction_id,
-                    operation_id=pending.request.identity.operation_id,
-                    revision=pending.request.revision,
-                    response_token=response_token,
-                    continuation_digest=pending.request.continuation_digest,
-                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                    actor_ref=request.actor_ref,
-                    responded_at=request.responded_at,
-                    baseline_digest=pending.baseline_digest,
-                    proposed_effect_digest=pending.proposed_effect_digest,
-                )
-            else:
-                response = OperationRejectResponse(
-                    interaction_id=pending.request.interaction_id,
-                    operation_id=pending.request.identity.operation_id,
-                    revision=pending.request.revision,
-                    response_token=response_token,
-                    continuation_digest=pending.request.continuation_digest,
-                    reviewed_proposal_digest=pending.reviewed_proposal_digest,
-                    actor_ref=request.actor_ref,
-                    responded_at=request.responded_at,
-                    reason_code=request.reason_code,
-                )
+            response = _response_for_mutation(request, pending, response_token)
             consumed = await self.supervisor.respond(response)
             if consumed.interaction_id != request.interaction_id or consumed.intent is not intent:
                 raise ValueError("operation supervisor consumed a different response")
@@ -1308,6 +1315,53 @@ class OperationCancellationService:
 
 
 @dataclass(frozen=True, slots=True)
+class _DetachContext:
+    """Detach request and durable state bound to an allowed public contract."""
+
+    request: OperationDetachRequestV1
+    snapshot: OperationPersistedSnapshot
+
+
+def _detach_request_or_refusal(
+    request: OperationDetachVersionHeader | OperationDetachRequestV1,
+) -> OperationDetachRequestV1 | OperationDetachRefusalV1:
+    """Validate the versioned detach envelope before reading durable state."""
+    if request.detach_version != _SUPPORTED_VERSION:
+        return _detach_refusal(
+            OperationDetachRefusalCode.UNSUPPORTED_VERSION,
+            requested_version=request.detach_version,
+        )
+    if not isinstance(request, OperationDetachRequestV1):
+        return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
+    return request
+
+
+async def _load_detach_context(
+    reader: OperationObservationReader,
+    registry: OperationRegistry,
+    request: OperationDetachRequestV1,
+) -> _DetachContext | OperationDetachRefusalV1:
+    """Read and authorize the exact live snapshot named by a detach request."""
+    snapshot = await read_snapshot(reader, request.operation_id)
+    if snapshot is None:
+        return _detach_refusal(OperationDetachRefusalCode.UNKNOWN_OPERATION, requested_version=1)
+    if isinstance(snapshot, UnavailableSnapshot):
+        return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
+    if snapshot.revision != request.expected_revision:
+        return _detach_refusal(OperationDetachRefusalCode.STALE_OPERATION_REVISION, requested_version=1)
+    try:
+        contract = registry.lookup_public_contract(snapshot.identity.definition_id)
+    except Exception:
+        return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
+    if (
+        snapshot.definition_contract_digest != contract.definition_contract_digest
+        or contract.close_policy is not OperationClosePolicy.DETACH_ALLOWED
+    ):
+        return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
+    return _DetachContext(request=request, snapshot=snapshot)
+
+
+@dataclass(frozen=True, slots=True)
 class OperationDetachService:
     """Detach a frontend from an operation through one public boundary."""
 
@@ -1320,33 +1374,23 @@ class OperationDetachService:
         request: OperationDetachVersionHeader | OperationDetachRequestV1,
     ) -> OperationDetachResultV1:
         """Detach the requested operation or return a stable typed refusal."""
-        if request.detach_version != _SUPPORTED_VERSION:
-            return _detach_refusal(
-                OperationDetachRefusalCode.UNSUPPORTED_VERSION,
-                requested_version=request.detach_version,
-            )
-        if not isinstance(request, OperationDetachRequestV1):
-            return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-        snapshot = await read_snapshot(self.reader, request.operation_id)
-        if snapshot is None:
-            return _detach_refusal(OperationDetachRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-        if isinstance(snapshot, UnavailableSnapshot):
-            return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-        if snapshot.revision != request.expected_revision:
-            return _detach_refusal(OperationDetachRefusalCode.STALE_OPERATION_REVISION, requested_version=1)
+        request_or_refusal = _detach_request_or_refusal(request)
+        if isinstance(request_or_refusal, OperationDetachRefusalV1):
+            return request_or_refusal
+        context_or_refusal = await _load_detach_context(self.reader, self.registry, request_or_refusal)
+        if isinstance(context_or_refusal, OperationDetachRefusalV1):
+            return context_or_refusal
         try:
-            contract = self.registry.lookup_public_contract(snapshot.identity.definition_id)
-        except Exception:
-            return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-        if snapshot.definition_contract_digest != contract.definition_contract_digest:
-            return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-        if contract.close_policy is not OperationClosePolicy.DETACH_ALLOWED:
-            return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
-        try:
-            detached = await self.supervisor.detach(request.operation_id)
-            if detached.identity.operation_id != request.operation_id or detached.revision != snapshot.revision:
+            detached = await self.supervisor.detach(context_or_refusal.request.operation_id)
+            if (
+                detached.identity.operation_id != context_or_refusal.request.operation_id
+                or detached.revision != context_or_refusal.snapshot.revision
+            ):
                 raise ValueError("supervisor returned an invalid detach state")
-            return OperationDetachSuccessV1(operation_id=request.operation_id, revision=detached.revision)
+            return OperationDetachSuccessV1(
+                operation_id=context_or_refusal.request.operation_id,
+                revision=detached.revision,
+            )
         except Exception:
             return _detach_refusal(OperationDetachRefusalCode.DETACH_NOT_ALLOWED, requested_version=1)
 

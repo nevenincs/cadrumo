@@ -129,20 +129,6 @@ def _rebuild_replayed_draft(*, draft: ModeloDraft, binding_values: tuple[ModeloB
     return draft.model_copy(update={"binding_values": binding_values, "draft_id": draft_id})
 
 
-def row_source_fingerprints_for_review(draft: ModeloDraft) -> tuple[ModeloRowSourceFingerprint, ...]:
-    """Return deterministic fingerprint-only row provenance for review surfaces."""
-    return tuple(
-        ModeloRowSourceFingerprint(
-            binding_id=value.binding_id,
-            row_index=value.row_index,
-            source_kind=identity.source_kind,
-            fingerprint=identity.fingerprint,
-        )
-        for value in sorted(draft.binding_values, key=lambda item: (item.binding_id, item.row_index or 0))
-        if value.row_index is not None and (identity := value.row_source_identity) is not None
-    )
-
-
 def revision_row_source_fingerprints_for_review(
     revision: CalculationRevision | None,
 ) -> tuple[ModeloRowSourceFingerprint, ...]:
@@ -164,5 +150,4 @@ __all__ = [
     "ModeloRowSourceFingerprint",
     "attach_revision_row_source_identities",
     "revision_row_source_fingerprints_for_review",
-    "row_source_fingerprints_for_review",
 ]

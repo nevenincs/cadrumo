@@ -16,9 +16,9 @@ from ....tests.profile_capsule import seed_test_profile_record
 from ....tests.secure_sql import isolated_runtime_profile
 from ..action_errors import ModeloProfileReadinessError
 from ..m303_regimen_simplificado_scope import (
+    active_taxpayer_profile,
     m303_regimen_simplificado_scope_for_composition,
     m303_regimen_simplificado_scope_for_profile,
-    resolve_m303_regimen_simplificado_scope,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -108,9 +108,8 @@ def test_secure_profile_composition_derives_the_closed_m303_scope(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         _store_profile(composition=composition)
 
-        decision = resolve_m303_regimen_simplificado_scope(_work_unit())
+        decision = m303_regimen_simplificado_scope_for_profile(active_taxpayer_profile(_work_unit()))
 
-    assert decision is not None
     assert decision.scope is expected_scope
 
 

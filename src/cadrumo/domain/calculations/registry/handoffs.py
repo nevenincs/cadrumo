@@ -35,6 +35,7 @@ from .relation_dependency import (
 from .relations import RegistryFoldRequirement, relation_source_requirements
 from .runtime_graph import expression_binding_refs, expression_relation_refs
 from .schema import (
+    DataBindingDefinition,
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -692,6 +693,97 @@ class RegistryHandoffPathAudit(BaseModel):
         return {key: tuple(value) for key, value in grouped.items()}
 
 
+class _HandoffPathClassification(NamedTuple):
+    classification: RelationHandoffClassification
+    resolver_owner: RelationResolverOwner
+    wallet_owned: bool
+
+
+def _target_binding_for_handoff(
+    revision: ModeloRevision,
+    inventory_record: RelationHandoffRecord,
+) -> DataBindingDefinition:
+    """Resolve the binding that owns one inventory record's target slot."""
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    return bindings_by_id[inventory_record.target_binding]
+
+
+def _parallel_handoff_ids(
+    revision: ModeloRevision,
+    inventory_record: RelationHandoffRecord,
+) -> tuple[tuple[BindingId, ...], tuple[CasillaId, ...]]:
+    """Find direct previous-filing bindings that share a relation target."""
+    previous_filing_binding_ids = {
+        binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PREVIOUS_FILING
+    }
+    parallel_binding_ids: set[BindingId] = set()
+    parallel_casilla_ids: set[CasillaId] = set()
+    for casilla in revision.casillas:
+        if casilla.id not in inventory_record.target_casilla_ids:
+            continue
+        competing = set(bound_casilla_binding_ids(casilla)).intersection(previous_filing_binding_ids)
+        competing.discard(inventory_record.target_binding)
+        if competing:
+            parallel_casilla_ids.add(casilla.id)
+            parallel_binding_ids.update(competing)
+    return tuple(sorted(parallel_binding_ids)), tuple(sorted(parallel_casilla_ids))
+
+
+def _classify_relation_handoff(inventory_record: RelationHandoffRecord) -> _HandoffPathClassification:
+    """Classify the owner of a relation target using its exact registry coordinate."""
+    wallet_owned = is_iva_wallet_owned_relation_target(
+        modelo_id=str(inventory_record.target_modelo),
+        revision_id=str(inventory_record.target_revision),
+        relation_id=str(inventory_record.relation_id),
+        target_binding=str(inventory_record.target_binding),
+    )
+    if wallet_owned:
+        return _HandoffPathClassification(
+            classification=RelationHandoffClassification.IVA_WALLET_EXCEPTION,
+            resolver_owner=RelationResolverOwner.IVA_WALLET,
+            wallet_owned=True,
+        )
+    if inventory_record.target_binding_source is BindingSourceKind.RELATION_PREFILL:
+        return _HandoffPathClassification(
+            classification=RelationHandoffClassification.CANONICAL_RELATION_PREFILL,
+            resolver_owner=RelationResolverOwner.RELATION_MESH,
+            wallet_owned=False,
+        )
+    return _HandoffPathClassification(
+        classification=RelationHandoffClassification.NON_CANONICAL,
+        resolver_owner=RelationResolverOwner.UNRESOLVED,
+        wallet_owned=False,
+    )
+
+
+def _build_handoff_path_record(
+    inventory_record: RelationHandoffRecord,
+    target_binding: DataBindingDefinition,
+    path_classification: _HandoffPathClassification,
+    parallel_binding_ids: tuple[BindingId, ...],
+    parallel_casilla_ids: tuple[CasillaId, ...],
+) -> RelationHandoffPathRecord:
+    """Build one path row after its identity and classification are resolved."""
+    return RelationHandoffPathRecord(
+        target_modelo=inventory_record.target_modelo,
+        target_revision=inventory_record.target_revision,
+        relation_id=inventory_record.relation_id,
+        target_binding=inventory_record.target_binding,
+        target_binding_source=target_binding.source,
+        target_casilla_ids=inventory_record.target_casilla_ids,
+        classification=path_classification.classification,
+        resolver_owner=path_classification.resolver_owner,
+        parallel_path=bool(parallel_binding_ids)
+        or (target_binding.source is BindingSourceKind.PREVIOUS_FILING and not path_classification.wallet_owned),
+        parallel_binding_ids=parallel_binding_ids,
+        parallel_casilla_ids=parallel_casilla_ids,
+        legal_refs=inventory_record.legal_refs,
+        source_refs=inventory_record.source_refs,
+        target_binding_legal_refs=inventory_record.target_binding_legal_refs,
+        target_binding_source_refs=inventory_record.target_binding_source_refs,
+    )
+
+
 def audit_registry_handoff_paths(authority: ValidatedRegistryAuthority) -> RegistryHandoffPathAudit:
     """Classify validated relation paths without inventing semantic repairs.
 
@@ -712,54 +804,16 @@ def audit_registry_handoff_paths(authority: ValidatedRegistryAuthority) -> Regis
     for inventory_record in relation_inventory.records:
         modelo = authority.modelo(str(inventory_record.target_modelo))
         revision = modelo.revisions[inventory_record.target_revision]
-        bindings_by_id = {binding.id: binding for binding in revision.bindings}
-        target_binding = bindings_by_id[inventory_record.target_binding]
-        previous_filing_binding_ids = {
-            binding.id for binding in revision.bindings if binding.source is BindingSourceKind.PREVIOUS_FILING
-        }
-        parallel_binding_ids: set[BindingId] = set()
-        parallel_casilla_ids: set[CasillaId] = set()
-        for casilla in revision.casillas:
-            if casilla.id not in inventory_record.target_casilla_ids:
-                continue
-            competing = set(bound_casilla_binding_ids(casilla)).intersection(previous_filing_binding_ids)
-            competing.discard(inventory_record.target_binding)
-            if competing:
-                parallel_casilla_ids.add(casilla.id)
-                parallel_binding_ids.update(competing)
-        wallet_owned = is_iva_wallet_owned_relation_target(
-            modelo_id=str(inventory_record.target_modelo),
-            revision_id=str(inventory_record.target_revision),
-            relation_id=str(inventory_record.relation_id),
-            target_binding=str(inventory_record.target_binding),
-        )
-        if wallet_owned:
-            classification: RelationHandoffClassification = RelationHandoffClassification.IVA_WALLET_EXCEPTION
-            resolver_owner: RelationResolverOwner = RelationResolverOwner.IVA_WALLET
-        elif inventory_record.target_binding_source is BindingSourceKind.RELATION_PREFILL:
-            classification = RelationHandoffClassification.CANONICAL_RELATION_PREFILL
-            resolver_owner = RelationResolverOwner.RELATION_MESH
-        else:
-            classification = RelationHandoffClassification.NON_CANONICAL
-            resolver_owner = RelationResolverOwner.UNRESOLVED
+        target_binding = _target_binding_for_handoff(revision, inventory_record)
+        parallel_binding_ids, parallel_casilla_ids = _parallel_handoff_ids(revision, inventory_record)
+        path_classification = _classify_relation_handoff(inventory_record)
         records.append(
-            RelationHandoffPathRecord(
-                target_modelo=inventory_record.target_modelo,
-                target_revision=inventory_record.target_revision,
-                relation_id=inventory_record.relation_id,
-                target_binding=inventory_record.target_binding,
-                target_binding_source=target_binding.source,
-                target_casilla_ids=inventory_record.target_casilla_ids,
-                classification=classification,
-                resolver_owner=resolver_owner,
-                parallel_path=bool(parallel_binding_ids)
-                or (target_binding.source is BindingSourceKind.PREVIOUS_FILING and not wallet_owned),
-                parallel_binding_ids=tuple(sorted(parallel_binding_ids)),
-                parallel_casilla_ids=tuple(sorted(parallel_casilla_ids)),
-                legal_refs=inventory_record.legal_refs,
-                source_refs=inventory_record.source_refs,
-                target_binding_legal_refs=inventory_record.target_binding_legal_refs,
-                target_binding_source_refs=inventory_record.target_binding_source_refs,
+            _build_handoff_path_record(
+                inventory_record,
+                target_binding,
+                path_classification,
+                parallel_binding_ids,
+                parallel_casilla_ids,
             ),
         )
     return RegistryHandoffPathAudit(records=tuple(records))

@@ -698,6 +698,45 @@ class BorradorSourceProvenance(BaseModel):
     bindings_sourced: tuple[BindingId, ...] = Field(default_factory=tuple)
 
 
+def _primary_provenance_refs(provenance: Sequence[CalculationSourceProvenance]) -> tuple[str, ...]:
+    """Collect the source references that may parent contributor nodes."""
+    return tuple(row.source_ref for row in provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY)
+
+
+def _require_unique_primary_provenance_refs(primary_refs: Sequence[str]) -> None:
+    """Reject an ambiguous provenance graph with more than one primary copy."""
+    if len(primary_refs) != len(set(primary_refs)):
+        raise SourceMeshError("aggregation.source_mesh.errors.provenance_primary_ref_ambiguous")
+
+
+def _require_contributor_provenance_parents(
+    provenance: Sequence[CalculationSourceProvenance],
+    primary_refs: Sequence[str],
+) -> None:
+    """Reject contributors whose parent is not one of this resolution's primaries."""
+    primary_ref_set = frozenset(primary_refs)
+    if any(
+        row.parent_source_ref not in primary_ref_set
+        for row in provenance
+        if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
+    ):
+        raise SourceMeshError("aggregation.source_mesh.errors.provenance_contributor_parent_missing")
+
+
+def _validate_provenance_resolver_ids(
+    provenance: Sequence[CalculationSourceProvenance],
+    resolver_id: str | CompositeSourceResolverId,
+) -> None:
+    """Enforce resolver identity unless this is a deliberately composite result."""
+    if isinstance(resolver_id, CompositeSourceResolverId):
+        return
+    if resolver_id in set(CompositeSourceResolverId):
+        raise SourceMeshError("aggregation.source_mesh.errors.reserved_composite_resolver_id")
+    mismatched = tuple(row.resolver_id for row in provenance if row.resolver_id != resolver_id)
+    if mismatched:
+        raise SourceMeshError("aggregation.source_mesh.errors.provenance_resolver_mismatch")
+
+
 class CalculationSourceResolution(BaseModel):
     """Resolved values and provenance returned by one source resolver."""
 
@@ -1014,25 +1053,10 @@ class CalculationSourceResolution(BaseModel):
 
     @model_validator(mode="after")
     def _provenance_names_its_producing_resolver(self) -> CalculationSourceResolution:
-        primary_refs = tuple(
-            row.source_ref for row in self.provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY
-        )
-        if len(primary_refs) != len(set(primary_refs)):
-            raise SourceMeshError("aggregation.source_mesh.errors.provenance_primary_ref_ambiguous")
-        primary_ref_set = frozenset(primary_refs)
-        if any(
-            row.parent_source_ref not in primary_ref_set
-            for row in self.provenance
-            if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
-        ):
-            raise SourceMeshError("aggregation.source_mesh.errors.provenance_contributor_parent_missing")
-        if isinstance(self.resolver_id, CompositeSourceResolverId):
-            return self
-        if self.resolver_id in set(CompositeSourceResolverId):
-            raise SourceMeshError("aggregation.source_mesh.errors.reserved_composite_resolver_id")
-        mismatched = tuple(row.resolver_id for row in self.provenance if row.resolver_id != self.resolver_id)
-        if mismatched:
-            raise SourceMeshError("aggregation.source_mesh.errors.provenance_resolver_mismatch")
+        primary_refs = _primary_provenance_refs(self.provenance)
+        _require_unique_primary_provenance_refs(primary_refs)
+        _require_contributor_provenance_parents(self.provenance, primary_refs)
+        _validate_provenance_resolver_ids(self.provenance, self.resolver_id)
         return self
 
     @field_serializer("binding_values")

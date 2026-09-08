@@ -31,7 +31,7 @@ from .record_design_pdf_visual import (
     snapshot_pdf_page,
     uses_page_record_layout,
 )
-from .record_design_schema import RecordDesignExtraction, RecordDesignSkippedSheet
+from .record_design_schema import RecordDesignExtraction, RecordDesignSheet, RecordDesignSkippedSheet
 from .record_design_sources import EMPTY_CORRECTIONS, CorrectionIndex, load_corrections
 
 
@@ -70,11 +70,51 @@ def extract_record_design_pdf_stream(
         RegistryValidationError: When no text can be extracted, or every text
             and visual reading strategy fails to produce a usable extraction.
     """
-    import pdfplumber
-
     pdf_bytes = stream.read()
+    lines = _prepare_record_design_pdf_lines(
+        pdf_bytes,
+        source_label=source_label,
+        corrections=corrections,
+    )
+    if not any(line.strip() for line in lines):
+        raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
+    try:
+        return _read_with_reversed_column_repair(lines, source_label=source_label, corrections=corrections)
+    except ValueError as pdfium_exc:
+        recovered = _recover_after_pdf_text_failure(
+            pdf_bytes,
+            source_label=source_label,
+            corrections=corrections,
+            pdfium_error=pdfium_exc,
+        )
+        if recovered is not None:
+            return recovered
+        raise
+
+
+def _prepare_record_design_pdf_lines(
+    pdf_bytes: bytes,
+    *,
+    source_label: str,
+    corrections: CorrectionIndex,
+) -> tuple[str, ...]:
     base_lines = extract_pdf_text_lines(pdf_bytes, source_label=source_label)
-    lines = reattach_stranded_casilla_tags(
+    lines = _repair_base_record_design_lines(base_lines)
+    if not uses_page_record_layout(base_lines):
+        return lines
+    page_lines = _repair_page_record_lines(
+        extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label),
+    )
+    return _better_page_record_lines(
+        page_lines,
+        lines,
+        source_label=source_label,
+        corrections=corrections,
+    )
+
+
+def _repair_base_record_design_lines(base_lines: tuple[str, ...]) -> tuple[str, ...]:
+    return reattach_stranded_casilla_tags(
         split_row_from_wrapped_content(
             split_fused_ordinal_offset_rows(
                 collapse_doubled_coordinate_rows(
@@ -83,56 +123,86 @@ def extract_record_design_pdf_stream(
             ),
         ),
     )
-    if uses_page_record_layout(base_lines):
-        page_lines = reattach_stranded_casilla_tags(
-            collapse_stuttered_row_prefix(
-                join_wrapped_row_descriptions(
-                    extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label),
-                ),
-            ),
-        )
-        lines = _better_page_record_lines(
-            page_lines,
-            lines,
-            source_label=source_label,
-            corrections=corrections,
-        )
-    if not any(line.strip() for line in lines):
-        raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
+
+
+def _repair_page_record_lines(page_lines: tuple[str, ...]) -> tuple[str, ...]:
+    return reattach_stranded_casilla_tags(
+        collapse_stuttered_row_prefix(join_wrapped_row_descriptions(page_lines)),
+    )
+
+
+def _recover_after_pdf_text_failure(
+    pdf_bytes: bytes,
+    *,
+    source_label: str,
+    corrections: CorrectionIndex,
+    pdfium_error: ValueError,
+) -> RecordDesignExtraction | None:
+    text_fallback = _try_pdf_text_fallback(
+        pdf_bytes,
+        source_label=source_label,
+        corrections=corrections,
+        pdfium_error=pdfium_error,
+    )
+    if text_fallback is not None:
+        return text_fallback
+    return _try_visual_record_design_fallback(pdf_bytes, source_label=source_label)
+
+
+def _try_pdf_text_fallback(
+    pdf_bytes: bytes,
+    *,
+    source_label: str,
+    corrections: CorrectionIndex,
+    pdfium_error: ValueError,
+) -> RecordDesignExtraction | None:
     try:
-        return _read_with_reversed_column_repair(lines, source_label=source_label, corrections=corrections)
-    except ValueError as pdfium_exc:
-        text_fallback_error = pdfium_exc
-        try:
-            fallback_lines = extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
-            return extract_pdf_lines(fallback_lines, source_label=source_label, corrections=corrections)
-        except ValueError as fallback_exc:
-            text_fallback_error = fallback_exc
-        if "did not contain parseable field rows" not in str(text_fallback_error):
-            raise text_fallback_error from pdfium_exc
-        try:
-            with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
-                pages = tuple(snapshot_pdf_page(page) for page in pdf.pages)
-        except Exception as pdf_exc:  # pragma: no cover - defensive; pdfplumber surface
-            raise RegistryValidationError(
-                f"pdfplumber could not open record-design PDF {source_label}: {pdf_exc}",
-            ) from pdf_exc
-        visual_chart = extract_visual_record_design_chart(pages, source_label=source_label)
-        if visual_chart:
-            # The geometry reader was documented as "complete by construction",
-            # and it is not: modelo 349's 2002 edition and modelo 180's 2000
-            # edition both reconstruct here with 40-to-65-byte runs missing from
-            # every record, and reported ``is_complete`` because nothing checked.
-            # It is a READER like any other, so it answers to the same contiguity
-            # question -- a sheet whose rows do not tile its declared extent is
-            # reported as skipped rather than handed over as whole.
-            broken = {sheet.name: reason for sheet in visual_chart if (reason := contiguity_failure(sheet)) is not None}
-            return RecordDesignExtraction(
-                source=source_label,
-                sheets=tuple(sheet for sheet in visual_chart if sheet.name not in broken),
-                skipped=tuple(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
-            )
-        raise
+        fallback_lines = extract_pdfplumber_text_lines(pdf_bytes, source_label=source_label)
+        return extract_pdf_lines(fallback_lines, source_label=source_label, corrections=corrections)
+    except ValueError as fallback_error:
+        if "did not contain parseable field rows" not in str(fallback_error):
+            raise fallback_error from pdfium_error
+    return None
+
+
+def _try_visual_record_design_fallback(
+    pdf_bytes: bytes,
+    *,
+    source_label: str,
+) -> RecordDesignExtraction | None:
+    import pdfplumber
+
+    try:
+        with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+            pages = tuple(snapshot_pdf_page(page) for page in pdf.pages)
+    except Exception as pdf_exc:  # pragma: no cover - defensive; pdfplumber surface
+        raise RegistryValidationError(
+            f"pdfplumber could not open record-design PDF {source_label}: {pdf_exc}",
+        ) from pdf_exc
+    visual_chart = extract_visual_record_design_chart(pages, source_label=source_label)
+    return _visual_record_design_extraction(visual_chart, source_label=source_label)
+
+
+def _visual_record_design_extraction(
+    visual_chart: tuple[RecordDesignSheet, ...],
+    *,
+    source_label: str,
+) -> RecordDesignExtraction | None:
+    if not visual_chart:
+        return None
+    # The geometry reader was documented as "complete by construction", and it
+    # is not: modelo 349's 2002 edition and modelo 180's 2000 edition both
+    # reconstruct here with 40-to-65-byte runs missing from every record, and
+    # reported ``is_complete`` because nothing checked. It is a READER like any
+    # other, so it answers to the same contiguity question -- a sheet whose rows
+    # do not tile its declared extent is reported as skipped rather than handed
+    # over as whole.
+    broken = {sheet.name: reason for sheet in visual_chart if (reason := contiguity_failure(sheet)) is not None}
+    return RecordDesignExtraction(
+        source=source_label,
+        sheets=tuple(sheet for sheet in visual_chart if sheet.name not in broken),
+        skipped=tuple(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
+    )
 
 
 def _better_page_record_lines(

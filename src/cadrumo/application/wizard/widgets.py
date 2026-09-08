@@ -58,6 +58,42 @@ def _fail(question: WizardQuestion, reason: str, **context: object) -> WizardVal
     return WizardValidationError(message_key, context=error_context, translated_message=translated)
 
 
+def _validate_required_text(value: str, question: WizardQuestion) -> None:
+    """Reject a blank text answer when the descriptor requires one."""
+    if not value and question.required and question.visible_when is None:
+        raise _fail(question, "blank_text")
+
+
+def _validate_text_choice(value: str, raw: str, question: WizardQuestion) -> None:
+    """Reject a non-blank text answer outside its declared choices."""
+    if not value or not question.choices:
+        return
+    allowed = {choice.value for choice in question.choices}
+    if value not in allowed:
+        raise _fail(question, "select_unknown", raw=raw, choices=sorted(allowed))
+
+
+def _validate_text_tax_id(value: str, raw: str, question: WizardQuestion) -> None:
+    """Apply the canonical identity validator to tax-id text questions."""
+    if not value or question.id not in _TAX_ID_QUESTION_IDS:
+        return
+    try:
+        validate_identity(value)
+    except IdentityError as exc:
+        raise _fail(
+            question,
+            "invalid_tax_id",
+            raw=raw,
+            detail=resolve_error_message(exc),
+        ) from exc
+
+
+def _validate_text_postcode(value: str, raw: str, question: WizardQuestion) -> None:
+    """Apply the canonical Spanish postcode validator when required."""
+    if value and question.id in _POSTCODE_QUESTION_IDS and not is_spanish_postcode(value):
+        raise _fail(question, "invalid_postcode", raw=raw)
+
+
 def validate_text(raw: str, question: WizardQuestion) -> str:
     """Return the trimmed text answer; reject blank required strings.
 
@@ -77,24 +113,10 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
     zeros are preserved; it is never int-coerced.
     """
     value = raw.strip()
-    if not value and question.required and question.visible_when is None:
-        raise _fail(question, "blank_text")
-    if value and question.choices:
-        allowed = {choice.value for choice in question.choices}
-        if value not in allowed:
-            raise _fail(question, "select_unknown", raw=raw, choices=sorted(allowed))
-    if value and question.id in _TAX_ID_QUESTION_IDS:
-        try:
-            validate_identity(value)
-        except IdentityError as exc:
-            raise _fail(
-                question,
-                "invalid_tax_id",
-                raw=raw,
-                detail=resolve_error_message(exc),
-            ) from exc
-    if value and question.id in _POSTCODE_QUESTION_IDS and not is_spanish_postcode(value):
-        raise _fail(question, "invalid_postcode", raw=raw)
+    _validate_required_text(value, question)
+    _validate_text_choice(value, raw, question)
+    _validate_text_tax_id(value, raw, question)
+    _validate_text_postcode(value, raw, question)
     return value
 
 

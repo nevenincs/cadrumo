@@ -86,6 +86,25 @@ def _parse_listbox(
         grid's own pager label declares, so a caller can tell a complete answer
         from a rendered-page-only one.
     """
+    soup, listbox = _parse_declarations_html(html, modelo=modelo, ejercicio=ejercicio)
+    action_indexes = _resolved_action_indexes(listbox, modelo=modelo, ejercicio=ejercicio)
+    declared_total = _parse_declared_total(soup)
+    rows = _parse_listbox_rows(
+        listbox,
+        modelo=modelo,
+        ejercicio=ejercicio,
+        action_indexes=action_indexes,
+    )
+    return DeclaracionesRegisterPage(rows=rows, declared_total=declared_total)
+
+
+def _parse_declarations_html(
+    html: str,
+    *,
+    modelo: str,
+    ejercicio: int,
+) -> tuple[BeautifulSoup, Tag]:
+    """Parse one response and require its ZK listbox container."""
     try:
         soup = parse_html(html)
     except Exception as exc:
@@ -102,62 +121,66 @@ def _parse_listbox(
             failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
             context={"modelo": modelo, "ejercicio": ejercicio},
         )
+    return soup, listbox
 
-    action_indexes = _listbox_action_indexes(listbox)
-    if action_indexes is None:
-        justificante_index: int | None = 7
-        archive_index: int | None = 8
-        declaration_copy_index: int | None = None
-    else:
-        justificante_index = action_indexes.justificante
-        archive_index = action_indexes.submitted_file
-        declaration_copy_index = action_indexes.declaration_pdf
-    if justificante_index is None:
-        raise SedeParseError(
-            "declaraciones response missing justificante column",
-            translated_message=tr("adapters.sede.errors.justificante_column_missing"),
-            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-            context={"modelo": modelo, "ejercicio": ejercicio},
-        )
-    items = listbox.find_all(class_=_has_class("z-listitem"))
-    declared_total = _parse_declared_total(soup)
 
+def _parse_listbox_rows(
+    listbox: Tag,
+    *,
+    modelo: str,
+    ejercicio: int,
+    action_indexes: _ResolvedListboxActionIndexes,
+) -> tuple[Declaracion, ...]:
+    """Decode listbox items in DOM order, preserving the empty sentinel."""
     rows: list[Declaracion] = []
-    for item in items:
-        cells = item.find_all(class_=_has_class("z-listcell"))
-        cell_texts = [cell.get_text(" ", strip=True) for cell in cells]
-
+    for item in listbox.find_all(class_=_has_class("z-listitem")):
+        cell_texts = [cell.get_text(" ", strip=True) for cell in item.find_all(class_=_has_class("z-listcell"))]
         if len(cell_texts) == 1 and cell_texts[0] == NO_RESULTS_TEXT:
-            return DeclaracionesRegisterPage(rows=(), declared_total=declared_total)
-
-        if len(cell_texts) < 7:
-            log.debug("_parse_listbox: skipping malformed row with %d cell(s)", len(cell_texts))
-            continue
-
-        try:
-            presented_at = _parse_presented_at(cell_texts[6])
-        except ValueError as exc:
-            raise SedeParseError(f"failed to parse presented_at {cell_texts[6]!r}: {exc}") from exc
-
-        rows.append(
-            Declaracion(
-                modelo=modelo,
-                ejercicio=ejercicio,
-                period=Period.from_year_and_code(ejercicio, cell_texts[4]),
-                expediente_id=cell_texts[3],
-                estado=cell_texts[5],
-                tipo_solicitud=cell_texts[1] or None,
-                observaciones=cell_texts[2] or None,
-                presented_at=presented_at,
-                justificante_link_text=cell_text(cell_texts, justificante_index),
-                archive_link_text=cell_text(cell_texts, archive_index),
-                declaration_copy_link_text=cell_text(cell_texts, declaration_copy_index),
-                justificante_cell_index=justificante_index,
-                archive_cell_index=archive_index,
-                declaration_copy_cell_index=declaration_copy_index,
-            ),
+            return ()
+        row = _parse_listbox_row(
+            cell_texts,
+            modelo=modelo,
+            ejercicio=ejercicio,
+            action_indexes=action_indexes,
         )
-    return DeclaracionesRegisterPage(rows=tuple(rows), declared_total=declared_total)
+        if row is not None:
+            rows.append(row)
+    return tuple(rows)
+
+
+def _parse_listbox_row(
+    cell_texts: list[str],
+    *,
+    modelo: str,
+    ejercicio: int,
+    action_indexes: _ResolvedListboxActionIndexes,
+) -> Declaracion | None:
+    """Decode one row, skipping malformed shapes and wrapping bad timestamps."""
+    if len(cell_texts) < 7:
+        log.debug("_parse_listbox: skipping malformed row with %d cell(s)", len(cell_texts))
+        return None
+
+    try:
+        presented_at = _parse_presented_at(cell_texts[6])
+    except ValueError as exc:
+        raise SedeParseError(f"failed to parse presented_at {cell_texts[6]!r}: {exc}") from exc
+
+    return Declaracion(
+        modelo=modelo,
+        ejercicio=ejercicio,
+        period=Period.from_year_and_code(ejercicio, cell_texts[4]),
+        expediente_id=cell_texts[3],
+        estado=cell_texts[5],
+        tipo_solicitud=cell_texts[1] or None,
+        observaciones=cell_texts[2] or None,
+        presented_at=presented_at,
+        justificante_link_text=cell_text(cell_texts, action_indexes.justificante),
+        archive_link_text=cell_text(cell_texts, action_indexes.submitted_file),
+        declaration_copy_link_text=cell_text(cell_texts, action_indexes.declaration_pdf),
+        justificante_cell_index=action_indexes.justificante,
+        archive_cell_index=action_indexes.submitted_file,
+        declaration_copy_cell_index=action_indexes.declaration_pdf,
+    )
 
 
 def _parse_declared_total(soup: BeautifulSoup) -> int | None:
@@ -183,6 +206,39 @@ class _ListboxActionIndexes:
     justificante: int | None = None
     submitted_file: int | None = None
     declaration_pdf: int | None = None
+
+
+@dataclass(slots=True, frozen=True)
+class _ResolvedListboxActionIndexes:
+    """Action indexes after the required justificante column is validated."""
+
+    justificante: int
+    submitted_file: int | None = None
+    declaration_pdf: int | None = None
+
+
+def _resolved_action_indexes(
+    listbox: Tag,
+    *,
+    modelo: str,
+    ejercicio: int,
+) -> _ResolvedListboxActionIndexes:
+    """Resolve action columns, retaining the legacy no-header defaults."""
+    action_indexes = _listbox_action_indexes(listbox)
+    if action_indexes is None:
+        return _ResolvedListboxActionIndexes(justificante=7, submitted_file=8)
+    if action_indexes.justificante is None:
+        raise SedeParseError(
+            "declaraciones response missing justificante column",
+            translated_message=tr("adapters.sede.errors.justificante_column_missing"),
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={"modelo": modelo, "ejercicio": ejercicio},
+        )
+    return _ResolvedListboxActionIndexes(
+        justificante=action_indexes.justificante,
+        submitted_file=action_indexes.submitted_file,
+        declaration_pdf=action_indexes.declaration_pdf,
+    )
 
 
 def _listbox_action_indexes(listbox: Tag) -> _ListboxActionIndexes | None:

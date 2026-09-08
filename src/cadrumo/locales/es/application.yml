@@ -1110,8 +1110,6 @@ application:
         el destinatario; la clave no coincide o el paquete ha sido manipulado.
       recipient_encryption_invalid_key: La clave pública del destinatario no es una
         clave pública X25519 válida.
-      recipient_encryption_key_not_found: Aun no se ha generado ningún par de claves
-        de cifrado de destinatario para este bucket.
       recipient_registry_already_exists: El destinatario %{recipient_id} ya está registrado.
       recipient_registry_generic: Se ha producido un error en el registro de huellas
         digitales de destinatarios.
@@ -1462,9 +1460,6 @@ application:
       edit_missing_filing_baseline: 'Esta edición dejaría incompletos los datos de
         identidad para presentar modelos. Añade estos flags al mismo comando y vuelve
         a ejecutarlo: %{missing_flags}.'
-      persist_answers_edit_requires_supplied_question_ids: 'persist_answers(mode=''edit'')
-        requiere supplied_question_ids: la edición es un parche, no una reescritura
-        completa.'
       persist_patch_unknown_question_id: El parche del asistente referencia un id
         de pregunta desconocido.
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto

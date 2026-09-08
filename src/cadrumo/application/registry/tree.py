@@ -16,6 +16,7 @@ that is filed-state comparison's distinct concern.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Collection, Iterable
 from pathlib import Path
 from typing import NamedTuple
 
@@ -27,10 +28,13 @@ from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.ids import ExportLayoutId as _ExportLayoutId
 from ...domain.calculations.registry.ids import LegalRefId as _LegalRefId
 from ...domain.calculations.registry.ids import RelationId as _RelationId
+from ...domain.calculations.registry.ids import RevisionId as _RevisionId
 from ...domain.calculations.registry.ids import SourceRefId as _SourceRefId
 from ...domain.calculations.registry.ids import WorkbookParityRefId as _WorkbookParityRefId
 from ...domain.calculations.registry.legal import verify_legal_catalogue as _verify_legal_catalogue
 from ...domain.calculations.registry.schema import ModeloDefinition as _ModeloDefinition
+from ...domain.calculations.registry.schema import ModeloRevision as _ModeloRevision
+from ...domain.calculations.registry.schema_verification import WorkbookParityReference as _WorkbookParityReference
 
 
 class RegistryTreeReport(BaseModel):
@@ -200,69 +204,130 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
     )
 
 
+def _all_revisions(modelos: tuple[_ModeloDefinition, ...]) -> tuple[_ModeloRevision, ...]:
+    """Flatten modelo revisions without changing their loaded insertion order."""
+    return tuple(revision for modelo in modelos for revision in modelo.revisions.values())
+
+
+def _revision_collection_count(
+    revisions: tuple[_ModeloRevision, ...],
+    select: Callable[[_ModeloRevision], Collection[object]],
+) -> int:
+    """Count one collection field across the loaded revisions."""
+    return sum(len(select(revision)) for revision in revisions)
+
+
+def _distinct_revision_values(
+    revisions: tuple[_ModeloRevision, ...],
+    select: Callable[[_ModeloRevision], Iterable[str]],
+) -> tuple[str, ...]:
+    """Return sorted distinct string values selected from every revision."""
+    values: set[str] = set()
+    for revision in revisions:
+        values.update(select(revision))
+    return tuple(sorted(values))
+
+
+def _revision_application_surfaces(revision: _ModeloRevision) -> Iterable[str]:
+    """Select application-link surfaces from one revision."""
+    return (link.surface for link in revision.application_links)
+
+
+def _revision_relation_roles(revision: _ModeloRevision) -> Iterable[str]:
+    """Select relation dependency roles from one revision."""
+    return (relation.dependency_role for relation in revision.relations)
+
+
 def _revision_inventory(modelos: tuple[_ModeloDefinition, ...]) -> RegistryRevisionInventory:
-    revisions = tuple(revision for modelo in modelos for revision in modelo.revisions.values())
-    application_surfaces = {link.surface for revision in revisions for link in revision.application_links}
-    relation_roles = {relation.dependency_role for revision in revisions for relation in revision.relations}
+    revisions = _all_revisions(modelos)
     return RegistryRevisionInventory(
-        casilla_count=sum(len(revision.casillas) for revision in revisions),
-        formula_count=sum(len(revision.formulas) for revision in revisions),
-        extraction_profile_count=sum(len(revision.extraction_profiles) for revision in revisions),
-        cross_reference_count=sum(len(revision.live_cross_references) for revision in revisions),
-        workbook_parity_ref_count=sum(len(revision.workbook_parity_refs) for revision in revisions),
-        verification_expectation_count=sum(len(revision.verification_expectations) for revision in revisions),
-        application_link_count=sum(len(revision.application_links) for revision in revisions),
-        application_link_surfaces=tuple(sorted(application_surfaces)),
-        relation_count=sum(len(revision.relations) for revision in revisions),
-        relation_dependency_roles=tuple(sorted(relation_roles)),
-        filing_schedule_count=sum(len(revision.filing_schedules) for revision in revisions),
+        casilla_count=_revision_collection_count(revisions, lambda revision: revision.casillas),
+        formula_count=_revision_collection_count(revisions, lambda revision: revision.formulas),
+        extraction_profile_count=_revision_collection_count(revisions, lambda revision: revision.extraction_profiles),
+        cross_reference_count=_revision_collection_count(revisions, lambda revision: revision.live_cross_references),
+        workbook_parity_ref_count=_revision_collection_count(revisions, lambda revision: revision.workbook_parity_refs),
+        verification_expectation_count=_revision_collection_count(
+            revisions,
+            lambda revision: revision.verification_expectations,
+        ),
+        application_link_count=_revision_collection_count(revisions, lambda revision: revision.application_links),
+        application_link_surfaces=_distinct_revision_values(revisions, _revision_application_surfaces),
+        relation_count=_revision_collection_count(revisions, lambda revision: revision.relations),
+        relation_dependency_roles=_distinct_revision_values(revisions, _revision_relation_roles),
+        filing_schedule_count=_revision_collection_count(revisions, lambda revision: revision.filing_schedules),
+    )
+
+
+def _sorted_revision_entries(
+    modelos: tuple[_ModeloDefinition, ...],
+) -> Iterable[tuple[_ModeloDefinition, _RevisionId, _ModeloRevision]]:
+    """Yield revision entries in the report's canonical modelo/id order."""
+    for modelo in sorted(modelos, key=lambda item: item.id):
+        for revision_id, revision in sorted(modelo.revisions.items()):
+            yield modelo, revision_id, revision
+
+
+def _export_record_and_field_counts(revision: _ModeloRevision) -> tuple[int, int]:
+    """Count flattened export records and fields for one revision."""
+    export_records = tuple(record for layout in revision.export_layouts for record in layout.records)
+    export_fields = tuple(field for record in export_records for field in record.fields)
+    return len(export_records), len(export_fields)
+
+
+def _workbook_parity_detail(reference: _WorkbookParityReference) -> RegistryWorkbookParityDetailReport:
+    """Project one workbook-parity reference into its public detail report."""
+    return RegistryWorkbookParityDetailReport(
+        id=reference.id,
+        workbook_source=reference.workbook_source,
+        formula_coverage=reference.formula_coverage,
+        runner_required=reference.runner_required,
+        output_cell_count=len(reference.output_cells),
+    )
+
+
+def _revision_workbook_parity_details(
+    revision: _ModeloRevision,
+) -> tuple[RegistryWorkbookParityDetailReport, ...]:
+    """Project workbook-parity references in stable reference-id order."""
+    references = sorted(revision.workbook_parity_refs, key=lambda item: item.id)
+    return tuple(_workbook_parity_detail(reference) for reference in references)
+
+
+def _revision_detail_report(
+    modelo: _ModeloDefinition,
+    revision_id: _RevisionId,
+    revision: _ModeloRevision,
+) -> RegistryRevisionDetailReport:
+    """Project one loaded revision without altering its declared collections."""
+    export_record_count, export_field_count = _export_record_and_field_counts(revision)
+    return RegistryRevisionDetailReport(
+        modelo=str(modelo.id),
+        revision=str(revision_id),
+        legal_refs=tuple(revision.legal_refs),
+        source_refs=tuple(revision.source_refs),
+        export_layout_ids=tuple(layout.id for layout in revision.export_layouts),
+        export_layout_count=len(revision.export_layouts),
+        export_record_count=export_record_count,
+        export_field_count=export_field_count,
+        deadline_window_count=len(revision.deadline_windows),
+        deadline_periods=tuple(sorted(window.period.registry_token for window in revision.deadline_windows)),
+        relation_ids=tuple(relation.id for relation in revision.relations),
+        relation_count=len(revision.relations),
+        relation_dependency_roles=tuple(sorted(set(_revision_relation_roles(revision)))),
+        filing_schedule_ids=tuple(str(schedule.id) for schedule in revision.filing_schedules),
+        filing_schedule_count=len(revision.filing_schedules),
+        portal_guard_policy_ids=tuple(
+            sorted({decision.guard_policy_id for decision in revision.live_cross_references}),
+        ),
+        workbook_parity=_revision_workbook_parity_details(revision),
     )
 
 
 def _revision_details(modelos: tuple[_ModeloDefinition, ...]) -> tuple[RegistryRevisionDetailReport, ...]:
-    reports: list[RegistryRevisionDetailReport] = []
-    for modelo in sorted(modelos, key=lambda item: item.id):
-        for revision_id, revision in sorted(modelo.revisions.items()):
-            export_records = tuple(record for layout in revision.export_layouts for record in layout.records)
-            export_fields = tuple(field for record in export_records for field in record.fields)
-            workbook_parity = tuple(
-                RegistryWorkbookParityDetailReport(
-                    id=reference.id,
-                    workbook_source=reference.workbook_source,
-                    formula_coverage=reference.formula_coverage,
-                    runner_required=reference.runner_required,
-                    output_cell_count=len(reference.output_cells),
-                )
-                for reference in sorted(revision.workbook_parity_refs, key=lambda item: item.id)
-            )
-            reports.append(
-                RegistryRevisionDetailReport(
-                    modelo=str(modelo.id),
-                    revision=str(revision_id),
-                    legal_refs=tuple(revision.legal_refs),
-                    source_refs=tuple(revision.source_refs),
-                    export_layout_ids=tuple(layout.id for layout in revision.export_layouts),
-                    export_layout_count=len(revision.export_layouts),
-                    export_record_count=len(export_records),
-                    export_field_count=len(export_fields),
-                    deadline_window_count=len(revision.deadline_windows),
-                    deadline_periods=tuple(
-                        sorted(window.period.registry_token for window in revision.deadline_windows),
-                    ),
-                    relation_ids=tuple(relation.id for relation in revision.relations),
-                    relation_count=len(revision.relations),
-                    relation_dependency_roles=tuple(
-                        sorted({relation.dependency_role for relation in revision.relations}),
-                    ),
-                    filing_schedule_ids=tuple(str(schedule.id) for schedule in revision.filing_schedules),
-                    filing_schedule_count=len(revision.filing_schedules),
-                    portal_guard_policy_ids=tuple(
-                        sorted({decision.guard_policy_id for decision in revision.live_cross_references}),
-                    ),
-                    workbook_parity=workbook_parity,
-                ),
-            )
-    return tuple(reports)
+    return tuple(
+        _revision_detail_report(modelo, revision_id, revision)
+        for modelo, revision_id, revision in _sorted_revision_entries(modelos)
+    )
 
 
 __all__ = [

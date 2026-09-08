@@ -2,8 +2,8 @@
 
 Every trust-boundary crossing on the review-package recipient-encryption
 surface -- registering or removing a trusted recipient, sealing a package for
-a recipient, decrypting a sealed package, opening a review-only workspace,
-and counter-signing a received package -- emits a typed
+a recipient, decrypting a sealed package, and counter-signing a received
+package -- emits a typed
 :class:`~domain.buckets.BucketEvent` so an operator can reconstruct the
 collaboration timeline from the bucket-event-history catalogue, mirroring
 every other material workflow transition in the codebase (the pattern
@@ -14,7 +14,7 @@ comment: ``collab_event.*`` marks a TRUST/TRANSPORT-boundary action (adding a
 recipient, sealing a package for them) that does not itself expose decrypted
 material to the caller emitting the event; ``privacy_event.*`` marks a
 DISCLOSURE-relevant action where decrypted or otherwise sensitive material
-was read (decrypting a package, opening a review-only workspace). This lets
+was read (decrypting a package). This lets
 a future audit query distinguish "who was trusted / what was sealed" from
 "what was actually read".
 
@@ -53,9 +53,6 @@ See Also:
     :mod:`~application.modelo._review_package_recipient_encryption`
         Owns the encrypt/decrypt primitives this module's package events
         describe.
-    :mod:`~application.modelo._review_package_review_only_workspace`
-        Owns the review-only workspace this module's workspace-opened event
-        describes.
     :mod:`~application.modelo._review_package_counter_sign`
         Owns the counter-sign primitive this module's counter-signed event
         describes.
@@ -72,7 +69,6 @@ from typing import TYPE_CHECKING
 
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ._review_package_review_only_workspace import ReviewOnlyWorkspace
 from .review_package_recipient_registry import RecipientFingerprintRecord
 from .revision_persistence import emit_modelo_bucket_event
 
@@ -235,47 +231,6 @@ def emit_collab_package_decrypted_event(
     )
 
 
-def emit_collab_review_only_workspace_opened_event(
-    workspace: ReviewOnlyWorkspace,
-    *,
-    bucket_id: str,
-    repository: BucketEventHistoryRepositoryProtocol,
-    actor: str = "operator",
-    occurred_at: datetime | None = None,
-) -> BucketEvent:
-    """Append a ``COLLAB_REVIEW_ONLY_WORKSPACE_OPENED`` event.
-
-    A ``privacy_event.*``-prefixed disclosure event: opening the workspace
-    makes the decrypted review-package contents readable to the caller.
-
-    Args:
-        workspace: The :class:`~application.modelo.ReviewOnlyWorkspace`
-            just materialised by
-            :func:`~application.modelo.open_review_only_workspace`.
-        bucket_id: The bucket the workspace was opened in.
-        repository: The bucket's
-            :class:`~domain.buckets.BucketEventHistoryRepositoryProtocol`.
-        actor: Actor label.
-        occurred_at: Optional override for the event's ``occurred_at``
-            timestamp (tests only); defaults to the current UTC time.
-    """
-    return emit_modelo_bucket_event(
-        repository=repository,
-        bucket_id=bucket_id,
-        event_type=BucketEventType.COLLAB_REVIEW_ONLY_WORKSPACE_OPENED,
-        occurred_at=occurred_at or _utc_now(),
-        actor=actor,
-        object_type=BucketEventObjectType.CALCULATION_REVISION,
-        object_id=workspace.manifest.calculation_revision_id,
-        payload={
-            "calculation_revision_id": workspace.manifest.calculation_revision_id,
-            "work_unit_id": workspace.manifest.work_unit_id,
-            "modelo": workspace.manifest.modelo,
-            "review_only": "true" if workspace.review_only else "false",
-        },
-    )
-
-
 def emit_collab_package_counter_signed_event(
     receipt: CounterSignedReceipt,
     *,
@@ -389,5 +344,4 @@ __all__ = [
     "emit_collab_package_encrypted_event",
     "emit_collab_recipient_registered_event",
     "emit_collab_recipient_removed_event",
-    "emit_collab_review_only_workspace_opened_event",
 ]

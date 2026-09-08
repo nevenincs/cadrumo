@@ -7,7 +7,7 @@ import os
 import sys
 import threading
 import time
-from collections.abc import Generator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from statistics import median
@@ -120,6 +120,10 @@ class ProfileCustodyUnlock:
     dek: bytes
 
 
+class _CalibrationDeadlineElapsedError(Exception):
+    """Signal that a calibration grid cannot continue within its total deadline."""
+
+
 def profile_password_wrap_aad(
     *,
     profile_id: UUID,
@@ -218,10 +222,11 @@ def _posix_memory_bytes() -> int:
         return 0
     if "SC_PAGE_SIZE" not in names:
         return 0
-    page_size = int(sysconf("SC_PAGE_SIZE"))
+    sysconf_reader = cast("Callable[[str], int]", sysconf)
+    page_size = int(sysconf_reader("SC_PAGE_SIZE"))
     for pages_name in ("SC_AVPHYS_PAGES", "SC_PHYS_PAGES"):
         if pages_name in names:
-            return page_size * int(sysconf(pages_name))
+            return page_size * int(sysconf_reader(pages_name))
     return 0
 
 
@@ -256,6 +261,50 @@ def profile_kdf_is_eligible(
     )
 
 
+def _fallback_profile_kdf_calibration(
+    parameters: ProfileCustodyKdfParameters,
+) -> ProfileCustodyKdfCalibration:
+    return ProfileCustodyKdfCalibration(
+        version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
+        parameters=parameters,
+        source="fallback",
+        median_seconds=None,
+    )
+
+
+def _measure_profile_kdf_samples(
+    parameters: ProfileCustodyKdfParameters,
+    *,
+    deadline: float,
+    settings: Settings | None,
+) -> tuple[float, ...]:
+    _measure_profile_kdf(parameters, deadline=deadline, settings=settings)
+    return tuple(
+        _measure_profile_kdf(parameters, deadline=deadline, settings=settings)
+        for _ in range(PROFILE_CUSTODY_KDF_SAMPLE_COUNT)
+    )
+
+
+def _measure_profile_kdf_calibration_point(
+    parameters: ProfileCustodyKdfParameters,
+    *,
+    deadline: float,
+    settings: Settings | None,
+    completed_measurements: list[tuple[ProfileCustodyKdfParameters, tuple[float, ...] | None]],
+) -> tuple[float, ...] | None:
+    try:
+        return _measure_profile_kdf_samples(parameters, deadline=deadline, settings=settings)
+    except TimeoutError as exc:
+        if time.monotonic() >= deadline:
+            raise _CalibrationDeadlineElapsedError from exc
+        completed_measurements.append((parameters, None))
+        return None
+    except ProfileCustodyRefusedError as exc:
+        if exc.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT:
+            return None
+        raise
+
+
 def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> ProfileCustodyKdfCalibration:
     """Calibrate a fresh profile KDF with bounded real child-process samples."""
     resources = profile_kdf_resources()
@@ -271,12 +320,7 @@ def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> P
     # band's floor -- so nothing about the wrap weakens; only the host
     # measurement is skipped.
     if not (settings or load_settings()).cadrumo_profile_kdf_measure_calibration:
-        return ProfileCustodyKdfCalibration(
-            version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
-            parameters=fallback,
-            source="fallback",
-            median_seconds=None,
-        )
+        return _fallback_profile_kdf_calibration(fallback)
 
     deadline = time.monotonic() + PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS
     completed_measurements: list[tuple[ProfileCustodyKdfParameters, tuple[float, ...] | None]] = []
@@ -284,29 +328,21 @@ def calibrate_profile_kdf(*, salt: bytes, settings: Settings | None = None) -> P
         if not profile_kdf_is_eligible(parameters, resources=resources):
             continue
         try:
-            _measure_profile_kdf(parameters, deadline=deadline, settings=settings)
-            samples: list[float] = []
-            for _ in range(PROFILE_CUSTODY_KDF_SAMPLE_COUNT):
-                samples.append(_measure_profile_kdf(parameters, deadline=deadline, settings=settings))
-        except TimeoutError:
-            if time.monotonic() >= deadline:
-                break
-            completed_measurements.append((parameters, None))
+            samples = _measure_profile_kdf_calibration_point(
+                parameters,
+                deadline=deadline,
+                settings=settings,
+                completed_measurements=completed_measurements,
+            )
+        except _CalibrationDeadlineElapsedError:
+            break
+        if samples is None:
             continue
-        except ProfileCustodyRefusedError as exc:
-            if exc.refusal is ProfileCustodyRefusal.KDF_RESOURCE_LIMIT:
-                continue
-            raise
-        completed_measurements.append((parameters, tuple(samples)))
+        completed_measurements.append((parameters, samples))
         selected = _select_profile_kdf_calibration(completed_measurements)
         if selected is not None:
             return selected
-    return ProfileCustodyKdfCalibration(
-        version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
-        parameters=fallback,
-        source="fallback",
-        median_seconds=None,
-    )
+    return _fallback_profile_kdf_calibration(fallback)
 
 
 def unlock_profile_custody(

@@ -29,7 +29,6 @@ from ..m145_communication_records import (
     M145CommunicationRecord,
     create_m145_communication_record,
     derive_m145_communication_record_id,
-    list_m145_communication_records,
     m145_communication_record_object_key,
     read_m145_communication_record,
 )
@@ -63,7 +62,6 @@ def _command(
 def test_create_m145_communication_record_persists_bucket_scoped_registry_record(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         record = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id)
-        listed = list_m145_communication_records(bucket_id=runtime.bucket_id)
         read_back = read_m145_communication_record(record.communication_record_id[:12], bucket_id=runtime.bucket_id)
 
     assert isinstance(record, M145CommunicationRecord)
@@ -84,7 +82,6 @@ def test_create_m145_communication_record_persists_bucket_scoped_registry_record
     )
     assert "rd-439-2007:art-88" in record.legal_refs
     assert "aeat-modelo-145-form" in record.source_refs
-    assert listed == (record,)
     assert read_back == record
 
 
@@ -107,12 +104,10 @@ def test_create_m145_communication_record_is_idempotent_for_identical_content(tm
     with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
         first = create_m145_communication_record(_command(), bucket_id=runtime.bucket_id)
         second = create_m145_communication_record(_command(note="Ignored replay note"), bucket_id=runtime.bucket_id)
-        listed = list_m145_communication_records(bucket_id=runtime.bucket_id)
 
     assert second == first
     assert second.communication_record_id == first.communication_record_id
     assert second.created_at == first.created_at
-    assert listed == (first,)
 
 
 def test_create_m145_communication_record_distinguishes_variation_period(tmp_path: Path) -> None:
@@ -122,11 +117,12 @@ def test_create_m145_communication_record_distinguishes_variation_period(tmp_pat
             _command(period_token=M145CommunicationPeriod.VARIATION),
             bucket_id=runtime.bucket_id,
         )
-        listed = list_m145_communication_records(bucket_id=runtime.bucket_id)
+        communication_read = read_m145_communication_record(communication.communication_record_id, bucket_id=runtime.bucket_id)
+        variation_read = read_m145_communication_record(variation.communication_record_id, bucket_id=runtime.bucket_id)
 
     assert variation.period_token is M145CommunicationPeriod.VARIATION
     assert variation.communication_record_id != communication.communication_record_id
-    assert {record.communication_record_id for record in listed} == {
+    assert {record.communication_record_id for record in (communication_read, variation_read)} == {
         communication.communication_record_id,
         variation.communication_record_id,
     }

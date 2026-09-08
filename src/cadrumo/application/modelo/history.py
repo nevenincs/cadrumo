@@ -44,7 +44,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -57,17 +57,21 @@ from ...core.identity import BucketId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import (
     BucketEvent,
+    BucketEventHistoryCatalogue,
     BucketEventObjectType,
     BucketEventType,
     bucket_event_order_key,
 )
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
     VerificationReportCatalogueRepositoryProtocol,
 )
+from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from .action_errors import WorkUnitNotFoundError
@@ -98,6 +102,75 @@ def _select_history_work_unit(
 ) -> ModeloWorkResolution:
     """Select a history root from the caller-captured catalogue."""
     return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
+
+
+def _work_unit_history_events(catalogue: BucketEventHistoryCatalogue, work_unit_id: str) -> list[BucketEvent]:
+    """Start a history with the events emitted directly by its work unit."""
+    return list(
+        catalogue.for_object(
+            object_type=BucketEventObjectType.WORK_UNIT,
+            object_id=work_unit_id,
+        ),
+    )
+
+
+def _calculation_history_events(
+    catalogue: BucketEventHistoryCatalogue,
+    revisions: Iterable[CalculationRevision],
+    work_unit_id: str,
+) -> tuple[list[BucketEvent], set[str]]:
+    """Collect calculation events and the revision identities they establish."""
+    collected: list[BucketEvent] = []
+    revision_ids: set[str] = set()
+    for revision in revisions:
+        if revision.work_unit_id != work_unit_id:
+            continue
+        revision_ids.add(revision.calculation_revision_id)
+        collected.extend(
+            catalogue.for_object(
+                object_type=BucketEventObjectType.CALCULATION_REVISION,
+                object_id=revision.calculation_revision_id,
+            ),
+        )
+    return collected, revision_ids
+
+
+def _verification_history_events(
+    catalogue: BucketEventHistoryCatalogue,
+    reports: Iterable[VerificationReport],
+    revision_ids: set[str],
+) -> list[BucketEvent]:
+    """Collect verification events belonging to the selected revisions."""
+    collected: list[BucketEvent] = []
+    for report in reports:
+        if report.calculation_revision_id not in revision_ids:
+            continue
+        collected.extend(
+            catalogue.for_object(
+                object_type=BucketEventObjectType.VERIFICATION_REPORT,
+                object_id=report.verification_report_id,
+            ),
+        )
+    return collected
+
+
+def _filing_history_events(
+    catalogue: BucketEventHistoryCatalogue,
+    filings: Iterable[ModeloRecord],
+    work_unit_id: str,
+) -> list[BucketEvent]:
+    """Collect filing events belonging to the selected work unit."""
+    collected: list[BucketEvent] = []
+    for filing in filings:
+        if filing.work_unit_id != work_unit_id:
+            continue
+        collected.extend(
+            catalogue.for_object(
+                object_type=BucketEventObjectType.FILING_RECORD,
+                object_id=filing.filing_record_id,
+            ),
+        )
+    return collected
 
 
 def assemble_work_unit_history(
@@ -165,48 +238,17 @@ def assemble_work_unit_history(
 
     # Work-unit-scoped events (create / rename / discard) live under
     # object_type=WORK_UNIT keyed by work_unit_id.
-    collected = list(
-        catalogue.for_object(
-            object_type=BucketEventObjectType.WORK_UNIT,
-            object_id=work_unit_id,
-        ),
-    )
+    collected = _work_unit_history_events(catalogue, work_unit_id)
 
     revisions = cr_repo.load()
-    for revision in revisions.values():
-        if revision.work_unit_id != work_unit_id:
-            continue
-        collected.extend(
-            catalogue.for_object(
-                object_type=BucketEventObjectType.CALCULATION_REVISION,
-                object_id=revision.calculation_revision_id,
-            ),
-        )
+    calculation_events, revision_ids = _calculation_history_events(catalogue, revisions.values(), work_unit_id)
+    collected.extend(calculation_events)
 
-    revision_ids = {
-        revision.calculation_revision_id for revision in revisions.values() if revision.work_unit_id == work_unit_id
-    }
     verifications = require_verification_report_coordinates_current(vr_repo.load())
-    for report in verifications.values():
-        if report.calculation_revision_id not in revision_ids:
-            continue
-        collected.extend(
-            catalogue.for_object(
-                object_type=BucketEventObjectType.VERIFICATION_REPORT,
-                object_id=report.verification_report_id,
-            ),
-        )
+    collected.extend(_verification_history_events(catalogue, verifications.values(), revision_ids))
 
     filings = fr_repo.load()
-    for filing in filings.values():
-        if filing.work_unit_id != work_unit_id:
-            continue
-        collected.extend(
-            catalogue.for_object(
-                object_type=BucketEventObjectType.FILING_RECORD,
-                object_id=filing.filing_record_id,
-            ),
-        )
+    collected.extend(_filing_history_events(catalogue, filings.values(), work_unit_id))
 
     # The merge order of the per-object streams above is not meaningful, so
     # same-instant events would otherwise inherit it. Ordering on the shared

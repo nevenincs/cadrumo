@@ -33,9 +33,12 @@ from .models import (
     CrossPeriodGroupMemberRoster,
     EntityType,
     FiscalResidency,
+    IrpfActivityKind,
+    IrpfEstimationRegime,
     IrpfIncomeCategory,
     IrpfSpecialRegime,
     IVARegime,
+    LegalEntityForm,
     M303RegimeComposition,
     M303TaxTerritory,
     ModeloEnrollment,
@@ -63,97 +66,11 @@ def taxpayer_profile_from_mapping(
     """
     canonical, padded = _canonicalize_and_pad(values, tax_id_default=tax_id_default)
     typed = project_setup_answers(padded)
-
-    entity_type = typed.entity_type or None
-    legal_entity_form = typed.legal_entity_form or None
-    income_categories = _resolve_income_categories(typed.irpf_income_categories)
-    declaration_roles = _resolve_declaration_roles(typed.declaration_roles)
-    estimation_regime = typed.irpf_estimation_regime or None
-    activity_kind = typed.irpf_activity_kind or None
-    tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
-    iva_regime = _resolve_iva_regime(
-        canonical.get("iva.regime"),
-        _default_iva_regime_for_profile(
-            entity_type=entity_type,
-            income_categories=income_categories,
-            configured_default=iva_regime_default,
-        ),
-    )
-
-    return TaxpayerProfile(
-        tax_id=tax_id,
-        entity_type=entity_type,
-        declaration_roles=declaration_roles,
-        legal_entity_form=legal_entity_form,
-        irpf_income_categories=income_categories,
-        irpf_estimation_regime=estimation_regime,
-        irpf_activity_kind=activity_kind,
-        iva_regime=iva_regime,
-        has_employees=typed.has_employees,
-        colegio_concertado=(typed.colegio_concertado if isinstance(typed.colegio_concertado, bool) else None),
-        pays_professionals_with_retencion=typed.pays_professionals_with_retencion,
-        professional_income_withholding_ge_70pct=typed.professional_income_withholding_ge_70pct,
-        art109_activity_income_withholding_ge_70pct=typed.art109_activity_income_withholding_ge_70pct,
-        pays_rent_with_retencion=typed.pays_rent_with_retencion,
-        pays_capital_income_with_retencion=typed.pays_capital_income_with_retencion,
-        **_objective_estimation_fields(canonical),
-        does_intracomunitario=typed.does_intracomunitario,
-        third_party_transactions_above_347_threshold=typed.third_party_transactions_above_347_threshold,
-        bienes_extranjero_above_threshold=typed.bienes_extranjero_above_threshold,
-        monedas_virtuales_extranjero_above_threshold=typed.monedas_virtuales_extranjero_above_threshold,
-        iva=_resolve_modelo_iva_profile(canonical, typed),
-        cross_period_group_member_rosters=_parse_cross_period_group_member_rosters(canonical),
-        enrollment=ModeloEnrollment(
-            large_company=typed.enrollment_large_company,
-            public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
-        ),
-        fiscal_address_cadastral_reference=canonical.get("address.cadastral_reference", ""),
-        fiscal_address_is_habitual_vivienda=_parse_bool(canonical.get("address.is_habitual_vivienda")) or False,
-        activity_start_date=_parse_date(canonical.get("censo.activity_start_date")),
-        activity_end_date=_parse_date(canonical.get("censo.activity_end_date")),
-        incn_prior_12_months=_parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
-        new_entity_first_two_profit_periods=_parse_optional_bool(
-            canonical.get("taxpayer_type.new_entity_first_two_profit_periods"),
-        ),
-        ley_49_2002_special_regime_option_declared=_parse_optional_bool(
-            canonical.get("taxpayer_type.ley_49_2002_special_regime_option_declared"),
-        ),
-        ley_49_2002_special_regime_option_date=_parse_date(
-            canonical.get("taxpayer_type.ley_49_2002_special_regime_option_date"),
-        ),
-        ley_49_2002_special_regime_renunciation_declared=_parse_optional_bool(
-            canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_declared"),
-        ),
-        ley_49_2002_special_regime_renunciation_date=_parse_date(
-            canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_date"),
-        ),
-        establecimiento_type=canonical.get("censo.establecimiento_type", ""),
-        elected_withholding_pct=canonical.get("censo.elected_withholding_pct", ""),
-        vivienda_office_total_m2=_parse_decimal(canonical.get("vivienda_office.total_m2")),
-        vivienda_office_office_m2=_parse_decimal(canonical.get("vivienda_office.office_m2")),
-        iae_epigraph=canonical.get("activities.iae_epigraph", ""),
-        notes=typed.notes,
-        irpf_special_regime=_resolve_special_regime(
-            # Prefer the typed wizard answer; fall back to the canonical
-            # path-keyed value from record_to_path_values so the field is
-            # reachable from persisted facts even before a wizard question is
-            # added to the SETUP_FLOW.
-            typed.irpf_special_regime or canonical.get("irpf.special_regime", ""),
-        ),
-        special_regime_start_date=_parse_date(
-            typed.irpf_special_regime_start_date or canonical.get("irpf.special_regime_start_date"),
-        ),
-        fiscal_residency=_resolve_fiscal_residency(
-            typed.fiscal_residency or canonical.get("taxpayer_type.fiscal_residency", ""),
-        ),
-        country_of_fiscal_residence=_coerce_country_code(
-            typed.country_of_fiscal_residence or canonical.get("taxpayer_type.country_of_fiscal_residence", ""),
-        ),
-        representante_fiscal_nif=canonical.get("taxpayer_type.representante_fiscal_nif") or None,
-        representante_fiscal_nombre=canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
-        irpf_pagadores_count=_parse_optional_int(canonical.get("irpf.pagadores_count")),
-        irpf_pagadores_secondary_income=_parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
-        irpf_pagadores_total_work_income=_parse_decimal(canonical.get("irpf.pagadores_total_work_income")),
+    return _build_taxpayer_profile(
+        canonical,
+        typed,
+        tax_id_default=tax_id_default,
+        iva_regime_default=iva_regime_default,
     )
 
 
@@ -170,50 +87,52 @@ def _canonicalize_and_pad(
     bare-flag forwarding ``project_answers`` needs to run its strict
     validation against a well-formed shape.
     """
-    # Coerce mixed-typed mappings to canonical-token strings before the
-    # descriptor's projection runs.
+    canonical = _canonicalize_values(values)
+    padded = _pad_projection_values(canonical, tax_id_default=tax_id_default)
+    _forward_bare_profile_flags(canonical, padded)
+    return canonical, padded
+
+
+def _canonicalize_values(values: Mapping[str, object]) -> dict[str, str]:
+    """Stringify profile facts and normalize the IVA selector token."""
     canonical: dict[str, str] = {key: _stringify(raw) for key, raw in values.items()}
-    # The wizard's SELECT validator only accepts the IVARegime
-    # canonical uppercase token, so the mapping is normalised here
-    # against the enum's value form before projection.
     if canonical.get("iva.regime"):
         canonical["iva.regime"] = canonical["iva.regime"].strip().upper().replace("-", "_")
+    return canonical
 
-    # SetupAnswers requires identity.tax_id and activities.description;
-    # the deadline engine supplies a tax_id default so it can render
-    # diagnostic schedules against an empty profile. Pad here so
-    # project_answers' strict validation runs against the same shape.
+
+def _pad_projection_values(canonical: Mapping[str, str], *, tax_id_default: str) -> dict[str, str]:
+    """Add only the structural values required by strict answer projection."""
     padded = dict(canonical)
     padded.setdefault("identity.tax_id", canonical.get("tax.id") or tax_id_default)
     padded.setdefault("activities.description", canonical.get("activity") or "schedule-only")
-    # Forward selector-keyed input from external callers to the canonical
-    # schema path the wizard projects against.
     if "tax.id" in canonical and "identity.tax_id" not in canonical:
         padded["identity.tax_id"] = canonical["tax.id"]
     if "activity" in canonical and "activities.description" not in canonical:
         padded["activities.description"] = canonical["activity"]
-    # Bare boolean flag names map to their canonical wizard keys so the
-    # descriptor's project_answers picks them up.
-    for bare, canonical_key in (
-        ("has_employees", "withholding.has_employees"),
-        ("colegio_concertado", "withholding.colegio_concertado"),
-        ("pays_professionals_with_retencion", "withholding.pays_professionals_with_retencion"),
-        ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
-        ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
-        ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
-        ("does_intracomunitario", "iva.does_intracomunitario"),
-        ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
-        (
-            "monedas_virtuales_extranjero_above_threshold",
-            "obligations.monedas_virtuales_extranjero_above_threshold",
-        ),
-        ("enrollment.large_company", "censo.large_company"),
-        ("enrollment.public_administration_budget_gt_6000000", "censo.public_administration_budget_gt_6000000"),
-    ):
+    return padded
+
+
+_BARE_PROFILE_FLAG_KEYS: tuple[tuple[str, str], ...] = (
+    ("has_employees", "withholding.has_employees"),
+    ("colegio_concertado", "withholding.colegio_concertado"),
+    ("pays_professionals_with_retencion", "withholding.pays_professionals_with_retencion"),
+    ("art109_activity_income_withholding_ge_70pct", "irpf.art109_activity_income_withholding_ge_70pct"),
+    ("pays_rent_with_retencion", "withholding.pays_rent_with_retencion"),
+    ("pays_capital_income_with_retencion", "withholding.pays_capital_income_with_retencion"),
+    ("does_intracomunitario", "iva.does_intracomunitario"),
+    ("bienes_extranjero_above_threshold", "obligations.bienes_extranjero_above_threshold"),
+    ("monedas_virtuales_extranjero_above_threshold", "obligations.monedas_virtuales_extranjero_above_threshold"),
+    ("enrollment.large_company", "censo.large_company"),
+    ("enrollment.public_administration_budget_gt_6000000", "censo.public_administration_budget_gt_6000000"),
+)
+
+
+def _forward_bare_profile_flags(canonical: Mapping[str, str], padded: dict[str, str]) -> None:
+    """Forward legacy bare flag names to the canonical wizard paths."""
+    for bare, canonical_key in _BARE_PROFILE_FLAG_KEYS:
         if bare in canonical and canonical_key not in canonical:
             padded[canonical_key] = canonical[bare]
-
-    return canonical, padded
 
 
 class _ObjectiveEstimationFields(TypedDict):
@@ -229,6 +148,86 @@ class _ObjectiveEstimationFields(TypedDict):
     objective_estimation_modulos_module_5_units: Decimal | None
     objective_estimation_modulos_module_6_units: Decimal | None
     objective_estimation_modulos_module_7_units: Decimal | None
+
+
+class _ProfileAxisFields(TypedDict):
+    tax_id: str
+    entity_type: EntityType | None
+    declaration_roles: frozenset[ThirdPartyDeclarationRole]
+    legal_entity_form: LegalEntityForm | None
+    irpf_income_categories: frozenset[IrpfIncomeCategory]
+    irpf_estimation_regime: IrpfEstimationRegime | None
+    irpf_activity_kind: IrpfActivityKind | None
+    iva_regime: IVARegime
+
+
+class _ProfileWithholdingFields(TypedDict):
+    has_employees: bool
+    colegio_concertado: bool | None
+    pays_professionals_with_retencion: bool
+    professional_income_withholding_ge_70pct: bool
+    art109_activity_income_withholding_ge_70pct: bool
+    pays_rent_with_retencion: bool
+    pays_capital_income_with_retencion: bool
+
+
+class _ProfileObligationFields(TypedDict):
+    does_intracomunitario: bool
+    third_party_transactions_above_347_threshold: bool
+    bienes_extranjero_above_threshold: bool
+    monedas_virtuales_extranjero_above_threshold: bool
+
+
+class _ProfileRelationshipFields(TypedDict):
+    iva: ModeloIVAProfile | None
+    cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...]
+    enrollment: ModeloEnrollment
+
+
+class _ProfileAddressFields(TypedDict):
+    fiscal_address_cadastral_reference: str
+    fiscal_address_is_habitual_vivienda: bool
+
+
+class _ProfileActivityFields(TypedDict):
+    activity_start_date: date | None
+    activity_end_date: date | None
+    incn_prior_12_months: Decimal | None
+
+
+class _ProfileCorporateFields(TypedDict):
+    new_entity_first_two_profit_periods: bool | None
+    ley_49_2002_special_regime_option_declared: bool | None
+    ley_49_2002_special_regime_option_date: date | None
+    ley_49_2002_special_regime_renunciation_declared: bool | None
+    ley_49_2002_special_regime_renunciation_date: date | None
+
+
+class _ProfileEstablishmentFields(TypedDict):
+    establecimiento_type: str
+    elected_withholding_pct: str
+    vivienda_office_total_m2: Decimal | None
+    vivienda_office_office_m2: Decimal | None
+    iae_epigraph: str
+    notes: str
+
+
+class _ProfileRegimeFields(TypedDict):
+    irpf_special_regime: IrpfSpecialRegime | None
+    special_regime_start_date: date | None
+    fiscal_residency: FiscalResidency | None
+    country_of_fiscal_residence: str | None
+
+
+class _ProfileRepresentativeFields(TypedDict):
+    representante_fiscal_nif: str | None
+    representante_fiscal_nombre: str | None
+
+
+class _ProfilePagadoresFields(TypedDict):
+    irpf_pagadores_count: int | None
+    irpf_pagadores_secondary_income: Decimal | None
+    irpf_pagadores_total_work_income: Decimal | None
 
 
 def _objective_estimation_fields(canonical: Mapping[str, str]) -> _ObjectiveEstimationFields:
@@ -277,6 +276,202 @@ def _objective_estimation_fields(canonical: Mapping[str, str]) -> _ObjectiveEsti
             canonical.get("irpf.objective_estimation_modulos_module_7_units"),
         ),
     )
+
+
+def _build_taxpayer_profile(
+    canonical: dict[str, str],
+    typed: SetupAnswers,
+    *,
+    tax_id_default: str,
+    iva_regime_default: IVARegime,
+) -> TaxpayerProfile:
+    """Assemble the profile from ordered, domain-specific field families."""
+    return TaxpayerProfile(
+        **_resolve_profile_axes(
+            canonical,
+            typed,
+            tax_id_default=tax_id_default,
+            iva_regime_default=iva_regime_default,
+        ),
+        **_resolve_profile_withholding_fields(typed),
+        **_objective_estimation_fields(canonical),
+        **_resolve_profile_obligation_fields(typed),
+        **_resolve_profile_relationship_fields(canonical, typed),
+        **_resolve_profile_address_fields(canonical),
+        **_resolve_profile_activity_fields(canonical),
+        **_resolve_profile_corporate_fields(canonical),
+        **_resolve_profile_establishment_fields(canonical, typed),
+        **_resolve_profile_regime_fields(canonical, typed),
+        **_resolve_profile_representative_fields(canonical),
+        **_resolve_profile_pagadores_fields(canonical),
+    )
+
+
+def _resolve_profile_axes(
+    canonical: Mapping[str, str],
+    typed: SetupAnswers,
+    *,
+    tax_id_default: str,
+    iva_regime_default: IVARegime,
+) -> _ProfileAxisFields:
+    """Resolve identity, tax axes, and the profile-level IVA default."""
+    entity_type = typed.entity_type or None
+    legal_entity_form = typed.legal_entity_form or None
+    income_categories = _resolve_income_categories(typed.irpf_income_categories)
+    declaration_roles = _resolve_declaration_roles(typed.declaration_roles)
+    estimation_regime = typed.irpf_estimation_regime or None
+    activity_kind = typed.irpf_activity_kind or None
+    tax_id = canonical.get("identity.tax_id") or canonical.get("tax.id") or tax_id_default
+    iva_regime = _resolve_iva_regime(
+        canonical.get("iva.regime"),
+        _default_iva_regime_for_profile(
+            entity_type=entity_type,
+            income_categories=income_categories,
+            configured_default=iva_regime_default,
+        ),
+    )
+    return {
+        "tax_id": tax_id,
+        "entity_type": entity_type,
+        "declaration_roles": declaration_roles,
+        "legal_entity_form": legal_entity_form,
+        "irpf_income_categories": income_categories,
+        "irpf_estimation_regime": estimation_regime,
+        "irpf_activity_kind": activity_kind,
+        "iva_regime": iva_regime,
+    }
+
+
+def _resolve_profile_withholding_fields(typed: SetupAnswers) -> _ProfileWithholdingFields:
+    """Project the withholding answers that are already typed by SetupAnswers."""
+    colegio_concertado = typed.colegio_concertado if isinstance(typed.colegio_concertado, bool) else None
+    return {
+        "has_employees": typed.has_employees,
+        "colegio_concertado": colegio_concertado,
+        "pays_professionals_with_retencion": typed.pays_professionals_with_retencion,
+        "professional_income_withholding_ge_70pct": typed.professional_income_withholding_ge_70pct,
+        "art109_activity_income_withholding_ge_70pct": typed.art109_activity_income_withholding_ge_70pct,
+        "pays_rent_with_retencion": typed.pays_rent_with_retencion,
+        "pays_capital_income_with_retencion": typed.pays_capital_income_with_retencion,
+    }
+
+
+def _resolve_profile_obligation_fields(typed: SetupAnswers) -> _ProfileObligationFields:
+    """Project the obligation flags that are already typed by SetupAnswers."""
+    return {
+        "does_intracomunitario": typed.does_intracomunitario,
+        "third_party_transactions_above_347_threshold": typed.third_party_transactions_above_347_threshold,
+        "bienes_extranjero_above_threshold": typed.bienes_extranjero_above_threshold,
+        "monedas_virtuales_extranjero_above_threshold": typed.monedas_virtuales_extranjero_above_threshold,
+    }
+
+
+def _resolve_profile_relationship_fields(
+    canonical: Mapping[str, str],
+    typed: SetupAnswers,
+) -> _ProfileRelationshipFields:
+    """Resolve IVA detail, grouped rosters, and enrollment facts."""
+    return {
+        "iva": _resolve_modelo_iva_profile(canonical, typed),
+        "cross_period_group_member_rosters": _parse_cross_period_group_member_rosters(canonical),
+        "enrollment": ModeloEnrollment(
+            large_company=typed.enrollment_large_company,
+            public_administration_budget_gt_6000000=typed.enrollment_public_administration_budget_gt_6000000,
+        ),
+    }
+
+
+def _resolve_profile_address_fields(canonical: Mapping[str, str]) -> _ProfileAddressFields:
+    """Resolve fiscal-address facts and preserve the explicit bool parser."""
+    return {
+        "fiscal_address_cadastral_reference": canonical.get("address.cadastral_reference", ""),
+        "fiscal_address_is_habitual_vivienda": _parse_bool(canonical.get("address.is_habitual_vivienda")) or False,
+    }
+
+
+def _resolve_profile_activity_fields(canonical: Mapping[str, str]) -> _ProfileActivityFields:
+    """Resolve activity dates and the prior-year INCN amount."""
+    return {
+        "activity_start_date": _parse_date(canonical.get("censo.activity_start_date")),
+        "activity_end_date": _parse_date(canonical.get("censo.activity_end_date")),
+        "incn_prior_12_months": _parse_decimal(canonical.get("taxpayer_type.incn_prior_12_months")),
+    }
+
+
+def _resolve_profile_corporate_fields(canonical: Mapping[str, str]) -> _ProfileCorporateFields:
+    """Resolve corporate option declarations and their dates."""
+    return {
+        "new_entity_first_two_profit_periods": _parse_optional_bool(
+            canonical.get("taxpayer_type.new_entity_first_two_profit_periods"),
+        ),
+        "ley_49_2002_special_regime_option_declared": _parse_optional_bool(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_option_declared"),
+        ),
+        "ley_49_2002_special_regime_option_date": _parse_date(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_option_date"),
+        ),
+        "ley_49_2002_special_regime_renunciation_declared": _parse_optional_bool(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_declared"),
+        ),
+        "ley_49_2002_special_regime_renunciation_date": _parse_date(
+            canonical.get("taxpayer_type.ley_49_2002_special_regime_renunciation_date"),
+        ),
+    }
+
+
+def _resolve_profile_establishment_fields(
+    canonical: Mapping[str, str],
+    typed: SetupAnswers,
+) -> _ProfileEstablishmentFields:
+    """Resolve establishment, office, activity, and user-note fields."""
+    return {
+        "establecimiento_type": canonical.get("censo.establecimiento_type", ""),
+        "elected_withholding_pct": canonical.get("censo.elected_withholding_pct", ""),
+        "vivienda_office_total_m2": _parse_decimal(canonical.get("vivienda_office.total_m2")),
+        "vivienda_office_office_m2": _parse_decimal(canonical.get("vivienda_office.office_m2")),
+        "iae_epigraph": canonical.get("activities.iae_epigraph", ""),
+        "notes": typed.notes,
+    }
+
+
+def _resolve_profile_regime_fields(
+    canonical: Mapping[str, str],
+    typed: SetupAnswers,
+) -> _ProfileRegimeFields:
+    """Resolve special-regime and fiscal-residency fallback facts."""
+    # Prefer typed wizard answers; fall back to canonical path-keyed values so
+    # persisted facts remain reachable before a wizard question is added.
+    return {
+        "irpf_special_regime": _resolve_special_regime(
+            typed.irpf_special_regime or canonical.get("irpf.special_regime", ""),
+        ),
+        "special_regime_start_date": _parse_date(
+            typed.irpf_special_regime_start_date or canonical.get("irpf.special_regime_start_date"),
+        ),
+        "fiscal_residency": _resolve_fiscal_residency(
+            typed.fiscal_residency or canonical.get("taxpayer_type.fiscal_residency", ""),
+        ),
+        "country_of_fiscal_residence": _coerce_country_code(
+            typed.country_of_fiscal_residence or canonical.get("taxpayer_type.country_of_fiscal_residence", ""),
+        ),
+    }
+
+
+def _resolve_profile_representative_fields(canonical: Mapping[str, str]) -> _ProfileRepresentativeFields:
+    """Resolve optional fiscal-representative identity facts."""
+    return {
+        "representante_fiscal_nif": canonical.get("taxpayer_type.representante_fiscal_nif") or None,
+        "representante_fiscal_nombre": canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
+    }
+
+
+def _resolve_profile_pagadores_fields(canonical: Mapping[str, str]) -> _ProfilePagadoresFields:
+    """Resolve the multiple-payer work-income facts."""
+    return {
+        "irpf_pagadores_count": _parse_optional_int(canonical.get("irpf.pagadores_count")),
+        "irpf_pagadores_secondary_income": _parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
+        "irpf_pagadores_total_work_income": _parse_decimal(canonical.get("irpf.pagadores_total_work_income")),
+    }
 
 
 def _parse_optional_bool(raw: str | None) -> bool | None:
@@ -468,7 +663,7 @@ def _parse_optional_int(raw: str | None) -> int | None:
         return None
 
 
-def _parse_cross_period_group_member_rosters(canonical: dict[str, str]) -> tuple[CrossPeriodGroupMemberRoster, ...]:
+def _parse_cross_period_group_member_rosters(canonical: Mapping[str, str]) -> tuple[CrossPeriodGroupMemberRoster, ...]:
     """Parse profile-declared member rosters for grouped cross-period fan-in.
 
     Supported profile fact keys:

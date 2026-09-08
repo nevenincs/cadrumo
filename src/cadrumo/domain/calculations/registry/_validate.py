@@ -231,6 +231,53 @@ class RegistryValidator:
         failures.extend(validate_m210_tipo_renta_code_projection_parity(modelo))
         return failures
 
+    def _registry_cache_key(
+        self,
+        modelo_tuple: tuple[ModeloDefinition, ...],
+    ) -> tuple[tuple[int, ...], int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint]:
+        """Build the identity and environment key for a registry validation."""
+        return (
+            tuple(id(modelo) for modelo in modelo_tuple),
+            id(self._legal),
+            id(self._sources),
+            self._supported_filing_years,
+            self._source_root_key(),
+            self._corpus_root_key(),
+            self._source_evidence_key(),
+        )
+
+    def _cached_registry_failures(
+        self,
+        modelo_tuple: tuple[ModeloDefinition, ...],
+        cache_key: tuple[tuple[int, ...], int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint],
+    ) -> tuple[str, ...] | None:
+        """Return a cache hit only when both tuple and catalogue identities still match."""
+        cached = REGISTRY_VALIDATION_CACHE.get(cache_key)
+        if (
+            cached is None
+            or cached[0] != modelo_tuple
+            or cached[1] is not self._legal
+            or cached[2] is not self._sources
+        ):
+            return None
+        return cached[3]
+
+    def _validate_registry_modelos(self, modelo_tuple: tuple[ModeloDefinition, ...]) -> list[str]:
+        """Run catalogue and per-model checks in their established order."""
+        failures: list[str] = list(self._validate_catalogues())
+        for modelo in modelo_tuple:
+            failures.extend(self._validate_modelo(modelo, validate_catalogues=False))
+        return failures
+
+    def _cache_registry_failures(
+        self,
+        cache_key: tuple[tuple[int, ...], int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint],
+        modelo_tuple: tuple[ModeloDefinition, ...],
+        failures: tuple[str, ...],
+    ) -> None:
+        """Persist a completed registry validation result under its exact key."""
+        REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, failures)
+
     def validate_registry(self, modelos: Iterable[ModeloDefinition]) -> None:
         """Validate every modelo and the cross-model relation graph.
 
@@ -242,31 +289,23 @@ class RegistryValidator:
                 checks cross-model closure.
         """
         modelo_tuple = tuple(modelos)
-        cache_key = (
-            tuple(id(modelo) for modelo in modelo_tuple),
-            id(self._legal),
-            id(self._sources),
-            self._supported_filing_years,
-            self._source_root_key(),
-            self._corpus_root_key(),
-            self._source_evidence_key(),
-        )
-        cached = REGISTRY_VALIDATION_CACHE.get(cache_key)
-        if cached is not None and cached[0] == modelo_tuple and cached[1] is self._legal and cached[2] is self._sources:
-            if cached[3]:
-                raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in cached[3]))
+        cache_key = self._registry_cache_key(modelo_tuple)
+        cached_failures = self._cached_registry_failures(modelo_tuple, cache_key)
+        if cached_failures is not None:
+            if cached_failures:
+                raise RegistryValidationError(
+                    "registry validation failed:\n" + "\n".join(f" - {f}" for f in cached_failures),
+                )
             return
 
-        failures: list[str] = list(self._validate_catalogues())
-        for modelo in modelo_tuple:
-            failures.extend(self._validate_modelo(modelo, validate_catalogues=False))
-
+        failures = self._validate_registry_modelos(modelo_tuple)
         failures.extend(validate_registry_scope(modelo_tuple))
-
-        if failures:
-            REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, tuple(failures))
-            raise RegistryValidationError("registry validation failed:\n" + "\n".join(f" - {f}" for f in failures))
-        REGISTRY_VALIDATION_CACHE[cache_key] = (modelo_tuple, self._legal, self._sources, ())
+        failure_tuple = tuple(failures)
+        self._cache_registry_failures(cache_key, modelo_tuple, failure_tuple)
+        if failure_tuple:
+            raise RegistryValidationError(
+                "registry validation failed:\n" + "\n".join(f" - {f}" for f in failure_tuple),
+            )
 
     def _validate_user_profile_contract(self, modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
         from ...user_profile.loader import load_user_profile_schema

@@ -2,8 +2,8 @@
 
 Behind :mod:`cadrumo.application.modelo`, this family owns edit admission and
 parsing, authoritative preflight, an exact compare-and-swap mutation
-baseline, typed scalar and repeatable-row intents, mutation capability
-projection, and the safe result receipt for a guarded calculation edit. It
+baseline, typed scalar and repeatable-row intents, and the safe result receipt
+for a guarded calculation edit. It
 never owns TUI state, operation lifecycle or custody, registry meaning,
 calculation formulas, or persistence adapters -- see
 :class:`~domain.calculations.registry.schema.ModeloRevision` for the
@@ -40,7 +40,7 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.row_models import ModeloDetailRow
-from ..operations.models import OperationDefinitionId, OperationId
+from ..operations.models import OperationId
 from ..operator_actions.models import ActionReference
 from .edit_contract import (
     EditModel,
@@ -49,17 +49,13 @@ from .edit_contract import (
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
 )
-from .workspace_models import (
-    ModeloWorkspaceCapabilityDisposition,
-    ModeloWorkspaceTargetV1,
-)
+from .workspace_models import ModeloWorkspaceTargetV1
 
 _MAX_FINDINGS = 500
 _MAX_INTENTS = 500
 _MAX_SURFACE_ENTRIES = 2000
 _MAX_MESSAGE_ARGUMENTS = 16
 _MAX_EVIDENCE_REFERENCES = 64
-_MAX_CAPABILITY_ROWS = 64
 _MAX_ROW_VALUES = 200
 
 type _BoundedText = Annotated[str, Field(min_length=1, max_length=256)]
@@ -177,12 +173,6 @@ class ModeloEditRefusalCode(StrEnum):
     SURFACE_CONFLICT = "surface_conflict"
     BASELINE_EXPIRED = "baseline_expired"
     STALE_EDIT_BASELINE = "stale_edit_baseline"
-
-
-class ModeloEditVersionHeader(EditModel):
-    """Minimal pre-dispatch shape read before target or financial input parsing."""
-
-    edit_contract_version: Annotated[int, Field(ge=1)]
 
 
 class ModeloEditScalarAddressV1(EditModel):
@@ -736,6 +726,50 @@ class ModeloBindingEditIntentV1(EditModel):
         return self
 
 
+def _validate_add_row_intent_shape(
+    address: ModeloEditRowAddressV1,
+    row: tuple[ModeloScalarEditIntentV1, ...] | None,
+    move_to_index: int | None,
+) -> None:
+    """Require an ADD_ROW to carry a new-row identity and complete values."""
+    if not isinstance(address, ModeloEditNewRowCorrelationV1) or not row:
+        raise ValueError("ADD_ROW requires a new-row correlation address and a complete typed row")
+    if move_to_index is not None:
+        raise ValueError("ADD_ROW may not carry a move_to_index")
+
+
+def _validate_update_row_intent_shape(
+    address: ModeloEditRowAddressV1,
+    row: tuple[ModeloScalarEditIntentV1, ...] | None,
+    move_to_index: int | None,
+) -> None:
+    """Require an UPDATE_ROW to carry an existing-row identity and values."""
+    if isinstance(address, ModeloEditNewRowCorrelationV1) or not row:
+        raise ValueError("UPDATE_ROW requires the canonical existing-row address and a complete typed row")
+    if move_to_index is not None:
+        raise ValueError("UPDATE_ROW may not carry a move_to_index")
+
+
+def _validate_delete_row_intent_shape(
+    address: ModeloEditRowAddressV1,
+    row: tuple[ModeloScalarEditIntentV1, ...] | None,
+    move_to_index: int | None,
+) -> None:
+    """Require a DELETE_ROW to carry only an existing-row identity."""
+    if isinstance(address, ModeloEditNewRowCorrelationV1) or row is not None or move_to_index is not None:
+        raise ValueError("DELETE_ROW requires only the canonical existing-row address")
+
+
+def _validate_move_row_intent_shape(
+    address: ModeloEditRowAddressV1,
+    row: tuple[ModeloScalarEditIntentV1, ...] | None,
+    move_to_index: int | None,
+) -> None:
+    """Require a MOVE_ROW to carry an existing-row identity and destination."""
+    if isinstance(address, ModeloEditNewRowCorrelationV1) or row is not None or move_to_index is None:
+        raise ValueError("MOVE_ROW requires the canonical existing-row address and a move_to_index")
+
+
 class ModeloRowEditIntentV1(EditModel):
     """One repeatable-row edit intent addressed by canonical or correlation identity."""
 
@@ -746,23 +780,14 @@ class ModeloRowEditIntentV1(EditModel):
 
     @model_validator(mode="after")
     def _require_shape_matches_kind(self) -> ModeloRowEditIntentV1:
-        is_new = isinstance(self.address, ModeloEditNewRowCorrelationV1)
         if self.kind is ModeloEditRowIntentKind.ADD_ROW:
-            if not is_new or not self.row:
-                raise ValueError("ADD_ROW requires a new-row correlation address and a complete typed row")
-            if self.move_to_index is not None:
-                raise ValueError("ADD_ROW may not carry a move_to_index")
+            _validate_add_row_intent_shape(self.address, self.row, self.move_to_index)
         elif self.kind is ModeloEditRowIntentKind.UPDATE_ROW:
-            if is_new or not self.row:
-                raise ValueError("UPDATE_ROW requires the canonical existing-row address and a complete typed row")
-            if self.move_to_index is not None:
-                raise ValueError("UPDATE_ROW may not carry a move_to_index")
+            _validate_update_row_intent_shape(self.address, self.row, self.move_to_index)
         elif self.kind is ModeloEditRowIntentKind.DELETE_ROW:
-            if is_new or self.row is not None or self.move_to_index is not None:
-                raise ValueError("DELETE_ROW requires only the canonical existing-row address")
+            _validate_delete_row_intent_shape(self.address, self.row, self.move_to_index)
         elif self.kind is ModeloEditRowIntentKind.MOVE_ROW:
-            if is_new or self.row is not None or self.move_to_index is None:
-                raise ValueError("MOVE_ROW requires the canonical existing-row address and a move_to_index")
+            _validate_move_row_intent_shape(self.address, self.row, self.move_to_index)
         return self
 
 
@@ -852,49 +877,6 @@ class ModeloEditApplyRequestV1(EditModel):
     submission: ModeloEditSubmissionV1
 
 
-class ModeloMutationCapabilityRequestV1(EditModel):
-    """One request for the closed mutation-capability projection over a target."""
-
-    edit_contract_version: Literal[1] = 1
-    target: ModeloWorkspaceTargetV1
-
-
-class ModeloMutationCapabilityRowV1(EditModel):
-    """One closed capability row for a mutation candidate; composed, never inferred."""
-
-    mutation_id: _BoundedCode
-    owning_producer: _BoundedCode
-    revision_id: RevisionId
-    disposition: ModeloWorkspaceCapabilityDisposition
-    evidence: _BoundedRefList = ()
-    reconsideration_condition: _BoundedText | None = None
-    recovery_action: ActionReference | None = None
-    operation_definition_id: OperationDefinitionId | None = None
-
-    @model_validator(mode="after")
-    def _require_definition_when_available(self) -> ModeloMutationCapabilityRowV1:
-        if self.disposition is ModeloWorkspaceCapabilityDisposition.AVAILABLE and self.operation_definition_id is None:
-            raise ValueError("an AVAILABLE mutation capability row requires its registered operation definition")
-        return self
-
-
-class ModeloMutationCapabilityProjectionV1(EditModel):
-    """The complete closed capability denominator for one edit target."""
-
-    edit_contract_version: Literal[1] = 1
-    rows: Annotated[tuple[ModeloMutationCapabilityRowV1, ...], Field(max_length=_MAX_CAPABILITY_ROWS)]
-
-    @field_validator("rows")
-    @classmethod
-    def _require_unique_mutation_ids(
-        cls, value: tuple[ModeloMutationCapabilityRowV1, ...]
-    ) -> tuple[ModeloMutationCapabilityRowV1, ...]:
-        ids = [row.mutation_id for row in value]
-        if len(set(ids)) != len(ids):
-            raise ValueError("mutation capability projection rows must have unique mutation ids")
-        return value
-
-
 class ModeloEditExecutionUpdatedV1(EditModel):
     """The successful compare-and-swap arm carrying the authoritative receipt."""
 
@@ -913,19 +895,6 @@ type ModeloEditExecutionResultV1 = Annotated[
     ModeloEditExecutionUpdatedV1 | ModeloEditExecutionNoEffectV1,
     Field(discriminator="effect"),
 ]
-
-
-def read_modelo_edit_version_header(payload: dict[str, object]) -> ModeloEditVersionHeader | None:
-    """Return the version header if present, without parsing anything else.
-
-    The exact version dispatcher reads only ``edit_contract_version`` before a
-    target or financial input is parsed, so an unsupported version refuses
-    before any secure state is touched.
-    """
-    value = payload.get("edit_contract_version")
-    if not isinstance(value, int):
-        return None
-    return ModeloEditVersionHeader(edit_contract_version=value)
 
 
 __all__ = [
@@ -977,16 +946,11 @@ __all__ = [
     "ModeloEditSubmissionV1",
     "ModeloEditUnsupportedIntentReason",
     "ModeloEditUnsupportedIntentRefusalV1",
-    "ModeloEditVersionHeader",
     "ModeloEditVersionRefusalV1",
     "ModeloEditWritableBindingOverrideSurfaceEntryV1",
     "ModeloEditWritableDetailRowSurfaceEntryV1",
     "ModeloEditWritableRowGroupSurfaceEntryV1",
     "ModeloEditWritableScalarSurfaceEntryV1",
-    "ModeloMutationCapabilityProjectionV1",
-    "ModeloMutationCapabilityRequestV1",
-    "ModeloMutationCapabilityRowV1",
     "ModeloRowEditIntentV1",
     "ModeloScalarEditIntentV1",
-    "read_modelo_edit_version_header",
 ]

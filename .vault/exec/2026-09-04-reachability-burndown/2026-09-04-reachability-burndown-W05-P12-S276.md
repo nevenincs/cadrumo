@@ -1,0 +1,41 @@
+---
+tags:
+  - '#exec'
+  - '#reachability-burndown'
+date: '2026-09-08'
+modified: '2026-09-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:f336651d81887bd1ade0f6631c66af9cf50d9aee0872f626d9df64575bbf1bad'
+step_id: 'S276'
+related:
+  - "[[2026-09-04-reachability-burndown-plan]]"
+---
+
+<!-- Machine-owned: the filename, the frontmatter, the title heading and the
+     Scope list are all filled by `vaultspec-core vault add exec` from the
+     originating Step row; never hand-edit them. Add no frontmatter fields.
+     Wiki-links belong in `related:` only, never in the body. -->
+
+# Delete the test-only Modelo edit mutation-capability projection, its request/row/result DTOs, and tests because it hard-codes an UNMEASURED future-operation disposition in production; retain executable edit admission, parsing, preflight, and guarded mutation behavior, update cadence, and remeasure exact reachability.
+
+## Scope
+
+- `Modelo edit services`
+- `models`
+- `and focused integration tests`
+
+## Changes
+
+- `M` `src/cadrumo/application/modelo/edit_services.py`
+- `M` `src/cadrumo/application/modelo/edit_models.py`
+- `M` `src/cadrumo/application/modelo/tests/test_edit_contract.py`
+- `M` `src/cadrumo/application/modelo/tests/test_edit_models.py`
+- `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `verify:` exact symbol search for deleted projector and DTOs -> `no matches`
+- `verify:` focused Ruff check -> `pass`
+- `verify:` focused edit integration suites -> `16 passed`
+- `verify:` exact reachability -> `265 unused symbols, 31 unreachable modules, 0 orphaned tests`
+
+## Notes
+
+The removed production projection could only return an empty set or one hard-coded `UNMEASURED` calculate row whose reconsideration text described future registration. Its only callers were tests. The executable edit admission, parsing, preflight, and guarded mutation mechanisms remain and pass their real integration behavior. Exact unused symbols improved from 266 to 265.

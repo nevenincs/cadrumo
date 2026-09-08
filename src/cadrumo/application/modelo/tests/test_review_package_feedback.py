@@ -78,7 +78,6 @@ from ..review_package_recipient_encryption import (
     RecipientDecryptionError,
     RecipientPackageExpiredError,
     ensure_recipient_encryption_keypair,
-    recipient_encryption_public_key,
 )
 from ..review_package_signing import ensure_review_package_signing_keypair, sign_review_package
 from ._review_package_bytes_support import build_package_path
@@ -207,7 +206,7 @@ def test_full_round_trip_originator_signs_accountant_countersigns_and_returns_fe
             bucket_id=runtime.primary.bucket_id,
             repository=runtime.primary.repository,
         )
-        originator_encryption_public_key = recipient_encryption_public_key(originator_encryption_keypair)
+        originator_encryption_public_key = originator_encryption_keypair
 
         # Accountant counter-signs with their own Ed25519 signing keypair.
         with runtime.switch_to_secondary():
@@ -289,7 +288,7 @@ def test_unstructured_feedback_with_no_counter_signed_receipt_imports_cleanly(tm
             bucket_id=runtime.primary.bucket_id,
             repository=runtime.primary.repository,
         )
-        originator_encryption_public_key = recipient_encryption_public_key(originator_encryption_keypair)
+        originator_encryption_public_key = originator_encryption_keypair
 
         feedback = build_feedback_package(
             bucket_id=runtime.primary.bucket_id,
@@ -467,7 +466,7 @@ def test_import_feedback_package_refuses_when_archive_tampered_after_countersign
             bucket_id=runtime.primary.bucket_id,
             repository=runtime.primary.repository,
         )
-        originator_encryption_public_key = recipient_encryption_public_key(originator_encryption_keypair)
+        originator_encryption_public_key = originator_encryption_keypair
 
         with runtime.switch_to_secondary():
             accountant_signing_keypair = ensure_review_package_signing_keypair(
@@ -529,7 +528,7 @@ def test_import_feedback_package_refuses_with_forged_counter_signer_key(tmp_path
             bucket_id=runtime.primary.bucket_id,
             repository=runtime.primary.repository,
         )
-        originator_encryption_public_key = recipient_encryption_public_key(originator_encryption_keypair)
+        originator_encryption_public_key = originator_encryption_keypair
 
         with runtime.switch_to_secondary():
             accountant_signing_keypair = ensure_review_package_signing_keypair(
@@ -587,7 +586,7 @@ def test_import_feedback_package_raises_when_receipt_present_but_no_counter_sign
             bucket_id=runtime.primary.bucket_id,
             repository=runtime.primary.repository,
         )
-        originator_encryption_public_key = recipient_encryption_public_key(originator_encryption_keypair)
+        originator_encryption_public_key = originator_encryption_keypair
 
         with runtime.switch_to_secondary():
             accountant_signing_keypair = ensure_review_package_signing_keypair(

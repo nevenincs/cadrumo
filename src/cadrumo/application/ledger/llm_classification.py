@@ -66,13 +66,14 @@ from ...domain.transactions.errors import TransactionNotFoundError, TransactionV
 from ...domain.transactions.llm import (
     LLMClassificationResponse,
     LLMClassifier,
+    LLMSplitChild,
     LLMSplitProposer,
     LLMSplitResponse,
     PromptSpec,
     prompt_spec_with_every_spending_category,
     prompt_spec_with_saturation_fields,
 )
-from ...domain.transactions.models import Transaction
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.service import set_classification
 from ...llm.models import MultimodalImageInput
@@ -496,6 +497,55 @@ def _split_with_evidence(
     ), proposer.decided_by
 
 
+def _load_llm_transaction(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+) -> tuple[TransactionCatalogueRepositoryProtocol, Transaction]:
+    """Resolve the catalogue port and load one addressed ledger transaction."""
+    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    transaction = repository.load().get(transaction_id)
+    if transaction is None:
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
+    return repository, transaction
+
+
+def _resolve_llm_settings(settings: Settings | None) -> Settings:
+    """Use the supplied settings, or load the profile settings once."""
+    if settings is None:
+        return load_settings()
+    return settings
+
+
+def _resolve_requested_llm_evidence(
+    transaction: Transaction,
+    *,
+    bucket_id: str,
+    settings: Settings,
+    read_evidence: bool,
+) -> ResolvedEvidence | None:
+    """Resolve linked evidence only when the caller opted into reading it."""
+    if not read_evidence:
+        return None
+    return _resolve_evidence(transaction, bucket_id=bucket_id, settings=settings)
+
+
+def _evidence_text_and_reference(evidence: ResolvedEvidence | None) -> tuple[str | None, str | None]:
+    """Project optional evidence into the two fields consumed by suggestions."""
+    if evidence is None:
+        return None, None
+    return evidence.text, evidence.reference
+
+
+def _effective_ledger_date(transaction: Transaction, on_date: date | None) -> date:
+    """Return the explicit date or the transaction's value/booked date."""
+    return on_date or transaction.raw.value_date or transaction.raw.booked_date
+
+
 def suggest_llm_classification(
     *,
     bucket_id: str,
@@ -539,23 +589,18 @@ def suggest_llm_classification(
         LLMClassifierError: When the classifier fails (e.g. provider CLI
             unavailable, hallucinated out-of-allow-list value).
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    transaction = repository.load().get(transaction_id)
-    if transaction is None:
-        raise TransactionNotFoundError(
-            translated_message="application.ledger.errors.transaction_not_found",
-            context={"transaction_id": transaction_id},
-        )
-    resolved_settings = settings if settings is not None else load_settings()
+    _, transaction = _load_llm_transaction(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        transaction_repository=transaction_repository,
+    )
+    resolved_settings = _resolve_llm_settings(settings)
     resolved_classifier = classifier
-    evidence = (
-        _resolve_evidence(
-            transaction,
-            bucket_id=bucket_id,
-            settings=resolved_settings,
-        )
-        if read_evidence
-        else None
+    evidence = _resolve_requested_llm_evidence(
+        transaction,
+        bucket_id=bucket_id,
+        settings=resolved_settings,
+        read_evidence=read_evidence,
     )
     response, provenance = classify_with_evidence(
         transaction,
@@ -583,6 +628,50 @@ def suggest_llm_classification(
         evidence_id=evidence.reference if evidence is not None else None,
         multiple_components=response.multiple_components,
     )
+
+
+def _validate_llm_application_business_pct(
+    suggestion: LLMClassificationSuggestion,
+    business_pct: Decimal | None,
+) -> None:
+    """Enforce the operator-owned business percentage coupling."""
+    classification = suggestion.classification
+    if classification is BusinessClassification.MIXED and business_pct is None:
+        raise TransactionValidationError(
+            "applying a MIXED LLM suggestion requires --business-pct; "
+            "the LLM proposes the split direction but not the business-use percentage",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+    if classification is not BusinessClassification.MIXED and business_pct is not None:
+        raise TransactionValidationError(
+            "--business-pct only applies to a MIXED classification",
+            context={"transaction_id": suggestion.transaction_id},
+        )
+
+
+def _validate_active_llm_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> None:
+    """Refuse missing or immutable rows before the classification write."""
+    current = catalogue.get(transaction_id)
+    if current is None:
+        raise TransactionNotFoundError(
+            translated_message="application.ledger.errors.transaction_not_found",
+            context={"transaction_id": transaction_id},
+        )
+    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        raise TransactionValidationError(
+            "only active ledger transactions can be classified; archived, stashed, and split-parent rows are immutable",
+            context={
+                "transaction_id": transaction_id,
+                "lifecycle_state": current.lifecycle_state.value,
+            },
+        )
+
+
+def _llm_category_id(suggestion: LLMClassificationSuggestion) -> str | None:
+    """Carry a spending category only on a business-bearing classification."""
+    if suggestion.classification not in BUSINESS_BEARING_STATES:
+        return None
+    return suggestion.category.value if suggestion.category is not None else None
 
 
 def apply_llm_classification(
@@ -633,18 +722,8 @@ def apply_llm_classification(
         TransactionValidationError: When the transaction is not ACTIVE or a
             ``MIXED`` suggestion is applied without a ``business_pct``.
     """
+    _validate_llm_application_business_pct(suggestion, business_pct)
     classification = suggestion.classification
-    if classification is BusinessClassification.MIXED and business_pct is None:
-        raise TransactionValidationError(
-            "applying a MIXED LLM suggestion requires --business-pct; "
-            "the LLM proposes the split direction but not the business-use percentage",
-            context={"transaction_id": suggestion.transaction_id},
-        )
-    if classification is not BusinessClassification.MIXED and business_pct is not None:
-        raise TransactionValidationError(
-            "--business-pct only applies to a MIXED classification",
-            context={"transaction_id": suggestion.transaction_id},
-        )
     occurred = coerce_utc_aware(occurred_at or now())
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     event_repository = require_concrete_repository(
@@ -653,23 +732,8 @@ def apply_llm_classification(
         reason="apply_llm_classification",
     )
     catalogue = repository.load()
-    current = catalogue.get(suggestion.transaction_id)
-    if current is None:
-        raise TransactionNotFoundError(
-            translated_message="application.ledger.errors.transaction_not_found",
-            context={"transaction_id": suggestion.transaction_id},
-        )
-    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-        raise TransactionValidationError(
-            "only active ledger transactions can be classified; archived, stashed, and split-parent rows are immutable",
-            context={
-                "transaction_id": suggestion.transaction_id,
-                "lifecycle_state": current.lifecycle_state.value,
-            },
-        )
-    category_id: str | None = None
-    if classification in BUSINESS_BEARING_STATES:
-        category_id = suggestion.category.value if suggestion.category is not None else None
+    _validate_active_llm_transaction(catalogue, suggestion.transaction_id)
+    category_id = _llm_category_id(suggestion)
     updated_catalogue = set_classification(
         catalogue,
         suggestion.transaction_id,
@@ -747,6 +811,25 @@ def _derive_iva_substrate(
     return resolution.rate, taxable_base, iva_amount, True, ""
 
 
+def _saturation_iva_values(
+    response: LLMClassificationResponse,
+    *,
+    gross: Decimal,
+    on_date: date,
+) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
+    """Derive the optional saturation substrate from the model's IVA category."""
+    if response.iva_category is None:
+        return None, None, None, False, ""
+    return _derive_iva_substrate(response.iva_category, gross=gross, on_date=on_date)
+
+
+def _iva_category_label(response: LLMClassificationResponse) -> str:
+    """Return the audit-log label for an optional IVA category."""
+    if response.iva_category is None:
+        return ""
+    return response.iva_category.value
+
+
 def saturate_llm_classification(
     *,
     bucket_id: str,
@@ -793,23 +876,18 @@ def saturate_llm_classification(
         LLMClassifierError: When the classifier fails (provider CLI
             unavailable, hallucinated out-of-allow-list value).
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    transaction = repository.load().get(transaction_id)
-    if transaction is None:
-        raise TransactionNotFoundError(
-            translated_message="application.ledger.errors.transaction_not_found",
-            context={"transaction_id": transaction_id},
-        )
-    resolved_settings = settings if settings is not None else load_settings()
-    resolved_classifier = classifier if classifier is not None else None
-    evidence = (
-        _resolve_evidence(
-            transaction,
-            bucket_id=bucket_id,
-            settings=resolved_settings,
-        )
-        if read_evidence
-        else None
+    _, transaction = _load_llm_transaction(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        transaction_repository=transaction_repository,
+    )
+    resolved_settings = _resolve_llm_settings(settings)
+    resolved_classifier = classifier
+    evidence = _resolve_requested_llm_evidence(
+        transaction,
+        bucket_id=bucket_id,
+        settings=resolved_settings,
+        read_evidence=read_evidence,
     )
     response, provenance = classify_with_evidence(
         transaction,
@@ -820,27 +898,19 @@ def saturate_llm_classification(
         vision_model=vision_model,
         settings=resolved_settings,
     )
-    evidence_text = evidence.text if evidence is not None else None
-    evidence_reference = evidence.reference if evidence is not None else None
-    effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
-
-    iva_rate: Decimal | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-    rate_derivable = False
-    derivation_note = ""
-    if response.iva_category is not None:
-        iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _derive_iva_substrate(
-            response.iva_category,
-            gross=transaction.raw.amount,
-            on_date=effective_date,
-        )
+    evidence_text, evidence_reference = _evidence_text_and_reference(evidence)
+    effective_date = _effective_ledger_date(transaction, on_date)
+    iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _saturation_iva_values(
+        response,
+        gross=transaction.raw.amount,
+        on_date=effective_date,
+    )
     _logger.info(
         "llm saturate: transaction=%s provider=%s classification=%s iva_category=%s derivable=%s",
         transaction_id,
         provenance,
         response.classification.value,
-        response.iva_category.value if response.iva_category is not None else "",
+        _iva_category_label(response),
         rate_derivable,
     )
     return LLMSaturatedSuggestion(
@@ -1080,6 +1150,68 @@ def _split_child_description(child_index: int, *, citation: str, category: Spend
     return f"{child_index + 1}. {label}"
 
 
+def _split_child_iva_values(
+    child: LLMSplitChild,
+    *,
+    amount: Decimal,
+    on_date: date,
+) -> tuple[Decimal | None, Decimal | None, Decimal | None, bool, str]:
+    """Derive one split child's optional IVA substrate."""
+    if child.iva_category is None:
+        return None, None, None, False, ""
+    return _derive_iva_substrate(child.iva_category, gross=amount, on_date=on_date)
+
+
+def _build_split_child_suggestion(
+    child: LLMSplitChild,
+    *,
+    index: int,
+    amount: Decimal,
+    effective_date: date,
+) -> LLMSplitChildSuggestion:
+    """Materialize one model child with system-derived amounts and tax values."""
+    iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _split_child_iva_values(
+        child,
+        amount=amount,
+        on_date=effective_date,
+    )
+    return LLMSplitChildSuggestion(
+        proportion=child.proportion,
+        amount=amount,
+        description=_split_child_description(index, citation=child.evidence_citation, category=child.category),
+        category=child.category,
+        iva_category=child.iva_category,
+        iva_rate=iva_rate,
+        taxable_base=taxable_base,
+        iva_amount=iva_amount,
+        rate_derivable=rate_derivable,
+        derivation_note=derivation_note,
+        evidence_citation=child.evidence_citation,
+    )
+
+
+def _materialize_split_children(
+    response: LLMSplitResponse,
+    *,
+    transaction: Transaction,
+    effective_date: date,
+) -> list[LLMSplitChildSuggestion]:
+    """Derive exact child amounts and materialize them in model order."""
+    proportions = tuple(child.proportion for child in response.children)
+    amounts = derive_child_amounts(transaction.raw.amount, proportions)
+    children: list[LLMSplitChildSuggestion] = []
+    for index, (child, amount) in enumerate(zip(response.children, amounts, strict=True)):
+        children.append(
+            _build_split_child_suggestion(
+                child,
+                index=index,
+                amount=amount,
+                effective_date=effective_date,
+            ),
+        )
+    return children
+
+
 def suggest_evidence_split(
     *,
     bucket_id: str,
@@ -1128,23 +1260,18 @@ def suggest_evidence_split(
         LLMClassifierError: When the proposer fails (provider CLI unavailable,
             hallucinated out-of-allow-list value, or a malformed split response).
     """
-    repository = resolve_transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
-    transaction = repository.load().get(transaction_id)
-    if transaction is None:
-        raise TransactionNotFoundError(
-            translated_message="application.ledger.errors.transaction_not_found",
-            context={"transaction_id": transaction_id},
-        )
-    resolved_settings = settings if settings is not None else load_settings()
-    resolved_proposer = proposer if proposer is not None else None
-    evidence = (
-        _resolve_evidence(
-            transaction,
-            bucket_id=bucket_id,
-            settings=resolved_settings,
-        )
-        if read_evidence
-        else None
+    _, transaction = _load_llm_transaction(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        transaction_repository=transaction_repository,
+    )
+    resolved_settings = _resolve_llm_settings(settings)
+    resolved_proposer = proposer
+    evidence = _resolve_requested_llm_evidence(
+        transaction,
+        bucket_id=bucket_id,
+        settings=resolved_settings,
+        read_evidence=read_evidence,
     )
     response, provenance = _split_with_evidence(
         transaction,
@@ -1155,38 +1282,13 @@ def suggest_evidence_split(
         vision_model=vision_model,
         settings=resolved_settings,
     )
-    evidence_reference = evidence.reference if evidence is not None else None
-    proportions = tuple(child.proportion for child in response.children)
-    amounts = derive_child_amounts(transaction.raw.amount, proportions)
-    effective_date = on_date or transaction.raw.value_date or transaction.raw.booked_date
-    children: list[LLMSplitChildSuggestion] = []
-    for index, (child, amount) in enumerate(zip(response.children, amounts, strict=True)):
-        iva_rate: Decimal | None = None
-        taxable_base: Decimal | None = None
-        iva_amount: Decimal | None = None
-        rate_derivable = False
-        derivation_note = ""
-        if child.iva_category is not None:
-            iva_rate, taxable_base, iva_amount, rate_derivable, derivation_note = _derive_iva_substrate(
-                child.iva_category,
-                gross=amount,
-                on_date=effective_date,
-            )
-        children.append(
-            LLMSplitChildSuggestion(
-                proportion=child.proportion,
-                amount=amount,
-                description=_split_child_description(index, citation=child.evidence_citation, category=child.category),
-                category=child.category,
-                iva_category=child.iva_category,
-                iva_rate=iva_rate,
-                taxable_base=taxable_base,
-                iva_amount=iva_amount,
-                rate_derivable=rate_derivable,
-                derivation_note=derivation_note,
-                evidence_citation=child.evidence_citation,
-            ),
-        )
+    _, evidence_reference = _evidence_text_and_reference(evidence)
+    effective_date = _effective_ledger_date(transaction, on_date)
+    children = _materialize_split_children(
+        response,
+        transaction=transaction,
+        effective_date=effective_date,
+    )
     _logger.info(
         "llm split suggest: transaction=%s provider=%s children=%d",
         transaction_id,

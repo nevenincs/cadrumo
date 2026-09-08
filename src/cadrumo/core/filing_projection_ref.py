@@ -1097,8 +1097,8 @@ _TYPED_FILING_PROJECTION_REFS: Final[tuple[type, ...]] = _projection_ref_support
 )
 
 
-def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
-    """Compile one canonical projection reference from exact persisted primitives."""
+def _normalise_filing_projection_ref_payload(value: object) -> dict[str, object]:
+    """Copy persisted values while retaining the compiler's primitive guards."""
     if not isinstance(value, Mapping):
         raise ValueError("filing projection reference must be a mapping")
     source = cast(Mapping[object, object], value)
@@ -1123,15 +1123,31 @@ def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
         # above exists: refusing a value the target model accepts is a defect,
         # not strictness.
         payload[raw_key] = raw_value.value if isinstance(raw_value, StrEnum) else raw_value
+    return payload
+
+
+def _validate_filing_projection_ref_strings(payload: Mapping[str, object]) -> None:
+    """Refuse non-string or padded identity tokens before model coercion."""
     for field_name in _projection_ref_support.STRING_WIRE_FIELDS.intersection(payload):
         if type(payload[field_name]) is not str:
             raise ValueError(f"filing projection reference {field_name!r} must be an exact string")
         string_value = cast(str, payload[field_name])
         if string_value != string_value.strip():
             raise ValueError(f"filing projection reference {field_name!r} must not contain surrounding whitespace")
+
+
+def _validate_filing_projection_ref_integers(payload: Mapping[str, object]) -> None:
+    """Refuse integer fields that a permissive model adapter could coerce."""
     for integer_field in ("slot", "module_order", "sub_index"):
         if integer_field in payload and type(payload[integer_field]) is not int:
             raise ValueError(f"filing projection reference {integer_field!r} must be an exact integer")
+
+
+def compile_filing_projection_ref(value: object) -> FilingProjectionRef:
+    """Compile one canonical projection reference from exact persisted primitives."""
+    payload = _normalise_filing_projection_ref_payload(value)
+    _validate_filing_projection_ref_strings(payload)
+    _validate_filing_projection_ref_integers(payload)
     return _FILING_PROJECTION_REF_ADAPTER.validate_python(payload, strict=False)
 
 

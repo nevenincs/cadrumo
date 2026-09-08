@@ -53,6 +53,7 @@ from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -70,7 +71,11 @@ from ..calculations.iva_compensation_casillas import (
     M303_DISPONIBLE_CASILLA,
 )
 from ..calculations.m303_carry_ingress import M303CarryIngressError, validate_normalized_m303_carry_observation_envelope
-from ..calculations.observations_repository import CalculationObservationRepository, IvaWalletDecisionRepository
+from ..calculations.observations_repository import (
+    CalculationObservationRepository,
+    IvaWalletDecisionRepository,
+    ObservationEnvelopePayload,
+)
 from ..calculations.revision_carry_gate import revision_carry_outcome
 from ..user_profile.projections import profile_path_values_for_bucket as _profile_path_values_for_bucket
 from .action_errors import ModeloPreconditionErrorMixin
@@ -780,22 +785,26 @@ def _decision_is_missing_local_authority(decision: object) -> bool:
     return str(getattr(decision, "divergence", "")) == "missing" and getattr(decision, "selected_amount", None) is None
 
 
+def _source_proves_concrete_zero_authority(source: object) -> bool:
+    amount = getattr(source, "amount", None)
+    if amount is None or Decimal(amount) != Decimal("0"):
+        return False
+    source_kind = str(getattr(source, "source_kind", ""))
+    if source_kind == "aeat_wallet":
+        return getattr(source, "captured_at", None) is not None
+    return source_kind in _LOCAL_EVIDENCE_SOURCE_KINDS and bool(
+        tuple(getattr(source, "source_periods", ()) or ())
+    )
+
+
 def _decision_has_concrete_zero_authority(decision: object) -> bool:
     selected_amount = getattr(decision, "selected_amount", None)
     if selected_amount is None or Decimal(selected_amount) != Decimal("0"):
         return False
-    for source in getattr(decision, "authority_sources", ()) or ():
-        amount = getattr(source, "amount", None)
-        if amount is None or Decimal(amount) != Decimal("0"):
-            continue
-        source_kind = str(getattr(source, "source_kind", ""))
-        if source_kind == "aeat_wallet" and getattr(source, "captured_at", None) is not None:
-            return True
-        if source_kind in _LOCAL_EVIDENCE_SOURCE_KINDS and tuple(
-            getattr(source, "source_periods", ()) or (),
-        ):
-            return True
-    return False
+    return any(
+        _source_proves_concrete_zero_authority(source)
+        for source in getattr(decision, "authority_sources", ()) or ()
+    )
 
 
 def _non_blocking_concrete_zero_authority_decision(
@@ -968,6 +977,79 @@ _NO_PRIOR_PERIOD_OBSERVATION: Final = _PriorPeriodCarryEvidence(
 )
 
 
+def _prior_period_observation_requirement(
+    snapshot: RegistrySnapshot,
+) -> RegistryFoldRequirement | None:
+    requirements = tuple(
+        requirement
+        for requirement in previous_filing_observation_requirements(
+            snapshot.revision,
+            filing_year=snapshot.filing_year,
+            period=snapshot.period,
+        )
+        if requirement.source_modelo == Modelo.M303.value
+        and _M303_PRIOR_COMPENSATION_BINDING_ID in requirement.binding_ids
+    )
+    if len(requirements) != 1 or len(requirements[0].periods) != 1:
+        return None
+    return requirements[0]
+
+
+def _prior_period_source_period(requirement: RegistryFoldRequirement) -> _Period:
+    return (
+        requirement.filing_periods[0]
+        if requirement.filing_periods
+        else _Period.from_year_and_code(requirement.filing_year, requirement.periods[0])
+    )
+
+
+def _prior_period_observation_is_usable(
+    payload: ObservationEnvelopePayload,
+    *,
+    requirement: RegistryFoldRequirement,
+    source_period: _Period,
+) -> bool:
+    observation = payload.observation
+    return (
+        observation.filing_year == requirement.filing_year
+        and observation.period == source_period.registry_token
+        and not revision_carry_outcome(payload.registry_snapshot_ref).refused
+    )
+
+
+def _validated_prior_period_observation(
+    payload: ObservationEnvelopePayload,
+) -> ObservationEnvelopePayload | None:
+    try:
+        return validate_normalized_m303_carry_observation_envelope(payload)
+    except M303CarryIngressError:
+        return None
+
+
+def _prior_period_recurrence(
+    payload: ObservationEnvelopePayload,
+    *,
+    requirement: RegistryFoldRequirement,
+    source_period: _Period,
+) -> LocalIvaCompensationRecurrence | None:
+    amount = payload.observation.casilla_values.get(_M303_AVAILABLE_COMPENSATION_CASILLA_ID)
+    if amount is None:
+        return None
+    return LocalIvaCompensationRecurrence(
+        binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
+        amount=amount,
+        source_kind=str(payload.source_kind),
+        source_modelo=Modelo.M303.value,
+        source_filing_year=requirement.filing_year,
+        source_periods=(source_period,),
+        source_registry_snapshot_refs=(payload.registry_snapshot_ref,),
+        resolved_at=payload.captured_at,
+        source_locator=(
+            f"observation-envelope:{Modelo.M303.value}:{source_period.filing_year}:{source_period.registry_token}"
+        ),
+    )
+
+
 def _prior_period_carry_evidence(
     work_unit: WorkUnit,
     *,
@@ -990,56 +1072,32 @@ def _prior_period_carry_evidence(
     docstring claimed the gate blocked in those cases, which was true of every
     path except the one that mattered.
     """
-    requirements = tuple(
-        requirement
-        for requirement in previous_filing_observation_requirements(
-            snapshot.revision,
-            filing_year=snapshot.filing_year,
-            period=snapshot.period,
-        )
-        if requirement.source_modelo == Modelo.M303.value
-        and _M303_PRIOR_COMPENSATION_BINDING_ID in requirement.binding_ids
-    )
-    if len(requirements) != 1 or len(requirements[0].periods) != 1:
+    requirement = _prior_period_observation_requirement(snapshot)
+    if requirement is None:
         return _NO_PRIOR_PERIOD_OBSERVATION
-    requirement = requirements[0]
-    source_period = (
-        requirement.filing_periods[0]
-        if requirement.filing_periods
-        else _Period.from_year_and_code(requirement.filing_year, requirement.periods[0])
-    )
+    source_period = _prior_period_source_period(requirement)
     payload = CalculationObservationRepository().load_observation(Modelo.M303.value, source_period)
     if payload is None:
         return _NO_PRIOR_PERIOD_OBSERVATION
     found = _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
-    observation = payload.observation
-    if (
-        observation.filing_year != requirement.filing_year
-        or observation.period != source_period.registry_token
-        or revision_carry_outcome(payload.registry_snapshot_ref).refused
+    if not _prior_period_observation_is_usable(
+        payload,
+        requirement=requirement,
+        source_period=source_period,
     ):
         return found
-    try:
-        validated = validate_normalized_m303_carry_observation_envelope(payload)
-    except M303CarryIngressError:
+    validated = _validated_prior_period_observation(payload)
+    if validated is None:
         return found
-    amount = validated.observation.casilla_values.get(_M303_AVAILABLE_COMPENSATION_CASILLA_ID)
-    if amount is None:
+    recurrence = _prior_period_recurrence(
+        validated,
+        requirement=requirement,
+        source_period=source_period,
+    )
+    if recurrence is None:
         return found
     return _PriorPeriodCarryEvidence(
-        recurrence=LocalIvaCompensationRecurrence(
-            binding_id=_M303_PRIOR_COMPENSATION_BINDING_ID,
-            amount=amount,
-            source_kind=str(validated.source_kind),
-            source_modelo=Modelo.M303.value,
-            source_filing_year=requirement.filing_year,
-            source_periods=(source_period,),
-            source_registry_snapshot_refs=(validated.registry_snapshot_ref,),
-            resolved_at=validated.captured_at,
-            source_locator=(
-                f"observation-envelope:{Modelo.M303.value}:{source_period.filing_year}:{source_period.registry_token}"
-            ),
-        ),
+        recurrence=recurrence,
         prior_period_observation_found=True,
     )
 
