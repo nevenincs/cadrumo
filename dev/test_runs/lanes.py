@@ -127,8 +127,11 @@ def run_lanes(lanes: Sequence[str], repository: Path = REPO_ROOT) -> int:
         repository: The checkout the run evidence is written beneath.
 
     Returns:
-        0 when every lane passed, otherwise 1. The individual exit codes are in
-        the summary; the sweep's own status is a single pass/fail verdict.
+        0 when every lane passed, otherwise the FIRST non-zero status any lane
+        reported. Flattening that to 1 threw away the one thing a caller
+        reading the number alone could use: a lane that could not run (127)
+        looked exactly like a lane whose tests failed (1). See
+        ``dev/EXIT-CODES.md``.
     """
     run_root = allocate_run_directory(repository, family="test-runs", label="test-all")
     for name in RUN_SUBDIRECTORIES:
@@ -148,4 +151,4 @@ def run_lanes(lanes: Sequence[str], repository: Path = REPO_ROOT) -> int:
         finally:
             sys.stdout, sys.stderr = original_out, original_err
 
-    return 0 if all(result.status == 0 for result in results) else 1
+    return next((r.status for r in results if r.status != 0), 0)

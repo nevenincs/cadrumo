@@ -153,7 +153,15 @@ def run_gate(name: str, command: tuple[str, ...]) -> GateResult:
 
 
 def main() -> int:
-    """Run all gates and emit the consolidated dashboard."""
+    """Run every gate and emit the consolidated dashboard.
+
+    Every gate runs even after one fails, because an aggregate is asked for a
+    complete picture and fail-fast costs a CI round-trip per defect. The status
+    returned is the FIRST non-zero one: the earliest failure is the one that may
+    explain the rest, and its actual value distinguishes a gate that found
+    something (1) from a gate that could not run at all (127). See
+    ``dev/EXIT-CODES.md``.
+    """
     results = [run_gate(name, command) for name, command in GATES]
     failed = [r for r in results if r.returncode != 0]
     passed = [r for r in results if r.returncode == 0]
@@ -169,7 +177,7 @@ def main() -> int:
         _emit("")
     if passed:
         _emit("passed: " + ", ".join(r.name for r in passed))
-    return 1
+    return failed[0].returncode
 
 
 def _emit(line: str) -> None:
