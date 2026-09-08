@@ -696,10 +696,10 @@ harness_worker_hook := "src/cadrumo/tests/test_worker_count_hook_harness.py"
 harness_members := harness_worker_hook
 harness_exclusions := prepend("--ignore=", harness_members)
 
-# Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
+# Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, tautology drift, and the exit-code contract.
 [group('testing')]
 test-ratchets:
-    @uv run --no-sync pytest -v -p no:cacheprovider dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py
+    @uv run --no-sync pytest -v -p no:cacheprovider dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py dev/tests/test_exit_code_contract.py
 
 # Run the worker-count hook verdict outer-serially so it can inspect the
 # installed pytest hook without nesting another worker pool.
@@ -1435,121 +1435,11 @@ release-readiness-json:
 # for a human to run deliberately. See RELEASING.md#diagnose-and-recover.
 [doc('Print the rollback procedure for a released version that must be pulled (read-only, human-run).')]
 [group('release')]
-[unix]
 release-rollback version:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "Rollback procedure for cadrumo v{{version}} (RELEASING.md#diagnose-and-recover):"
-    echo ""
-    echo "1. Confirm the rollback trigger (data loss/corruption, security disclosure,"
-    echo "   widespread regression, or a compatibility mis-computation) — see"
-    echo "   docs/_release_checklist.yaml 'rollback.triggers'."
-    echo "2. Revert the release commit and tag on main (human-run, never automated):"
-    echo "     git revert --no-commit <release-commit-sha>"
-    echo "     git commit -m 'revert: roll back v{{version}}'"
-    echo "     git tag -a v{{version}}-rollback -m 'marks the rollback of v{{version}}'"
-    echo "     git push origin main"
-    echo "     git push origin refs/tags/v{{version}}-rollback"
-    echo "3. Yank the bad version from PyPI so pip/uv skip it by default (this does"
-    echo "   NOT delete the artifact; it only stops new installs from resolving it):"
-    echo "     https://pypi.org/manage/project/cadrumo/release/{{version}}/  -> Options -> Yank release"
-    echo "     https://pypi.org/manage/project/cadrumo-data-manuals/release/{{version}}/  -> Options -> Yank release"
-    echo "     https://pypi.org/manage/project/cadrumo-data-official/release/{{version}}/  -> Options -> Yank release"
-    echo "4. Publish a corrected patch release following the emergency hotfix cycle"
-    echo "   time for the trigger category (docs/_release_checklist.yaml 'hotfix')."
-    echo "5. Update docs/updates.md per its critical-updates contract and note the"
-    echo "   rollback + corrected version in the GitHub Release notes for v{{version}}."
-
-[doc('Print the rollback procedure for a released version that must be pulled (read-only, human-run).')]
-[group('release')]
-[windows]
-release-rollback version:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    Write-Host "Rollback procedure for cadrumo v{{version}} (RELEASING.md#diagnose-and-recover):"
-    Write-Host ""
-    Write-Host "1. Confirm the rollback trigger (data loss/corruption, security disclosure,"
-    Write-Host "   widespread regression, or a compatibility mis-computation) - see"
-    Write-Host "   docs/_release_checklist.yaml 'rollback.triggers'."
-    Write-Host "2. Revert the release commit and tag on main (human-run, never automated):"
-    Write-Host "     git revert --no-commit <release-commit-sha>"
-    Write-Host "     git commit -m 'revert: roll back v{{version}}'"
-    Write-Host "     git tag -a v{{version}}-rollback -m 'marks the rollback of v{{version}}'"
-    Write-Host "     git push origin main"
-    Write-Host "     git push origin refs/tags/v{{version}}-rollback"
-    Write-Host "3. Yank the bad version from PyPI so pip/uv skip it by default (this does"
-    Write-Host "   NOT delete the artifact; it only stops new installs from resolving it):"
-    Write-Host "     https://pypi.org/manage/project/cadrumo/release/{{version}}/  -> Options -> Yank release"
-    Write-Host "     https://pypi.org/manage/project/cadrumo-data-manuals/release/{{version}}/  -> Options -> Yank release"
-    Write-Host "     https://pypi.org/manage/project/cadrumo-data-official/release/{{version}}/  -> Options -> Yank release"
-    Write-Host "4. Publish a corrected patch release following the emergency hotfix cycle"
-    Write-Host "   time for the trigger category (docs/_release_checklist.yaml 'hotfix')."
-    Write-Host "5. Update docs/updates.md per its critical-updates contract and note the"
-    Write-Host "   rollback + corrected version in the GitHub Release notes for v{{version}}."
+    uv run --no-sync python -m dev.release rollback {{version}}
 
 # Preview the next version release via dry-run.
 [doc('Preview the next version release via dry-run (release-please).')]
 [group('release')]
-[unix]
 release:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if ! command -v node >/dev/null 2>&1; then
-        echo "node not on PATH — install Node.js to use release-please (npx)." >&2
-        exit 1
-    fi
-    if ! command -v gh >/dev/null 2>&1; then
-        echo "gh not on PATH — install the GitHub CLI and run 'gh auth login'." >&2
-        exit 1
-    fi
-    if ! TOKEN=$(gh auth token 2>/dev/null); then
-        echo "gh auth token failed — run 'gh auth login' first." >&2
-        exit 1
-    fi
-    mkdir -p var/release
-    LOG=var/release/release-please.log
-    echo "▶ release-please release-pr --dry-run --debug (output → $LOG)"
-    npx --yes release-please@16 release-pr \
-        --token "$TOKEN" \
-        --repo-url nevenincs/cadrumo \
-        --target-branch main \
-        --config-file release-please-config.json \
-        --manifest-file .release-please-manifest.json \
-        --dry-run \
-        --debug \
-        2>&1 | tee "$LOG"
-    echo "✔ dry-run complete — review $LOG. Merging the release pull request applies the bump; this recipe is preview-only and mutates nothing."
-
-[doc('Preview the next version release via dry-run (release-please).')]
-[group('release')]
-[windows]
-release:
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
-        Write-Error "node not on PATH - install Node.js to use release-please (npx)."
-        exit 1
-    }
-    if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
-        Write-Error "gh not on PATH - install the GitHub CLI and run 'gh auth login'."
-        exit 1
-    }
-    $token = & gh auth token 2>$null
-    if ($LASTEXITCODE -ne 0 -or -not $token) {
-        Write-Error "gh auth token failed - run 'gh auth login' first."
-        exit 1
-    }
-    New-Item -ItemType Directory -Force -Path var/release | Out-Null
-    $log = 'var/release/release-please.log'
-    Write-Host "▶ release-please release-pr --dry-run --debug (output → $log)"
-    & npx --yes release-please@16 release-pr `
-        --token $token `
-        --repo-url nevenincs/cadrumo `
-        --target-branch main `
-        --config-file release-please-config.json `
-        --manifest-file .release-please-manifest.json `
-        --dry-run `
-        --debug 2>&1 | Tee-Object -FilePath $log
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ dry-run complete - review $log. Merging the release pull request applies the bump; this recipe is preview-only and mutates nothing."
-
+    uv run --no-sync python -m dev.release preview
