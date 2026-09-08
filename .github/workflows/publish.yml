@@ -55,6 +55,7 @@ jobs:
         run: python3 -m dev.ci.runner_queue_watchdog
 
   runtime-inventory:
+    timeout-minutes: 20
     name: Validate stable runtime inventory
     runs-on: [self-hosted, Linux, X64]
     outputs:
@@ -106,6 +107,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
   build:
+    timeout-minutes: 120
     name: Build
     needs: runtime-inventory
     # Hosted. The three distributions are py3-none-any, so the build host
@@ -203,6 +205,7 @@ jobs:
           TAG: ${{ inputs.tag }}
 
   publish-pypi:
+    timeout-minutes: 30
     name: Publish to PyPI
     needs: smoke-test
     runs-on: [self-hosted, Linux, X64]
