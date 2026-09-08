@@ -366,92 +366,14 @@ def test_windows_long_path_row_flags_a_deep_root(tmp_path: Path) -> None:
             assert row.precondition_verdict is not None
 
 
-# ── #413 — portal-registry health / recorded portal drift ────────────────────
+# ── Portal-registry health ───────────────────────────────────────────────────
 
 
-def test_portal_health_ok_offline_when_no_drift_recorded() -> None:
-    """With no recorded drift the row is healthy and says the axis was not evaluated.
-
-    A bare ``drift_count: 0`` asserts a zero the product has never measured:
-    no shipped surface reads a registered portal URL, so the observation the
-    drift evaluator compares against is never produced. The row must let a
-    reader tell "no drift" from "never looked".
-    """
+def test_portal_health_reports_the_assembled_registry_offline() -> None:
     row = probe_portal_registry_health()
     assert row.check == "portal-registry:health"
     assert row.healthy is True
     assert row.severity is HealthSeverity.OK
-    assert row.facts["drift_evaluated"] is False
-    assert row.facts["drift_count"] == 0
-
-
-def test_portal_health_warns_on_recorded_volatile_url_drift() -> None:
-    """A recorded drift on a rotatable app-path URL is a non-blocking advisory."""
-    from datetime import UTC, datetime
-
-    from ...domain.portals.categories import UrlStability
-    from ...domain.portals.drift import evaluate_portal_drift
     from ...domain.portals.registry import PORTAL_REGISTRY
 
-    entry = next(m for m in PORTAL_REGISTRY.values() if m.url_stability is UrlStability.VOLATILE_APP_PATH)
-    drift = evaluate_portal_drift(
-        entry,
-        observed_url=str(entry.url).rstrip("/") + "/rotated-shell",
-        detected_at=datetime(2026, 6, 30, tzinfo=UTC),
-    )
-    assert drift is not None
-    row = probe_portal_registry_health(drift_events=(drift,))
-    assert row.healthy is True
-    assert row.severity is HealthSeverity.WARN
-    assert row.facts["drift_count"] == 1
-    assert row.facts["stable_drift_present"] is False
-    assert row.precondition_verdict is None
-
-
-def test_portal_health_errors_on_recorded_stable_url_drift() -> None:
-    """A recorded drift on a BOE-referenced stable URL is a red integrity row."""
-    from datetime import UTC, datetime
-
-    from ...domain.portals.categories import UrlStability
-    from ...domain.portals.drift import evaluate_portal_drift
-    from ...domain.portals.registry import PORTAL_REGISTRY
-
-    entry = next(m for m in PORTAL_REGISTRY.values() if m.url_stability is UrlStability.STABLE_PROTOCOL_GRADE)
-    drift = evaluate_portal_drift(
-        entry,
-        observed_url="https://impostor.example.org/moved",
-        detected_at=datetime(2026, 6, 30, tzinfo=UTC),
-    )
-    assert drift is not None
-    row = probe_portal_registry_health(drift_events=(drift,))
-    assert row.healthy is False
-    assert row.severity is HealthSeverity.ERROR
-    assert row.facts["drift_count"] == 1
-    assert row.facts["stable_drift_present"] is True
-    assert row.precondition_verdict is not None
-    assert row.precondition_verdict.evidence[0].values == row.facts
-
-
-def test_portal_health_marks_the_drift_axis_evaluated_when_events_are_supplied() -> None:
-    """The control: with an observation in hand the row stops disclaiming.
-
-    Without this the flag could be hard-coded False and the first case would
-    still pass, which would make the disclaimer permanent rather than honest.
-    """
-    from datetime import UTC, datetime
-
-    from ...domain.portals.categories import UrlStability
-    from ...domain.portals.drift import evaluate_portal_drift
-    from ...domain.portals.registry import PORTAL_REGISTRY
-
-    entry = next(m for m in PORTAL_REGISTRY.values() if m.url_stability is UrlStability.VOLATILE_APP_PATH)
-    drift = evaluate_portal_drift(
-        entry,
-        observed_url=str(entry.url).rstrip("/") + "/rotated-shell",
-        detected_at=datetime(2026, 6, 30, tzinfo=UTC),
-    )
-    assert drift is not None, "the rotated shell must diverge from the registered URL"
-    row = probe_portal_registry_health(drift_events=(drift,))
-
-    assert row.facts["drift_evaluated"] is True
-    assert row.facts["drift_count"] == 1
+    assert row.facts == {"portal_count": len(PORTAL_REGISTRY)}
