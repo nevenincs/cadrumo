@@ -13,14 +13,14 @@ operator path executing outside the platform that governs it is the defect
 already recorded against the spreadsheet export; this module exists so the
 rename action does not repeat it.
 
-NOTHING HERE PRESENTS A MODAL OR OWNS A SCREEN. Presentation is
-:func:`present_operation_modal`'s job and the controller is the shared one, so
+NOTHING HERE PRESENTS A MODAL OR OWNS A SCREEN. The host mounts the canonical
+``OperationModal`` with the shared controller, so
 this module contributes only the two things that are rename-specific: building
 the typed request, and naming where a settled rename leaves the operator.
 
 See Also:
-    :mod:`cadrumo.entrypoints.tui.operations.facade`
-        The single door for presenting a bound operation.
+    :class:`cadrumo.entrypoints.tui.operations.modal.OperationModal`
+        The canonical screen for presenting a bound operation.
     :mod:`cadrumo.entrypoints.tui.modelo.actions`
         The dispatch row this action's destination comes from.
 """
@@ -95,8 +95,8 @@ async def submit_rename(
 ) -> OperationController:
     """Submit the rename and return the controller bound to that submission.
 
-    Submits without starting. The caller hands the returned controller to
-    :func:`present_operation_modal`, which owns starting, observing and the
+    Submits without starting. The caller hands the returned controller to the
+    canonical ``OperationModal``, which owns starting, observing and the
     operator's detach choice -- so a surface cannot accidentally run a rename
     to completion with no window watching it.
     """
