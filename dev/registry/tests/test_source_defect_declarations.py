@@ -66,8 +66,11 @@ from ..pipeline.source_defects import (
     NoteStatedApplicabilityDeclaration,
     SourceDefectDeclaration,
     adjudicated_literal_for,
+    note_governed_amount_for,
     note_governed_amounts_for,
     note_stated_applicability_for,
+    note_stated_applicability_reading_for,
+    note_states_only_applicability,
     source_defects_for,
     validate_note_governed_amount_declarations,
     validate_note_stated_applicability_declarations,
@@ -991,3 +994,121 @@ class TestNoteStatedApplicabilityAdmission:
                 stale,
                 _intermediate(source_ref="aeat-dr-353-2026", sha=self._M353_2026_SHA).source,
             )
+
+
+class TestTheOneMatcherEachDeclarationFamilyIsAdmittedBy:
+    """The sheet-and-content match that decides coverage, tested where it lives.
+
+    Both families resolve a cell through exactly one accessor --
+    :func:`note_governed_amount_for` and
+    :func:`note_stated_applicability_reading_for` -- and every consumer takes
+    the covering declaration from it rather than repeating the comparison. The
+    renderer, the eligibility predicate and the footnote census therefore all
+    inherit whatever this match decides, which is why its boundary is asserted
+    here directly and not only through a consumer.
+
+    Two boundaries carry the weight. The published content must match EXACTLY,
+    so a declaration for ``Nota 2`` leaves a cell reading ``Nota 2.`` to its
+    caller's own derivation; and the scope is the sheet that PRINTS the note,
+    because the same label on another sheet names another note.
+
+    The declarations are written here rather than read from the shipped table:
+    what is under test is the matcher's boundary, and a locally constructed
+    pair states the near-miss cases the corpus does not happen to contain.
+    """
+
+    _SHEET: Final = "Pág. 2"
+    _OTHER_SHEET: Final = "Pág. 3"
+    _POINTER: Final = "Nota 2"
+
+    def _amount(self) -> NoteGovernedAmountDeclaration:
+        return NoteGovernedAmountDeclaration(
+            source_ref=_M390_2025_SOURCE_REF,
+            source_sha256=_SHA,
+            sheet=self._SHEET,
+            published_content=self._POINTER,
+            note_cell="A119",
+            note_statement="Nota 2: estas casillas deben estar rellenas a 0",
+            integer_digits=15,
+            decimal_digits=2,
+            sign_policy="unsigned",
+            mandated_values=("0",),
+            evidence="Written here to state the matcher's boundary cases.",
+        )
+
+    def _applicability(self) -> NoteStatedApplicabilityDeclaration:
+        return NoteStatedApplicabilityDeclaration(
+            source_ref=_M390_2025_SOURCE_REF,
+            source_sha256=_SHA,
+            sheet=self._SHEET,
+            published_content=self._POINTER,
+            note_cell="A119",
+            note_statement="Solo para periodos 02 y siguientes.",
+            evidence="Written here to state the matcher's boundary cases.",
+        )
+
+    def test_a_covered_cell_returns_the_declaration_itself(self) -> None:
+        """The caller receives the adjudication, not a verdict it must re-find."""
+        amount = self._amount()
+        applicability = self._applicability()
+
+        assert note_governed_amount_for((amount,), sheet=self._SHEET, published_content=self._POINTER) is amount
+        assert (
+            note_stated_applicability_reading_for((applicability,), sheet=self._SHEET, published_content=self._POINTER)
+            is applicability
+        )
+
+    def test_an_empty_declaration_set_covers_nothing(self) -> None:
+        assert note_governed_amount_for((), sheet=self._SHEET, published_content=self._POINTER) is None
+        assert note_stated_applicability_reading_for((), sheet=self._SHEET, published_content=self._POINTER) is None
+
+    def test_content_the_declaration_does_not_name_exactly_is_not_covered(self) -> None:
+        """A trailing period is a different cell, and the caller's own reading stands.
+
+        The whole mechanism is that a reviewed reading covers the exact bytes it
+        was adjudicated against. A matcher admitting a near miss would extend
+        somebody's reading of one cell to a cell they never read.
+        """
+        near_miss = f"{self._POINTER}."
+
+        assert note_governed_amount_for((self._amount(),), sheet=self._SHEET, published_content=near_miss) is None
+        assert (
+            note_stated_applicability_reading_for(
+                (self._applicability(),), sheet=self._SHEET, published_content=near_miss
+            )
+            is None
+        )
+
+    def test_a_declaration_does_not_reach_the_same_label_on_another_sheet(self) -> None:
+        """A design numbers each page's notes from one, so the label needs its sheet."""
+        assert (
+            note_governed_amount_for((self._amount(),), sheet=self._OTHER_SHEET, published_content=self._POINTER)
+            is None
+        )
+        assert (
+            note_stated_applicability_reading_for(
+                (self._applicability(),), sheet=self._OTHER_SHEET, published_content=self._POINTER
+            )
+            is None
+        )
+
+    def test_the_boolean_form_agrees_with_the_declaration_form_on_every_input(self) -> None:
+        """The eligibility predicate cannot answer differently from the census.
+
+        ``note_states_only_applicability`` is the boolean of the same matcher, so
+        the two answers are one answer by construction. This asserts that
+        property at the cases where it would matter -- the hit, the near miss and
+        the other sheet -- so a future implementation that re-scanned instead of
+        delegating would have to keep them agreeing.
+        """
+        declarations = (self._applicability(),)
+        for sheet, content in (
+            (self._SHEET, self._POINTER),
+            (self._SHEET, f"{self._POINTER}."),
+            (self._OTHER_SHEET, self._POINTER),
+            (self._SHEET, "Nota 3"),
+        ):
+            reading = note_stated_applicability_reading_for(declarations, sheet=sheet, published_content=content)
+            assert note_states_only_applicability(declarations, sheet=sheet, published_content=content) == (
+                reading is not None
+            ), f"the two forms disagree for {sheet!r} {content!r}"

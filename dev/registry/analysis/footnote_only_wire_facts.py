@@ -114,10 +114,10 @@ from ..pipeline.render_check import revision_render_inputs
 from ..pipeline.source_defects import (
     NoteGovernedAmountDeclaration,
     NoteStatedApplicabilityDeclaration,
-    note_governed_amount_scale_for,
+    note_governed_amount_for,
     note_governed_amounts_for,
     note_stated_applicability_for,
-    note_states_only_applicability,
+    note_stated_applicability_reading_for,
 )
 from .footnote_pointer_notes import (
     PointerEvidence,
@@ -258,24 +258,18 @@ def cell_adjudication(
 ) -> NoteGovernedAmountDeclaration | None:
     """Return the declaration covering this content cell, or ``None``.
 
-    The verdict is taken from :func:`note_governed_amount_scale_for`, the same
-    matcher the renderer admits a cell by, so the two cannot disagree about what
-    is covered. The declaration is looked up afterwards only to quote the note
-    that was read into the row's detail line.
+    The declaration IS :func:`note_governed_amount_for`'s return value, taken
+    from the same matcher the renderer admits a cell by, so the two cannot
+    disagree about what is covered. Recovering it by a second comparison here
+    would put the sheet-and-content match in two files, and the copy would be
+    the one that stopped agreeing.
 
     ``content`` is whitespace-normalised the way the renderer normalises it
     before matching. The renderer additionally peels a clause wrapped whole in
     brackets; a bracketed cell is not a bare pointer and never reaches this
     screen, so there is nothing here for that peel to do.
     """
-    published = " ".join(content.split())
-    if note_governed_amount_scale_for(declarations, sheet=sheet, published_content=published) is None:
-        return None
-    return next(
-        declaration
-        for declaration in declarations
-        if declaration.sheet == sheet and declaration.published_content == published
-    )
+    return note_governed_amount_for(declarations, sheet=sheet, published_content=" ".join(content.split()))
 
 
 def pinned_applicability_readings(
@@ -302,19 +296,12 @@ def cell_applicability_reading(
 ) -> NoteStatedApplicabilityDeclaration | None:
     """Return the applicability reading covering this content cell, or ``None``.
 
-    The verdict is taken from :func:`note_states_only_applicability`, the same
-    matcher the eligibility predicate admits a cell by, so the two cannot
-    disagree about what has been read. The declaration is looked up afterwards
-    only to quote the note into the row's detail line.
+    The declaration IS :func:`note_stated_applicability_reading_for`'s return
+    value, taken from the same matcher the eligibility predicate admits a cell
+    by -- it asks for the boolean form of this answer -- so the two cannot
+    disagree about what has been read.
     """
-    published = " ".join(content.split())
-    if not note_states_only_applicability(declarations, sheet=sheet, published_content=published):
-        return None
-    return next(
-        declaration
-        for declaration in declarations
-        if declaration.sheet == sheet and declaration.published_content == published
-    )
+    return note_stated_applicability_reading_for(declarations, sheet=sheet, published_content=" ".join(content.split()))
 
 
 def classify_pointer(
