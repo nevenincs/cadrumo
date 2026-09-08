@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb4b4e850d8885d9d06d4a8da25887794020f146fb41c4e1288a0189b5db0435'
+body_hash: 'sha256:3554f59c4ffcfca8068dcf1b36c0fed9705746ec19073740ff0ce445ce23aec5'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -163,6 +163,12 @@ When a shipped constants module explicitly says its only consumer is a developme
 A typed event and injection parameter do not establish a measured health dimension when no product path captures the observation. Delete the DTO, evaluator, synthetic event tests, and unreachable reporting branches together; keep the health probe limited to facts it obtains itself. A future live observer should introduce its event at the acquisition boundary and wire it through composition, not predeclare a dormant advisory contract.
 
 When exact reachability exposes a generic projector beside a stronger live workflow-specific projector, compare their evidence inputs before preserving either. Delete the generic helper and self-tests when only the live owner derives grounding from canonical observations and handles domain exclusions; retaining both creates duplicate vocabulary with different safety semantics. Verify the shared evidence model and the live capture/recapture path, not the unused convenience.
+
+An accepted domain rule does not justify an application DTO and projector that no workflow calls. Preserve the reusable domain state and calculation substrate, delete the unwired application assembly and synthetic suite, and amend the ADR to distinguish the enduring decision from its contradicted implementation prescription. Reintroduce the application surface only with a real composition-root caller and end-to-end refusal evidence.
+
+An exact-id lookup facade is duplicate surface when no product boundary calls it and the same module's live search plus loader already own concept hydration. Delete the facade, export, prose, and lookup-only assertion; keep lifecycle admission and search filtering tests over the canonical loaded concepts. A test proving a private collection can be linearly searched does not add quality to the shipped query contract.
+
+When production consumers use only proof DTOs and protocols while every executor call originates in development tooling, split contract from execution at that boundary. Keep the typed records and ports in `src/`; move the orchestration, temporary-output handling, custody consumer, and receipt checks together into the development authority. Do not leave forwarding aliases in production. Run both marker lanes because the fast contract tests and real-registry proof tests establish different parts of the move.
 
 ## Authority boundaries
 
