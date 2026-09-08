@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal, Protocol, cast, runtime_checkable
+from typing import Annotated, Literal, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -28,7 +28,6 @@ from cadrumo.application.filing.export import export_draft
 from cadrumo.application.filing.export_proof import (
     FilingExportConformanceReceipt,
     FilingExportConformanceRenderInputs,
-    FilingExportConformanceRequest,
     FilingExportConformanceVectorEvidence,
     FilingExportDictionaryValue,
     FilingExportGeneratedOutput,
@@ -42,7 +41,6 @@ from cadrumo.application.filing.export_proof import (
     FilingExportSecureCustodyRecord,
     FilingExportSecureReplayEvidence,
     FilingExportSecureReplayReceipt,
-    FilingExportSecureReplayRequest,
 )
 from cadrumo.application.filing.export_proof import FilingExportProof as TwoChannelFilingExportProof
 from cadrumo.application.filing.export_verification import (
@@ -111,6 +109,26 @@ from .pipeline._render_profile import (
 )
 from .pipeline._semantic_map_join import join_record_design_semantics
 from .pipeline._semantic_map_loader import load_semantic_map
+
+_AuthorityToken = Annotated[str, Field(min_length=1, max_length=200, pattern=r"^[a-z0-9][a-z0-9._:/-]*$")]
+
+
+class FilingExportConformanceRequest(BaseModel):
+    """Public development request carrying no filing values or producer identity."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    coordinate: FilingExportProofCoordinate
+
+
+class FilingExportSecureReplayRequest(BaseModel):
+    """Development request that cannot carry caller-supplied filing inputs."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    coordinate: FilingExportProofCoordinate
+    source_authority_id: _AuthorityToken
+    custody_authority_id: _AuthorityToken
 
 
 @runtime_checkable
