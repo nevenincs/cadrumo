@@ -420,7 +420,6 @@ errors:
       az internetkapcsolatot, és próbálja újra.
     fail_outbound_storage_unavailable: A tárhelyszolgáltatás átmenetileg nem érhető
       el. Várjon néhány percet, és próbálja újra.
-    fail_repair_decision_not_found: A kért javítási döntés nem létezik.
     fail_review_source_load: A forrásfájl jelen van, de nem elemezhető.
     fail_sancion_arithmetic: A szankciós dokumentumon nyomtatott összegek nem egyeztethetők
       össze egymással.
@@ -546,8 +545,6 @@ errors:
       az aktuális vetítéssel.
     integrity_profile_snapshot_not_found: Nem létezik profil-pillanatkép a megadott
       azonosítóval.
-    integrity_repair_integrity: Egy javítási-integritási invariáns vagy döntési szerződés
-      sérült.
     integrity_storage_blob: Egy tárolt objektum SHA-256 hashje eltér a manifeszttől.
     integrity_storage_bucket_validation: Egy gyűjtőparaméter vagy manifestmező nem
       teljesítette az érvényesítést.

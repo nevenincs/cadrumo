@@ -1133,10 +1133,6 @@ application:
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}
         %{period}, però la devolució només està disponible en l'últim període de declaració
         de l'any. Arrossega el crèdit (compensar) o tria la devolució en l'últim període.
-      review_only_workspace_no_authority: Aquest espai de treball de només revisió
-        no té autoritat de presentació; es pot llegir i verificar, però mai s'ha de
-        tractar com a prova que la revisió de càlcul %{calculation_revision_id} ha
-        estat o serà presentada.
       review_package_generic: S'ha produït un error en construir el paquet de revisió.
       review_package_integrity: 'El paquet de revisió %{package_path} no ha superat
         la verificació d''integritat: %{detail}.'
@@ -1321,17 +1317,6 @@ application:
         extreta per a {manual_key}.
       no_revision_for_diff_year: 'Cap revisió del registre de {modelo} cobreix l''exercici
         {filing_year}. Revisions declarades: {available_revisions}.'
-  repair_integrity:
-    errors:
-      conflicting_list_filters: 'Els filtres de llista de reparació són excloents:
-        {filters}. Fes servir un filtre o cap.'
-      decision_id_mismatch_list: L id de la decisió de reparació no coincideix amb
-        l id recalculat des del contingut; es rebutja l entrada de la llista.
-      decision_id_mismatch_load: L'id del contingut de la decisió de reparació no
-        coincideix amb el sol.licitat o recalculat; es rebutja la càrrega.
-      decision_id_mismatch_save: L'id de la decisió de reparació no coincideix amb
-        l'id recalculat des del contingut; es rebutja el desament.
-      decision_not_found: La decisió de reparació {decision_id} no existeix.
   storage:
     calc_sheets:
       engine:
