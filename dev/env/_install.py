@@ -1,25 +1,32 @@
-"""Additive dependency installation into this checkout's virtualenv.
-
-`uv pip install` rather than `uv sync` is deliberate and load bearing: shared
-Windows worktrees hold long-lived executable locks under `.venv/Scripts`, and a
-sync - which prunes before it installs - fails against them. The additive form
-leaves what is already installed in place, so a resident session keeps working.
-"""
+"""Exact, lock-aware project synchronization through ``uv``."""
 
 from __future__ import annotations
 
 import subprocess
 import sys
 
-from dev.env._venv import VENV, guard, interpreter
+from dev.env._venv import VENV, guard
 
 #: The extras and groups an everyday development environment carries.
-EXTRA = ".[workbook-windows]"
+EXTRA = "workbook-windows"
 GROUP = "dev"
 
 
+def sync_command() -> tuple[str, ...]:
+    """Return the sole command that converges the project environment."""
+    return (
+        "uv",
+        "sync",
+        "--locked",
+        "--extra",
+        EXTRA,
+        "--group",
+        GROUP,
+    )
+
+
 def install() -> int:
-    """Install runtime, workbook, and dev dependencies additively.
+    """Synchronize runtime, workbook, and dev dependencies from ``uv.lock``.
 
     Returns:
         0 on success, 1 when the environment is locked or in use, otherwise
@@ -27,17 +34,7 @@ def install() -> int:
     """
     try:
         with guard(VENV):
-            argv = [
-                "uv",
-                "pip",
-                "install",
-                "--python",
-                str(interpreter(VENV)),
-                "--editable",
-                EXTRA,
-                "--group",
-                GROUP,
-            ]
+            argv = sync_command()
             print(f"$ {' '.join(argv)}", flush=True)
             return subprocess.run(argv, check=False).returncode
     except RuntimeError as exc:

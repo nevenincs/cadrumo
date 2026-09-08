@@ -152,8 +152,7 @@ COPY --chown=${USERNAME}:${USERNAME} . .
 # to nothing on Linux (its sole dependency is `sys_platform == 'win32'`
 # marker-gated) but is requested for parity with that recipe.
 RUN --mount=type=cache,target=/home/${USERNAME}/.cache/uv,uid=${USER_UID},gid=${USER_GID} \
-    uv venv --python 3.13 .venv \
-    && uv pip install --python .venv/bin/python --editable ".[workbook-windows]" --group dev
+    uv sync --locked --extra workbook-windows --group dev
 
 # Pre-bake headless Chromium so `playwright install --with-deps` is
 # unnecessary at container start (issue #101 acceptance criterion).
