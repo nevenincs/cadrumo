@@ -1,16 +1,17 @@
 ---
 tags:
-  - '#adr'
-  - '#object-name-declustering'
+  - "#adr"
+  - "#object-name-declustering"
 date: '2026-09-02'
-modified: '2026-09-07'
-body_schema: 'body-v2'
-body_hash: 'sha256:59b0074a70a2338418cf36c646ad30ab3c68d676d8fa539a24d83cf87431dc22'
 related:
   - "[[2026-09-02-object-name-declustering-research]]"
   - "[[2026-09-02-object-name-declustering-reference]]"
+superseded_by: '2026-09-08-quality-gate-zero-closure-product-boundary-adr'
+modified: '2026-09-08'
+body_schema: 'body-v2'
+body_hash: 'sha256:6941e8bafc9593b58fa355ddf83b925a4a769b41e0586533cd14128bbe0f3bd1'
 ---
-# `object-name-declustering` adr: `manifest-governed graph batches with receipt-bound rehearsal` | (**status:** `accepted`)
+# `object-name-declustering` adr: `manifest-governed graph batches with receipt-bound rehearsal` | (**status:** `superseded`)
 
 ## Problem Statement
 
