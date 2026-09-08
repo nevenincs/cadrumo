@@ -8,7 +8,7 @@ related:
   - '[[2026-06-09-justfile-redesign-adr]]'
   - '[[2026-06-09-justfile-redesign-research]]'
 modified: '2026-09-08'
-body_hash: 'sha256:8d8afd917a0ed2145b4c8f4a6abc97643dc94dc428f200ef04478e113e8fec90'
+body_hash: 'sha256:85b6805af63632a47cbac66b32e5fe7941d7f403366e23f7fd6339471597beeb'
 ---
 
 # `justfile-redesign` `implementation` plan
@@ -68,14 +68,14 @@ This plan implements the build harness and project quality gate redesign authori
 - [x] `S45` - Audit docs-check output for cognitive load and readability; `suppress passing noise, present only actionable findings; `justfile`.
 - [x] `S46` - Relocate scripts/ dev tooling into dev.quality and dev.audit submodules with cohabiting tests; `rewire recipes, ruff ignores, and the utf8/ratchet gates; `dev/quality, dev/audit, justfile`.
 - [x] `S47` - Relocate docs/tools into dev.docs (build, cli_reference, apidocs) with cohabiting tests; `rewire conf.py, recipes, ruff ignores, and the docs rules; `dev/docs, docs/conf.py, justfile`.
-- [ ] `S48` - Consolidate redundant recipes and reorganize command groups; `justfile`.
-- [ ] `S49` - Update initialization selector and documentation after removing the empty Node phase; `dev/init`.
-- [ ] `S50` - Migrate workflow calls to parameterized audit output; `.github/workflows/code-health-report.yml`.
-- [ ] `S51` - Rename advisory security wiring without presenting it as a blocking check; `dev/audit and dev/quality`.
-- [ ] `S52` - Update contributor and container command references to canonical setup recipes; `CONTRIBUTING.md and .devcontainer`.
-- [ ] `S53` - Update recipe-contract tests and reachability expectations; `dev tests`.
-- [ ] `S54` - Run focused justfile, workflow, initialization, and quality-suite verification; `justfile consumers`.
-- [ ] `S55` - Review the final command surface for semantic duplication and CI parity; `justfile and workflows`.
+- [x] `S48` - Consolidate redundant recipes and reorganize command groups; `justfile`.
+- [x] `S49` - Update initialization selector and documentation after removing the empty Node phase; `dev/init`.
+- [x] `S50` - Migrate workflow calls to parameterized audit output; `.github/workflows/code-health-report.yml`.
+- [x] `S51` - Rename advisory security wiring without presenting it as a blocking check; `dev/audit and dev/quality`.
+- [x] `S52` - Update contributor and container command references to canonical setup recipes; `CONTRIBUTING.md and .devcontainer`.
+- [x] `S53` - Update recipe-contract tests and reachability expectations; `dev tests`.
+- [x] `S54` - Run focused justfile, workflow, initialization, and quality-suite verification; `justfile consumers`.
+- [x] `S55` - Review the final command surface for semantic duplication and CI parity; `justfile and workflows`.
 
 ## Parallelization
 
