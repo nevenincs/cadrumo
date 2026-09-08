@@ -206,6 +206,32 @@ class _IndexedTransactionDates:
         return self.eligible_from <= end and self.eligible_to >= start
 
 
+def _out_of_window_summary(
+    rows: tuple[tuple[str, date], ...],
+) -> OutOfWindowTransactionSummary | None:
+    """Summarise out-of-window index rows without reading transaction payloads."""
+    if not rows:
+        return None
+    filing_dates = tuple(filing_date for _transaction_id, filing_date in rows)
+    return OutOfWindowTransactionSummary(
+        count=len(rows),
+        min_filing_date=min(filing_dates),
+        max_filing_date=max(filing_dates),
+    )
+
+
+def _out_of_window_index_entries(
+    rows: tuple[tuple[str, date], ...],
+) -> tuple[OutOfWindowTransactionIndexEntry, ...]:
+    """Project small out-of-window sets in deterministic transaction-id order."""
+    if len(rows) > _OUT_OF_WINDOW_ROW_PROJECTION_LIMIT:
+        return ()
+    return tuple(
+        OutOfWindowTransactionIndexEntry(transaction_id=transaction_id, filing_date=filing_date)
+        for transaction_id, filing_date in sorted(rows)
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class _MigratedIvaDeductionFact:
     """The complete IVA authority axis required to migrate one transaction row."""
@@ -747,6 +773,72 @@ class TransactionCatalogueRepository:
         )
         return TransactionCatalogue.from_transactions(transactions)
 
+    def _partition_from_full_scan(self, start: date, end: date) -> LedgerDatePartition:
+        """Partition every decrypted row after the date index fails completeness."""
+        full_catalogue = self.load()
+        in_window: list[Transaction] = []
+        out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+        for transaction in full_catalogue.values():
+            dates = _IndexedTransactionDates.for_transaction(transaction)
+            if dates.overlaps(start, end):
+                in_window.append(transaction)
+                continue
+            out_of_window.append(
+                OutOfWindowTransactionIndexEntry(
+                    transaction_id=transaction.transaction_id,
+                    filing_date=dates.filing_date,
+                ),
+            )
+        _log.debug(
+            "partitioned transaction catalogue via full-scan fallback bucket_id=%s window=%s..%s "
+            "in_window=%d out_of_window=%d",
+            self._bucket_id,
+            start.isoformat(),
+            end.isoformat(),
+            len(in_window),
+            len(out_of_window),
+        )
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue.from_transactions(in_window),
+            out_of_window=tuple(out_of_window),
+            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
+            index_complete=False,
+        )
+
+    def _partition_from_complete_index(
+        self,
+        index_rows: dict[str, _IndexedTransactionDates],
+        start: date,
+        end: date,
+    ) -> LedgerDatePartition:
+        """Partition through a complete plaintext date index and targeted decrypt."""
+        in_window_ids = {
+            transaction_id for transaction_id, dates in index_rows.items() if dates.overlaps(start, end)
+        }
+        transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
+        out_of_window_rows = tuple(
+            (transaction_id, dates.filing_date)
+            for transaction_id, dates in index_rows.items()
+            if transaction_id not in in_window_ids
+        )
+        out_of_window_summary = _out_of_window_summary(out_of_window_rows)
+        out_of_window_index_entries = _out_of_window_index_entries(out_of_window_rows)
+        _log.debug(
+            "partitioned transaction catalogue via date index bucket_id=%s window=%s..%s in_window=%d "
+            "out_of_window=%d",
+            self._bucket_id,
+            start.isoformat(),
+            end.isoformat(),
+            len(transactions),
+            len(out_of_window_rows),
+        )
+        return LedgerDatePartition(
+            in_window=TransactionCatalogue.from_transactions(transactions),
+            out_of_window=out_of_window_index_entries,
+            out_of_window_summary=out_of_window_summary,
+            index_complete=True,
+        )
+
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
 
@@ -796,74 +888,9 @@ class TransactionCatalogueRepository:
             # Stale, partially-synced, or missing index rows for this bucket:
             # fall back to a full decrypt scan and partition in memory so
             # correctness never depends on index freshness.
-            full_catalogue = self.load()
-            in_window: list[Transaction] = []
-            out_of_window: list[OutOfWindowTransactionIndexEntry] = []
-            for transaction in full_catalogue.values():
-                dates = _IndexedTransactionDates.for_transaction(transaction)
-                if dates.overlaps(start, end):
-                    in_window.append(transaction)
-                else:
-                    out_of_window.append(
-                        OutOfWindowTransactionIndexEntry(
-                            transaction_id=transaction.transaction_id,
-                            filing_date=dates.filing_date,
-                        ),
-                    )
-            _log.debug(
-                "partitioned transaction catalogue via full-scan fallback bucket_id=%s window=%s..%s "
-                "in_window=%d out_of_window=%d",
-                self._bucket_id,
-                start.isoformat(),
-                end.isoformat(),
-                len(in_window),
-                len(out_of_window),
-            )
-            return LedgerDatePartition(
-                in_window=TransactionCatalogue.from_transactions(in_window),
-                out_of_window=tuple(out_of_window),
-                out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
-                index_complete=False,
-            )
+            return self._partition_from_full_scan(start, end)
 
-        in_window_ids = {transaction_id for transaction_id, dates in index_rows.items() if dates.overlaps(start, end)}
-        transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
-
-        out_of_window_rows = tuple(
-            (transaction_id, dates.filing_date)
-            for transaction_id, dates in index_rows.items()
-            if transaction_id not in in_window_ids
-        )
-        out_of_window_summary = None
-        if out_of_window_rows:
-            out_of_window_dates = tuple(filing_date for _transaction_id, filing_date in out_of_window_rows)
-            out_of_window_summary = OutOfWindowTransactionSummary(
-                count=len(out_of_window_rows),
-                min_filing_date=min(out_of_window_dates),
-                max_filing_date=max(out_of_window_dates),
-            )
-        out_of_window_index_entries = (
-            tuple(
-                OutOfWindowTransactionIndexEntry(transaction_id=transaction_id, filing_date=filing_date)
-                for transaction_id, filing_date in sorted(out_of_window_rows)
-            )
-            if len(out_of_window_rows) <= _OUT_OF_WINDOW_ROW_PROJECTION_LIMIT
-            else ()
-        )
-        _log.debug(
-            "partitioned transaction catalogue via date index bucket_id=%s window=%s..%s in_window=%d out_of_window=%d",
-            self._bucket_id,
-            start.isoformat(),
-            end.isoformat(),
-            len(transactions),
-            len(out_of_window_rows),
-        )
-        return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(transactions),
-            out_of_window=out_of_window_index_entries,
-            out_of_window_summary=out_of_window_summary,
-            index_complete=True,
-        )
+        return self._partition_from_complete_index(index_rows, start, end)
 
     def _load_transactions_by_ids(self, transaction_ids: Iterable[str], *, read_context: str) -> list[Transaction]:
         """Load selected transaction rows through one targeted secure-object batch."""

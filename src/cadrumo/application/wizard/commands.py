@@ -883,21 +883,36 @@ def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str |
     if value is None:
         return None
     if question.widget is WizardWidget.CONFIRM:
-        if not isinstance(value, bool):
-            return None
-        return "true" if value else "false"
+        return _canonical_confirm_value(value)
     if question.widget is WizardWidget.CHECKBOX:
-        if not isinstance(value, list | tuple):
-            return None
-        tokens = [str(item) for item in OBJECT_TUPLE_ADAPTER.validate_python(value) if str(item)]
-        return ",".join(tokens) if tokens else None
+        return _canonical_checkbox_value(value)
     if question.widget is WizardWidget.INTEGER:
-        if isinstance(value, int):
-            return str(value)
-        return str(int(str(value)))
+        return _canonical_integer_value(value)
     if question.widget is WizardWidget.PATH:
         return str(value)
     return str(value)
+
+
+def _canonical_confirm_value(value: object) -> str | None:
+    """Project a boolean flag into the flow's lowercase canonical token."""
+    if not isinstance(value, bool):
+        return None
+    return "true" if value else "false"
+
+
+def _canonical_checkbox_value(value: object) -> str | None:
+    """Project repeated checkbox values into one comma-separated token."""
+    if not isinstance(value, list | tuple):
+        return None
+    tokens = [str(item) for item in OBJECT_TUPLE_ADAPTER.validate_python(value) if str(item)]
+    return ",".join(tokens) if tokens else None
+
+
+def _canonical_integer_value(value: object) -> str:
+    """Project an integer flag while retaining Typer's accepted coercions."""
+    if isinstance(value, int):
+        return str(value)
+    return str(int(str(value)))
 
 
 def _python_parameter(
@@ -1137,6 +1152,47 @@ def _run_patch_edit(flow: WizardFlow, explicit_flags: dict[str, str], *, profile
     return merged_values
 
 
+def _seed_default_answers(flow: WizardFlow, canonical: dict[str, str]) -> dict[str, str]:
+    """Overlay explicit canonical answers on the flow's declared defaults."""
+    seeded: dict[str, str] = {
+        question.id: question.default or ""
+        for section in flow.sections
+        for question in section.questions
+        if question.default is not None
+    }
+    seeded.update(canonical)
+    return seeded
+
+
+def _persist_full_flow_answers(
+    flow: WizardFlow,
+    answers: BaseModel,
+    *,
+    profile_id: str,
+) -> dict[str, str]:
+    """Validate and persist one completed full-flow answer model."""
+    from ...domain.user_profile.values import UserProfileFact
+    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
+    from ..user_profile.profile_record_repository import ProfileRecordRepository
+    from ..user_profile.projections import record_to_path_values
+    from .persistence import project_answers, serialise_answers
+
+    profile_values = serialise_answers(flow, answers)
+    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
+    values = record_to_path_values(record)
+    values.update({path: value for path, value in profile_values.items() if value})
+    _require_filing_baseline(flow, project_answers(flow, values))
+    from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
+
+    taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
+    apply_profile_fact_changes(
+        profile_id=profile_id,
+        changes=tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items() if value),
+        door=ProfileFactWriteDoor.ANSWERS,
+    )
+    return values
+
+
 def _run_full_flow(
     flow: WizardFlow,
     canonical: dict[str, str],
@@ -1160,15 +1216,7 @@ def _run_full_flow(
     hide it, so an explicitly-given flag value is always honoured.
 
     """
-    from ...domain.user_profile.values import UserProfileFact
-    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-    from ..user_profile.profile_record_repository import ProfileRecordRepository
-    from ..user_profile.projections import record_to_path_values
     from ..user_profile.registration import ProfileRegistrationError
-    from .persistence import (
-        project_answers,
-        serialise_answers,
-    )
 
     if mode == "create":
         raise ProfileRegistrationError(
@@ -1176,14 +1224,7 @@ def _run_full_flow(
         )
 
     if accept_defaults:
-        seeded: dict[str, str] = {
-            question.id: question.default or ""
-            for section in flow.sections
-            for question in section.questions
-            if question.default is not None
-        }
-        seeded.update(canonical)
-        canonical = seeded
+        canonical = _seed_default_answers(flow, canonical)
 
     if quiet:
         missing = _missing_required_flags(flow, canonical)
@@ -1250,20 +1291,7 @@ def _run_full_flow(
     # patch scoped to the pages the operator actually answered
     # (``supplied_question_ids``); the full serialisation here feeds the
     # filing-baseline survival check and the success payload.
-    profile_values = serialise_answers(flow, answers)
-    record = ProfileRecordRepository.for_current_session(profile_id).load(profile_id)
-    values = record_to_path_values(record)
-    values.update({path: value for path, value in profile_values.items() if value})
-    _require_filing_baseline(flow, project_answers(flow, values))
-    from ...domain.deadlines.profiles import taxpayer_profile_from_mapping
-
-    taxpayer_profile_from_mapping(values, tax_id_default=values.get("identity.tax_id", ""))
-    apply_profile_fact_changes(
-        profile_id=profile_id,
-        changes=tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items() if value),
-        door=ProfileFactWriteDoor.ANSWERS,
-    )
-    return values
+    return _persist_full_flow_answers(flow, answers, profile_id=profile_id)
 
 
 def _enter_requested_output_language(kwargs: dict[str, object], language_stack: contextlib.ExitStack) -> None:

@@ -500,6 +500,26 @@ def verify_registry_citations(
     )
 
 
+def _filter_manual_parts(
+    parts: tuple[tuple[RegistryManualId, int, ManualPart, Path], ...],
+    *,
+    command: RegistryManualsListCommand,
+) -> tuple[tuple[RegistryManualId, int, ManualPart, Path], ...]:
+    """Apply the manual filter, then the year filter, in command order."""
+    if command.manual is not None:
+        parts = tuple(entry for entry in parts if entry[0] == command.manual)
+    if command.year is not None:
+        parts = tuple(entry for entry in parts if entry[1] == command.year)
+    return parts
+
+
+def _manual_list_filter_values(command: RegistryManualsListCommand) -> tuple[str, int | str]:
+    """Return the stable filter labels used by the report and audit log."""
+    manual_filter = command.manual.value if command.manual is not None else ""
+    year_filter = command.year if command.year is not None else ""
+    return manual_filter, year_filter
+
+
 def list_registry_manuals(
     command: RegistryManualsListCommand | None = None,
     *,
@@ -510,24 +530,24 @@ def list_registry_manuals(
     """Return discovered local manual parts as a :class:`RegistryManualsListReport`."""
     resolved_command = command or RegistryManualsListCommand()
     topics = _topic_projections(topic_catalogue, locale=locale)
-    parts = _discover_manual_parts(settings=settings)
-    if resolved_command.manual is not None:
-        parts = tuple(entry for entry in parts if entry[0] == resolved_command.manual)
-    if resolved_command.year is not None:
-        parts = tuple(entry for entry in parts if entry[1] == resolved_command.year)
+    parts = _filter_manual_parts(
+        _discover_manual_parts(settings=settings),
+        command=resolved_command,
+    )
     rows = tuple(_manual_part_projection(*entry) for entry in parts)
+    manual_filter, year_filter = _manual_list_filter_values(resolved_command)
     _LOGGER.info(
         "registry.manuals.list",
         extra={
             "registry_service": "registry.manuals.list",
-            "registry_manual_filter": resolved_command.manual.value if resolved_command.manual is not None else "",
-            "registry_year_filter": resolved_command.year if resolved_command.year is not None else "",
+            "registry_manual_filter": manual_filter,
+            "registry_year_filter": year_filter,
             "registry_part_count": len(rows),
             "registry_topic_count": len(topics),
         },
     )
     return RegistryManualsListReport(
-        manual_filter=resolved_command.manual.value if resolved_command.manual is not None else None,
+        manual_filter=manual_filter or None,
         year_filter=resolved_command.year,
         part_count=len(rows),
         parts=rows,
@@ -911,18 +931,48 @@ def _legal_reference_sort_key(reference: LegalReference) -> tuple[str, str]:
     return (_legal_article_number(reference), reference.id)
 
 
-def _legal_document_number(document_id: str) -> str:
-    parts = document_id.split("-")
+def _legal_number_for_simple_prefix(parts: list[str]) -> str | None:
+    """Resolve the compact number used by a directly-prefixed legal id."""
     if len(parts) >= 3 and parts[0] in {"ley", "rd", "rdl", "rdleg"}:
         return f"{parts[-2]}/{parts[-1]}"
-    if "rdleg" in parts:
-        rdleg_index = parts.index("rdleg")
-        if len(parts) > rdleg_index + 2:
-            return f"{parts[rdleg_index + 1]}/{parts[rdleg_index + 2]}"
-    if len(parts) >= 4 and parts[0] == "real" and parts[1] == "decreto" and parts[2] == "ley":
-        return f"{parts[-2]}/{parts[-1]}"
-    if len(parts) >= 4 and parts[0] == "orden" and parts[1].isalpha():
-        return f"{parts[1].upper()}/{parts[-2]}/{parts[-1]}"
+    return None
+
+
+def _legal_number_for_embedded_rdleg(parts: list[str]) -> str | None:
+    """Resolve the number embedded after a ``rdleg`` legal-id segment."""
+    if "rdleg" not in parts:
+        return None
+    rdleg_index = parts.index("rdleg")
+    if len(parts) <= rdleg_index + 2:
+        return None
+    return f"{parts[rdleg_index + 1]}/{parts[rdleg_index + 2]}"
+
+
+def _legal_number_for_real_decreto_ley(parts: list[str]) -> str | None:
+    """Resolve the number used by a ``real-decreto-ley`` legal id."""
+    if len(parts) < 4 or parts[:3] != ["real", "decreto", "ley"]:
+        return None
+    return f"{parts[-2]}/{parts[-1]}"
+
+
+def _legal_number_for_orden(parts: list[str]) -> str | None:
+    """Resolve the ministry/year number used by an ``orden`` legal id."""
+    if len(parts) < 4 or parts[0] != "orden" or not parts[1].isalpha():
+        return None
+    return f"{parts[1].upper()}/{parts[-2]}/{parts[-1]}"
+
+
+def _legal_document_number(document_id: str) -> str:
+    """Return the human-facing number encoded by a canonical legal id."""
+    parts = document_id.split("-")
+    for candidate in (
+        _legal_number_for_simple_prefix(parts),
+        _legal_number_for_embedded_rdleg(parts),
+        _legal_number_for_real_decreto_ley(parts),
+        _legal_number_for_orden(parts),
+    ):
+        if candidate is not None:
+            return candidate
     return document_id
 
 
@@ -1075,29 +1125,56 @@ def _manual_issue_projection(issue: ManualVerificationIssue) -> RegistryCorpusIs
     )
 
 
+_ManualPartEntry = tuple[RegistryManualId, int, ManualPart, Path]
+
+
+def _manual_discovery_directories(root: Path) -> tuple[Path, ...]:
+    """Return manual roots in the canonical directory-scan order."""
+    return tuple(path for path in scan_directory(root) if path.is_dir())
+
+
+def _manual_discovery_years(manual_dir: Path) -> tuple[Path, ...]:
+    """Return numeric manual-year directories in scan order."""
+    return tuple(path for path in scan_directory(manual_dir) if path.is_dir() and path.name.isdigit())
+
+
+def _discover_manual_year_parts(*, manual_id: RegistryManualId, year_dir: Path) -> tuple[_ManualPartEntry, ...]:
+    """Discover valid parts beneath one manual year, retaining source order."""
+    year = int(year_dir.name)
+    discovered: list[_ManualPartEntry] = []
+    for part_dir in _manual_part_dirs(year_dir):
+        part = _manual_part_from_dir(year_dir=year_dir, part_dir=part_dir)
+        if part is None:
+            _LOGGER.debug("manual discovery: skipping unknown manual part %s", part_dir.name)
+            continue
+        discovered.append((manual_id, year, part, part_dir))
+    return tuple(discovered)
+
+
+def _discover_manual_directory_parts(*, manual_id: RegistryManualId, manual_dir: Path) -> tuple[_ManualPartEntry, ...]:
+    """Discover all valid year/part entries beneath one manual directory."""
+    discovered: list[_ManualPartEntry] = []
+    for year_dir in _manual_discovery_years(manual_dir):
+        discovered.extend(_discover_manual_year_parts(manual_id=manual_id, year_dir=year_dir))
+    return tuple(discovered)
+
+
 def _discover_manual_parts(
     *,
     settings: Settings | None = None,
-) -> tuple[tuple[RegistryManualId, int, ManualPart, Path], ...]:
+) -> tuple[_ManualPartEntry, ...]:
     resolved = settings or load_settings()
     root = resolved.aeat_manuals_root
     if not root.exists():
         return ()
-    discovered: list[tuple[RegistryManualId, int, ManualPart, Path]] = []
-    for manual_dir in (path for path in scan_directory(root) if path.is_dir()):
+    discovered: list[_ManualPartEntry] = []
+    for manual_dir in _manual_discovery_directories(root):
         try:
             manual_id = registry_manual_id(manual_dir.name)
         except RegistryApplicationInputError:
             _LOGGER.debug("manual discovery: skipping unknown manual id %s", manual_dir.name)
             continue
-        for year_dir in (path for path in scan_directory(manual_dir) if path.is_dir() and path.name.isdigit()):
-            year = int(year_dir.name)
-            for part_dir in _manual_part_dirs(year_dir):
-                part = _manual_part_from_dir(year_dir=year_dir, part_dir=part_dir)
-                if part is None:
-                    _LOGGER.debug("manual discovery: skipping unknown manual part %s", part_dir.name)
-                    continue
-                discovered.append((manual_id, year, part, part_dir))
+        discovered.extend(_discover_manual_directory_parts(manual_id=manual_id, manual_dir=manual_dir))
     return tuple(discovered)
 
 

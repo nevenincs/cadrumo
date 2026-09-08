@@ -20,7 +20,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from typing import ClassVar, Literal, Protocol
@@ -85,6 +85,31 @@ class PreviousFilingSourceReference:
     has_variable_year_offset: bool = False
 
 
+_PreviousFilingRequirementKey = tuple[ModeloId, int, str]
+
+
+@dataclass(slots=True)
+class _PreviousFilingRequirementAccumulator:
+    """Collect one requirement's keyed evidence before materialisation."""
+
+    binding_ids_by_key: dict[_PreviousFilingRequirementKey, set[BindingId]] = field(default_factory=dict)
+    source_casilla_ids_by_key: dict[_PreviousFilingRequirementKey, set[CasillaId]] = field(default_factory=dict)
+    required_source_casilla_ids_by_key: dict[
+        _PreviousFilingRequirementKey,
+        set[CasillaId],
+    ] = field(default_factory=dict)
+    source_presence_groups_by_key: dict[
+        _PreviousFilingRequirementKey,
+        set[tuple[CasillaId, ...]],
+    ] = field(default_factory=dict)
+    legal_refs_by_key: dict[_PreviousFilingRequirementKey, set[LegalRefId]] = field(default_factory=dict)
+    source_refs_by_key: dict[_PreviousFilingRequirementKey, set[SourceRefId]] = field(default_factory=dict)
+    dependency_treatment_by_key: dict[
+        _PreviousFilingRequirementKey,
+        RelationDependencyTreatmentField | None,
+    ] = field(default_factory=dict)
+
+
 def previous_filing_source_reference(binding: DataBindingDefinition) -> PreviousFilingSourceReference:
     """Return the :class:`PreviousFilingSourceReference` for a ``previous_filing`` binding.
 
@@ -106,6 +131,68 @@ def previous_filing_source_reference(binding: DataBindingDefinition) -> Previous
     )
 
 
+def _direct_previous_filing_selectors(
+    revision: ModeloRevision,
+) -> Iterable[tuple[DataBindingDefinition, PreviousModeloSelector]]:
+    """Yield typed selectors for direct previous-filing bindings in revision order."""
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.PREVIOUS_FILING:
+            continue
+        if not is_direct_previous_filing_binding(binding):
+            continue
+        yield binding, _previous_filing_selector(binding)
+
+
+def _record_previous_filing_requirement(
+    accumulator: _PreviousFilingRequirementAccumulator,
+    binding: DataBindingDefinition,
+    selector: PreviousModeloSelector,
+    *,
+    filing_year: int,
+    period_year_delta: int,
+    required_period: str,
+    dependency_treatments_by_source: Mapping[ModeloId, RelationDependencyTreatmentField],
+) -> None:
+    """Record one selector anchor and all of its registry provenance."""
+    expected_year = filing_year + selector.filing_year_delta + period_year_delta
+    key = (selector.source_modelo, expected_year, required_period)
+    source_ids = _previous_filing_source_ids(selector)
+    accumulator.binding_ids_by_key.setdefault(key, set()).add(binding.id)
+    accumulator.source_casilla_ids_by_key.setdefault(key, set()).update(source_ids)
+    required_ids = source_ids if selector.required_source_casilla_ids is None else selector.required_source_casilla_ids
+    accumulator.required_source_casilla_ids_by_key.setdefault(key, set()).update(required_ids)
+    if selector.required_source_casilla_ids == ():
+        accumulator.source_presence_groups_by_key.setdefault(key, set()).add(source_ids)
+    accumulator.legal_refs_by_key.setdefault(key, set()).update(binding.legal_refs)
+    accumulator.source_refs_by_key.setdefault(key, set()).update(binding.source_refs)
+    accumulator.dependency_treatment_by_key[key] = dependency_treatments_by_source.get(selector.source_modelo)
+
+
+def _materialise_previous_filing_requirement(
+    key: _PreviousFilingRequirementKey,
+    accumulator: _PreviousFilingRequirementAccumulator,
+) -> RegistryFoldRequirement:
+    """Build one deterministic fold requirement from the keyed accumulator."""
+    modelo, expected_year, required_period = key
+    return RegistryFoldRequirement(
+        source_modelo=modelo,
+        filing_periods=tuple(
+            filing_period
+            for filing_period in (filing_period_from_scope(expected_year, required_period),)
+            if filing_period is not None
+        ),
+        filing_year=expected_year,
+        periods=(required_period,),
+        binding_ids=tuple(sorted(accumulator.binding_ids_by_key[key])),
+        source_casilla_ids=tuple(sorted(accumulator.source_casilla_ids_by_key[key])),
+        required_source_casilla_ids=tuple(sorted(accumulator.required_source_casilla_ids_by_key[key])),
+        source_presence_groups=tuple(sorted(accumulator.source_presence_groups_by_key.get(key, set()))),
+        dependency_treatment=accumulator.dependency_treatment_by_key[key],
+        legal_refs=tuple(sorted(accumulator.legal_refs_by_key[key])),
+        source_refs=tuple(sorted(accumulator.source_refs_by_key[key])),
+    )
+
+
 def previous_filing_observation_requirements(
     revision: ModeloRevision,
     *,
@@ -120,68 +207,28 @@ def previous_filing_observation_requirements(
     source modelo/year/period, :class:`~cadrumo.domain.calculations.registry.BindingId`
     consumers, and source casilla ids.
     """
-    binding_ids_by_key: dict[tuple[ModeloId, int, str], set[BindingId]] = {}
-    source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
-    required_source_casilla_ids_by_key: dict[tuple[ModeloId, int, str], set[CasillaId]] = {}
-    source_presence_groups_by_key: dict[tuple[ModeloId, int, str], set[tuple[CasillaId, ...]]] = {}
-    legal_refs_by_key: dict[tuple[ModeloId, int, str], set[LegalRefId]] = {}
-    source_refs_by_key: dict[tuple[ModeloId, int, str], set[SourceRefId]] = {}
+    accumulator = _PreviousFilingRequirementAccumulator()
     # Same closed vocabulary as
     # :attr:`~cadrumo.domain.calculations.registry.DependencyClassificationDefinition.treatment`
     # and :attr:`RegistryFoldRequirement.dependency_treatment`, which this
     # value ultimately feeds -- typed to match rather than widened to `str`.
-    dependency_treatment_by_key: dict[
-        tuple[ModeloId, int, str],
-        RelationDependencyTreatmentField | None,
-    ] = {}
-    classifications_by_source = {
-        classification.source_modelo: classification for classification in revision.dependency_classifications
+    dependency_treatments_by_source = {
+        classification.source_modelo: classification.treatment for classification in revision.dependency_classifications
     }
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.PREVIOUS_FILING:
-            continue
-        if not is_direct_previous_filing_binding(binding):
-            continue
-        selector = _previous_filing_selector(binding)
+    for binding, selector in _direct_previous_filing_selectors(revision):
         for period_year_delta, required_period in selector.required_period_anchors_for_target(period):
-            expected_year = filing_year + selector.filing_year_delta + period_year_delta
-            key = (selector.source_modelo, expected_year, required_period)
-            binding_ids_by_key.setdefault(key, set()).add(binding.id)
-            source_casilla_ids_by_key.setdefault(key, set()).update(_previous_filing_source_ids(selector))
-            required_source_casilla_ids_by_key.setdefault(key, set()).update(
-                _previous_filing_source_ids(selector)
-                if selector.required_source_casilla_ids is None
-                else selector.required_source_casilla_ids
+            _record_previous_filing_requirement(
+                accumulator,
+                binding,
+                selector,
+                filing_year=filing_year,
+                period_year_delta=period_year_delta,
+                required_period=required_period,
+                dependency_treatments_by_source=dependency_treatments_by_source,
             )
-            if selector.required_source_casilla_ids == ():
-                source_presence_groups_by_key.setdefault(key, set()).add(_previous_filing_source_ids(selector))
-            legal_refs_by_key.setdefault(key, set()).update(binding.legal_refs)
-            source_refs_by_key.setdefault(key, set()).update(binding.source_refs)
-            classification = classifications_by_source.get(selector.source_modelo)
-            dependency_treatment_by_key[key] = None if classification is None else classification.treatment
     return tuple(
-        RegistryFoldRequirement(
-            source_modelo=modelo,
-            filing_periods=tuple(
-                filing_period
-                for filing_period in (filing_period_from_scope(expected_year, required_period),)
-                if filing_period is not None
-            ),
-            filing_year=expected_year,
-            periods=(required_period,),
-            binding_ids=tuple(sorted(binding_ids_by_key[(modelo, expected_year, required_period)])),
-            source_casilla_ids=tuple(sorted(source_casilla_ids_by_key[(modelo, expected_year, required_period)])),
-            required_source_casilla_ids=tuple(
-                sorted(required_source_casilla_ids_by_key[(modelo, expected_year, required_period)])
-            ),
-            source_presence_groups=tuple(
-                sorted(source_presence_groups_by_key.get((modelo, expected_year, required_period), set()))
-            ),
-            dependency_treatment=dependency_treatment_by_key[(modelo, expected_year, required_period)],
-            legal_refs=tuple(sorted(legal_refs_by_key[(modelo, expected_year, required_period)])),
-            source_refs=tuple(sorted(source_refs_by_key[(modelo, expected_year, required_period)])),
-        )
-        for modelo, expected_year, required_period in sorted(binding_ids_by_key)
+        _materialise_previous_filing_requirement(key, accumulator)
+        for key in sorted(accumulator.binding_ids_by_key)
     )
 
 

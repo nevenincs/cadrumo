@@ -57,13 +57,11 @@ from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_un
 from ....tests.secure_sql import isolated_runtime_profile
 from ..review_package_signing import (
     ReviewPackageSigningError,
-    ReviewPackageSigningKeyNotFoundError,
     ReviewPackageSigningKeypair,
     ReviewPackageSigningPublicKey,
     SignedReviewPackage,
     _signing_key_object_key,
     ensure_review_package_signing_keypair,
-    load_review_package_signing_keypair,
     review_package_signing_public_key,
     sign_review_package,
     verify_review_package_signature,
@@ -209,14 +207,6 @@ def test_private_key_is_never_stored_as_plaintext(tmp_path: Path) -> None:
 
         assert keypair.private_key_hex.encode("utf-8") not in ciphertext_bytes
         assert bytes.fromhex(keypair.private_key_hex) not in ciphertext_bytes
-
-
-def test_load_without_ensure_raises_key_not_found(tmp_path: Path) -> None:
-    with (
-        isolated_runtime_profile(tmp_path=tmp_path, bucket_id="a441deaf-8144-4c36-8d07-2de6681ac224") as profile,
-        pytest.raises(ReviewPackageSigningKeyNotFoundError),
-    ):
-        load_review_package_signing_keypair(bucket_id=profile.bucket_id, repository=profile.repository)
 
 
 def test_sign_then_verify_with_correct_public_key_passes(tmp_path: Path) -> None:
@@ -371,8 +361,6 @@ def test_signing_keypair_refuses_foreign_payload_bucket(
             write_provenance="test.review_package_signing.foreign_payload",
         )
 
-        with pytest.raises(ReviewPackageSigningError):
-            load_review_package_signing_keypair(bucket_id=target_bucket_id, repository=profile.repository)
         with pytest.raises(ReviewPackageSigningError, match="does not belong"):
             ensure_review_package_signing_keypair(bucket_id=target_bucket_id, repository=profile.repository)
 
@@ -418,7 +406,7 @@ def test_signing_keypair_accepts_a_whitespace_wrapped_spelling_as_the_same_bucke
             write_provenance="test.review_package_signing.whitespace_payload",
         )
 
-        loaded = load_review_package_signing_keypair(
+        loaded = ensure_review_package_signing_keypair(
             bucket_id=_OWNER_BUCKET_ID,
             repository=profile.repository,
         )
@@ -463,7 +451,7 @@ def test_concurrent_signing_keypair_mint_reuses_one_encrypted_key_and_signs_pack
         assert errors == [], f"concurrent keypair mint failures: {errors}"
         assert len(minted) == worker_count
 
-        loaded = load_review_package_signing_keypair(bucket_id=bucket_id, repository=profile.repository)
+        loaded = ensure_review_package_signing_keypair(bucket_id=bucket_id, repository=profile.repository)
         assert {keypair.private_key_hex for keypair in minted} == {loaded.private_key_hex}
         assert {keypair.public_key_hex for keypair in minted} == {loaded.public_key_hex}
 

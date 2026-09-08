@@ -543,6 +543,85 @@ def _m131_resolve_modulos_indices_generales_args(
     )
 
 
+def _m131_read_indices_generales_base(
+    args: _M131ResolveModulosIndicesGeneralesArgs,
+    ctx: _EvalContext,
+) -> tuple[Decimal, str]:
+    """Read the base rendimiento and epígrafe in dispatcher operand order."""
+    minorado = _numeric_casilla_value(args.minorado_casilla_id, ctx)
+    ctx.operand_refs.append(args.minorado_casilla_id)
+    ctx.operand_casilla_refs.append(args.minorado_casilla_id)
+    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
+    ctx.operand_refs.append(args.epigrafe_casilla_id)
+    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    return minorado, epigrafe
+
+
+def _m131_apply_small_dimension_index(
+    rendimiento: Decimal,
+    epigrafe: str,
+    args: _M131ResolveModulosIndicesGeneralesArgs,
+    ctx: _EvalContext,
+) -> tuple[Decimal, bool]:
+    """Apply b.1 and report whether it excludes the remaining cascade."""
+    pequena_dimension = _read_modulos_indice(args.pequena_dimension_casilla_id, ctx)
+    aplica = pequena_dimension > ZERO and epigrafe not in _M131_EPIGRAFES_INDICE_ESPECIAL
+    if not aplica:
+        return rendimiento, False
+    return rendimiento * pequena_dimension, True
+
+
+def _m131_apply_temporada_index(
+    rendimiento: Decimal,
+    args: _M131ResolveModulosIndicesGeneralesArgs,
+    ctx: _EvalContext,
+) -> tuple[Decimal, Decimal]:
+    """Apply b.2 and return its declared factor for b.4 incompatibility."""
+    temporada = _read_modulos_indice(args.temporada_casilla_id, ctx)
+    if temporada > ZERO:
+        rendimiento = rendimiento * temporada
+    return rendimiento, temporada
+
+
+def _m131_apply_exceso_index(
+    rendimiento: Decimal,
+    epigrafe: str,
+    args: _M131ResolveModulosIndicesGeneralesArgs,
+    ctx: _EvalContext,
+) -> Decimal:
+    """Apply b.3's keyed threshold and excess factor to the running value."""
+    if not epigrafe:
+        return rendimiento
+    cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
+    ctx.operand_refs.append(args.cuantia_parameter)
+    if cuantia_parameter is None or rendimiento <= ZERO:
+        return rendimiento
+    cuantia = _resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
+    if cuantia is None or rendimiento <= cuantia:
+        return rendimiento
+    ctx.operand_values.append(cuantia)
+    indice = _resolve_scalar_parameter(
+        args.indice_exceso_parameter,
+        ctx,
+        op="m131_resolve_modulos_indices_generales",
+    )
+    return cuantia + indice * (rendimiento - cuantia)
+
+
+def _m131_apply_inicio_actividad_index(
+    rendimiento: Decimal,
+    temporada: Decimal,
+    args: _M131ResolveModulosIndicesGeneralesArgs,
+    ctx: _EvalContext,
+) -> Decimal:
+    """Apply b.4 only when b.2 did not declare a positive season factor."""
+    if temporada <= ZERO:
+        inicio_actividad = _read_modulos_indice(args.inicio_actividad_casilla_id, ctx)
+        if inicio_actividad > ZERO:
+            return rendimiento * inicio_actividad
+    return rendimiento
+
+
 def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     """Resolve the M131 estimación-objetiva Fase 3ª índices correctores generales cascade.
 
@@ -610,23 +689,14 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
     for the operator's manual casilla 01.
     """
     args = _m131_resolve_modulos_indices_generales_args(expression)
-    minorado = _numeric_casilla_value(args.minorado_casilla_id, ctx)
-    ctx.operand_refs.append(args.minorado_casilla_id)
-    ctx.operand_casilla_refs.append(args.minorado_casilla_id)
-    epigrafe = ctx.text_values.get(args.epigrafe_casilla_id, "").strip()
-    ctx.operand_refs.append(args.epigrafe_casilla_id)
-    ctx.operand_casilla_refs.append(args.epigrafe_casilla_id)
+    minorado, epigrafe = _m131_read_indices_generales_base(args, ctx)
     if minorado <= ZERO:
         return minorado
 
     # b.1) Índice corrector para empresas de pequeña dimensión — first in the
     # Orden's literal enumeration order.
-    pequena_dimension = _read_modulos_indice(args.pequena_dimension_casilla_id, ctx)
-    aplica_pequena_dimension = pequena_dimension > ZERO and epigrafe not in _M131_EPIGRAFES_INDICE_ESPECIAL
-
-    rendimiento = minorado
+    rendimiento, aplica_pequena_dimension = _m131_apply_small_dimension_index(minorado, epigrafe, args, ctx)
     if aplica_pequena_dimension:
-        rendimiento = rendimiento * pequena_dimension
         # b.1 excludes b.3 (índice de exceso) outright, and the Orden never
         # reaches b.2/b.4 once b.1 has been applied for this epígrafe.
         return rendimiento
@@ -635,37 +705,18 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
     # enumeration order, applied on the rendimiento rectificado by b.1 (a
     # no-op here, since b.1 did not apply) and BEFORE b.3's exceso threshold
     # check.
-    temporada = _read_modulos_indice(args.temporada_casilla_id, ctx)
-    if temporada > ZERO:
-        rendimiento = rendimiento * temporada
+    rendimiento, temporada = _m131_apply_temporada_index(rendimiento, args, ctx)
 
     # b.3) Índice corrector de exceso — third in the Orden's literal
     # enumeration order (b.1 -> b.2 -> b.3 -> b.4), applied on the running
     # rendimiento (already rectificado by b.2, if declared).
-    if epigrafe:
-        cuantia_parameter = ctx.parameters.get(args.cuantia_parameter)
-        ctx.operand_refs.append(args.cuantia_parameter)
-        if cuantia_parameter is not None and rendimiento > ZERO:
-            cuantia = _resolve_keyed_bracket(cuantia_parameter, key=epigrafe, filing_year=ctx.filing_year)
-            if cuantia is not None and rendimiento > cuantia:
-                ctx.operand_values.append(cuantia)
-                indice = _resolve_scalar_parameter(
-                    args.indice_exceso_parameter,
-                    ctx,
-                    op="m131_resolve_modulos_indices_generales",
-                )
-                rendimiento = cuantia + indice * (rendimiento - cuantia)
+    rendimiento = _m131_apply_exceso_index(rendimiento, epigrafe, args, ctx)
 
     # b.4) Índice corrector por inicio de nuevas actividades — last in the
     # Orden's literal enumeration order, applied on the b.3-rectificado
     # figure and only when b.2 (temporada) is absent (the Orden's own
     # mutual-exclusion rule).
-    if temporada <= ZERO:
-        inicio_actividad = _read_modulos_indice(args.inicio_actividad_casilla_id, ctx)
-        if inicio_actividad > ZERO:
-            rendimiento = rendimiento * inicio_actividad
-
-    return rendimiento
+    return _m131_apply_inicio_actividad_index(rendimiento, temporada, args, ctx)
 
 
 @dataclass(frozen=True, slots=True)

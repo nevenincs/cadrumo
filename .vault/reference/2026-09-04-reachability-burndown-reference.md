@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:3554f59c4ffcfca8068dcf1b36c0fed9705746ec19073740ff0ce445ce23aec5'
+body_hash: 'sha256:aa31d68114114877e768768f6250bed3c536d3a3c8d5376583438f5af547a097'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -169,6 +169,78 @@ An accepted domain rule does not justify an application DTO and projector that n
 An exact-id lookup facade is duplicate surface when no product boundary calls it and the same module's live search plus loader already own concept hydration. Delete the facade, export, prose, and lookup-only assertion; keep lifecycle admission and search filtering tests over the canonical loaded concepts. A test proving a private collection can be linearly searched does not add quality to the shipped query contract.
 
 When production consumers use only proof DTOs and protocols while every executor call originates in development tooling, split contract from execution at that boundary. Keep the typed records and ports in `src/`; move the orchestration, temporary-output handling, custody consumer, and receipt checks together into the development authority. Do not leave forwarding aliases in production. Run both marker lanes because the fast contract tests and real-registry proof tests establish different parts of the move.
+
+A protocol belongs with the boundary that exercises substitutability, not automatically with the DTOs in its method signatures. After moving development-only executors out of `src/`, remeasure for protocols newly exposed as dev-only and move them to the same development owner without forwarding aliases. Keep shared request and result records in production only while a product boundary consumes those records; otherwise follow the residue again as a coherent ownership chain.
+
+An encrypted adapter and strong at-rest tests do not establish a product custody boundary when no composition root constructs the adapter and the executor receives no instance. Delete the adapter, its synthetic roundtrip suite, and its ownerless namespace registration together; retain the generic secure-storage mechanism and its independently live tests. Historical references must describe the withdrawal rather than continuing to label an uncomposed half as finished.
+
+Do not encode production-shaped Python source as strings merely to feed an AST detector test. Such fixtures duplicate implementation form and can remain green while the real boundary changes. Prefer running the detector over real repository paths or typed synthetic structures; if a negative string fixture contributes no distinct material guarantee, delete the test instead of maintaining a miniature source tree inside the suite.
+
+An AST heuristic plus a map keyed by production module and function names is an identity census even when each row carries a thoughtful non-regulatory explanation. If the detector cannot distinguish tax caps from scheduling, security, presentation, and collection bounds through code semantics, delete the enrollment gate and its witness registry rather than maintaining exemptions. Preserve direct grounded calculation tests at each domain owner; those prove the regulated result without turning code identities into development classifications.
+
+A lifecycle mutation is not live merely because its docstring describes the transition that should call it. If the actual operator surface exposes only read operations and no confirmation or abandonment path invokes deletion, remove the mutation and its self-test rather than treating the prose as wiring. Preserve the live store's read, write, replacement, encryption, and corruption-refusal tests; add deletion only with the real lifecycle command that owns it.
+
+A provenance-construction facade is not a safety boundary when no reader calls it and its only evidence is tests that construct envelopes through that facade. Delete the wrapper and wrapper-specific assertions while retaining the deterministic evaluator, the live structured-reader constructor, and model invariants that forbid laundering self-reported anchors into verified outcomes. Test the real reader-to-operator path separately; unrelated red assertions there remain visible.
+
+When a test-only persistence facade duplicates the parse-and-save prefix of a stronger live enrollment operation, migrate the meaningful mismatch and identity cases to the live operation before deleting the facade and its narrower result DTO. This removes duplicate vocabulary without sacrificing behavioral evidence, and ensures tests exercise the atomic downstream effects the product actually relies on.
+
+A one-record application load facade is duplicate vocabulary when the injected repository already exposes the same identity-bound load and no product caller uses the facade. Remove the wrapper and make persistence tests call the repository directly, retaining higher-level list or aggregate operations only where product surfaces consume their projection.
+
+A centralisation test that pins module paths, alias names, constant identifiers, literal tuples, explanatory strings, and parallel pytest ids is itself a hand-maintained production-identity census. Delete the census rather than editing its rows when a dead alias is exposed. Retain the canonical typed constant and verify the live consumers that use it; duplicate-literal prevention should come from semantic analysis without an approved-name inventory, or not masquerade as a quality gate.
+
+A production role constant is development classification when no runtime branch consumes it and its only assertion checks enum identity. Delete the label and explain vendor ownership directly at the resolver that implements path precedence. Retain behavioral tests over explicit roots, vendor environment overrides, platform defaults, and missing-cache outcomes.
+
+A detailed report facade is not material merely because its tests drive real storage. When no product caller consumes the facade and the live diagnostics path independently owns the same integrity probe and quarantine behavior, delete the duplicate report DTOs, builders, exports, and facade-only tests as one slice. Preserve and execute tests through the live diagnostic/quarantine owner; follow newly exposed private repository helpers in the same remeasurement.
+
+When withdrawing a writerless store, follow the whole representation chain rather than stopping at the reported writer: remove the persistable mirror and conversion methods, adapter composition, secure namespace, custody carry resolver, operator commands that can only read the never-written data, result fields, locale leaves, error registrations, and synthetic roundtrip tests. Preserve the independently live in-memory record and the product behavior that can still make honest claims. An ADR amendment must explicitly supersede the cache-backed behavior so old implementation prose cannot be mistaken for current authority.
+
+A test-only stored-evidence aggregate should not sit above several independently live repositories merely to prove they can be read together. Delete the aggregate DTO, projections, list/load facades, and aggregate-only assertions; make retained tests call the history or manifest repository that owns each behavior. Remeasure twice when the first deletion exposes a second convenience list facade, and remove that residue in the same Step rather than closing on a name swap.
+
+An encrypted decision repository is not a product repair workflow when no command creates, lists, or acts on its records. Delete the decision model, content-id helper, repository, process-local namespace, errors, locales, runtime-attached cohort entries, and persistence self-tests together. A generic runtime-repository matrix does not make an uncomposed repository live; remove that member instead of preserving synthetic cross-profile writes, and keep the actual quarantine/session tests as the repair authority.
+
+### Test-owned production inventories
+
+A production catalog consumed only by a test is development metastate even when the test derives its comparison population from a live command graph. Delete the catalog models, policy rows, construction helpers, and catalog-specific suite together. Preserve security through behavioral tests of the actual repair, refusal, and quarantine paths; comparing two inventories proves agreement between inventories, not runtime correctness.
+
+### Uncomposed safety projections
+
+A hard-refusal model is not a safety boundary when no product path constructs or consumes it. Delete the projection, refusal, synthetic audit event, error registrations, locale leaves, and self-tests as one uncomposed slice while retaining the live transport and persistence mechanisms around it. Safety claims must attach to an executable operation; prose requiring a hypothetical future composition to call a guard does not make that guard material.
+
+### Duplicate projections at the wrong lifecycle stage
+
+When the live review surface projects safe provenance from the persisted revision, a second projection from an intermediate draft is duplicate vocabulary if only replay tests call it. Delete the draft projection and keep replay tests on attachment, substitution refusal, content identity, and raw-identity secrecy; verify the canonical review projection separately through its real application path.
+
+### Parser claims without a dispatcher
+
+A minimal header DTO and parser do not establish an early-refusal boundary when no runtime dispatcher calls them. If their only test feeds an arbitrary mapping and asserts the parser's self-authored behavior, delete the DTO, helper, exports, and identity test together. Keep version enforcement on the request models and executable ingestion path that product callers actually use.
+
+### Hard-coded capability dispositions
+
+A production projection that always labels a capability `UNMEASURED` and explains which future registration would make it available is development lifecycle state, not product behavior. Delete the projector, request/row/result DTOs, validators, and tests together. Keep the executable admission and mutation paths; a capability should enter production only when a live operation can derive its availability from current composition.
+
+### Test-only collection facades
+
+A list operation is not an application query when no product surface consumes it and tests use it only to confirm records they just created. Delete the facade and assert persistence through the canonical identity-bound read operation. Preserve collection semantics only when a live operator workflow needs enumeration; create idempotence and distinct identities do not require a shipped list API.
+
+### Test-only composition wrappers
+
+A wrapper that merely composes two independently live functions is duplicate vocabulary when no product caller uses it. Delete the wrapper and let retained tests compose the secure-load and domain-mapping owners directly. Keep a convenience only when it owns error translation, atomicity, or another contract consumed by a live boundary; tests alone do not create that boundary.
+
+### Read and projection doors beside mint-or-load owners
+
+When a live key owner already implements validated encrypted mint-or-load and exposes the non-secret public field required by consumers, separate strict-load and public-projection APIs are duplicate test seams if no product caller uses them. Delete their DTOs, missing-before-mint error/locale, parser residue, and API-specific tests. Preserve security with the live owner's encrypted-at-rest, bucket-identity, concurrency, and cryptographic roundtrip tests.
+
+### Symmetric owner audit without symmetric deletion
+
+Apply a repeated finding structurally, not by name symmetry. For signing keys, delete the unused strict-load facade and its missing-before-mint error exactly as for encryption keys, but retain the public-key projection because live CLI commands consume it. Remeasure after facade deletion and remove any parser helper that existed only for that facade; preserve tests through the shared mint-or-load owner.
+
+A test that parses production source or embeds Python calls as strings is not a behavioural proof of the production contract. Delete path-keyed sanctioned-site lists and synthetic source-string discrimination tests when the callable's real inputs, refusals, and outputs are already exercised directly. Source snippets belong only where parsing or process execution is itself the product boundary; they must not become a second implementation of application correctness.
+
+When deleting an unreachable import facade exposes a test-only port or adapter writer, continue down the vertical slice in the same Step. Remove the application method, protocol member, adapter binding, persistence implementation, and tests that manufacture a round trip no product entrypoint offers. Retain behavior tests only for the surviving live direction—such as export custody policy—and remeasure until the next exact finding is not merely the displaced inner owner.
+
+A production module that says an interface is unreachable until future evidence exists is carrying development staging into shipped code. If the staged projector has zero callers and the live reviewed-operation owner already derives the durable effects it needs, delete the speculative field census, parser adapter, namespace vocabulary, exports, and staging prose together. Verify the real reviewed owner through its repository effects and refusals; do not preserve synthetic future-input behavior.
+
+When a zero-caller persistence facade duplicates a live command writer, retain shared projection functions and types that reachable commands consume, but delete the facade-specific branch, error vocabulary, locale rows, exports, and misleading test names. A serialization round trip is evidence for serialization only; do not name or describe it as persistence coverage when it performs no durable write.
 
 ## Authority boundaries
 

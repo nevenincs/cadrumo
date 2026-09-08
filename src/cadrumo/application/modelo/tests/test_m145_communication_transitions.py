@@ -31,7 +31,6 @@ from ..m145_communication_records import (
     M145CommunicationRecordValidationError,
     _m145_communication_record_repository,
     create_m145_communication_record,
-    list_m145_communication_records,
     mark_m145_communication_record_delivered_to_payer,
     mark_m145_communication_record_locally_completed,
     read_m145_communication_record,
@@ -107,7 +106,7 @@ def test_m145_communication_record_transitions_are_idempotent_after_success(tmp_
     assert delivered_after_completion == completed
 
 
-def test_m145_list_transition_and_existing_create_refuse_divergent_registry_coordinate(
+def test_m145_transition_and_existing_create_refuse_divergent_registry_coordinate(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -120,8 +119,6 @@ def test_m145_list_transition_and_existing_create_refuse_divergent_registry_coor
             lambda _ref: RevisionCarryOutcome(refused=True, selected_revision_id=None, detail="diverged"),
         )
 
-        with pytest.raises(M145CommunicationRecordValidationError):
-            list_m145_communication_records(bucket_id=runtime.bucket_id)
         with pytest.raises(M145CommunicationRecordValidationError):
             mark_m145_communication_record_delivered_to_payer(
                 created.communication_record_id,

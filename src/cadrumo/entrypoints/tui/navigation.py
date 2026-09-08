@@ -204,25 +204,11 @@ class TuiDestinationRouteV1:
 
     def __post_init__(self) -> None:
         """Enforce route/admission/factory/action consistency."""
-        canonical_descriptor = _DESCRIPTORS_BY_ID.get(self.descriptor.destination)
-        if canonical_descriptor is None or self.descriptor != canonical_descriptor:
-            raise NavigationContractError("route descriptor must match the canonical destination catalogue")
-        if self.descriptor.destination != self.admission.destination:
-            raise DestinationAdmissionError("route descriptor and admission must name the same destination")
-        if self.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE and self.factory is None:
-            raise DestinationFactoryError("an available destination requires an injected screen factory")
-        if self.admission.state is WorkbenchDestinationAdmissionState.AVAILABLE and self.factory is not None:
-            _validate_screen_factory(self.factory)
-        if self.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
-            if self.factory is not None:
-                raise DestinationFactoryError("a non-available destination cannot carry a screen factory")
-            if self.action_candidates:
-                raise DestinationAdmissionError("a non-available destination cannot admit action candidates")
-        action_ids = tuple(item.action_candidate_id for item in self.action_candidates)
-        if len(set(action_ids)) != len(action_ids):
-            raise NavigationContractError("action candidate IDs must be unique within a destination")
-        if any(item.destination != self.descriptor.destination for item in self.action_candidates):
-            raise DestinationAdmissionError("an action candidate must belong to its destination")
+        _validate_canonical_route_descriptor(self.descriptor)
+        _validate_route_admission_identity(self.descriptor, self.admission)
+        _validate_route_factory_state(self.admission, self.factory)
+        _validate_unavailable_route_state(self.admission, self.factory, self.action_candidates)
+        _validate_route_action_candidates(self.descriptor, self.action_candidates)
 
     def action_candidate(self, action_candidate_id: str) -> TuiActionCandidateV1:
         """Resolve one action candidate declared by this route."""
@@ -256,6 +242,58 @@ TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
 _DESCRIPTORS_BY_ID: Mapping[str, TuiDestinationDescriptorV1] = MappingProxyType(
     {descriptor.destination: descriptor for descriptor in TUI_DESTINATION_CATALOGUE}
 )
+
+
+def _validate_canonical_route_descriptor(descriptor: TuiDestinationDescriptorV1) -> None:
+    """Require route metadata to be one of the immutable catalogue entries."""
+    canonical_descriptor = _DESCRIPTORS_BY_ID.get(descriptor.destination)
+    if canonical_descriptor is None or descriptor != canonical_descriptor:
+        raise NavigationContractError("route descriptor must match the canonical destination catalogue")
+
+
+def _validate_route_admission_identity(
+    descriptor: TuiDestinationDescriptorV1,
+    admission: TuiDestinationAdmissionV1,
+) -> None:
+    """Require the route descriptor and admission to name one destination."""
+    if descriptor.destination != admission.destination:
+        raise DestinationAdmissionError("route descriptor and admission must name the same destination")
+
+
+def _validate_route_factory_state(
+    admission: TuiDestinationAdmissionV1,
+    factory: TuiScreenFactoryV1 | None,
+) -> None:
+    """Require available routes to carry an inspectable screen factory."""
+    if admission.state is WorkbenchDestinationAdmissionState.AVAILABLE and factory is None:
+        raise DestinationFactoryError("an available destination requires an injected screen factory")
+    if admission.state is WorkbenchDestinationAdmissionState.AVAILABLE and factory is not None:
+        _validate_screen_factory(factory)
+
+
+def _validate_unavailable_route_state(
+    admission: TuiDestinationAdmissionV1,
+    factory: TuiScreenFactoryV1 | None,
+    action_candidates: tuple[TuiActionCandidateV1, ...],
+) -> None:
+    """Keep unavailable routes free of factories and admitted actions."""
+    if admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE:
+        if factory is not None:
+            raise DestinationFactoryError("a non-available destination cannot carry a screen factory")
+        if action_candidates:
+            raise DestinationAdmissionError("a non-available destination cannot admit action candidates")
+
+
+def _validate_route_action_candidates(
+    descriptor: TuiDestinationDescriptorV1,
+    action_candidates: tuple[TuiActionCandidateV1, ...],
+) -> None:
+    """Require unique action identities and route-local ownership."""
+    action_ids = tuple(item.action_candidate_id for item in action_candidates)
+    if len(set(action_ids)) != len(action_ids):
+        raise NavigationContractError("action candidate IDs must be unique within a destination")
+    if any(item.destination != descriptor.destination for item in action_candidates):
+        raise DestinationAdmissionError("an action candidate must belong to its destination")
 
 
 def _require_closed_destination_keys(values: Mapping[str, object], *, field_name: str) -> None:

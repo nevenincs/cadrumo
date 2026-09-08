@@ -490,6 +490,45 @@ def _descendant_instances(answers: Mapping[str, str], *, prefix_root: str) -> se
     return {key[len(prefix_root) :].split(".", 1)[0] for key in answers if key.startswith(prefix_root) and "." in key}
 
 
+def _entry_event_page_verdicts(
+    raw: str,
+    *,
+    page_id: str,
+    permitted: frozenset[str],
+    birth: date | None,
+    relacion: str,
+    instance: str,
+    today: date,
+) -> list[ValidationVerdict]:
+    """Judge one populated entry-event page against date and relación facts."""
+    if not raw:
+        return []
+    entry = parse_iso8601_date(raw)
+    if entry is None:
+        return []
+    verdicts: list[ValidationVerdict] = []
+    # A future date is reported on its own; only a past one is then compared
+    # against the birth, so the operator is told the one thing wrong with the
+    # value rather than two overlapping refusals.
+    if entry > today:
+        verdicts.append(ValidationVerdict.failed(_ENTRY_IN_FUTURE_LOCALE_KEY, instance=instance, page=page_id))
+    elif birth is not None and entry < birth:
+        verdicts.append(ValidationVerdict.failed(_ENTRY_BEFORE_BIRTH_LOCALE_KEY, instance=instance, page=page_id))
+    # An UNSTATED relación is not judged: an inscription date alone reads as
+    # an adoption (the canonical record infers it), so refusing here would
+    # block the shape the model accepts.
+    if relacion and relacion not in permitted:
+        verdicts.append(
+            ValidationVerdict.failed(
+                _ENTRY_RELACION_MISMATCH_LOCALE_KEY,
+                instance=instance,
+                page=page_id,
+                accepted=", ".join(sorted(permitted)),
+            ),
+        )
+    return verdicts
+
+
 def _entry_event_verdicts(
     answers: Mapping[str, str],
     *,
@@ -506,30 +545,16 @@ def _entry_event_verdicts(
         (_ACOGIMIENTO_PAGE_ID, _ACOGIMIENTO_RELACIONES),
     ):
         raw = answers.get(f"{prefix}.{page_id}") or ""
-        if not raw:
-            continue
-        entry = parse_iso8601_date(raw)
-        if entry is None:
-            continue
-        # A future date is reported on its own; only a past one is then compared
-        # against the birth, so the operator is told the one thing wrong with the
-        # value rather than two overlapping refusals.
-        if entry > today:
-            verdicts.append(ValidationVerdict.failed(_ENTRY_IN_FUTURE_LOCALE_KEY, instance=instance, page=page_id))
-        elif birth is not None and entry < birth:
-            verdicts.append(ValidationVerdict.failed(_ENTRY_BEFORE_BIRTH_LOCALE_KEY, instance=instance, page=page_id))
-        # An UNSTATED relación is not judged: an inscription date alone reads as
-        # an adoption (the canonical record infers it), so refusing here would
-        # block the shape the model accepts.
-        if relacion and relacion not in permitted:
-            verdicts.append(
-                ValidationVerdict.failed(
-                    _ENTRY_RELACION_MISMATCH_LOCALE_KEY,
-                    instance=instance,
-                    page=page_id,
-                    accepted=", ".join(sorted(permitted)),
-                ),
-            )
+        page_verdicts = _entry_event_page_verdicts(
+            raw,
+            page_id=page_id,
+            permitted=permitted,
+            birth=birth,
+            relacion=relacion,
+            instance=instance,
+            today=today,
+        )
+        verdicts.extend(page_verdicts)
     return verdicts
 
 

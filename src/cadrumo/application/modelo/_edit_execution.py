@@ -39,6 +39,7 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core.casilla_id import CasillaId
 from ...core.hashing import content_hash_hex
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.row_models import ModeloDetailRow
@@ -49,6 +50,7 @@ from .edit_models import (
     ModeloDetailRowEditIntentV1,
     ModeloEditAddressV1,
     ModeloEditApplyRequestV1,
+    ModeloEditBaselineV1,
     ModeloEditBindingIntentKind,
     ModeloEditDetailRowIntentKind,
     ModeloEditDomainRefusalV1,
@@ -157,6 +159,49 @@ def _detail_row_natural_key_refusal(address: ModeloEditAddressV1) -> ModeloEditE
     )
 
 
+def _detail_rows_by_kind(
+    current_detail_rows: tuple[ModeloDetailRow, ...],
+) -> dict[str, list[ModeloDetailRow]]:
+    """Group the current rows without changing their within-kind order."""
+    by_kind: dict[str, list[ModeloDetailRow]] = {}
+    for row in current_detail_rows:
+        by_kind.setdefault(row.row_type, []).append(row)
+    return by_kind
+
+
+def _apply_detail_row_intent(
+    by_kind: dict[str, list[ModeloDetailRow]],
+    intent: ModeloDetailRowEditIntentV1,
+) -> ModeloEditExecutionNoEffectV1 | None:
+    """Apply one natural-key row intent, returning its typed refusal if invalid."""
+    kind = intent.address.detail_row_kind
+    rows = by_kind.setdefault(kind, [])
+    keys = [detail_row_natural_key(row) for row in rows]
+    if intent.kind is ModeloEditDetailRowIntentKind.ADD_ROW:
+        if intent.row is None:
+            return _detail_row_natural_key_refusal(intent.address)
+        rows.append(intent.row)
+    elif intent.kind is ModeloEditDetailRowIntentKind.UPDATE_ROW:
+        if intent.row is None:
+            return _detail_row_natural_key_refusal(intent.address)
+        if intent.address.natural_key not in keys:
+            return _detail_row_natural_key_refusal(intent.address)
+        rows[keys.index(intent.address.natural_key)] = intent.row
+    elif intent.kind is ModeloEditDetailRowIntentKind.DELETE_ROW:
+        if intent.address.natural_key not in keys:
+            return _detail_row_natural_key_refusal(intent.address)
+        rows.pop(keys.index(intent.address.natural_key))
+    return None
+
+
+def _ordered_detail_rows(by_kind: dict[str, list[ModeloDetailRow]]) -> tuple[ModeloDetailRow, ...]:
+    """Flatten grouped rows by row type while retaining each group's order."""
+    result: list[ModeloDetailRow] = []
+    for kind in sorted(by_kind):
+        result.extend(by_kind[kind])
+    return tuple(result)
+
+
 def _reconstruct_detail_rows(
     *,
     current_detail_rows: tuple[ModeloDetailRow, ...],
@@ -180,33 +225,134 @@ def _reconstruct_detail_rows(
     silently absorbed by the guarded duplicate-result branch rather than
     actually persist. See :class:`~._edit_models.ModeloEditDetailRowIntentKind`.
     """
-    by_kind: dict[str, list[ModeloDetailRow]] = {}
-    for row in current_detail_rows:
-        by_kind.setdefault(row.row_type, []).append(row)
-
+    by_kind = _detail_rows_by_kind(current_detail_rows)
     for intent in detail_row_intents:
-        kind = intent.address.detail_row_kind
-        rows = by_kind.setdefault(kind, [])
-        keys = [detail_row_natural_key(row) for row in rows]
-        if intent.kind is ModeloEditDetailRowIntentKind.ADD_ROW:
-            if intent.row is None:
-                return _detail_row_natural_key_refusal(intent.address)
-            rows.append(intent.row)
-        elif intent.kind is ModeloEditDetailRowIntentKind.UPDATE_ROW:
-            if intent.row is None:
-                return _detail_row_natural_key_refusal(intent.address)
-            if intent.address.natural_key not in keys:
-                return _detail_row_natural_key_refusal(intent.address)
-            rows[keys.index(intent.address.natural_key)] = intent.row
-        elif intent.kind is ModeloEditDetailRowIntentKind.DELETE_ROW:
-            if intent.address.natural_key not in keys:
-                return _detail_row_natural_key_refusal(intent.address)
-            rows.pop(keys.index(intent.address.natural_key))
+        refusal = _apply_detail_row_intent(by_kind, intent)
+        if refusal is not None:
+            return refusal
+    return _ordered_detail_rows(by_kind)
 
-    result: list[ModeloDetailRow] = []
-    for kind in sorted(by_kind):
-        result.extend(by_kind[kind])
-    return tuple(result)
+
+def _prepare_scalar_edit_inputs(
+    submission: ModeloEditSubmissionV1,
+) -> tuple[dict[str, Decimal], dict[str, str], tuple[CasillaId, ...]] | ModeloEditExecutionNoEffectV1:
+    """Resolve and validate scalar intents before any catalogue read."""
+    reachable = _reachable_scalar_inputs(submission)
+    if isinstance(reachable, ModeloEditExecutionNoEffectV1):
+        return reachable
+    casilla_inputs, text_casilla_inputs, cleared_casilla_ids = reachable
+    baseline = submission.baseline
+    for intent in submission.scalar_intents:
+        refusal = validate_scalar_intent(baseline, intent.address, intent.kind)
+        if refusal is not None:
+            return ModeloEditExecutionNoEffectV1(refusal=refusal)
+    return casilla_inputs, text_casilla_inputs, cleared_casilla_ids
+
+
+def _capture_edit_receipt(
+    calculation_revision_id: str,
+    bucket_event_id: str | None,
+    *,
+    request: ModeloEditApplyRequestV1,
+    submission: ModeloEditSubmissionV1,
+    receipt_repository: ModeloEditReceiptRepository,
+    now: datetime,
+    result_destination: str,
+    captured_receipt: list[ModeloEditMutationResultReceiptV1],
+) -> tuple[SecureObjectWrite, ...]:
+    """Build and capture the safe receipt co-committed with the calculation."""
+    baseline = submission.baseline
+    receipt_id = content_hash_hex(
+        {
+            "operation_id": request.operation_id,
+            "baseline_id": baseline.baseline_id,
+            "calculation_revision_id": calculation_revision_id,
+            "bucket_event_id": bucket_event_id or "",
+        },
+    )
+    receipt = ModeloEditMutationResultReceiptV1(
+        receipt_id=receipt_id,
+        operation_id=request.operation_id,
+        mutation_family=submission.mutation_family,
+        baseline_id=baseline.baseline_id,
+        work_unit_id=baseline.work_unit_id,
+        calculation_revision_id=calculation_revision_id,
+        bucket_event_id=bucket_event_id,
+        committed_at=now,
+        result_destination=result_destination,
+    )
+    captured_receipt.append(receipt)
+    return (receipt_repository.to_secure_object_write(receipt),)
+
+
+def _execute_modelo_edit(
+    *,
+    request: ModeloEditApplyRequestV1,
+    submission: ModeloEditSubmissionV1,
+    casilla_inputs: dict[str, Decimal],
+    text_casilla_inputs: dict[str, str],
+    cleared_casilla_ids: tuple[CasillaId, ...],
+    detail_rows: tuple[ModeloDetailRow, ...],
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    receipt_repository: ModeloEditReceiptRepository,
+    now: datetime,
+    result_destination: str,
+) -> ModeloEditExecutionUpdatedV1:
+    """Run the canonical calculation writer and retain its co-committed receipt."""
+    captured_receipt: list[ModeloEditMutationResultReceiptV1] = []
+
+    def _co_commit_receipt(calculation_revision_id: str, bucket_event_id: str | None) -> tuple[SecureObjectWrite, ...]:
+        return _capture_edit_receipt(
+            calculation_revision_id,
+            bucket_event_id,
+            request=request,
+            submission=submission,
+            receipt_repository=receipt_repository,
+            now=now,
+            result_destination=result_destination,
+            captured_receipt=captured_receipt,
+        )
+
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        submission.baseline.work_unit_id,
+        actor=_RESPONSIBLE_OWNER,
+        casilla_inputs=casilla_inputs or None,
+        text_casilla_inputs=text_casilla_inputs or None,
+        cleared_casilla_ids=cleared_casilla_ids,
+        detail_rows=detail_rows,
+        work_unit_repository=work_unit_repository,
+        calculation_repository=calculation_repository,
+        bucket_event_repository=bucket_event_repository,
+        clock=now,
+        additional_secure_object_writes_for_revision=_co_commit_receipt,
+    )
+    if not captured_receipt:
+        raise ModeloError(
+            "the calculation boundary resolved no revision id for the applied edit",
+        )
+    return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])
+
+
+def _reconstruct_current_edit_detail_rows(
+    *,
+    baseline: ModeloEditBaselineV1,
+    calculation_catalogue: CalculationRevisionCatalogue,
+    detail_row_intents: tuple[ModeloDetailRowEditIntentV1, ...],
+) -> tuple[ModeloDetailRow, ...] | ModeloEditExecutionNoEffectV1:
+    """Revalidate the current revision coordinate before reconstructing its rows."""
+    current_revision = (
+        calculation_catalogue.get(baseline.current_calculation_revision_id)
+        if baseline.current_calculation_revision_id is not None
+        else None
+    )
+    if current_revision is not None:
+        require_calculation_revision_coordinates_current(current_revision)
+    return _reconstruct_detail_rows(
+        current_detail_rows=current_revision.detail_rows if current_revision is not None else (),
+        detail_row_intents=detail_row_intents,
+    )
 
 
 def apply_modelo_edit(
@@ -243,15 +389,10 @@ def apply_modelo_edit(
     if submission.mutation_family is not ModeloEditMutationFamily.CALCULATE:
         return _unsupported_intent_refusal(ModeloEditUnsupportedIntentReason.RECALCULATE_NOT_YET_WIRED)
 
-    reachable = _reachable_scalar_inputs(submission)
+    reachable = _prepare_scalar_edit_inputs(submission)
     if isinstance(reachable, ModeloEditExecutionNoEffectV1):
         return reachable
     casilla_inputs, text_casilla_inputs, cleared_casilla_ids = reachable
-
-    for intent in submission.scalar_intents:
-        refusal = validate_scalar_intent(baseline, intent.address, intent.kind)
-        if refusal is not None:
-            return ModeloEditExecutionNoEffectV1(refusal=refusal)
 
     # Immediately before effect: revision-load the catalogues and recheck
     # every baseline coordinate. No re-read happens between this check and
@@ -265,63 +406,28 @@ def apply_modelo_edit(
     if stale is not None:
         return ModeloEditExecutionNoEffectV1(refusal=stale)
 
-    current_revision = (
-        calculation_catalogue.get(baseline.current_calculation_revision_id)
-        if baseline.current_calculation_revision_id is not None
-        else None
-    )
-    if current_revision is not None:
-        require_calculation_revision_coordinates_current(current_revision)
-    reconstructed_detail_rows = _reconstruct_detail_rows(
-        current_detail_rows=current_revision.detail_rows if current_revision is not None else (),
+    reconstructed_detail_rows = _reconstruct_current_edit_detail_rows(
+        baseline=baseline,
+        calculation_catalogue=calculation_catalogue,
         detail_row_intents=submission.detail_row_intents,
     )
     if isinstance(reconstructed_detail_rows, ModeloEditExecutionNoEffectV1):
         return reconstructed_detail_rows
 
-    captured_receipt: list[ModeloEditMutationResultReceiptV1] = []
-
-    def _co_commit_receipt(calculation_revision_id: str, bucket_event_id: str | None) -> tuple[SecureObjectWrite, ...]:
-        receipt_id = content_hash_hex(
-            {
-                "operation_id": request.operation_id,
-                "baseline_id": baseline.baseline_id,
-                "calculation_revision_id": calculation_revision_id,
-                "bucket_event_id": bucket_event_id or "",
-            },
-        )
-        receipt = ModeloEditMutationResultReceiptV1(
-            receipt_id=receipt_id,
-            operation_id=request.operation_id,
-            mutation_family=submission.mutation_family,
-            baseline_id=baseline.baseline_id,
-            work_unit_id=baseline.work_unit_id,
-            calculation_revision_id=calculation_revision_id,
-            bucket_event_id=bucket_event_id,
-            committed_at=now,
-            result_destination=result_destination,
-        )
-        captured_receipt.append(receipt)
-        return (receipt_repository.to_secure_object_write(receipt),)
-
-    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-        baseline.work_unit_id,
-        actor=_RESPONSIBLE_OWNER,
-        casilla_inputs=casilla_inputs or None,
-        text_casilla_inputs=text_casilla_inputs or None,
+    return _execute_modelo_edit(
+        request=request,
+        submission=submission,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
         cleared_casilla_ids=cleared_casilla_ids,
         detail_rows=reconstructed_detail_rows,
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         bucket_event_repository=bucket_event_repository,
-        clock=now,
-        additional_secure_object_writes_for_revision=_co_commit_receipt,
+        receipt_repository=receipt_repository,
+        now=now,
+        result_destination=result_destination,
     )
-    if not captured_receipt:
-        raise ModeloError(
-            "the calculation boundary resolved no revision id for the applied edit",
-        )
-    return ModeloEditExecutionUpdatedV1(receipt=captured_receipt[0])
 
 
 __all__ = ["apply_modelo_edit"]

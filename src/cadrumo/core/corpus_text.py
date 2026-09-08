@@ -228,34 +228,63 @@ def resolve_anchored_extracted_unit(
     if not units:
         raise CorpusAnchorResolutionError(f"extracted sidecar {sidecar_path} has no readable units")
 
-    # Canonicalisation deletes non-alphanumerics, so a BOE positional anchor
-    # like "#a3-3" collapses onto the genuine "#a33" of Articulo 33 and both
-    # become undecidable -- 114 such collisions across 12 bundled sidecars,
-    # including LIRPF, LIVA and the IVA reglamento, each one a provision that
-    # cannot be cited at all.  A verbatim match is tried first because it can
-    # only ever NARROW the canonical candidate set: any literal match also
-    # canonicalises equal, so this disambiguates without letting a request
-    # select a unit canonicalisation would have rejected.
-    literal = [
-        (title, text) for unit_anchor, title, text in units if _literal_anchor(unit_anchor) == _literal_anchor(anchor)
-    ]
+    resolved = _resolve_literal_anchor(units, anchor, include_title=include_title)
+    if resolved is not None:
+        return resolved
+    resolved = _resolve_exact_anchor(units, target, anchor, sidecar_path, include_title=include_title)
+    if resolved is not None:
+        return resolved
+    resolved = _resolve_single_unit_anchor(units, anchor, include_title=include_title)
+    if resolved is not None:
+        return resolved
+    return _resolve_structural_anchor(units, target, anchor, sidecar_path, include_title=include_title)
+
+
+def _resolve_literal_anchor(units: list[tuple[str, str, str]], anchor: str, *, include_title: bool) -> str | None:
+    """Resolve a unique literal anchor before canonical matching can collide."""
+    requested = _literal_anchor(anchor)
+    literal = [(title, text) for unit_anchor, title, text in units if _literal_anchor(unit_anchor) == requested]
     if len(literal) == 1:
         return _render_unit(*literal[0], include_title=include_title)
+    return None
 
+
+def _resolve_exact_anchor(
+    units: list[tuple[str, str, str]],
+    target: str,
+    anchor: str,
+    sidecar_path: Path,
+    *,
+    include_title: bool,
+) -> str | None:
+    """Resolve one canonical anchor, refusing duplicate persisted units."""
     exact = [(title, text) for unit_anchor, title, text in units if _canonical_anchor(unit_anchor) == target]
     if len(exact) == 1:
         return _render_unit(*exact[0], include_title=include_title)
     if len(exact) > 1:
         raise CorpusAnchorResolutionError(f"anchor {anchor!r} is duplicated in {sidecar_path}")
-    if len(units) == 1:
-        unit_anchor, title, text = units[0]
-        if not _canonical_anchor(unit_anchor) or _single_unit_covers_subsection(unit_anchor, anchor):
-            # A sidecar containing one article is already scoped to that
-            # article. It may therefore cover a numeric subsection citation
-            # of the same article even when extraction persisted only the
-            # article unit. A different article remains a missing anchor.
-            return _render_unit(title, text, include_title=include_title)
+    return None
 
+
+def _resolve_single_unit_anchor(units: list[tuple[str, str, str]], anchor: str, *, include_title: bool) -> str | None:
+    """Resolve a scoped legacy sidecar whose sole unit covers the citation."""
+    if len(units) != 1:
+        return None
+    unit_anchor, title, text = units[0]
+    if _canonical_anchor(unit_anchor) and not _single_unit_covers_subsection(unit_anchor, anchor):
+        return None
+    return _render_unit(title, text, include_title=include_title)
+
+
+def _resolve_structural_anchor(
+    units: list[tuple[str, str, str]],
+    target: str,
+    anchor: str,
+    sidecar_path: Path,
+    *,
+    include_title: bool,
+) -> str:
+    """Resolve a unique structural heading or report the precise refusal."""
     structural = [(title, text) for _unit_anchor, title, text in units if _title_matches_anchor(title, target)]
     if len(structural) == 1:
         return _render_unit(*structural[0], include_title=include_title)

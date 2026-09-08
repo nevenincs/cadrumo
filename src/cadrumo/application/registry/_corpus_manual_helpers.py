@@ -18,6 +18,7 @@ from ...domain.calculations.registry.authority import (
     bundled_authority,
 )
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from ...domain.manuals.fetch import load_manifest
 from ...domain.manuals.loader import iter_sections, load_manual, resolve_part_root
 from ...domain.manuals.schema import ManualCasillaReference, ManualId, ManualPart, RuleKind
@@ -88,35 +89,77 @@ def _manual_registry_casilla_reference_rule_issues(
     try:
         modelo = authority.modelo(reference.modelo_id)
     except RegistrySnapshotError:
-        return (
-            ManualVerificationIssue(
-                level=BaseSeverity.ERROR,
-                code="unknown-casilla-modelo-ref",
-                message=(
-                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
-                    f"{reference.casilla_id!r}, but the modelo is absent from the registry"
-                ),
-            ),
-        )
+        return (_unknown_casilla_modelo_issue(reference=reference, rule_id=rule_id),)
 
-    covering_revisions = tuple(
+    covering_revisions = _covering_revisions(modelo, manual_year=manual_year)
+    if not covering_revisions:
+        return (_no_covering_casilla_revision_issue(reference=reference, manual_year=manual_year, rule_id=rule_id),)
+
+    issues, missing_revisions, resolved_signatures = _collect_casilla_reference_resolution(
+        reference=reference,
+        covering_revisions=covering_revisions,
+        rule_id=rule_id,
+    )
+    return _append_casilla_reference_summary_issues(
+        issues,
+        reference=reference,
+        manual_year=manual_year,
+        rule_id=rule_id,
+        missing_revisions=missing_revisions,
+        resolved_signatures=resolved_signatures,
+    )
+
+
+def _unknown_casilla_modelo_issue(
+    *,
+    reference: ManualCasillaReference,
+    rule_id: str,
+) -> ManualVerificationIssue:
+    return ManualVerificationIssue(
+        level=BaseSeverity.ERROR,
+        code="unknown-casilla-modelo-ref",
+        message=(
+            f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
+            f"{reference.casilla_id!r}, but the modelo is absent from the registry"
+        ),
+    )
+
+
+def _covering_revisions(modelo: ModeloDefinition, *, manual_year: int) -> tuple[ModeloRevision, ...]:
+    return tuple(
         sorted(
             (revision for revision in modelo.revisions.values() if revision.period_selector.includes_year(manual_year)),
             key=lambda revision: (revision.valid_from, str(revision.id)),
         ),
     )
-    if not covering_revisions:
-        return (
-            ManualVerificationIssue(
-                level=BaseSeverity.ERROR,
-                code="no-casilla-revision-ref",
-                message=(
-                    f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
-                    f"{reference.casilla_id!r}, but no registry revision covers year {manual_year}"
-                ),
-            ),
-        )
 
+
+def _no_covering_casilla_revision_issue(
+    *,
+    reference: ManualCasillaReference,
+    manual_year: int,
+    rule_id: str,
+) -> ManualVerificationIssue:
+    return ManualVerificationIssue(
+        level=BaseSeverity.ERROR,
+        code="no-casilla-revision-ref",
+        message=(
+            f"rule {rule_id} references modelo {reference.modelo_id!r} casilla "
+            f"{reference.casilla_id!r}, but no registry revision covers year {manual_year}"
+        ),
+    )
+
+
+def _collect_casilla_reference_resolution(
+    *,
+    reference: ManualCasillaReference,
+    covering_revisions: tuple[ModeloRevision, ...],
+    rule_id: str,
+) -> tuple[
+    list[ManualVerificationIssue],
+    list[str],
+    dict[tuple[str | None, str, str, tuple[str, ...], str], list[str]],
+]:
     issues: list[ManualVerificationIssue] = []
     missing_revisions: list[str] = []
     resolved_signatures: dict[tuple[str | None, str, str, tuple[str, ...], str], list[str]] = {}
@@ -141,7 +184,18 @@ def _manual_registry_casilla_reference_rule_issues(
         casilla = matches[0]
         signature = (casilla.segmento, casilla.number, casilla.label, casilla.section, casilla.data_type)
         resolved_signatures.setdefault(signature, []).append(str(revision.id))
+    return issues, missing_revisions, resolved_signatures
 
+
+def _append_casilla_reference_summary_issues(
+    issues: list[ManualVerificationIssue],
+    *,
+    reference: ManualCasillaReference,
+    manual_year: int,
+    rule_id: str,
+    missing_revisions: list[str],
+    resolved_signatures: dict[tuple[str | None, str, str, tuple[str, ...], str], list[str]],
+) -> tuple[ManualVerificationIssue, ...]:
     if missing_revisions:
         issues.append(
             ManualVerificationIssue(

@@ -33,6 +33,53 @@ class CoverageModel(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
+def _validate_populated_family_row(
+    *,
+    family: str,
+    populated_count: int,
+    reason: str | None,
+    has_refs: bool,
+) -> None:
+    """Validate the content and metadata invariants of a populated family."""
+    if populated_count == 0:
+        raise RegistryValidationError(f"family {family!r} is populated but reports no members")
+    if reason is not None or has_refs:
+        raise RegistryValidationError(
+            f"family {family!r} is populated and needs no inapplicability reason or refs",
+        )
+
+
+def _validate_unpopulated_family_count(*, family: str, populated_count: int) -> None:
+    """Validate the shared zero-count invariant of non-populated families."""
+    if populated_count != 0:
+        raise RegistryValidationError(
+            f"family {family!r} reports {populated_count} members but is not populated",
+        )
+
+
+def _validate_not_applicable_family_metadata(
+    *,
+    family: str,
+    reason: str | None,
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
+) -> None:
+    """Validate the cited explanation required by a not-applicable claim."""
+    if reason is None or not legal_refs or not source_refs:
+        raise RegistryValidationError(
+            f"family {family!r} is declared not applicable, which requires a reason, legal refs and source refs",
+        )
+
+
+def _validate_blocked_family_metadata(*, family: str, reason: str | None, has_refs: bool) -> None:
+    """Validate that an unresolved blocked family carries no resolution claim."""
+    if reason is not None or has_refs:
+        raise RegistryValidationError(
+            f"family {family!r} is blocked pending evidence and cannot carry a reason or refs; "
+            f"declare it not applicable instead",
+        )
+
+
 class SchemaFamilyCoverageRow(CoverageModel):
     """One family's content disposition on one revision.
 
@@ -59,29 +106,23 @@ class SchemaFamilyCoverageRow(CoverageModel):
         """
         has_refs = bool(self.legal_refs or self.source_refs)
         if self.disposition is RegistrySchemaFamilyDisposition.POPULATED:
-            if self.populated_count == 0:
-                raise RegistryValidationError(f"family {self.family!r} is populated but reports no members")
-            if self.reason is not None or has_refs:
-                raise RegistryValidationError(
-                    f"family {self.family!r} is populated and needs no inapplicability reason or refs",
-                )
-            return self
-        if self.populated_count != 0:
-            raise RegistryValidationError(
-                f"family {self.family!r} reports {self.populated_count} members but is not populated",
+            _validate_populated_family_row(
+                family=self.family,
+                populated_count=self.populated_count,
+                reason=self.reason,
+                has_refs=has_refs,
             )
+            return self
+        _validate_unpopulated_family_count(family=self.family, populated_count=self.populated_count)
         if self.disposition is RegistrySchemaFamilyDisposition.NOT_APPLICABLE:
-            if self.reason is None or not self.legal_refs or not self.source_refs:
-                raise RegistryValidationError(
-                    f"family {self.family!r} is declared not applicable, which requires a reason, "
-                    f"legal refs and source refs",
-                )
-            return self
-        if self.reason is not None or has_refs:
-            raise RegistryValidationError(
-                f"family {self.family!r} is blocked pending evidence and cannot carry a reason or refs; "
-                f"declare it not applicable instead",
+            _validate_not_applicable_family_metadata(
+                family=self.family,
+                reason=self.reason,
+                legal_refs=self.legal_refs,
+                source_refs=self.source_refs,
             )
+            return self
+        _validate_blocked_family_metadata(family=self.family, reason=self.reason, has_refs=has_refs)
         return self
 
 

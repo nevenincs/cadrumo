@@ -254,6 +254,73 @@ def _load_acceleration_secret(*, profile_id: UUID, session_id: UUID) -> bytes | 
     return key
 
 
+def _read_keychain_entry_for_deletion(
+    keyring: _ProfileSessionKeyring,
+    keyring_error: type[BaseException],
+    account: str,
+    *,
+    refusal_detail: str,
+    unexpected_detail: str,
+) -> str | None:
+    """Read one account while preserving the deletion-phase error wording."""
+    try:
+        return keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
+    except keyring_error as exc:
+        raise KeyringUnavailableError(f"OS keychain refused the {refusal_detail}: {exc}") from exc
+    except Exception as exc:
+        raise KeyringUnavailableError(f"OS keychain raised unexpectedly {unexpected_detail}: {exc}") from exc
+
+
+def _delete_keychain_entry(
+    *,
+    profile_id: UUID,
+    session_id: UUID,
+) -> None:
+    """Delete and independently confirm one exact UUID-pair account."""
+    keyring, keyring_error, password_delete_error = _keyring()
+    account = _keychain_account(profile_id=profile_id, session_id=session_id)
+    present = _read_keychain_entry_for_deletion(
+        keyring,
+        keyring_error,
+        account,
+        refusal_detail="profile-session key read before deletion",
+        unexpected_detail="before profile-session key deletion",
+    )
+    if present is None:
+        return
+    try:
+        keyring.delete_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
+    except password_delete_error:
+        # A concurrent owner may have deleted it after ``present``.  Do
+        # not turn that idempotent absence into a false unavailable
+        # outcome; only a second exact read decides it.
+        confirmed = _read_keychain_entry_for_deletion(
+            keyring,
+            keyring_error,
+            account,
+            refusal_detail="profile-session key deletion confirmation",
+            unexpected_detail="during profile-session key deletion confirmation",
+        )
+        if confirmed is None:
+            return
+        raise KeyringUnavailableError("OS keychain did not confirm profile-session key deletion") from None
+    except keyring_error as exc:
+        raise KeyringUnavailableError(f"OS keychain refused the profile-session key deletion: {exc}") from exc
+    except Exception as exc:
+        raise KeyringUnavailableError(
+            f"OS keychain raised unexpectedly during profile-session key deletion: {exc}",
+        ) from exc
+    confirmed = _read_keychain_entry_for_deletion(
+        keyring,
+        keyring_error,
+        account,
+        refusal_detail="profile-session key deletion confirmation",
+        unexpected_detail="during profile-session key deletion confirmation",
+    )
+    if confirmed is not None:
+        raise KeyringUnavailableError("OS keychain did not confirm profile-session key deletion")
+
+
 def _delete_acceleration_secret(
     *,
     profile_id: UUID,
@@ -269,56 +336,7 @@ def _delete_acceleration_secret(
     under the typed unavailable path.
     """
     try:
-        keyring, keyring_error, password_delete_error = _keyring()
-        account = _keychain_account(profile_id=profile_id, session_id=session_id)
-        try:
-            present = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-        except keyring_error as exc:
-            raise KeyringUnavailableError(
-                f"OS keychain refused the profile-session key read before deletion: {exc}",
-            ) from exc
-        except Exception as exc:
-            raise KeyringUnavailableError(
-                f"OS keychain raised unexpectedly before profile-session key deletion: {exc}",
-            ) from exc
-        if present is None:
-            return
-        try:
-            keyring.delete_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-        except password_delete_error:
-            # A concurrent owner may have deleted it after ``present``.  Do
-            # not turn that idempotent absence into a false unavailable
-            # outcome; only a second exact read decides it.
-            try:
-                if keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account) is None:
-                    return
-            except keyring_error as exc:
-                raise KeyringUnavailableError(
-                    f"OS keychain refused the profile-session key deletion confirmation: {exc}",
-                ) from exc
-            except Exception as exc:
-                raise KeyringUnavailableError(
-                    f"OS keychain raised unexpectedly during profile-session key deletion confirmation: {exc}",
-                ) from exc
-            raise KeyringUnavailableError("OS keychain did not confirm profile-session key deletion") from None
-        except keyring_error as exc:
-            raise KeyringUnavailableError(f"OS keychain refused the profile-session key deletion: {exc}") from exc
-        except Exception as exc:
-            raise KeyringUnavailableError(
-                f"OS keychain raised unexpectedly during profile-session key deletion: {exc}",
-            ) from exc
-        try:
-            absent = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account) is None
-        except keyring_error as exc:
-            raise KeyringUnavailableError(
-                f"OS keychain refused the profile-session key deletion confirmation: {exc}",
-            ) from exc
-        except Exception as exc:
-            raise KeyringUnavailableError(
-                f"OS keychain raised unexpectedly during profile-session key deletion confirmation: {exc}",
-            ) from exc
-        if not absent:
-            raise KeyringUnavailableError("OS keychain did not confirm profile-session key deletion")
+        _delete_keychain_entry(profile_id=profile_id, session_id=session_id)
     except Exception as exc:
         if suppress_unavailable:
             _log.debug("profile-session key cleanup deferred error_type=%s", type(exc).__name__)
@@ -815,6 +833,151 @@ def _refusal(
     return ProfileSessionResumeOutcome(resumed=False, refusal=reason, record=record), None
 
 
+def _resume_artifacts_present(*, path: Path, retirement_path: Path) -> bool:
+    """Observe whether either receipt artifact exists without taking a lock."""
+    if (
+        read_optional_profile_custody_local_record(
+            path,
+            maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
+        )
+        is not None
+    ):
+        return True
+    return (
+        read_optional_profile_custody_local_record(
+            retirement_path,
+            maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
+        )
+        is not None
+    )
+
+
+def _discard_resume_record_or_refuse(
+    *,
+    path: Path,
+    payload: bytes,
+    record: _crypto.PersistedProfileSession,
+    reason: ProfileSessionRefusalReason,
+) -> tuple[ProfileSessionResumeOutcome, None]:
+    """Revoke a known receipt before returning its typed refusal."""
+    if not _discard_known_record(path=path, payload=payload, record=record):
+        return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
+    return _refusal(reason, record)
+
+
+def _resume_record_refusal(
+    *,
+    path: Path,
+    payload: bytes,
+    record: _crypto.PersistedProfileSession,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
+    now: datetime,
+) -> tuple[ProfileSessionResumeOutcome, None] | None:
+    """Apply ordered metadata and deadline checks to one parsed receipt."""
+    if record.schema_version != _crypto.PROFILE_SESSION_SCHEMA_VERSION:
+        return _discard_resume_record_or_refuse(
+            path=path,
+            payload=payload,
+            record=record,
+            reason=ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH,
+        )
+    if record.profile_id != profile_id:
+        return _discard_resume_record_or_refuse(
+            path=path,
+            payload=payload,
+            record=record,
+            reason=ProfileSessionRefusalReason.TAMPERED,
+        )
+    if record.custody_generation != custody_generation or record.dek_epoch != dek_epoch:
+        return _discard_resume_record_or_refuse(
+            path=path,
+            payload=payload,
+            record=record,
+            reason=ProfileSessionRefusalReason.CUSTODY_CHANGED,
+        )
+    if now >= record.absolute_deadline:
+        return _discard_resume_record_or_refuse(
+            path=path,
+            payload=payload,
+            record=record,
+            reason=ProfileSessionRefusalReason.EXPIRED_ABSOLUTE,
+        )
+    if now >= record.idle_deadline:
+        return _discard_resume_record_or_refuse(
+            path=path,
+            payload=payload,
+            record=record,
+            reason=ProfileSessionRefusalReason.EXPIRED_IDLE,
+        )
+    return None
+
+
+def _resume_profile_dek(
+    *,
+    path: Path,
+    payload: bytes,
+    record: _crypto.PersistedProfileSession,
+) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
+    """Load the split key and unwrap the DEK after metadata admission."""
+    try:
+        session_key = _load_acceleration_secret(profile_id=record.profile_id, session_id=record.session_id)
+    except KeyringUnavailableError:
+        return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
+    if session_key is None:
+        _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
+        return _refusal(ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING, record)
+
+    session_key_buffer = bytearray(session_key)
+    del session_key
+    try:
+        dek = _crypto.unwrap_profile_session_dek(session_key=bytes(session_key_buffer), record=record)
+    except DecryptionError:
+        if not _discard_known_record(path=path, payload=payload, record=record):
+            return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
+        return _refusal(ProfileSessionRefusalReason.TAMPERED, record)
+    finally:
+        _zeroise(session_key_buffer)
+    return ProfileSessionResumeOutcome(resumed=True, refusal=None, record=record), dek
+
+
+def _resume_profile_session_locked(
+    *,
+    path: Path,
+    profile_id: UUID,
+    custody_generation: int,
+    dek_epoch: str,
+    now: datetime,
+) -> tuple[ProfileSessionResumeOutcome, bytearray | None]:
+    """Evaluate the receipt after the profile-local lock is held."""
+    payload = read_optional_profile_custody_local_record(
+        path,
+        maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
+    )
+    if payload is None:
+        return _refusal(ProfileSessionRefusalReason.ABSENT)
+    try:
+        record = _record_from_canonical_receipt(payload)
+    except (ValueError, ValidationError):
+        _log.debug("profile-session record malformed; refusing profile_id=%s", profile_id)
+        _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
+        return _refusal(ProfileSessionRefusalReason.MALFORMED)
+
+    refusal = _resume_record_refusal(
+        path=path,
+        payload=payload,
+        record=record,
+        profile_id=profile_id,
+        custody_generation=custody_generation,
+        dek_epoch=dek_epoch,
+        now=now,
+    )
+    if refusal is not None:
+        return refusal
+    return _resume_profile_dek(path=path, payload=payload, record=record)
+
+
 def resume_profile_session(
     *,
     storage_root: Path,
@@ -906,18 +1069,7 @@ def _resume_profile_session(
         # secret into a storage mutation.  A pending retirement journal is
         # itself state that needs the locked recovery path, even when no
         # receipt currently exists.
-        if (
-            read_optional_profile_custody_local_record(
-                path,
-                maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
-            )
-            is None
-            and read_optional_profile_custody_local_record(
-                retirement_path,
-                maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
-            )
-            is None
-        ):
+        if not _resume_artifacts_present(path=path, retirement_path=retirement_path):
             return _refusal(ProfileSessionRefusalReason.ABSENT)
         with profile_custody_local_lock(_profile_session_lock_path(path)):
             # A predecessor cleanup failure is non-authoritative: attempt
@@ -931,60 +1083,13 @@ def _resume_profile_session(
                     ProfileSessionRefusalReason.KEYRING_UNAVAILABLE,
                     None if observed is None else observed[1],
                 )
-
-            payload = read_optional_profile_custody_local_record(
-                path,
-                maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
+            return _resume_profile_session_locked(
+                path=path,
+                profile_id=profile_id,
+                custody_generation=custody_generation,
+                dek_epoch=dek_epoch,
+                now=now,
             )
-            if payload is None:
-                return _refusal(ProfileSessionRefusalReason.ABSENT)
-            try:
-                record = _record_from_canonical_receipt(payload)
-            except (ValueError, ValidationError):
-                _log.debug("profile-session record malformed; refusing profile_id=%s", profile_id)
-                _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
-                return _refusal(ProfileSessionRefusalReason.MALFORMED)
-
-            if record.schema_version != _crypto.PROFILE_SESSION_SCHEMA_VERSION:
-                if not _discard_known_record(path=path, payload=payload, record=record):
-                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-                return _refusal(ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH)
-            if record.profile_id != profile_id:
-                if not _discard_known_record(path=path, payload=payload, record=record):
-                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-                return _refusal(ProfileSessionRefusalReason.TAMPERED)
-            if record.custody_generation != custody_generation or record.dek_epoch != dek_epoch:
-                if not _discard_known_record(path=path, payload=payload, record=record):
-                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-                return _refusal(ProfileSessionRefusalReason.CUSTODY_CHANGED, record)
-            if now >= record.absolute_deadline:
-                if not _discard_known_record(path=path, payload=payload, record=record):
-                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-                return _refusal(ProfileSessionRefusalReason.EXPIRED_ABSOLUTE, record)
-            if now >= record.idle_deadline:
-                if not _discard_known_record(path=path, payload=payload, record=record):
-                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-                return _refusal(ProfileSessionRefusalReason.EXPIRED_IDLE, record)
-
-            try:
-                session_key = _load_acceleration_secret(profile_id=record.profile_id, session_id=record.session_id)
-            except KeyringUnavailableError:
-                return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-            if session_key is None:
-                _clear_captured_receipt(path, payload=payload, maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES)
-                return _refusal(ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING, record)
-
-            session_key_buffer = bytearray(session_key)
-            del session_key
-            try:
-                dek = _crypto.unwrap_profile_session_dek(session_key=bytes(session_key_buffer), record=record)
-            except DecryptionError:
-                if not _discard_known_record(path=path, payload=payload, record=record):
-                    return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, record)
-                return _refusal(ProfileSessionRefusalReason.TAMPERED, record)
-            finally:
-                _zeroise(session_key_buffer)
-            return ProfileSessionResumeOutcome(resumed=True, refusal=None, record=record), dek
     except (ProfileCustodyRecordError, StorageValidationError, ValueError, ValidationError) as exc:
         _log.debug("profile-session receipt access refused error_type=%s", type(exc).__name__)
         return _refusal(ProfileSessionRefusalReason.MALFORMED)

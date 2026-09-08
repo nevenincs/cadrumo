@@ -343,6 +343,29 @@ def _invoice_line_iva_observation(
             iva_amount_eur=iva_amount_eur,
             deduction_authority=deduction_authority,
         )
+    return _invoice_line_iva_observation_without_iva(
+        ledger_id=ledger_id,
+        invoice=invoice,
+        line=line,
+        devengo_date=devengo_date,
+        recargo_amount=recargo_amount,
+        base_amount_eur=base_amount_eur,
+        iva_amount_eur=iva_amount_eur,
+        deduction_authority=deduction_authority,
+    )
+
+
+def _invoice_line_iva_observation_without_iva(
+    *,
+    ledger_id: str,
+    invoice: Invoice,
+    line: InvoiceLine,
+    devengo_date: date,
+    recargo_amount: Decimal,
+    base_amount_eur: Decimal,
+    iva_amount_eur: Decimal,
+    deduction_authority: IvaLedgerObservation | None,
+) -> IvaLedgerObservation | None:
     category = invoice.iva_category
     declared_flow = _DECLARED_CATEGORY_BASE_ONLY_FLOWS.get(category) if category is not None else None
     if category is not None and declared_flow is not None and invoice.kind is InvoiceKind.ISSUED:
@@ -357,27 +380,24 @@ def _invoice_line_iva_observation(
             base_amount_eur=base_amount_eur,
             iva_amount_eur=iva_amount_eur,
         )
-    if category is not None and category not in _BASE_ONLY_ROUTED_CATEGORIES:
+    if category is None:
+        # No declared treatment at all: the rate slot is the only signal there
+        # is, and the standard-case classification is the right reading of it.
+        # ``None`` cannot be a member of ``_BASE_ONLY_ROUTED_CATEGORIES``.
+        return _standard_invoice_line_iva_observation(
+            ledger_id=ledger_id,
+            invoice=invoice,
+            line=line,
+            devengo_date=devengo_date,
+            recargo_amount=recargo_amount,
+            base_amount_eur=base_amount_eur,
+            iva_amount_eur=iva_amount_eur,
+        )
+    if category not in _BASE_ONLY_ROUTED_CATEGORIES:
         # The declared treatment wins over the rate slot, which is what the
-        # bank-transaction path has always done and what this path did not. The
-        # slot cannot express a reverse charge at all: the supplier charges
-        # nothing, so the line is exempt-slotted, and deriving from it relabelled
-        # a declared `domestic_reverse_charge` as `domestic_exempt` at flow
-        # `soportado` -- describing the recipient as merely bearing input tax
-        # where the law has them self-assess output tax.
-        #
-        # The flow comes from `derive_flow_for_classification` rather than from a
-        # membership test, because the families genuinely differ: an
-        # intra-community acquisition self-assesses on either direction, while a
-        # domestic reverse charge resolves BY direction since both sides are
-        # Spanish and the form asks for them separately. One call routes both.
-        #
-        # This makes the RECORD correct. It does not make the operation declare:
-        # the recipient-side selector is a triple and the rate kind is still
-        # `exempt`, so a cuota-less line reaches no binding. The shortfall is
-        # reported through `_reverse_charge_cuota_not_derivable` rather than
-        # closed here, because closing it means asserting a rate the record does
-        # not carry.
+        # bank-transaction path has always done. The slot cannot express a
+        # reverse charge, so retain the declared category and report an
+        # unrouted observation rather than inventing a rate.
         return _declared_category_unrouted_observation(
             ledger_id=ledger_id,
             invoice=invoice,
@@ -389,27 +409,9 @@ def _invoice_line_iva_observation(
             base_amount_eur=base_amount_eur,
             iva_amount_eur=iva_amount_eur,
         )
-    if category is None or category not in _BASE_ONLY_ROUTED_CATEGORIES:
-        # No declared treatment at all: the rate slot is the only signal there
-        # is, and the standard-case classification is the right reading of it.
-        # ``category is None`` is folded into this membership test rather than
-        # left implicit -- ``None`` is never a member of
-        # ``_BASE_ONLY_ROUTED_CATEGORIES`` so the outcome is unchanged, but the
-        # explicit check is what lets every use of ``category`` from here on
-        # narrow to non-``None``.
-        return _standard_invoice_line_iva_observation(
-            ledger_id=ledger_id,
-            invoice=invoice,
-            line=line,
-            devengo_date=devengo_date,
-            recargo_amount=recargo_amount,
-            base_amount_eur=base_amount_eur,
-            iva_amount_eur=iva_amount_eur,
-        )
     if invoice.kind is not InvoiceKind.ISSUED:
-        # Both base-only casillas select the repercutido flow: these are
-        # operations the taxpayer SUPPLIES. A received invoice claiming one is a
-        # mis-tag, not a purchase to declare there.
+        # Both base-only casillas select the repercutido flow: a received
+        # invoice claiming one is a mis-tag, not a purchase to declare there.
         return None
     if not _counterparty_supports_the_declared_category(invoice):
         return None
@@ -418,14 +420,13 @@ def _invoice_line_iva_observation(
         transaction_date=devengo_date,
         category=category,
         # Zero rather than the exempt tier: the casillas select rate kind
-        # "zero", and these operations are exempt WITH a zero rate applied to a
-        # real base, which is what a base-only casilla declares.
+        # "zero", and these operations are exempt WITH a zero rate applied to
+        # a real base, which is what a base-only casilla declares.
         rate_kind=IvaRateKind.ZERO,
         # Stated, not left unset. These operations carry a real zero rate on a
         # real base, and a rate-specific binding takes only rows that say what
         # they were charged: leaving it None would make this producer's rows
-        # invisible to any zero-rate box, which is the shape that made a
-        # narrowed reducido binding look like a silent under-declaration.
+        # invisible to any zero-rate box.
         applied_rate=Decimal("0"),
         flow_direction=IvaFlowDirection.REPERCUTIDO,
         base_amount=base_amount_eur,

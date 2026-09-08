@@ -106,30 +106,36 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
     Returns:
         Tuple of :class:`ExportLayoutDefinition` with binding-derived fields populated.
     """
-    if not revision.export_layouts:
+    layouts = revision.export_layouts
+    if not layouts:
         return ()
-    # Parsed LAZILY, over the records a layout actually claims through
-    # ``binding_record``, because the selector key that marks an export
-    # projection is overloaded. ``record`` names an export record in one
-    # authored sense (``page_1``, ``page_01``, ``page_02``) and a SOURCE row-set
-    # in another (``perceptor``, ``donante``, ``m347_declarante_summary``), and
-    # only the first carries wire coordinates. Parsing every binding eagerly
-    # demanded coordinates from the second the moment a revision gained any
-    # export layout, so the first modelo to hold both refused -- with the
-    # informativa group behind it, since 182, 184, 190, 193, 232 and 360 all
-    # carry source-sense bindings.
-    #
-    # Narrowing here changes nothing for a claimed record: the loop below
-    # already consults ``bindings_by_record`` only for records declaring
-    # ``binding_record``, so a binding no record claims could never have
-    # contributed a field. What it stops is demanding a wire projection from a
-    # binding that was never asked to provide one.
-    claimed_records = {
+    claimed_records = _claimed_export_binding_records(layouts)
+    bindings_by_record = _bindings_by_export_record(revision, claimed_records)
+    return tuple(_derive_export_layout(layout, bindings_by_record) for layout in layouts)
+
+
+def _claimed_export_binding_records(
+    layouts: Sequence[ExportLayoutDefinition],
+) -> frozenset[str]:
+    """Return record names that layouts explicitly claim for binding derivation."""
+    return frozenset(
         record.binding_record
-        for layout in revision.export_layouts
+        for layout in layouts
         for record in layout.records
         if record.binding_record is not None
-    }
+    )
+
+
+def _bindings_by_export_record(
+    revision: ModeloRevision,
+    claimed_records: frozenset[str],
+) -> dict[str, list[_BindingExportMember]]:
+    """Index only binding selectors claimed by an export record.
+
+    Selector ``record`` is overloaded: some bindings name wire records while
+    others name source row sets. Filtering against the declarations first keeps
+    source-only selectors from being interpreted as export coordinates.
+    """
     bindings_by_record: dict[str, list[_BindingExportMember]] = {}
     for binding in revision.bindings:
         if selector_as_dict(binding).get("record") not in claimed_records:
@@ -138,29 +144,54 @@ def derive_export_layouts_from_bindings(revision: ModeloRevision) -> tuple[Expor
         if selector is None:
             continue
         bindings_by_record.setdefault(selector.record, []).append((binding, selector))
+    return bindings_by_record
 
-    resolved_layouts: list[ExportLayoutDefinition] = []
-    for layout in revision.export_layouts:
-        resolved_records: list[ExportRecordDefinition] = []
-        for record in layout.records:
-            if record.binding_record is None:
-                resolved_records.append(record)
-                continue
-            derived = tuple(
-                sorted(
-                    _export_fields_from_record_bindings(record, bindings_by_record.get(record.binding_record, [])),
-                    key=lambda field: (field.offset, field.id),
-                ),
-            )
-            base_fields = tuple(
-                field
-                for field in record.fields
-                if field.kind == CasillaFieldKind.BINDING
-                or not any(export_fields_overlap(field, derived_field) for derived_field in derived)
-            )
-            resolved_records.append(record.model_copy(update={"fields": (*base_fields, *derived)}))
-        resolved_layouts.append(layout.model_copy(update={"records": tuple(resolved_records)}))
-    return tuple(resolved_layouts)
+
+def _derive_export_layout(
+    layout: ExportLayoutDefinition,
+    bindings_by_record: Mapping[str, Sequence[_BindingExportMember]],
+) -> ExportLayoutDefinition:
+    """Materialize all binding-derived records in one layout, preserving order."""
+    return layout.model_copy(
+        update={
+            "records": tuple(
+                _derive_export_record(record, _bindings_for_export_record(record, bindings_by_record))
+                for record in layout.records
+            ),
+        },
+    )
+
+
+def _bindings_for_export_record(
+    record: ExportRecordDefinition,
+    bindings_by_record: Mapping[str, Sequence[_BindingExportMember]],
+) -> Sequence[_BindingExportMember]:
+    """Return the selectors claimed by ``record``, or none for inline records."""
+    if record.binding_record is None:
+        return ()
+    return bindings_by_record.get(record.binding_record, ())
+
+
+def _derive_export_record(
+    record: ExportRecordDefinition,
+    bindings: Sequence[_BindingExportMember],
+) -> ExportRecordDefinition:
+    """Materialize one binding-record declaration or return it unchanged."""
+    if record.binding_record is None:
+        return record
+    derived = tuple(
+        sorted(
+            _export_fields_from_record_bindings(record, bindings),
+            key=lambda field: (field.offset, field.id),
+        ),
+    )
+    base_fields = tuple(
+        field
+        for field in record.fields
+        if field.kind == CasillaFieldKind.BINDING
+        or not any(export_fields_overlap(field, derived_field) for derived_field in derived)
+    )
+    return record.model_copy(update={"fields": (*base_fields, *derived)})
 
 
 def fixed_width_record_casilla_ids(records: Sequence[ExportRecordDefinition]) -> frozenset[CasillaId]:
@@ -311,20 +342,37 @@ def _export_fields_from_record_bindings(
     bindings_by_id = {binding.id: (binding, selector) for binding, selector in bindings}
     derived_row_fields: set[str] = set()
     for binding, selector in bindings:
-        if isinstance(selector, BindingFixedExportSelector):
-            if any(field.kind == CasillaFieldKind.BINDING and field.binding == binding.id for field in record.fields):
-                continue
-            fields.append(_export_field_from_binding(record, binding, selector))
-            continue
-        row_field = _row_binding_field(binding, selector)
-        if row_field is not None:
-            if row_field in derived_row_fields:
-                continue
-            derived_row_fields.add(row_field)
-        field = _export_field_from_row_binding(record, binding, selector, bindings_by_id=bindings_by_id)
+        field = _export_field_from_binding_member(
+            record,
+            binding,
+            selector,
+            bindings_by_id=bindings_by_id,
+            derived_row_fields=derived_row_fields,
+        )
         if field is not None:
             fields.append(field)
     return tuple(fields)
+
+
+def _export_field_from_binding_member(
+    record: ExportRecordDefinition,
+    binding: DataBindingDefinition,
+    selector: BindingExportSelector,
+    *,
+    bindings_by_id: Mapping[str, _BindingExportMember],
+    derived_row_fields: set[str],
+) -> ExportFieldDefinition | None:
+    """Resolve one fixed or repeated binding while retaining source order."""
+    if isinstance(selector, BindingFixedExportSelector):
+        if any(field.kind == CasillaFieldKind.BINDING and field.binding == binding.id for field in record.fields):
+            return None
+        return _export_field_from_binding(record, binding, selector)
+    row_field = _row_binding_field(binding, selector)
+    if row_field is not None:
+        if row_field in derived_row_fields:
+            return None
+        derived_row_fields.add(row_field)
+    return _export_field_from_row_binding(record, binding, selector, bindings_by_id=bindings_by_id)
 
 
 def _row_binding_field(binding: DataBindingDefinition, selector: BindingExportSelector) -> str | None:
@@ -342,6 +390,37 @@ def _export_field_from_row_binding(
     *,
     bindings_by_id: Mapping[str, _BindingExportMember],
 ) -> ExportFieldDefinition | None:
+    context = _row_binding_export_context(record, binding, selector)
+    if context is None:
+        return None
+    row_field, casilla_id = context
+    # Pattern A: the record already hand-authors a kind="binding" field pinned
+    # to this exact binding id. Trust the operator-pinned offset/length.
+    if _row_binding_is_already_materialized(record, binding, row_field, bindings_by_id):
+        return None
+    # Pattern B: another hand-authored binding field already occupies this
+    # row slot. It is the public field for the row_field, so source mirrors must
+    # not derive duplicate export fields from the same fixed-width slot.
+    template = _row_binding_template(record, binding, casilla_id)
+    # Pattern C: a kind="casilla" template field exists for this casilla — derive
+    # a binding-kind field by copying the template's offset/length/data_type.
+    return template.model_copy(
+        update={
+            "kind": CasillaFieldKind.BINDING,
+            "casilla_id": None,
+            "binding": binding.id,
+            "legal_refs": binding.legal_refs,
+            "source_refs": binding.source_refs,
+        },
+    )
+
+
+def _row_binding_export_context(
+    record: ExportRecordDefinition,
+    binding: DataBindingDefinition,
+    selector: BindingExportSelector,
+) -> tuple[str, CasillaId] | None:
+    """Resolve a repeated binding to its declared row-field casilla."""
     if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         return None
     if record.binding_record is None:
@@ -355,17 +434,27 @@ def _export_field_from_row_binding(
             f"export record {record.id!r} binding {binding.id!r} row_field {row_field!r}"
             " has no casilla mapping in row_field_casilla_ids",
         )
-    # Pattern A: the record already hand-authors a kind="binding" field pinned
-    # to this exact binding id. Trust the operator-pinned offset/length.
+    return row_field, casilla_id
+
+
+def _row_binding_is_already_materialized(
+    record: ExportRecordDefinition,
+    binding: DataBindingDefinition,
+    row_field: str,
+    bindings_by_id: Mapping[str, _BindingExportMember],
+) -> bool:
+    """Detect operator-pinned or row-slot binding fields before derivation."""
     if any(field.kind == CasillaFieldKind.BINDING and field.binding == binding.id for field in record.fields):
-        return None
-    # Pattern B: another hand-authored binding field already occupies this
-    # row slot. It is the public field for the row_field, so source mirrors must
-    # not derive duplicate export fields from the same fixed-width slot.
-    if _record_binding_field_for_row_field(record, row_field=row_field, bindings_by_id=bindings_by_id) is not None:
-        return None
-    # Pattern C: a kind="casilla" template field exists for this casilla — derive
-    # a binding-kind field by copying the template's offset/length/data_type.
+        return True
+    return _record_binding_field_for_row_field(record, row_field=row_field, bindings_by_id=bindings_by_id) is not None
+
+
+def _row_binding_template(
+    record: ExportRecordDefinition,
+    binding: DataBindingDefinition,
+    casilla_id: CasillaId,
+) -> ExportFieldDefinition:
+    """Find the casilla field whose fixed-width slot templates this row binding."""
     template = next(
         (field for field in record.fields if field.kind == CasillaFieldKind.CASILLA and field.casilla_id == casilla_id),
         None,
@@ -375,15 +464,7 @@ def _export_field_from_row_binding(
             f"export record {record.id!r} binding {binding.id!r} casilla {casilla_id!r}"
             " has no matching template field in the record",
         )
-    return template.model_copy(
-        update={
-            "kind": CasillaFieldKind.BINDING,
-            "casilla_id": None,
-            "binding": binding.id,
-            "legal_refs": binding.legal_refs,
-            "source_refs": binding.source_refs,
-        },
-    )
+    return template
 
 
 def _record_binding_field_for_row_field(

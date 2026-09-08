@@ -61,7 +61,6 @@ from ....domain.user_profile.errors import (
     ProfileSnapshotVersionError,
     UserProfileValidationError,
 )
-from ....domain.user_profile.portable_export import CarriedSecureObject
 from ....domain.user_profile.values import UserProfileSnapshot
 from ..profile.buckets import BucketEventHistoryRepository
 from ..profile.snapshots import SecureSnapshotRepository
@@ -785,16 +784,6 @@ class _PersistenceProfileCustody:
         from ._profile_custody_carry import collect_profile_custody_carry
 
         return collect_profile_custody_carry(bucket_id=bucket_id, profile=profile)
-
-    def restore_profile_custody_carry(
-        self,
-        carried_objects: tuple[CarriedSecureObject, ...],
-        *,
-        target_bucket_id: str,
-    ) -> None:
-        from ._profile_custody_carry import restore_profile_custody_carry
-
-        restore_profile_custody_carry(carried_objects, target_bucket_id=target_bucket_id)
 
     def profile_snapshot_persistence(
         self,

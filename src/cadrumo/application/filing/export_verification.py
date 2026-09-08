@@ -311,6 +311,43 @@ def verify_written_export(draft: ModeloDraft, *, file_path: Path, schema_provide
     )
 
 
+def _xml_exported_casilla_ids(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    schema_provider: RegistrySchemaAccessor,
+) -> Iterable[CasillaId]:
+    """Yield draft casillas represented by an XML dictionary layout."""
+    entries = xml_dictionary_entries(
+        layout,
+        source_root=schema_provider.source_root,
+        sources=schema_provider.sources,
+    )
+    draft_casillas = {value.casilla_id for value in draft.values}
+    return (
+        entry.casilla_id
+        for entry in entries
+        if entry.casilla_id is not None and entry.casilla_id in draft_casillas
+    )
+
+
+def _fixed_width_exported_casilla_ids(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+) -> Iterable[CasillaId]:
+    """Yield draft casillas represented by fixed-width layout fields in order."""
+    draft_casillas = {value.casilla_id for value in draft.values}
+    return (
+        field.casilla_id
+        for record in sorted(layout.records, key=lambda item: item.order)
+        for field in record.fields
+        if field.kind == CasillaFieldKind.CASILLA
+        and field.casilla_id is not None
+        and field.casilla_id in draft_casillas
+    )
+
+
 def exported_casilla_provenance(
     layout: ExportLayoutDefinition, *, draft: ModeloDraft, schema_provider: RegistrySchemaAccessor
 ) -> tuple[ModeloCasillaProvenance, ...]:
@@ -325,28 +362,14 @@ def exported_casilla_provenance(
         One :class:`ModeloCasillaProvenance` per exported casilla.
     """
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
-        entries = xml_dictionary_entries(
-            layout, source_root=schema_provider.source_root, sources=schema_provider.sources
-        )
-        draft_casillas = {value.casilla_id for value in draft.values}
         return _provenance_for_casillas(
             draft,
-            (
-                entry.casilla_id
-                for entry in entries
-                if entry.casilla_id is not None and entry.casilla_id in draft_casillas
-            ),
+            _xml_exported_casilla_ids(layout, draft=draft, schema_provider=schema_provider),
         )
-    draft_casillas = {value.casilla_id for value in draft.values}
-    layout_casillas = (
-        field.casilla_id
-        for record in sorted(layout.records, key=lambda item: item.order)
-        for field in record.fields
-        if field.kind == CasillaFieldKind.CASILLA
-        and field.casilla_id is not None
-        and field.casilla_id in draft_casillas
+    return _provenance_for_casillas(
+        draft,
+        _fixed_width_exported_casilla_ids(layout, draft=draft),
     )
-    return _provenance_for_casillas(draft, layout_casillas)
 
 
 def _mismatched_casilla_ids(

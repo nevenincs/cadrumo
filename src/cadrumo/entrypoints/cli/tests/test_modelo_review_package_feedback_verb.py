@@ -47,7 +47,6 @@ from click.testing import Result
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....application.modelo.review_package_recipient_encryption import (
     ensure_recipient_encryption_keypair,
-    recipient_encryption_public_key,
 )
 from ....application.modelo.review_package_recipient_registry import RecipientFingerprintRegistryRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
@@ -112,7 +111,7 @@ def _register_originator(recipient_id: str) -> str:
 
     repository = secure_object_repository_for_bucket(_BUCKET_ID)
     keypair = ensure_recipient_encryption_keypair(bucket_id=_BUCKET_ID, repository=repository)
-    public_key = recipient_encryption_public_key(keypair)
+    public_key = keypair
     registry = RecipientFingerprintRegistryRepository(bucket_id=_BUCKET_ID)
     registry.add(recipient_id=recipient_id, public_key_hex=public_key.public_key_hex)
     return public_key.public_key_hex

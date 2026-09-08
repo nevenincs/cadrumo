@@ -16,6 +16,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
+from typing import Protocol
 
 from pydantic import BaseModel
 
@@ -44,6 +45,7 @@ from ...domain.calculations.registry.relations import (
 from ...domain.calculations.registry.schema import DataBindingDefinition as _DataBindingDefinition
 from ...domain.calculations.registry.schema import RegistrySnapshot as _RegistrySnapshot
 from ...domain.calculations.registry.schema_input_kind import InputKind as _InputKind
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef as _RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition as _CasillaDefinition
 from ...domain.calculations.registry.verification_tolerance import (
     verification_tolerance_or_exact as _verification_tolerance_or_exact,
@@ -112,6 +114,33 @@ def _verified_required_casilla_ids(
     return tuple(requested)
 
 
+class _FiledObservationCoordinate(Protocol):
+    """Narrow observation shape needed for registry-coordinate revalidation."""
+
+    @property
+    def registry_snapshot_ref(self) -> _RegistrySnapshotRef: ...
+
+
+def _verify_filed_observation_coordinates(
+    observations: tuple[_FiledObservationCoordinate, ...],
+    *,
+    authority: _ValidatedRegistryAuthority,
+) -> None:
+    """Reconfirm every filed/source observation against the current authority."""
+    for observation in observations:
+        outcome = _revision_carry_outcome(observation.registry_snapshot_ref, authority=authority)
+        if outcome.refused:
+            raise _RegistrySnapshotError(
+                "filed-state observation registry coordinate cannot be re-confirmed: "
+                f"{observation.registry_snapshot_ref.revision_id}: {outcome.detail}",
+            )
+
+
+def _computed_filed_state_casilla_ids(snapshot: _RegistrySnapshot) -> tuple[_CasillaId, ...]:
+    """Return the computed casillas used when no explicit ids were requested."""
+    return tuple(casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == _InputKind.COMPUTED)
+
+
 def verify_filed_state(
     *,
     observation_path: Path,
@@ -148,13 +177,7 @@ def verify_filed_state(
         filing_year=filed_observation.ejercicio,
         period=filing_period_token,
     )
-    for observation in (filed_observation, *source_observations):
-        outcome = _revision_carry_outcome(observation.registry_snapshot_ref, authority=authority)
-        if outcome.refused:
-            raise _RegistrySnapshotError(
-                "filed-state observation registry coordinate cannot be re-confirmed: "
-                f"{observation.registry_snapshot_ref.revision_id}: {outcome.detail}"
-            )
+    _verify_filed_observation_coordinates((filed_observation, *source_observations), authority=authority)
     requested_required_casilla_ids = _verified_required_casilla_ids(required_casilla_ids, snapshot=snapshot)
     binding_values = _resolve_previous_filing_binding_values(
         snapshot.revision,
@@ -181,9 +204,7 @@ def verify_filed_state(
         relation_values=relation_values,
         # Recomputation reconciles a filed observation's own values, carrying no
     )
-    casilla_ids = requested_required_casilla_ids or tuple(
-        casilla.id for casilla in snapshot.revision.casillas if casilla.input_kind == _InputKind.COMPUTED
-    )
+    casilla_ids = requested_required_casilla_ids or _computed_filed_state_casilla_ids(snapshot)
     comparison = _compare_calculation_to_filed_observation(
         calculation,
         registry_observation,

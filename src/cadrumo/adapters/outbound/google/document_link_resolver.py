@@ -27,7 +27,7 @@ import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import TYPE_CHECKING, Any, Final, Protocol, cast
+from typing import TYPE_CHECKING, Any, Final, NoReturn, Protocol, cast
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -408,6 +408,128 @@ def list_drive_folder_documents(
     return DriveFolderListing(documents=tuple(documents), skipped_non_document_count=skipped)
 
 
+def _drive_folder_list_request(
+    files: _DriveFilesResource,
+    *,
+    query: str,
+    page_token: str | None,
+) -> _DriveFilesListRequest:
+    """Build one Drive list request, preserving the first-page call shape."""
+    if page_token is None:
+        return files.list(
+            q=query,
+            fields="nextPageToken, files(id, name, mimeType)",
+            pageSize=_DRIVE_LIST_PAGE_SIZE,
+        )
+    return files.list(
+        q=query,
+        fields="nextPageToken, files(id, name, mimeType)",
+        pageSize=_DRIVE_LIST_PAGE_SIZE,
+        pageToken=page_token,
+    )
+
+
+def _raise_folder_scope_refusal(
+    error: OutboundStoragePermissionError,
+    *,
+    folder_id: str,
+) -> NoReturn:
+    """Map an unscoped Drive permission failure to the folder refusal contract."""
+    context = dict(error.context or {})
+    if "required_scope" in context:
+        raise error
+    raise _document_link_terminal_refusal(
+        OutboundStoragePermissionError(
+            f"Drive folder {folder_id!r} is not reachable under the drive.file scope "
+            "(the app can only list files/folders it created or the operator picked); "
+            "reading an arbitrary operator folder requires drive.readonly",
+            context={"required_scope": _DRIVE_READONLY_SCOPE, "folder_id": folder_id, **context},
+        ),
+        DocumentLinkPreconditionCondition.FOLDER_SCOPE_SUFFICIENT,
+        facts={"folder_id": folder_id, "required_scope": _DRIVE_READONLY_SCOPE, "scope_sufficient": False},
+        outcome=NoRecoveryOutcome.SAFETY,
+    ) from error
+
+
+def _fetch_drive_folder_page(
+    drive_service: _DriveService,
+    *,
+    folder_id: str,
+    query: str,
+    page_token: str | None,
+) -> dict[str, Any]:
+    """Fetch one folder page and map permission failures at the folder boundary."""
+    request = _drive_folder_list_request(
+        drive_service.files(),
+        query=query,
+        page_token=page_token,
+    )
+    try:
+        response = execute_request(
+            # CAST-RATIONALE-thirdparty: Google Drive SDK request object is untyped at the client boundary
+            cast("Any", request),
+            action="drive.files.list",
+        )
+    except OutboundStoragePermissionError as exc:
+        _raise_folder_scope_refusal(exc, folder_id=folder_id)
+    # CAST-RATIONALE-thirdparty: Google Drive files-list is an untyped JSON API response
+    return cast(dict[str, Any], response)
+
+
+def _folder_page_documents(
+    response: Mapping[str, Any],
+    *,
+    folder_id: str,
+) -> Iterator[DriveFolderDocument]:
+    """Validate and materialise each raw file row from one successful page."""
+    # CAST-RATIONALE-thirdparty: Google Drive files-list is an untyped JSON API response
+    raw_files: object = response.get("files", [])
+    if not is_object_list(raw_files):
+        raise _document_link_terminal_refusal(
+            OutboundStorageValidationError(
+                "Drive files.list returned a non-list files field",
+                context={"action": "drive.files.list", "folder_id": folder_id},
+            ),
+            DocumentLinkPreconditionCondition.FOLDER_FILES_LIST_VALID,
+            facts={"folder_id": folder_id, "files_list_valid": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        )
+    for entry_index, raw_file in enumerate(raw_files):
+        yield _drive_folder_document_from_response(raw_file, folder_id=folder_id, entry_index=entry_index)
+
+
+def _next_drive_folder_page_token(
+    response: Mapping[str, Any],
+    *,
+    folder_id: str,
+    seen_tokens: set[str],
+) -> str | None:
+    """Validate one folder page's continuation token and map malformed tokens."""
+    # CAST-RATIONALE-thirdparty: Google Drive nextPageToken is an untyped JSON API response
+    raw_page_token = response.get("nextPageToken")
+    try:
+        return next_drive_page_token(
+            raw_page_token,
+            seen_tokens=seen_tokens,
+            action="drive.files.list",
+        )
+    except OutboundStorageNetworkError as exc:
+        token_state = "repeated" if isinstance(raw_page_token, str) else "non_string"
+        raise _document_link_terminal_refusal(
+            OutboundStorageValidationError(
+                "Drive files.list returned an invalid nextPageToken",
+                context={
+                    "action": "drive.files.list",
+                    "folder_id": folder_id,
+                    "page_token_state": token_state,
+                },
+            ),
+            DocumentLinkPreconditionCondition.FOLDER_PAGINATION_VALID,
+            facts={"folder_id": folder_id, "page_token_state": token_state, "page_token_valid": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ) from exc
+
+
 def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) -> Iterator[DriveFolderDocument]:
     """Yield every raw Drive child of ``folder_id`` across pages, mapping scope refusals.
 
@@ -419,78 +541,14 @@ def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) ->
     page_token: str | None = None
     seen_tokens: set[str] = set()
     while True:
-        files = drive_service.files()
-        if page_token is None:
-            request = files.list(
-                q=query,
-                fields="nextPageToken, files(id, name, mimeType)",
-                pageSize=_DRIVE_LIST_PAGE_SIZE,
-            )
-        else:
-            request = files.list(
-                q=query,
-                fields="nextPageToken, files(id, name, mimeType)",
-                pageSize=_DRIVE_LIST_PAGE_SIZE,
-                pageToken=page_token,
-            )
-        try:
-            response = execute_request(
-                # CAST-RATIONALE-thirdparty: Google Drive SDK request object is untyped at the client boundary
-                cast("Any", request),
-                action="drive.files.list",
-            )
-        except OutboundStoragePermissionError as exc:
-            context = dict(exc.context or {})
-            if "required_scope" in context:
-                raise
-            raise _document_link_terminal_refusal(
-                OutboundStoragePermissionError(
-                    f"Drive folder {folder_id!r} is not reachable under the drive.file scope "
-                    "(the app can only list files/folders it created or the operator picked); "
-                    "reading an arbitrary operator folder requires drive.readonly",
-                    context={"required_scope": _DRIVE_READONLY_SCOPE, "folder_id": folder_id, **context},
-                ),
-                DocumentLinkPreconditionCondition.FOLDER_SCOPE_SUFFICIENT,
-                facts={"folder_id": folder_id, "required_scope": _DRIVE_READONLY_SCOPE, "scope_sufficient": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ) from exc
-        # CAST-RATIONALE-thirdparty: Google Drive files-list is an untyped JSON API response
-        raw_files: object = response.get("files", [])
-        if not is_object_list(raw_files):
-            raise _document_link_terminal_refusal(
-                OutboundStorageValidationError(
-                    "Drive files.list returned a non-list files field",
-                    context={"action": "drive.files.list", "folder_id": folder_id},
-                ),
-                DocumentLinkPreconditionCondition.FOLDER_FILES_LIST_VALID,
-                facts={"folder_id": folder_id, "files_list_valid": False},
-                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-            )
-        for entry_index, raw_file in enumerate(raw_files):
-            yield _drive_folder_document_from_response(raw_file, folder_id=folder_id, entry_index=entry_index)
-        # CAST-RATIONALE-thirdparty: Google Drive nextPageToken is an untyped JSON API response
-        raw_page_token = response.get("nextPageToken")
-        try:
-            page_token = next_drive_page_token(
-                raw_page_token,
-                seen_tokens=seen_tokens,
-                action="drive.files.list",
-            )
-        except OutboundStorageNetworkError as exc:
-            token_state = "repeated" if isinstance(raw_page_token, str) else "non_string"
-            raise _document_link_terminal_refusal(
-                OutboundStorageValidationError(
-                    "Drive files.list returned an invalid nextPageToken",
-                    context={
-                        "action": "drive.files.list",
-                        "folder_id": folder_id,
-                        "page_token_state": token_state,
-                    },
-                ),
-                DocumentLinkPreconditionCondition.FOLDER_PAGINATION_VALID,
-                facts={"folder_id": folder_id, "page_token_state": token_state, "page_token_valid": False},
-                outcome=NoRecoveryOutcome.OPERATOR_DECISION,
-            ) from exc
+        response = _fetch_drive_folder_page(
+            drive_service,
+            folder_id=folder_id,
+            query=query,
+            page_token=page_token,
+        )
+        yield from _folder_page_documents(response, folder_id=folder_id)
+        page_token = _next_drive_folder_page_token(response, folder_id=folder_id, seen_tokens=seen_tokens)
         if not page_token:
             break
 

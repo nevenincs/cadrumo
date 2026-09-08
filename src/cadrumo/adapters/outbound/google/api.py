@@ -182,6 +182,36 @@ def _raise_mapped_google_http_error(exc: Exception, *, action: str) -> None:
         ) from exc
 
 
+def _quota_markers_from_entries(entries: object) -> tuple[str, ...]:
+    """Collect string ``reason`` markers from one Google error-entry list."""
+    markers: list[str] = []
+    if not is_object_list(entries):
+        return ()
+    for entry in entries:
+        if not is_object_dict(entry):
+            continue
+        reason = entry.get("reason")
+        if isinstance(reason, str):
+            markers.append(reason)
+    return tuple(markers)
+
+
+def _quota_markers_from_payload(payload: object) -> tuple[str, ...]:
+    """Collect quota markers from the structured Google error payload."""
+    if not is_object_dict(payload):
+        return ()
+    raw_error = payload.get("error")
+    if not is_object_dict(raw_error):
+        return ()
+    markers: list[str] = []
+    status = raw_error.get("status")
+    if isinstance(status, str):
+        markers.append(status)
+    markers.extend(_quota_markers_from_entries(raw_error.get("errors")))
+    markers.extend(_quota_markers_from_entries(raw_error.get("details")))
+    return tuple(markers)
+
+
 def _quota_marker(error: Exception) -> str | None:
     """Return a recognised quota marker from a Google ``HttpError`` payload.
 
@@ -199,33 +229,5 @@ def _quota_marker(error: Exception) -> str | None:
         payload = json.loads(body)
     except json.JSONDecodeError:
         return None
-    if not is_object_dict(payload):
-        return None
-    raw_error = payload.get("error")
-    if not is_object_dict(raw_error):
-        return None
 
-    markers: list[str] = []
-    status = raw_error.get("status")
-    if isinstance(status, str):
-        markers.append(status)
-
-    errors = raw_error.get("errors")
-    if is_object_list(errors):
-        for entry in errors:
-            if not is_object_dict(entry):
-                continue
-            reason = entry.get("reason")
-            if isinstance(reason, str):
-                markers.append(reason)
-
-    details = raw_error.get("details")
-    if is_object_list(details):
-        for entry in details:
-            if not is_object_dict(entry):
-                continue
-            reason = entry.get("reason")
-            if isinstance(reason, str):
-                markers.append(reason)
-
-    return next((marker for marker in markers if marker in _RATE_LIMIT_MARKERS), None)
+    return next((marker for marker in _quota_markers_from_payload(payload) if marker in _RATE_LIMIT_MARKERS), None)

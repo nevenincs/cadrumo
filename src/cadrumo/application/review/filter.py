@@ -324,6 +324,133 @@ def _filter_year_or_raise(clause: FilterClause) -> int:
     )
 
 
+def _ledger_filter_values(
+    clauses: tuple[FilterClause, ...],
+) -> tuple[
+    LedgerReviewStatus | None,
+    str | None,
+    int | None,
+    LedgerImportDiagnosticKind | None,
+    str | None,
+    BusinessClassification | None,
+    str | None,
+    TransactionDirection | None,
+]:
+    status: LedgerReviewStatus | None = None
+    period_code: str | None = None
+    filing_year: int | None = None
+    issue: LedgerImportDiagnosticKind | None = None
+    import_id: str | None = None
+    classification: BusinessClassification | None = None
+    text: str | None = None
+    direction: TransactionDirection | None = None
+    for clause in clauses:
+        if clause.key == LedgerReviewFilterKey.STATUS:
+            status = _enum_value_or_raise(
+                clause,
+                LedgerReviewStatus,
+                scope="ledger-status",
+            )
+        elif clause.key == LedgerReviewFilterKey.PERIOD:
+            period_code = clause.value
+        elif clause.key == LedgerReviewFilterKey.YEAR:
+            filing_year = _filter_year_or_raise(clause)
+        elif clause.key == LedgerReviewFilterKey.ISSUE:
+            issue = _enum_value_or_raise(
+                clause,
+                LedgerImportDiagnosticKind,
+                scope="ledger-issue",
+            )
+        elif clause.key == LedgerReviewFilterKey.IMPORT:
+            import_id = clause.value
+        elif clause.key == LedgerReviewFilterKey.CLASSIFICATION:
+            # case_fold so an operator may type the natural lowercase
+            # (classification=business) as well as the enum-cased BUSINESS;
+            # mirrors the invoice `kind` filter's case-folding.
+            classification = _enum_value_or_raise(
+                clause,
+                BusinessClassification,
+                scope="ledger-classification",
+                case_fold=True,
+            )
+        elif clause.key == LedgerReviewFilterKey.TEXT:
+            text = clause.value
+        elif clause.key == LedgerReviewFilterKey.DIRECTION:
+            # case_fold so direction=ingreso-equivalent lowercase (incoming /
+            # outgoing / internal_transfer) resolves as well as the enum case.
+            direction = _enum_value_or_raise(
+                clause,
+                TransactionDirection,
+                scope="ledger-direction",
+                case_fold=True,
+            )
+    return status, period_code, filing_year, issue, import_id, classification, text, direction
+
+
+def _ledger_period_or_raise(period_code: str | None, filing_year: int | None) -> Period | None:
+    if (period_code is not None) != (filing_year is not None):
+        raise FilterParseError(
+            "--filter period=/year=",
+            reason="ledger-period-year-pairing",
+        )
+    if period_code is None or filing_year is None:
+        return None
+    try:
+        period = Period.from_year_and_code(filing_year, period_code)
+    except PeriodError as exc:
+        raise FilterParseError(
+            f"--filter period={period_code}",
+            reason="invalid-value-ledger-period",
+        ) from exc
+    if not period.has_date_span():
+        raise FilterParseError(
+            f"--filter period={period_code}",
+            reason="invalid-value-ledger-period",
+        )
+    return period
+
+
+def _require_clause_field_match(
+    present_keys: set[str],
+    key: LedgerReviewFilterKey,
+    value: object,
+    *,
+    field_name: str,
+) -> None:
+    if (key in present_keys) != (value is not None):
+        raise ValueError(f"clauses[{key.value}] / {field_name} field disagree")
+
+
+def _validate_ledger_period_consistency(
+    present_keys: set[str],
+    clauses: tuple[FilterClause, ...],
+    period: Period | None,
+) -> None:
+    has_period_clause = LedgerReviewFilterKey.PERIOD in present_keys
+    has_year_clause = LedgerReviewFilterKey.YEAR in present_keys
+    if has_period_clause != has_year_clause:
+        raise FilterParseError(
+            "--filter period=/year=",
+            reason="ledger-period-year-pairing",
+        )
+    if has_period_clause != (period is not None):
+        raise ValueError("clauses[period] / period field disagree")
+    if period is None:
+        return
+    clauses_by_key = {clause.key: clause for clause in clauses}
+    period_clause = clauses_by_key[LedgerReviewFilterKey.PERIOD]
+    year_clause = clauses_by_key[LedgerReviewFilterKey.YEAR]
+    try:
+        expected_period = Period.from_year_and_code(
+            _filter_year_or_raise(year_clause),
+            period_clause.value,
+        )
+    except (FilterParseError, PeriodError) as exc:
+        raise ValueError("clauses[period/year] / period field disagree") from exc
+    if expected_period != period:
+        raise ValueError("clauses[period/year] / period field disagree")
+
+
 class LedgerReviewFilterSpec(BaseModel):
     """Typed ``aeat app ledger review --filter`` spec.
 
@@ -359,73 +486,10 @@ class LedgerReviewFilterSpec(BaseModel):
         clauses = parse_filter_clauses(raw)
         _ensure_known_keys(clauses, scope="ledger", allowed=LedgerReviewFilterKey)
         _ensure_unique_keys(clauses, scope="ledger")
-        status: LedgerReviewStatus | None = None
-        period_code: str | None = None
-        filing_year: int | None = None
-        issue: LedgerImportDiagnosticKind | None = None
-        import_id: str | None = None
-        classification: BusinessClassification | None = None
-        text: str | None = None
-        direction: TransactionDirection | None = None
-        for clause in clauses:
-            if clause.key == LedgerReviewFilterKey.STATUS:
-                status = _enum_value_or_raise(
-                    clause,
-                    LedgerReviewStatus,
-                    scope="ledger-status",
-                )
-            elif clause.key == LedgerReviewFilterKey.PERIOD:
-                period_code = clause.value
-            elif clause.key == LedgerReviewFilterKey.YEAR:
-                filing_year = _filter_year_or_raise(clause)
-            elif clause.key == LedgerReviewFilterKey.ISSUE:
-                issue = _enum_value_or_raise(
-                    clause,
-                    LedgerImportDiagnosticKind,
-                    scope="ledger-issue",
-                )
-            elif clause.key == LedgerReviewFilterKey.IMPORT:
-                import_id = clause.value
-            elif clause.key == LedgerReviewFilterKey.CLASSIFICATION:
-                # case_fold so an operator may type the natural lowercase
-                # (classification=business) as well as the enum-cased BUSINESS;
-                # mirrors the invoice `kind` filter's case-folding.
-                classification = _enum_value_or_raise(
-                    clause,
-                    BusinessClassification,
-                    scope="ledger-classification",
-                    case_fold=True,
-                )
-            elif clause.key == LedgerReviewFilterKey.TEXT:
-                text = clause.value
-            elif clause.key == LedgerReviewFilterKey.DIRECTION:
-                # case_fold so direction=ingreso-equivalent lowercase (incoming /
-                # outgoing / internal_transfer) resolves as well as the enum case.
-                direction = _enum_value_or_raise(
-                    clause,
-                    TransactionDirection,
-                    scope="ledger-direction",
-                    case_fold=True,
-                )
-        period: Period | None = None
-        if (period_code is not None) != (filing_year is not None):
-            raise FilterParseError(
-                "--filter period=/year=",
-                reason="ledger-period-year-pairing",
-            )
-        if period_code is not None and filing_year is not None:
-            try:
-                period = Period.from_year_and_code(filing_year, period_code)
-            except PeriodError as exc:
-                raise FilterParseError(
-                    f"--filter period={period_code}",
-                    reason="invalid-value-ledger-period",
-                ) from exc
-            if not period.has_date_span():
-                raise FilterParseError(
-                    f"--filter period={period_code}",
-                    reason="invalid-value-ledger-period",
-                )
+        status, period_code, filing_year, issue, import_id, classification, text, direction = _ledger_filter_values(
+            clauses,
+        )
+        period = _ledger_period_or_raise(period_code, filing_year)
         return cls(
             clauses=clauses,
             status=status,
@@ -446,40 +510,43 @@ class LedgerReviewFilterSpec(BaseModel):
         with the raw clauses.
         """
         present_keys = {clause.key for clause in self.clauses}
-        if (LedgerReviewFilterKey.STATUS in present_keys) != (self.status is not None):
-            raise ValueError("clauses[status] / status field disagree")
-        has_period_clause = LedgerReviewFilterKey.PERIOD in present_keys
-        has_year_clause = LedgerReviewFilterKey.YEAR in present_keys
-        if has_period_clause != has_year_clause:
-            raise FilterParseError(
-                "--filter period=/year=",
-                reason="ledger-period-year-pairing",
-            )
-        if has_period_clause != (self.period is not None):
-            raise ValueError("clauses[period] / period field disagree")
-        if self.period is not None:
-            clauses_by_key = {clause.key: clause for clause in self.clauses}
-            period_clause = clauses_by_key[LedgerReviewFilterKey.PERIOD]
-            year_clause = clauses_by_key[LedgerReviewFilterKey.YEAR]
-            try:
-                expected_period = Period.from_year_and_code(
-                    _filter_year_or_raise(year_clause),
-                    period_clause.value,
-                )
-            except (FilterParseError, PeriodError) as exc:
-                raise ValueError("clauses[period/year] / period field disagree") from exc
-            if expected_period != self.period:
-                raise ValueError("clauses[period/year] / period field disagree")
-        if (LedgerReviewFilterKey.ISSUE in present_keys) != (self.issue is not None):
-            raise ValueError("clauses[issue] / issue field disagree")
-        if (LedgerReviewFilterKey.IMPORT in present_keys) != (self.import_id is not None):
-            raise ValueError("clauses[import] / import_id field disagree")
-        if (LedgerReviewFilterKey.CLASSIFICATION in present_keys) != (self.classification is not None):
-            raise ValueError("clauses[classification] / classification field disagree")
-        if (LedgerReviewFilterKey.TEXT in present_keys) != (self.text is not None):
-            raise ValueError("clauses[text] / text field disagree")
-        if (LedgerReviewFilterKey.DIRECTION in present_keys) != (self.direction is not None):
-            raise ValueError("clauses[direction] / direction field disagree")
+        _require_clause_field_match(
+            present_keys,
+            LedgerReviewFilterKey.STATUS,
+            self.status,
+            field_name="status",
+        )
+        _validate_ledger_period_consistency(present_keys, self.clauses, self.period)
+        _require_clause_field_match(
+            present_keys,
+            LedgerReviewFilterKey.ISSUE,
+            self.issue,
+            field_name="issue",
+        )
+        _require_clause_field_match(
+            present_keys,
+            LedgerReviewFilterKey.IMPORT,
+            self.import_id,
+            field_name="import_id",
+        )
+        _require_clause_field_match(
+            present_keys,
+            LedgerReviewFilterKey.CLASSIFICATION,
+            self.classification,
+            field_name="classification",
+        )
+        _require_clause_field_match(
+            present_keys,
+            LedgerReviewFilterKey.TEXT,
+            self.text,
+            field_name="text",
+        )
+        _require_clause_field_match(
+            present_keys,
+            LedgerReviewFilterKey.DIRECTION,
+            self.direction,
+            field_name="direction",
+        )
         return self
 
 

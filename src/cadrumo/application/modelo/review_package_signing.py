@@ -86,14 +86,6 @@ class ReviewPackageSigningError(CadrumoError):
     """Base error for review-package signing/verification failures."""
 
 
-class ReviewPackageSigningKeyNotFoundError(ReviewPackageSigningError):
-    """Raised when no signing keypair has been minted for a profile bucket yet.
-
-    Callers should mint one via :func:`ensure_review_package_signing_keypair`
-    before signing a package for the first time in a given profile.
-    """
-
-
 class ReviewPackageSigningKeypair(BaseModel):
     """A profile's Ed25519 signing keypair, private key included.
 
@@ -169,24 +161,6 @@ def _signing_key_object_key(bucket_id: str) -> str:
     return f"review-package-signing-key:{canonical_bucket_id(bucket_id)}"
 
 
-def _keypair_from_repository_payload(payload: bytes, *, bucket_id: str) -> ReviewPackageSigningKeypair:
-    """Load a keypair only when its encrypted payload agrees with its storage key.
-
-    The natural object key binds the record to ``bucket_id``.  The encrypted
-    payload repeats that identity so a foreign keypair re-keyed under this
-    bucket cannot silently become this profile's signing key.  Exact rather
-    than normalized equality also refuses legacy whitespace spellings: those
-    would otherwise address the canonical key while preserving a second,
-    ambiguous payload identity.
-    """
-    keypair = ReviewPackageSigningKeypair.model_validate_json(payload)
-    if keypair.bucket_id != bucket_id:
-        raise ReviewPackageSigningError(
-            translated_message="application.modelo.errors.review_package_generic",
-        )
-    return keypair
-
-
 def ensure_review_package_signing_keypair(
     *,
     bucket_id: str,
@@ -245,39 +219,6 @@ def ensure_review_package_signing_keypair(
         mismatch_error=_mismatch_error,
         write_provenance="application.modelo.review_package_signing.ensure_keypair",
     )
-
-
-def load_review_package_signing_keypair(
-    *,
-    bucket_id: str,
-    repository: SecureObjectRepository,
-) -> ReviewPackageSigningKeypair:
-    """Load the profile's existing Ed25519 signing keypair.
-
-    Args:
-        bucket_id: The profile bucket whose signing keypair is loaded.
-        repository: The bucket's
-            :class:`~adapters.persistence.storage.SecureObjectRepository`.
-
-    Raises:
-        ReviewPackageSigningKeyNotFoundError: If no keypair has been minted
-            yet for ``bucket_id``. Call
-            :func:`ensure_review_package_signing_keypair` first.
-    """
-    normalised_bucket_id = canonical_bucket_id(bucket_id)
-    object_key = _signing_key_object_key(normalised_bucket_id)
-    record = repository.load(
-        _NAMESPACE.namespace,
-        object_key,
-        expected_class=_NAMESPACE.sensitivity,
-        max_supported_version=_NAMESPACE.schema_version,
-    )
-    if record is None:
-        raise ReviewPackageSigningKeyNotFoundError(
-            translated_message="application.modelo.errors.review_package_generic",
-            context={"bucket_id": normalised_bucket_id},
-        )
-    return _keypair_from_repository_payload(record.payload, bucket_id=normalised_bucket_id)
 
 
 def review_package_signing_public_key(
@@ -409,12 +350,10 @@ def _package_manifest_sha256(package_path: Path) -> str:
 
 __all__ = [
     "ReviewPackageSigningError",
-    "ReviewPackageSigningKeyNotFoundError",
     "ReviewPackageSigningKeypair",
     "ReviewPackageSigningPublicKey",
     "SignedReviewPackage",
     "ensure_review_package_signing_keypair",
-    "load_review_package_signing_keypair",
     "review_package_signing_public_key",
     "sign_review_package",
     "verify_review_package_signature",

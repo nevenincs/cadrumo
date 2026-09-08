@@ -93,44 +93,74 @@ class OperationModalViewModelV1(BaseModel):
     def _validate_derivation(self) -> OperationModalViewModelV1:
         projection = self.projection
         terminal = projection.lifecycle is OperationLifecycle.TERMINAL
-        if self.spinner_visible == terminal:
-            raise ValueError("modal spinner visibility must disagree with terminal settlement")
-        if self.cancel_control_enabled != projection.cancellable_now:
-            raise ValueError("modal cancel affordance must match the projection's cancellable_now fact")
-        detachable = projection.close_policy is OperationClosePolicy.DETACH_ALLOWED and not terminal
-        if self.detach_control_enabled != detachable:
-            raise ValueError("modal detach affordance must match the projection's close policy and settlement")
-        if self.close_policy is not projection.close_policy:
-            raise ValueError("modal close policy must mirror the projection's declared close policy")
-        expected_affordance = _interaction_affordance(projection)
-        if self.interaction_affordance != expected_affordance:
-            raise ValueError("modal interaction affordance must mirror the pending-interaction discriminator")
-        expected_copy = _terminal_copy_key(projection) if terminal else None
-        if self.terminal_copy_key != expected_copy:
-            raise ValueError("modal terminal copy key must mirror the projection's terminal settlement")
-        if self.phase_code != projection.phase_code:
-            raise ValueError("modal phase must mirror the projection's declared phase")
-        if self.execution_deadline_at != projection.execution_deadline_at:
-            raise ValueError("modal execution deadline must mirror the projection's execution deadline")
-        if self.cleanup_deadline_at != projection.cleanup_deadline_at:
-            raise ValueError("modal cleanup deadline must mirror the projection's cleanup deadline")
-        if self.diagnostic_ref != projection.diagnostic_ref:
-            raise ValueError("modal diagnostic reference must mirror the projection's diagnostic reference")
-        # Read the settled reference straight off the projection rather than
-        # through the builder's helper. Sharing that helper would make this
-        # check agree with the builder by construction, so a defect inside
-        # the helper itself would pass unseen.
-        if projection.result_ref is not None:
-            expected_kind, expected_ref = "result", projection.result_ref
-        elif projection.refusal_ref is not None:
-            expected_kind, expected_ref = "refusal", projection.refusal_ref
-        else:
-            expected_kind, expected_ref = None, None
-        if self.receipt_kind != expected_kind:
-            raise ValueError("modal receipt kind must mirror which settled reference the projection carries")
-        if self.receipt_ref != expected_ref:
-            raise ValueError("modal receipt reference must mirror the projection's settled reference")
+        _validate_modal_controls(self, projection, terminal)
+        _validate_modal_interaction(self, projection, terminal)
+        _validate_modal_projection_fields(self, projection)
+        _validate_modal_receipt(self, projection)
         return self
+
+
+def _validate_modal_controls(
+    view_model: OperationModalViewModelV1,
+    projection: OperationPublicProjectionV1,
+    terminal: bool,
+) -> None:
+    if view_model.spinner_visible == terminal:
+        raise ValueError("modal spinner visibility must disagree with terminal settlement")
+    if view_model.cancel_control_enabled != projection.cancellable_now:
+        raise ValueError("modal cancel affordance must match the projection's cancellable_now fact")
+    detachable = projection.close_policy is OperationClosePolicy.DETACH_ALLOWED and not terminal
+    if view_model.detach_control_enabled != detachable:
+        raise ValueError("modal detach affordance must match the projection's close policy and settlement")
+    if view_model.close_policy is not projection.close_policy:
+        raise ValueError("modal close policy must mirror the projection's declared close policy")
+
+
+def _validate_modal_interaction(
+    view_model: OperationModalViewModelV1,
+    projection: OperationPublicProjectionV1,
+    terminal: bool,
+) -> None:
+    expected_affordance = _interaction_affordance(projection)
+    if view_model.interaction_affordance != expected_affordance:
+        raise ValueError("modal interaction affordance must mirror the pending-interaction discriminator")
+    expected_copy = _terminal_copy_key(projection) if terminal else None
+    if view_model.terminal_copy_key != expected_copy:
+        raise ValueError("modal terminal copy key must mirror the projection's terminal settlement")
+
+
+def _validate_modal_projection_fields(
+    view_model: OperationModalViewModelV1,
+    projection: OperationPublicProjectionV1,
+) -> None:
+    if view_model.phase_code != projection.phase_code:
+        raise ValueError("modal phase must mirror the projection's declared phase")
+    if view_model.execution_deadline_at != projection.execution_deadline_at:
+        raise ValueError("modal execution deadline must mirror the projection's execution deadline")
+    if view_model.cleanup_deadline_at != projection.cleanup_deadline_at:
+        raise ValueError("modal cleanup deadline must mirror the projection's cleanup deadline")
+    if view_model.diagnostic_ref != projection.diagnostic_ref:
+        raise ValueError("modal diagnostic reference must mirror the projection's diagnostic reference")
+
+
+def _validate_modal_receipt(
+    view_model: OperationModalViewModelV1,
+    projection: OperationPublicProjectionV1,
+) -> None:
+    # Read the settled reference straight off the projection rather than
+    # through the builder's helper. Sharing that helper would make this
+    # check agree with the builder by construction, so a defect inside
+    # the helper itself would pass unseen.
+    if projection.result_ref is not None:
+        expected_kind, expected_ref = "result", projection.result_ref
+    elif projection.refusal_ref is not None:
+        expected_kind, expected_ref = "refusal", projection.refusal_ref
+    else:
+        expected_kind, expected_ref = None, None
+    if view_model.receipt_kind != expected_kind:
+        raise ValueError("modal receipt kind must mirror which settled reference the projection carries")
+    if view_model.receipt_ref != expected_ref:
+        raise ValueError("modal receipt reference must mirror the projection's settled reference")
 
 
 def build_operation_modal_view_model(projection: OperationPublicProjectionV1) -> OperationModalViewModelV1:

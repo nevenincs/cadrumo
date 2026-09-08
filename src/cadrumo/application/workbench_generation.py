@@ -27,10 +27,15 @@ from ..core.identifier_grammar import NamespacedId
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import UtcInstant
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ..domain.deadlines.models import TaxpayerProfile
 from ..domain.invoices.models import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
-from ..domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ..domain.modelos.filing_record import ModeloRecord
+from ..domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionCatalogue,
+    CalculationRevisionState,
+)
+from ..domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
 from ..domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -76,6 +81,7 @@ from .overview.calendar import build_overview_calendar
 from .overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from .overview.evidence import (
     AeatCalendarEvidenceSources,
+    CalendarEvidenceProjection,
     CalendarEvidenceReadOutcome,
     LocalCalendarEvidenceSources,
     build_calendar_evidence_projection,
@@ -134,21 +140,72 @@ def _validate_result_state(
 ) -> None:
     """Enforce the no-false-empty state machine shared by input/output rows."""
     if availability in _OBSERVABLE:
-        if observed_at is None:
-            raise ValueError(f"{label} {availability.value} result requires an observation time")
-        if availability is WorkbenchGenerationAvailability.AVAILABLE and refusal is not None:
-            raise ValueError(f"{label} available result cannot carry a refusal")
-        if not has_value:
-            raise ValueError(f"{label} {availability.value} result requires a value")
-        if availability is WorkbenchGenerationAvailability.STALE and refusal is None:
-            raise ValueError(f"{label} stale result requires a refusal")
+        _validate_observable_result_state(availability, observed_at, refusal, has_value, label)
         return
+    _validate_unobservable_result_state(availability, observed_at, refusal, has_value, label)
+
+
+def _validate_observable_result_state(
+    availability: WorkbenchGenerationAvailability,
+    observed_at: UtcInstant | None,
+    refusal: NamespacedId | None,
+    has_value: bool,
+    label: str,
+) -> None:
+    if observed_at is None:
+        raise ValueError(f"{label} {availability.value} result requires an observation time")
+    if availability is WorkbenchGenerationAvailability.AVAILABLE and refusal is not None:
+        raise ValueError(f"{label} available result cannot carry a refusal")
+    if not has_value:
+        raise ValueError(f"{label} {availability.value} result requires a value")
+    if availability is WorkbenchGenerationAvailability.STALE and refusal is None:
+        raise ValueError(f"{label} stale result requires a refusal")
+
+
+def _validate_unobservable_result_state(
+    availability: WorkbenchGenerationAvailability,
+    observed_at: UtcInstant | None,
+    refusal: NamespacedId | None,
+    has_value: bool,
+    label: str,
+) -> None:
     if observed_at is not None:
         raise ValueError(f"{label} {availability.value} result cannot carry an observation time")
     if refusal is None:
         raise ValueError(f"{label} {availability.value} result requires a refusal")
     if has_value:
         raise ValueError(f"{label} {availability.value} result cannot carry a value")
+
+
+def _read_declarations_workspace(
+    *,
+    bucket_id: str,
+    work_units: WorkUnitCatalogue,
+    calculation_revisions: CalculationRevisionCatalogue,
+    filing_records: ModeloRecordCatalogue,
+    observed_at: UtcInstant,
+    result_casilla_reader: DeclarationResultCasillaReaderV1 | None,
+) -> DeclarationsWorkspaceProjectionV1 | None:
+    try:
+        return project_declarations_workspace(
+            bucket_id=bucket_id,
+            work_units=work_units,
+            calculation_revisions=calculation_revisions,
+            filing_records=filing_records,
+            lifecycle_facts=(),
+            result_casilla_reader=result_casilla_reader,
+            zone_observations=(
+                _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
+                _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
+                DeclarationsWorkspaceZoneObservationV1(
+                    zone=DeclarationsWorkspaceZone.FILING_HISTORY,
+                    availability=DeclarationsWorkspaceAvailability.UNAVAILABLE,
+                    reason_code="workbench.declarations.lifecycle_reader_unavailable",
+                ),
+            ),
+        )
+    except DeclarationsWorkspaceProjectionError:
+        return None
 
 
 class WorkbenchGenerationSourceResultV1[SourceT](BaseModel):
@@ -365,72 +422,24 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         revisions, calculations_revision = self.calculation_repository.load_revisioned()
         filings, filings_revision = self.filing_repository.load_revisioned()
 
-        try:
-            declarations = project_declarations_workspace(
-                bucket_id=self.profile_id,
-                work_units=work_units,
-                calculation_revisions=revisions,
-                filing_records=filings,
-                lifecycle_facts=(),
-                result_casilla_reader=self.result_casilla_reader,
-                zone_observations=(
-                    _declarations_observation(DeclarationsWorkspaceZone.DECLARATIONS, observed_at),
-                    _declarations_observation(DeclarationsWorkspaceZone.CALCULATION_REVISIONS, observed_at),
-                    DeclarationsWorkspaceZoneObservationV1(
-                        zone=DeclarationsWorkspaceZone.FILING_HISTORY,
-                        availability=DeclarationsWorkspaceAvailability.UNAVAILABLE,
-                        reason_code="workbench.declarations.lifecycle_reader_unavailable",
-                    ),
-                ),
-            )
-        except DeclarationsWorkspaceProjectionError:
-            declarations = None
+        declarations = _read_declarations_workspace(
+            bucket_id=self.profile_id,
+            work_units=work_units,
+            calculation_revisions=revisions,
+            filing_records=filings,
+            observed_at=observed_at,
+            result_casilla_reader=self.result_casilla_reader,
+        )
         taxpayer = projection_for_taxpayer(record, tax_id_default="00000000T")
         raw_values = record_to_path_values(record)
-        query_range = OverviewCalendarRange(
-            from_date=date(as_of.year, 1, 1),
-            to_date=date(as_of.year, 12, 31),
-        )
-        schedule_calendar = build_overview_calendar(
-            taxpayer,
-            query_range,
-            today=as_of,
+        evidence, declarations_calendar, agenda = _build_workbench_calendar_inputs(
+            taxpayer=taxpayer,
             raw_values=raw_values,
-            work_units=tuple(work_units.values()),
-        )
-        evidence = build_calendar_evidence_projection(
-            local=CalendarEvidenceReadOutcome(
-                state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
-                value=LocalCalendarEvidenceSources(
-                    filing_records=_scope_filing_records(
-                        tuple(filings.records.values()),
-                        schedule_calendar,
-                    )
-                ),
-            ),
-            aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](
-                state=HomeZoneState(
-                    availability=HomeAvailability.NEVER_CAPTURED,
-                    reason_code="workbench.calendar.aeat_reader_unavailable",
-                ),
-            ),
-            expected_tax_id=taxpayer.tax_id,
-        )
-        calendar = build_overview_calendar(
-            taxpayer,
-            query_range,
-            today=as_of,
-            raw_values=raw_values,
-            filing_evidence=evidence.evidence,
-            work_units=tuple(work_units.values()),
-        )
-        declarations_calendar = project_declarations_calendar(
-            calendar=calendar,
-            evidence=evidence,
             as_of=as_of,
-            schedule_observation=_schedule_observation(calendar, observed_at),
+            work_units=work_units,
+            filings=filings,
+            observed_at=observed_at,
         )
-        agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values)
         ledger_sources = self._load_ledger_sources()
         verification = self._load_verification_reports()
         custody_count = self._load_custody_count()
@@ -444,101 +453,54 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             censo_values=raw_values,
         )
         account_session = self.account_session_reader()
+        if not self._capture_is_unchanged(
+            record=record,
+            work_units_revision=work_units_revision,
+            calculations_revision=calculations_revision,
+            filings_revision=filings_revision,
+            ledger_sources=ledger_sources,
+            verification=verification,
+            custody_count=custody_count,
+        ):
+            raise RuntimeError("secure workbench generation changed during capture")
+        return _build_workbench_generation_inputs(
+            observed_at=observed_at,
+            account_session=account_session,
+            agenda=agenda,
+            agenda_evidence_state=evidence.aeat_state,
+            ledger=ledger,
+            declarations=declarations,
+            declarations_calendar=declarations_calendar,
+            aeat_sync=aeat_sync,
+            aeat_sync_refusal=aeat_sync_refusal,
+            modelo=modelo,
+            work_units=work_units,
+            verification=verification,
+        )
+
+    def _capture_is_unchanged(
+        self,
+        *,
+        record: UserProfileRecord,
+        work_units_revision: str,
+        calculations_revision: str,
+        filings_revision: str,
+        ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
+        verification: VerificationReportCatalogue | None,
+        custody_count: int | None,
+    ) -> bool:
         final_record = self.profile_repository.load(self.profile_id)
         _, final_work_units_revision = self.work_unit_repository.load_revisioned()
         _, final_calculations_revision = self.calculation_repository.load_revisioned()
         _, final_filings_revision = self.filing_repository.load_revisioned()
-        if (
-            final_record.content_digest != record.content_digest
-            or final_work_units_revision != work_units_revision
-            or final_calculations_revision != calculations_revision
-            or final_filings_revision != filings_revision
-            or self._load_ledger_sources() != ledger_sources
-            or self._load_verification_reports() != verification
-            or self._load_custody_count() != custody_count
-        ):
-            raise RuntimeError("secure workbench generation changed during capture")
-        return WorkbenchGenerationInputsV1(
-            assembled_at=observed_at,
-            home=WorkbenchGenerationSourceResultV1[HomeProjectionInput].available(
-                _secure_profile_home_input(
-                    observed_at=observed_at,
-                    account_session=account_session,
-                    agenda=agenda,
-                    agenda_evidence_state=evidence.aeat_state,
-                    ledger=ledger,
-                    declarations=_home_declarations(declarations, work_units),
-                    blocked_revision_ids=_dependency_blocked_revisions(verification),
-                ),
-                observed_at=observed_at,
-            ),
-            ledger=(
-                WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1].available(
-                    ledger, observed_at=observed_at
-                )
-                if ledger is not None
-                else WorkbenchGenerationSourceResultV1[LedgerWorkspaceProjectionV1].unavailable(
-                    refusal="workbench.ledger.snapshot_projector_unavailable"
-                )
-            ),
-            declarations=(
-                WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1].available(
-                    declarations, observed_at=observed_at
-                )
-                if declarations is not None
-                else WorkbenchGenerationSourceResultV1[DeclarationsWorkspaceProjectionV1].unavailable(
-                    refusal="workbench.declarations.snapshot_projector_unavailable"
-                )
-            ),
-            declarations_calendar=WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1].available(
-                declarations_calendar,
-                observed_at=observed_at,
-            ),
-            aeat_sync=(
-                WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].available(
-                    aeat_sync, observed_at=observed_at
-                )
-                if aeat_sync is not None
-                else WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1].unavailable(
-                    refusal=aeat_sync_refusal
-                )
-            ),
-            modelo=(
-                WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].available(
-                    modelo, observed_at=observed_at
-                )
-                if modelo is not None
-                else WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]].unavailable(
-                    refusal="workbench.modelo.bulk_reader_unavailable"
-                )
-            ),
-            ledger_admission=(
-                _generation_admission("workbench.ledger", WorkbenchDestinationAdmissionState.AVAILABLE)
-                if ledger is not None
-                else _generation_admission(
-                    "workbench.ledger",
-                    WorkbenchDestinationAdmissionState.UNAVAILABLE,
-                    reason_code="workbench.ledger.snapshot_projector_unavailable",
-                )
-            ),
-            declarations_admission=(
-                _generation_admission("workbench.declarations", WorkbenchDestinationAdmissionState.AVAILABLE)
-                if declarations is not None
-                else _generation_admission(
-                    "workbench.declarations",
-                    WorkbenchDestinationAdmissionState.UNAVAILABLE,
-                    reason_code="workbench.declarations.snapshot_projector_unavailable",
-                )
-            ),
-            aeat_sync_admission=(
-                _generation_admission("workbench.aeat_sync", WorkbenchDestinationAdmissionState.AVAILABLE)
-                if aeat_sync is not None
-                else _generation_admission(
-                    "workbench.aeat_sync",
-                    WorkbenchDestinationAdmissionState.UNAVAILABLE,
-                    reason_code=aeat_sync_refusal,
-                )
-            ),
+        return (
+            final_record.content_digest == record.content_digest
+            and final_work_units_revision == work_units_revision
+            and final_calculations_revision == calculations_revision
+            and final_filings_revision == filings_revision
+            and self._load_ledger_sources() == ledger_sources
+            and self._load_verification_reports() == verification
+            and self._load_custody_count() == custody_count
         )
 
     def _load_custody_count(self) -> int | None:
@@ -717,6 +679,62 @@ def _schedule_observation(
         availability=HomeAvailability.AVAILABLE,
         observed_at=observed_at,
     )
+
+
+def _build_workbench_calendar_inputs(
+    *,
+    taxpayer: TaxpayerProfile,
+    raw_values: Mapping[str, object],
+    as_of: date,
+    work_units: WorkUnitCatalogue,
+    filings: ModeloRecordCatalogue,
+    observed_at: UtcInstant,
+) -> tuple[CalendarEvidenceProjection, DeclarationsCalendarProjectionV1, OverviewAgenda]:
+    query_range = OverviewCalendarRange(
+        from_date=date(as_of.year, 1, 1),
+        to_date=date(as_of.year, 12, 31),
+    )
+    schedule_calendar = build_overview_calendar(
+        taxpayer,
+        query_range,
+        today=as_of,
+        raw_values=raw_values,
+        work_units=tuple(work_units.values()),
+    )
+    evidence = build_calendar_evidence_projection(
+        local=CalendarEvidenceReadOutcome(
+            state=HomeZoneState(availability=HomeAvailability.AVAILABLE, observed_at=observed_at),
+            value=LocalCalendarEvidenceSources(
+                filing_records=_scope_filing_records(
+                    tuple(filings.records.values()),
+                    schedule_calendar,
+                ),
+            ),
+        ),
+        aeat=CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources](
+            state=HomeZoneState(
+                availability=HomeAvailability.NEVER_CAPTURED,
+                reason_code="workbench.calendar.aeat_reader_unavailable",
+            ),
+        ),
+        expected_tax_id=taxpayer.tax_id,
+    )
+    calendar = build_overview_calendar(
+        taxpayer,
+        query_range,
+        today=as_of,
+        raw_values=raw_values,
+        filing_evidence=evidence.evidence,
+        work_units=tuple(work_units.values()),
+    )
+    declarations_calendar = project_declarations_calendar(
+        calendar=calendar,
+        evidence=evidence,
+        as_of=as_of,
+        schedule_observation=_schedule_observation(calendar, observed_at),
+    )
+    agenda = build_overview_agenda(taxpayer, as_of=as_of, raw_values=raw_values)
+    return evidence, declarations_calendar, agenda
 
 
 def _secure_profile_home_input(
@@ -1022,6 +1040,99 @@ def _generation_admission(
     return WorkbenchDestinationAdmission(destination=destination, state=state, reason_code=reason_code)
 
 
+def _source_result[SourceT](
+    value: SourceT | None,
+    *,
+    observed_at: UtcInstant,
+    refusal: NamespacedId,
+) -> WorkbenchGenerationSourceResultV1[SourceT]:
+    if value is None:
+        return WorkbenchGenerationSourceResultV1[SourceT].unavailable(refusal=refusal)
+    return WorkbenchGenerationSourceResultV1[SourceT].available(value, observed_at=observed_at)
+
+
+def _source_admission(
+    destination: str,
+    value: object | None,
+    *,
+    unavailable_reason: str,
+) -> WorkbenchDestinationAdmission:
+    if value is None:
+        return _generation_admission(
+            destination,
+            WorkbenchDestinationAdmissionState.UNAVAILABLE,
+            reason_code=unavailable_reason,
+        )
+    return _generation_admission(destination, WorkbenchDestinationAdmissionState.AVAILABLE)
+
+
+def _build_workbench_generation_inputs(
+    *,
+    observed_at: UtcInstant,
+    account_session: HomeAccountSession,
+    agenda: OverviewAgenda,
+    agenda_evidence_state: HomeZoneState,
+    ledger: LedgerWorkspaceProjectionV1 | None,
+    declarations: DeclarationsWorkspaceProjectionV1 | None,
+    declarations_calendar: DeclarationsCalendarProjectionV1,
+    aeat_sync: AeatSyncWorkspaceProjectionV1 | None,
+    aeat_sync_refusal: NamespacedId,
+    modelo: tuple[ModeloWorkspaceProjectionV1, ...] | None,
+    work_units: WorkUnitCatalogue,
+    verification: VerificationReportCatalogue | None,
+) -> WorkbenchGenerationInputsV1:
+    return WorkbenchGenerationInputsV1(
+        assembled_at=observed_at,
+        home=WorkbenchGenerationSourceResultV1[HomeProjectionInput].available(
+            _secure_profile_home_input(
+                observed_at=observed_at,
+                account_session=account_session,
+                agenda=agenda,
+                agenda_evidence_state=agenda_evidence_state,
+                ledger=ledger,
+                declarations=_home_declarations(declarations, work_units),
+                blocked_revision_ids=_dependency_blocked_revisions(verification),
+            ),
+            observed_at=observed_at,
+        ),
+        ledger=_source_result(
+            ledger,
+            observed_at=observed_at,
+            refusal="workbench.ledger.snapshot_projector_unavailable",
+        ),
+        declarations=_source_result(
+            declarations,
+            observed_at=observed_at,
+            refusal="workbench.declarations.snapshot_projector_unavailable",
+        ),
+        declarations_calendar=WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1].available(
+            declarations_calendar,
+            observed_at=observed_at,
+        ),
+        aeat_sync=_source_result(aeat_sync, observed_at=observed_at, refusal=aeat_sync_refusal),
+        modelo=_source_result(
+            modelo,
+            observed_at=observed_at,
+            refusal="workbench.modelo.bulk_reader_unavailable",
+        ),
+        ledger_admission=_source_admission(
+            "workbench.ledger",
+            ledger,
+            unavailable_reason="workbench.ledger.snapshot_projector_unavailable",
+        ),
+        declarations_admission=_source_admission(
+            "workbench.declarations",
+            declarations,
+            unavailable_reason="workbench.declarations.snapshot_projector_unavailable",
+        ),
+        aeat_sync_admission=_source_admission(
+            "workbench.aeat_sync",
+            aeat_sync,
+            unavailable_reason=aeat_sync_refusal,
+        ),
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class InstalledWorkbenchGenerationProviderV1:
     """Child-owned provider for one immutable installed-session generation.
@@ -1125,6 +1236,53 @@ def _carry_projection[ProjectionT](
     )
 
 
+def _search_projections(
+    sources: tuple[
+        WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1],
+        WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1],
+        WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1],
+        WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]],
+    ],
+) -> (
+    tuple[
+        LedgerWorkspaceProjectionV1,
+        DeclarationsWorkspaceProjectionV1,
+        AeatSyncWorkspaceProjectionV1,
+        tuple[ModeloWorkspaceProjectionV1, ...],
+    ]
+    | None
+):
+    if any(source.projection is None for source in sources):
+        return None
+    ledger_projection = sources[0].projection
+    declarations_projection = sources[1].projection
+    aeat_projection = sources[2].projection
+    modelo_projection = sources[3].projection
+    # The ``None`` branch above makes these values present; the explicit
+    # narrowing keeps the call boundary honest for static type checkers.
+    if (
+        ledger_projection is None
+        or declarations_projection is None
+        or aeat_projection is None
+        or modelo_projection is None
+    ):  # pragma: no cover - guarded by the branch above
+        return None
+    return ledger_projection, declarations_projection, aeat_projection, modelo_projection
+
+
+def _search_availability(
+    sources: tuple[
+        WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1],
+        WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1],
+        WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1],
+        WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]],
+    ],
+) -> WorkbenchGenerationAvailability:
+    if any(source.availability is WorkbenchGenerationAvailability.STALE for source in sources):
+        return WorkbenchGenerationAvailability.STALE
+    return WorkbenchGenerationAvailability.AVAILABLE
+
+
 def _assemble_search(
     *,
     ledger: WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1],
@@ -1137,27 +1295,11 @@ def _assemble_search(
 ) -> WorkbenchGenerationProjectionResultV1[InstalledWorkbenchSearchSnapshotV1]:
     """Derive search from the same source generation or preserve refusal."""
     sources = (ledger, declarations, aeat_sync, modelo)
-    if any(source.projection is None for source in sources):
+    projections = _search_projections(sources)
+    if projections is None:
         return _missing_search(sources)
-
-    ledger_projection = ledger.projection
-    declarations_projection = declarations.projection
-    aeat_projection = aeat_sync.projection
-    modelo_projection = modelo.projection
-    # The ``None`` branch above makes these values present; the explicit
-    # narrowing keeps the call boundary honest for static type checkers.
-    if (
-        ledger_projection is None
-        or declarations_projection is None
-        or aeat_projection is None
-        or modelo_projection is None
-    ):  # pragma: no cover - guarded by the branch above
-        return _missing_search(sources)
-    availability = (
-        WorkbenchGenerationAvailability.STALE
-        if any(source.availability is WorkbenchGenerationAvailability.STALE for source in sources)
-        else WorkbenchGenerationAvailability.AVAILABLE
-    )
+    ledger_projection, declarations_projection, aeat_projection, modelo_projection = projections
+    availability = _search_availability(sources)
     observed_at = min(source.observed_at for source in sources if source.observed_at is not None)
     refusal = next(
         (source.refusal for source in sources if source.availability is WorkbenchGenerationAvailability.STALE),

@@ -157,28 +157,37 @@ def _resolve_language(concept: dict[str, object], locale: str, *, concept_id: st
     return _FALLBACK_LOCALE, {}
 
 
+def _term_entry_labels(entry: object) -> tuple[str | None, tuple[str, ...]]:
+    """Return one entry's preferred label marker and searchable labels."""
+    entry_data = _as_str_object_dict(entry)
+    if entry_data is None:
+        return None, ()
+    label = entry_data.get("label")
+    if not isinstance(label, str) or not label.strip():
+        return None, ()
+    normalized = label.strip()
+    labels = [normalized]
+    hidden = entry_data.get("hidden_search_forms")
+    if isinstance(hidden, list):
+        labels.extend(
+            form.strip()
+            for form in OBJECT_TUPLE_ADAPTER.validate_python(hidden)
+            if isinstance(form, str) and form.strip()
+        )
+    preferred = normalized if entry_data.get("term_status") == "preferred" else None
+    return preferred, tuple(labels)
+
+
 def _terms_and_preferred(language_block: dict[str, object]) -> tuple[str, tuple[str, ...]]:
     raw_terms = language_block.get("term")
     entries = OBJECT_TUPLE_ADAPTER.validate_python(raw_terms) if isinstance(raw_terms, list) else ()
     labels: list[str] = []
     preferred: str | None = None
     for entry in entries:
-        entry_data = _as_str_object_dict(entry)
-        if entry_data is None:
-            continue
-        label = entry_data.get("label")
-        if not isinstance(label, str) or not label.strip():
-            continue
-        labels.append(label.strip())
-        if entry_data.get("term_status") == "preferred" and preferred is None:
-            preferred = label.strip()
-        hidden = entry_data.get("hidden_search_forms")
-        if isinstance(hidden, list):
-            labels.extend(
-                form.strip()
-                for form in OBJECT_TUPLE_ADAPTER.validate_python(hidden)
-                if isinstance(form, str) and form.strip()
-            )
+        entry_preferred, entry_labels = _term_entry_labels(entry)
+        labels.extend(entry_labels)
+        if preferred is None and entry_preferred is not None:
+            preferred = entry_preferred
     resolved_preferred = preferred or (labels[0] if labels else "")
     return resolved_preferred, tuple(dict.fromkeys(labels))
 
@@ -269,17 +278,36 @@ def load_terminology_concepts(locale: str = _FALLBACK_LOCALE) -> tuple[Terminolo
     return tuple(concepts)
 
 
+def _has_exact_label_match(folded_labels: list[tuple[str, str]], needle: str) -> bool:
+    """Return whether any preferred or alternate label exactly matches ``needle``."""
+    return any(needle == folded for _label, folded in folded_labels)
+
+
+def _first_label_match(
+    folded_labels: list[tuple[str, str]],
+    needle: str,
+    *,
+    prefix: bool,
+) -> str | None:
+    """Return the first label matching ``needle`` by prefix or substring."""
+    for label, folded in folded_labels:
+        matches = folded.startswith(needle) if prefix else needle in folded
+        if matches:
+            return label
+    return None
+
+
 def _match_score(concept: TerminologyConcept, needle: str) -> tuple[int, str]:
     folded_id = _fold(concept.concept_id)
     folded_labels = [(label, _fold(label)) for label in (concept.preferred_label, *concept.terms)]
-    if needle == folded_id or any(needle == folded for _label, folded in folded_labels):
+    if needle == folded_id or _has_exact_label_match(folded_labels, needle):
         return 100, concept.preferred_label
-    for label, folded in folded_labels:
-        if folded.startswith(needle):
-            return 70, label
-    for label, folded in folded_labels:
-        if needle in folded:
-            return 50, label
+    matched = _first_label_match(folded_labels, needle, prefix=True)
+    if matched is not None:
+        return 70, matched
+    matched = _first_label_match(folded_labels, needle, prefix=False)
+    if matched is not None:
+        return 50, matched
     if needle in _fold(concept.short_description):
         return 30, concept.preferred_label
     if needle in _fold(concept.definition):

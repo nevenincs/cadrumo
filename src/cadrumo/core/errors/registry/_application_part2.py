@@ -1075,16 +1075,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.review_package_signing.ReviewPackageSigningKeyNotFoundError",
-        ErrorCode(
-            code="REFUSED_MODELO_REVIEW_PACKAGE_SIGNING_KEY_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.review_package_generic",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.application.modelo.review_package_counter_sign.ReviewPackageCounterSigningError",
         ErrorCode(
             code="ERROR_MODELO_REVIEW_PACKAGE_COUNTER_SIGNING",
@@ -1155,16 +1145,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.review_package_recipient_encryption.RecipientEncryptionKeyNotFoundError",
-        ErrorCode(
-            code="REFUSED_MODELO_RECIPIENT_ENCRYPTION_KEY_NOT_FOUND",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.recipient_encryption_key_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.adapters.persistence.profile.recipient_replay_guard.RecipientReplayGuardError",
         ErrorCode(
             code="ERROR_MODELO_RECIPIENT_REPLAY_GUARD",
@@ -1180,26 +1160,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_MODELO_RECIPIENT_PACKAGE_REPLAYED",
             category=ErrorCategory.REFUSED,
             message_key="application.modelo.errors.recipient_decryption_failed",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceError",
-        ErrorCode(
-            code="ERROR_MODELO_REVIEW_ONLY_WORKSPACE",
-            category=ErrorCategory.ERROR,
-            message_key="application.modelo.errors.review_only_workspace_no_authority",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo._review_package_review_only_workspace.ReviewOnlyWorkspaceAuthorityError",
-        ErrorCode(
-            code="REFUSED_MODELO_REVIEW_ONLY_WORKSPACE_AUTHORITY",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.review_only_workspace_no_authority",
             retryable=False,
             runbook_id=None,
         ),

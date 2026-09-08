@@ -29,7 +29,7 @@ See Also:
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from decimal import InvalidOperation
 from enum import StrEnum
@@ -246,6 +246,67 @@ class M145CommunicationCreateCommand(BaseModel):
         return value
 
 
+def _validate_m145_transition_timestamps(
+    created_at: datetime,
+    delivered_at: datetime | None,
+    completed_at: datetime | None,
+) -> None:
+    if delivered_at is not None and delivered_at < created_at:
+        raise ValueError("delivered_to_payer_at must not precede created_at")
+    if completed_at is not None and completed_at < created_at:
+        raise ValueError("locally_completed_at must not precede created_at")
+    if delivered_at is not None and completed_at is not None and completed_at < delivered_at:
+        raise ValueError("locally_completed_at must not precede delivered_to_payer_at")
+
+
+def _validate_m145_created_state_timestamps(
+    delivered_at: datetime | None,
+    completed_at: datetime | None,
+) -> None:
+    if delivered_at is not None or completed_at is not None:
+        raise ValueError("created Modelo 145 communication records cannot carry transition timestamps")
+
+
+def _validate_m145_delivered_state_timestamps(
+    delivered_at: datetime | None,
+    completed_at: datetime | None,
+) -> None:
+    if delivered_at is None:
+        raise ValueError("delivered Modelo 145 communication records require delivered_to_payer_at")
+    if completed_at is not None:
+        raise ValueError("delivered Modelo 145 communication records cannot carry locally_completed_at")
+
+
+def _validate_m145_completed_state_timestamps(
+    delivered_at: datetime | None,
+    completed_at: datetime | None,
+) -> None:
+    if delivered_at is None or completed_at is None:
+        raise ValueError(
+            "locally completed Modelo 145 communication records require delivery and completion timestamps",
+        )
+
+
+_M145_STATE_TIMESTAMP_VALIDATORS: Mapping[
+    M145CommunicationRecordState,
+    Callable[[datetime | None, datetime | None], None],
+] = {
+    M145CommunicationRecordState.CREATED: _validate_m145_created_state_timestamps,
+    M145CommunicationRecordState.DELIVERED_TO_PAYER: _validate_m145_delivered_state_timestamps,
+    M145CommunicationRecordState.LOCALLY_COMPLETED: _validate_m145_completed_state_timestamps,
+}
+
+
+def _validate_m145_state_timestamps(
+    state: M145CommunicationRecordState,
+    delivered_at: datetime | None,
+    completed_at: datetime | None,
+) -> None:
+    validator = _M145_STATE_TIMESTAMP_VALIDATORS.get(state)
+    if validator is not None:
+        validator(delivered_at, completed_at)
+
+
 class M145CommunicationRecord(BaseModel):
     """Persisted bucket-local Modelo 145 communication record."""
 
@@ -287,28 +348,12 @@ class M145CommunicationRecord(BaseModel):
 
     @model_validator(mode="after")
     def _validate_local_transition_state(self) -> M145CommunicationRecord:
-        delivered_at = self.delivered_to_payer_at
-        completed_at = self.locally_completed_at
-        if delivered_at is not None and delivered_at < self.created_at:
-            raise ValueError("delivered_to_payer_at must not precede created_at")
-        if completed_at is not None and completed_at < self.created_at:
-            raise ValueError("locally_completed_at must not precede created_at")
-        if delivered_at is not None and completed_at is not None and completed_at < delivered_at:
-            raise ValueError("locally_completed_at must not precede delivered_to_payer_at")
-        match self.state:
-            case M145CommunicationRecordState.CREATED:
-                if delivered_at is not None or completed_at is not None:
-                    raise ValueError("created Modelo 145 communication records cannot carry transition timestamps")
-            case M145CommunicationRecordState.DELIVERED_TO_PAYER:
-                if delivered_at is None:
-                    raise ValueError("delivered Modelo 145 communication records require delivered_to_payer_at")
-                if completed_at is not None:
-                    raise ValueError("delivered Modelo 145 communication records cannot carry locally_completed_at")
-            case M145CommunicationRecordState.LOCALLY_COMPLETED:
-                if delivered_at is None or completed_at is None:
-                    raise ValueError(
-                        "locally completed Modelo 145 communication records require delivery and completion timestamps",
-                    )
+        _validate_m145_transition_timestamps(
+            self.created_at,
+            self.delivered_to_payer_at,
+            self.locally_completed_at,
+        )
+        _validate_m145_state_timestamps(self.state, self.delivered_to_payer_at, self.locally_completed_at)
         return self
 
 
@@ -426,13 +471,6 @@ def _snapshot_for_scope(
             context={"expected_surfaces": expected, "declared_surfaces": got},
         )
     return snapshot
-
-
-def list_m145_communication_records(*, bucket_id: BucketId) -> tuple[M145CommunicationRecord, ...]:
-    """Return every local Modelo 145 communication record in one bucket."""
-    records = _m145_communication_record_repository(bucket_id).list_snapshots()
-    current = tuple(_require_m145_record_coordinates_current(record) for record in records)
-    return tuple(sorted(current, key=lambda record: (record.created_at, record.communication_record_id)))
 
 
 def _require_m145_record_coordinates_current(record: M145CommunicationRecord) -> M145CommunicationRecord:
@@ -562,45 +600,61 @@ def _issue(
     )
 
 
+def _nif_value_shape_issue(value: str) -> str | None:
+    try:
+        validate_spanish_tax_id(value)
+    except IdentityError as exc:
+        return resolve_error_message(exc)
+    return None
+
+
+def _year_value_shape_issue(value: str) -> str | None:
+    if not _FOUR_DIGIT_YEAR_PATTERN.fullmatch(value):
+        return "value must be a four-digit year"
+    return None
+
+
+def _date_value_shape_issue(value: str) -> str | None:
+    if not (_ISO_DATE_PATTERN.fullmatch(value) or _AEAT_DATE_PATTERN.fullmatch(value)):
+        return "value must be ISO yyyy-mm-dd or AEAT ddmmaaaa"
+    return None
+
+
+def _integer_value_shape_issue(value: str) -> str | None:
+    if not value.isdecimal():
+        return "value must contain only decimal digits"
+    return None
+
+
+def _money_value_shape_issue(value: str) -> str | None:
+    try:
+        # DECIMAL-TEXT-RATIONALE-M145-SHAPE-PREDICATE: inverted use --
+        # the result is discarded and only the raise is read, so this
+        # asks "is this parseable at all", not "what number is it".
+        # Routing it through the strict grammar would make the guard
+        # REFUSE more, which is the shape the rule-3 declarante-selector
+        # and Renta-WEB-oracle exemptions record.
+        coerce_decimal_strict(value)
+    except (InvalidOperation, ValueError) as exc:
+        return f"value is not a valid decimal amount: {type(exc).__name__}"
+    return None
+
+
+_VALUE_SHAPE_VALIDATORS: Mapping[str, Callable[[str], str | None]] = {
+    "nif": _nif_value_shape_issue,
+    "year": _year_value_shape_issue,
+    "date": _date_value_shape_issue,
+    "integer": _integer_value_shape_issue,
+    "money": _money_value_shape_issue,
+}
+
+
 def _value_shape_issue(casilla: CasillaDefinition, value: str) -> str | None:
     stripped = value.strip()
     if not stripped:
         return "value must not be blank"
-    match casilla.data_type:
-        case "text":
-            return None
-        case "nif":
-            try:
-                validate_spanish_tax_id(stripped)
-            except IdentityError as exc:
-                return resolve_error_message(exc)
-            return None
-        case "year":
-            if not _FOUR_DIGIT_YEAR_PATTERN.fullmatch(stripped):
-                return "value must be a four-digit year"
-            return None
-        case "date":
-            if not (_ISO_DATE_PATTERN.fullmatch(stripped) or _AEAT_DATE_PATTERN.fullmatch(stripped)):
-                return "value must be ISO yyyy-mm-dd or AEAT ddmmaaaa"
-            return None
-        case "integer":
-            if not stripped.isdecimal():
-                return "value must contain only decimal digits"
-            return None
-        case "money":
-            try:
-                # DECIMAL-TEXT-RATIONALE-M145-SHAPE-PREDICATE: inverted use --
-                # the result is discarded and only the raise is read, so this
-                # asks "is this parseable at all", not "what number is it".
-                # Routing it through the strict grammar would make the guard
-                # REFUSE more, which is the shape the rule-3 declarante-selector
-                # and Renta-WEB-oracle exemptions record.
-                coerce_decimal_strict(stripped)
-            except (InvalidOperation, ValueError) as exc:
-                return f"value is not a valid decimal amount: {type(exc).__name__}"
-            return None
-        case _:
-            return None
+    validator = _VALUE_SHAPE_VALIDATORS.get(casilla.data_type)
+    return None if validator is None else validator(stripped)
 
 
 def _constraint_issue(casilla: CasillaDefinition, value: str) -> str | None:
@@ -1129,7 +1183,6 @@ __all__ = [
     "create_m145_communication_record",
     "derive_m145_communication_record_id",
     "export_m145_communication_record",
-    "list_m145_communication_records",
     "m145_communication_record_object_key",
     "mark_m145_communication_record_delivered_to_payer",
     "mark_m145_communication_record_locally_completed",

@@ -85,11 +85,12 @@ _INCREMENTO_GUARDERIA_SEMANTIC_ROLE = "irpf_incremento_maternidad_guarderia"
 
 
 class _GuarderiaContext(NamedTuple):
-    """The casilla, devengo year, and descendant records an Art. 81.3 advisory reads."""
+    """The shared source facts an Art. 81.3 advisory reads."""
 
     casilla_id: CasillaId
     filing_year: int
     descendants: tuple[DescendantInfo, ...]
+    facts: dict[str, str]
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -195,6 +196,20 @@ def _profile_fact_strings(bucket_id: str) -> dict[str, str] | None:
     return {fact.path: str(fact.value) for fact in record.facts if fact.value is not None}
 
 
+def _inferred_prorrata_indices(facts: Mapping[str, str]) -> list[int]:
+    """Return descendants whose prorrata outcome is inferred from household facts."""
+    from .profile_binding import second_entitled_filer_indicated
+
+    if not second_entitled_filer_indicated(facts):
+        return []
+    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
+    return [
+        index
+        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
+        if descendant.prorrata_minimo is None and not descendant.custodia_compartida
+    ]
+
+
 def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     revision: ModeloRevision,
     casilla_values: Mapping[CasillaId, Decimal],
@@ -250,16 +265,7 @@ def collect_minimo_descendientes_prorrata_inferred_diagnostics(
     if facts is None:
         return ()
 
-    from .profile_binding import second_entitled_filer_indicated
-
-    if not second_entitled_filer_indicated(facts):
-        return ()
-    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
-    inferred = [
-        index
-        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
-        if descendant.prorrata_minimo is None and not descendant.custodia_compartida
-    ]
+    inferred = _inferred_prorrata_indices(facts)
     if not inferred:
         return ()
     # Bounded for the same reason the sibling advisory is: naming every
@@ -755,43 +761,10 @@ def collect_guarderia_spend_shape_diagnostics(
     Returns:
         A one-element tuple carrying the advisory, or an empty tuple.
     """
-    if modelo != Modelo.M100.value:
+    context = _guarderia_descendants(revision, modelo=modelo, bucket_id=bucket_id)
+    if context is None:
         return ()
-    casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
-        revision,
-        _INCREMENTO_GUARDERIA_SEMANTIC_ROLE,
-        modelo_id=modelo,
-    )
-    if casilla_id is None:
-        return ()
-    if revision.valid_to is None:
-        # An open-ended revision fixes no devengo date, so the turning-three
-        # test has no anchor. Silent rather than guessing a year.
-        return ()
-    facts = _profile_fact_strings(bucket_id)
-    if facts is None:
-        return ()
-    filing_year = revision.valid_to.year
-    descendant_facts = {key: value for key, value in facts.items() if key.startswith(_DESCENDANT_FACT_PREFIX)}
-    affected = [
-        index
-        for index, descendant in enumerate(descendant_list_from_facts(descendant_facts))
-        if descendant.guarderia_needs_monthly_detail(filing_year)
-    ]
-    descendants = descendant_list_from_facts(descendant_facts)
-    needs_month = [
-        index
-        for index, descendant in enumerate(descendants)
-        if descendant.guarderia_needs_segundo_ciclo_month(filing_year)
-    ]
-    diagnostics: list[CalculationSourceDiagnostic] = []
-    if affected:
-        diagnostics.append(_guarderia_shape_advisory(affected, casilla_id))
-    if needs_month:
-        diagnostics.append(_segundo_ciclo_month_advisory(needs_month, casilla_id))
-    if _cotizaciones_ceiling_is_unbounded(descendants, facts, filing_year):
-        diagnostics.append(_cotizaciones_ceiling_advisory(casilla_id))
-    return tuple(diagnostics)
+    return _guarderia_spend_shape_diagnostics(context)
 
 
 def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: str) -> _GuarderiaContext | None:
@@ -822,7 +795,32 @@ def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: 
         casilla_id=casilla_id,
         filing_year=revision.valid_to.year,
         descendants=tuple(descendant_list_from_facts(descendant_facts)),
+        facts=facts,
     )
+
+
+def _guarderia_spend_shape_diagnostics(
+    context: _GuarderiaContext,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Classify every declared guardería shape issue in stable diagnostic order."""
+    affected = [
+        index
+        for index, descendant in enumerate(context.descendants)
+        if descendant.guarderia_needs_monthly_detail(context.filing_year)
+    ]
+    needs_month = [
+        index
+        for index, descendant in enumerate(context.descendants)
+        if descendant.guarderia_needs_segundo_ciclo_month(context.filing_year)
+    ]
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    if affected:
+        diagnostics.append(_guarderia_shape_advisory(affected, context.casilla_id))
+    if needs_month:
+        diagnostics.append(_segundo_ciclo_month_advisory(needs_month, context.casilla_id))
+    if _cotizaciones_ceiling_is_unbounded(context.descendants, context.facts, context.filing_year):
+        diagnostics.append(_cotizaciones_ceiling_advisory(context.casilla_id))
+    return tuple(diagnostics)
 
 
 def collect_guarderia_madre_meses_undeclared_diagnostics(

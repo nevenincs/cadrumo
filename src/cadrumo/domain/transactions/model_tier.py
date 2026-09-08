@@ -186,6 +186,45 @@ def profiles_for_provider(provider: str) -> tuple[ModelProfile, ...]:
     return tuple(p for p in _CATALOGUE if p.provider == normalised)
 
 
+def _resolve_default_profile(
+    provider: str,
+    candidates: tuple[ModelProfile, ...],
+    minimum_tier: ModelTier,
+) -> ModelProfile:
+    """Choose the cheapest provider profile meeting the capability floor."""
+    eligible = sorted(
+        (profile for profile in candidates if profile.tier >= minimum_tier),
+        key=lambda profile: profile.tier,
+    )
+    if not eligible:
+        available_tiers = sorted({profile.tier.name for profile in candidates})
+        raise TransactionError(
+            f"no {provider} model meets minimum tier {minimum_tier.name}; available: {available_tiers}",
+        )
+    return eligible[0]
+
+
+def _resolve_alias_profile(
+    provider: str,
+    candidates: tuple[ModelProfile, ...],
+    alias: str,
+    minimum_tier: ModelTier,
+) -> ModelProfile:
+    """Resolve one explicit alias and enforce the capability floor."""
+    normalised_alias = alias.lower().strip()
+    for profile in candidates:
+        if profile.alias != normalised_alias:
+            continue
+        if profile.tier < minimum_tier:
+            raise TransactionError(
+                f"model {profile.alias!r} is tier {profile.tier.name} "
+                f"but classification requires at least {minimum_tier.name}",
+            )
+        return profile
+    known_aliases = sorted(profile.alias for profile in candidates)
+    raise TransactionError(f"unknown alias {alias!r} for provider {provider}; known: {known_aliases}")
+
+
 def resolve_profile(
     provider: str,
     *,
@@ -219,28 +258,8 @@ def resolve_profile(
         raise TransactionError(f"unknown provider {provider!r}; known: {known}")
 
     if alias is None:
-        eligible = sorted(
-            (p for p in candidates if p.tier >= minimum_tier),
-            key=lambda p: p.tier,
-        )
-        if not eligible:
-            available_tiers = sorted({p.tier.name for p in candidates})
-            raise TransactionError(
-                f"no {normalised_provider} model meets minimum tier {minimum_tier.name}; available: {available_tiers}",
-            )
-        return eligible[0]
-
-    normalised_alias = alias.lower().strip()
-    for profile in candidates:
-        if profile.alias == normalised_alias:
-            if profile.tier < minimum_tier:
-                raise TransactionError(
-                    f"model {profile.alias!r} is tier {profile.tier.name} "
-                    f"but classification requires at least {minimum_tier.name}",
-                )
-            return profile
-    known_aliases = sorted(p.alias for p in candidates)
-    raise TransactionError(f"unknown alias {alias!r} for provider {normalised_provider}; known: {known_aliases}")
+        return _resolve_default_profile(normalised_provider, candidates, minimum_tier)
+    return _resolve_alias_profile(normalised_provider, candidates, alias, minimum_tier)
 
 
 __all__ = [

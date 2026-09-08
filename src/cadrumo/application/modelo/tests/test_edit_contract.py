@@ -41,18 +41,15 @@ from ..edit_models import (
     ModeloEditScalarIntentKind,
     ModeloEditSubmissionV1,
     ModeloEditWritableScalarSurfaceEntryV1,
-    ModeloMutationCapabilityRequestV1,
     ModeloScalarEditIntentV1,
 )
 from ..edit_services import (
     admit_modelo_edit,
     modelo_edit_request_schema_identity,
     modelo_edit_result_schema_identity,
-    project_modelo_edit_mutation_capability,
 )
 from ..work_addressing import ModeloExactWorkUnitTarget
 from ..workspace_models import (
-    ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceTargetV1,
 )
@@ -146,60 +143,6 @@ def _admit(
     )
     assert isinstance(result, ModeloEditAdmittedV1)
     return result
-
-
-def test_mutation_capability_is_unmeasured_for_a_resolvable_target() -> None:
-    """The facade never advertises AVAILABLE without a registered operation definition."""
-    work_unit = _work_unit()
-    work_catalogue = WorkUnitCatalogue.from_work_units((work_unit,))
-    projection = project_modelo_edit_mutation_capability(
-        ModeloMutationCapabilityRequestV1(target=_target_for(work_unit)),
-        bucket_id=_BUCKET_ID,
-        work_catalogue=work_catalogue,
-    )
-    assert len(projection.rows) == 1
-    assert projection.rows[0].disposition is ModeloWorkspaceCapabilityDisposition.UNMEASURED
-    assert projection.rows[0].operation_definition_id is None
-
-
-def test_the_unmeasured_row_names_a_condition_that_can_actually_be_met() -> None:
-    """An unmeasured row must be waiting on something reachable, not something deleted.
-
-    The row previously waited on a dependency receipt whose family had been
-    retired and whose module was deleted, so the condition could never be
-    satisfied: the row read as pending while being permanently stuck, which is
-    indistinguishable from a row nobody has considered. The surviving mechanism
-    is operation registration, which the row model already enforces by refusing
-    an available row that carries no operation definition.
-    """
-    work_unit = _work_unit()
-    projection = project_modelo_edit_mutation_capability(
-        ModeloMutationCapabilityRequestV1(target=_target_for(work_unit)),
-        bucket_id=_BUCKET_ID,
-        work_catalogue=WorkUnitCatalogue.from_work_units((work_unit,)),
-    )
-
-    condition = projection.rows[0].reconsideration_condition
-    assert condition is not None
-    assert "receipt" not in condition.lower(), (
-        f"the reconsideration condition still names a retired mechanism: {condition!r}"
-    )
-    assert "operation" in condition.lower(), (
-        f"the reconsideration condition must name the surviving mechanism: {condition!r}"
-    )
-
-
-def test_mutation_capability_is_empty_for_an_unresolvable_target() -> None:
-    """An absent target projects no fabricated row, just an empty set."""
-    target = ModeloWorkspaceExactWorkUnitTargetV1(
-        target=ModeloExactWorkUnitTarget(work_unit_id="0" * 64, bucket_id=_BUCKET_ID)
-    )
-    projection = project_modelo_edit_mutation_capability(
-        ModeloMutationCapabilityRequestV1(target=target),
-        bucket_id=_BUCKET_ID,
-        work_catalogue=WorkUnitCatalogue(),
-    )
-    assert projection.rows == ()
 
 
 def _apply(

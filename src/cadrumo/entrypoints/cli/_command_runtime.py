@@ -106,8 +106,10 @@ def _shared_parameter_kwargs(
     return kwargs
 
 
-def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
-    default, default_factory = _parameter_default(spec.default)
+def _parameter_value_projection(
+    spec: ArgumentSpec | OptionSpec,
+) -> tuple[object, object | None, object | None, str | None]:
+    """Resolve annotation, parser, Click type, and choice metavar from a spec."""
     annotation = _annotation(spec.value.annotation)
     if isinstance(spec, OptionSpec) and spec.multiple:
         annotation = GenericAlias(list, (annotation,))
@@ -122,53 +124,107 @@ def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
     if isinstance(click_type, type):
         click_type = click_type()
     choice_metavar = None if not spec.value.choices else f"<{'|'.join(spec.value.choices)}>"
+    return annotation, parser, click_type, choice_metavar
+
+
+def _argument_parameter(
+    spec: ArgumentSpec,
+    *,
+    default: object,
+    default_factory: Callable[[], object] | None,
+    annotation: object,
+    parser: object | None,
+    click_type: object | None,
+    choice_metavar: str | None,
+) -> inspect.Parameter:
+    """Materialize one positional argument from its production spec."""
+    argument_factory = cast(Any, typer.Argument)
     argument_choice_metavar = None if choice_metavar is None else f"{spec.name}:{choice_metavar}"
-    if isinstance(spec, ArgumentSpec):
-        argument_factory = cast(Any, typer.Argument)
-        argument_kwargs = _shared_parameter_kwargs(
-            spec,
-            default_factory=default_factory,
-            metavar=spec.metavar or argument_choice_metavar,
-            parser=parser,
-            click_type=click_type,
-        )
-        typer_default = argument_factory(default, **argument_kwargs)
-        kind = inspect.Parameter.POSITIONAL_OR_KEYWORD
-    else:
-        callback = None if spec.value.callback is None else resolve_deferred_target(spec.value.callback)
-        completion = None if spec.value.completion is None else resolve_deferred_target(spec.value.completion)
-        option_factory = cast(Any, typer.Option)
-        option_kwargs = _shared_parameter_kwargs(
-            spec,
-            default_factory=default_factory,
-            metavar=spec.metavar or choice_metavar,
-            parser=parser,
-            click_type=click_type,
-        )
-        option_kwargs.update(
-            {
-                "count": spec.count,
-                "prompt": None if spec.prompt_key is None else tr(spec.prompt_key.value),
-                "confirmation_prompt": (
-                    False if spec.confirmation_prompt_key is None else tr(spec.confirmation_prompt_key.value)
-                ),
-                "envvar": list(spec.envvar) or None,
-                "is_eager": spec.eager,
-                "callback": callback,
-                "shell_complete": completion,
-            }
-        )
-        # Typer derives flag semantics from the boolean annotation and paired
-        # declarations. Its legacy ``is_flag`` / ``flag_value`` parameters are
-        # deprecated and ignored, so projecting them would add warnings without
-        # preserving any contract fact.
-        typer_default = option_factory(default, *spec.declarations, **option_kwargs)
-        kind = inspect.Parameter.KEYWORD_ONLY
+    argument_kwargs = _shared_parameter_kwargs(
+        spec,
+        default_factory=default_factory,
+        metavar=spec.metavar or argument_choice_metavar,
+        parser=parser,
+        click_type=click_type,
+    )
+    typer_default = argument_factory(default, **argument_kwargs)
     return inspect.Parameter(
         spec.name,
-        kind,
+        inspect.Parameter.POSITIONAL_OR_KEYWORD,
         annotation=annotation,
         default=typer_default,
+    )
+
+
+def _option_parameter(
+    spec: OptionSpec,
+    *,
+    default: object,
+    default_factory: Callable[[], object] | None,
+    annotation: object,
+    parser: object | None,
+    click_type: object | None,
+    choice_metavar: str | None,
+) -> inspect.Parameter:
+    """Materialize one named option from its production spec."""
+    callback = None if spec.value.callback is None else resolve_deferred_target(spec.value.callback)
+    completion = None if spec.value.completion is None else resolve_deferred_target(spec.value.completion)
+    option_factory = cast(Any, typer.Option)
+    option_kwargs = _shared_parameter_kwargs(
+        spec,
+        default_factory=default_factory,
+        metavar=spec.metavar or choice_metavar,
+        parser=parser,
+        click_type=click_type,
+    )
+    option_kwargs.update(
+        {
+            "count": spec.count,
+            "prompt": None if spec.prompt_key is None else tr(spec.prompt_key.value),
+            "confirmation_prompt": (
+                False if spec.confirmation_prompt_key is None else tr(spec.confirmation_prompt_key.value)
+            ),
+            "envvar": list(spec.envvar) or None,
+            "is_eager": spec.eager,
+            "callback": callback,
+            "shell_complete": completion,
+        }
+    )
+    # Typer derives flag semantics from the boolean annotation and paired
+    # declarations. Its legacy ``is_flag`` / ``flag_value`` parameters are
+    # deprecated and ignored, so projecting them would add warnings without
+    # preserving any contract fact.
+    typer_default = option_factory(default, *spec.declarations, **option_kwargs)
+    return inspect.Parameter(
+        spec.name,
+        inspect.Parameter.KEYWORD_ONLY,
+        annotation=annotation,
+        default=typer_default,
+    )
+
+
+def _parameter(spec: ArgumentSpec | OptionSpec) -> inspect.Parameter:
+    """Materialize one spec-owned argument or option parameter."""
+    default, default_factory = _parameter_default(spec.default)
+    annotation, parser, click_type, choice_metavar = _parameter_value_projection(spec)
+    if isinstance(spec, ArgumentSpec):
+        return _argument_parameter(
+            spec,
+            default=default,
+            default_factory=default_factory,
+            annotation=annotation,
+            parser=parser,
+            click_type=click_type,
+            choice_metavar=choice_metavar,
+        )
+    return _option_parameter(
+        spec,
+        default=default,
+        default_factory=default_factory,
+        annotation=annotation,
+        parser=parser,
+        click_type=click_type,
+        choice_metavar=choice_metavar,
     )
 
 
@@ -181,47 +237,62 @@ def _invoke_deferred_target(target_ref: DeferredTarget, arguments: Mapping[str, 
     return invoke(**arguments)
 
 
-def _behavior_wrapper(graph: CommandSpecGraph, spec: CommandSpec) -> Callable[..., object]:
+def _require_behavior_target(spec: CommandSpec) -> DeferredTarget:
+    """Return the executable target declared by one command spec."""
     binding = spec.handler
     if binding is None or binding.state is not BindingState.TARGET or binding.target is None:
         raise RuntimeError(f"command {spec.key!r} has no executable target")
+    return binding.target
 
-    target_ref = binding.target
-    signature: inspect.Signature
 
-    def invoke(*args: object, **kwargs: object) -> object:
-        bound = signature.bind(*args, **kwargs)
-        context_parameter = spec.invocation.context_parameter
-        if spec.kind == "group" and context_parameter is not None:
-            structural_context = bound.arguments.get(context_parameter)
-            if structural_context is None or not hasattr(structural_context, "find_root"):
-                raise TypeError("command invocation context has an invalid type")
-            if getattr(structural_context, "invoked_subcommand", None) is not None:
-                # Ancestor groups are structural only. Their terminal behavior
-                # must not be imported or executed while Click descends toward
-                # the fully parsed child authority.
-                return None
-        if context_parameter is not None and (
-            spec.kind == "leaf" or (spec.kind == "group" and spec.invocation.terminal_behavior == "executable")
-        ):
-            from ._profile_authentication_gate import preflight_parsed_leaf
-            from .config.secure_input import clear_staged_machine_secret_payloads
+def _invocation_context(bound: inspect.BoundArguments, context_parameter: str) -> object:
+    """Require the Click context object bound under a command's context parameter."""
+    context = bound.arguments.get(context_parameter)
+    if context is None or not hasattr(context, "find_root"):
+        raise TypeError("command invocation context has an invalid type")
+    return context
 
-            context = bound.arguments.get(context_parameter)
-            if context is None or not hasattr(context, "find_root"):
-                raise TypeError("command invocation context has an invalid type")
-            try:
-                preflight_parsed_leaf(
-                    cast(typer.Context, context),
-                    graph=graph,
-                    spec=spec,
-                    arguments=bound.arguments,
-                )
-                return _invoke_deferred_target(target_ref, bound.arguments)
-            finally:
-                clear_staged_machine_secret_payloads()
-        return _invoke_deferred_target(target_ref, bound.arguments)
 
+def _requires_leaf_preflight(spec: CommandSpec) -> bool:
+    """Report whether a spec's terminal behavior needs profile preflight."""
+    return spec.kind == "leaf" or (spec.kind == "group" and spec.invocation.terminal_behavior == "executable")
+
+
+def _invoke_bound_behavior(
+    graph: CommandSpecGraph,
+    spec: CommandSpec,
+    target_ref: DeferredTarget,
+    bound: inspect.BoundArguments,
+) -> object:
+    """Apply group short-circuiting and terminal preflight to bound arguments."""
+    context_parameter = spec.invocation.context_parameter
+    if spec.kind == "group" and context_parameter is not None:
+        structural_context = _invocation_context(bound, context_parameter)
+        if getattr(structural_context, "invoked_subcommand", None) is not None:
+            # Ancestor groups are structural only. Their terminal behavior
+            # must not be imported or executed while Click descends toward
+            # the fully parsed child authority.
+            return None
+    if context_parameter is not None and _requires_leaf_preflight(spec):
+        from ._profile_authentication_gate import preflight_parsed_leaf
+        from .config.secure_input import clear_staged_machine_secret_payloads
+
+        context = _invocation_context(bound, context_parameter)
+        try:
+            preflight_parsed_leaf(
+                cast(typer.Context, context),
+                graph=graph,
+                spec=spec,
+                arguments=bound.arguments,
+            )
+            return _invoke_deferred_target(target_ref, bound.arguments)
+        finally:
+            clear_staged_machine_secret_payloads()
+    return _invoke_deferred_target(target_ref, bound.arguments)
+
+
+def _wrapper_parameters(spec: CommandSpec) -> list[inspect.Parameter]:
+    """Build the legal Python signature projected from one command spec."""
     parameters: list[inspect.Parameter] = []
     context_parameter = spec.invocation.context_parameter
     if context_parameter is not None:
@@ -253,6 +324,19 @@ def _behavior_wrapper(graph: CommandSpecGraph, spec: CommandSpec) -> Callable[..
             ),
         )
     )
+    return parameters
+
+
+def _behavior_wrapper(graph: CommandSpecGraph, spec: CommandSpec) -> Callable[..., object]:
+    target_ref = _require_behavior_target(spec)
+
+    signature: inspect.Signature
+
+    def invoke(*args: object, **kwargs: object) -> object:
+        bound = signature.bind(*args, **kwargs)
+        return _invoke_bound_behavior(graph, spec, target_ref, bound)
+
+    parameters = _wrapper_parameters(spec)
     invoke.__name__ = f"invoke_{spec.key}"
     invoke.__qualname__ = invoke.__name__
     signature = inspect.Signature(parameters)

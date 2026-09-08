@@ -51,9 +51,9 @@ propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
 # step it runs delegates to `dev/env`, which already owns this repository's
 # venv provisioning, its exclusive install lock, and `env/.env`.
 #
-# `uv pip install` rather than `uv sync` stays load bearing: a sync prunes
-# before it installs, and on a shared Windows worktree the prune fails against
-# the executable locks held under `.venv/Scripts`.
+# `uv sync --locked` is the sole project-environment operation. It creates
+# `.venv` when absent and converges it exactly to the committed lockfile; the
+# initializer refuses first when a live process holds the environment.
 #
 # Idempotent: a second run costs a stamp comparison and touches nothing.
 # `just init-check` verifies without mutating, exiting 3 when the worktree is
@@ -66,7 +66,7 @@ propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
 init:
     uv run --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
 
-[doc('Create the pinned environment and additively install every dependency.')]
+[doc('Synchronize the pinned environment exactly from uv.lock.')]
 [group('bootstrap')]
 init-python:
     uv run --no-project --python 3.13.11 -- python -m dev.init python{{propagate}}
@@ -91,10 +91,9 @@ init-check:
 doctor-check:
     uv run --no-sync aeat config check
 
-# Additively install runtime, workbook, and dev dependencies into the current
-# venv. This is intentionally not an exact sync: it repairs missing packages and
-# editable metadata without removing locked executables from other agents.
-[doc('Additively install runtime, workbook, and dev dependencies into the current venv.')]
+# Synchronize runtime, workbook, and dev dependencies exactly from uv.lock.
+# The live-process guard refuses before uv mutates an environment in active use.
+[doc('Synchronize the project environment exactly from uv.lock.')]
 [group('setup')]
 setup-install:
     uv run --no-sync python -m dev.env install

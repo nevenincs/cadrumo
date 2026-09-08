@@ -472,13 +472,19 @@ def _revision_intersects_year_range(
     return not (year_to is not None and revision_from > year_to)
 
 
-def _year_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
+def _explicit_year_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool | None:
+    """Compare selectors that contain at least one explicit year list."""
     if left.years and right.years:
         return bool(set(left.years).intersection(right.years))
     if left.years:
         return any(right.includes_year(year) for year in left.years)
     if right.years:
         return any(left.includes_year(year) for year in right.years)
+    return None
+
+
+def _bounded_year_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
+    """Compare selectors represented by inclusive year ranges."""
     left_from, right_from = left.year_from, right.year_from
     if left_from is None or right_from is None:
         return False
@@ -486,3 +492,10 @@ def _year_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool
     if left_to is not None and left_to < right_from:
         return False
     return not (right_to is not None and right_to < left_from)
+
+
+def _year_selectors_overlap(left: PeriodSelector, right: PeriodSelector) -> bool:
+    explicit_overlap = _explicit_year_selectors_overlap(left, right)
+    if explicit_overlap is not None:
+        return explicit_overlap
+    return _bounded_year_selectors_overlap(left, right)

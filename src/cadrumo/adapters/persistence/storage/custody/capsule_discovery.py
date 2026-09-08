@@ -433,47 +433,105 @@ def _windows_candidate_commit(
     label_filename: str | None,
     label_maximum_bytes: int | None,
 ) -> AnchoredCurrentCapsuleCommit | None:
-    try:
-        if not entry.is_dir(follow_symlinks=False):
-            return None
-    except OSError:
+    if not _windows_entry_is_directory(entry):
         return None
     candidate = capsules_root / entry.name
     with ExitStack() as candidate_anchors:
-        try:
-            anchor_directory(candidate_anchors, candidate, final_access=0x80000000)
-        except ProfileCustodyRecordError:
+        if not _anchor_windows_candidate(candidate_anchors, candidate):
             # The candidate itself cannot be anchored, so it may not be
             # treated as a capsule and no child is inspected.
             return None
         profile_id = _canonical_profile_id(entry.name)
         if profile_id is None:
             return None
-        label_path = candidate / "data" / label_filename if label_filename is not None else None
-        label_anchored = False
-        if label_path is not None:
-            try:
-                anchor_directory(candidate_anchors, label_path.parent, final_access=0x80000000)
-                label_anchored = True
-            except ProfileCustodyRecordError:
-                label_anchored = False
-        marker_path = candidate / commit_filename
-        if not lexists(marker_path, trace=None):
+        label_path, label_anchored = _anchor_windows_label(
+            candidate_anchors,
+            candidate,
+            label_filename=label_filename,
+        )
+        commit = _read_windows_commit(
+            candidate,
+            parse_commit=parse_commit,
+            commit_filename=commit_filename,
+            maximum_bytes=maximum_bytes,
+        )
+        if commit is None:
             return None
-        commit = parse_commit(read_regular_file(marker_path, maximum_bytes=maximum_bytes, trace=None))
         if commit.profile_id != profile_id:
             raise ProfileCustodyRecordError("profile capsule commit UUID does not match its directory")
-        label_payload = None
-        if label_path is not None and label_anchored and lexists(label_path, trace=None):
-            if label_maximum_bytes is None:
-                raise ValueError("summary discovery requires both label filename and byte ceiling")
-            label_payload = read_regular_file(label_path, maximum_bytes=label_maximum_bytes, trace=None)
+        label_payload = _read_windows_label(
+            label_path,
+            label_anchored=label_anchored,
+            label_maximum_bytes=label_maximum_bytes,
+        )
         return AnchoredCurrentCapsuleCommit(
             capsule_path=candidate,
             commit=commit,
             label_payload=label_payload,
             label_requested=label_path is not None,
         )
+
+
+def _windows_entry_is_directory(entry: os.DirEntry[str]) -> bool:
+    """Return whether an enumerated entry is a real directory."""
+    try:
+        return entry.is_dir(follow_symlinks=False)
+    except OSError:
+        return False
+
+
+def _anchor_windows_candidate(anchors: ExitStack, candidate: Path) -> bool:
+    """Anchor a Windows candidate before any child path is inspected."""
+    try:
+        anchor_directory(anchors, candidate, final_access=0x80000000)
+    except ProfileCustodyRecordError:
+        return False
+    return True
+
+
+def _anchor_windows_label(
+    anchors: ExitStack,
+    candidate: Path,
+    *,
+    label_filename: str | None,
+) -> tuple[Path | None, bool]:
+    """Return the label path and whether its data directory was anchored."""
+    label_path = candidate / "data" / label_filename if label_filename is not None else None
+    if label_path is None:
+        return None, False
+    try:
+        anchor_directory(anchors, label_path.parent, final_access=0x80000000)
+    except ProfileCustodyRecordError:
+        return label_path, False
+    return label_path, True
+
+
+def _read_windows_commit(
+    candidate: Path,
+    *,
+    parse_commit: Callable[[bytes], _CommitIdentity],
+    commit_filename: str,
+    maximum_bytes: int,
+) -> _CommitIdentity | None:
+    """Read and parse a candidate's current marker, if it exists."""
+    marker_path = candidate / commit_filename
+    if not lexists(marker_path, trace=None):
+        return None
+    return parse_commit(read_regular_file(marker_path, maximum_bytes=maximum_bytes, trace=None))
+
+
+def _read_windows_label(
+    label_path: Path | None,
+    *,
+    label_anchored: bool,
+    label_maximum_bytes: int | None,
+) -> bytes | None:
+    """Read an anchored current label, preserving absent-label semantics."""
+    if label_path is None or not label_anchored or not lexists(label_path, trace=None):
+        return None
+    if label_maximum_bytes is None:
+        raise ValueError("summary discovery requires both label filename and byte ceiling")
+    return read_regular_file(label_path, maximum_bytes=label_maximum_bytes, trace=None)
 
 
 def _canonical_profile_id(candidate_name: str) -> UUID | None:
