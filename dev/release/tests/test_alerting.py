@@ -1,7 +1,6 @@
 """Tests for the release-alert transport.
 
-`dev.quality.module_test_reach` listed `dev/release/alerting.py` as unreached
-and writing to the tree, and this module is the one that pays for a removal: the
+This module is the one that pays for a removal: the
 release path no longer stops at a human approval click, so a silently failed
 orchestration is indistinguishable from a release nobody started. An untested
 alerting channel is that same silence by a slower route.

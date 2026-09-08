@@ -15,7 +15,6 @@ from cadrumo.tests import (
     SRC_CADRUMO,
     aeat_relative,
     ast_for_path,
-    bare_utf8_literal_violations,
     cast_call_linenos,
     cast_rationale_violations,
     discover_test_control_modules,
@@ -1764,24 +1763,4 @@ def test_regex_line_hits_can_include_comment_lines(tmp_path: Path) -> None:
 
     assert regex_line_hits([path], re.compile("token"), skip_comment_lines=False) == [
         f"{path.as_posix()}:1: 'token'",
-    ]
-
-
-def test_bare_utf8_literal_violations_ignore_hash_protocol_lines(tmp_path: Path) -> None:
-    """UTF-8 inventory reports text I/O literals while preserving hash-protocol escapes."""
-    path = tmp_path / "module.py"
-    path.write_text(
-        "\n".join(
-            [
-                'payload = path.read_text(encoding="utf-8")',
-                'digest = hashlib.sha256(raw.encode("utf-8")).hexdigest()',
-                'body = data.decode("utf-8")',
-            ],
-        ),
-        encoding="utf-8",
-    )
-
-    assert bare_utf8_literal_violations(path) == [
-        (1, 'payload = path.read_text(encoding="utf-8")'),
-        (3, 'body = data.decode("utf-8")'),
     ]

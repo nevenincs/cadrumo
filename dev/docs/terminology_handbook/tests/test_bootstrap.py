@@ -114,10 +114,10 @@ def test_scaffold_check_is_green_against_the_bootstrapped_tree() -> None:
     assert plan.is_empty, f"the committed tree drifted from the enrolment sources: {_drift_summary(plan)}"
 
 
-def test_audit_reports_structurally_clean_with_a_tracked_backlog() -> None:
+def test_audit_reports_structural_health_and_live_curation_counts() -> None:
     report = audit_handbook(terminology_concepts_dir())
     # Structurally clean (no dangling relations, no retired-without-replacement).
     assert report.is_clean
-    # The curation backlog is the honest draft count the ratchet baselines.
+    # Draft and approved counts describe the live curation state.
     assert report.draft_count >= 1
     assert report.approved_count >= 20

@@ -666,16 +666,6 @@ convention = "google"
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
-# The checkout-drift screen and its cases invoke read-only git verbs with a
-# `shutil.which`-resolved executable and a fixed argv; the only interpolated
-# value is a repository root the caller already owns.
-"dev/audit/checkout_drift.py" = ["S603"]
-"dev/audit/tests/test_checkout_drift.py" = ["S603"]
-# The facade export scan reads module sources through read-only `git ls-tree` /
-# `git cat-file` with a fixed argv; the only interpolated value is a revision
-# the caller supplies. It must read the object store rather than the working
-# tree, so the subprocess call is the point of the module, not an incidental.
-"dev/quality/facade_export_scan.py" = ["S603", "S607"]
 # The newline-pinning gate enumerates its scan corpus with a read-only
 # `git ls-files` under a fixed argv; the only interpolated values are this
 # module's own SCAN_ROOTS constants. It must read the TRACKED set rather than
@@ -685,7 +675,6 @@ convention = "google"
 # a property of a fresh import, so an in-process check would read modules this
 # process already imported. The command is built from `sys.executable` plus
 # repo-relative paths this module discovered itself, never operator input.
-"src/cadrumo/tests/test_every_test_module_is_collectable.py" = ["S603"]
 # Proves the profile-summary boundary imports none of the authenticated
 # aggregate. That is a property of a FRESH interpreter: this process has
 # already imported the aggregate via sibling tests, so an in-process check
@@ -780,9 +769,6 @@ convention = "google"
 # Bundled `git ls-files` invocation reads from PATH; the explicit command list
 # is reviewed and audited rather than a partial path risk.
 "src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py" = ["S603", "S607"]
-# The facade export gate resolves HEAD and probes its pinned fixture commit with
-# read-only git verbs on a fixed argv.
-"src/cadrumo/tests/test_facade_export_gate.py" = ["S603", "S607"]
 # Same rationale: the content-boundary gate builds the project's own wheel with
 # the trusted `uv` build driver (partial path resolved from PATH by design).
 "src/cadrumo/tests/test_wheel_content_boundary.py" = ["S603", "S607"]
@@ -925,9 +911,8 @@ convention = "google"
 # build, so the length is harmless.
 "src/cadrumo/application/modelo/tests/test_bienes_inversion_advisory.py" = ["S106", "E501"]
 "src/cadrumo/application/modelo/tests/test_prorrata_regularizacion_advisory.py" = ["S106"]
-# Long import-linter diagnostic f-string and the codemod tool's usage example.
+# Long import-linter diagnostic f-string.
 "src/cadrumo/tests/test_importlinter_ledger.py" = ["E501"]
-"dev/quality/import_centralization_codemod.py" = ["E501"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.

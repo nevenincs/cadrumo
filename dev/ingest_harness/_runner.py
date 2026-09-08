@@ -24,7 +24,7 @@ from typing import Any
 from ._caveats import TWIN_LINK_IS_PROSE
 from ._field_mapping import slots_unavailable_at
 from ._key import CorpusKey
-from ._result import FLOAT_SANITY_PROBE, EmittedOnly, HarnessRefusalError, ModelTier, ResultRow, Scored
+from ._result import FLOAT_SANITY_PROBE, EmittedOnly, HarnessModelTier, HarnessRefusalError, ResultRow, Scored
 
 __all__ = ["HarnessReport", "format_report", "verify_decimal_comparison_path"]
 
@@ -92,7 +92,7 @@ class HarnessReport:
         return tuple(row for row in self._rows if not row.is_baseline_eligible)
 
 
-def require_model_tier(payload: dict[str, Any]) -> ModelTier:
+def require_model_tier(payload: dict[str, Any]) -> HarnessModelTier:
     """Resolve a tier from an external payload, refusing a row that omits it.
 
     The typed row already makes the tier mandatory for anything built in
@@ -109,14 +109,14 @@ def require_model_tier(payload: dict[str, Any]) -> ModelTier:
             f"result row for {payload.get('doc_id', '<unknown document>')!r} carries no model_tier. "
             "A figure without its tier is as unfalsifiable as one without its key hash: the design "
             f"target is a small on-host model, so a number that could have come from any of "
-            f"{[member.value for member in ModelTier]} states nothing about the shipped product.",
+            f"{[member.value for member in HarnessModelTier]} states nothing about the shipped product.",
         )
     try:
-        return ModelTier(raw)
+        return HarnessModelTier(raw)
     except ValueError as exc:
         raise HarnessRefusalError(
             f"result row for {payload.get('doc_id', '<unknown document>')!r} names an unknown "
-            f"model_tier {raw!r}; accepted tiers are {[member.value for member in ModelTier]}",
+            f"model_tier {raw!r}; accepted tiers are {[member.value for member in HarnessModelTier]}",
         ) from exc
 
 

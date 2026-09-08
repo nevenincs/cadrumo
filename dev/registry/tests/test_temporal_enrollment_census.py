@@ -59,13 +59,12 @@ def test_live_registry_tests_have_no_unaccounted_literal_revision_enrollment(
 
     assert audit.clean, "\n".join(finding.detail for finding in audit.findings)
 
+
 def test_yearless_constructor_collection_is_detected_without_filename_help(
     authority: ValidatedRegistryAuthority,
 ) -> None:
     audit = _audit(
-        '    _GeneratedTree("390", "2022"),\n'
-        '    _GeneratedTree("390", "2023"),\n'
-        '    _GeneratedTree("390", "2024"),',
+        '    _GeneratedTree("390", "2022"),\n    _GeneratedTree("390", "2023"),\n    _GeneratedTree("390", "2024"),',
         authority,
     )
 
@@ -76,8 +75,7 @@ def test_yearless_constructor_collection_is_detected_without_filename_help(
 
 def test_removed_pair_reports_the_exact_missing_identity(authority: ValidatedRegistryAuthority) -> None:
     audit = _audit(
-        '    _GeneratedTree("390", "2022"),\n'
-        '    _GeneratedTree("390", "2024"),',
+        '    _GeneratedTree("390", "2022"),\n    _GeneratedTree("390", "2024"),',
         authority,
     )
 
@@ -88,9 +86,7 @@ def test_removed_pair_reports_the_exact_missing_identity(authority: ValidatedReg
 
 def test_altered_pair_reports_exact_missing_and_extra_identities(authority: ValidatedRegistryAuthority) -> None:
     audit = _audit(
-        '    _GeneratedTree("390", "2022"),\n'
-        '    _GeneratedTree("390", "2099"),\n'
-        '    _GeneratedTree("390", "2024"),',
+        '    _GeneratedTree("390", "2022"),\n    _GeneratedTree("390", "2099"),\n    _GeneratedTree("390", "2024"),',
         authority,
     )
 
@@ -102,10 +98,7 @@ def test_altered_pair_reports_exact_missing_and_extra_identities(authority: Vali
 def test_imported_enrollment_is_not_counted_as_a_second_literal_declaration(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    source = (
-        "from sibling import GENERATED_TREES as _GENERATED_TREES\n"
-        "_REEXPORTED_TREES = _GENERATED_TREES\n"
-    )
+    source = "from sibling import GENERATED_TREES as _GENERATED_TREES\n_REEXPORTED_TREES = _GENERATED_TREES\n"
 
     audit = audit_temporal_enrollment_source(
         source,
@@ -132,10 +125,7 @@ def test_exclusion_pin_goes_dormant_when_its_source_is_reissued(
         reason="The isolated fixture deliberately withholds this subject.",
         reconsideration_condition="Re-enrol when the pinned design is reissued.",
     )
-    rows = (
-        '    _GeneratedTree("390", "2022"),\n'
-        '    _GeneratedTree("390", "2024"),'
-    )
+    rows = '    _GeneratedTree("390", "2022"),\n    _GeneratedTree("390", "2024"),'
 
     assert _audit(rows, authority, pins=(pin,)).clean
 

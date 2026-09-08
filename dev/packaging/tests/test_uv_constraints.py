@@ -1,7 +1,6 @@
 """Tests for the pinned runtime constraint export.
 
-`dev.quality.module_test_reach` listed `dev/packaging/uv_constraints.py` as
-unreached. It decides what the Scoop manifest and the MCPB bundle pin at user
+It decides what the Scoop manifest and the MCPB bundle pin at user
 install time: left unpinned, a user's install resolves to whatever the index
 serves that day rather than the closure the release actually tested.
 

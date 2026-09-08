@@ -1,7 +1,6 @@
 """Tests for the type-check harness's empty-stream refusal and its suppression list.
 
-`dev.quality.module_test_reach` listed `dev/quality/types.py` as unreached. It
-runs three type checkers and reports whether the tree is clean, so the one thing
+It runs three type checkers and reports whether the tree is clean, so the one thing
 it must never do is report clean without having measured.
 
 It did, for one of the three. ``collect_pyrefly`` and ``collect_basedpyright``

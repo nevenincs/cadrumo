@@ -320,60 +320,6 @@ def census(revision: str) -> list[Finding]:
     return sorted(findings, key=lambda f: (f.kind, f.path, f.line))
 
 
-@dataclass(frozen=True)
-class Exemption:
-    """One site allowed to keep an open-coded normal form, with its reason."""
-
-    path: str
-    symbol: str
-    reason: str
-
-    def key(self) -> tuple[str, str]:
-        """Return the ``(path, symbol)`` identity this exemption answers."""
-        return (self.path, self.symbol)
-
-
-#: Sites that open-code the normal form and are allowed to.
-#:
-#: Keyed by ``(path, symbol)`` and never by line, so an edit above the site
-#: does not silently retire its exemption. Each states a reason, and
-#: :func:`stale_exemptions` fails an entry that no longer answers a live
-#: occurrence, so the list cannot outlive what it excuses.
-EXEMPTIONS: Final[tuple[Exemption, ...]] = ()
-"""Sites allowed to keep an open-coded normal form, with a reason each.
-
-Empty, and deliberately so. The obvious two entries -- the canonical
-``tax_id_identity_token`` and ``normalise_nif_iva`` definitions -- were
-written first and then removed: this census flags a respelling by the
-tax-identifier words in the normalised EXPRESSION, and both definitions
-normalise a parameter named ``value``, so neither is detected and neither
-needs excusing. Two entries excusing nothing would have shipped looking like
-considered judgement, and the next author would have inherited them as
-precedent for adding a third.
-
-Keyed by ``(path, enclosing)`` and never by line. :func:`stale_exemptions`
-fails any entry that stops answering a live occurrence, so this list cannot
-outlive what it excuses.
-"""
-
-
-def unexempted(findings: list[Finding]) -> list[Finding]:
-    """Return findings not answered by a named :data:`EXEMPTIONS` entry."""
-    excused = {entry.key() for entry in EXEMPTIONS}
-    return [f for f in findings if (f.path, f.enclosing) not in excused]
-
-
-def stale_exemptions(findings: list[Finding]) -> tuple[Exemption, ...]:
-    """Return exemptions that no longer answer a live occurrence.
-
-    An exemption for a site that has been fixed or deleted is worse than no
-    exemption: it reads as a considered judgement while excusing nothing, and
-    the next author inherits it as precedent.
-    """
-    live = {(f.path, f.enclosing) for f in findings}
-    return tuple(entry for entry in EXEMPTIONS if entry.key() not in live)
-
-
 def main(argv: list[str] | None = None) -> int:
     """Print the respelling census for one pinned revision."""
     parser = argparse.ArgumentParser(description=__doc__)

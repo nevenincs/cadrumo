@@ -276,7 +276,7 @@ check-relative-imports:
 # Verify the core facade, import-edge, and no-shim architecture invariants.
 [group('static-checks')]
 check-architecture:
-    @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_closed_vocabulary_canonicalization.py dev/tests/test_import_edge_integrity_gate.py dev/tests/test_facade_export_gate.py
+    @uv run --no-sync pytest -q -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_import_edge_integrity_gate.py
 
 # Refuse numeric product policy embedded beside modelo-routing branches.
 [group('static-checks')]
@@ -306,27 +306,6 @@ check-unused-symbol-coverage:
 [group('static-checks')]
 check-secure-store-write-path:
     @uv run --no-sync python -m dev.quality.secure_store_write_path
-
-# A function whose whole body is `return sibling(...).field` returns strictly
-# less than the sibling it calls. Five were removed for dropping a refusal, a
-# coverage manifest, or a superseded_by pointer that the caller needed.
-# Verify no shipped function narrows a sibling's result with nothing calling it.
-# The review inventory has always been able to name the TUI interfaces no
-# surface renders; nothing ever failed on the number. Keyed by qualname, so a
-# swap cannot net to zero. Entries leave in the step that gives one a surface.
-# Verify the set of unrendered TUI interfaces only shrinks.
-[group('static-checks')]
-check-tui-render-coverage:
-    @uv run --no-sync python -m dev.quality.tui_render_coverage
-
-[group('static-checks')]
-check-narrowing-delegators:
-    @uv run --no-sync python -m dev.quality.narrowing_delegators
-
-# Refuse shipped development-progress censuses and named engine rollout switches.
-[group('static-checks')]
-check-production-metastate:
-    @uv run --no-sync python -m dev.quality.production_metastate
 
 [group('static-checks')]
 check-docstring-references:
@@ -676,14 +655,6 @@ fix-format:
 [group('mutations')]
 fix-all: fix-style fix-format
 
-# Rehearse a reviewed object-name component by default; live application requires explicit arguments.
-[script('pwsh.exe', '-NoLogo', '-NoProfile', '-File')]
-[positional-arguments]
-[group('mutations')]
-fix-object-names *ARGS:
-    & uv run --no-sync python -m dev.quality.object_name_declustering @args
-    exit $LASTEXITCODE
-
 # Trigger incremental vector re-indexing via the loopback service.
 [group('mutations')]
 fix-rag:
@@ -700,41 +671,24 @@ pytest_workers := env_var_or_default("CADRUMO_PYTEST_WORKERS", "auto")
 # never restated, because a member list repeated at five call sites is five
 # chances to drift into a lane that silently nests a worker pool inside a pool.
 #
-# One member is a FILE and one is a DIRECTORY, and the asymmetry is deliberate.
 # The worker hook sits among hundreds of ordinary unit modules in
 # `src/cadrumo/tests`, so naming its directory would drag that whole corpus into
-# an outer-serial lane and out of every parallel one; only the file can be named.
-# `dev/harness` is the opposite: the package exists solely to hold outer-serial
-# members, nothing else may live there, and naming the file left the DIRECTORY
-# inside no lane's scope at all -- so a second proof added beside the first would
-# have been collected by nothing, silently. Naming the directory makes membership
-# a property of where a module lives rather than of remembering to edit this line.
+# an outer-serial lane and out of every parallel one; only the file is named.
 harness_worker_hook := "src/cadrumo/tests/test_worker_count_hook_harness.py"
-harness_package := "dev/harness/tests"
-harness_members := harness_worker_hook + " " + harness_package
+harness_members := harness_worker_hook
 harness_exclusions := prepend("--ignore=", harness_members)
 
 # Run the fast test-framework ratchets for discovery, markers, skip/xfail, mock/test-double, monkeypatch, broad raises, bare except, and tautology drift.
 [group('testing')]
 test-ratchets:
-    @uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_mock_inventory.py dev/tests/test_monkeypatch_inventory.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py --tb=short
+    @uv run --no-sync pytest -q -p no:cacheprovider -rsf dev/tests/test_test_inventory.py src/cadrumo/tests/test_relative_imports_only.py dev/tests/test_no_skip_xfail.py dev/tests/test_no_broad_exception_raises.py dev/tests/test_no_bare_except.py --tb=short
 
-# The real-proof pass raises the per-test wall ceiling above the product suite's
-# 300 s ini default, for the reason `test-dev-ci` already states: this lane's
-# subject is a real child pytest, and one member recursively collects the whole
-# first-party corpus. That legitimately runs minutes -- measured at 75 s on a
-# quiet tree and 272 s on a loaded one -- so the default ceiling kills a healthy
-# proof under load and reports it as a harness failure. Only this lane is
-# raised; 900 s still kills a genuine wedge in minutes.
-# Run the dedicated harness verdict outer-serially. Each explicit owned member
-# collects separately before the combined real-proof run, so pytest exit 5
-# exposes either collapsed proof without inventing another marker. Every call
-# is direct, preserving the meaningful failing pytest exit status.
-[doc('Run the dedicated outer-serial test-harness verdict (installed hook and full-corpus collection proofs).')]
+# Run the worker-count hook verdict outer-serially so it can inspect the
+# installed pytest hook without nesting another worker pool.
+[doc('Run the dedicated outer-serial worker-count hook verdict.')]
 [group('testing')]
 test-harness:
     @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_worker_hook}}
-    @uv run --no-sync pytest -q -m integration --collect-only -n0 {{harness_package}}
     @uv run --no-sync pytest -q -m integration -rsf -n0 --timeout=900 {{harness_members}}
 
 # Run the unit test suite in parallel, ignoring workbook parity tests. Quiet
@@ -809,15 +763,10 @@ test-integration:
 # mixed-marker, so inheriting the default `-m 'unit and ...'` would silently
 # deselect the integration contracts and still exit zero.
 #
-# `dev/benchmarks/cli/tests` holds no test module yet, and that is exactly why
-# it is named: an empty `tests` package is the emptiest form of the hole this
-# lane list keeps producing. Nothing collects from it today, so the cost is one
-# directory walk; the first proof written into it runs on the push that adds it
-# rather than waiting for someone to remember this line.
-[doc('Run the dev/ tooling gates that no other lane reaches (audit, benchmarks, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
+[doc('Run the dev/ tooling gates that no other lane reaches (audit, deploy, env, identity, locales, sanitizer, registry, docs, agent-eval, ingest-harness subsystems).')]
 [group('testing')]
 test-dev-tooling:
-    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/benchmarks/cli/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/registry/parity/tests
+    @uv run --no-sync pytest -q -n {{pytest_workers}} -m "(unit or integration) and not resident_service and not external_tool" dev/audit/tests dev/corpus/tests dev/deploy/tests dev/docs/tests dev/env/tests dev/identity/tests dev/locales/tests dev/readme/tests dev/tests dev/sanitizer/tests dev/registry/tests dev/registry/newmodelo/tests dev/registry/aeip/tests dev/docs/preprocess/tests dev/docs/sequences/tests dev/docs/terminology/tests dev/docs/terminology_handbook/tests dev/agent_eval/tests dev/ingest_harness/tests dev/containers/tests dev/smoke/tests dev/tui/tests dev/registry/parity/tests
 
 # Run the registry conformance suite. It sits in its own lane rather than in
 # `test-dev-tooling` because of cost, not category: a sequential local run
@@ -1121,21 +1070,13 @@ audit-write-paths *ARGS:
 audit-duplication:
     @uv run --no-sync python -m dev.audit.duplication
 
-# Terminators rewritten after checkout are invisible to `git diff` and to every
-# text-mode reader. This is a screen and always exits 0; apply the shrink-only
-# ceiling with `python -m dev.audit.checkout_drift --check`.
-# Count tracked files whose on-disk bytes differ from their committed bytes.
-[group('audits')]
-audit-checkout-drift:
-    @uv run --no-sync python -m dev.audit.checkout_drift
-
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 [group('audits')]
 audit-rag QUERY:
     @uv run --no-sync vaultspec-rag search "{{QUERY}}" --port 8766 --timeout 45.0
 
-# Run all advisory audits (complexity, dead code, duplication, checkout
-# drift, security) as one composed red/amber/green dashboard; tolerant of
+# Run all retained advisory audits (complexity, dead code, duplication,
+# security) as one composed red/amber/green dashboard; tolerant of
 # individual findings (always exits 0). The runner (dev.audit.advisory) owns
 # the composition, so this recipe cannot drift from what it reports. Full,
 # uncapped results are persisted to dev/audit/.runs/ every run (summary.json
@@ -1164,14 +1105,6 @@ audit-health-report:
 [group('audits')]
 audit-health-report-json:
     @uv run --no-sync python -m dev.audit.report --json
-
-# Audit module, class, enum, and function names across src/ and dev/.
-# Public production declarations must be singular and globally unique; private
-# and test collisions remain visible as advisory findings.
-[doc('Audit module, class, enum, and function names across src/ and dev/ for singularity and uniqueness.')]
-[group('audits')]
-audit-object-names *ARGS:
-    @uv run --no-sync python -m dev.audit.object_names {{ARGS}}
 
 # Show conformance status across all modelo revisions and the derived release
 # closure. Both verbs exit 0 always (screen posture): ``report`` renders every

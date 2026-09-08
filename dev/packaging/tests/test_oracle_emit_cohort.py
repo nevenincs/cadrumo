@@ -1,7 +1,6 @@
 """Tests for the cohort oracle-emit leg's refusals and its argument contract.
 
-`dev.quality.module_test_reach` listed `dev/packaging/oracle_emit_cohort.py` as
-unreached and writing to the tree. Most of the module is an orchestration of two
+Most of the module is an orchestration of two
 real ``uv`` invocations against digest-pinned wheels, and that part is what the
 packaging-smoke workflow itself exercises on every OS leg; reproducing it here
 would need a real release cohort and prove nothing the live legs do not.

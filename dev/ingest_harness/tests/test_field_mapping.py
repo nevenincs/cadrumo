@@ -24,7 +24,7 @@ from .._field_mapping import (
     unmapped_slot_census,
     validate_mapping_targets,
 )
-from .._key import CorpusDocument, CorpusKey
+from .._key import CorpusKey, IngestCorpusDocument
 from .._scoring import score_emission
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -209,7 +209,7 @@ def test_an_unmapped_field_never_becomes_a_miss(key: CorpusKey) -> None:
 # ----------------------------------------------------------------------------
 
 
-def _divergent_total_documents(key: CorpusKey) -> tuple[CorpusDocument, ...]:
+def _divergent_total_documents(key: CorpusKey) -> tuple[IngestCorpusDocument, ...]:
     """Documents whose printed total disagrees with the computed identity."""
     return tuple(
         d

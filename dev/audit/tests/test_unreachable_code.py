@@ -741,7 +741,7 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
 
     assert spec.package == "cadrumo"
     # `aeat` is the only console script the product declares; the full-screen
-    # session is reached through `aeat --tui`, which starts the module-execution
+    # session is reached through `aeat app tui`, which starts the module-execution
     # surface below rather than a second console entry.
     assert "cadrumo.entrypoints._cli_main:main" in {entry.spec for entry in spec.entry_points}
     assert "cadrumo.entrypoints.tui.__main__" in spec.module_roots

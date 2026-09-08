@@ -16,6 +16,7 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from .aggregate import CommittedProfileView, UnlockedProfileFactSummary
 from .custody_ports import (
     ProfileCustodyCapsuleLabelPort,
+    ProfileCustodyConcurrentChangeError,
     ProfileCustodyLabelHeadPort,
     ProfileCustodyPasswordMaterialPort,
     ProfileCustodyRecordIntegrityError,
@@ -23,6 +24,7 @@ from .custody_ports import (
 )
 from .custody_repository import ProfileCustodyTransactionRepository, profile_custody_transaction_lock
 from .custody_transactions import (
+    ProfileCustodyTransactionCorruptError,
     ProfileCustodyTransactionConflictError,
     ProfileCustodyTransactionJournal,
     ProfileCustodyTransactionOperation,
@@ -75,8 +77,10 @@ def _verify_label_head(
             source_witness=source_witness,
             root=root,
         )
-    except ProfileCustodyRecordIntegrityError as exc:
+    except ProfileCustodyConcurrentChangeError as exc:
         raise ProfileCustodyTransactionConflictError(str(exc)) from exc
+    except ProfileCustodyRecordIntegrityError as exc:
+        raise ProfileCustodyTransactionCorruptError(str(exc)) from exc
 
 
 def _load_current_custody_state(

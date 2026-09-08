@@ -15,12 +15,9 @@ from __future__ import annotations
 import pytest
 
 from ..identity.hex64_redeclaration_census import (
-    ALLOWLIST,
     CANONICAL_HOME,
     DeclarationKind,
     census_sources,
-    stale_exemptions,
-    unexempted,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -125,15 +122,6 @@ def test_a_module_that_does_not_parse_is_skipped_rather_than_crashing() -> None:
     assert census_sources(_sources(**{"src__a.py": "def broken(\n"})) == ()
 
 
-def test_an_exemption_excuses_only_its_own_symbol() -> None:
-    entry = ALLOWLIST[0]
-    source = "class Other:\n    f: str = Field(min_length=64, max_length=64)\n"
-    found = census_sources(((entry.path, source),))
-    # Same path, different symbol: the exemption is keyed on both, so this must
-    # remain open rather than inheriting the excuse of a neighbour.
-    assert unexempted(found) == found
-
-
 @pytest.mark.parametrize(
     ("label", "source"),
     (
@@ -151,45 +139,12 @@ def test_an_exemption_excuses_only_its_own_symbol() -> None:
     ),
 )
 def test_a_pattern_declaration_carries_the_name_it_is_bound_to(label: str, source: str) -> None:
-    """A pattern occurrence borrows its binding, so an exemption can name it.
+    """A pattern occurrence borrows its binding so the finding names its owner.
 
     The regression guard for a real bug: the scanner first reported an EMPTY
     symbol for every pattern-kind declaration, because the occurrence is found
-    deep inside an expression and has no name of its own. An allowlist keyed by
-    ``(path, symbol)`` could therefore never match one -- so both carve-outs
-    excused nothing while reading as considered judgements.
-
-    Keying on the line number instead would have "fixed" it and been wrong: a
-    line-keyed exemption is invalidated by every edit above it and silently
-    moves onto whatever later occupies the line.
+    deep inside an expression and has no name of its own. A nameless result is
+    not actionable and cannot identify the product declaration to replace.
     """
     found = census_sources(_sources(**{"src__a.py": source}))
     assert [item.symbol for item in found] == ["Alias"], label
-
-
-def test_an_exemption_can_actually_excuse_a_pattern_declaration() -> None:
-    # The end-to-end proof, and the one that fails if the binding is ever
-    # dropped again: an allowlist entry naming an alias must remove that
-    # alias's pattern declaration from the open set.
-    from ..identity.hex64_redeclaration_census import Exemption
-
-    source = 'Excused = r"^[0-9a-f]{64}$"\nOpen = r"^[0-9a-f]{64}$"\n'
-    found = census_sources(_sources(**{"src__a.py": source}))
-    assert len(found) == 2
-
-    excused = Exemption(path="src/a.py", symbol="Excused", reason="x" * 50)
-    remaining = tuple(i for i in found if i.key() != excused.key())
-    assert [i.symbol for i in remaining] == ["Open"]
-
-
-def test_every_allowlist_entry_states_a_reason() -> None:
-    for entry in ALLOWLIST:
-        assert entry.reason.strip(), f"{entry.path}:{entry.symbol} carries no stated reason"
-        assert len(entry.reason) > 40, f"{entry.path}:{entry.symbol} reason is too thin to review"
-
-
-def test_a_stale_exemption_is_reported() -> None:
-    # An exemption answering nothing is worse than a missing one: it reads as a
-    # considered judgement about code that has moved, and widens to whatever
-    # later occupies its key.
-    assert stale_exemptions(()) == ALLOWLIST

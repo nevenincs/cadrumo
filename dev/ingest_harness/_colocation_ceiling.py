@@ -286,7 +286,7 @@ def colocation_ceiling(key_documents: Sequence[Mapping[str, object]]) -> Ceiling
 
     Args:
         key_documents: Raw key entries, as loaded from the pinned corpus key.
-            Taken raw rather than as :class:`~._key.CorpusDocument` because the
+            Taken raw rather than as :class:`~._key.IngestCorpusDocument` because the
             authored transcription is not on that narrow projection.
 
     Returns:

@@ -1533,4 +1533,3 @@ D11's no-import direction remains mandatory. Its permitted external reference is
 packaging, direct module execution, and this single opaque root-launch command. All earlier
 `aeat --tui`, `AVAILABLE`/`NOT_IMPLEMENTED`, and CLI destination-launch authorizations are
 superseded.
-

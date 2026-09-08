@@ -25,12 +25,10 @@ import pytest
 
 from ..env.temp_reaper import (
     IDLE_CEILING_SECONDS,
-    OBJECT_NAME_REHEARSAL_PREFIX,
     assess_claude_sessions,
     assess_session,
     claude_session_root,
     newest_activity,
-    object_name_rehearsal_roots,
     reclaim,
     transcript_mtime,
 )
@@ -419,31 +417,6 @@ def test_the_verdict_records_the_evidence_it_decided_on(tmp_path: Path) -> None:
     assert verdict.scratchpad_idle_seconds == pytest.approx(over, abs=5)
     assert verdict.transcript_idle_seconds == pytest.approx(over + 3600, abs=5)
     assert verdict.reason
-
-
-def test_rehearsal_roots_are_counted_without_sweeping_in_unrelated_temp_entries(tmp_path: Path) -> None:
-    """The third temp family is named by prefix, and only directories count.
-
-    The count is what the report stands on, so a neighbour that merely shares the
-    opening characters, or a plain file with the right name, must not inflate it.
-    """
-    (tmp_path / f"{OBJECT_NAME_REHEARSAL_PREFIX}aaaa1111").mkdir()
-    (tmp_path / f"{OBJECT_NAME_REHEARSAL_PREFIX}bbbb2222").mkdir()
-    (tmp_path / f"{OBJECT_NAME_REHEARSAL_PREFIX}cccc3333").write_text("a file, not a root", encoding="utf-8")
-    (tmp_path / "cadrumo-object-nameless-dddd").mkdir()
-    (tmp_path / "unrelated").mkdir()
-
-    found = object_name_rehearsal_roots(tmp_path)
-
-    assert [path.name for path in found] == [
-        f"{OBJECT_NAME_REHEARSAL_PREFIX}aaaa1111",
-        f"{OBJECT_NAME_REHEARSAL_PREFIX}bbbb2222",
-    ]
-
-
-def test_a_missing_temporary_root_reports_no_rehearsal_roots(tmp_path: Path) -> None:
-    """An absent directory is an empty family, not a crash mid-report."""
-    assert object_name_rehearsal_roots(tmp_path / "does-not-exist") == ()
 
 
 def test_a_root_that_exists_but_cannot_be_scanned_refuses_rather_than_reporting_none(

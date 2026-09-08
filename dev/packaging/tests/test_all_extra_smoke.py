@@ -1,7 +1,6 @@
 """Tests for the all-extras lane's claim list and argument contract.
 
-`dev.quality.module_test_reach` listed `dev/packaging/all_extra_smoke.py` as
-unreached. The lane installs the aggregate optional extras into a stdlib venv
+The lane installs the aggregate optional extras into a stdlib venv
 and drives the installed console script; that is what the packaging-smoke
 workflow runs on every OS leg, and reproducing it here would prove nothing the
 live legs do not.

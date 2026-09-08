@@ -2,8 +2,8 @@
 
 The module is a thin layer over the domain's live-parity functions, and its own
 behaviour is the wiring: which arguments it forwards, when it writes, and
-whether what it writes can be read back. `dev.quality.module_test_reach` listed
-it as an untested module that writes to the tree, which is what brought it here.
+whether what it writes can be read back. Those boundaries are what brought it
+here.
 
 Nothing is mocked. The workbook verification runs against a constructed root and
 returns a real report in hundredths of a second when there is nothing to scan,

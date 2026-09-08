@@ -1,7 +1,6 @@
 """Tests for the semantic audit's leak classification.
 
-`dev.quality.module_test_reach` listed `dev/audit/semantic.py` as unreached. Its
-search and health calls need the resident RAG daemon, which is not connected
+Its search and health calls need the resident RAG daemon, which is not connected
 here, but the classification is pure: given a snippet and a path, is this a
 domain calculation that leaked into an adapter or an entrypoint?
 

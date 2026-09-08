@@ -19,6 +19,7 @@ from ..pipeline.render_check import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
     return bundled_authority()

@@ -62,6 +62,7 @@ See Also:
 
 from __future__ import annotations
 
+import ast
 import re
 import shutil
 import subprocess
@@ -95,6 +96,7 @@ _TABLE_TOTAL_LABEL: Final[str] = "Total:"
 _CELL_FILES_ANALYZED: Final[int] = 2
 _CELL_DUPLICATED_LINES: Final[int] = 6
 _MIN_TABLE_CELLS: Final[int] = 8
+_CLONE_SITE: Final = re.compile(r"^\s*(?:-|\s)\s*(?P<path>.+?) \[(?P<start>\d+):\d+ - (?P<end>\d+):\d+\]")
 
 
 class DuplicationOutcome(StrEnum):
@@ -114,6 +116,15 @@ class CloneGroup:
     def render(self) -> str:
         """Render the block as its original multi-line console text."""
         return "\n".join(self.lines)
+
+    def sites(self) -> tuple[tuple[str, int, int], ...]:
+        """Return the source spans named by jscpd's console block."""
+        sites: list[tuple[str, int, int]] = []
+        for line in self.lines[1:]:
+            match = _CLONE_SITE.match(line)
+            if match is not None:
+                sites.append((match.group("path"), int(match.group("start")), int(match.group("end"))))
+        return tuple(sites)
 
 
 @dataclass(frozen=True)
@@ -298,6 +309,48 @@ def classify_jscpd_output(raw_stdout: str) -> DuplicationResult:
     )
 
 
+def _span_is_import_preamble(repo_root: Path, site: tuple[str, int, int]) -> bool:
+    path, start, end = site
+    try:
+        tree = ast.parse((repo_root / path).read_text(encoding=_UTF_8), filename=path)
+    except (OSError, UnicodeError, SyntaxError):
+        return False
+    statements = [
+        node for node in tree.body if getattr(node, "end_lineno", node.lineno) >= start and node.lineno <= end
+    ]
+    starts_in_import = any(
+        isinstance(node, (ast.Import, ast.ImportFrom))
+        and node.lineno <= start <= getattr(node, "end_lineno", node.lineno)
+        for node in statements
+    )
+    carries_behavior = any(
+        isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) for node in statements
+    )
+    return starts_in_import and not carries_behavior
+
+
+def _spans_overlap(left: tuple[str, int, int], right: tuple[str, int, int]) -> bool:
+    return left[0] == right[0] and left[1] <= right[2] and right[1] <= left[2]
+
+
+def actionable_clone_groups(groups: tuple[CloneGroup, ...], repo_root: Path) -> tuple[CloneGroup, ...]:
+    """Remove structural noise and duplicate reports without hiding executable clones."""
+    retained: list[CloneGroup] = []
+    retained_sites: list[tuple[tuple[str, int, int], ...]] = []
+    for group in groups:
+        sites = group.sites()
+        if len(sites) >= 2 and all(_span_is_import_preamble(repo_root, site) for site in sites):
+            continue
+        if len(sites) == 2 and any(
+            len(previous) == 2 and _spans_overlap(sites[0], previous[0]) and _spans_overlap(sites[1], previous[1])
+            for previous in retained_sites
+        ):
+            continue
+        retained.append(group)
+        retained_sites.append(sites)
+    return tuple(retained)
+
+
 def run_duplication_scan(
     repo_root: Path,
     *,
@@ -342,7 +395,18 @@ def run_duplication_scan(
         tail = detail[-1] if detail else "no diagnostic output"
         return DuplicationResult.unavailable(f"jscpd exited {completed.returncode}: {tail}")
 
-    return classify_jscpd_output(completed.stdout)
+    result = classify_jscpd_output(completed.stdout)
+    if result.outcome is not DuplicationOutcome.CLONES:
+        return result
+    groups = actionable_clone_groups(result.groups, repo_root)
+    if not groups:
+        return DuplicationResult.observed_zero(result.files_analyzed)
+    return DuplicationResult.from_clones(
+        files_analyzed=result.files_analyzed,
+        clone_count=len(groups),
+        duplicated_pct=result.duplicated_pct,
+        groups=groups,
+    )
 
 
 def render_console_report(result: DuplicationResult) -> str:

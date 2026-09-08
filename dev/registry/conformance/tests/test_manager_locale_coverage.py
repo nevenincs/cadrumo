@@ -2,9 +2,8 @@
 
 The manager renders facts computed elsewhere, with one exception: locale
 coverage is the axis it adds itself, because the shipped composer does not reach
-into the locale catalogue. That axis is 1,468 lines away from any test -
-`dev.quality.module_test_reach` reports the module as reached by none - and it
-carries an asymmetry its own docstring warns about.
+into the locale catalogue. It carries an asymmetry its own docstring warns
+about.
 
 ``labels_required_per_locale`` counts the required leaves for ONE locale, since
 every audited locale shares the key set. ``labels_translated`` is summed ACROSS

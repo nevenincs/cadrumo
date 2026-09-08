@@ -38,8 +38,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from ._field_mapping import expand_document_slots, project_emission
-from ._key import CORPUS_ROOT, CorpusDocument
-from ._result import EngineRoute, ModelTier, PipelineStage, ResultRow, Scored, build_result_row
+from ._key import CORPUS_ROOT, IngestCorpusDocument
+from ._result import EngineRoute, HarnessModelTier, PipelineStage, ResultRow, Scored, build_result_row
 from ._scoring import score_emission
 
 if TYPE_CHECKING:
@@ -52,7 +52,7 @@ class DriverError(RuntimeError):
     """A document could not be driven through the product's entry point."""
 
 
-def _document_path(document: CorpusDocument) -> Path:
+def _document_path(document: IngestCorpusDocument) -> Path:
     """Return the corpus document's path on disk, refusing an absent one."""
     path = CORPUS_ROOT / document.path
     if not path.is_file():
@@ -64,7 +64,7 @@ def _document_path(document: CorpusDocument) -> Path:
     return path
 
 
-def read_structured_draft(document: CorpusDocument) -> dict[str, Any]:
+def read_structured_draft(document: IngestCorpusDocument) -> dict[str, Any]:
     """Read one structured document through the product's own parser.
 
     Deterministic and model-free: the structured readers recover values from the
@@ -101,7 +101,7 @@ def read_structured_draft(document: CorpusDocument) -> dict[str, Any]:
 
 
 def measure_structured_document(
-    document: CorpusDocument,
+    document: IngestCorpusDocument,
     *,
     key_sha256: str,
     model_identity: str = "deterministic-structured-reader",
@@ -148,7 +148,7 @@ def measure_structured_document(
         # The deterministic lane sets no acceptance floor for a MODEL: it
         # measures a parser, and a floor drawn from it would flatter every
         # model-read lane it was compared against.
-        model_tier=ModelTier.UPPER_REFERENCE,
+        model_tier=HarnessModelTier.UPPER_REFERENCE,
         outcome=Scored(
             scorable_field_count=len(expanded.scorable_fields),
             matched=scoring.matched,

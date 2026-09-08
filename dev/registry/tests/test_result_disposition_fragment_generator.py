@@ -1,8 +1,7 @@
 """Tests for the result-disposition fragment generator.
 
-The module writes registry declarations and takes an ``--apply`` flag, and had
-no tests: `dev.quality.module_test_reach` ranks it first alongside two import
-codemods for exactly that pair of properties. The property most worth holding is
+The module writes registry declarations and takes an ``--apply`` flag. The
+property most worth holding is
 therefore not what it renders but what it does NOT do without ``--apply``.
 
 The renderer's two branches carry the module's actual judgement. A modelo whose

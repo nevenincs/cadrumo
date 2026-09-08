@@ -132,6 +132,7 @@ class ModeloModuleRecord:
     signals: tuple[DerivationSignal, ...]
     evidence: tuple[EmbedEvidence, ...]
 
+
 def modelo_codes() -> frozenset[str]:
     """Return every AEAT modelo code the core enum declares."""
     if str(SOURCE_ROOT.parent) not in sys.path:

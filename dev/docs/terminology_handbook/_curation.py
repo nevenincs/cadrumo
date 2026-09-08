@@ -11,8 +11,7 @@ arguments is a no-op diff).
 The audit report is read-only: it summarises curation-backlog health
 (draft counts, empty short_descriptions, dangling relations,
 retired-without-replaced_by, seed-provenance coverage) as a structured
-:class:`AuditReport` so a curation-backlog ratchet can consume the
-counts directly rather than re-parsing printed text.
+:class:`AuditReport` for direct inspection without re-parsing printed text.
 """
 
 from __future__ import annotations
@@ -56,7 +55,7 @@ class CurationError(TerminologyValidationError):
 
 @dataclass(frozen=True, slots=True)
 class AuditReport:
-    """Structured handbook-health snapshot for the curation-backlog ratchet."""
+    """Structured handbook-health snapshot for the live concept tree."""
 
     total_concepts: int
     draft_count: int

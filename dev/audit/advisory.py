@@ -2,7 +2,7 @@
 """The composed `just audit-all` dashboard: one concise summary, full results on disk.
 
 Replaces the old ``audit-all`` recipe, which chained five raw tool
-passthroughs (`complexity`, `dead code`, `duplication`, `checkout drift`,
+passthroughs (`complexity`, `dead code`, `duplication`,
 `security`) with no structure and no persistence. Measured on this tree, the
 raw `check-security` step alone produced 55,378 lines for 365 findings --
 each rendering matched code plus surrounding context, and several bundled
@@ -15,7 +15,7 @@ are reused verbatim (report.py itself is untouched: it is wired into
 ``.github/workflows/code-health-report.yml`` and
 ``src/cadrumo/tests/test_dev_audit_report.py`` pins its `to_json()` shape and
 four-dimension composition), and `dev.audit.dead_code` / `dev.audit.security`
-/ `dev.audit.checkout_drift` supply the other three.
+/ `dev.audit.security` supply the other two.
 
 Two things this module adds that no existing `dev/audit` scanner has:
 
@@ -41,7 +41,7 @@ See Also:
         module deliberately does not merge into (different dimension set,
         different CI wiring, pinned test coverage).
     :func:`build_advisory_report`
-        Assembles all five dimensions.
+        Assembles the four retained dimensions.
     :func:`persist`
         Writes the full, uncapped result to disk.
 """
@@ -57,7 +57,6 @@ from pathlib import Path
 from typing import Final
 
 from .._paths import REPO_ROOT, UTF_8
-from .checkout_drift import growth_against_ceiling, load_ceiling, measure
 from .dead_code import DeadCodeOutcome, run_dead_code_scan
 from .report import DimensionReport, Status, audit_complexity, audit_duplication
 from .security import SecurityOutcome, run_security_scan
@@ -125,47 +124,6 @@ def audit_dead_code(repo_root: Path) -> AdvisoryDimension:
         count_by_severity=result.count_by_confidence,
         findings=findings,
     )
-
-
-# ---------------------------------------------------------------------------
-# Checkout drift
-# ---------------------------------------------------------------------------
-
-
-def audit_checkout_drift(repo_root: Path) -> AdvisoryDimension:
-    """Classify the checkout-drift dimension from the real byte-drift measurement.
-
-    RED only if a counter exceeds its own recorded `--check` ceiling --
-    reuses `growth_against_ceiling`, so this display never invents a policy
-    beyond what `python -m dev.audit.checkout_drift --check` already
-    enforces. AMBER on drift with no ceiling breach (the module's own
-    documented "screen, not a gate" posture). GREEN on zero drift.
-    """
-    measurement = measure(repo_root)
-    ceiling_total, ceiling_buckets = load_ceiling()
-    growth = growth_against_ceiling(measurement, ceiling_total, ceiling_buckets)
-
-    findings: tuple[dict[str, object], ...] = tuple({"path": path} for path in measurement.drifted)
-    details = list(measurement.drifted)
-    count_by_severity = {"drifted": measurement.total, "carrying_crlf": measurement.carrying_crlf}
-    headline = (
-        f"{measurement.total} silently drifted file(s) of {measurement.scanned} scanned "
-        f"({measurement.carrying_crlf} carrying CRLF)"
-    )
-
-    if growth:
-        return AdvisoryDimension(
-            DimensionReport(name="checkout_drift", status=Status.RED, headline=headline, details=growth),
-            count_by_severity=count_by_severity,
-            findings=findings,
-        )
-    if measurement.total:
-        return AdvisoryDimension(
-            DimensionReport(name="checkout_drift", status=Status.AMBER, headline=headline, details=details),
-            count_by_severity=count_by_severity,
-            findings=findings,
-        )
-    return AdvisoryDimension(DimensionReport(name="checkout_drift", status=Status.GREEN, headline=headline))
 
 
 # ---------------------------------------------------------------------------
@@ -245,9 +203,8 @@ def _wrap(report: DimensionReport) -> AdvisoryDimension:
 def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
     """Run every advisory-audit dimension and assemble the composed report.
 
-    Returns exactly the five dimensions `just audit-all` has always covered,
-    in a fixed order: complexity, dead code, duplication, checkout drift,
-    security.
+    Returns the four retained dimensions in a fixed order: complexity, dead
+    code, duplication, and security.
 
     Module cohesion is enforced by structural gates owned by each architecture
     boundary, not by line-count thresholds or snapshots of temporary debt.
@@ -256,7 +213,6 @@ def build_advisory_report(repo_root: Path) -> tuple[AdvisoryDimension, ...]:
         _wrap(audit_complexity()),
         audit_dead_code(repo_root),
         _wrap(audit_duplication(repo_root)),
-        audit_checkout_drift(repo_root),
         audit_security(repo_root),
     )
 
@@ -301,7 +257,7 @@ _LEADING_COUNT: Final = re.compile(r"^(\d+)")
 def _total_findings(dimension: AdvisoryDimension) -> int:
     """The best available true count for a dimension.
 
-    Dimensions built in this module (dead code, checkout drift, security)
+    Dimensions built in this module (dead code and security)
     populate ``findings`` one record per finding, so its length is exact.
     Complexity and duplication are reused verbatim from ``dev.audit.report``
     and never populate ``findings`` -- their `details` list is not always

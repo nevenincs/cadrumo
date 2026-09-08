@@ -76,6 +76,7 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
     row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M100, "2025"))
     assert row.filing_export is not None
+    assert row.filing_export.refusal is not None
     assert (row.filing_export.outcome, row.filing_export.refusal.reason) == ("refused", "stale_evidence")
     assert row.predicate_outcome == "refused"
 
@@ -94,6 +95,7 @@ def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_ca
     row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo.M303, "2026-y-siguientes"))
     assert row.temporal_coverage.failure_code == "selected_revision_mismatch"
     assert row.filing_export is not None
+    assert row.filing_export.refusal is not None
     assert (row.filing_export.outcome, row.filing_export.refusal.reason) == ("refused", "cross_limb_disagreement")
     assert row.predicate_outcome == "refused"
 

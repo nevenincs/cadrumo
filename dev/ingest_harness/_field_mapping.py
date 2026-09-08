@@ -65,7 +65,7 @@ from typing import Any, Final, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ._key import CorpusDocument, CorpusKey
+from ._key import CorpusKey, IngestCorpusDocument
 from ._result import PipelineStage
 
 __all__ = [
@@ -397,7 +397,7 @@ _SUPERSEDING_FIELDS: Final = frozenset(
 )
 
 
-def _claims_draft_slot(key_field: str, document: CorpusDocument) -> bool:
+def _claims_draft_slot(key_field: str, document: IngestCorpusDocument) -> bool:
     """Whether this key field occupies its draft slot for THIS document.
 
     Exactly one member of a superseding pair may occupy one draft field, or the
@@ -417,7 +417,7 @@ def _claims_draft_slot(key_field: str, document: CorpusDocument) -> bool:
     return True
 
 
-def _resolved_role_target(mapping: FieldMapping, document: CorpusDocument) -> str | None:
+def _resolved_role_target(mapping: FieldMapping, document: IngestCorpusDocument) -> str | None:
     """Resolve a role-dependent mapping against the document's own role fact."""
     role = document.ground_truth.get("counterparty_role")
     if role == _ROLE_SUPPLIER:
@@ -427,7 +427,7 @@ def _resolved_role_target(mapping: FieldMapping, document: CorpusDocument) -> st
     return None
 
 
-def expand_document_slots(document: CorpusDocument) -> CorpusDocument:
+def expand_document_slots(document: IngestCorpusDocument) -> IngestCorpusDocument:
     """Return the document with its truth expanded into scorable SLOTS.
 
     Composite fields become one slot per leaf, so a wrong leaf costs one slot
@@ -470,7 +470,7 @@ _STAGE_ORDER: Final[tuple[PipelineStage, ...]] = (
 )
 
 
-def slots_unavailable_at(document: CorpusDocument, stage: PipelineStage) -> tuple[str, ...]:
+def slots_unavailable_at(document: IngestCorpusDocument, stage: PipelineStage) -> tuple[str, ...]:
     """Return the document's scorable slots that *stage* structurally cannot carry.
 
     A slot the stage cannot produce is not a failed read. Scoring it books a
@@ -513,7 +513,7 @@ def slots_unavailable_at(document: CorpusDocument, stage: PipelineStage) -> tupl
     return tuple(unavailable)
 
 
-def project_emission(document: CorpusDocument, draft_payload: Mapping[str, Any]) -> dict[str, Any]:
+def project_emission(document: IngestCorpusDocument, draft_payload: Mapping[str, Any]) -> dict[str, Any]:
     """Re-key a draft payload into the corpus's slot vocabulary.
 
     Moves values between names and does nothing else: no parsing, no coercion, no

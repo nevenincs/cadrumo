@@ -1,7 +1,6 @@
 """Tests for the devcontainer smoke checks' refusals.
 
-`dev.quality.module_test_reach` listed `dev/containers/devcontainer_smoke.py` as
-unreached. It runs INSIDE the built image, and each of its checks maps
+It runs INSIDE the built image, and each of its checks maps
 one-to-one onto a defect that shipped in that image, so the checks themselves
 cannot be exercised from this host - the venv is not ``/workspace/.venv``, there
 is no baked source tree, and no Chromium is provisioned here.

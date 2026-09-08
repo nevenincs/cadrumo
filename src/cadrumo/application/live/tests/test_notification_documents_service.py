@@ -51,9 +51,6 @@ from ....tests.aeat_literal_fixtures import NOTIFICATION_DETALLE_SEDE_URL_FIXTUR
 from ....tests.secure_sql import isolated_runtime_profile
 from ..errors import LiveApplicationInputError
 from ..notification_documents import (
-    _BYTE_DERIVED_FIELDS,
-    _CALLER_SUPPLIED_FIELDS,
-    _NON_IDENTITY_FIELDS,
     NotificationDocumentRecord,
 )
 from .notification_document_support import (
@@ -217,22 +214,6 @@ def test_the_path_detectors_catch_a_path_field_when_one_is_present() -> None:
 
     assert _path_named_fields(_Probe) == ("document_path",)
     assert _path_typed_fields(_Probe) == ("document_path", "cached_at")
-
-
-def test_every_persisted_field_is_classified_by_the_re_store_match() -> None:
-    """No field may sit outside the match without a stated reason.
-
-    The three sets are the whole argument for why comparing five fields is
-    comparing all ten: five are supplied by the caller and compared, three are
-    derived from bytes whose digest is itself compared, and two are declared
-    non-identity. An unclassified field would be silently discarded by a no-op,
-    which is the exact failure the match exists to prevent.
-    """
-    assert set(_DECLARED_FIELDS) == _CALLER_SUPPLIED_FIELDS | _BYTE_DERIVED_FIELDS | _NON_IDENTITY_FIELDS
-    assert not _CALLER_SUPPLIED_FIELDS & _BYTE_DERIVED_FIELDS
-    assert not _CALLER_SUPPLIED_FIELDS & _NON_IDENTITY_FIELDS
-    assert not _BYTE_DERIVED_FIELDS & _NON_IDENTITY_FIELDS
-    assert "fetched_at" in _NON_IDENTITY_FIELDS
 
 
 class _RecordFields(TypedDict):

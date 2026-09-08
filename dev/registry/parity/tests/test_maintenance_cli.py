@@ -1,7 +1,6 @@
 """Tests for the registry maintenance CLI's exit-code contract.
 
-`dev.quality.module_test_reach` listed `dev/registry/parity/maintenance_cli.py`
-as unreached. Three of its four verbs are gates by intent, and only one of them
+Three of its four verbs are gates by intent, and only one of them
 could fail.
 
 ``audit-oracles`` raises ``typer.Exit(1)`` on failures and is the verb CI runs.

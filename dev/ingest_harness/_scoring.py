@@ -7,8 +7,8 @@ measure had a place to be written down and no code that produced it. This module
 is the missing half, and it is deliberately the only place a verdict is decided.
 
 **Every slot comes from the corpus, never from an example.** The scorable slots
-are :attr:`~dev.ingest_harness._key.CorpusDocument.scorable_fields` and the traps are
-:attr:`~dev.ingest_harness._key.CorpusDocument.fabrication_trap_fields`, both derived
+are :attr:`~dev.ingest_harness._key.IngestCorpusDocument.scorable_fields` and the traps are
+:attr:`~dev.ingest_harness._key.IngestCorpusDocument.fabrication_trap_fields`, both derived
 from the document's own authored truth. Nothing here enumerates a field name, so
 a corpus that adds a field is scored on it without this module changing.
 
@@ -62,7 +62,7 @@ from typing import Any, Final, Self
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ._caveats import normalise_whitespace
-from ._key import CorpusDocument
+from ._key import IngestCorpusDocument
 from ._result import HarnessRefusalError, Scored, amounts_match
 
 __all__ = [
@@ -281,7 +281,7 @@ def _values_agree(truth: Any, emitted: Any, *, tolerance_cents: int) -> bool:
     return truth == emitted
 
 
-def score_emission(*, document: CorpusDocument, emitted: Mapping[str, Any]) -> FieldScoring:
+def score_emission(*, document: IngestCorpusDocument, emitted: Mapping[str, Any]) -> FieldScoring:
     """Score one emission against one document's authored truth.
 
     The emission is whatever the product produced for this document -- a mapping

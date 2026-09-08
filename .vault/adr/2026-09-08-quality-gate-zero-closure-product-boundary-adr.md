@@ -8,6 +8,7 @@ related:
   - "[[2026-09-08-quality-gate-zero-closure-dev-tooling-product-boundary-audit]]"
 supersedes:
   - '2026-09-07-quality-gate-zero-closure-blind-green-gates-adr'
+  - '2026-09-02-object-name-declustering-adr'
 modified: '2026-09-08'
 body_schema: 'body-v2'
 body_hash: 'sha256:cd8f6527b32c8559a892e959b1a3f28aca36d7a9b3c12353e6144713f399d3ba'

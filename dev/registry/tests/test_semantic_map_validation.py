@@ -16,8 +16,7 @@ from cadrumo.core.filing_projection_ref import (
 from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..analysis.m200_2024_reviewed_promotions import build_m200_2024_reviewed_promotion_snapshot
-from ..pipeline import _semantic_map_join, _semantic_map_validation
+from ..pipeline import _semantic_map_validation
 from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
 from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_validation import (
@@ -320,71 +319,6 @@ def test_exact_and_segment_qualified_casilla_identities_are_preserved() -> None:
 
     assert resolved.entries[0] is semantic_map.entries[0]
     assert resolved.entries[0].casilla_id == qualified
-
-
-def test_receipt_bound_qualified_identity_admission_is_exact_and_not_generic_padding() -> None:
-    semantic_map = _casilla_token_map("588")
-    qualified = validated_casilla_id("DP200018:00588", surface="test")
-
-    resolved = _semantic_map_validation._resolve_semantic_map_casilla_tokens(
-        semantic_map,
-        casilla_ids=frozenset({qualified}),
-        qualified_identity_admissions={"generated.casilla.one": qualified},
-    )
-
-    assert resolved.entries[0].casilla_id == qualified
-    with pytest.raises(RegistryValidationError, match="reviewed qualified identity admission drifted"):
-        _semantic_map_validation._resolve_semantic_map_casilla_tokens(
-            semantic_map,
-            casilla_ids=frozenset({qualified}),
-            qualified_identity_admissions={
-                "generated.casilla.one": validated_casilla_id("DP200018:00589", surface="test")
-            },
-        )
-
-
-def test_join_qualified_identity_transform_requires_the_closed_reviewed_receipt() -> None:
-    """A matching qualified suffix alone is never a join-time admission proof."""
-    authored = (
-        _casilla_token_map("588")
-        .entries[0]
-        .model_copy(
-            update={"export_field_id": "m200-2024.dp200018.f0172"},
-        )
-    )
-    admitted = authored.model_copy(
-        update={"casilla_id": validated_casilla_id("DP200018:00588", surface="test")},
-    )
-    invented = authored.model_copy(
-        update={"casilla_id": validated_casilla_id("DP200018:00589", surface="test")},
-    )
-    admissions = _semantic_map_join._issued_qualified_identity_admissions(
-        modelo="200",
-        revision_id="2024",
-        reviewed_promotion_snapshot=build_m200_2024_reviewed_promotion_snapshot(),
-    )
-
-    assert _semantic_map_join._entry_is_exact_or_compiled_token(
-        authored,
-        admitted,
-        modelo="200",
-        revision_id="2024",
-        qualified_identity_admissions=admissions,
-    )
-    assert not _semantic_map_join._entry_is_exact_or_compiled_token(
-        authored,
-        invented,
-        modelo="200",
-        revision_id="2024",
-        qualified_identity_admissions=admissions,
-    )
-    assert not _semantic_map_join._entry_is_exact_or_compiled_token(
-        authored,
-        admitted,
-        modelo="130",
-        revision_id="2024",
-        qualified_identity_admissions=admissions,
-    )
 
 
 def test_numeric_official_casilla_token_refuses_ambiguous_left_padding() -> None:
@@ -1010,102 +944,6 @@ def test_variable_envelope_boundary_refuses_record_identity_mismatch() -> None:
         match="reviewed variable-envelope contract names 'envelope-other' but the parser owns 'envelope-wrap'",
     ):
         _semantic_map_validation._validate_variable_envelope_boundary(semantic_map, intermediate)
-
-
-@pytest.mark.parametrize(
-    ("token", "identifier"),
-    (
-        ("abc", "DP200018:00588"),
-        ("588", "00588"),
-    ),
-)
-def test_qualified_token_match_refuses_non_decimal_token_or_unqualified_identifier(token: str, identifier: str) -> None:
-    """The early refusal branch: a non-numeric token or an unqualified identifier never matches."""
-    assert _semantic_map_validation._is_qualified_token_match(token, identifier) is False
-
-
-#: A real closed M200/2024 receipt row, captured once: export field
-#: "m200-2024.dp200018.f0172" is reviewed-admitted to qualified identity
-#: "DP200018:00588". Each test below makes exactly ONE call into
-#: ``_reviewed_qualified_identity_admissions``, which freshly rebuilds the real
-#: M200/2024 promotion receipt every time it runs -- an expensive, CPU-bound
-#: compilation over real bundled audit data. Splitting one raise branch per
-#: test (rather than driving both from a single test) gives each its own
-#: per-test timeout budget instead of sharing one.
-_M200_2024_REAL_EXPORT_FIELD_ID = "m200-2024.dp200018.f0172"
-_M200_2024_REAL_QUALIFIED_IDENTITY = "DP200018:00588"
-
-
-def test_reviewed_qualified_identity_admission_refuses_a_drifted_token() -> None:
-    """``_reviewed_qualified_identity_admissions`` is reachable through the public
-    ``validate_semantic_map``/``join_record_design_semantics`` entry points only
-    for modelo 200, design epoch 2024, revision 2024 -- everywhere else it
-    short-circuits to an empty admission set before ever touching the receipt.
-    That narrow gate previously left this raise branch undriven; this test
-    calls the private function directly, the same pattern already used above
-    for ``_resolve_semantic_map_casilla_tokens``, using the real bundled
-    M200/2024 revision and its real closed promotion receipt.
-    """
-    from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
-
-    inspection = bundled_revision_inspection("200", filing_year=2024, period="0A")
-    drifted_map = SemanticMap.model_validate(
-        _semantic_map_payload(
-            modelo="200",
-            design_epoch="2024",
-            entries=(
-                _entry(
-                    row=14,
-                    ordinal=1,
-                    field_id=_M200_2024_REAL_EXPORT_FIELD_ID,
-                    kind="casilla",
-                    casilla_id="999",
-                ),
-                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
-            ),
-        ),
-    )
-
-    with pytest.raises(RegistryValidationError, match="does not match its semantic-map token"):
-        _semantic_map_validation._reviewed_qualified_identity_admissions(drifted_map, inspection)
-
-
-def test_reviewed_qualified_identity_admission_refuses_an_identity_absent_from_the_target_revision() -> None:
-    """The receipt-admitted qualified identity must still live in the selected revision.
-
-    Reachable the same way as the sibling drifted-token case above; driven
-    separately so each expensive real-receipt compilation keeps its own
-    per-test timeout budget.
-    """
-    from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
-
-    inspection = bundled_revision_inspection("200", filing_year=2024, period="0A")
-    matching_map = SemanticMap.model_validate(
-        _semantic_map_payload(
-            modelo="200",
-            design_epoch="2024",
-            entries=(
-                _entry(
-                    row=14,
-                    ordinal=1,
-                    field_id=_M200_2024_REAL_EXPORT_FIELD_ID,
-                    kind="casilla",
-                    casilla_id="588",
-                ),
-                _entry(row=15, ordinal=2, field_id="generated.literal.two", literal="0"),
-            ),
-        ),
-    )
-    inspection_without_identity = inspection.model_copy(
-        update={
-            "casilla_ids": frozenset(
-                cid for cid in inspection.casilla_ids if cid != _M200_2024_REAL_QUALIFIED_IDENTITY
-            ),
-        },
-    )
-
-    with pytest.raises(RegistryValidationError, match="is absent from the target revision"):
-        _semantic_map_validation._reviewed_qualified_identity_admissions(matching_map, inspection_without_identity)
 
 
 def test_validation_module_carries_no_legacy_layout_dependency() -> None:

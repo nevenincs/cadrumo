@@ -23,7 +23,6 @@ import sys
 from typing import Final, TextIO
 
 from .._paths import UTF_8
-from .suite import annotate_unevaluated_contracts
 
 _UTF_8: Final[str] = UTF_8
 
@@ -73,17 +72,7 @@ def main(argv: list[str] | None = None) -> int:
         # Mirror of the decode note above: a cp1252 console cannot encode the
         # tool's UTF-8 replay either, so the replay itself raised instead of
         # showing the failure it was invoked to surface.
-        # import-linter aborts before evaluating ANY contract when one ignore
-        # pin matches nothing, and its whole output is then the line naming
-        # that pin. Replayed bare, that reads as one narrow complaint; it is
-        # every layering contract going unchecked. CI runs this wrapper, so
-        # without the annotation here the distinction never reaches the only
-        # place that looks. Applied unconditionally rather than keyed on the
-        # command: the annotator matches the linter's own markers, so any other
-        # tool's failure passes through untouched, and keying on a command name
-        # would make this branch unreachable from a test that cannot invoke the
-        # real binary.
-        _write_replay(sys.stdout, annotate_unevaluated_contracts(result.stdout or ""))
+        _write_replay(sys.stdout, result.stdout)
         _write_replay(sys.stderr, result.stderr)
     return result.returncode
 

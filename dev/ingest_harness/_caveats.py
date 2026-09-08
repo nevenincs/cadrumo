@@ -17,7 +17,7 @@ from __future__ import annotations
 import re
 from typing import Final
 
-from ._key import TWIN_LINK_IS_PROSE, CorpusDocument
+from ._key import TWIN_LINK_IS_PROSE, IngestCorpusDocument
 
 __all__ = [
     "SPANISH_OPTIMISM_BIAS_CAVEAT",
@@ -56,7 +56,7 @@ def normalise_whitespace(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def caveats_for_document(document: CorpusDocument) -> tuple[str, ...]:
+def caveats_for_document(document: IngestCorpusDocument) -> tuple[str, ...]:
     """Return every caveat this document's own properties require.
 
     Derived rather than supplied. A caller cannot forget to pass one, and a

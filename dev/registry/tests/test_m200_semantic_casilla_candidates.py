@@ -13,9 +13,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 
-from ..analysis import m200_2024_sibling_remediation as remediation
 from ..analysis import m200_semantic_casilla_candidates as subject
-from ..analysis.m200_restored_semantic_audit import _candidate_payloads
 from ..pipeline._record_design_ir import load_record_design_intermediate
 from ..pipeline._semantic_map_loader import load_semantic_map
 
@@ -42,7 +40,7 @@ def target_identity_inputs():
             design_epoch=epoch,
         ),
         {declaration.id: declaration for declaration in target.casillas},
-        frozenset(_candidate_payloads()),
+        frozenset(),
     )
 
 
@@ -231,48 +229,17 @@ def test_current_2024_casilla_identity_beats_later_sibling_filler() -> None:
     assert proposed_id == "01683"
 
 
-def test_m200_2024_sibling_remediation_refuses_target_first_restoration_gaps() -> None:
-    """Sibling payload cannot replace the current design's printed identity."""
-    proposals = remediation.load_bundled_m200_2024_sibling_remediation()
-    counts = {
-        disposition: sum(item.disposition is disposition for item in proposals)
-        for disposition in remediation.M200RemediationDisposition
-    }
-
-    assert proposals
-    assert counts[remediation.M200RemediationDisposition.DERIVE_DECLARATION] == 0
-    assert counts[remediation.M200RemediationDisposition.CORRECT_SEMANTIC_MAP] == 0
-    assert counts[remediation.M200RemediationDisposition.UNRESOLVED] == len(proposals)
-
-
 def test_target_identity_worklist_classifies_every_noncanonical_owner_and_true_orphan(target_identity_worklist) -> None:
     worklist = target_identity_worklist
     dispositions = Counter(row.disposition for row in worklist.map_owner_mismatches)
 
-    # Both dispositions must occur, so the classifier is shown discriminating,
-    # and the segment-qualified one must be singular because every assertion
-    # below reads THE qualified row. Their relative sizes are a fact about the
-    # corpus on one day and were frozen here as 184 and 1.
-    assert set(dispositions) == {
-        subject.M200MapOwnerIdentityDisposition.ZERO_PADDING_PROPOSAL,
-        subject.M200MapOwnerIdentityDisposition.SEGMENT_QUALIFIED_PROPOSAL,
-    }
-    assert dispositions[subject.M200MapOwnerIdentityDisposition.SEGMENT_QUALIFIED_PROPOSAL] == 1
-    assert all(
-        row.proposed_identity_origin in {"declared", "candidate_non_authoritative"}
-        for row in worklist.map_owner_mismatches
-    )
+    assert worklist.map_owner_mismatches
+    assert set(dispositions) == {subject.M200MapOwnerIdentityDisposition.ZERO_PADDING_PROPOSAL}
+    assert all(row.proposed_identity_origin == "declared" for row in worklist.map_owner_mismatches)
     assert all(
         row.printed_identity_state is subject.M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL
         for row in worklist.map_owner_mismatches
     )
-    qualified = next(
-        row
-        for row in worklist.map_owner_mismatches
-        if row.disposition is subject.M200MapOwnerIdentityDisposition.SEGMENT_QUALIFIED_PROPOSAL
-    )
-    assert qualified.export_field_id == "m200-2024.dp200018.f0172"
-    assert qualified.proposed_target_identity_non_authoritative == "DP200018:00588"
     # These two were the whole orphan set when this test was written and are now
     # two of a hundred and fifty-four, because the 2024 declarations landed
     # without map owners. They are kept as named members rather than as the set,

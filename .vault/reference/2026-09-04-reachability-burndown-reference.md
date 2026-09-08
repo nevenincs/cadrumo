@@ -5,7 +5,7 @@ tags:
 date: '2026-09-04'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7586faee0edb1e58507c28cb11006274beabafd785ba901780a27dbbf61a1d4'
+body_hash: 'sha256:d04cbceec6634ccf315c62de105c97edf59069c61ba08d285ef130c1cd71e6ba'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -79,6 +79,28 @@ A runtime-checkable protocol with one concrete implementation is not an applicat
 A production `*_ALLOWED_COLUMNS` aggregate used only by a cross-cutting coverage test is a development census even when every member is accurate. Derive the test population from the live row schema (`model_fields`) or the runtime parser authority, and keep only subsets the product itself consumes for required-field refusal or dispatch. Detector proof must move when the executable schema moves without requiring a mirrored constant edit.
 
 Do not export a read-only proxy of a private runtime catalogue merely so tests can call a generic helper with production identities. Keep the live catalogue private to its aggregator and prove generic refusal behavior with a minimal synthetic mapping. The synthetic mapping tests the mechanism; the aggregator’s behavioral suite tests the real catalogue, without creating a second public name or a test-facing production seam.
+
+A constructor for an empty or sentinel fingerprint is test support when production always self-loads the real source and only tests inject the empty digest to avoid a bucket dependency. Move the constructor into the excluded shared test-support package, where it may call the production owner’s private canonical fingerprint primitive. Keep production overrides generic for legitimate precomputed values, but remove docstrings that advertise test-only empty helpers as product APIs.
+
+A production accessor whose only consumer is a test enumerating a private runtime set is a development census, even when the underlying set drives live behavior. Delete the accessor and its export; retain the private runtime authority. Rewrite the proof around explicit input/output behavior and, where useful, separately assert that the public production computation supplies the expected prerequisites rather than exposing internal membership for inspection.
+
+An exhaustive production mapping plus a second `excluded` or `ignored` inventory is development metastate when no live product path consumes either collection. If an accepted ADR prescribed that completeness scheme, amend the ADR first: retain the semantic boundary and the real wire vocabulary, but defer event conversion to the future live producer that owns it. Delete the inventories, exclusion-reason enum, exports, and census tests together; behavioral tests belong at the real producer once it exists.
+
+A cache-reset composition exported from production solely so tests can mutate time-windowed cache state is test support. Remove the facade, its export, and production documentation that advertises test/tool mutation. Let the focused test clear the real cache owners directly, keeping each production cache and the live read path unchanged; do not replace the facade with another shipped diagnostic wrapper.
+
+A production convenience that only chains already-public owners and has no product caller is a test seam, not an application service. Remove the wrapper, export, and module-level advertising; make the test compose the canonical state load and projection functions directly. Preserve any error translation only when a live caller consumes that contract—tests alone do not justify shipping it.
+
+A public alias of a private canonical predicate is removable when exact reachability shows no consumers and the private predicate remains live through another public operation. Delete the alias and export together; verify the shared live path rather than adding an alias-specific test. This preserves one semantic owner and avoids manufacturing API surface for internal implementation detail.
+
+Field partitions such as `compared`, `derived`, and `non-identity` are development metastate when only a completeness test consumes the non-live partitions. Keep the subset that drives the runtime comparison; delete explanatory inventories used only to make an exhaustive union and remove that union test. Preserve safety with behavioral proofs that retries no-op on agreement, refuse changed caller input, retain timestamps, and do not repeat custody writes.
+
+A production `uncovered_*` reporter and its pure comparison helper are development tooling when only a test calls them. Keep the live mapping in production, but move union introspection and set-difference logic into the coverage test. Preserve detector teeth by subtracting one real member in test-owned data and proving the missing member is detected; production should not expose the test's audit operation.
+
+A generated production aggregate of otherwise-live contracts is development metastate when no assembly, capture, revalidation, or reader consumes the aggregate. Retain each owner-specific contract at its live port boundary, delete the inventory model, digest, singleton, exports, and inventory-only tests, and amend any ADR that prescribed the aggregate. A completeness gate may discover live contract instances by their semantic type and compare their kinds with the typed runtime denominator; it must not introduce a second tuple of contracts, constant-name census, or shipped inventory version.
+
+A test is not valuable merely because it checks a detailed synthetic contract. When an exact finding's removal exposes the contract's defining module as wholly unreachable and every remaining consumer is its own test suite, follow that reachability edge before closing the Step. Delete the abandoned production model, its synthetic fixtures, identity/export censuses, and orphaned primitive together unless a real product boundary owns the behavior. Remeasure after the first edit: a newly unreachable module is evidence that the initial symbol was only the outermost layer of the same dead slice, not a reason to preserve the layer or repair its tests.
+
+A reflective test that scans a hand-maintained package list, converts live types into qualified-name strings, and compares them with an enrolled/classified name census is not a second safety authority when the production composition already validates typed membership and the exact reachability detector already reports dormant implementations. Delete the reflective gate rather than updating its module list, disposition map, or pinned counts. Keep production validation over the actual typed route and behavioral tests that execute representative resolvers; those fail on real composition defects without encoding development classifications or duplicate code identities.
 
 ## Authority boundaries
 

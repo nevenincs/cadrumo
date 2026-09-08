@@ -48,15 +48,50 @@ __all__ = [
 class GeneratedArtifactSource(Protocol):
     """The byte-authority fields a generated-artifact verifier consumes."""
 
-    id: SourceRefId
-    kind: RegistrySourceKind
-    corpus_path: str
-    sha256: str
-    bytes: int
-    applies_from: date | None
-    applies_to: date | None
-    record_design_epoch: str | None
-    corpus_tier: CorpusTierField | None
+    @property
+    def id(self) -> SourceRefId:
+        """Return the source-reference identity."""
+        ...
+
+    @property
+    def kind(self) -> RegistrySourceKind:
+        """Return the source kind."""
+        ...
+
+    @property
+    def corpus_path(self) -> str:
+        """Return the bundled corpus path."""
+        ...
+
+    @property
+    def sha256(self) -> str:
+        """Return the expected source digest."""
+        ...
+
+    @property
+    def bytes(self) -> int:
+        """Return the expected source byte length."""
+        ...
+
+    @property
+    def applies_from(self) -> date | None:
+        """Return the lower applicability bound."""
+        ...
+
+    @property
+    def applies_to(self) -> date | None:
+        """Return the upper applicability bound."""
+        ...
+
+    @property
+    def record_design_epoch(self) -> str | None:
+        """Return the record-design epoch, when declared."""
+        ...
+
+    @property
+    def corpus_tier(self) -> CorpusTierField | None:
+        """Return the corpus authority tier, when declared."""
+        ...
 
     def applies_across(self, span_from: date, span_to: date | None) -> bool:
         """Report whether this source's applicability window overlaps one date span.
@@ -70,13 +105,40 @@ class GeneratedArtifactSource(Protocol):
 class GeneratedArtifactInspection(Protocol):
     """The static revision facts required to verify a generated artefact."""
 
-    modelo_id: ModeloId
-    revision_id: RevisionId
-    revision_source_refs: tuple[SourceRefId, ...]
-    legal_ref_ids: frozenset[LegalRefId]
-    casilla_ids: frozenset[CasillaId]
-    binding_ids: frozenset[BindingId]
-    projection_endpoints: tuple[ProjectionEndpointDeclaration, ...]
+    @property
+    def modelo_id(self) -> ModeloId:
+        """Return the modelo identity."""
+        ...
+
+    @property
+    def revision_id(self) -> RevisionId:
+        """Return the revision identity."""
+        ...
+
+    @property
+    def revision_source_refs(self) -> tuple[SourceRefId, ...]:
+        """Return the revision's source references."""
+        ...
+
+    @property
+    def legal_ref_ids(self) -> frozenset[LegalRefId]:
+        """Return the revision's legal-reference identities."""
+        ...
+
+    @property
+    def casilla_ids(self) -> frozenset[CasillaId]:
+        """Return the declared casilla identities."""
+        ...
+
+    @property
+    def binding_ids(self) -> frozenset[BindingId]:
+        """Return the declared binding identities."""
+        ...
+
+    @property
+    def projection_endpoints(self) -> tuple[ProjectionEndpointDeclaration, ...]:
+        """Return the declared projection endpoints."""
+        ...
 
     @property
     def sources(self) -> Mapping[SourceRefId, GeneratedArtifactSource]:

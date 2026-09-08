@@ -81,18 +81,6 @@ _CALLER_SUPPLIED_FIELDS: Final[frozenset[str]] = frozenset(
     {"certificado_id", "bucket_id", "document_sha256", "byte_size", "source_url"},
 )
 
-#: Persisted fields derived deterministically from the document BYTES. Equal
-#: bytes imply equal values, and ``document_sha256`` — which IS the bytes'
-#: identity — is compared above, so these are covered transitively. Re-deriving
-#: them to compare would re-run the very reading the no-op exists to skip.
-_BYTE_DERIVED_FIELDS: Final[frozenset[str]] = frozenset({"attachment_id", "sancion", "parse_refusal"})
-
-#: Persisted fields deliberately OUTSIDE the match. ``fetched_at`` is a
-#: last-seen body field, never identity: folding the clock in would make every
-#: retry diverge from itself. ``mode`` is a single-value structural marker.
-_NON_IDENTITY_FIELDS: Final[frozenset[str]] = frozenset({"fetched_at", "mode"})
-
-
 NotificationParseRefusal = Annotated[str, StringConstraints(min_length=1, max_length=512)]
 """Why a sede notification document could not be parsed."""
 

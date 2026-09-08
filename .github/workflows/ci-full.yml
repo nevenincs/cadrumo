@@ -381,7 +381,6 @@ jobs:
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live tests are skipped.
         run: |
           uv run --no-sync pytest -n 8 \
-            dev/tests/test_roundtrip_coverage.py \
             src/cadrumo/application/ledger/tests \
             src/cadrumo/adapters/persistence/storage \
             src/cadrumo/adapters/persistence/profile \

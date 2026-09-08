@@ -83,8 +83,6 @@ def _iter_scanned_modules() -> Iterator[Path]:
             parts = path.parts
             if "tests" in parts or "__pycache__" in parts:
                 continue
-            if ".baseline-source-snapshot" in path.as_posix():
-                continue
             yield path
 
 

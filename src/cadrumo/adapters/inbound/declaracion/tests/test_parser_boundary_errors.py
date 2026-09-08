@@ -5,9 +5,11 @@ from __future__ import annotations
 import pytest
 
 from ._parser_boundary_support import (
+    FIXTURES_DIR,
     Decimal,
     DeclaracionParseError,
     Path,
+    _modelo_130_snapshot,
     _write_declaration_pdf,
     parse_declaracion,
 )
@@ -32,3 +34,19 @@ def test_parser_requires_a_known_registry_model_after_template_resolution(tmp_pa
     error = excinfo.value.context.get("error", "")
     assert isinstance(error, str)
     assert "is not present in the calculation registry" in error
+
+
+def test_parser_contains_an_invalid_period_override_as_a_parse_failure() -> None:
+    """A malformed caller override must not leak the core period family."""
+    pdf_path = FIXTURES_DIR / "justificantes" / "130" / "2024-1T.pdf"
+
+    with pytest.raises(DeclaracionParseError) as excinfo:
+        parse_declaracion(
+            pdf_path,
+            modelo_override="130",
+            año_override=2024,
+            period_override="NOT-A-PERIOD",
+            registry_snapshot=_modelo_130_snapshot(),
+        )
+
+    assert excinfo.value.translated_message == "adapters.inbound.declaracion.errors.period_unresolved"

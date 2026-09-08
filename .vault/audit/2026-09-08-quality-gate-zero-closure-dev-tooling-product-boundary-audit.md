@@ -5,7 +5,7 @@ tags:
 date: '2026-09-08'
 modified: '2026-09-08'
 body_schema: 'body-v2'
-body_hash: 'sha256:d98f2119242ef3b18b7592fb1459619d5d95ea7695f74df2bbd4fe2066d6de09'
+body_hash: 'sha256:369fc9f6f6a2b402b01b7d87085f535e53025bd5958cb63de77bc41c61931f66'
 related:
   - "[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]"
 ---
@@ -75,6 +75,12 @@ The replacement was narrowed after the broader sweep encountered registry consum
 
 `W08.P28.S121` is now listed as retired, so the plan no longer presents that deleted detector mutation run as open work. The accepted ADR and the plan's description, completed implementation rows, and verification criteria still state that `mutmut` and the detector mechanisms are installed standing obligations. The high governance-conflict finding therefore remains open in narrower form until the architecture corpus records the user's superseding decision.
 
+### residual-roundtrip-inventory-closure | low | the hardcoded inventory and its CI pin are removed
+
+Resolved after explicit authorization from the workflow owner. `dev/tests/test_roundtrip_coverage.py`, its explicit `ci-full.yml` pytest argument, and the command-pin assertion are deleted atomically. The full-lane step continues to invoke the real ledger, storage, and profile roundtrip suites directly; no shim, duplicate test, shadow inventory, or re-export replaces it.
+### historical-shape-detector-closure | low | narrowing and production-metastate parsers are removed
+
+Resolved in the reviewed worktree. The narrowing-delegator and production-metastate gates were custom AST and textual classifiers whose paired tests constructed synthetic Python modules around historical removed shapes. Their underlying product cleanups remain; the detectors, fixtures, tests, recipes, and aggregate-suite rows are deleted.
 ## Recommendations
 
 1. Keep the current deletion of the six detector modules, all paired gates and mutation-shaped fixtures, the taxonomy declaration residue, the source-inspection revision census, and all `mutmut` dependency/configuration. Do not replace them with another mutation engine or an equivalent local parser.

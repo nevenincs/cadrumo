@@ -106,11 +106,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Named for what they ARE -- values planted into a specimen -- rather than for
 #: what they are not. They are a positive control, not a test double: nothing
 #: here stands in for a collaborator, and the real ``sanitize_pdf`` processes
-#: them. The ``mock/fake/stub/spy/dummy`` vocabulary is banned tree-wide by
-#: ``tests/test_mock_inventory.py`` precisely because it reads as substitution,
-#: which would misdescribe these and mask a real double elsewhere. ``_PLANTED_``
-#: also pairs with the ``_SYNTHETIC_`` values below, so the specimen's before
-#: and after sides are one vocabulary.
+#: them. ``_PLANTED_`` also pairs with the ``_SYNTHETIC_`` values below, so the
+#: specimen's before and after sides are one vocabulary.
 _PLANTED_NIF = "00000000T"
 _PLANTED_IBAN = "ES8200000000000000000000"
 

@@ -14,13 +14,16 @@ related:
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]'
   - '[[2026-09-07-quality-gate-zero-closure-blind-green-measurement-research]]'
   - '[[2026-09-07-quality-gate-zero-closure-gate-consumer-parser-blindness-audit]]'
+  - '[[2026-09-08-quality-gate-zero-closure-product-boundary-adr]]'
 modified: '2026-09-08'
-body_hash: 'sha256:4f98a70327e6e372a7c410460f5167853ea882f7313948cf14b9e49084616089'
+body_hash: 'sha256:1c121304693e540134d96b52a8c631691418704901b3d355d0b19aae68050e1e'
 ---
 
 <!-- RETIRED: W01, W02, W03, W04, W05, W06, P01, P02, P03, P04, P05, P06, P07, P08, P09, P10, P11, P12, P13, P14, P15, P16, P17, P18, P19, P21, P22, S01, S02, S03, S04, S05, S06, S07, S08, S09, S10, S11, S12, S13, S14, S15, S16, S17, S18, S19, S20, S21, S22, S23, S24, S25, S26, S27, S28, S29, S30, S31, S32, S33, S34, S35, S36, S37, S38, S39, S40, S41, S42, S43, S44, S45, S46, S47, S48, S49, S50, S51, S52, S53, S54, S55, S56, S57, S58, S59, S60, S61, S62, S63, S64, S65, S66, S67, S68, S69, S70, S71, S72, S73, S74, S75, S76, S77, S78, S79, S80, S81, S82, S83, S84, S85, S86, S87, S88, S89, S90, S91, S92, S95, S96, S97, S98, S99, S100, S101, S102, S103, S121 -->
 
 # `quality-gate-zero-closure` plan
+
+> **Retired implementation record (2026-09-08).** Wave W08 and its verification criteria describe historical execution under the superseded blind-green ADR. The accepted `2026-09-08-quality-gate-zero-closure-product-boundary-adr` withdrew the standing mutation/meta-detector architecture; those instruments, fixtures, dependencies, and commands are intentionally removed and this completed plan does not authorize recreating them.
 
 ## Description
 

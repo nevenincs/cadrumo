@@ -23,7 +23,7 @@ import pytest
 
 from .._driver import DriverError, measure_structured_document, read_structured_draft
 from .._key import CorpusKey
-from .._result import EngineRoute, HarnessRefusalError, ModelTier, PipelineStage, Scored
+from .._result import EngineRoute, HarnessModelTier, HarnessRefusalError, PipelineStage, Scored
 from .._runner import HarnessReport
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -105,7 +105,7 @@ def test_the_row_names_the_route_and_tier_it_actually_ran_under(key: CorpusKey) 
     row = measure_structured_document(_first_readable(key), key_sha256=key.sha256)
 
     assert row.engine_route is EngineRoute.DETERMINISTIC
-    assert row.model_tier is ModelTier.UPPER_REFERENCE
+    assert row.model_tier is HarnessModelTier.UPPER_REFERENCE
     assert not row.is_baseline_eligible
     assert row.stage is PipelineStage.END_TO_END
 

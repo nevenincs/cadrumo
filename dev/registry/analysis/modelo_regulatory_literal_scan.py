@@ -42,9 +42,7 @@ def _modelo_members(node: ast.AST) -> tuple[str, ...]:
             {
                 child.attr
                 for child in ast.walk(node)
-                if isinstance(child, ast.Attribute)
-                and isinstance(child.value, ast.Name)
-                and child.value.id == "Modelo"
+                if isinstance(child, ast.Attribute) and isinstance(child.value, ast.Name) and child.value.id == "Modelo"
             }
         )
     )

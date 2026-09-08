@@ -192,4 +192,3 @@ interpret, or resume from a full-screen destination outcome. The only remaining 
 the opaque `aeat app tui` root launch, which requires neither destination tokens nor an outcome
 file and returns only the child's exit status. Remove the shared destination protocol if no
 non-CLI peer still requires it; destination navigation otherwise stays internal to the TUI.
-

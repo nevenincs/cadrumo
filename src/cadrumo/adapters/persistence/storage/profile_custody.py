@@ -609,6 +609,8 @@ class _PersistenceProfileCustody:
                 if verified is not None
                 else repository.publish_initial(label=custody_label, source_witness=source_witness)
             )
+        except ProfileCustodyConcurrentCapsuleChangeError as exc:
+            raise ProfileCustodyConcurrentChangeError(str(exc)) from exc
         except ProfileCustodyRecordError as exc:
             raise ProfileCustodyRecordIntegrityError(str(exc)) from exc
 

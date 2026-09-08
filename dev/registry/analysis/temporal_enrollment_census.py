@@ -132,10 +132,7 @@ def law_selectable_revision_subjects(
 ) -> frozenset[RegistryRevisionSubject]:
     """Derive the complete law-selectable registered-revision denominator."""
     report = compose_temporal_coverage(authority=authority)
-    return frozenset(
-        RegistryRevisionSubject(summary.modelo, summary.revision)
-        for summary in report.revision_summaries
-    )
+    return frozenset(RegistryRevisionSubject(summary.modelo, summary.revision) for summary in report.revision_summaries)
 
 
 def audit_registry_test_enrollment_literals(
@@ -305,11 +302,7 @@ def _pin_is_current(
     except (KeyError, LookupError):
         return False
     source = authority.catalogues.sources.get(pin.source_ref)
-    return (
-        pin.source_ref in revision.source_refs
-        and source is not None
-        and source.sha256 == pin.source_sha256
-    )
+    return pin.source_ref in revision.source_refs and source is not None and source.sha256 == pin.source_sha256
 
 
 def _render_subjects(subjects: tuple[RegistryRevisionSubject, ...]) -> str:
