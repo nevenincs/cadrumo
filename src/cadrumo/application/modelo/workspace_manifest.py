@@ -316,16 +316,15 @@ def _walk_annotation(
     discriminator: str | None,
     record_terminal: bool = True,
 ) -> None:
-    if isinstance(annotation, TypeAliasType) and _is_traversable_type_alias(annotation):
-        _walk_annotation(
-            annotation=annotation.__value__,
-            path=path,
-            nodes=nodes,
-            visited=visited,
-            active=active,
-            discriminator=discriminator,
-            record_terminal=record_terminal,
-        )
+    if _walk_type_alias(
+        annotation=annotation,
+        path=path,
+        nodes=nodes,
+        visited=visited,
+        active=active,
+        discriminator=discriminator,
+        record_terminal=record_terminal,
+    ):
         return
     effective_discriminator = discriminator or _annotation_discriminator(annotation)
     unwrapped = _unwrap_annotated(annotation)
@@ -340,55 +339,140 @@ def _walk_annotation(
             discriminator=effective_discriminator,
         )
         return
-    if _is_model_type(unwrapped):
-        model_type = unwrapped
-        pair = (model_type, path)
-        if pair in visited or model_type in active:
-            return
-        visited.add(pair)
-        annotations = _model_annotations(model_type)
-        # ``model_fields`` is already ``dict[str, FieldInfo]`` on a pydantic model,
-        # so the three narrowing asserts this replaced could never fire.
-        fields: dict[str, FieldInfo] = dict(model_type.model_fields)
-        for field_name, field in fields.items():
-            field_annotation = annotations.get(field_name, field.annotation)
-            _walk_annotation(
-                annotation=field_annotation,
-                path=f"{path}.{field_name}",
-                nodes=nodes,
-                visited=visited,
-                active=(*active, model_type),
-                discriminator=_field_discriminator(field.discriminator) or _annotation_discriminator(field_annotation),
-            )
+    if _walk_model_annotation(
+        unwrapped=unwrapped,
+        path=path,
+        nodes=nodes,
+        visited=visited,
+        active=active,
+    ):
         return
     if origin is Literal:
         if record_terminal:
             _record_node(nodes, path, _schema_type_label(unwrapped), "leaf")
         return
-    if _is_mapping_origin(origin):
-        arguments = get_args(unwrapped)
-        if len(arguments) != 2:
-            raise ValueError(f"workspace field manifest cannot classify mapping at {path}")
-        _walk_annotation(
-            annotation=arguments[1],
-            path=f"{path}.mapping_value",
-            nodes=nodes,
-            visited=visited,
-            active=active,
-            discriminator=None,
-        )
+    if _walk_mapping_annotation(
+        unwrapped=unwrapped,
+        origin=origin,
+        path=path,
+        nodes=nodes,
+        visited=visited,
+        active=active,
+    ):
         return
-    if _is_collection_origin(origin):
-        _walk_collection(
-            arguments=get_args(unwrapped),
-            path=path,
-            nodes=nodes,
-            visited=visited,
-            active=active,
-        )
+    if _walk_collection_annotation(
+        unwrapped=unwrapped,
+        origin=origin,
+        path=path,
+        nodes=nodes,
+        visited=visited,
+        active=active,
+    ):
         return
     if record_terminal:
         _record_node(nodes, path, _schema_type_label(unwrapped), "leaf")
+
+
+def _walk_type_alias(
+    *,
+    annotation: object,
+    path: _Path,
+    nodes: dict[str, _Node],
+    visited: set[tuple[type[BaseModel], str]],
+    active: tuple[type[BaseModel], ...],
+    discriminator: str | None,
+    record_terminal: bool,
+) -> bool:
+    if not isinstance(annotation, TypeAliasType) or not _is_traversable_type_alias(annotation):
+        return False
+    _walk_annotation(
+        annotation=annotation.__value__,
+        path=path,
+        nodes=nodes,
+        visited=visited,
+        active=active,
+        discriminator=discriminator,
+        record_terminal=record_terminal,
+    )
+    return True
+
+
+def _walk_model_annotation(
+    *,
+    unwrapped: object,
+    path: _Path,
+    nodes: dict[str, _Node],
+    visited: set[tuple[type[BaseModel], str]],
+    active: tuple[type[BaseModel], ...],
+) -> bool:
+    if not _is_model_type(unwrapped):
+        return False
+    model_type = unwrapped
+    pair = (model_type, path)
+    if pair in visited or model_type in active:
+        return True
+    visited.add(pair)
+    annotations = _model_annotations(model_type)
+    # ``model_fields`` is already ``dict[str, FieldInfo]`` on a pydantic model,
+    # so the three narrowing asserts this replaced could never fire.
+    fields: dict[str, FieldInfo] = dict(model_type.model_fields)
+    for field_name, field in fields.items():
+        field_annotation = annotations.get(field_name, field.annotation)
+        _walk_annotation(
+            annotation=field_annotation,
+            path=f"{path}.{field_name}",
+            nodes=nodes,
+            visited=visited,
+            active=(*active, model_type),
+            discriminator=_field_discriminator(field.discriminator) or _annotation_discriminator(field_annotation),
+        )
+    return True
+
+
+def _walk_mapping_annotation(
+    *,
+    unwrapped: object,
+    origin: object,
+    path: _Path,
+    nodes: dict[str, _Node],
+    visited: set[tuple[type[BaseModel], str]],
+    active: tuple[type[BaseModel], ...],
+) -> bool:
+    if not _is_mapping_origin(origin):
+        return False
+    arguments = get_args(unwrapped)
+    if len(arguments) != 2:
+        raise ValueError(f"workspace field manifest cannot classify mapping at {path}")
+    _walk_annotation(
+        annotation=arguments[1],
+        path=f"{path}.mapping_value",
+        nodes=nodes,
+        visited=visited,
+        active=active,
+        discriminator=None,
+    )
+    return True
+
+
+def _walk_collection_annotation(
+    *,
+    unwrapped: object,
+    origin: object,
+    path: _Path,
+    nodes: dict[str, _Node],
+    visited: set[tuple[type[BaseModel], str]],
+    active: tuple[type[BaseModel], ...],
+) -> bool:
+    if not _is_collection_origin(origin):
+        return False
+    _walk_collection(
+        arguments=get_args(unwrapped),
+        path=path,
+        nodes=nodes,
+        visited=visited,
+        active=active,
+    )
+    return True
 
 
 def _walk_union(
@@ -535,10 +619,22 @@ def _projected_destination(
 ) -> _Destination | None:
     if path.startswith(("selector.", "derived.export_layout.")):
         return None
+    return _projected_context_destination(path, schema_type, node_kind) or _projected_schema_destination(schema_type)
+
+
+def _projected_context_destination(
+    path: _Path,
+    schema_type: _SchemaType,
+    node_kind: _NodeKind,
+) -> _Destination | None:
     if node_kind == "union_branch" and _is_workspace_formula_operand(path, schema_type):
         return "ModeloWorkspaceFormulaOperandReferenceV1"
     if schema_type == "ApplicabilityRuleId":
         return "ModeloWorkspaceApplicabilityReferenceV1"
+    return _projected_path_destination(path, schema_type)
+
+
+def _projected_path_destination(path: _Path, schema_type: _SchemaType) -> _Destination | None:
     if ".constraint" in path and schema_type == "CasillaId":
         return "ModeloWorkspaceConstraintReferenceV1"
     if schema_type == "ContinuidadId":
@@ -547,6 +643,9 @@ def _projected_destination(
         return "ModeloWorkspaceExportExposureReferenceV1"
     if ".relation" in path and schema_type in {"BindingId", "CasillaId"}:
         return "ModeloWorkspaceRelationEndpointReferenceV1"
+
+
+def _projected_schema_destination(schema_type: _SchemaType) -> _Destination | None:
     destinations: dict[_SchemaType, _Destination] = {
         "ApplicabilityRuleId": "ModeloWorkspaceApplicabilityReferenceV1",
         "BindingId": "ModeloWorkspaceBindingReferenceV1",

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from ...core.filing_projection_ref import FilingProjectionRef
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 from ._producer_snapshot_m200 import Modelo200ProfileFacts
 from .producer_snapshot import FilingProducerSnapshot
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
@@ -78,6 +78,78 @@ def _rows_for(profile: object, kind: str) -> tuple[object, ...]:
     return tuple(getattr(profile.projection_rows, family, ()) or ())
 
 
+def _m200_projection_refs(record: ExportRecordDefinition) -> tuple[FilingProjectionRef, ...]:
+    return tuple(field.projection_ref for field in record.fields if field.projection_ref is not None)
+
+
+def _m200_record_depth(profile: object, refs: tuple[FilingProjectionRef, ...]) -> int:
+    filled = max((len(_rows_for(profile, ref.projection_kind)) for ref in refs), default=0)
+    slot_ceiling = max(
+        (address[0] for ref in refs if (address := _m200_address(ref)) is not None),
+        default=0,
+    )
+    return min(filled, slot_ceiling)
+
+
+def _m200_projection_values_for_occurrence(
+    *,
+    profile: object,
+    refs: tuple[FilingProjectionRef, ...],
+    record: ExportRecordDefinition,
+    occurrence: int,
+) -> list[FilingProjectionValue]:
+    values: list[FilingProjectionValue] = []
+    for ref in refs:
+        address = _m200_address(ref)
+        if address is None:
+            continue
+        slot, field_name = address
+        family_rows = _rows_for(profile, ref.projection_kind)
+        row = family_rows[slot - 1] if slot <= len(family_rows) else None
+        values.append(
+            FilingProjectionValue(
+                projection_ref=ref,
+                record_id=record.id,
+                occurrence=occurrence,
+                value=getattr(row, field_name, None) if row is not None else None,
+            ),
+        )
+    return values
+
+
+def _project_m200_record(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    layout: ExportLayoutDefinition,
+    profile: object,
+    record: ExportRecordDefinition,
+) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
+    refs = _m200_projection_refs(record)
+    if not refs:
+        return (), ()
+    depth = _m200_record_depth(profile, refs)
+    contexts: list[FilingRecordRenderContext] = []
+    values: list[FilingProjectionValue] = []
+    for occurrence in range(1, depth + 1):
+        contexts.append(
+            FilingRecordRenderContext(
+                registry_snapshot=registry_snapshot,
+                layout=layout,
+                record=record,
+                occurrence=occurrence,
+            ),
+        )
+        values.extend(
+            _m200_projection_values_for_occurrence(
+                profile=profile,
+                refs=refs,
+                record=record,
+                occurrence=occurrence,
+            ),
+        )
+    return tuple(contexts), tuple(values)
+
+
 def build_m200_filing_projection_plan(
     *,
     registry_snapshot: RegistrySnapshot,
@@ -90,41 +162,12 @@ def build_m200_filing_projection_plan(
     values: list[FilingProjectionValue] = []
 
     for record in layout.records:
-        refs = tuple(field.projection_ref for field in record.fields if field.projection_ref is not None)
-        if not refs:
-            continue
-        # A record's occurrence count is the deepest slot any of its families actually
-        # fills -- never the layout's slot ceiling, which is what the FORM allows rather
-        # than what this filer has.
-        filled = 0
-        for ref in refs:
-            filled = max(filled, len(_rows_for(profile, ref.projection_kind)))
-        depth = min(
-            filled,
-            max((address[0] for ref in refs if (address := _m200_address(ref)) is not None), default=0),
+        record_contexts, record_values = _project_m200_record(
+            registry_snapshot=registry_snapshot,
+            layout=layout,
+            profile=profile,
+            record=record,
         )
-        for occurrence in range(1, depth + 1):
-            contexts.append(
-                FilingRecordRenderContext(
-                    registry_snapshot=registry_snapshot,
-                    layout=layout,
-                    record=record,
-                    occurrence=occurrence,
-                ),
-            )
-            for ref in refs:
-                address = _m200_address(ref)
-                if address is None:
-                    continue
-                slot, field_name = address
-                family_rows = _rows_for(profile, ref.projection_kind)
-                row = family_rows[slot - 1] if slot <= len(family_rows) else None
-                values.append(
-                    FilingProjectionValue(
-                        projection_ref=ref,
-                        record_id=record.id,
-                        occurrence=occurrence,
-                        value=getattr(row, field_name, None) if row is not None else None,
-                    ),
-                )
+        contexts.extend(record_contexts)
+        values.extend(record_values)
     return FilingProjectionPlan(contexts=tuple(contexts), values=tuple(values))

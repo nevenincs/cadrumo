@@ -38,7 +38,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
@@ -765,63 +765,77 @@ def _parse_relation_metadata(
     """Parse the ``"k=v; k=v"`` shape written by the apply adapter."""
     if not raw:
         return None, None, None, (), (), (), (), None
-    parts = [piece.strip() for piece in raw.split(";") if "=" in piece]
+    fields = _relation_metadata_fields(raw)
+    return (
+        _relation_metadata_provenance(fields),
+        fields.get("source_modelo") or None,
+        _relation_metadata_year(fields),
+        _relation_metadata_tokens(fields, "source_periods"),
+        _relation_metadata_tokens(fields, "source_casilla_ids"),
+        _relation_metadata_refs(fields, "legal_refs", _validated_relation_legal_refs),
+        _relation_metadata_refs(fields, "source_refs", _validated_relation_source_refs),
+        _relation_metadata_datetime(fields),
+    )
+
+
+def _relation_metadata_fields(raw: str) -> dict[str, str]:
+    """Split metadata pairs, retaining the apply adapter's last-value rule."""
     fields: dict[str, str] = {}
-    for part in parts:
+    for part in (piece.strip() for piece in raw.split(";") if "=" in piece):
         key, _, value = part.partition("=")
         fields[key.strip()] = value.strip()
-    raw_provenance = fields.get("provenance", "")
-    provenance: SheetRelationProvenanceValue | None
-    match raw_provenance:
-        case "local_filing":
-            provenance = SheetRelationProvenance.LOCAL_FILING
-        case "aeat_live":
-            provenance = SheetRelationProvenance.AEAT_LIVE
-        case "operator_manual":
-            provenance = SheetRelationProvenance.OPERATOR_MANUAL
-        case _:
-            provenance = None
-    source_modelo: ModeloId | None = fields.get("source_modelo") or None
-    source_filing_year: int | None = None
+    return fields
+
+
+def _relation_metadata_provenance(fields: Mapping[str, str]) -> SheetRelationProvenanceValue | None:
+    """Translate the serialized provenance token without inventing a value."""
+    return {
+        "local_filing": SheetRelationProvenance.LOCAL_FILING,
+        "aeat_live": SheetRelationProvenance.AEAT_LIVE,
+        "operator_manual": SheetRelationProvenance.OPERATOR_MANUAL,
+    }.get(fields.get("provenance", ""))
+
+
+def _relation_metadata_year(fields: Mapping[str, str]) -> int | None:
+    """Parse an optional source year, treating malformed metadata as absent."""
     raw_year = fields.get("source_filing_year", "")
-    if raw_year:
-        try:
-            source_filing_year = int(raw_year)
-        except ValueError:
-            source_filing_year = None
-    source_periods: tuple[str, ...] = ()
-    raw_periods = fields.get("source_periods", "")
-    if raw_periods:
-        source_periods = tuple(piece for piece in raw_periods.split("+") if piece)
-    source_casilla_ids: tuple[CasillaId, ...] = ()
-    raw_casilla_ids = fields.get("source_casilla_ids", "")
-    if raw_casilla_ids:
-        source_casilla_ids = tuple(piece for piece in raw_casilla_ids.split("+") if piece)
-    legal_refs: tuple[LegalRefId, ...] = ()
-    raw_legal_refs = fields.get("legal_refs", "")
-    if raw_legal_refs:
-        legal_refs = _validated_relation_legal_refs(raw_legal_refs)
-    source_refs: tuple[SourceRefId, ...] = ()
-    raw_source_refs = fields.get("source_refs", "")
-    if raw_source_refs:
-        source_refs = _validated_relation_source_refs(raw_source_refs)
-    resolved_at: datetime | None = None
+    if not raw_year:
+        return None
+    try:
+        return int(raw_year)
+    except ValueError:
+        return None
+
+
+def _relation_metadata_tokens(fields: Mapping[str, str], key: str) -> tuple[str, ...]:
+    """Split a ``+``-joined metadata field while preserving token order."""
+    raw_value = fields.get(key, "")
+    if not raw_value:
+        return ()
+    return tuple(piece for piece in raw_value.split("+") if piece)
+
+
+def _relation_metadata_refs(
+    fields: Mapping[str, str],
+    key: str,
+    validator: Callable[[str], tuple[LegalRefId, ...]] | Callable[[str], tuple[SourceRefId, ...]],
+) -> tuple[LegalRefId, ...] | tuple[SourceRefId, ...]:
+    """Validate a present registry-reference field, otherwise return no refs."""
+    raw_value = fields.get(key, "")
+    if not raw_value:
+        return ()
+    return validator(raw_value)
+
+
+def _relation_metadata_datetime(fields: Mapping[str, str]) -> datetime | None:
+    """Parse the optional resolution timestamp, refusing malformed stamps softly."""
     raw_resolved = fields.get("resolved_at", "")
-    if raw_resolved:
-        try:
-            resolved_at = datetime.fromisoformat(raw_resolved)
-        except ValueError:
-            resolved_at = None
-    return (
-        provenance,
-        source_modelo,
-        source_filing_year,
-        source_periods,
-        source_casilla_ids,
-        legal_refs,
-        source_refs,
-        resolved_at,
-    )
+    if not raw_resolved:
+        return None
+    try:
+        return datetime.fromisoformat(raw_resolved)
+    except ValueError:
+        return None
 
 
 def _relation_ref_tokens(raw: str) -> tuple[str, ...]:

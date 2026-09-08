@@ -22,6 +22,7 @@ from ...core.result_disposition import ResultDisposition
 from .errors import DeadlineValidationError
 
 if TYPE_CHECKING:
+    from ..calculations.registry.deadline_coordinate import DeadlineSemanticCoordinate
     from ..calculations.registry.schema import ModeloRevision
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
 
@@ -171,42 +172,148 @@ def _resolve_projected_filing_window(
     # Registry applicability imports this deadline facade, so defer the public
     # registry-facade import until resolution time to keep that dependency cycle
     # out of module initialisation.
-    from ..calculations.registry.deadline_coordinate import (
-        deadline_semantic_coordinate,
-        deadline_window_semantic_coordinates,
-    )
-    from ..calculations.registry.period_selector_match import selector_period_matches_request
+    from ..calculations.registry.deadline_coordinate import deadline_semantic_coordinate
 
     requested = deadline_semantic_coordinate(modelo, period, resultado, tipo_renta_code)
     if requested.filing_year != filing_year:
         return None
 
-    qualified_m210_event = (
+    qualified_m210_event = _is_qualified_m210_event(
+        modelo=modelo,
+        period=period,
+        resultado=resultado,
+        tipo_renta_code=tipo_renta_code,
+    )
+    matches = _matching_projected_windows(
+        windows,
+        modelo=modelo,
+        requested=requested,
+        filing_year=filing_year,
+        resultado=resultado,
+        tipo_renta_code=tipo_renta_code,
+        qualified_m210_event=qualified_m210_event,
+    )
+    return _select_unique_projected_window(matches, requested=requested)
+
+
+def _is_qualified_m210_event(
+    *,
+    modelo: str,
+    period: Period,
+    resultado: ResultDisposition | None,
+    tipo_renta_code: str | None,
+) -> bool:
+    from ..calculations.registry.period_selector_match import selector_period_matches_request
+
+    return (
         modelo == Modelo.M210
         and selector_period_matches_request("EVENT-N", period.registry_token)
         and (resultado is not None or tipo_renta_code is not None)
     )
-    matches: tuple[DeadlineWindowDefinition, ...]
+
+
+def _matching_projected_windows(
+    windows: tuple[DeadlineWindowProjection, ...],
+    *,
+    modelo: str,
+    requested: DeadlineSemanticCoordinate,
+    filing_year: int,
+    resultado: ResultDisposition | None,
+    tipo_renta_code: str | None,
+    qualified_m210_event: bool,
+) -> tuple[DeadlineWindowDefinition, ...]:
     if qualified_m210_event:
-        matches = tuple(
-            window
-            for projected_modelo, _revision, window in windows
-            if projected_modelo == modelo
-            and window.period.kind is PeriodKind.ANNUAL
-            and any(
-                coordinate.filing_year == filing_year
-                and coordinate.resultado_scope == resultado
-                and coordinate.tipo_renta_code == tipo_renta_code
-                for coordinate in deadline_window_semantic_coordinates(projected_modelo, window)
-            )
+        return _matching_qualified_m210_event_windows(
+            windows,
+            modelo=modelo,
+            filing_year=filing_year,
+            resultado=resultado,
+            tipo_renta_code=tipo_renta_code,
         )
-    else:
-        matches = tuple(
-            window
-            for projected_modelo, _revision, window in windows
-            if projected_modelo == modelo
-            and requested in deadline_window_semantic_coordinates(projected_modelo, window)
+    return _matching_general_projected_windows(windows, modelo=modelo, requested=requested)
+
+
+def _matching_qualified_m210_event_windows(
+    windows: tuple[DeadlineWindowProjection, ...],
+    *,
+    modelo: str,
+    filing_year: int,
+    resultado: ResultDisposition | None,
+    tipo_renta_code: str | None,
+) -> tuple[DeadlineWindowDefinition, ...]:
+    return tuple(
+        window
+        for projected_modelo, _revision, window in windows
+        if _matches_qualified_m210_event_window(
+            projected_modelo,
+            window,
+            modelo=modelo,
+            filing_year=filing_year,
+            resultado=resultado,
+            tipo_renta_code=tipo_renta_code,
         )
+    )
+
+
+def _matches_qualified_m210_event_window(
+    projected_modelo: str,
+    window: DeadlineWindowDefinition,
+    *,
+    modelo: str,
+    filing_year: int,
+    resultado: ResultDisposition | None,
+    tipo_renta_code: str | None,
+) -> bool:
+    if projected_modelo != modelo:
+        return False
+    if window.period.kind is not PeriodKind.ANNUAL:
+        return False
+    return any(
+        (coordinate.filing_year, coordinate.resultado_scope, coordinate.tipo_renta_code)
+        == (filing_year, resultado, tipo_renta_code)
+        for coordinate in _window_semantic_coordinates(projected_modelo, window)
+    )
+
+
+def _matching_general_projected_windows(
+    windows: tuple[DeadlineWindowProjection, ...],
+    *,
+    modelo: str,
+    requested: DeadlineSemanticCoordinate,
+) -> tuple[DeadlineWindowDefinition, ...]:
+    return tuple(
+        window
+        for projected_modelo, _revision, window in windows
+        if _matches_general_projected_window(projected_modelo, window, modelo=modelo, requested=requested)
+    )
+
+
+def _matches_general_projected_window(
+    projected_modelo: str,
+    window: DeadlineWindowDefinition,
+    *,
+    modelo: str,
+    requested: DeadlineSemanticCoordinate,
+) -> bool:
+    if projected_modelo != modelo:
+        return False
+    return requested in _window_semantic_coordinates(projected_modelo, window)
+
+
+def _window_semantic_coordinates(
+    modelo: str,
+    window: DeadlineWindowDefinition,
+) -> tuple[DeadlineSemanticCoordinate, ...]:
+    from ..calculations.registry.deadline_coordinate import deadline_window_semantic_coordinates
+
+    return deadline_window_semantic_coordinates(modelo, window)
+
+
+def _select_unique_projected_window(
+    matches: tuple[DeadlineWindowDefinition, ...],
+    *,
+    requested: DeadlineSemanticCoordinate,
+) -> DeadlineWindowDefinition | None:
     if not matches:
         return None
     if len(matches) > 1:

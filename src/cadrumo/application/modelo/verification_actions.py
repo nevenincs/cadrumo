@@ -95,7 +95,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationSourceIssue,
 )
 from ...domain.modelos.errors import ModeloValidationError
-from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
+from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingSnapshot
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -115,6 +115,7 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.verification_repository import upsert_verification_report
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.models import TransactionCatalogue
 from ..aggregation import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
     CalculationSourceDiagnostic,
@@ -1243,9 +1244,177 @@ class LedgerEvidenceRecaptureResult(BaseModel):
     recaptured_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class _LedgerEvidenceRecaptureContext:
+    revisions: CalculationRevisionCatalogue
+    revisions_revision_id: str
+    target: CalculationRevision
+    work_unit: WorkUnit
+    stored_snapshot: LedgerFilingSnapshot
+
+
 def _row_carries_linked_evidence(row: LedgerEvidenceRow) -> bool:
     """Whether a bundled row points at any evidence at all."""
     return bool(row.purchase_invoice_evidence_id) or bool(row.invoice_id) or bool(row.attachment_ids)
+
+
+def _resolve_recapture_context(
+    calculation_revision_id: CalculationRevisionId,
+    *,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+) -> _LedgerEvidenceRecaptureContext:
+    revisions, revisions_revision_id = calculation_repository.load_revisioned()
+    target = revisions.get(calculation_revision_id)
+    if target is None:
+        raise CalculationRevisionNotFoundError(
+            translated_message="application.modelo.errors.calculation_revision_not_found",
+            context={"calculation_revision_id": calculation_revision_id},
+        )
+    if target.state not in SEALED_REVISION_STATES:
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": calculation_revision_id, "state": target.state.value},
+        )
+    stored_snapshot = target.ledger_filing_snapshot
+    if stored_snapshot is None:
+        raise CalculationRevisionStateError(
+            translated_message="errors.error.error_modelo_calculation_revision_state",
+            context={"calculation_revision_id": calculation_revision_id, "state": target.state.value},
+        )
+    work_unit = work_unit_repository.load().get(target.work_unit_id)
+    if work_unit is None:
+        raise WorkUnitNotFoundError(
+            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
+        )
+    return _LedgerEvidenceRecaptureContext(
+        revisions=revisions,
+        revisions_revision_id=revisions_revision_id,
+        target=target,
+        work_unit=work_unit,
+        stored_snapshot=stored_snapshot,
+    )
+
+
+def _assert_live_snapshot_matches_sealed_revision(
+    *,
+    target: CalculationRevision,
+    stored_snapshot: LedgerFilingSnapshot,
+    catalogue: TransactionCatalogue,
+    captured_at: datetime,
+    calculation_revision_id: CalculationRevisionId,
+) -> None:
+    """Refuse recapture when any sealed contributor fingerprint moved.
+
+    The aggregate address covers every contributor fingerprint, so one
+    comparison answers the whole question; the per-row detail below is only
+    for the refusal message, not the decision.
+    """
+    live_snapshot = compute_ledger_filing_snapshot(
+        source_transaction_ids=target.source_transaction_ids,
+        catalogue=catalogue,
+        captured_at=captured_at,
+    )
+    if live_snapshot.snapshot_fingerprint == stored_snapshot.snapshot_fingerprint:
+        return
+    stored_by_id = {row.transaction_id: row.fingerprint for row in stored_snapshot.rows}
+    moved = tuple(
+        sorted(
+            row.transaction_id for row in live_snapshot.rows if stored_by_id.get(row.transaction_id) != row.fingerprint
+        ),
+    )
+    raise LedgerEvidenceRecaptureRefusedError(
+        translated_message="errors.refused.refused_modelo_ledger_evidence_recapture",
+        context={
+            "calculation_revision_id": calculation_revision_id,
+            "transaction_ids": list(moved),
+            "reason": "ledger_facts_moved_since_seal",
+        },
+    )
+
+
+def _previously_evidenced_transaction_ids(target: CalculationRevision) -> set[str]:
+    evidence = target.ledger_filing_evidence
+    return {
+        row.transaction_id
+        for row in (evidence.rows if evidence is not None else ())
+        if _row_carries_linked_evidence(row)
+    }
+
+
+def _save_recaptured_evidence(
+    *,
+    context: _LedgerEvidenceRecaptureContext,
+    catalogue: TransactionCatalogue,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    captured_at: datetime,
+) -> tuple[LedgerEvidenceRow, ...]:
+    """Capture and co-commit the replacement evidence bundle."""
+    recaptured = capture_revision_ledger_evidence(
+        revision=context.target,
+        catalogue=catalogue,
+        snapshot_fingerprint=context.stored_snapshot.snapshot_fingerprint,
+        captured_at=captured_at,
+    )
+    assert_evidence_covers_snapshot(context.stored_snapshot, recaptured)
+    updated = context.target.model_copy(
+        update={
+            "ledger_filing_evidence": recaptured,
+            "updated_at": captured_at,
+        },
+    )
+    calculation_repository.save_with_secure_object_writes(
+        upsert_calculation_revision(context.revisions, updated),
+        (),
+        expected_revision_id=context.revisions_revision_id,
+    )
+    return recaptured.rows
+
+
+def _newly_evidenced_transaction_ids(
+    rows: Iterable[LedgerEvidenceRow],
+    *,
+    previously_evidenced: set[str],
+) -> tuple[str, ...]:
+    return tuple(
+        sorted(
+            row.transaction_id
+            for row in rows
+            if _row_carries_linked_evidence(row) and row.transaction_id not in previously_evidenced
+        ),
+    )
+
+
+def _emit_ledger_evidence_recapture_event(
+    *,
+    repository: BucketEventHistoryRepositoryProtocol,
+    context: _LedgerEvidenceRecaptureContext,
+    calculation_revision_id: CalculationRevisionId,
+    captured_at: datetime,
+    actor: str,
+    row_count: int,
+    newly_evidenced_count: int,
+) -> None:
+    """Record the replacement after the sealed bundle has been persisted.
+
+    The replaced bundle is not retained, so without this event the fact that a
+    sealed revision's evidence changed would leave no trace.
+    """
+    _emit_bucket_event(
+        repository=repository,
+        bucket_id=context.work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_LEDGER_EVIDENCE_RECAPTURED,
+        occurred_at=captured_at,
+        actor=actor,
+        object_type=BucketEventObjectType.CALCULATION_REVISION,
+        object_id=calculation_revision_id,
+        payload={
+            "work_unit_id": context.target.work_unit_id,
+            "snapshot_fingerprint": context.stored_snapshot.snapshot_fingerprint,
+            "row_count": str(row_count),
+            "newly_evidenced_count": str(newly_evidenced_count),
+        },
+    )
 
 
 def recapture_ledger_filing_evidence(
@@ -1302,111 +1471,43 @@ def recapture_ledger_filing_evidence(
     now = clock or _utc_now()
     cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
     wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    revisions, revisions_revision_id = cr_repo.load_revisioned()
-    target = revisions.get(calculation_revision_id)
-    if target is None:
-        raise CalculationRevisionNotFoundError(
-            translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
-    if target.state not in SEALED_REVISION_STATES:
-        raise CalculationRevisionStateError(
-            translated_message="errors.error.error_modelo_calculation_revision_state",
-            context={"calculation_revision_id": calculation_revision_id, "state": target.state.value},
-        )
-    stored_snapshot = target.ledger_filing_snapshot
-    if stored_snapshot is None:
-        raise CalculationRevisionStateError(
-            translated_message="errors.error.error_modelo_calculation_revision_state",
-            context={"calculation_revision_id": calculation_revision_id, "state": target.state.value},
-        )
-    work_unit = wu_repo.load().get(target.work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
-        )
-    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    context = _resolve_recapture_context(
+        calculation_revision_id,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+    )
+    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=context.work_unit.bucket_id)
     catalogue = tx_repo.load()
-    live_snapshot = compute_ledger_filing_snapshot(
-        source_transaction_ids=target.source_transaction_ids,
+    _assert_live_snapshot_matches_sealed_revision(
+        target=context.target,
+        stored_snapshot=context.stored_snapshot,
         catalogue=catalogue,
         captured_at=now,
+        calculation_revision_id=calculation_revision_id,
     )
-    # The aggregate address covers every contributor fingerprint, so one
-    # comparison answers the whole question; the per-row detail below is for
-    # the refusal message, not the decision.
-    if live_snapshot.snapshot_fingerprint != stored_snapshot.snapshot_fingerprint:
-        stored_by_id = {row.transaction_id: row.fingerprint for row in stored_snapshot.rows}
-        moved = tuple(
-            sorted(
-                row.transaction_id
-                for row in live_snapshot.rows
-                if stored_by_id.get(row.transaction_id) != row.fingerprint
-            ),
-        )
-        raise LedgerEvidenceRecaptureRefusedError(
-            translated_message="errors.refused.refused_modelo_ledger_evidence_recapture",
-            context={
-                "calculation_revision_id": calculation_revision_id,
-                "transaction_ids": list(moved),
-                "reason": "ledger_facts_moved_since_seal",
-            },
-        )
-    previously_evidenced = {
-        row.transaction_id
-        for row in (target.ledger_filing_evidence.rows if target.ledger_filing_evidence is not None else ())
-        if _row_carries_linked_evidence(row)
-    }
-    recaptured = capture_revision_ledger_evidence(
-        revision=target,
+    previously_evidenced = _previously_evidenced_transaction_ids(context.target)
+    recaptured_rows = _save_recaptured_evidence(
+        context=context,
         catalogue=catalogue,
-        snapshot_fingerprint=stored_snapshot.snapshot_fingerprint,
+        calculation_repository=cr_repo,
         captured_at=now,
     )
-    assert_evidence_covers_snapshot(stored_snapshot, recaptured)
-    updated = target.model_copy(
-        update={
-            "ledger_filing_evidence": recaptured,
-            "updated_at": now,
-        },
+    newly_evidenced = _newly_evidenced_transaction_ids(
+        recaptured_rows,
+        previously_evidenced=previously_evidenced,
     )
-    # Through the co-commit entry point with no extra writes, rather than the
-    # plain save: only this one carries ``expected_revision_id``, and dropping
-    # the optimistic-concurrency guard would let a concurrent writer's revision
-    # be overwritten by this one.
-    cr_repo.save_with_secure_object_writes(
-        upsert_calculation_revision(revisions, updated),
-        (),
-        expected_revision_id=revisions_revision_id,
-    )
-    newly_evidenced = tuple(
-        sorted(
-            row.transaction_id
-            for row in recaptured.rows
-            if _row_carries_linked_evidence(row) and row.transaction_id not in previously_evidenced
-        ),
-    )
-    # The replaced bundle is not retained, so without this event the fact that
-    # a sealed revision's evidence changed at all would leave no trace -- the
-    # evidence chain would be edited rather than extended.
-    _emit_bucket_event(
+    _emit_ledger_evidence_recapture_event(
         repository=bucket_event_repository or BucketEventHistoryRepository(),
-        bucket_id=work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_LEDGER_EVIDENCE_RECAPTURED,
-        occurred_at=now,
+        context=context,
+        calculation_revision_id=calculation_revision_id,
+        captured_at=now,
         actor=actor,
-        object_type=BucketEventObjectType.CALCULATION_REVISION,
-        object_id=calculation_revision_id,
-        payload={
-            "work_unit_id": target.work_unit_id,
-            "snapshot_fingerprint": stored_snapshot.snapshot_fingerprint,
-            "row_count": str(len(recaptured.rows)),
-            "newly_evidenced_count": str(len(newly_evidenced)),
-        },
+        row_count=len(recaptured_rows),
+        newly_evidenced_count=len(newly_evidenced),
     )
     return LedgerEvidenceRecaptureResult(
         calculation_revision_id=calculation_revision_id,
-        row_count=len(recaptured.rows),
+        row_count=len(recaptured_rows),
         newly_evidenced_transaction_ids=newly_evidenced,
         recaptured_at=now,
     )
@@ -1484,6 +1585,28 @@ def _append_revision_advisory_findings(
 _OSS_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_OSS_AGGREGATION
 
 
+def _m369_oss_bindings(snapshot: RegistrySnapshot) -> tuple[DataBindingDefinition, ...]:
+    return tuple(binding for binding in snapshot.revision.bindings if binding.source is _OSS_AGGREGATION_SOURCE)
+
+
+def _m369_source_issue_finding(
+    *,
+    target: CalculationRevision,
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
+) -> ModeloVerificationFinding | None:
+    unrouted_issues = tuple(
+        issue
+        for issue in target.source_issues
+        if issue.binding_source is _OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
+    )
+    if unrouted_issues:
+        return _unrouted_oss_source_finding(unrouted_issues, legal_refs=legal_refs, source_refs=source_refs)
+    if any(ref.resolved_binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance):
+        return None
+    return _missing_oss_evidence_finding(legal_refs=legal_refs, source_refs=source_refs)
+
+
 def _m369_unresolved_oss_source_finding(
     *,
     work_unit: WorkUnit,
@@ -1502,20 +1625,15 @@ def _m369_unresolved_oss_source_finding(
     """
     if str(work_unit.modelo) != Modelo.M369.value:
         return None
-    oss_bindings = tuple(binding for binding in snapshot.revision.bindings if binding.source is _OSS_AGGREGATION_SOURCE)
+    oss_bindings = _m369_oss_bindings(snapshot)
     if not oss_bindings:
         return None
     legal_refs, source_refs = _oss_binding_grounding(oss_bindings)
-    unrouted_issues = tuple(
-        issue
-        for issue in target.source_issues
-        if issue.binding_source is _OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
+    return _m369_source_issue_finding(
+        target=target,
+        legal_refs=legal_refs,
+        source_refs=source_refs,
     )
-    if unrouted_issues:
-        return _unrouted_oss_source_finding(unrouted_issues, legal_refs=legal_refs, source_refs=source_refs)
-    if any(ref.resolved_binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance):
-        return None
-    return _missing_oss_evidence_finding(legal_refs=legal_refs, source_refs=source_refs)
 
 
 def _oss_binding_grounding(

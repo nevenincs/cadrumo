@@ -47,10 +47,14 @@ from .._common import current_workflow_state, emit_envelope
 from ._censo_payloads import CensoFactPayload, CensoFileIngestResult, CensoPullDivergencePayload, CensoPullResult
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Iterable, Mapping
 
+    from ....application.user_profile.censal_observation import CensalObservation
+    from ....application.user_profile.censal_operation import CensalReviewFieldProjectionV1
     from ....application.user_profile.censo_sync import CensalReconciliation
-    from ....domain.user_profile.values import UserProfileFact
+    from ....application.user_profile.projections import EffectiveFact
+    from ....domain.user_profile.values import UserProfileFact, UserProfileRecord
+    from ....entrypoints.censal_review import CensalReviewedFrontendResult
 
 
 def censo_import(
@@ -102,15 +106,7 @@ def censo_pull(
     import asyncio
 
     from ....application.live.censo import pull_censal_datos
-    from ....application.user_profile.censal_operation import CensalFieldIntent
-    from ....application.user_profile.censo_sync import (
-        CENSAL_ADOPTABLE_PATHS,
-        CENSO_SOURCE_TAG,
-        censal_facts_from_read,
-        reconcile_censal_read,
-    )
     from ....application.user_profile.projections import record_to_effective_facts
-    from ....domain.user_profile.values import UserProfileFact
     from ....entrypoints.censal_review import run_censal_review
     from ._censo_review_cli import confirm_censal_review
 
@@ -129,63 +125,18 @@ def censo_pull(
     effective = record_to_effective_facts(record)
 
     if apply:
-        from ....core.config import Settings
-
         reviewed = run_censal_review(actor_ref="operator:cli-censo", decide=confirm_censal_review)
-        projected = tuple(
-            UserProfileFact(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
-            for field in reviewed.projection.fields
-            if field.observed_value is not None
-        )
-        adopted = tuple(
-            CensoFactPayload(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
-            for field in reviewed.projection.fields
-            if field.intent is CensalFieldIntent.ADOPT and field.observed_value is not None
-        )
-        divergences = tuple(
-            CensoPullDivergencePayload(
-                path=field.path,
-                profile_value=(current.value if (current := effective.get(field.path)) is not None else None),
-                aeat_value=field.observed_value,
-            )
-            for field in reviewed.projection.fields
-            if field.intent is CensalFieldIntent.PRESERVE
-            and field.observed_value is not None
-            and ((current := effective.get(field.path)) is None or current.value != field.observed_value)
-        )
-        unchanged = tuple(
-            CensoFactPayload(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
-            for field in reviewed.projection.fields
-            if field.intent is CensalFieldIntent.PRESERVE
-            and field.observed_value is not None
-            and (current := effective.get(field.path)) is not None
-            and current.value == field.observed_value
-        )
-        source_url = str(Settings.external_constants().aeat.domains.sede) + str(
-            Settings.external_constants().aeat.sede_paths.censal_datos
+        adopted, unchanged, divergences, source_url = _reviewed_pull_outcomes(
+            reviewed=reviewed,
+            effective=effective,
         )
     else:
         read = asyncio.run(pull_censal_datos())
-        projected = censal_facts_from_read(read)
-        reconciliation = reconcile_censal_read(record, projected, incoming_identity=read.identity.nif)
-        adopted = tuple(
-            CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source)
-            for fact in reconciliation.adopted
+        adopted, unchanged, divergences, source_url = _preview_pull_outcomes(
+            read=read,
+            record=record,
+            effective=effective,
         )
-        divergences = tuple(
-            CensoPullDivergencePayload(
-                path=path,
-                profile_value=(fact.value if (fact := effective.get(path)) is not None else None),
-                aeat_value=value,
-            )
-            for path, value in reconciliation.divergences
-        )
-        unchanged = _unchanged_facts(
-            projected=projected,
-            reconciliation=reconciliation,
-            adoptable_paths=CENSAL_ADOPTABLE_PATHS,
-        )
-        source_url = str(read.source_url)
 
     result = CensoPullResult(
         applied=apply,
@@ -216,6 +167,145 @@ def censo_pull(
         lines=lines,
         notices=notices,
     )
+
+
+def _reviewed_projected_facts(
+    fields: Iterable[CensalReviewFieldProjectionV1],
+) -> tuple[UserProfileFact, ...]:
+    from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
+    from ....domain.user_profile.values import UserProfileFact
+
+    return tuple(
+        UserProfileFact(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
+        for field in fields
+        if field.observed_value is not None
+    )
+
+
+def _reviewed_adopted_payloads(
+    fields: Iterable[CensalReviewFieldProjectionV1],
+) -> tuple[CensoFactPayload, ...]:
+    from ....application.user_profile.censal_operation import CensalFieldIntent
+    from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
+
+    return tuple(
+        CensoFactPayload(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
+        for field in fields
+        if field.intent is CensalFieldIntent.ADOPT and field.observed_value is not None
+    )
+
+
+def _reviewed_divergence_payloads(
+    fields: Iterable[CensalReviewFieldProjectionV1],
+    effective: Mapping[str, EffectiveFact],
+) -> tuple[CensoPullDivergencePayload, ...]:
+    from ....application.user_profile.censal_operation import CensalFieldIntent
+
+    return tuple(
+        CensoPullDivergencePayload(
+            path=field.path,
+            profile_value=(current.value if (current := effective.get(field.path)) is not None else None),
+            aeat_value=field.observed_value,
+        )
+        for field in fields
+        if field.intent is CensalFieldIntent.PRESERVE
+        and field.observed_value is not None
+        and ((current := effective.get(field.path)) is None or current.value != field.observed_value)
+    )
+
+
+def _reviewed_unchanged_payloads(
+    fields: Iterable[CensalReviewFieldProjectionV1],
+    effective: Mapping[str, EffectiveFact],
+) -> tuple[CensoFactPayload, ...]:
+    from ....application.user_profile.censal_operation import CensalFieldIntent
+    from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
+
+    return tuple(
+        CensoFactPayload(path=field.path, value=field.observed_value, source=CENSO_SOURCE_TAG)
+        for field in fields
+        if field.intent is CensalFieldIntent.PRESERVE
+        and field.observed_value is not None
+        and (current := effective.get(field.path)) is not None
+        and current.value == field.observed_value
+    )
+
+
+def _reviewed_pull_outcomes(
+    *,
+    reviewed: CensalReviewedFrontendResult,
+    effective: Mapping[str, EffectiveFact],
+) -> tuple[
+    tuple[CensoFactPayload, ...],
+    tuple[CensoFactPayload, ...],
+    tuple[CensoPullDivergencePayload, ...],
+    str,
+]:
+    from ....core.config import Settings
+
+    fields = reviewed.projection.fields
+    # Constructing these facts is an intentional validation side effect: the
+    # reviewed projection must still cross the canonical profile-fact model
+    # before its selected rows are reported or applied.
+    _reviewed_projected_facts(fields)
+    adopted = _reviewed_adopted_payloads(fields)
+    divergences = _reviewed_divergence_payloads(fields, effective)
+    unchanged = _reviewed_unchanged_payloads(fields, effective)
+    source_url = str(Settings.external_constants().aeat.domains.sede) + str(
+        Settings.external_constants().aeat.sede_paths.censal_datos
+    )
+    return adopted, unchanged, divergences, source_url
+
+
+def _preview_adopted_payloads(
+    reconciliation: CensalReconciliation,
+) -> tuple[CensoFactPayload, ...]:
+    return tuple(
+        CensoFactPayload(path=fact.path, value=str(fact.value), source=fact.source) for fact in reconciliation.adopted
+    )
+
+
+def _preview_divergence_payloads(
+    reconciliation: CensalReconciliation,
+    effective: Mapping[str, EffectiveFact],
+) -> tuple[CensoPullDivergencePayload, ...]:
+    return tuple(
+        CensoPullDivergencePayload(
+            path=path,
+            profile_value=(fact.value if (fact := effective.get(path)) is not None else None),
+            aeat_value=value,
+        )
+        for path, value in reconciliation.divergences
+    )
+
+
+def _preview_pull_outcomes(
+    *,
+    read: CensalObservation,
+    record: UserProfileRecord | None,
+    effective: Mapping[str, EffectiveFact],
+) -> tuple[
+    tuple[CensoFactPayload, ...],
+    tuple[CensoFactPayload, ...],
+    tuple[CensoPullDivergencePayload, ...],
+    str,
+]:
+    from ....application.user_profile.censo_sync import (
+        CENSAL_ADOPTABLE_PATHS,
+        censal_facts_from_read,
+        reconcile_censal_read,
+    )
+
+    projected = censal_facts_from_read(read)
+    reconciliation = reconcile_censal_read(record, projected, incoming_identity=read.identity.nif)
+    adopted = _preview_adopted_payloads(reconciliation)
+    divergences = _preview_divergence_payloads(reconciliation, effective)
+    unchanged = _unchanged_facts(
+        projected=projected,
+        reconciliation=reconciliation,
+        adoptable_paths=CENSAL_ADOPTABLE_PATHS,
+    )
+    return adopted, unchanged, divergences, str(read.source_url)
 
 
 def _unchanged_facts(

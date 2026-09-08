@@ -57,5 +57,5 @@ jobs:
         continue-on-error: true
 
       - name: Run code-health report (JSON, log only)
-        run: just audit-health-report-json
+        run: just audit-health-report --json
         continue-on-error: true

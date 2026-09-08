@@ -46,7 +46,7 @@
   // provisions the local env file. `playwright install --with-deps` is
   // deliberately NOT run here — it is unnecessary, per the Dockerfile.
   // `just` itself is installed in the image (Debian trixie ships 1.40.0).
-  "postCreateCommand": "just install && just env-setup",
+  "postCreateCommand": "just setup-install && just setup-env",
 
   "remoteEnv": {
     // Headless Chromium in the container has no interactive display; the

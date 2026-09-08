@@ -50,7 +50,7 @@ from ...core.identity import CalculationRevisionId
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now
-from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write as _bucket_event_write
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
@@ -58,6 +58,7 @@ from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
 )
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.justificante import Justificante, JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
@@ -86,7 +87,11 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.repository import upsert_work_unit
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..calculations.observations_repository import CalculationObservationRepository, ObservationSourceKind
+from ..calculations.observations_repository import (
+    CalculationObservationRepository,
+    ObservationEnvelopePayload,
+    ObservationSourceKind,
+)
 from ..user_profile.custody_ports import default_profile_bucket_event_history_repository
 from ..workflow.active_profile import require_active_profile_bucket_id
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
@@ -124,6 +129,20 @@ class ExternalFilingBaselineSource:
     registry_revision_id: str | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class _ExternalImportFilingState:
+    """Prepared catalogues and filing identity for one external import."""
+
+    revisions: CalculationRevisionCatalogue
+    revisions_revision_id: str
+    updated_filing_catalogue: ModeloRecordCatalogue
+    filing_revision_id: str
+    advanced_work_units: WorkUnitCatalogue
+    new_filing_id: str
+    new_filing: ModeloRecord
+    prior_current: ModeloRecord | None
+
+
 def _select_active_external_import_work_unit(
     source: ExternalFilingBaselineSource,
     *,
@@ -145,25 +164,8 @@ def _select_active_external_import_work_unit(
     )
 
 
-def import_external_filing_source(
-    source: ExternalFilingBaselineSource,
-    *,
-    bucket_id: str,
-    filing_instance_evidence: FilingInstanceEvidence | None = None,
-    actor: str = "aeat-import",
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    justificante_repository: JustificanteRepositoryProtocol | None = None,
-    observation_repository: CalculationObservationRepository | None = None,
-    clock: datetime | None = None,
-) -> ModeloRecord:
-    """Resolve or create the target work unit and persist an amendable baseline.
-
-    Source lexical tokens are retained verbatim on the revision input snapshot;
-    their independently parsed Decimal values feed the filing baseline.
-    """
+def _validate_external_source_shape(source: ExternalFilingBaselineSource) -> None:
+    """Reject source metadata that cannot identify a filing target or values."""
     if source.period.filing_year != source.filing_year:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_source_period_mismatch",
@@ -172,6 +174,12 @@ def import_external_filing_source(
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_filing_no_casilla_values",
         )
+
+
+def _parse_external_source_values(
+    source: ExternalFilingBaselineSource,
+) -> tuple[dict[CasillaId, str], dict[CasillaId, Decimal]]:
+    """Parse source lexicals while retaining their exact input representation."""
     lexical_values: dict[CasillaId, str] = {}
     decimal_values: dict[CasillaId, Decimal] = {}
     for raw_casilla_id, raw_lexical in source.casilla_lexicals.items():
@@ -196,13 +204,16 @@ def import_external_filing_source(
             ) from exc
         lexical_values[casilla_id] = raw_lexical
         decimal_values[casilla_id] = decimal_value
+    return lexical_values, decimal_values
 
-    snapshot, canonical_values = _reject_unknown_import_casillas(
-        modelo=source.modelo,
-        filing_year=source.filing_year,
-        period=source.period,
-        casilla_values=decimal_values,
-    )
+
+def _validate_external_source_registry_values(
+    *,
+    snapshot: RegistrySnapshot,
+    canonical_values: Mapping[CasillaId, Decimal],
+    lexical_values: Mapping[CasillaId, str],
+) -> None:
+    """Require source values to cover every required numeric registry casilla."""
     _validated_source_lexicals(
         canonical_values=canonical_values,
         source_lexicals=lexical_values,
@@ -218,6 +229,17 @@ def import_external_filing_source(
             translated_message="application.modelo.errors.external_import_source_incomplete",
             context={"missing_casilla_ids": ",".join(sorted(missing_required))},
         )
+
+
+def _validate_external_source_requirements(
+    *,
+    source: ExternalFilingBaselineSource,
+    bucket_id: str,
+    filing_instance_evidence: FilingInstanceEvidence | None,
+    actor: str,
+    justificante_repository: JustificanteRepositoryProtocol | None,
+) -> JustificanteRepositoryProtocol:
+    """Validate actor/evidence requirements and return the receipt repository."""
     if source.modelo == Modelo.M303.value and filing_instance_evidence is None:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
@@ -236,11 +258,18 @@ def import_external_filing_source(
         expected_tax_id=source.tax_id,
         justificante_repository=resolved_justificante_repository,
     )
+    return resolved_justificante_repository
 
-    wu_repo = work_unit_repository or work_unit_catalogue_repository(bucket_id=bucket_id)
-    catalogue = wu_repo.load()
+
+def _select_external_source_work_unit(
+    source: ExternalFilingBaselineSource,
+    *,
+    catalogue: WorkUnitCatalogue,
+    bucket_id: str,
+) -> ModeloWorkResolution:
+    """Translate target-selection conflicts into import-domain refusals."""
     try:
-        resolution = _select_active_external_import_work_unit(
+        return _select_active_external_import_work_unit(
             source,
             catalogue=catalogue,
             bucket_id=bucket_id,
@@ -253,26 +282,109 @@ def import_external_filing_source(
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_source_revision_mismatch",
         ) from exc
+
+
+def _create_external_source_work_unit(
+    source: ExternalFilingBaselineSource,
+    *,
+    bucket_id: str,
+    actor: str,
+    repository: WorkUnitCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    clock: datetime | None,
+) -> WorkUnit:
+    """Create a source import target using the law-selected registry revision."""
+    revision_id = law_selected_revision_for_work_target(
+        modelo=source.modelo,
+        filing_year=source.filing_year,
+        period=source.period,
+        requested_revision_id=source.registry_revision_id,
+    )
+    return create_work_unit(
+        bucket_id=bucket_id,
+        modelo=source.modelo,
+        filing_year=source.filing_year,
+        period=source.period,
+        revision_id=revision_id,
+        actor=actor,
+        repository=repository,
+        bucket_event_repository=bucket_event_repository,
+        clock=clock,
+    )
+
+
+def _resolve_external_source_work_unit(
+    source: ExternalFilingBaselineSource,
+    *,
+    bucket_id: str,
+    actor: str,
+    repository: WorkUnitCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+    clock: datetime | None,
+) -> WorkUnit:
+    """Resolve the active target or create one when the target is absent."""
+    resolution = _select_external_source_work_unit(source, catalogue=repository.load(), bucket_id=bucket_id)
     if resolution.work_unit is not None:
-        work_unit = resolution.work_unit
-    else:
-        revision_id = law_selected_revision_for_work_target(
-            modelo=source.modelo,
-            filing_year=source.filing_year,
-            period=source.period,
-            requested_revision_id=source.registry_revision_id,
-        )
-        work_unit = create_work_unit(
-            bucket_id=bucket_id,
-            modelo=source.modelo,
-            filing_year=source.filing_year,
-            period=source.period,
-            revision_id=revision_id,
-            actor=actor,
-            repository=wu_repo,
-            bucket_event_repository=bucket_event_repository,
-            clock=clock,
-        )
+        return resolution.work_unit
+    return _create_external_source_work_unit(
+        source,
+        bucket_id=bucket_id,
+        actor=actor,
+        repository=repository,
+        bucket_event_repository=bucket_event_repository,
+        clock=clock,
+    )
+
+
+def import_external_filing_source(
+    source: ExternalFilingBaselineSource,
+    *,
+    bucket_id: str,
+    filing_instance_evidence: FilingInstanceEvidence | None = None,
+    actor: str = "aeat-import",
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
+    justificante_repository: JustificanteRepositoryProtocol | None = None,
+    observation_repository: CalculationObservationRepository | None = None,
+    clock: datetime | None = None,
+) -> ModeloRecord:
+    """Resolve or create the target work unit and persist an amendable baseline.
+
+    Source lexical tokens are retained verbatim on the revision input snapshot;
+    their independently parsed Decimal values feed the filing baseline.
+    """
+    _validate_external_source_shape(source)
+    lexical_values, decimal_values = _parse_external_source_values(source)
+    snapshot, canonical_values = _reject_unknown_import_casillas(
+        modelo=source.modelo,
+        filing_year=source.filing_year,
+        period=source.period,
+        casilla_values=decimal_values,
+    )
+    _validate_external_source_registry_values(
+        snapshot=snapshot,
+        canonical_values=canonical_values,
+        lexical_values=lexical_values,
+    )
+    resolved_justificante_repository = _validate_external_source_requirements(
+        source=source,
+        bucket_id=bucket_id,
+        filing_instance_evidence=filing_instance_evidence,
+        actor=actor,
+        justificante_repository=justificante_repository,
+    )
+
+    wu_repo = work_unit_repository or work_unit_catalogue_repository(bucket_id=bucket_id)
+    work_unit = _resolve_external_source_work_unit(
+        source,
+        bucket_id=bucket_id,
+        actor=actor,
+        repository=wu_repo,
+        bucket_event_repository=bucket_event_repository,
+        clock=clock,
+    )
     return import_external_filing_evidence(
         work_unit_id=work_unit.work_unit_id,
         casilla_values=decimal_values,
@@ -355,6 +467,51 @@ def _validated_source_lexicals[CasillaKey](
     return validated
 
 
+def _validate_external_import_evidence_requirements(
+    *,
+    work_unit: WorkUnit,
+    evidence_kind: ExternalEvidenceKind,
+    filing_instance_evidence: FilingInstanceEvidence | None,
+    cleaned_reference: str,
+    expected_tax_id: str | None,
+    justificante_repository: JustificanteRepositoryProtocol | None,
+) -> None:
+    """Enforce filing-instance and receipt-bound evidence requirements."""
+    if work_unit.modelo == Modelo.M303.value and filing_instance_evidence is None:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
+            context={"work_unit_id": work_unit.work_unit_id},
+        )
+    resolved_justificante_repository = justificante_repository or resolve_justificante_repository(
+        bucket_id=work_unit.bucket_id,
+    )
+    _require_bound_justificante_artifact(
+        evidence_kind=evidence_kind,
+        evidence_reference_id=cleaned_reference,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        expected_tax_id=expected_tax_id,
+        justificante_repository=resolved_justificante_repository,
+    )
+
+
+def _prepare_external_import_values[CasillaKey](
+    *,
+    canonical_values: Mapping[CasillaId, Decimal],
+    source_lexical_values_by_casilla_id: Mapping[CasillaKey, str] | None,
+    snapshot: RegistrySnapshot,
+) -> tuple[dict[CasillaId, str], dict[CasillaId, Decimal], tuple[CasillaObservation, ...]]:
+    """Validate source lexicals and project canonical values into observations."""
+    input_values_by_casilla_id = _validated_source_lexicals(
+        canonical_values=canonical_values,
+        source_lexicals=source_lexical_values_by_casilla_id,
+    )
+    outputs = dict(canonical_values)
+    observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
+    return input_values_by_casilla_id, outputs, observations
+
+
 def _prepare_external_import_revision(
     *,
     repository: CalculationRevisionCatalogueRepositoryProtocol,
@@ -431,6 +588,189 @@ def _advance_external_import_work_unit(
     )
 
 
+def _prepare_external_import_filing_state(
+    *,
+    work_units: WorkUnitCatalogue,
+    work_unit: WorkUnit,
+    work_unit_id: str,
+    revisions: CalculationRevisionCatalogue,
+    revisions_revision_id: str,
+    revision_id: CalculationRevisionId,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    actor: str,
+    now: datetime,
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+) -> _ExternalImportFilingState:
+    """Compose the filing, supersession, and advanced work-unit catalogues."""
+    new_filing_id = derive_filing_record_id(
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        filed_by=actor.strip(),
+    )
+    filing_catalogue, filing_revision_id = filing_repository.load_revisioned()
+    prior_current = filing_catalogue.current_for(
+        bucket_id=work_unit.bucket_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+    )
+    new_filing = _build_external_filing_record(
+        filing_record_id=new_filing_id,
+        work_unit=work_unit,
+        calculation_revision_id=revision_id,
+        filed_at=now,
+        filed_by=actor.strip(),
+        evidence_kind=evidence_kind,
+        evidence_reference_id=evidence_reference_id,
+    )
+    updated_filing_catalogue, revisions = _supersede_prior_current_external_filing(
+        filing_catalogue=filing_catalogue,
+        prior_current=prior_current,
+        revisions=revisions,
+        new_filing_id=new_filing_id,
+        now=now,
+    )
+    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
+    advanced_work_units = _advance_external_import_work_unit(
+        work_units,
+        work_unit=work_unit,
+        revision_id=revision_id,
+        filing_record_id=new_filing_id,
+        now=now,
+    )
+    return _ExternalImportFilingState(
+        revisions=revisions,
+        revisions_revision_id=revisions_revision_id,
+        updated_filing_catalogue=updated_filing_catalogue,
+        filing_revision_id=filing_revision_id,
+        advanced_work_units=advanced_work_units,
+        new_filing_id=new_filing_id,
+        new_filing=new_filing,
+        prior_current=prior_current,
+    )
+
+
+def _build_external_import_event(
+    *,
+    work_unit: WorkUnit,
+    state: _ExternalImportFilingState,
+    work_unit_id: str,
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    actor: str,
+    casilla_count: int,
+    occurred_at: datetime,
+):
+    """Build the event that accounts for the imported filing transition."""
+    return _build_bucket_event(
+        bucket_id=work_unit.bucket_id,
+        event_type=BucketEventType.MODELO_FILING_IMPORTED,
+        occurred_at=occurred_at,
+        actor=actor,
+        object_type=BucketEventObjectType.FILING_RECORD,
+        object_id=state.new_filing_id,
+        payload={
+            "work_unit_id": work_unit_id,
+            "calculation_revision_id": state.new_filing.calculation_revision_id,
+            "modelo": work_unit.modelo,
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period.registry_token,
+            "evidence_kind": evidence_kind.value,
+            "evidence_reference_id": evidence_reference_id,
+            "supersedes_filing_record_id": (
+                state.prior_current.filing_record_id if state.prior_current is not None else ""
+            ),
+            "casilla_count": str(casilla_count),
+        },
+    )
+
+
+def _build_external_import_observation_payload(
+    *,
+    evidence_kind: ExternalEvidenceKind,
+    observation_repository: CalculationObservationRepository,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    occurred_at: datetime,
+    cleaned_reference: str,
+    expected_tax_id: str | None,
+    filing_record_id: str,
+) -> ObservationEnvelopePayload | None:
+    """Build the CSV observation envelope when that evidence channel applies."""
+    if evidence_kind is not ExternalEvidenceKind.AEAT_CSV_REGISTER:
+        return None
+    return observation_repository.prepare_observation_envelope(
+        RegistryModeloObservation(
+            modelo=work_unit.modelo,
+            filing_year=work_unit.filing_year,
+            period=work_unit.period.registry_token,
+            observations=revision.observations,
+        ),
+        source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
+        captured_at=occurred_at,
+        stamped_revision_id=work_unit.revision_id,
+        source_metadata={
+            "aeat_register_status": "ALTA",
+            "aeat_expediente_id": cleaned_reference,
+            "authenticated_identity": (expected_tax_id or "").strip(),
+            "external_evidence_reference_id": cleaned_reference,
+            "filing_record_id": filing_record_id,
+        },
+    )
+
+
+def _external_import_secure_writes(
+    *,
+    state: _ExternalImportFilingState,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    bucket_event: BucketEvent,
+    observation_repository: CalculationObservationRepository,
+    observation_payload: ObservationEnvelopePayload | None,
+):
+    """Collect the co-committed writes, including CSV observations when present."""
+    writes = [
+        calculation_repository.to_secure_object_write(
+            state.revisions,
+            expected_revision_id=state.revisions_revision_id,
+        ),
+        work_unit_repository.to_secure_object_write(state.advanced_work_units),
+        _bucket_event_write(bucket_event_repository, (bucket_event,)),
+    ]
+    if observation_payload is not None:
+        writes.append(observation_repository.to_secure_object_write(observation_payload))
+    return tuple(writes)
+
+
+def _persist_external_import(
+    *,
+    state: _ExternalImportFilingState,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol,
+    bucket_event: BucketEvent,
+    observation_repository: CalculationObservationRepository,
+    observation_payload: ObservationEnvelopePayload | None,
+) -> None:
+    """Commit the filing, revision, work-unit, event, and observation together."""
+    filing_repository.save_with_secure_object_writes(
+        state.updated_filing_catalogue,
+        _external_import_secure_writes(
+            state=state,
+            calculation_repository=calculation_repository,
+            work_unit_repository=work_unit_repository,
+            bucket_event_repository=bucket_event_repository,
+            bucket_event=bucket_event,
+            observation_repository=observation_repository,
+            observation_payload=observation_payload,
+        ),
+        expected_revision_id=state.filing_revision_id,
+    )
+
+
 def import_external_filing_evidence[CasillaKey](
     *,
     work_unit_id: str,
@@ -479,7 +819,6 @@ def import_external_filing_evidence[CasillaKey](
     if wu_repo is None:
         wu_repo = work_unit_catalogue_repository(bucket_id=require_active_profile_bucket_id())
     observation_repo = observation_repository or CalculationObservationRepository()
-
     work_units, work_unit, snapshot, canonical_values, cleaned_reference = _load_external_import_target(
         work_unit_id=work_unit_id,
         casilla_values=casilla_values,
@@ -489,30 +828,20 @@ def import_external_filing_evidence[CasillaKey](
     cr_repo = calculation_repository or calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id)
     fr_repo = filing_repository or modelo_record_catalogue_repository(bucket_id=work_unit.bucket_id)
     bv_repo = bucket_event_repository or default_profile_bucket_event_history_repository()
-    if work_unit.modelo == Modelo.M303.value and filing_instance_evidence is None:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_import_m303_filing_evidence_required",
-            context={"work_unit_id": work_unit.work_unit_id},
-        )
-    _require_bound_justificante_artifact(
+    _validate_external_import_evidence_requirements(
+        work_unit=work_unit,
         evidence_kind=evidence_kind,
-        evidence_reference_id=cleaned_reference,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
+        filing_instance_evidence=filing_instance_evidence,
+        cleaned_reference=cleaned_reference,
         expected_tax_id=expected_tax_id,
-        justificante_repository=(
-            justificante_repository or resolve_justificante_repository(bucket_id=work_unit.bucket_id)
-        ),
+        justificante_repository=justificante_repository,
     )
 
-    input_values_by_casilla_id = _validated_source_lexicals(
+    input_values_by_casilla_id, outputs, observations = _prepare_external_import_values(
         canonical_values=canonical_values,
-        source_lexicals=source_lexical_values_by_casilla_id,
+        source_lexical_values_by_casilla_id=source_lexical_values_by_casilla_id,
+        snapshot=snapshot,
     )
-    outputs = dict(canonical_values)
-    observations = _external_filing_observations(casilla_values=outputs, snapshot=snapshot)
-
     now = clock or _utc_now()
     # Revisioned: both catalogues are composed into the co-commit below, so
     # neither can use a self-committing mutation, and an unguarded read would
@@ -528,113 +857,55 @@ def import_external_filing_evidence[CasillaKey](
         actor=actor,
         now=now,
     )
-    revision_id = revision.calculation_revision_id
-
-    new_filing_id = derive_filing_record_id(
-        work_unit_id=work_unit_id,
-        calculation_revision_id=revision_id,
-        filed_by=actor.strip(),
-    )
-
-    filing_catalogue, filing_revision_id = fr_repo.load_revisioned()
-    prior_current = filing_catalogue.current_for(
-        bucket_id=work_unit.bucket_id,
-        modelo=work_unit.modelo,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-    )
-
-    new_filing = _build_external_filing_record(
-        filing_record_id=new_filing_id,
+    state = _prepare_external_import_filing_state(
+        work_units=work_units,
         work_unit=work_unit,
-        calculation_revision_id=revision_id,
-        filed_at=now,
-        filed_by=actor.strip(),
+        work_unit_id=work_unit_id,
+        revisions=revisions,
+        revisions_revision_id=revisions_revision_id,
+        revision_id=revision.calculation_revision_id,
+        filing_repository=fr_repo,
+        actor=actor,
+        now=now,
         evidence_kind=evidence_kind,
         evidence_reference_id=cleaned_reference,
     )
-
-    updated_filing_catalogue, revisions = _supersede_prior_current_external_filing(
-        filing_catalogue=filing_catalogue,
-        prior_current=prior_current,
-        revisions=revisions,
-        new_filing_id=new_filing_id,
-        now=now,
-    )
-    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
-
-    advanced_work_units = _advance_external_import_work_unit(
-        work_units,
+    imported_event = _build_external_import_event(
         work_unit=work_unit,
-        revision_id=revision_id,
-        filing_record_id=new_filing_id,
-        now=now,
-    )
-    imported_event = _build_bucket_event(
-        bucket_id=work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_FILING_IMPORTED,
-        occurred_at=now,
+        state=state,
+        work_unit_id=work_unit_id,
+        evidence_kind=evidence_kind,
+        evidence_reference_id=cleaned_reference,
         actor=actor,
-        object_type=BucketEventObjectType.FILING_RECORD,
-        object_id=new_filing_id,
-        payload={
-            "work_unit_id": work_unit_id,
-            "calculation_revision_id": revision_id,
-            "modelo": work_unit.modelo,
-            "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period.registry_token,
-            "evidence_kind": evidence_kind.value,
-            "evidence_reference_id": cleaned_reference,
-            "supersedes_filing_record_id": (prior_current.filing_record_id if prior_current is not None else ""),
-            "casilla_count": str(len(outputs)),
-        },
+        casilla_count=len(outputs),
+        occurred_at=now,
     )
-    observation_payload = (
-        observation_repo.prepare_observation_envelope(
-            RegistryModeloObservation(
-                modelo=work_unit.modelo,
-                filing_year=work_unit.filing_year,
-                period=work_unit.period.registry_token,
-                observations=revision.observations,
-            ),
-            source_kind=ObservationSourceKind.AEAT_CSV_REGISTER,
-            captured_at=now,
-            stamped_revision_id=work_unit.revision_id,
-            source_metadata={
-                "aeat_register_status": "ALTA",
-                "aeat_expediente_id": cleaned_reference,
-                "authenticated_identity": (expected_tax_id or "").strip(),
-                "external_evidence_reference_id": cleaned_reference,
-                "filing_record_id": new_filing_id,
-            },
-        )
-        if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
-        else None
+    observation_payload = _build_external_import_observation_payload(
+        evidence_kind=evidence_kind,
+        observation_repository=observation_repo,
+        work_unit=work_unit,
+        revision=revision,
+        occurred_at=now,
+        cleaned_reference=cleaned_reference,
+        expected_tax_id=expected_tax_id,
+        filing_record_id=state.new_filing_id,
     )
-
     # One unit of work: the imported revision, the filing catalogue, the advanced
     # work-unit pointers, and the ``modelo.filing.imported`` event commit
     # together. Emitted afterwards through a separate save, an event-storage
     # failure left a durable imported filing and an advanced filed-revision
     # pointer that no history entry accounted for.
-    fr_repo.save_with_secure_object_writes(
-        updated_filing_catalogue,
-        tuple(
-            write
-            for write in (
-                cr_repo.to_secure_object_write(revisions, expected_revision_id=revisions_revision_id),
-                wu_repo.to_secure_object_write(advanced_work_units),
-                _bucket_event_write(bv_repo, (imported_event,)),
-                observation_repo.to_secure_object_write(observation_payload)
-                if observation_payload is not None
-                else None,
-            )
-            if write is not None
-        ),
-        expected_revision_id=filing_revision_id,
+    _persist_external_import(
+        state=state,
+        calculation_repository=cr_repo,
+        filing_repository=fr_repo,
+        work_unit_repository=wu_repo,
+        bucket_event_repository=bv_repo,
+        bucket_event=imported_event,
+        observation_repository=observation_repo,
+        observation_payload=observation_payload,
     )
-
-    return new_filing
+    return state.new_filing
 
 
 def _supersede_prior_current_external_filing(

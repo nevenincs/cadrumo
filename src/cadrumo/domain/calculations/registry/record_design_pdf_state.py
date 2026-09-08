@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -238,62 +238,12 @@ class _PdfSheetDraft:
         # 184 stages BOTH "151-155 PORCENTAJE..." and the "151- 153 ENTERO" it
         # subdivides into, so keying one candidate per offset silently picks
         # whichever was read last and loses the one that actually fits.
-        by_offset: dict[int, list[PdfRow]] = {}
-        for candidate in self.unnamed_candidates:
-            by_offset.setdefault(candidate.offset, []).append(candidate)
+        by_offset = _candidates_by_offset(self.unnamed_candidates)
         admitted: list[RecordDesignField] = []
         index = 0
         while index < len(self.fields):
-            parent = self.fields[index]
-            run: list[RecordDesignField] = []
-            cursor = index + 1
-            while cursor < len(self.fields):
-                child = self.fields[cursor]
-                if (
-                    child.offset >= parent.offset
-                    and child.offset + child.length <= parent.offset + parent.length
-                    and (child.offset, child.length) != (parent.offset, parent.length)
-                ):
-                    run.append(child)
-                    cursor += 1
-                else:
-                    break
-            index = cursor if run else index + 1
-            declared = declared_subdivision_count(parent)
-            # ``run`` may be EMPTY. Modelo 190's 81-107 and 108-147 each say
-            # "Este campo se subdivide en tres/cuatro" and NONE of their
-            # sub-rows was read, so requiring an already-read child would
-            # skip exactly the designs where the whole desglose went unread.
-            # The declared count still carries the proof: the candidates must
-            # tile the parent end to end AND number exactly what it declares.
-            if declared is None or tiles_exactly(parent, run) or len(run) >= declared:
-                continue
-            covered: set[int] = set()
-            for child in run:
-                covered.update(range(child.offset, child.offset + child.length))
-            chosen = solve_declared_desglose_holes(
-                parent=parent,
-                covered=covered,
-                by_offset=by_offset,
-                wanted=declared - len(run),
-            )
-            if chosen is None:
-                continue
-            fillers = [
-                RecordDesignField(
-                    sheet=self.name,
-                    row=candidate.source_row,
-                    ordinal=None,
-                    offset=candidate.offset,
-                    length=candidate.length,
-                    type_code=candidate.type_code,
-                    description=candidate.description,
-                )
-                for candidate in chosen
-            ]
-            if not tiles_exactly(parent, sorted([*run, *fillers], key=lambda read: read.offset)):
-                continue
-            admitted.extend(fillers)
+            parent, run, index = _nested_desglose_run(self.fields, index)
+            admitted.extend(_desglose_fillers(self.name, parent, run, by_offset))
         if admitted:
             self.fields = sorted([*self.fields, *admitted], key=lambda read: read.offset)
 
@@ -313,6 +263,92 @@ class _PdfSheetDraft:
         return sheet
 
 
+def _candidates_by_offset(candidates: list[PdfRow]) -> dict[int, list[PdfRow]]:
+    """Keep every staged candidate at an offset for nested desglose solving."""
+    by_offset: dict[int, list[PdfRow]] = {}
+    for candidate in candidates:
+        by_offset.setdefault(candidate.offset, []).append(candidate)
+    return by_offset
+
+
+def _nested_desglose_run(
+    fields: list[RecordDesignField],
+    index: int,
+) -> tuple[RecordDesignField, list[RecordDesignField], int]:
+    """Return the parent and its immediately following contained fields."""
+    parent = fields[index]
+    run: list[RecordDesignField] = []
+    cursor = index + 1
+    while cursor < len(fields) and _is_nested_desglose_child(parent, fields[cursor]):
+        run.append(fields[cursor])
+        cursor += 1
+    return parent, run, cursor if run else index + 1
+
+
+def _is_nested_desglose_child(parent: RecordDesignField, child: RecordDesignField) -> bool:
+    """Whether ``child`` is a distinct field wholly contained by ``parent``."""
+    return (
+        child.offset >= parent.offset
+        and child.offset + child.length <= parent.offset + parent.length
+        and (child.offset, child.length) != (parent.offset, parent.length)
+    )
+
+
+def _desglose_fillers(
+    sheet_name: str,
+    parent: RecordDesignField,
+    run: list[RecordDesignField],
+    by_offset: Mapping[int, list[PdfRow]],
+) -> list[RecordDesignField]:
+    """Solve one declared subdivision and return only an exactly fitting fill."""
+    declared = declared_subdivision_count(parent)
+    # ``run`` may be EMPTY. Modelo 190's 81-107 and 108-147 each say
+    # "Este campo se subdivide en tres/cuatro" and NONE of their sub-rows was
+    # read, so requiring an already-read child would skip exactly the designs
+    # where the whole desglose went unread. The declared count still carries
+    # the proof: candidates must tile the parent end to end AND number exactly
+    # what it declares.
+    if declared is None or tiles_exactly(parent, run) or len(run) >= declared:
+        return []
+    covered = _covered_positions(run)
+    chosen = solve_declared_desglose_holes(
+        parent=parent,
+        covered=covered,
+        by_offset=by_offset,
+        wanted=declared - len(run),
+    )
+    if chosen is None:
+        return []
+    fillers = _fields_from_unnamed_rows(sheet_name, chosen)
+    if not tiles_exactly(parent, sorted([*run, *fillers], key=lambda read: read.offset)):
+        return []
+    return fillers
+
+
+def _covered_positions(fields: Iterable[RecordDesignField]) -> set[int]:
+    """Return all positions claimed by the supplied fields."""
+    covered: set[int] = set()
+    for parsed_field in fields:
+        covered.update(range(parsed_field.offset, parsed_field.offset + parsed_field.length))
+    return covered
+
+
+def _fields_from_unnamed_rows(sheet_name: str, rows: list[PdfRow]) -> list[RecordDesignField]:
+    """Convert admitted range rows into unnumbered design fields."""
+    return [
+        RecordDesignField(
+            sheet=sheet_name,
+            row=row.source_row,
+            ordinal=None,
+            offset=row.offset,
+            length=row.length,
+            type_code=row.type_code,
+            description=row.description,
+        )
+        for row in rows
+    ]
+
+
 @dataclass(frozen=True, slots=True)
 class _PdfSheetResult:
     """One finished record body and whether the source named it."""
@@ -320,6 +356,52 @@ class _PdfSheetResult:
     sheet: RecordDesignSheet
     identified: bool
     opened_at_row: int | None
+
+
+def _identified_sheets(results: list[_PdfSheetResult]) -> tuple[RecordDesignSheet, ...]:
+    """Return only named record bodies that contain parsed fields."""
+    return tuple(result.sheet for result in results if result.identified and result.sheet.fields)
+
+
+def _skipped_sheets(results: list[_PdfSheetResult]) -> tuple[RecordDesignSkippedSheet, ...]:
+    """Explain every result that cannot be returned as a read sheet."""
+    return tuple(
+        RecordDesignSkippedSheet(name=result.sheet.name, reason=_skipped_record_reason(result))
+        for result in results
+        if not (result.identified and result.sheet.fields)
+    )
+
+
+def _contiguity_failures(sheets: tuple[RecordDesignSheet, ...]) -> dict[str, str]:
+    """Collect the named sheets whose rows do not tile their declared extent."""
+    failures: dict[str, str] = {}
+    for sheet in sheets:
+        reason = contiguity_failure(sheet)
+        if reason is not None:
+            failures[sheet.name] = reason
+    return failures
+
+
+def _finalise_extraction(
+    source_label: str,
+    results: list[_PdfSheetResult],
+    corrections: Mapping[tuple[str, int], RecordDesignRangeStartCorrection],
+) -> RecordDesignExtraction:
+    """Finish post-recovery transforms and classify unread or broken sheets."""
+    read = _identified_sheets(results)
+    if not read:
+        raise RegistryValidationError("record-design PDF did not contain parseable field rows")
+    read = _recover_inline_constants(read)
+    read = _apply_range_start_corrections(read, corrections)
+    broken = _contiguity_failures(read)
+    return RecordDesignExtraction(
+        source=source_label,
+        sheets=tuple(sheet for sheet in read if sheet.name not in broken),
+        skipped=(
+            *_skipped_sheets(results),
+            *(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
+        ),
+    )
 
 
 #: A record's own closing identifier, which names the modelo and the page it
@@ -397,9 +479,21 @@ def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
     record did not state would be inventing an identity, which is worse than
     reporting the gap.
     """
+    declared_page = _declared_page_token(sheet)
+    closing = _numeric_closing_page_token(sheet)
+    if closing is not None:
+        if declared_page is not None and len(closing) != len(declared_page):
+            return f"Pág. {_page_label_from_token(declared_page)}"
+        return f"Pág. {_page_label_from_token(closing)}"
+    if declared_page is not None:
+        return f"Pág. {_page_label_from_token(declared_page)}"
+    return None
+
+
+def _declared_page_token(sheet: RecordDesignSheet) -> str | None:
+    """Read a Página constant only from the model/page geometry pair."""
     by_offset = {field.offset: field for field in sheet.fields}
     modelo_field, page_field = by_offset.get(3), by_offset.get(6)
-    declared_page: str | None = None
     if (
         modelo_field is not None
         and page_field is not None
@@ -415,8 +509,12 @@ def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
         # ``Constante "2011"``, and self-consistency alone would happily read it
         # as page 2011.
         if candidate is not None and len(candidate) == page_field.length and page_field.length in _PAGE_CONSTANT_WIDTHS:
-            declared_page = candidate
+            return candidate
+    return None
 
+
+def _numeric_closing_page_token(sheet: RecordDesignSheet) -> str | None:
+    """Read the first numeric closing identifier while ignoring prose tokens."""
     for design_field in reversed(sheet.fields):
         for text in (design_field.content, design_field.description, design_field.validation):
             if not text:
@@ -435,12 +533,7 @@ def _recovered_record_identity(sheet: RecordDesignSheet) -> str | None:
             # which geometry anchors.
             if not closing.isdigit():
                 break
-            if declared_page is not None and len(closing) != len(declared_page):
-                return f"Pág. {_page_label_from_token(declared_page)}"
-            return f"Pág. {_page_label_from_token(closing)}"
-
-    if declared_page is not None:
-        return f"Pág. {_page_label_from_token(declared_page)}"
+            return closing
     return None
 
 
@@ -523,26 +616,10 @@ class PdfParseState:
         """
         self.close_current_body()
         self._recover_unidentified_bodies()
-        read = tuple(result.sheet for result in self.results if result.identified and result.sheet.fields)
-        if not read:
-            raise RegistryValidationError("record-design PDF did not contain parseable field rows")
-        read = _recover_inline_constants(read)
-        read = _apply_range_start_corrections(read, self.corrections.range_start_corrections)
-        # A sheet whose rows do not tile its own declared extent was not read as
-        # published, so it is reported as SKIPPED rather than handed over as if
-        # it were whole. See :func:`contiguity_failure`.
-        broken = {sheet.name: reason for sheet in read if (reason := contiguity_failure(sheet)) is not None}
-        return RecordDesignExtraction(
-            source=self.source_label,
-            sheets=tuple(sheet for sheet in read if sheet.name not in broken),
-            skipped=(
-                *(
-                    RecordDesignSkippedSheet(name=result.sheet.name, reason=_skipped_record_reason(result))
-                    for result in self.results
-                    if not (result.identified and result.sheet.fields)
-                ),
-                *(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),
-            ),
+        return _finalise_extraction(
+            self.source_label,
+            self.results,
+            self.corrections.range_start_corrections,
         )
 
     def _recover_unidentified_bodies(self) -> None:
@@ -974,46 +1051,62 @@ def _apply_range_start_corrections(
     """
     if not corrections:
         return sheets
-    corrected: list[RecordDesignSheet] = []
-    for sheet in sheets:
-        applicable = {start: correction for (name, start), correction in corrections.items() if name == sheet.name}
-        if not applicable:
-            corrected.append(sheet)
-            continue
-        described: set[int] = set()
-        for parsed in sheet.fields:
-            described.update(range(parsed.offset, parsed.offset + parsed.length))
-        fields = list(sheet.fields)
-        applied: list[RecordDesignRangeStartCorrection] = []
-        for start, correction in sorted(applicable.items()):
-            matches = [index for index, parsed in enumerate(fields) if parsed.offset == start]
-            if not matches:
-                raise RegistryValidationError(
-                    f"record-design sheet {sheet.name!r} declares a range-start correction at "
-                    f"{start} but no field begins there; the correction names nothing and the "
-                    "span it was written to close would stay open",
-                )
-            gained = set(range(correction.corrected_start, start))
-            if collides := sorted(gained & described):
-                raise RegistryValidationError(
-                    f"record-design sheet {sheet.name!r} range-start correction would extend a run "
-                    f"back over position(s) {collides} that a read field already describes; this "
-                    "correction kind reclaims a hole and must never displace declared data",
-                )
-            index = matches[0]
-            original = fields[index]
-            fields[index] = original.model_copy(
-                update={
-                    "offset": correction.corrected_start,
-                    "length": original.length + (start - correction.corrected_start),
-                },
-            )
-            described |= gained
-            applied.append(correction)
-        corrected.append(
-            sheet.model_copy(update={"fields": tuple(fields), "corrections": (*sheet.corrections, *applied)}),
+    return tuple(_apply_sheet_range_start_corrections(sheet, corrections) for sheet in sheets)
+
+
+def _apply_sheet_range_start_corrections(
+    sheet: RecordDesignSheet,
+    corrections: Mapping[tuple[str, int], RecordDesignRangeStartCorrection],
+) -> RecordDesignSheet:
+    """Apply this sheet's declarations after proving each reclaimed span is empty."""
+    applicable = {start: correction for (name, start), correction in corrections.items() if name == sheet.name}
+    if not applicable:
+        return sheet
+    described = _covered_positions(sheet.fields)
+    fields = list(sheet.fields)
+    applied: list[RecordDesignRangeStartCorrection] = []
+    for start, correction in sorted(applicable.items()):
+        index = _range_correction_field_index(fields, sheet.name, start)
+        gained = _range_correction_hole(sheet.name, start, correction, described)
+        original = fields[index]
+        fields[index] = original.model_copy(
+            update={
+                "offset": correction.corrected_start,
+                "length": original.length + (start - correction.corrected_start),
+            },
         )
-    return tuple(corrected)
+        described |= gained
+        applied.append(correction)
+    return sheet.model_copy(update={"fields": tuple(fields), "corrections": (*sheet.corrections, *applied)})
+
+
+def _range_correction_field_index(fields: list[RecordDesignField], sheet_name: str, start: int) -> int:
+    """Find the field named by a range-start declaration or reject the declaration."""
+    matches = [index for index, parsed in enumerate(fields) if parsed.offset == start]
+    if not matches:
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} declares a range-start correction at "
+            f"{start} but no field begins there; the correction names nothing and the "
+            "span it was written to close would stay open",
+        )
+    return matches[0]
+
+
+def _range_correction_hole(
+    sheet_name: str,
+    start: int,
+    correction: RecordDesignRangeStartCorrection,
+    described: set[int],
+) -> set[int]:
+    """Return a correction's reclaimed positions after proving they are a hole."""
+    gained = set(range(correction.corrected_start, start))
+    if collides := sorted(gained & described):
+        raise RegistryValidationError(
+            f"record-design sheet {sheet_name!r} range-start correction would extend a run "
+            f"back over position(s) {collides} that a read field already describes; this "
+            "correction kind reclaims a hole and must never displace declared data",
+        )
+    return gained
 
 
 def contiguity_failure(sheet: RecordDesignSheet) -> str | None:

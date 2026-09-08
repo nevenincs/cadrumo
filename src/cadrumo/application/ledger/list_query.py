@@ -16,6 +16,7 @@ line formatting, which stay with the surface that displays them.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Final, override
 
 from pydantic import BaseModel, NonNegativeInt
@@ -107,33 +108,71 @@ class _DescendingKey:
         return hash(self.value)
 
 
-def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
-    """Project one sort axis to a string so ordering can never raise.
-
-    Every axis becomes a ``str`` so a sort never compares mixed types, and an
-    optional axis with no value yields the empty string; the caller pairs that
-    with a *missing* flag so a blank never sorts as though it held a value.
-    """
+def _effective_date_sort_value(transaction: Transaction) -> str:
+    """Project the effective ledger date used by the default date axis."""
     raw = transaction.raw
-    if field is LedgerSortField.DATE:
-        return (raw.value_date or raw.booked_date).isoformat()
-    if field is LedgerSortField.VALUE_DATE:
-        return raw.value_date.isoformat() if raw.value_date is not None else ""
-    if field is LedgerSortField.AMOUNT:
-        # Zero-pad the integer part so lexical order matches numeric order over
-        # the non-negative magnitudes (e.g. "9.00" must sort before "10.00").
-        return f"{raw.amount:020.2f}"
-    if field is LedgerSortField.DESCRIPTION:
-        return raw.description
-    if field is LedgerSortField.CREATED_AT:
-        return transaction.created_at.isoformat()
-    if field is LedgerSortField.MODIFIED_AT:
-        return transaction.modified_at.isoformat()
-    if field is LedgerSortField.CLASSIFIED_AT:
-        return transaction.classified_at.isoformat() if transaction.classified_at is not None else ""
-    if field is LedgerSortField.LIFECYCLE_STATE:
-        return transaction.lifecycle_state.value
+    return (raw.value_date or raw.booked_date).isoformat()
+
+
+def _value_date_sort_value(transaction: Transaction) -> str:
+    """Project the optional raw value date, leaving absence sortable last."""
+    value_date = transaction.raw.value_date
+    return value_date.isoformat() if value_date is not None else ""
+
+
+def _amount_sort_value(transaction: Transaction) -> str:
+    """Project a zero-padded amount so lexical order matches numeric order."""
+    # Zero-pad the integer part so lexical order matches numeric order over
+    # the non-negative magnitudes (e.g. "9.00" must sort before "10.00").
+    return f"{transaction.raw.amount:020.2f}"
+
+
+def _description_sort_value(transaction: Transaction) -> str:
+    """Project the operator-facing description axis."""
+    return transaction.raw.description
+
+
+def _created_at_sort_value(transaction: Transaction) -> str:
+    """Project the persistence creation timestamp axis."""
+    return transaction.created_at.isoformat()
+
+
+def _modified_at_sort_value(transaction: Transaction) -> str:
+    """Project the persistence modification timestamp axis."""
+    return transaction.modified_at.isoformat()
+
+
+def _classified_at_sort_value(transaction: Transaction) -> str:
+    """Project the optional classification timestamp axis."""
+    return transaction.classified_at.isoformat() if transaction.classified_at is not None else ""
+
+
+def _lifecycle_state_sort_value(transaction: Transaction) -> str:
+    """Project the lifecycle-state token axis."""
+    return transaction.lifecycle_state.value
+
+
+def _classification_sort_value(transaction: Transaction) -> str:
+    """Project the business-classification token axis."""
     return transaction.business_classification.value
+
+
+_SORT_FIELD_PROJECTORS: Final[dict[LedgerSortField, Callable[[Transaction], str]]] = {
+    LedgerSortField.DATE: _effective_date_sort_value,
+    LedgerSortField.VALUE_DATE: _value_date_sort_value,
+    LedgerSortField.AMOUNT: _amount_sort_value,
+    LedgerSortField.DESCRIPTION: _description_sort_value,
+    LedgerSortField.CREATED_AT: _created_at_sort_value,
+    LedgerSortField.MODIFIED_AT: _modified_at_sort_value,
+    LedgerSortField.CLASSIFIED_AT: _classified_at_sort_value,
+    LedgerSortField.LIFECYCLE_STATE: _lifecycle_state_sort_value,
+    LedgerSortField.CLASSIFICATION: _classification_sort_value,
+}
+
+
+def _sort_field_value(transaction: Transaction, field: LedgerSortField) -> str:
+    """Project one sort axis to a string so ordering can never raise."""
+    return _SORT_FIELD_PROJECTORS.get(field, _classification_sort_value)(transaction)
 
 
 def sort_ledger_results(
@@ -182,6 +221,105 @@ def latest_llm_decision_is_rejection(
     return decisions[-1].event_type is BucketEventType.LEDGER_TRANSACTION_LLM_SUGGESTION_REJECTED
 
 
+def _filter_by_review_spec(
+    results: tuple[ManualLedgerTransactionResult, ...],
+    *,
+    query: LedgerTransactionListQuery,
+    bucket_id: str,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+) -> tuple[ManualLedgerTransactionResult, ...]:
+    """Apply the canonical review-filter projection when clauses are present."""
+    if not query.spec.clauses:
+        return results
+    matching = query_ledger_review_rows(
+        ledger_review_query_for_spec(query.spec, bucket_id=bucket_id),
+        transaction_repository=transaction_repository,
+    )
+    matching_ids = {row.id for row in matching.rows}
+    return tuple(item for item in results if item.transaction.transaction_id in matching_ids)
+
+
+def _exclude_rejected_results(
+    results: tuple[ManualLedgerTransactionResult, ...],
+    *,
+    query: LedgerTransactionListQuery,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+) -> tuple[ManualLedgerTransactionResult, ...]:
+    """Drop rows whose latest model decision is a rejection when requested."""
+    if not query.exclude_llm_rejected:
+        return results
+    if bucket_event_repository is None:
+        raise ValueError("excluding model-rejected rows requires the bucket event history repository")
+    catalogue = bucket_event_repository.load()
+    return tuple(
+        item for item in results if not latest_llm_decision_is_rejection(catalogue, item.transaction.transaction_id)
+    )
+
+
+def _filter_by_group(
+    results: tuple[ManualLedgerTransactionResult, ...],
+    *,
+    group: str | None,
+) -> tuple[ManualLedgerTransactionResult, ...]:
+    """Keep only the requested normalized group label."""
+    if group is None:
+        return results
+    wanted = group.strip() or None
+    return tuple(item for item in results if item.transaction.group_label == wanted)
+
+
+def _sort_if_requested(
+    results: tuple[ManualLedgerTransactionResult, ...],
+    *,
+    sort_by: LedgerSortField | None,
+    sort_order: LedgerSortOrder,
+) -> tuple[ManualLedgerTransactionResult, ...]:
+    """Apply the requested primary sort while retaining the stored order otherwise."""
+    if sort_by is None:
+        return results
+    return sort_ledger_results(results, sort_by=sort_by, sort_order=sort_order)
+
+
+def _partition_by_group(
+    results: tuple[ManualLedgerTransactionResult, ...],
+    *,
+    by_group: bool,
+    sort_by: LedgerSortField | None,
+) -> tuple[ManualLedgerTransactionResult, ...]:
+    """Partition named groups before ungrouped rows without changing their order."""
+    if not by_group:
+        return results
+    return tuple(
+        sorted(
+            results,
+            key=lambda item: (
+                item.transaction.group_label or _UNGROUPED_SENTINEL,
+                # Only the residual tie-break when no axis was chosen;
+                # otherwise the stable sort above already holds the order.
+                item.transaction.transaction_id if sort_by is None else "",
+            ),
+        )
+    )
+
+
+def _page_results(
+    results: tuple[ManualLedgerTransactionResult, ...],
+    *,
+    bucket_id: str,
+    limit: int | None,
+    offset: int,
+) -> LedgerTransactionListPageV1:
+    """Build the truthful unpaged total and requested result window."""
+    total = len(results)
+    window_end = total if limit is None else min(offset + limit, total)
+    return LedgerTransactionListPageV1(
+        bucket_id=bucket_id,
+        results=results[offset:window_end],
+        total=total,
+        truncated=offset > 0 or window_end < total,
+    )
+
+
 def query_ledger_transaction_list(
     query: LedgerTransactionListQuery,
     *,
@@ -212,45 +350,33 @@ def query_ledger_transaction_list(
             repository to read the decisions from.
     """
     results = list_manual_transactions(bucket_id=bucket_id, transaction_repository=transaction_repository)
-    if query.spec.clauses:
-        matching = query_ledger_review_rows(
-            ledger_review_query_for_spec(query.spec, bucket_id=bucket_id),
-            transaction_repository=transaction_repository,
-        )
-        matching_ids = {row.id for row in matching.rows}
-        results = tuple(item for item in results if item.transaction.transaction_id in matching_ids)
-    if query.exclude_llm_rejected:
-        if bucket_event_repository is None:
-            raise ValueError("excluding model-rejected rows requires the bucket event history repository")
-        catalogue = bucket_event_repository.load()
-        results = tuple(
-            item for item in results if not latest_llm_decision_is_rejection(catalogue, item.transaction.transaction_id)
-        )
-    if query.group is not None:
-        wanted = query.group.strip() or None
-        results = tuple(item for item in results if item.transaction.group_label == wanted)
-    if query.sort_by is not None:
-        results = sort_ledger_results(results, sort_by=query.sort_by, sort_order=query.sort_order)
-    if query.by_group:
-        results = tuple(
-            sorted(
-                results,
-                key=lambda item: (
-                    item.transaction.group_label or _UNGROUPED_SENTINEL,
-                    # Only the residual tie-break when no axis was chosen;
-                    # otherwise the stable sort above already holds the order.
-                    item.transaction.transaction_id if query.sort_by is None else "",
-                ),
-            )
-        )
-
-    total = len(results)
-    window_end = total if query.limit is None else min(query.offset + query.limit, total)
-    return LedgerTransactionListPageV1(
+    results = _filter_by_review_spec(
+        results,
+        query=query,
         bucket_id=bucket_id,
-        results=results[query.offset : window_end],
-        total=total,
-        truncated=query.offset > 0 or window_end < total,
+        transaction_repository=transaction_repository,
+    )
+    results = _exclude_rejected_results(
+        results,
+        query=query,
+        bucket_event_repository=bucket_event_repository,
+    )
+    results = _filter_by_group(results, group=query.group)
+    results = _sort_if_requested(
+        results,
+        sort_by=query.sort_by,
+        sort_order=query.sort_order,
+    )
+    results = _partition_by_group(
+        results,
+        by_group=query.by_group,
+        sort_by=query.sort_by,
+    )
+    return _page_results(
+        results,
+        bucket_id=bucket_id,
+        limit=query.limit,
+        offset=query.offset,
     )
 
 

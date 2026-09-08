@@ -49,11 +49,6 @@ from ..contribuyente.deduccion_maternidad import compute_deduccion_maternidad_06
 from ..contribuyente.descendant import DescendantInfo
 from ..contribuyente.family_profile import RentaFamilyProfile
 from ..contribuyente.family_types import MinimoDescendientesThresholds
-from ..fincas.amortization_ledger import compute_amortization_for_year
-from ..fincas.enums import ExpenseCategory, TitularContribuyente, TitularidadRegime, UseType
-from ..fincas.expense_rollup import CarryForwardEntry, compute_gastos_for_year
-from ..fincas.models import Finca, FincaGasto, FincaRendimientoRecord
-from ..fincas.titularidad import Titularidad
 from ..renta.ledger_expenses import RentaDeductibilityContext, RentaDeductibleExpenseFact, evaluate_renta_deductibility
 from ..renta.maritime_exemption import MaritimeWorkerFacts, calculate_art_7p_exemption
 
@@ -116,88 +111,6 @@ def _witness_art_7p_exemption_cap() -> tuple[object, object]:
     return uncapped_prorata, observation.value
 
 
-def _witness_amortizacion_remaining_cap() -> tuple[object, object]:
-    """Accrual against a construction-cost cap already nearly consumed."""
-    finca = Finca(
-        id=1,
-        identifier="term-dominance",
-        address="X",
-        valor_catastral_total=Decimal("100000.00"),
-        valor_catastral_construccion=Decimal("80000.00"),
-        coste_adquisicion=Decimal("150000.00"),
-        coste_adquisicion_construccion=Decimal("100000.00"),
-        acquisition_date=date(2020, 1, 1),
-        use_type=UseType.VIVIENDA_ARRENDADA,
-        titularidad=Titularidad(
-            regime=TitularidadRegime.PLENO_DOMINIO,
-            contribuyente=TitularContribuyente.PRIMER_DECLARANTE,
-            porcentaje_propiedad=Decimal("100.00"),
-        ),
-    )
-    income = FincaRendimientoRecord(
-        contract_id=1,
-        period_year=2025,
-        gross_rent_received=Decimal("12000.00"),
-        dias_alquilados=365,
-    )
-
-    def accrual(consumed: Decimal) -> Decimal:
-        return compute_amortization_for_year(
-            finca,
-            income,
-            cumulative_through_prior_year=consumed,
-        ).capped_amortization
-
-    # Almost the whole cap consumed leaves less headroom than one year's gross accrual,
-    # so the remaining-cap term wins; an unconsumed cap leaves the gross accrual intact.
-    return accrual(Decimal("0.00")), accrual(Decimal("99900.00"))
-
-
-def _witness_art_23_1_capped_subtotal() -> tuple[object, object]:
-    """Capped-category spend above gross rent, which art. 23.1 bounds it by."""
-    expenses = [
-        FincaGasto(
-            finca_id=1,
-            period_year=2025,
-            category=ExpenseCategory.FINANCIACION_INTERESES,
-            amount=Decimal("9000.00"),
-        )
-    ]
-
-    def applied(ingresos: Decimal) -> Decimal:
-        return compute_gastos_for_year(
-            expenses,
-            period_year=2025,
-            ingresos_for_period=ingresos,
-        ).capped_categories_applied
-
-    return applied(Decimal("12000.00")), applied(Decimal("2000.00"))
-
-
-def _witness_art_23_1_carry_capacity() -> tuple[object, object]:
-    """Carry-forward consumption bounded by the capacity gross rent leaves."""
-    carry = (CarryForwardEntry(origination_year=2023, remaining_amount=Decimal("5000.00")),)
-    expenses = [
-        FincaGasto(
-            finca_id=1,
-            period_year=2025,
-            category=ExpenseCategory.FINANCIACION_INTERESES,
-            amount=Decimal("1000.00"),
-        )
-    ]
-
-    def applied(ingresos: Decimal) -> Decimal:
-        return compute_gastos_for_year(
-            expenses,
-            period_year=2025,
-            ingresos_for_period=ingresos,
-            carry_forward_in=carry,
-        ).capped_categories_applied
-
-    # Wide capacity consumes the whole carry; narrow capacity is the binding term.
-    return applied(Decimal("12000.00")), applied(Decimal("1500.00"))
-
-
 def _witness_renta_statutory_cap() -> tuple[object, object]:
     """A per-person statutory cap, varied by the person count that scales it."""
     fact = RentaDeductibleExpenseFact(
@@ -233,8 +146,5 @@ REGULATORY_CAP_WITNESSES: Mapping[_SiteKey, Callable[..., tuple[object, object]]
         "compute_deduccion_maternidad_0611",
     ): _witness_maternidad_anual_cap,
     ("domain/renta/maritime_exemption.py", "calculate_art_7p_exemption"): _witness_art_7p_exemption_cap,
-    ("domain/fincas/amortization_ledger.py", "compute_amortization_for_year"): _witness_amortizacion_remaining_cap,
-    ("domain/fincas/expense_rollup.py", "compute_gastos_for_year"): _witness_art_23_1_capped_subtotal,
-    ("domain/fincas/expense_rollup.py", "_consume_carry"): _witness_art_23_1_carry_capacity,
-    ("domain/renta/ledger_expenses.py", "evaluate_renta_deductibility"): _witness_renta_statutory_cap,
+    ("domain/renta/ledger_expenses.py", "_evaluate_statutory_cap_rule"): _witness_renta_statutory_cap,
 }

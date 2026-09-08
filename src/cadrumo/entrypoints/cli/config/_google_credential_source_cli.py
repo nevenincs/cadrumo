@@ -99,6 +99,203 @@ def _default_scopes(selection: GoogleCredentialSourceSelection) -> list[str]:
     return list(selection.impersonation.target_scopes)
 
 
+def _resolve_active_profile_or_refuse() -> str:
+    """Resolve the active profile through the canonical profile authority."""
+    try:
+        return resolve_active_profile()
+    except GoogleAuthError as exc:
+        raise google_refusal(exc) from exc
+
+
+def _impersonation_kwargs(
+    *,
+    target_principal: str,
+    scopes: list[str],
+    delegates: list[str],
+    subject: str | None,
+    lifetime_seconds: int | None,
+) -> _ImpersonationKwargs:
+    """Translate CLI option values into the config model's optional kwargs."""
+    kwargs: _ImpersonationKwargs = {"target_principal": target_principal.strip()}
+    if scopes:
+        kwargs["target_scopes"] = tuple(scopes)
+    if delegates:
+        kwargs["delegates"] = tuple(delegates)
+    if subject is not None:
+        kwargs["subject"] = subject
+    if lifetime_seconds is not None:
+        kwargs["lifetime_s"] = lifetime_seconds
+    return kwargs
+
+
+def _impersonation_selection(
+    *,
+    kind: GoogleCredentialSourceKind,
+    target_principal: str | None,
+    scopes: list[str],
+    delegates: list[str],
+    subject: str | None,
+    lifetime_seconds: int | None,
+) -> GoogleCredentialSourceSelection:
+    """Validate and construct the service-account selection."""
+    if target_principal is None or not target_principal.strip():
+        raise google_refusal(
+            GoogleAuthError(
+                "credential-source set --kind service-account-impersonation requires --target-principal",
+                translated_message="cli.config.google.credential_source.detail.target_principal_required",
+                context={"kind": kind.value},
+            ),
+        )
+    try:
+        impersonation = GoogleImpersonationConfig(
+            **_impersonation_kwargs(
+                target_principal=target_principal,
+                scopes=scopes,
+                delegates=delegates,
+                subject=subject,
+                lifetime_seconds=lifetime_seconds,
+            ),
+        )
+        return GoogleCredentialSourceSelection(kind=kind, impersonation=impersonation)
+    except ValueError as exc:
+        raise google_refusal(
+            GoogleAuthError(
+                translated_message="cli.config.google.credential_source.detail.impersonation_config_invalid",
+                context={"error_type": type(exc).__name__},
+            ),
+        ) from exc
+
+
+def _reject_oauth_desktop_options(
+    *,
+    kind: GoogleCredentialSourceKind,
+    target_principal: str | None,
+    scopes: list[str],
+    delegates: list[str],
+    subject: str | None,
+    lifetime_seconds: int | None,
+) -> None:
+    """Reject options that have meaning only for impersonation."""
+    if any(
+        (
+            target_principal is not None,
+            bool(scopes),
+            bool(delegates),
+            subject is not None,
+            lifetime_seconds is not None,
+        ),
+    ):
+        raise google_refusal(
+            GoogleAuthError(
+                "credential-source set --kind oauth-desktop accepts no impersonation options",
+                translated_message="cli.config.google.credential_source.detail.oauth_desktop_rejects_impersonation_options",
+                context={"kind": kind.value},
+            ),
+        )
+
+
+def _selection_for_set(
+    *,
+    kind: GoogleCredentialSourceKind,
+    target_principal: str | None,
+    scopes: list[str],
+    delegates: list[str],
+    subject: str | None,
+    lifetime_seconds: int | None,
+) -> GoogleCredentialSourceSelection:
+    """Build the canonical selection while retaining CLI refusal ordering."""
+    if kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION:
+        return _impersonation_selection(
+            kind=kind,
+            target_principal=target_principal,
+            scopes=scopes,
+            delegates=delegates,
+            subject=subject,
+            lifetime_seconds=lifetime_seconds,
+        )
+    _reject_oauth_desktop_options(
+        kind=kind,
+        target_principal=target_principal,
+        scopes=scopes,
+        delegates=delegates,
+        subject=subject,
+        lifetime_seconds=lifetime_seconds,
+    )
+    return GoogleCredentialSourceSelection(kind=kind)
+
+
+def _selection_fields(
+    selection: GoogleCredentialSourceSelection,
+) -> tuple[str | None, list[str], list[str], str | None, int | None]:
+    """Flatten canonical selection fields for the two typed CLI schemas."""
+    impersonation = selection.impersonation
+    if impersonation is None:
+        return None, [], [], None, None
+    return (
+        impersonation.target_principal,
+        _default_scopes(selection),
+        list(impersonation.delegates),
+        impersonation.subject,
+        impersonation.lifetime_s,
+    )
+
+
+def _set_result(profile: str, selection: GoogleCredentialSourceSelection) -> GoogleCredentialSourceSetResult:
+    """Project a saved selection onto the set command's typed result."""
+    target_principal, target_scopes, delegates, subject, lifetime_s = _selection_fields(selection)
+    return GoogleCredentialSourceSetResult(
+        profile=profile,
+        kind=selection.kind,
+        target_principal=target_principal,
+        target_scopes=target_scopes,
+        delegates=delegates,
+        subject=subject,
+        lifetime_s=lifetime_s,
+    )
+
+
+def _view_result(
+    profile: str,
+    configured: bool,
+    selection: GoogleCredentialSourceSelection,
+) -> GoogleCredentialSourceViewResult:
+    """Project a loaded selection onto the view command's typed result."""
+    target_principal, target_scopes, delegates, subject, lifetime_s = _selection_fields(selection)
+    return GoogleCredentialSourceViewResult(
+        profile=profile,
+        configured=configured,
+        kind=selection.kind,
+        target_principal=target_principal,
+        target_scopes=target_scopes,
+        delegates=delegates,
+        subject=subject,
+        lifetime_s=lifetime_s,
+    )
+
+
+def _selection_lines(
+    operation: str,
+    profile: str,
+    selection: GoogleCredentialSourceSelection,
+) -> list[str]:
+    """Render the stable tabular projection shared by set and view."""
+    lines = [
+        f"operation\t{operation}",
+        f"profile\t{profile}",
+        f"kind\t{selection.kind.value}",
+    ]
+    impersonation = selection.impersonation
+    if impersonation is None:
+        return lines
+    lines.append(f"target_principal\t{impersonation.target_principal}")
+    lines.extend(f"scope\t{scope}" for scope in impersonation.target_scopes)
+    lines.extend(f"delegate\t{delegate}" for delegate in impersonation.delegates)
+    if impersonation.subject is not None:
+        lines.append(f"subject\t{impersonation.subject}")
+    lines.append(f"lifetime_s\t{impersonation.lifetime_s}")
+    return lines
+
+
 def google_credential_source_set(
     ctx: typer.Context,
     kind: GoogleCredentialSourceKind,
@@ -120,75 +317,24 @@ def google_credential_source_set(
     """
     scopes = scopes or []
     delegates = delegates or []
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise google_refusal(exc) from exc
-
-    if kind is GoogleCredentialSourceKind.SERVICE_ACCOUNT_IMPERSONATION:
-        if target_principal is None or not target_principal.strip():
-            raise google_refusal(
-                GoogleAuthError(
-                    "credential-source set --kind service-account-impersonation requires --target-principal",
-                    translated_message="cli.config.google.credential_source.detail.target_principal_required",
-                    context={"kind": kind.value},
-                ),
-            )
-        impersonation_kwargs: _ImpersonationKwargs = {"target_principal": target_principal.strip()}
-        if scopes:
-            impersonation_kwargs["target_scopes"] = tuple(scopes)
-        if delegates:
-            impersonation_kwargs["delegates"] = tuple(delegates)
-        if subject is not None:
-            impersonation_kwargs["subject"] = subject
-        if lifetime_seconds is not None:
-            impersonation_kwargs["lifetime_s"] = lifetime_seconds
-        try:
-            impersonation = GoogleImpersonationConfig(**impersonation_kwargs)
-            selection = GoogleCredentialSourceSelection(kind=kind, impersonation=impersonation)
-        except ValueError as exc:
-            raise google_refusal(
-                GoogleAuthError(
-                    translated_message="cli.config.google.credential_source.detail.impersonation_config_invalid",
-                    context={"error_type": type(exc).__name__},
-                ),
-            ) from exc
-    else:
-        if target_principal is not None or scopes or delegates or subject is not None or lifetime_seconds is not None:
-            raise google_refusal(
-                GoogleAuthError(
-                    "credential-source set --kind oauth-desktop accepts no impersonation options",
-                    translated_message="cli.config.google.credential_source.detail.oauth_desktop_rejects_impersonation_options",
-                    context={"kind": kind.value},
-                ),
-            )
-        selection = GoogleCredentialSourceSelection(kind=kind)
+    active = _resolve_active_profile_or_refuse()
+    selection = _selection_for_set(
+        kind=kind,
+        target_principal=target_principal,
+        scopes=scopes,
+        delegates=delegates,
+        subject=subject,
+        lifetime_seconds=lifetime_seconds,
+    )
 
     save_credential_source_selection(active, selection)
 
-    impersonation = selection.impersonation
-    typed = GoogleCredentialSourceSetResult(
-        profile=active,
-        kind=selection.kind,
-        target_principal=impersonation.target_principal if impersonation is not None else None,
-        target_scopes=_default_scopes(selection),
-        delegates=list(impersonation.delegates) if impersonation is not None else [],
-        subject=impersonation.subject if impersonation is not None else None,
-        lifetime_s=impersonation.lifetime_s if impersonation is not None else None,
+    emit_envelope(
+        ctx,
+        command="config.google.credential_source.set",
+        result=_set_result(active, selection),
+        lines=tuple(_selection_lines("config.google.credential_source.set", active, selection)),
     )
-    lines = [
-        "operation\tconfig.google.credential_source.set",
-        f"profile\t{active}",
-        f"kind\t{selection.kind.value}",
-    ]
-    if impersonation is not None:
-        lines.append(f"target_principal\t{impersonation.target_principal}")
-        lines.extend(f"scope\t{scope}" for scope in impersonation.target_scopes)
-        lines.extend(f"delegate\t{delegate}" for delegate in impersonation.delegates)
-        if impersonation.subject is not None:
-            lines.append(f"subject\t{impersonation.subject}")
-        lines.append(f"lifetime_s\t{impersonation.lifetime_s}")
-    emit_envelope(ctx, command="config.google.credential_source.set", result=typed, lines=tuple(lines))
 
 
 def google_credential_source_view(
@@ -201,40 +347,17 @@ def google_credential_source_view(
     factory dispatch (:func:`~adapters.outbound.storage.build_google_credentials`)
     applies — a missing record is a valid, expected state, never an error.
     """
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise google_refusal(exc) from exc
+    active = _resolve_active_profile_or_refuse()
 
     selection = load_credential_source_selection(active)
     configured = selection is not None
     resolved = selection if selection is not None else GoogleCredentialSourceSelection()
-    impersonation = resolved.impersonation
-
-    typed = GoogleCredentialSourceViewResult(
-        profile=active,
-        configured=configured,
-        kind=resolved.kind,
-        target_principal=impersonation.target_principal if impersonation is not None else None,
-        target_scopes=_default_scopes(resolved),
-        delegates=list(impersonation.delegates) if impersonation is not None else [],
-        subject=impersonation.subject if impersonation is not None else None,
-        lifetime_s=impersonation.lifetime_s if impersonation is not None else None,
+    emit_envelope(
+        ctx,
+        command="config.google.credential_source.show",
+        result=_view_result(active, configured, resolved),
+        lines=tuple(_selection_lines("config.google.credential_source.show", active, resolved)),
     )
-    lines = [
-        "operation\tconfig.google.credential_source.show",
-        f"profile\t{active}",
-        f"configured\t{configured}",
-        f"kind\t{resolved.kind.value}",
-    ]
-    if impersonation is not None:
-        lines.append(f"target_principal\t{impersonation.target_principal}")
-        lines.extend(f"scope\t{scope}" for scope in impersonation.target_scopes)
-        lines.extend(f"delegate\t{delegate}" for delegate in impersonation.delegates)
-        if impersonation.subject is not None:
-            lines.append(f"subject\t{impersonation.subject}")
-        lines.append(f"lifetime_s\t{impersonation.lifetime_s}")
-    emit_envelope(ctx, command="config.google.credential_source.show", result=typed, lines=tuple(lines))
 
 
 __all__ = ["google_credential_source_set", "google_credential_source_view"]

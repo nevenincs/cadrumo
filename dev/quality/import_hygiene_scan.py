@@ -529,11 +529,11 @@ def _expression_path(node: ast.AST) -> str | None:
 
 def _annotation_names(node: ast.AST | None) -> frozenset[str]:
     if node is None:
-        return frozenset()
+        return frozenset[str]()
     return frozenset(
         child.id if isinstance(child, ast.Name) else child.attr
         for child in ast.walk(node)
-        if isinstance(child, (ast.Name, ast.Attribute))
+        if isinstance(child, ast.Name | ast.Attribute)
     )
 
 
@@ -2186,7 +2186,7 @@ def module_export_surface(path: Path) -> tuple[frozenset[str], bool]:
     try:
         tree = ast.parse(path.read_text(encoding=_UTF_8), filename=str(path))
     except (OSError, SyntaxError, UnicodeDecodeError):
-        return frozenset(), False
+        return frozenset[str](), False
 
     names: set[str] = set()
     enumerable = True
@@ -3270,7 +3270,11 @@ def main() -> int:
     """Scan ``src/cadrumo`` and print the import-hygiene inventory report."""
     # Prose violations carry arbitrary source text (Spanish prose, en-dashes);
     # a cp1252 console would crash printing them.
-    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    # `sys.stdout` is typed `TextIO`, which declares no `reconfigure`; the
+    # runtime object is a `TextIOWrapper`, which does. `errors="replace"` is
+    # stronger than the package-wide default and is why this stays here.
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--json", type=Path, default=None, help="Write full inventory as JSON to this path")
     parser.add_argument("--top", type=int, default=20, help="Top-N offender modules to print")

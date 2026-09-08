@@ -18,7 +18,9 @@ _CROSSING_WORDS = frozenset({"capability", "destination", "outcome", "request", 
 def _words(value: str) -> frozenset[str]:
     """Split identifiers and literal keys into semantic words."""
     expanded = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", value)
-    return frozenset(re.findall(r"[a-z0-9]+", expanded.casefold()))
+    # `re.findall` is typed `list[Any]`; with one capture-free pattern every
+    # element is a `str`, which the comprehension states for the checker.
+    return frozenset(str(word) for word in re.findall(r"[a-z0-9]+", expanded.casefold()))
 
 
 def _is_retired_crossing(value: str) -> bool:

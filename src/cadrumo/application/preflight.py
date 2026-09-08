@@ -4,7 +4,7 @@ This module is the read-only doctor surface for the health dimensions that sit
 *beside* the external-dependency probes in :mod:`application.provisioning`:
 per-auth-provider certificate / Cl@ve Móvil configuration health, secure-storage
 and bundled-corpus reachability, key configuration sanity, registry referential
-integrity, and portal-registry assembly health with any recorded portal drift.
+integrity, and portal-registry assembly health.
 Each probe answers one health question and returns a
 typed :class:`PreflightCheck` — it never raises; a broken dimension is report
 data (an ``error`` severity row with typed facts and a precondition verdict), not an exception
@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -52,7 +52,6 @@ from .operator_actions.models import ActionReference, ConditionEvidence, Precond
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import ValidatedRegistryAuthority
-    from ..domain.portals.drift import PortalDriftEvent
 
 
 __all__ = [
@@ -608,41 +607,17 @@ def _representative_filing_context(revision: object) -> tuple[int | None, str | 
     return filing_year, period
 
 
-# ── Portal-registry health / recorded portal drift ────────────────────
-
-# UrlStability tiers whose drift is a real integrity concern (the URL was
-# promised to change only via explicit Orden / campaign-boundary publication).
-# A drift on a volatile app-path shell is an expected rotation, not an error.
-_PORTAL_DRIFT_ERROR_STABILITIES = frozenset({"stable_protocol_grade"})
+# ── Portal-registry health ────────────────────────────────────────────
 
 
-def probe_portal_registry_health(
-    *,
-    drift_events: Sequence[PortalDriftEvent] = (),
-) -> PreflightCheck:
-    """Report portal-registry assembly health and any recorded portal drift.
+def probe_portal_registry_health() -> PreflightCheck:
+    """Report portal-registry assembly health.
 
     Read-only and offline: this probe never contacts AEAT. It confirms the
     bundled :data:`~domain.portals.PORTAL_REGISTRY` assembled (a
     :class:`~domain.portals.PortalIntegrityError` at import is caught and
-    reported as an ``error`` row) and reports the count of any *recorded*
-    :class:`~domain.portals.PortalDriftEvent` passed in. The events are
-    produced elsewhere, under the live-read access gate, by
-    :func:`~domain.portals.evaluate_portal_drift`; this row reports the
-    registered / recorded state, it does not perform a live probe.
-
-    With no recorded drift the row is ``OK`` and reports
-    ``drift_evaluated: False``: no shipped surface reads a registered portal
-    URL, so the observation :func:`evaluate_portal_drift` compares against is
-    never produced, and a bare ``drift_count: 0`` would assert a zero the
-    product has never measured. A recorded drift on a ``stable_protocol_grade``
-    (BOE-referenced) URL is an ``ERROR``; a drift on a campaign-stable or
-    volatile app-path URL is a ``WARN`` advisory, since those tiers are
-    expected to rotate.
-
-    Args:
-        drift_events: Recorded portal-drift events to surface. Defaults to
-            empty — no live probe, nothing recorded.
+    reported as an ``error`` row). It performs no network access and makes no
+    claim about live portal availability or drift.
 
     Returns:
         One :class:`PreflightCheck` row with id ``portal-registry:health``.
@@ -661,44 +636,10 @@ def probe_portal_registry_health(
             facts=facts,
         )
 
-    if not drift_events:
-        # "no drift recorded" and "drift never evaluated" are different facts,
-        # and today every run is the second: no shipped surface reads a
-        # registered portal URL, so nothing can observe the live value
-        # evaluate_portal_drift needs. Reporting drift_count 0 alone asserts a
-        # proven zero the product has never measured, which is the collapse
-        # no-silent-under-declaration refuses. The row stays OK -- the registry
-        # DID assemble, which is what this check owns -- and says the drift
-        # axis was not evaluated rather than that it came back clean.
-        return _healthy_check(
-            check="portal-registry:health",
-            severity=HealthSeverity.OK,
-            facts={
-                "portal_count": portal_count,
-                "drift_evaluated": False,
-                "drift_count": 0,
-                "stable_drift_present": False,
-            },
-        )
-
-    has_error = any(str(event.url_stability) in _PORTAL_DRIFT_ERROR_STABILITIES for event in drift_events)
-    facts = {
-        "portal_count": portal_count,
-        "drift_evaluated": True,
-        "drift_count": len(drift_events),
-        "stable_drift_present": has_error,
-    }
-    if has_error:
-        return _failed_check(
-            check="portal-registry:health",
-            severity=HealthSeverity.ERROR,
-            condition=PreflightCondition.PORTAL_REGISTRY_HEALTHY,
-            facts=facts,
-        )
     return _healthy_check(
         check="portal-registry:health",
-        severity=HealthSeverity.WARN,
-        facts=facts,
+        severity=HealthSeverity.OK,
+        facts={"portal_count": portal_count},
     )
 
 

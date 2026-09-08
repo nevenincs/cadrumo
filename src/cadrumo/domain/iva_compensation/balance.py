@@ -9,6 +9,7 @@ builds the report lives in the application layer.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from decimal import Decimal
 from typing import Annotated, Final
 
@@ -17,6 +18,7 @@ from pydantic import BaseModel, Field, NonNegativeInt
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .carry_forward import (
+    IvaCompensationCarryForwardLot,
     IvaCompensationCarryForwardReport,
     IvaCompensationExpiryReviewState,
 )
@@ -70,27 +72,9 @@ def build_iva_wallet_balance_report(
 
     Returns an :class:`IvaWalletBalanceReport`.
     """
-    lots_with_balance = [lot for lot in carry_forward.lots if lot.remaining_amount > Decimal("0")]
-    expired_lots_with_balance = [
-        lot
-        for lot in lots_with_balance
-        if lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
-    ]
-    # Include ACTIVE and EXPIRY_REVIEW_DUE lots (age <= 4). EXPIRED_REVIEW_REQUIRED
-    # lots (age > 4) have passed the four-year boundary and are not usable without
-    # a separate policy review.
-    active_lots_with_balance = [
-        lot
-        for lot in lots_with_balance
-        if lot.expiry_review_state is not IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
-    ]
-
-    next_expiry_year: int | None = None
-    if active_lots_with_balance:
-        next_expiry_year = min(lot.source_filing_year + _FOUR_YEAR_WINDOW for lot in active_lots_with_balance)
-
-    active_balance = sum((lot.remaining_amount for lot in active_lots_with_balance), Decimal("0"))
-    expired_balance = sum((lot.remaining_amount for lot in expired_lots_with_balance), Decimal("0"))
+    active_lots_with_balance, expired_lots_with_balance = _partition_balance_lots(carry_forward)
+    active_balance = _sum_lot_balances(active_lots_with_balance)
+    expired_balance = _sum_lot_balances(expired_lots_with_balance)
     total_balance = active_balance + expired_balance
 
     return IvaWalletBalanceReport(
@@ -99,9 +83,38 @@ def build_iva_wallet_balance_report(
         active_balance=active_balance,
         expired_balance=expired_balance,
         lot_count=len(carry_forward.lots),
-        next_expiry_year=next_expiry_year,
+        next_expiry_year=_next_expiry_year(active_lots_with_balance),
         unallocated_applied_amount=carry_forward.unallocated_applied_amount,
     )
+
+
+def _partition_balance_lots(
+    carry_forward: IvaCompensationCarryForwardReport,
+) -> tuple[list[IvaCompensationCarryForwardLot], list[IvaCompensationCarryForwardLot]]:
+    lots_with_balance = [lot for lot in carry_forward.lots if lot.remaining_amount > Decimal("0")]
+    expired_lots = [
+        lot
+        for lot in lots_with_balance
+        if lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
+    ]
+    # Include ACTIVE and EXPIRY_REVIEW_DUE lots (age <= 4). EXPIRED_REVIEW_REQUIRED
+    # lots (age > 4) have passed the four-year boundary and are not usable without
+    # a separate policy review.
+    active_lots = [
+        lot
+        for lot in lots_with_balance
+        if lot.expiry_review_state is not IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
+    ]
+    return active_lots, expired_lots
+
+
+def _sum_lot_balances(lots: Iterable[IvaCompensationCarryForwardLot]) -> Decimal:
+    return sum((lot.remaining_amount for lot in lots), Decimal("0"))
+
+
+def _next_expiry_year(lots: Iterable[IvaCompensationCarryForwardLot]) -> int | None:
+    expiry_years = [lot.source_filing_year + _FOUR_YEAR_WINDOW for lot in lots]
+    return min(expiry_years) if expiry_years else None
 
 
 __all__ = [

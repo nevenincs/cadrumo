@@ -34,6 +34,23 @@ def attach_revision_row_source_identities(
     revision: CalculationRevision,
 ) -> ModeloDraft:
     """Attach every persisted row identity to its exact replayed draft row."""
+    revision_row_keys, identity_keys = _validate_replay_coordinates(draft=draft, revision=revision)
+    binding_values, attached = _replay_binding_values(
+        draft=draft,
+        revision=revision,
+        revision_row_keys=revision_row_keys,
+    )
+    if attached != identity_keys:
+        raise ModeloValidationError("row source identity replay did not attach every persisted identity coordinate")
+    return _rebuild_replayed_draft(draft=draft, binding_values=binding_values)
+
+
+def _validate_replay_coordinates(
+    *,
+    draft: ModeloDraft,
+    revision: CalculationRevision,
+) -> tuple[set[RowBindingKey], set[RowBindingKey]]:
+    """Ensure revision rows and persisted identities have matching coordinates."""
     revision_row_keys: set[RowBindingKey] = {
         (binding_id, int(row_index)) for binding_id, rows in revision.row_binding_values.items() for row_index in rows
     }
@@ -45,35 +62,62 @@ def attach_revision_row_source_identities(
     identity_keys = set(revision.row_source_identities)
     if not identity_keys.issubset(revision_row_keys):
         raise ModeloValidationError("row source identity replay contains an orphan revision coordinate")
+    return revision_row_keys, identity_keys
 
+
+def _canonical_replay_value(value: object) -> str:
+    """Render one draft row value in the same comparison form as persistence."""
+    return canonical_decimal_string(value) if isinstance(value, Decimal) else str(value).strip()
+
+
+def _replay_binding_value(
+    *,
+    value: ModeloBindingValue,
+    revision: CalculationRevision,
+    revision_row_keys: set[RowBindingKey],
+) -> tuple[ModeloBindingValue, RowBindingKey | None]:
+    """Validate and enrich one draft binding value, returning its attached coordinate."""
+    key = (value.binding_id, value.row_index) if value.row_index is not None else None
+    identity = revision.row_source_identities.get(key) if key is not None else None
+    if key is not None and key in revision_row_keys:
+        revision_value = revision.row_binding_values[key[0]][str(key[1])]
+        if _canonical_replay_value(value.value) != revision_value.strip():
+            raise ModeloValidationError("row source identity replay value does not match persisted revision row")
+    if identity is None:
+        return value, None
+    if key is None:
+        raise ModeloValidationError("row source identity replay requires the casilla key it attaches to")
+    if value.row_source_identity is not None and value.row_source_identity != identity:
+        raise ModeloValidationError("row source identity replay refuses a substituted attached identity")
+    payload = value.model_dump()
+    payload["row_source_identity"] = identity
+    return ModeloBindingValue.model_validate(payload), key
+
+
+def _replay_binding_values(
+    *,
+    draft: ModeloDraft,
+    revision: CalculationRevision,
+    revision_row_keys: set[RowBindingKey],
+) -> tuple[tuple[ModeloBindingValue, ...], set[RowBindingKey]]:
+    """Replay all draft binding values and record every identity coordinate attached."""
     enriched: list[ModeloBindingValue] = []
     attached: set[RowBindingKey] = set()
-    for value in draft.binding_values:
-        key = (value.binding_id, value.row_index) if value.row_index is not None else None
-        identity = revision.row_source_identities.get(key) if key is not None else None
-        if key is not None and key in revision_row_keys:
-            revision_value = revision.row_binding_values[key[0]][str(key[1])]
-            draft_value = value.value
-            canonical_draft_value = (
-                canonical_decimal_string(draft_value) if isinstance(draft_value, Decimal) else str(draft_value).strip()
-            )
-            if canonical_draft_value != revision_value.strip():
-                raise ModeloValidationError("row source identity replay value does not match persisted revision row")
-        if identity is None:
-            enriched.append(value)
-            continue
-        if key is None:
-            raise ModeloValidationError("row source identity replay requires the casilla key it attaches to")
-        if value.row_source_identity is not None and value.row_source_identity != identity:
-            raise ModeloValidationError("row source identity replay refuses a substituted attached identity")
-        payload = value.model_dump()
-        payload["row_source_identity"] = identity
-        enriched.append(ModeloBindingValue.model_validate(payload))
-        attached.add(key)
-    if attached != identity_keys:
-        raise ModeloValidationError("row source identity replay did not attach every persisted identity coordinate")
 
-    binding_values = tuple(enriched)
+    for value in draft.binding_values:
+        enriched_value, attached_key = _replay_binding_value(
+            value=value,
+            revision=revision,
+            revision_row_keys=revision_row_keys,
+        )
+        enriched.append(enriched_value)
+        if attached_key is not None:
+            attached.add(attached_key)
+    return tuple(enriched), attached
+
+
+def _rebuild_replayed_draft(*, draft: ModeloDraft, binding_values: tuple[ModeloBindingValue, ...]) -> ModeloDraft:
+    """Recompute the content identity after attaching replayed row identities."""
     draft_id = compute_modelo_draft_id(
         modelo=draft.modelo,
         period=draft.period,

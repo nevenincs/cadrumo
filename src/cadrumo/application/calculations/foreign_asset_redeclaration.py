@@ -23,7 +23,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
 
@@ -76,6 +76,16 @@ class _RedeclarationPosition:
     key: tuple[str, ...]
     group: ForeignAssetObligationGroup
     value_eur: Decimal
+
+
+@dataclass(slots=True)
+class _Modelo721PositionState:
+    """Mutable row-order state while projecting one Modelo 721 observation."""
+
+    positions: dict[tuple[str, ...], _RedeclarationPosition] = field(default_factory=dict)
+    custodian_name: str = ""
+    custodian_country: str = ""
+    token: str = ""
 
 
 def modelo_720_redeclaration_advisory_findings(
@@ -190,35 +200,49 @@ def _modelo_720_positions(observation: RegistryModeloObservation) -> Mapping[tup
 
 
 def _modelo_721_positions(observation: RegistryModeloObservation) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
-    positions: dict[tuple[str, ...], _RedeclarationPosition] = {}
-    custodian_name = ""
-    custodian_country = ""
-    token = ""
+    state = _Modelo721PositionState()
     for item in observation.observations:
-        if item.casilla_id == _M721_CUSTODIAN_NAME_CASILLA:
-            custodian_name = _decimal_text(item.value) if isinstance(item.value, Decimal) else item.value
-        elif item.casilla_id == _M721_CUSTODIAN_COUNTRY_CASILLA:
-            custodian_country = _decimal_text(item.value) if isinstance(item.value, Decimal) else item.value
-        elif item.casilla_id == _M721_CRYPTO_ASSET_CASILLA:
-            token = _decimal_text(item.value) if isinstance(item.value, Decimal) else item.value
-        elif item.casilla_id == _M721_BALANCE_CASILLA and token:
-            if not isinstance(item.value, Decimal):
-                continue
-            key = (
-                ForeignAssetObligationGroup.MONEDAS_VIRTUALES.value,
-                custodian_name,
-                custodian_country,
-                token,
-            )
-            existing = positions.get(key)
-            value_eur = item.value if existing is None else existing.value_eur + item.value
-            positions[key] = _RedeclarationPosition(
-                key=key,
-                group=ForeignAssetObligationGroup.MONEDAS_VIRTUALES,
-                value_eur=value_eur,
-            )
-            token = ""
-    return positions
+        if item.casilla_id == _M721_BALANCE_CASILLA:
+            _accumulate_modelo_721_balance(state, item.value)
+            continue
+        _update_modelo_721_position_identity(state, item.casilla_id, item.value)
+    return state.positions
+
+
+def _accumulate_modelo_721_balance(state: _Modelo721PositionState, value: Decimal | str) -> None:
+    if not state.token or not isinstance(value, Decimal):
+        return
+    key = (
+        ForeignAssetObligationGroup.MONEDAS_VIRTUALES.value,
+        state.custodian_name,
+        state.custodian_country,
+        state.token,
+    )
+    existing = state.positions.get(key)
+    value_eur = value if existing is None else existing.value_eur + value
+    state.positions[key] = _RedeclarationPosition(
+        key=key,
+        group=ForeignAssetObligationGroup.MONEDAS_VIRTUALES,
+        value_eur=value_eur,
+    )
+    state.token = ""
+
+
+def _update_modelo_721_position_identity(
+    state: _Modelo721PositionState,
+    casilla_id: CasillaId,
+    value: Decimal | str,
+) -> None:
+    if casilla_id == _M721_CUSTODIAN_NAME_CASILLA:
+        state.custodian_name = _modelo_721_identifier_text(value)
+    elif casilla_id == _M721_CUSTODIAN_COUNTRY_CASILLA:
+        state.custodian_country = _modelo_721_identifier_text(value)
+    elif casilla_id == _M721_CRYPTO_ASSET_CASILLA:
+        state.token = _modelo_721_identifier_text(value)
+
+
+def _modelo_721_identifier_text(value: Decimal | str) -> str:
+    return _decimal_text(value) if isinstance(value, Decimal) else value
 
 
 def _decimal_text(value: Decimal) -> str:
@@ -327,41 +351,87 @@ def modelo_720_evidence_observation(
     """
     class_binding = _foreign_asset_row_binding_id(modelo_revision, row_field=_ASSET_CLASS_ROW_FIELD)
     valuation_binding = _foreign_asset_row_binding_id(modelo_revision, row_field=_VALUATION_ROW_FIELD)
-    totals: dict[ForeignAssetObligationGroup, Decimal] = {}
-    if class_binding is not None and valuation_binding is not None:
-        class_rows = revision.row_binding_values.get(class_binding, {})
-        valuation_rows = revision.row_binding_values.get(valuation_binding, {})
-        for row_index, raw_code in class_rows.items():
-            asset_class = _M720_ASSET_CLASS_BY_CODE.get(raw_code.strip().upper())
-            raw_valuation = valuation_rows.get(row_index)
-            if asset_class is None or raw_valuation is None:
-                continue
-            value = _decimal_or_none(raw_valuation)
-            if value is None:
-                continue
-            group = foreign_asset_obligation_group(asset_class)
-            totals[group] = totals.get(group, Decimal("0")) + value
-
-    refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
-    observations: list[CasillaObservation] = []
-    for group, total in totals.items():
-        casilla_id = _M720_GROUP_VALUATION_CASILLAS.get(group)
-        refs = refs_by_casilla.get(casilla_id) if casilla_id is not None else None
-        if casilla_id is None or refs is None:
-            continue
-        observations.append(
-            CasillaObservation(
-                casilla_id=casilla_id,
-                value=total,
-                legal_refs=refs[0],
-                source_refs=refs[1],
-            ),
-        )
+    totals = _modelo_720_evidence_totals(
+        revision,
+        class_binding=class_binding,
+        valuation_binding=valuation_binding,
+    )
+    observations = _modelo_720_evidence_observations(totals, modelo_revision=modelo_revision)
     return RegistryModeloObservation(
         modelo=Modelo.M720.value,
         filing_year=filing_year,
         period=period,
-        observations=tuple(observations),
+        observations=observations,
+    )
+
+
+def _modelo_720_evidence_totals(
+    revision: CalculationRevision,
+    *,
+    class_binding: str | None,
+    valuation_binding: str | None,
+) -> dict[ForeignAssetObligationGroup, Decimal]:
+    if class_binding is None or valuation_binding is None:
+        return {}
+    class_rows = revision.row_binding_values.get(class_binding, {})
+    valuation_rows = revision.row_binding_values.get(valuation_binding, {})
+    totals: dict[ForeignAssetObligationGroup, Decimal] = {}
+    for row_index, raw_code in class_rows.items():
+        row = _modelo_720_evidence_row(raw_code, valuation_rows.get(row_index))
+        if row is None:
+            continue
+        asset_class, value = row
+        group = foreign_asset_obligation_group(asset_class)
+        totals[group] = totals.get(group, Decimal("0")) + value
+    return totals
+
+
+def _modelo_720_evidence_row(
+    raw_code: str,
+    raw_valuation: object,
+) -> tuple[ForeignAssetClass, Decimal] | None:
+    asset_class = _M720_ASSET_CLASS_BY_CODE.get(raw_code.strip().upper())
+    if asset_class is None or raw_valuation is None:
+        return None
+    value = _decimal_or_none(raw_valuation)
+    if value is None:
+        return None
+    return asset_class, value
+
+
+def _modelo_720_evidence_observations(
+    totals: Mapping[ForeignAssetObligationGroup, Decimal],
+    *,
+    modelo_revision: ModeloRevision,
+) -> tuple[CasillaObservation, ...]:
+    refs_by_casilla = {casilla.id: (casilla.legal_refs, casilla.source_refs) for casilla in modelo_revision.casillas}
+    observations: list[CasillaObservation] = []
+    for group, total in totals.items():
+        observation = _modelo_720_evidence_observation(
+            group,
+            total,
+            refs_by_casilla=refs_by_casilla,
+        )
+        if observation is not None:
+            observations.append(observation)
+    return tuple(observations)
+
+
+def _modelo_720_evidence_observation(
+    group: ForeignAssetObligationGroup,
+    total: Decimal,
+    *,
+    refs_by_casilla: Mapping[CasillaId, tuple[tuple[str, ...], tuple[str, ...]]],
+) -> CasillaObservation | None:
+    casilla_id = _M720_GROUP_VALUATION_CASILLAS.get(group)
+    refs = refs_by_casilla.get(casilla_id) if casilla_id is not None else None
+    if casilla_id is None or refs is None:
+        return None
+    return CasillaObservation(
+        casilla_id=casilla_id,
+        value=total,
+        legal_refs=refs[0],
+        source_refs=refs[1],
     )
 
 

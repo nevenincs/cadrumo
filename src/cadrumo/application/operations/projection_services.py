@@ -209,26 +209,24 @@ class BoundOperationSecureResponseAuthority:
         /,
     ) -> frozenset[OperationResponseIntent]:
         """Validate the binding and return its still-permitted response intents."""
+        self._validate_binding(request, pending)
+        return self.intents
+
+    def _validate_binding(
+        self,
+        request: OperationResponseControlRequestV1,
+        pending: OperationPendingInteraction,
+    ) -> None:
+        """Enforce every runtime bearer check before exposing its intent set."""
         if self._closed:
             raise ValueError("secure response authority is closed")
-        if (
-            request.operation_id != self.operation_id
-            or request.interaction_id != self.interaction_id
-            or request.revision != self.revision
-            or request.actor_ref != self.actor_ref
-            or pending.request.identity.operation_id != self.operation_id
-            or pending.request.interaction_id != self.interaction_id
-            or pending.request.revision != self.revision
-            or pending.reviewed_proposal_digest != self.reviewed_proposal_digest
-            or pending.request.expires_at != self.expires_at
-        ):
+        if not _response_authority_binding_matches(self, request, pending):
             raise ValueError("secure response authority binding is stale")
         if self.expires_at is not None and self.clock() > self.expires_at:
             raise ValueError("secure response authority is expired")
         token_digest = content_hash_hex(self._token.decode("ascii"))
         if not compare_digest(token_digest, pending.response_token_digest):
             raise ValueError("secure response authority bearer does not match the pending interaction")
-        return self.intents
 
     async def response_token(
         self,
@@ -247,6 +245,25 @@ class BoundOperationSecureResponseAuthority:
         """Zeroize the in-memory response bearer and prevent reuse."""
         zeroize_secret_buffer(self._token)
         object.__setattr__(self, "_closed", True)
+
+
+def _response_authority_binding_matches(
+    authority: BoundOperationSecureResponseAuthority,
+    request: OperationResponseControlRequestV1,
+    pending: OperationPendingInteraction,
+) -> bool:
+    """Match request and checkpoint coordinates to the bound bearer exactly."""
+    return (
+        request.operation_id == authority.operation_id
+        and request.interaction_id == authority.interaction_id
+        and request.revision == authority.revision
+        and request.actor_ref == authority.actor_ref
+        and pending.request.identity.operation_id == authority.operation_id
+        and pending.request.interaction_id == authority.interaction_id
+        and pending.request.revision == authority.revision
+        and pending.reviewed_proposal_digest == authority.reviewed_proposal_digest
+        and pending.request.expires_at == authority.expires_at
+    )
 
 
 class UnavailableOperationSecureResponseAuthority:
@@ -940,6 +957,103 @@ class OperationResultProjectionService:
 
 
 @dataclass(frozen=True, slots=True)
+class _ResponseControlContext:
+    """Durable REVIEW facts that passed the response-control identity checks."""
+
+    request: OperationResponseControlRequestV1
+    snapshot: OperationPersistedSnapshot
+    pending: OperationPendingInteraction
+
+
+def _response_control_request_or_refusal(
+    request: OperationResponseControlVersionHeader | OperationResponseControlRequestV1,
+) -> OperationResponseControlRequestV1 | OperationResponseControlRefusalV1:
+    """Validate the versioned response-control envelope before reading state."""
+    if request.response_control_version != _SUPPORTED_VERSION:
+        return _response_refusal(
+            OperationResponseControlRefusalCode.UNSUPPORTED_VERSION,
+            requested_version=request.response_control_version,
+        )
+    if not isinstance(request, OperationResponseControlRequestV1):
+        return _response_refusal(
+            OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+            requested_version=1,
+        )
+    return request
+
+
+async def _load_response_control_context(
+    reader: OperationObservationReader,
+    request: OperationResponseControlRequestV1,
+) -> _ResponseControlContext | OperationResponseControlRefusalV1:
+    """Read and validate the exact live REVIEW checkpoint for response control."""
+    snapshot = await read_snapshot(reader, request.operation_id)
+    if snapshot is None:
+        return _response_refusal(OperationResponseControlRefusalCode.UNKNOWN_OPERATION, requested_version=1)
+    if isinstance(snapshot, UnavailableSnapshot):
+        return _response_refusal(
+            OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+            requested_version=1,
+        )
+    pending = snapshot.pending_interaction
+    if (
+        pending is None
+        or pending.request.kind is not OperationInteractionKind.REVIEW
+        or pending.request.interaction_id != request.interaction_id
+    ):
+        return _response_refusal(
+            OperationResponseControlRefusalCode.RESPONSE_NOT_PENDING,
+            requested_version=1,
+        )
+    if snapshot.revision != request.revision or pending.request.revision != request.revision:
+        return _response_refusal(
+            OperationResponseControlRefusalCode.STALE_OPERATION_REVISION,
+            requested_version=1,
+        )
+    return _ResponseControlContext(request=request, snapshot=snapshot, pending=pending)
+
+
+def _response_control_contract_is_current(
+    registry: OperationRegistry,
+    context: _ResponseControlContext,
+) -> bool:
+    """Require the checkpoint response schema and definition digest to match."""
+    try:
+        contract = registry.lookup_public_contract(context.snapshot.identity.definition_id)
+        response_schema = contract.interaction_response_schema
+        return (
+            context.snapshot.definition_contract_digest == contract.definition_contract_digest
+            and response_schema is not None
+            and context.pending.request.response_schema_ref == operation_public_schema_reference(response_schema)
+        )
+    except Exception:
+        return False
+
+
+async def _inspect_response_authority(
+    authority: OperationSecureResponseAuthority,
+    context: _ResponseControlContext,
+) -> OperationResponseControlResultV1:
+    """Project only the supported intents authorized by the bound bearer."""
+    try:
+        intents = await authority.permitted_intents(context.request, context.pending)
+        if not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
+            raise ValueError("secure response authority returned an unknown intent")
+        return OperationResponseControlSuccessV1(
+            operation_id=context.request.operation_id,
+            interaction_id=context.request.interaction_id,
+            revision=context.request.revision,
+            available=bool(intents),
+            permitted_intents=frozenset(intents),
+        )
+    except Exception:
+        return _response_refusal(
+            OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
+            requested_version=1,
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class OperationResponseControlService:
     """Inspect and execute safe REVIEW response control at the public boundary."""
 
@@ -953,69 +1067,18 @@ class OperationResponseControlService:
         request: OperationResponseControlVersionHeader | OperationResponseControlRequestV1,
     ) -> OperationResponseControlResultV1:
         """Return authorized response intents or a typed refusal."""
-        if request.response_control_version != _SUPPORTED_VERSION:
-            return _response_refusal(
-                OperationResponseControlRefusalCode.UNSUPPORTED_VERSION,
-                requested_version=request.response_control_version,
-            )
-        if not isinstance(request, OperationResponseControlRequestV1):
-            return _response_refusal(
-                OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
-                requested_version=1,
-            )
-        snapshot = await read_snapshot(self.reader, request.operation_id)
-        if snapshot is None:
-            return _response_refusal(OperationResponseControlRefusalCode.UNKNOWN_OPERATION, requested_version=1)
-        if isinstance(snapshot, UnavailableSnapshot):
+        request_or_refusal = _response_control_request_or_refusal(request)
+        if isinstance(request_or_refusal, OperationResponseControlRefusalV1):
+            return request_or_refusal
+        context_or_refusal = await _load_response_control_context(self.reader, request_or_refusal)
+        if isinstance(context_or_refusal, OperationResponseControlRefusalV1):
+            return context_or_refusal
+        if not _response_control_contract_is_current(self.registry, context_or_refusal):
             return _response_refusal(
                 OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
                 requested_version=1,
             )
-        pending = snapshot.pending_interaction
-        if (
-            pending is None
-            or pending.request.kind is not OperationInteractionKind.REVIEW
-            or pending.request.interaction_id != request.interaction_id
-        ):
-            return _response_refusal(
-                OperationResponseControlRefusalCode.RESPONSE_NOT_PENDING,
-                requested_version=1,
-            )
-        if snapshot.revision != request.revision or pending.request.revision != request.revision:
-            return _response_refusal(
-                OperationResponseControlRefusalCode.STALE_OPERATION_REVISION,
-                requested_version=1,
-            )
-        try:
-            contract = self.registry.lookup_public_contract(snapshot.identity.definition_id)
-            response_schema = contract.interaction_response_schema
-            if (
-                snapshot.definition_contract_digest != contract.definition_contract_digest
-                or response_schema is None
-                or pending.request.response_schema_ref != operation_public_schema_reference(response_schema)
-            ):
-                raise ValueError("pending response does not reproduce its public definition")
-        except Exception:
-            return _response_refusal(
-                OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
-                requested_version=1,
-            )
-        try:
-            intents = await self.authority.permitted_intents(request, pending)
-            if not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
-                raise ValueError("secure response authority returned an unknown intent")
-            return OperationResponseControlSuccessV1(
-                operation_id=request.operation_id,
-                interaction_id=request.interaction_id,
-                revision=request.revision,
-                available=bool(intents),
-                permitted_intents=frozenset(intents),
-            )
-        except Exception:
-            return _response_refusal(
-                OperationResponseControlRefusalCode.RESPONSE_AUTHORITY_UNAVAILABLE,
-                requested_version=1,
-            )
+        return await _inspect_response_authority(self.authority, context_or_refusal)
 
     async def apply(self, request: OperationResponseApplyRequestV1) -> OperationResponseMutationResultV1:
         """Consume one exact APPLY response through the bound runtime authority."""

@@ -19,7 +19,7 @@ import subprocess
 import sys
 import time
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import IO, TYPE_CHECKING
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.test_runs.paths import allocate_run_directory
@@ -62,20 +62,20 @@ class _Tee:
     bodies could not share an implementation.
     """
 
-    def __init__(self, stream: object, handle: object) -> None:
+    def __init__(self, stream: IO[str], handle: IO[str]) -> None:
         self._stream = stream
         self._handle = handle
 
     def write(self, text: str) -> int:
         """Write ``text`` to both destinations."""
-        self._handle.write(text)  # type: ignore[attr-defined]
-        self._handle.flush()  # type: ignore[attr-defined]
-        return self._stream.write(text)  # type: ignore[attr-defined]
+        self._handle.write(text)
+        self._handle.flush()
+        return self._stream.write(text)
 
     def flush(self) -> None:
         """Flush both destinations."""
-        self._handle.flush()  # type: ignore[attr-defined]
-        self._stream.flush()  # type: ignore[attr-defined]
+        self._handle.flush()
+        self._stream.flush()
 
 
 def _run_lane(lane: str, env: dict[str, str]) -> LaneResult:

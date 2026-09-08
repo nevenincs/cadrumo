@@ -15,7 +15,7 @@ import json
 import re
 import urllib.parse
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 from .._paths import UTF_8
 
@@ -65,7 +65,9 @@ def _get_https(url: str, *, timeout: float, allowed_hosts: frozenset[str], maxim
 def _api(params: dict[str, str]) -> dict[str, object]:
     url = "https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode(params)
     payload = _get_https(url, timeout=30, allowed_hosts=frozenset({_COMMONS_API_HOST}), maximum_bytes=None)
-    return json.loads(payload.decode(_UTF_8))
+    # `json.loads` is typed `Any`; the cast states the shape this endpoint
+    # is documented to return, in one place instead of at every use.
+    return cast("dict[str, object]", json.loads(payload.decode(_UTF_8)))
 
 
 def _download(url: str) -> bytes:
@@ -82,6 +84,18 @@ def _licence_is_clean(short: str) -> bool:
     return _CLEAN_LICENCE_PATTERN.fullmatch(normalized) is not None
 
 
+def _json_str(value: object) -> str:
+    """Return *value* when the payload carried a string there, else the empty string."""
+    return value if isinstance(value, str) else ""
+
+
+def _json_object(value: object, field: str) -> dict[str, object]:
+    """Return *value* as a JSON object, or refuse naming the field that lied."""
+    if not isinstance(value, dict):
+        raise TypeError(f"the Commons API returned a non-object under `{field}`")
+    return cast("dict[str, object]", value)
+
+
 def _search(query: str, mime_prefixes: tuple[str, ...], limit: int = 20) -> list[dict[str, str]]:
     data = _api(
         {
@@ -96,18 +110,33 @@ def _search(query: str, mime_prefixes: tuple[str, ...], limit: int = 20) -> list
         },
     )
     out: list[dict[str, str]] = []
-    pages = data.get("query", {}).get("pages", {})  # type: ignore[union-attr]
-    for page in pages.values():  # type: ignore[union-attr]
-        info = (page.get("imageinfo") or [{}])[0]
-        meta = info.get("extmetadata", {}) or {}
-        short = (meta.get("LicenseShortName", {}) or {}).get("value", "")
-        mime = info.get("mime", "")
-        url = info.get("url", "")
+    # The API nests pages two levels down and every level is `object` to the
+    # checker. Refusing a malformed payload is better than silencing the reads:
+    # an `assert` would vanish under -O, and the previous ignore comments turned
+    # a wrong-shaped response into an AttributeError far from its cause.
+    pages = _json_object(_json_object(data.get("query", {}), "query").get("pages", {}), "pages")
+    for entry in pages.values():
+        page = _json_object(entry, "pages[]")
+        image_info = page.get("imageinfo")
+        first = image_info[0] if isinstance(image_info, list) and image_info else {}
+        info = _json_object(first, "imageinfo[]")
+        meta = _json_object(info.get("extmetadata") or {}, "extmetadata")
+        licence = _json_object(meta.get("LicenseShortName") or {}, "LicenseShortName")
+        short = _json_str(licence.get("value"))
+        mime = _json_str(info.get("mime"))
+        url = _json_str(info.get("url"))
         if not url or not mime.startswith(mime_prefixes):
             continue
         if not _licence_is_clean(short):
             continue
-        out.append({"title": page.get("title", ""), "url": url, "mime": mime, "licence": short})
+        out.append(
+            {
+                "title": _json_str(page.get("title")),
+                "url": url,
+                "mime": mime,
+                "licence": short,
+            }
+        )
     return out
 
 

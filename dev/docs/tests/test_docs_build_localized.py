@@ -60,12 +60,8 @@ def test_localized_user_scope_build_is_nitpicky_clean(tmp_path: Path, language: 
 #: The repository root, three levels up from ``dev/docs/tests``.
 _REPO_ROOT = REPO_ROOT
 
-#: One localized build line in the ``docs-langs`` recipe: the catalogue it
-#: selects and the root it renders into, captured separately so the gate below
-#: can require them to name the SAME language.
-_LOCALIZED_BUILD_LINE_RE = re.compile(
-    r"--scope\s+user\s+--language\s+(?P<language>[a-z-]+)\s+--out-dir\s+docs/_build/html/(?P<root>[a-z-]+)",
-)
+#: One delegation from the aggregate to the canonical single-language recipe.
+_LOCALIZED_BUILD_LINE_RE = re.compile(r"^\s*just\s+docs-lang\s+(?P<language>[a-z-]+)\s*$", re.MULTILINE)
 
 
 def _justfile_recipe(name: str) -> str:
@@ -100,8 +96,6 @@ def test_the_localized_build_recipe_covers_every_translation_target_in_its_own_r
         "docs-langs does not build exactly the translation targets "
         f"{TARGET_LANGUAGES}: it builds {[match['language'] for match in matched]}"
     )
-    mismatched = [match["language"] for match in matched if match["root"] != match["language"]]
-    assert not mismatched, f"docs-langs renders {mismatched} into a root that is not its own language"
 
 
 def test_the_single_language_build_recipe_renders_into_that_language_root() -> None:

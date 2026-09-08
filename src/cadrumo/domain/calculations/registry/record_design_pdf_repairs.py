@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 import re
+from collections.abc import Sequence
 
 from .record_design_pdf_rows import (
     PdfRow,
@@ -61,7 +61,7 @@ def _row_identities_by_record(lines: tuple[str, ...]) -> list[frozenset[tuple[st
     declaring position 1 begins a record, because a fixed-width record is
     contiguous from its first byte.
     """
-    identities: list[set[tuple[str, int]]] = [set()]
+    identities: list[set[tuple[str, int]]] = [set[tuple[str, int]]()]
     line_records: list[int] = []
     record_index = 0
     for number, line in enumerate(lines, start=1):
@@ -69,7 +69,7 @@ def _row_identities_by_record(lines: tuple[str, ...]) -> list[frozenset[tuple[st
         current = identities[record_index]
         if parsed is not None and parsed.offset == 1 and current:
             record_index += 1
-            current = set()
+            current = set[tuple[str, int]]()
             identities.append(current)
         line_records.append(record_index)
         if parsed is not None and parsed.ordinal is not None:
@@ -309,7 +309,7 @@ _ORPHAN_MEASURE_RE = re.compile(
 _ANY_CASILLA_TAG_RE = re.compile(r"\[\d+\]")
 
 
-def _previous_parsed_row(parsed: tuple[PdfRow | None, ...], before: int) -> PdfRow | None:
+def _previous_parsed_row(parsed: Sequence[PdfRow | None], before: int) -> PdfRow | None:
     """Find the nearest parsed row before a source-line index."""
     return next((row for row in reversed(parsed[:before]) if row is not None), None)
 
@@ -934,11 +934,7 @@ def split_tail_from_leading_fragment(lines: tuple[str, ...]) -> tuple[str, ...]:
             previous = parsed
             split.append(line)
             continue
-        candidate = (
-            _tail_fragment_candidate(line, lines[index + 1], previous)
-            if index + 1 < len(lines)
-            else None
-        )
+        candidate = _tail_fragment_candidate(line, lines[index + 1], previous) if index + 1 < len(lines) else None
         if candidate is None:
             split.append(line)
             continue

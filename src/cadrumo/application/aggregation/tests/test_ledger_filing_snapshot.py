@@ -20,7 +20,6 @@ from ..ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
-    project_manual_fact_basis_entries,
     row_fingerprint,
 )
 
@@ -30,8 +29,6 @@ _CAPTURED = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
 
 
 _MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00501")
-_SKIPPED_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00502")
-_EMPTY_MANUAL_FACT_CASILLA: CasillaId = validated_casilla_id("00503")
 _LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-37-1992:art-99",)
 _SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-modelo-303-2025-form",)
 
@@ -208,36 +205,6 @@ def test_evidence_capture_preserves_rent_paid_net_of_withholding_substrate() -> 
     assert row.amount != row.taxable_base + row.iva_amount
     assert row.category_id == "arrendamiento_local"
     assert row.irpf_category == "arrendamiento_local"
-
-
-def test_manual_fact_basis_projection_skips_blank_inputs() -> None:
-    entries = project_manual_fact_basis_entries(
-        {
-            _MANUAL_FACT_CASILLA: "140000.00",
-            _SKIPPED_MANUAL_FACT_CASILLA: " ",
-            _EMPTY_MANUAL_FACT_CASILLA: "",
-        },
-        legal_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _LEGAL_REFS},
-        source_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _SOURCE_REFS},
-    )
-
-    assert entries == (
-        ManualFactBasisEntry(
-            casilla_id=_MANUAL_FACT_CASILLA,
-            value="140000.00",
-            legal_refs=_LEGAL_REFS,
-            source_refs=_SOURCE_REFS,
-        ),
-    )
-
-
-def test_manual_fact_basis_projection_rejects_missing_grounding() -> None:
-    with pytest.raises(ModeloValidationError, match="legal_refs"):
-        project_manual_fact_basis_entries(
-            {_MANUAL_FACT_CASILLA: "140000.00"},
-            legal_refs_by_casilla_id={},
-            source_refs_by_casilla_id={_MANUAL_FACT_CASILLA: _SOURCE_REFS},
-        )
 
 
 def test_evidence_capture_rejects_blank_or_malformed_grounding_refs() -> None:

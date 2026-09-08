@@ -239,6 +239,53 @@ def _validate_auxiliary_header_lengths(fields: tuple[RecordDesignField, ...]) ->
         raise ValueError("auxiliary envelope header has an unsupported source length sequence")
 
 
+def _validate_auxiliary_header_modelo_constant(value: str | None) -> None:
+    """Validate the modelo's variable three-digit source constant."""
+    modelo_constant = _auxiliary_header_constant(value)
+    if modelo_constant is None or not _AUXILIARY_ENVELOPE_HEADER_MODELO_RE.fullmatch(modelo_constant):
+        raise ValueError(
+            f"auxiliary envelope header does not declare a three-digit modelo constant at its second slot: {value!r}",
+        )
+
+
+def _validate_auxiliary_header_period_constant(value: str | None) -> None:
+    """Validate the period slot's source-declared token or range."""
+    period_constant = _auxiliary_header_constant(value)
+    if period_constant is None or not _AUXILIARY_ENVELOPE_HEADER_PERIOD_RE.fullmatch(period_constant):
+        raise ValueError(
+            f"auxiliary envelope header does not declare a period token or range at its period slot: {value!r}",
+        )
+
+
+def _validate_auxiliary_header_footnote(value: str | None) -> None:
+    """Validate a source slot whose content may carry only a footnote marker."""
+    stripped = (value or "").strip()
+    if stripped and not _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_RE.fullmatch(stripped):
+        raise ValueError(
+            f"auxiliary envelope header footnoted slot carries neither a footnote marker nor an empty cell: {value!r}",
+        )
+
+
+def _validate_auxiliary_header_literal(index: int, expected: str | None, value: str | None) -> None:
+    """Validate one fixed literal slot after normalizing source spelling."""
+    if _auxiliary_header_constant(value) != _auxiliary_header_constant(expected):
+        raise ValueError(
+            f"auxiliary envelope header slot {index} carries {value!r}, not the required {expected!r}",
+        )
+
+
+def _validate_auxiliary_header_content_slot(index: int, expected: str | None, value: str | None) -> None:
+    """Dispatch one slot to the validator for its source-proved role."""
+    if index == _AUXILIARY_ENVELOPE_HEADER_MODELO_INDEX:
+        _validate_auxiliary_header_modelo_constant(value)
+    elif index == _AUXILIARY_ENVELOPE_HEADER_PERIOD_INDEX:
+        _validate_auxiliary_header_period_constant(value)
+    elif index in _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_INDICES:
+        _validate_auxiliary_header_footnote(value)
+    else:
+        _validate_auxiliary_header_literal(index, expected, value)
+
+
 def validate_auxiliary_envelope_header_contents(contents: tuple[str | None, ...]) -> None:
     """Require the exact auxiliary-header Contenido shape, modelo-neutrally.
 
@@ -251,33 +298,7 @@ def validate_auxiliary_envelope_header_contents(contents: tuple[str | None, ...]
             modelo's own three-digit constant, nor an admitted footnote spelling.
     """
     for index, (expected, value) in enumerate(zip(AUXILIARY_ENVELOPE_HEADER_CONTENT, contents, strict=True)):
-        if index == _AUXILIARY_ENVELOPE_HEADER_MODELO_INDEX:
-            modelo_constant = _auxiliary_header_constant(value)
-            if modelo_constant is None or not _AUXILIARY_ENVELOPE_HEADER_MODELO_RE.fullmatch(modelo_constant):
-                raise ValueError(
-                    "auxiliary envelope header does not declare a three-digit modelo constant at its "
-                    f"second slot: {value!r}",
-                )
-            continue
-        if index == _AUXILIARY_ENVELOPE_HEADER_PERIOD_INDEX:
-            period_constant = _auxiliary_header_constant(value)
-            if period_constant is None or not _AUXILIARY_ENVELOPE_HEADER_PERIOD_RE.fullmatch(period_constant):
-                raise ValueError(
-                    f"auxiliary envelope header does not declare a period token or range at its period slot: {value!r}",
-                )
-            continue
-        if index in _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_INDICES:
-            stripped = (value or "").strip()
-            if stripped and not _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_RE.fullmatch(stripped):
-                raise ValueError(
-                    "auxiliary envelope header footnoted slot carries neither a footnote marker nor an "
-                    f"empty cell: {value!r}",
-                )
-            continue
-        if _auxiliary_header_constant(value) != _auxiliary_header_constant(expected):
-            raise ValueError(
-                f"auxiliary envelope header slot {index} carries {value!r}, not the required {expected!r}",
-            )
+        _validate_auxiliary_header_content_slot(index, expected, value)
 
 
 def _validate_auxiliary_header_positions(fields: tuple[RecordDesignField, ...]) -> None:

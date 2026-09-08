@@ -19,6 +19,7 @@ import rtoml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.external_constants import LATIN_1_ENCODING
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -37,7 +38,6 @@ from cadrumo.domain.calculations.registry.ids import (
     RevisionId,
     SourceRefId,
 )
-from cadrumo.domain.calculations.registry.record_spec import ENCODING_ALIAS_MAP
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
@@ -88,6 +88,17 @@ __all__ = [
 SERIALIZER_CONVENTION: Final[Literal["rtoml-pretty-v1"]] = "rtoml-pretty-v1"
 _SAFE_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(r"^[^/\\\x00-\x1f]+$")
 _SLUG_RE: Final[re.Pattern[str]] = re.compile(r"[^a-z0-9]+")
+_ENCODING_ALIAS_MAP: Final[Mapping[str, str]] = {
+    LATIN_1_ENCODING: "iso-8859-1",
+    "latin_1": "iso-8859-1",
+    "iso-8859-1": "iso-8859-1",
+    "iso_8859_1": "iso-8859-1",
+    "cp1252": "cp1252",
+    "windows-1252": "cp1252",
+    "iso-8859-15": "iso-8859-15",
+    "iso_8859_15": "iso-8859-15",
+    "latin-9": "iso-8859-15",
+}
 # A bare trailing full stop is SENTENCE PUNCTUATION on the official content, not
 # an annotation, so each value grammar tolerates its own terminator rather than
 # the note peel removing it. Two reasons this is the right home. The peel is
@@ -371,7 +382,7 @@ class ExportTreeTransportProfile(_StrictModel):
 
     @model_validator(mode="after")
     def _require_supported_encoding_and_safe_ids(self) -> ExportTreeTransportProfile:
-        if self.encoding.casefold() not in ENCODING_ALIAS_MAP:
+        if self.encoding.casefold() not in _ENCODING_ALIAS_MAP:
             raise ValueError(f"export tree transport profile declares unsupported encoding {self.encoding!r}")
         _require_safe_identifier(str(self.layout_id), subject="export layout id")
         return self

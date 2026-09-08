@@ -44,8 +44,8 @@ release-please.yml:Refuse a deadlocked release state
 #   audit-oracles          `dev.registry.parity.maintenance_cli audit-oracles`
 #   check-vault            `vaultspec-core vault check all`, called raw; every
 #                          other repo in the fleet reaches the vault by recipe
-#   audit-dependencies     ci-full exports the lock and pipes it to `pip-audit`
-#                          while `just audit-dependencies` runs the fleet's own
+#   audit-deps             ci-full exports the lock and pipes it to `pip-audit`
+#                          while `just audit-deps` runs the fleet's own
 #                          dependency_audit.py - two different answers to one
 #                          question, in one repository
 #   test-roundtrip         a four-path pytest invocation with a `-k` filter

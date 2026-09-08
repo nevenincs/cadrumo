@@ -144,7 +144,6 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "submission_records",
     "justificante_metadata",
     "filing_drafts",
-    "filing_export_replay_proofs",
     "invoice_catalogue",
     "transaction_catalogue",
     "usage_ratio_profile",

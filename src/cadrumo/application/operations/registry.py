@@ -716,84 +716,15 @@ class OperationRegistry(BaseModel):
         registration: OperationPublicDefinitionRegistrationV1,
     ) -> None:
         contract = registration.contract
-        bindings = {
-            _schema_identity_key(binding.identity): binding.model_type for binding in registration.schema_bindings
-        }
-        declared_identities = {
-            _schema_identity_key(identity)
-            for identity in (
-                contract.request_schema,
-                contract.result_schema,
-                contract.review_projection_schema,
-                contract.interaction_response_schema,
-                contract.workspace_refresh_target_schema,
-            )
-            if identity is not None
-        }
-        if set(bindings) != declared_identities:
-            raise ValueError("public operation schema bindings must exactly match the declared manifest")
-        if bindings[_schema_identity_key(contract.request_schema)] is not definition.request_type:
-            raise ValueError("public operation request schema must bind the definition request type")
-        if definition.result_type is None:
-            if contract.result_schema is not None:
-                raise ValueError("result-less operation definition cannot declare a public result schema")
-            if registration.result_projector is not None:
-                raise ValueError("result-less operation definition cannot declare a result projector")
-        elif contract.result_schema is not None:
-            bound_result_type = bindings[_schema_identity_key(contract.result_schema)]
-            distinct_result_projection = bound_result_type is not definition.result_type
-            if distinct_result_projection != (registration.result_projector is not None):
-                raise ValueError(
-                    "a public result schema distinct from the definition result type requires one registered "
-                    "result projector, and one identical to it must not declare one"
-                )
-        elif registration.result_projector is not None:
-            raise ValueError("a result projector requires a declared public result schema")
-        if registration.result_projector is not None:
-            _require_positional_callable_signature(
-                registration.result_projector,
-                arity=2,
-                label="result projector",
-            )
-        declares_review = OperationInteractionKind.REVIEW in definition.interaction_kinds
-        if declares_review != (contract.review_projection_schema is not None):
-            raise ValueError("REVIEW operation definitions require one public review schema")
-        if declares_review != (registration.review_projector is not None):
-            raise ValueError("REVIEW operation definitions require one registered review projector")
-        if declares_review != (registration.reviewed_operand_type is not None):
-            raise ValueError("REVIEW operation definitions require one registered reviewed operand type")
-        if registration.reviewed_operand_type is not None:
-            require_strict_frozen_operation_model_graph(
-                registration.reviewed_operand_type,
-                path="reviewed operand",
-                reject_mutable_annotations=True,
-                require_validated_defaults=True,
-            )
-        if registration.review_projector is not None:
-            _require_positional_callable_signature(
-                registration.review_projector,
-                arity=2,
-                label="REVIEW projector",
-            )
-        declares_refresh = contract.workspace_refresh_target_schema is not None
-        if declares_refresh != (registration.workspace_refresh_adapter is not None):
-            raise ValueError("Workspace refresh schema and adapter must be declared together")
-        if registration.workspace_refresh_adapter is not None:
-            _require_positional_callable_signature(
-                registration.workspace_refresh_adapter,
-                arity=1,
-                label="Workspace refresh adapter",
-            )
-        expected = _public_contract_for_definition(
-            definition,
-            request_schema=contract.request_schema,
-            result_schema=contract.result_schema,
-            review_projection_schema=contract.review_projection_schema,
-            interaction_response_schema=contract.interaction_response_schema,
-            workspace_refresh_target_schema=contract.workspace_refresh_target_schema,
-        )
-        if expected != contract:
-            raise ValueError("public operation definition contract is not a live-registry fixed point")
+        bindings = _public_schema_bindings(registration)
+        declared_identities = _declared_public_schema_identities(contract)
+        _validate_public_schema_manifest(bindings, declared_identities)
+        _validate_public_request_binding(definition, contract, bindings)
+        _validate_public_result_registration(definition, registration, contract, bindings)
+        _validate_public_result_projector(registration)
+        _validate_public_review_registration(definition, registration, contract)
+        _validate_public_refresh_registration(registration, contract)
+        _validate_public_contract_fixed_point(definition, contract)
 
     @cached_property
     def public_contract_set(self) -> OperationPublicContractSetV1:
@@ -867,6 +798,177 @@ class OperationRegistry(BaseModel):
         return definition.request_type.model_validate_json(raw)
 
 
+def _public_schema_bindings(
+    registration: OperationPublicDefinitionRegistrationV1,
+) -> dict[tuple[str, int, ContentDigest], type[BaseModel]]:
+    """Index each registered public schema binding by its complete identity."""
+    return {_schema_identity_key(binding.identity): binding.model_type for binding in registration.schema_bindings}
+
+
+def _declared_public_schema_identities(
+    contract: OperationPublicDefinitionContractV1,
+) -> set[tuple[str, int, ContentDigest]]:
+    """Collect every schema identity declared by one public contract manifest."""
+    return {
+        _schema_identity_key(identity)
+        for identity in (
+            contract.request_schema,
+            contract.result_schema,
+            contract.review_projection_schema,
+            contract.interaction_response_schema,
+            contract.workspace_refresh_target_schema,
+        )
+        if identity is not None
+    }
+
+
+def _validate_public_schema_manifest(
+    bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
+    declared_identities: set[tuple[str, int, ContentDigest]],
+) -> None:
+    """Require schema bindings to cover exactly the contract's declared manifest."""
+    if set(bindings) != declared_identities:
+        raise ValueError("public operation schema bindings must exactly match the declared manifest")
+
+
+def _validate_public_request_binding(
+    definition: OperationDefinition,
+    contract: OperationPublicDefinitionContractV1,
+    bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
+) -> None:
+    """Require the declared request identity to bind the definition request model."""
+    if bindings[_schema_identity_key(contract.request_schema)] is not definition.request_type:
+        raise ValueError("public operation request schema must bind the definition request type")
+
+
+def _validate_public_result_registration(
+    definition: OperationDefinition,
+    registration: OperationPublicDefinitionRegistrationV1,
+    contract: OperationPublicDefinitionContractV1,
+    bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
+) -> None:
+    """Match result schema/projector declarations to the definition's result model."""
+    if definition.result_type is None:
+        _validate_resultless_public_registration(registration, contract)
+        return
+    _validate_resultful_public_registration(definition, registration, contract, bindings)
+
+
+def _validate_resultless_public_registration(
+    registration: OperationPublicDefinitionRegistrationV1,
+    contract: OperationPublicDefinitionContractV1,
+) -> None:
+    """Refuse result declarations for an operation without a result model."""
+    if contract.result_schema is not None:
+        raise ValueError("result-less operation definition cannot declare a public result schema")
+    if registration.result_projector is not None:
+        raise ValueError("result-less operation definition cannot declare a result projector")
+
+
+def _validate_resultful_public_registration(
+    definition: OperationDefinition,
+    registration: OperationPublicDefinitionRegistrationV1,
+    contract: OperationPublicDefinitionContractV1,
+    bindings: dict[tuple[str, int, ContentDigest], type[BaseModel]],
+) -> None:
+    """Match a result-bearing operation's schema and optional projection adapter."""
+    if contract.result_schema is not None:
+        bound_result_type = bindings[_schema_identity_key(contract.result_schema)]
+        distinct_result_projection = bound_result_type is not definition.result_type
+        if distinct_result_projection != (registration.result_projector is not None):
+            raise ValueError(
+                "a public result schema distinct from the definition result type requires one registered "
+                "result projector, and one identical to it must not declare one"
+            )
+    elif registration.result_projector is not None:
+        raise ValueError("a result projector requires a declared public result schema")
+
+
+def _validate_public_result_projector(registration: OperationPublicDefinitionRegistrationV1) -> None:
+    """Require a registered result projector to expose the public two-argument shape."""
+    if registration.result_projector is not None:
+        _require_positional_callable_signature(
+            registration.result_projector,
+            arity=2,
+            label="result projector",
+        )
+
+
+def _validate_public_review_registration(
+    definition: OperationDefinition,
+    registration: OperationPublicDefinitionRegistrationV1,
+    contract: OperationPublicDefinitionContractV1,
+) -> None:
+    """Match REVIEW declarations, operand validation, and projector signature in order."""
+    declares_review = OperationInteractionKind.REVIEW in definition.interaction_kinds
+    _validate_public_review_declarations(declares_review, registration, contract)
+    _validate_public_review_implementations(registration)
+
+
+def _validate_public_review_declarations(
+    declares_review: bool,
+    registration: OperationPublicDefinitionRegistrationV1,
+    contract: OperationPublicDefinitionContractV1,
+) -> None:
+    """Require each REVIEW contract and runtime registration arm together."""
+    if declares_review != (contract.review_projection_schema is not None):
+        raise ValueError("REVIEW operation definitions require one public review schema")
+    if declares_review != (registration.review_projector is not None):
+        raise ValueError("REVIEW operation definitions require one registered review projector")
+    if declares_review != (registration.reviewed_operand_type is not None):
+        raise ValueError("REVIEW operation definitions require one registered reviewed operand type")
+
+
+def _validate_public_review_implementations(registration: OperationPublicDefinitionRegistrationV1) -> None:
+    """Validate the reviewed operand graph before the REVIEW projector signature."""
+    if registration.reviewed_operand_type is not None:
+        require_strict_frozen_operation_model_graph(
+            registration.reviewed_operand_type,
+            path="reviewed operand",
+            reject_mutable_annotations=True,
+            require_validated_defaults=True,
+        )
+    if registration.review_projector is not None:
+        _require_positional_callable_signature(
+            registration.review_projector,
+            arity=2,
+            label="REVIEW projector",
+        )
+
+
+def _validate_public_refresh_registration(
+    registration: OperationPublicDefinitionRegistrationV1,
+    contract: OperationPublicDefinitionContractV1,
+) -> None:
+    """Require Workspace refresh schema and adapter declarations to move together."""
+    declares_refresh = contract.workspace_refresh_target_schema is not None
+    if declares_refresh != (registration.workspace_refresh_adapter is not None):
+        raise ValueError("Workspace refresh schema and adapter must be declared together")
+    if registration.workspace_refresh_adapter is not None:
+        _require_positional_callable_signature(
+            registration.workspace_refresh_adapter,
+            arity=1,
+            label="Workspace refresh adapter",
+        )
+
+
+def _validate_public_contract_fixed_point(
+    definition: OperationDefinition,
+    contract: OperationPublicDefinitionContractV1,
+) -> None:
+    """Require the public contract to equal the value derived from live definition data."""
+    expected = _public_contract_for_definition(
+        definition,
+        request_schema=contract.request_schema,
+        result_schema=contract.result_schema,
+        review_projection_schema=contract.review_projection_schema,
+        interaction_response_schema=contract.interaction_response_schema,
+        workspace_refresh_target_schema=contract.workspace_refresh_target_schema,
+    )
+    if expected != contract:
+        raise ValueError("public operation definition contract is not a live-registry fixed point")
+
+
 _HEX64_DIGEST_PATTERN = HEX_PATTERN_64
 
 
@@ -887,20 +989,37 @@ def _is_hex64_shaped_schema(value: object) -> bool:
     if not isinstance(value, dict):
         return False
     mapping = cast(dict[str, object], value)
-    if (
+    if _is_hex64_string_schema(mapping):
+        return True
+    if _is_hex64_any_of_schema(mapping):
+        return True
+    return _is_hex64_items_schema(mapping)
+
+
+def _is_hex64_string_schema(mapping: dict[str, object]) -> bool:
+    """Recognize the direct JSON-schema shape of one lowercase Hex64 value."""
+    return (
         mapping.get("type") == "string"
         and mapping.get("pattern") == _HEX64_DIGEST_PATTERN
         and mapping.get("minLength") == 64
         and mapping.get("maxLength") == 64
-    ):
-        return True
+    )
+
+
+def _is_hex64_any_of_schema(mapping: dict[str, object]) -> bool:
+    """Search non-null branches of an optional JSON-schema value for Hex64."""
     any_of = mapping.get("anyOf")
-    if isinstance(any_of, list):
-        return any(
-            _is_hex64_shaped_schema(cast(dict[str, object], item))
-            for item in cast(list[object], any_of)
-            if isinstance(item, dict) and cast(dict[str, object], item).get("type") != "null"
-        )
+    if not isinstance(any_of, list):
+        return False
+    return any(
+        _is_hex64_shaped_schema(cast(dict[str, object], item))
+        for item in cast(list[object], any_of)
+        if isinstance(item, dict) and cast(dict[str, object], item).get("type") != "null"
+    )
+
+
+def _is_hex64_items_schema(mapping: dict[str, object]) -> bool:
+    """Search a homogeneous tuple/array item schema for Hex64."""
     items = mapping.get("items")
     if isinstance(items, dict):
         return _is_hex64_shaped_schema(cast(dict[str, object], items))
@@ -922,27 +1041,42 @@ def _validate_credential_free_schema(schema: object) -> None:
     ``*_digest``, is also admitted by this rule.
     """
     if isinstance(schema, list):
-        for item in cast(list[object], schema):
-            _validate_credential_free_schema(item)
+        _validate_credential_free_schema_items(cast(list[object], schema))
         return
     if not isinstance(schema, dict):
         return
     mapping = cast(dict[str, object], schema)
-    schema_format = mapping.get("format")
-    if schema_format in _FORBIDDEN_OPERATION_SCHEMA_FORMATS:
-        raise ValueError("credential-free journal request schema contains a secret-capable format")
-    properties = mapping.get("properties")
-    if isinstance(properties, dict):
-        for field_name, field_schema in cast(dict[str, object], properties).items():
-            parts = set(field_name.lower().replace("-", "_").split("_"))
-            matched = parts & _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS
-            if not matched:
-                continue
-            if matched == {"digest"} and _is_hex64_shaped_schema(field_schema):
-                continue
-            raise ValueError(f"credential-free journal request field {field_name!r} has a forbidden security meaning")
+    _validate_credential_free_schema_format(mapping)
+    _validate_credential_free_schema_properties(mapping)
     for value in mapping.values():
         _validate_credential_free_schema(value)
+
+
+def _validate_credential_free_schema_items(items: list[object]) -> None:
+    """Recursively inspect every branch in a JSON-schema list container."""
+    for item in items:
+        _validate_credential_free_schema(item)
+
+
+def _validate_credential_free_schema_format(mapping: dict[str, object]) -> None:
+    """Reject schema formats that can carry credentials in journal input."""
+    if mapping.get("format") in _FORBIDDEN_OPERATION_SCHEMA_FORMATS:
+        raise ValueError("credential-free journal request schema contains a secret-capable format")
+
+
+def _validate_credential_free_schema_properties(mapping: dict[str, object]) -> None:
+    """Reject forbidden credential field names while admitting only digest-shaped exceptions."""
+    properties = mapping.get("properties")
+    if not isinstance(properties, dict):
+        return
+    for field_name, field_schema in cast(dict[str, object], properties).items():
+        parts = set(field_name.lower().replace("-", "_").split("_"))
+        matched = parts & _FORBIDDEN_CREDENTIAL_FREE_FIELD_PARTS
+        if not matched:
+            continue
+        if matched == {"digest"} and _is_hex64_shaped_schema(field_schema):
+            continue
+        raise ValueError(f"credential-free journal request field {field_name!r} has a forbidden security meaning")
 
 
 def _strict_model_json_schema(model_type: type[BaseModel]) -> dict[str, object]:
@@ -1094,12 +1228,29 @@ def _definition_contract_value(
     include_digest: bool,
 ) -> dict[str, object]:
     """Return the explicitly ordered, JSON-safe value governed by the digest."""
-    payload: dict[str, object] = {
+    payload: dict[str, object] = {}
+    payload.update(_definition_contract_identity_value(contract))
+    payload.update(_definition_contract_schema_value(contract))
+    payload.update(_definition_contract_policy_value(contract))
+    if include_digest:
+        payload["definition_contract_digest"] = contract.definition_contract_digest
+    return payload
+
+
+def _definition_contract_identity_value(contract: OperationPublicDefinitionContractV1) -> dict[str, object]:
+    """Return the manifest and operation identity fields in digest order."""
+    return {
         "manifest_version": contract.manifest_version,
         "definition_id": contract.definition_id,
         "action_reference": (
             None if contract.action_reference is None else contract.action_reference.model_dump(mode="json")
         ),
+    }
+
+
+def _definition_contract_schema_value(contract: OperationPublicDefinitionContractV1) -> dict[str, object]:
+    """Return the declared public schema identities in digest order."""
+    return {
         "request_schema": contract.request_schema.model_dump(mode="json"),
         "result_schema": None if contract.result_schema is None else contract.result_schema.model_dump(mode="json"),
         "review_projection_schema": (
@@ -1117,6 +1268,12 @@ def _definition_contract_value(
             if contract.workspace_refresh_target_schema is None
             else contract.workspace_refresh_target_schema.model_dump(mode="json")
         ),
+    }
+
+
+def _definition_contract_policy_value(contract: OperationPublicDefinitionContractV1) -> dict[str, object]:
+    """Return the policy and capability fields in digest order."""
+    return {
         "interaction_kinds": tuple(sorted(item.value for item in contract.interaction_kinds)),
         "request_storage": contract.request_storage.value,
         "durability": contract.durability.value,
@@ -1133,9 +1290,6 @@ def _definition_contract_value(
         "permitted_frontends": tuple(sorted(item.value for item in contract.permitted_frontends)),
         "ephemeral_secret_required": contract.ephemeral_secret_required,
     }
-    if include_digest:
-        payload["definition_contract_digest"] = contract.definition_contract_digest
-    return payload
 
 
 def _require_positional_callable_signature(

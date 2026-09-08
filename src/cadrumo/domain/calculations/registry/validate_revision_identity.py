@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .schema import ModeloRevision
+    from .schema_surfaces import CasillaDefinition
 
 
 def _duplicates(values: Iterable[str]) -> set[str]:
@@ -144,30 +145,47 @@ def _emit_ambiguous_bare_casilla_id_failures(
         )
 
 
+def _primary_id_owners(revision: ModeloRevision) -> dict[str, list[str]]:
+    """Index every primary record id by the record kinds that declare it."""
+    ids_by_kind = _collect_record_id_lists(revision)
+    owners_by_id: dict[str, list[str]] = {}
+    for kind, _attr in _RECORD_ID_KINDS:
+        if kind not in _PRIMARY_ID_KINDS:
+            continue
+        for record_id in ids_by_kind[kind]:
+            owners_by_id.setdefault(record_id, []).append(kind)
+    return owners_by_id
+
+
+def _casilla_metadata_tokens(casilla: CasillaDefinition) -> list[tuple[str, str | None]]:
+    """Return the display/export tokens that may collide with a primary id."""
+    tokens: list[tuple[str, str | None]] = [
+        ("number", casilla.number),
+        ("form_number", casilla.form_number),
+    ]
+    tokens.extend(("export_ref", export_ref) for export_ref in casilla.export_refs)
+    return tokens
+
+
+def _casilla_metadata_owners(revision: ModeloRevision) -> dict[str, list[str]]:
+    """Index non-canonical casilla metadata tokens by their owning casilla."""
+    metadata_owners: dict[str, list[str]] = {}
+    for casilla in revision.casillas:
+        for kind, token in _casilla_metadata_tokens(casilla):
+            if token is None or token == casilla.id:
+                continue
+            metadata_owners.setdefault(token, []).append(f"{kind} metadata for casilla {casilla.id!r}")
+    return metadata_owners
+
+
 def _emit_ambiguous_casilla_reference_token_failures(
     failures: list[str],
     prefix: str,
     revision: ModeloRevision,
 ) -> None:
     """Reject a token that is a primary id and casilla display/export metadata."""
-    primary_id_owners: dict[str, list[str]] = {}
-    for kind, attr in _RECORD_ID_KINDS:
-        if kind not in _PRIMARY_ID_KINDS:
-            continue
-        for record in getattr(revision, attr):
-            primary_id_owners.setdefault(record.id, []).append(kind)
-
-    metadata_owners: dict[str, list[str]] = {}
-    for casilla in revision.casillas:
-        metadata_tokens: list[tuple[str, str | None]] = [
-            ("number", casilla.number),
-            ("form_number", casilla.form_number),
-        ]
-        metadata_tokens.extend(("export_ref", export_ref) for export_ref in casilla.export_refs)
-        for kind, token in metadata_tokens:
-            if token is None or token == casilla.id:
-                continue
-            metadata_owners.setdefault(token, []).append(f"{kind} metadata for casilla {casilla.id!r}")
+    primary_id_owners = _primary_id_owners(revision)
+    metadata_owners = _casilla_metadata_owners(revision)
 
     for token, owners in sorted(metadata_owners.items()):
         primary_owners = primary_id_owners.get(token)

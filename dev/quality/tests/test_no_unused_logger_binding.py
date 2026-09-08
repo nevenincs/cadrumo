@@ -35,14 +35,18 @@ def _logger_bindings(tree: ast.Module) -> list[str]:
     """Return the names bound at module level to a logger factory call."""
     names: list[str] = []
     for node in tree.body:
-        target = None
+        # Bind the value beside the target rather than reaching for
+        # `node.value` later: only Assign and AnnAssign have one, and the
+        # narrowing that proves it does not survive to the second use.
+        target: ast.expr | None = None
+        value: ast.expr | None = None
         if isinstance(node, ast.Assign) and len(node.targets) == 1:
-            target = node.targets[0]
+            target, value = node.targets[0], node.value
         elif isinstance(node, ast.AnnAssign):
-            target = node.target
-        if not isinstance(target, ast.Name) or not isinstance(node.value, ast.Call):
+            target, value = node.target, node.value
+        if not isinstance(target, ast.Name) or not isinstance(value, ast.Call):
             continue
-        func = node.value.func
+        func = value.func
         called = func.attr if isinstance(func, ast.Attribute) else getattr(func, "id", "")
         if called in _LOGGER_FACTORIES:
             names.append(target.id)

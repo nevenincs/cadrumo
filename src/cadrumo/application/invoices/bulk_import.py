@@ -34,11 +34,11 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, NonNegativeInt, ValidationError
 
@@ -281,6 +281,95 @@ def _canonicalise_amount_text(raw: object, *, decimal_separator: DecimalSeparato
     return normalize_decimal_separators(text, strip_thousands="." in text and "," in text)
 
 
+def _assert_bulk_row_fields_present(raw_row: Mapping[str, object], *, row_number: int) -> None:
+    missing = [column for column in BULK_INVOICE_IMPORT_REQUIRED_COLUMNS if not coerce_cell_text(raw_row.get(column))]
+    if missing:
+        raise _RowParseError(row_number=row_number, field=missing[0], reason="required field is missing or blank")
+
+
+def _parse_optional_row_decimal(
+    raw_row: Mapping[str, object],
+    *,
+    field: str,
+    row_number: int,
+    decimal_separator: DecimalSeparatorValue,
+) -> Decimal | None:
+    raw = raw_row.get(field)
+    if not coerce_cell_text(raw):
+        return None
+    return _parse_row_decimal(
+        _canonicalise_amount_text(raw, decimal_separator=decimal_separator),
+        row_number=row_number,
+        field=field,
+    )
+
+
+def _parse_bulk_row_amounts(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    decimal_separator: DecimalSeparatorValue,
+) -> tuple[Decimal, Decimal | None, Decimal | None]:
+    taxable_base = _parse_row_decimal(
+        _canonicalise_amount_text(raw_row.get("taxable_base"), decimal_separator=decimal_separator),
+        row_number=row_number,
+        field="taxable_base",
+    )
+    iva_rate = _parse_optional_row_decimal(
+        raw_row,
+        field="iva_rate",
+        row_number=row_number,
+        decimal_separator=decimal_separator,
+    )
+    retencion_amount = _parse_optional_row_decimal(
+        raw_row,
+        field="retencion_amount",
+        row_number=row_number,
+        decimal_separator=decimal_separator,
+    )
+    return taxable_base, iva_rate, retencion_amount
+
+
+def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
+    country_code = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
+    if not country_code:
+        raise _RowParseError(
+            row_number=row_number,
+            field="country_code",
+            reason="counterparty country is missing or blank; state it in the row or declare one for the import",
+        )
+    return country_code
+
+
+def _build_bulk_invoice_row(
+    raw_row: Mapping[str, object],
+    *,
+    row_number: int,
+    invoice_date: date,
+    taxable_base: Decimal,
+    iva_rate: Decimal | None,
+    retencion_amount: Decimal | None,
+    country_code: str,
+) -> BulkInvoiceImportRow:
+    try:
+        return BulkInvoiceImportRow(
+            counterparty_nif=coerce_cell_text(raw_row.get("counterparty_nif")),
+            counterparty_name=coerce_cell_text(raw_row.get("counterparty_name")),
+            invoice_number=coerce_cell_text(raw_row.get("invoice_number")),
+            invoice_date=invoice_date,
+            taxable_base=taxable_base,
+            iva_rate=iva_rate,
+            retencion_amount=retencion_amount,
+            currency=coerce_cell_text(raw_row.get("currency")) or DEFAULT_CURRENCY,
+            country_code=country_code,
+            notes=coerce_cell_text(raw_row.get("notes")),
+        )
+    except ValidationError as exc:
+        first = exc.errors()[0] if exc.errors() else {"loc": ("row",), "msg": "invalid row"}
+        field = str(first["loc"][0]) if first.get("loc") else "row"
+        raise _RowParseError(row_number=row_number, field=field, reason=str(first.get("msg", "invalid row"))) from exc
+
+
 def _parse_bulk_invoice_row(
     raw_row: Mapping[str, object],
     *,
@@ -300,9 +389,7 @@ def _parse_bulk_invoice_row(
     empty: a blank cell in a file that HAS the column is an omission specific
     to that row, and is refused as one.
     """
-    missing = [column for column in BULK_INVOICE_IMPORT_REQUIRED_COLUMNS if not coerce_cell_text(raw_row.get(column))]
-    if missing:
-        raise _RowParseError(row_number=row_number, field=missing[0], reason="required field is missing or blank")
+    _assert_bulk_row_fields_present(raw_row, row_number=row_number)
 
     invoice_date_raw = coerce_cell_text(raw_row.get("invoice_date"))
     invoice_date = _parse_row_date(invoice_date_raw, row_number=row_number, field="invoice_date")
@@ -310,60 +397,21 @@ def _parse_bulk_invoice_row(
     # The raw cell is handed over unstringified so an already-numeric workbook
     # value keeps its own representation; only operator-written TEXT is held to
     # the euro grammar.
-    taxable_base = _parse_row_decimal(
-        _canonicalise_amount_text(raw_row.get("taxable_base"), decimal_separator=decimal_separator),
+    taxable_base, iva_rate, retencion_amount = _parse_bulk_row_amounts(
+        raw_row,
         row_number=row_number,
-        field="taxable_base",
+        decimal_separator=decimal_separator,
     )
-
-    iva_rate_raw = coerce_cell_text(raw_row.get("iva_rate"))
-    iva_rate = (
-        _parse_row_decimal(
-            _canonicalise_amount_text(raw_row.get("iva_rate"), decimal_separator=decimal_separator),
-            row_number=row_number,
-            field="iva_rate",
-        )
-        if iva_rate_raw
-        else None
+    country_code = _bulk_row_country_code(raw_row, declared_country=declared_country, row_number=row_number)
+    return _build_bulk_invoice_row(
+        raw_row,
+        row_number=row_number,
+        invoice_date=invoice_date,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        retencion_amount=retencion_amount,
+        country_code=country_code,
     )
-
-    retencion_raw = coerce_cell_text(raw_row.get("retencion_amount"))
-    retencion_amount = (
-        _parse_row_decimal(
-            _canonicalise_amount_text(raw_row.get("retencion_amount"), decimal_separator=decimal_separator),
-            row_number=row_number,
-            field="retencion_amount",
-        )
-        if retencion_raw
-        else None
-    )
-
-    currency_raw = coerce_cell_text(raw_row.get("currency")) or DEFAULT_CURRENCY
-    country_code_raw = coerce_cell_text(raw_row.get("country_code")) or declared_country or ""
-    if not country_code_raw:
-        raise _RowParseError(
-            row_number=row_number,
-            field="country_code",
-            reason="counterparty country is missing or blank; state it in the row or declare one for the import",
-        )
-
-    try:
-        return BulkInvoiceImportRow(
-            counterparty_nif=coerce_cell_text(raw_row.get("counterparty_nif")),
-            counterparty_name=coerce_cell_text(raw_row.get("counterparty_name")),
-            invoice_number=coerce_cell_text(raw_row.get("invoice_number")),
-            invoice_date=invoice_date,
-            taxable_base=taxable_base,
-            iva_rate=iva_rate,
-            retencion_amount=retencion_amount,
-            currency=currency_raw,
-            country_code=country_code_raw,
-            notes=coerce_cell_text(raw_row.get("notes")),
-        )
-    except ValidationError as exc:
-        first = exc.errors()[0] if exc.errors() else {"loc": ("row",), "msg": "invalid row"}
-        field = str(first["loc"][0]) if first.get("loc") else "row"
-        raise _RowParseError(row_number=row_number, field=field, reason=str(first.get("msg", "invalid row"))) from exc
 
 
 def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> None:
@@ -473,6 +521,48 @@ def _refuse_formula_cells(cells: Iterable[WorkbookCell], *, path: Path, row_numb
     )
 
 
+def _workbook_source_rows(
+    rows_iter: Iterator[tuple[Any, ...]],
+    *,
+    path: Path,
+    field_by_index: Mapping[int, str],
+) -> tuple[BulkImportSourceRow, ...]:
+    rows: list[BulkImportSourceRow] = []
+    for row_number, row_cells in enumerate(rows_iter, start=2):  # header is row 1
+        _refuse_formula_cells(row_cells, path=path, row_number=row_number)
+        row = [cell.value for cell in row_cells]
+        if not any(cell is not None and str(cell).strip() for cell in row):
+            continue
+        values: dict[str, object] = {}
+        for index, field in field_by_index.items():
+            cell_value = row[index] if index < len(row) else None
+            values[field] = cell_value.isoformat() if isinstance(cell_value, date) else cell_value
+        rows.append(BulkImportSourceRow(row_number=row_number, values=values))
+    return tuple(rows)
+
+
+def _workbook_source_from_rows(
+    rows_iter: Iterator[tuple[Any, ...]],
+    *,
+    path: Path,
+    mapper: ColumnRoleMapper | None,
+) -> BulkInvoiceImportSource:
+    try:
+        header_cells = next(rows_iter)
+    except StopIteration:
+        return BulkInvoiceImportSource(rows=(), resolution=resolve_bulk_import_columns((), mapper=None))
+    _refuse_formula_cells(header_cells, path=path, row_number=1)
+    headers = [coerce_cell_text(cell.value) for cell in header_cells]
+    resolution = resolve_bulk_import_columns(
+        headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
+    )
+    _assert_required_fields_present(resolution)
+    return BulkInvoiceImportSource(
+        rows=_workbook_source_rows(rows_iter, path=path, field_by_index=resolution.field_by_index),
+        resolution=resolution,
+    )
+
+
 def _read_workbook_source(path: Path, *, mapper: ColumnRoleMapper | None) -> BulkInvoiceImportSource:
     """Read a workbook invoice book into a resolved source.
 
@@ -499,31 +589,8 @@ def _read_workbook_source(path: Path, *, mapper: ColumnRoleMapper | None) -> Bul
 
     workbook = load_workbook(filename=path, read_only=True, data_only=False)
     try:
-        worksheet = workbook.worksheets[0]
-        rows_iter = worksheet.iter_rows()
-        try:
-            header_cells = next(rows_iter)
-        except StopIteration:
-            return BulkInvoiceImportSource(rows=(), resolution=resolve_bulk_import_columns((), mapper=None))
-        _refuse_formula_cells(header_cells, path=path, row_number=1)
-        headers = [coerce_cell_text(cell.value) for cell in header_cells]
-        resolution = resolve_bulk_import_columns(
-            headers, mapper=mapper, required_fields=BULK_INVOICE_IMPORT_REQUIRED_COLUMNS
-        )
-        _assert_required_fields_present(resolution)
-        field_by_index = resolution.field_by_index
-        rows: list[BulkImportSourceRow] = []
-        for row_number, row_cells in enumerate(rows_iter, start=2):  # header is row 1
-            _refuse_formula_cells(row_cells, path=path, row_number=row_number)
-            row = [cell.value for cell in row_cells]
-            if not any(cell is not None and str(cell).strip() for cell in row):
-                continue
-            values: dict[str, object] = {}
-            for index, field in field_by_index.items():
-                cell_value = row[index] if index < len(row) else None
-                values[field] = cell_value.isoformat() if isinstance(cell_value, date) else cell_value
-            rows.append(BulkImportSourceRow(row_number=row_number, values=values))
-        return BulkInvoiceImportSource(rows=tuple(rows), resolution=resolution)
+        rows_iter = iter(workbook.worksheets[0].iter_rows())
+        return _workbook_source_from_rows(rows_iter, path=path, mapper=mapper)
     finally:
         workbook.close()
 

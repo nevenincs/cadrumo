@@ -233,36 +233,9 @@ class ModeloRecord(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_invariants(self) -> ModeloRecord:
-        if self.period.filing_year != self.filing_year:
-            raise ModeloValidationError(
-                f"filing_year {self.filing_year!r} does not match period year {self.period.filing_year!r}",
-            )
-        derived = derive_filing_record_id(
-            work_unit_id=self.work_unit_id,
-            calculation_revision_id=self.calculation_revision_id,
-            filed_by=self.filed_by,
-            member_nif=self.member_nif,
-        )
-        if derived != self.filing_record_id:
-            raise ModeloValidationError(
-                f"filing_record_id {self.filing_record_id!r} does not match the derived id {derived!r}",
-            )
-        if self.aeat_accepted and self.external_evidence is None:
-            raise ModeloValidationError("AEAT-accepted filing record must carry external evidence")
-        if self.external_evidence is not None and not self.aeat_accepted:
-            raise ModeloValidationError("external filing evidence must carry AEAT acceptance")
-        if self.status is ModeloRecordStatus.VIGENTE:
-            if self.superseded_at is not None or self.superseded_by_filing_record_id is not None:
-                raise ModeloValidationError("current filing record must not carry supersession metadata")
-        elif self.status is ModeloRecordStatus.SUPERSEDIDO:
-            if self.superseded_at is None or self.superseded_by_filing_record_id is None:
-                raise ModeloValidationError(
-                    "superseded filing record must carry superseded_at and superseded_by_filing_record_id",
-                )
-            if self.superseded_at < self.filed_at:
-                raise ModeloValidationError(
-                    f"superseded_at {self.superseded_at.isoformat()} precedes filed_at {self.filed_at.isoformat()}",
-                )
+        _require_filing_record_identity(self)
+        _require_external_evidence_state(self)
+        _require_filing_record_status(self)
         return self
 
     @override
@@ -271,6 +244,58 @@ class ModeloRecord(BaseModel):
         if update:
             return type(self).model_validate(copied.model_dump(mode="python"))
         return copied
+
+
+def _require_filing_record_identity(record: ModeloRecord) -> None:
+    """Require the filing record's period and content-addressed identity to agree."""
+    if record.period.filing_year != record.filing_year:
+        raise ModeloValidationError(
+            f"filing_year {record.filing_year!r} does not match period year {record.period.filing_year!r}",
+        )
+    derived = derive_filing_record_id(
+        work_unit_id=record.work_unit_id,
+        calculation_revision_id=record.calculation_revision_id,
+        filed_by=record.filed_by,
+        member_nif=record.member_nif,
+    )
+    if derived != record.filing_record_id:
+        raise ModeloValidationError(
+            f"filing_record_id {record.filing_record_id!r} does not match the derived id {derived!r}",
+        )
+
+
+def _require_external_evidence_state(record: ModeloRecord) -> None:
+    """Require AEAT acceptance and external evidence to travel together."""
+    if record.aeat_accepted and record.external_evidence is None:
+        raise ModeloValidationError("AEAT-accepted filing record must carry external evidence")
+    if record.external_evidence is not None and not record.aeat_accepted:
+        raise ModeloValidationError("external filing evidence must carry AEAT acceptance")
+
+
+def _require_filing_record_status(record: ModeloRecord) -> None:
+    """Require lifecycle metadata to match the record's current or superseded state."""
+    if record.status is ModeloRecordStatus.VIGENTE:
+        _require_current_filing_record(record)
+    elif record.status is ModeloRecordStatus.SUPERSEDIDO:
+        _require_superseded_filing_record(record)
+
+
+def _require_current_filing_record(record: ModeloRecord) -> None:
+    """Reject supersession metadata on the current filing record."""
+    if record.superseded_at is not None or record.superseded_by_filing_record_id is not None:
+        raise ModeloValidationError("current filing record must not carry supersession metadata")
+
+
+def _require_superseded_filing_record(record: ModeloRecord) -> None:
+    """Require complete, chronologically ordered supersession metadata."""
+    if record.superseded_at is None or record.superseded_by_filing_record_id is None:
+        raise ModeloValidationError(
+            "superseded filing record must carry superseded_at and superseded_by_filing_record_id",
+        )
+    if record.superseded_at < record.filed_at:
+        raise ModeloValidationError(
+            f"superseded_at {record.superseded_at.isoformat()} precedes filed_at {record.filed_at.isoformat()}",
+        )
 
 
 class ModeloRecordCatalogue(BaseModel):

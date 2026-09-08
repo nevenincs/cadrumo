@@ -369,6 +369,61 @@ def calculation_closure_legal_refs(revision: ModeloRevision, modelo_id: str) -> 
     return frozenset(legal_refs)
 
 
+def _calculation_diseno_pairs(path: Path) -> frozenset[tuple[str, str]]:
+    """Return the extracted ``(sheet, number)`` pairs used for closure checks."""
+    return frozenset(
+        (sheet.name, number) for sheet in _extract_record_design(path) for number in _sheet_record_numbers(sheet)
+    )
+
+
+def _validate_calculation_diseno_membership(
+    *,
+    segmento: str | None,
+    number: str,
+    diseno_pairs: frozenset[tuple[str, str]] | None,
+) -> None:
+    """Reject a segment-qualified closure row absent from a non-empty Diseño."""
+    if not diseno_pairs or segmento is None:
+        return
+    matched = any(
+        number == pair_number and _segmento_addresses_sheet(segmento, sheet_name)
+        for sheet_name, pair_number in diseno_pairs
+    )
+    if matched:
+        return
+    raise RegistryValidationError(
+        f"calculation-completeness derivation: casilla {number!r} is "
+        f"declared under segmento {segmento!r} but the AEAT Diseño de "
+        "Registros does not carry it under that segment",
+    )
+
+
+def _derive_calculation_manifest_row(
+    casilla_id: CasillaId,
+    declared_by_id: dict[CasillaId, CasillaDefinition],
+    *,
+    multi_segment: bool,
+    diseno_pairs: frozenset[tuple[str, str]] | None,
+) -> DerivedDisenoCasilla | None:
+    """Derive one load-manifest row, retaining its canonical casilla identity."""
+    casilla = declared_by_id.get(casilla_id)
+    if casilla is None:
+        raise RegistryValidationError(
+            f"calculation-completeness derivation: closure reference {casilla_id!r} "
+            "is not a declared canonical casilla.id",
+        )
+    if casilla.internal_only:
+        return None
+    if not multi_segment:
+        return DerivedDisenoCasilla(segmento=None, number=casilla.number, casilla_id=casilla.id)
+    _validate_calculation_diseno_membership(
+        segmento=casilla.segmento,
+        number=casilla.number,
+        diseno_pairs=diseno_pairs,
+    )
+    return DerivedDisenoCasilla(segmento=casilla.segmento, number=casilla.number, casilla_id=casilla.id)
+
+
 def derive_calculation_completeness_casillas(
     revision: ModeloRevision,
     modelo_id: str,
@@ -444,66 +499,18 @@ def derive_calculation_completeness_casillas(
     """
     declared_by_id = casillas_by_id(revision)
 
-    diseno_pairs: frozenset[tuple[str, str]] | None = None
-    if diseno_path is not None:
-        diseno_pairs = frozenset(
-            (sheet.name, number)
-            for sheet in _extract_record_design(diseno_path)
-            for number in _sheet_record_numbers(sheet)
-        )
+    diseno_pairs = _calculation_diseno_pairs(diseno_path) if diseno_path is not None else None
 
     ordered: list[DerivedDisenoCasilla] = []
     for casilla_id in sorted(calculation_closure_casilla_ids(revision, modelo_id)):
-        casilla = declared_by_id.get(casilla_id)
-        if casilla is None:
-            raise RegistryValidationError(
-                f"calculation-completeness derivation: closure reference {casilla_id!r} "
-                "is not a declared canonical casilla.id",
-            )
-        segmento = casilla.segmento
-        number = casilla.number
-        if casilla.internal_only:
-            # App-internal computed casilla intentionally absent from the
-            # AEAT-published structure (e.g. a regulatory ceiling materialised
-            # so verification predicates can bound an operator-elective
-            # amount). The schema validator guarantees it carries no
-            # export_refs and is formula-derived; it is not an AEAT box, so it
-            # never appears in the completeness manifest, regardless of whether
-            # the modelo is single- or multi-segment.
-            continue
-        if not multi_segment:
-            ordered.append(DerivedDisenoCasilla(segmento=None, number=number, casilla_id=casilla.id))
-            continue
-        # An EMPTY pair set is no evidence, not evidence of absence. The pairs are
-        # built from the bracketed casilla tags a design prints, and a PDF design
-        # may print none at all: modelo 184's yields zero tags across all three of
-        # its sheets, so every declared casilla would refuse here for a reason the
-        # design never stated. Refusing from an empty set asserts absence out of
-        # ignorance, which is the same shape as a gate whose matcher cannot see
-        # the construct it governs. `None` already means "no design supplied";
-        # empty now joins it as "design supplied, said nothing on this axis".
-        #
-        # This does not soften the check where it has teeth: a design that prints
-        # tags for any sheet yields a non-empty set, and a casilla declared under
-        # a segment that set does not carry still refuses.
-        # A segmento NAMES a design sheet, and designs differ in whether the name
-        # carries a trailing description. Modelo 200's segmentos are exact sheet
-        # names ("DP200012"); modelo 714's are the sheet's leading code, where the
-        # design writes "714-10 Patrimonio". Both identify one sheet, so the match
-        # admits an exact name or that name followed by a space. It stays a
-        # prefix-to-WORD-boundary comparison rather than a bare startswith, so
-        # "714-1" cannot claim "714-10 Patrimonio".
-        matched = diseno_pairs is not None and any(
-            number == pair_number and (segmento == sheet_name or sheet_name.startswith(f"{segmento} "))
-            for sheet_name, pair_number in diseno_pairs
+        row = _derive_calculation_manifest_row(
+            casilla_id,
+            declared_by_id,
+            multi_segment=multi_segment,
+            diseno_pairs=diseno_pairs,
         )
-        if diseno_pairs and segmento is not None and not matched:
-            raise RegistryValidationError(
-                f"calculation-completeness derivation: casilla {number!r} is "
-                f"declared under segmento {segmento!r} but the AEAT Diseño de "
-                "Registros does not carry it under that segment",
-            )
-        ordered.append(DerivedDisenoCasilla(segmento=segmento, number=number, casilla_id=casilla.id))
+        if row is not None:
+            ordered.append(row)
     return tuple(ordered)
 
 
@@ -736,6 +743,50 @@ def _segmento_addresses_sheet(segmento: str | None, sheet_name: str | None) -> b
     return segmento == sheet_name or sheet_name.startswith(f"{segmento} ")
 
 
+def _declared_diseno_numbers(revision: ModeloRevision) -> dict[str | None, set[str]]:
+    """Index registry box numbers by the segment that owns them."""
+    declared: dict[str | None, set[str]] = {}
+    for casilla in revision.casillas:
+        number = _normalised_box_number(casilla.form_number or casilla.number)
+        declared.setdefault(casilla.segmento, set()).add(number)
+    return declared
+
+
+def _diseno_casilla_is_covered(
+    casilla: DerivedDisenoCasilla,
+    declared_by_segmento: dict[str | None, set[str]],
+) -> bool:
+    """Return whether a Diseño row has a matching registry number and segment."""
+    number = _normalised_box_number(casilla.number)
+    return any(
+        number in numbers and _segmento_addresses_sheet(segmento, casilla.segmento)
+        for segmento, numbers in declared_by_segmento.items()
+    )
+
+
+def _partition_diseno_coverage(
+    diseno: tuple[DerivedDisenoCasilla, ...],
+    declared_by_segmento: dict[str | None, set[str]],
+) -> tuple[list[DerivedDisenoCasilla], list[DerivedDisenoCasilla]]:
+    """Partition extracted Diseño rows into covered rows and remaining gaps."""
+    covered: list[DerivedDisenoCasilla] = []
+    gap: list[DerivedDisenoCasilla] = []
+    for casilla in diseno:
+        (covered if _diseno_casilla_is_covered(casilla, declared_by_segmento) else gap).append(casilla)
+    return covered, gap
+
+
+def _extracted_field_counts(sheets: tuple[RecordDesignSheet, ...]) -> tuple[int, int]:
+    """Count all extracted fields and fields with non-visual descriptions."""
+    from .record_design_pdf_visual import VISUAL_CHART_TYPE_CODE
+
+    extracted_fields = sum(len(sheet.fields) for sheet in sheets)
+    described_fields = sum(
+        1 for sheet in sheets for design_field in sheet.fields if design_field.type_code != VISUAL_CHART_TYPE_CODE
+    )
+    return extracted_fields, described_fields
+
+
 def build_diseno_coverage_report(
     path: Path,
     modelo_id: str,
@@ -791,36 +842,9 @@ def build_diseno_coverage_report(
     """
     sheets = _extract_record_design(path)
     diseno = _derive_diseno_coverage_casillas_from_sheets(sheets, multi_segment=multi_segment)
-
-    declared_by_segmento: dict[str | None, set[str]] = {}
-    for casilla in revision.casillas:
-        number = _normalised_box_number(casilla.form_number or casilla.number)
-        declared_by_segmento.setdefault(casilla.segmento, set()).add(number)
-
-    covered: list[DerivedDisenoCasilla] = []
-    gap: list[DerivedDisenoCasilla] = []
-    for casilla in diseno:
-        number = _normalised_box_number(casilla.number)
-        declared_numbers: set[str] = set()
-        for segmento, numbers in declared_by_segmento.items():
-            if _segmento_addresses_sheet(segmento, casilla.segmento):
-                declared_numbers |= numbers
-        if number in declared_numbers:
-            covered.append(casilla)
-        else:
-            gap.append(casilla)
-    # Counted from the same source the casillas were derived from, so an empty
-    # casilla set can be read as "nothing to scan" or "scanned, none present".
-    # The geometry-only marker is read from the extractor that stamps it, never
-    # copied: a second literal would silently stop matching if the extractor
-    # changed it, and `recovered_from_chart_geometry` would quietly go false for
-    # every design instead of failing.
-    from .record_design_pdf_visual import VISUAL_CHART_TYPE_CODE
-
-    extracted_fields = sum(len(sheet.fields) for sheet in sheets)
-    described_fields = sum(
-        1 for sheet in sheets for design_field in sheet.fields if design_field.type_code != VISUAL_CHART_TYPE_CODE
-    )
+    declared_by_segmento = _declared_diseno_numbers(revision)
+    covered, gap = _partition_diseno_coverage(diseno, declared_by_segmento)
+    extracted_fields, described_fields = _extracted_field_counts(sheets)
     return DisenoCoverageReport(
         modelo_id=modelo_id,
         revision_id=revision.id,

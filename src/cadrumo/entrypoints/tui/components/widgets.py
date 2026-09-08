@@ -18,6 +18,92 @@ from ....core.presentation import NoticePresentation
 from .theme import CADRUMO_CSS_TOKENS, tokenised
 
 
+def _resolve_fill_column_key(keys: Sequence[ColumnKey], fill_column: int | None) -> ColumnKey | None:
+    """Resolve the configured fill index without making a missing column fatal."""
+    if fill_column is None:
+        return None
+    try:
+        return keys[fill_column]
+    except IndexError:  # pragma: no cover - a table without that column
+        return None
+
+
+def _current_column_widths(columns: Sequence[tuple[ColumnKey, int, int, int]]) -> dict[ColumnKey, int]:
+    """Return current widths, preserving the no-shrink part of the policy."""
+    return {key: current_width for key, current_width, _header_width, _natural_width in columns}
+
+
+def _header_floor_widths(columns: Sequence[tuple[ColumnKey, int, int, int]]) -> dict[ColumnKey, int]:
+    """Raise each current width to its header floor."""
+    return {key: max(current_width, header_width) for key, current_width, header_width, _ in columns}
+
+
+def _natural_non_fill_width(columns: Sequence[tuple[ColumnKey, int, int, int]], fill_key: ColumnKey | None) -> int:
+    """Sum natural widths for every column except the fill target."""
+    return sum(natural_width for key, _current, _header, natural_width in columns if key is not fill_key)
+
+
+def _fill_header_width(columns: Sequence[tuple[ColumnKey, int, int, int]], fill_key: ColumnKey | None) -> int:
+    """Return the fill column's header floor, or zero when there is no target."""
+    return next(
+        (header_width for key, _current, header_width, _natural in columns if key is fill_key),
+        0,
+    )
+
+
+def _grow_non_fill_widths(
+    widths: dict[ColumnKey, int],
+    columns: Sequence[tuple[ColumnKey, int, int, int]],
+    fill_key: ColumnKey | None,
+) -> None:
+    """Grow non-fill columns to natural widths without shrinking any column."""
+    for key, _current, _header, natural_width in columns:
+        if key is not fill_key and widths[key] < natural_width:
+            widths[key] = natural_width
+
+
+def _current_non_fill_width(
+    widths: dict[ColumnKey, int],
+    columns: Sequence[tuple[ColumnKey, int, int, int]],
+    fill_key: ColumnKey,
+    cell_padding: int,
+) -> int:
+    """Sum rendered non-fill widths, including both cell-padding sides."""
+    return sum(widths[key] + cell_padding * 2 for key, _current, _header, _natural in columns if key is not fill_key)
+
+
+def _allocate_column_widths(
+    available: int,
+    columns: Sequence[tuple[ColumnKey, int, int, int]],
+    *,
+    fill_key: ColumnKey | None,
+    cell_padding: int,
+) -> dict[ColumnKey, int]:
+    """Apply the table's deterministic header, natural, and surplus width policy.
+
+    Each column tuple carries ``(key, current_width, header_width,
+    natural_width)``. Header widths are floors for every column. Non-fill
+    columns grow to their natural widths only when doing so leaves the fill
+    column's header visible; remaining width then belongs to the configured
+    fill column alone. The returned mapping never shrinks a current width.
+    """
+    if available <= 0:
+        return _current_column_widths(columns)
+
+    widths = _header_floor_widths(columns)
+    padding = cell_padding * 2 * len(columns)
+    natural_non_fill_width = _natural_non_fill_width(columns, fill_key)
+    fill_floor = _fill_header_width(columns, fill_key)
+    if fill_key is None or available - natural_non_fill_width - padding >= fill_floor:
+        _grow_non_fill_widths(widths, columns, fill_key)
+
+    if fill_key is not None:
+        surplus = available - _current_non_fill_width(widths, columns, fill_key, cell_padding) - cell_padding * 2
+        if surplus > widths[fill_key]:
+            widths[fill_key] = surplus
+    return widths
+
+
 class ContentScroll(VerticalScroll, can_focus=False):
     """The scroll host every Cadrumo surface puts its content column in."""
 
@@ -66,85 +152,28 @@ class ContentDataTable[CellType](DataTable[CellType]):
         self._absorb_surplus_width()
 
     def _absorb_surplus_width(self) -> None:
-        """Give every column its header, then hand the surplus to one of them.
-
-        Two rules, in order, because they answer different failures.
-
-        A column narrower than its own HEADER is unreadable whatever else
-        happens -- `Disponibilidad` clipped to `Disponibilid` stops the operator
-        knowing what the column is -- so the header length is a floor on every
-        column before any surplus is considered.
-
-        The surplus then goes to ONE column rather than being spread, because
-        widening an identifier or a state word past its content buys nothing
-        while a truncated description is exactly what the space is for.
-
-        Deliberately one-way: columns only grow. A table narrower than its
-        container may be a layout choice this cannot see; a column narrower than
-        its own header, or than its content while the container has room to
-        spare, is the defect.
-        """
+        """Apply the deterministic width policy and refresh only after growth."""
         if not self.columns:
             return
         available = self.container_size.width - self.scrollbar_size_vertical
         if available <= 0:
             return
 
+        columns = list(self.columns.items())
+        natural = {key: self._natural_width(key, column) for key, column in columns}
+        fill_key = _resolve_fill_column_key([key for key, _column in columns], self.fill_column)
+        allocated = _allocate_column_widths(
+            available,
+            [(key, column.width, len(str(column.label)), natural[key]) for key, column in columns],
+            fill_key=fill_key,
+            cell_padding=self.cell_padding,
+        )
+
         widened = False
-        for column in self.columns.values():
-            header = len(str(column.label))
-            if column.width < header:
-                column.width = header
+        for key, column in columns:
+            if column.width < allocated[key]:
+                column.width = allocated[key]
                 widened = True
-
-        # Value-driven sizing. An authored width is a guess made before anyone
-        # saw the data, and it is wrong in the direction that costs the
-        # operator information: `Declaraciones presentadas` clipped to
-        # `Declaraciones pr` at width 16 while one very wide column sat beside
-        # it.
-        #
-        # The short columns are made whole and the FILL column yields, rather
-        # than every column growing together. Growing together fails exactly
-        # when it is needed: one long free-text column makes the natural total
-        # overflow, so nothing grows and a two-character shortfall elsewhere
-        # goes unfixed. Yielding is also the right way round -- a truncated
-        # identifier or state word is unrecoverable, while the fill column is
-        # prose the operator can open the row to read.
-        keys = list(self.columns)
-        fill_key = None
-        if self.fill_column is not None and keys:
-            try:
-                fill_key = keys[self.fill_column]
-            except IndexError:  # pragma: no cover - a table without that column
-                fill_key = None
-        natural = {key: self._natural_width(key, column) for key, column in self.columns.items()}
-        padding = self.cell_padding * 2 * len(self.columns)
-        others = sum(width for key, width in natural.items() if key is not fill_key)
-        # What the fill column would be left with. Its own header is the floor:
-        # below that the fill column stops naming itself, which is the defect
-        # this method exists to prevent, so the whole pass stands down.
-        fill_floor = len(str(self.columns[fill_key].label)) if fill_key is not None else 0
-        if fill_key is None or available - others - padding >= fill_floor:
-            for key, column in self.columns.items():
-                if key is not fill_key and column.width < natural[key]:
-                    column.width = natural[key]
-                    widened = True
-
-        if self.fill_column is not None:
-            keys = list(self.columns)
-            try:
-                fill_key = keys[self.fill_column]
-            except IndexError:  # pragma: no cover - a table without that column
-                fill_key = None
-            if fill_key is not None:
-                target = self.columns[fill_key]
-                others = sum(
-                    column.width + self.cell_padding * 2 for key, column in self.columns.items() if key is not fill_key
-                )
-                surplus = available - others - self.cell_padding * 2
-                if surplus > target.width:
-                    target.width = surplus
-                    widened = True
 
         if widened:
             self.refresh()

@@ -256,49 +256,85 @@ def build_iva_compensation_carry_forward_report(
 
     Returns an :class:`IvaCompensationCarryForwardReport`.
     """
+    _validate_carry_forward_as_of_year(as_of_year)
+    ordered = tuple(sorted(states, key=lambda item: (item.filing_year, iva_compensation_period_sort_key(item.period))))
+    working: list[_WorkingCarryForwardLot] = []
+    unallocated_applied = ZERO
+    for state in ordered:
+        unallocated_applied += _allocate_state_application(state, working)
+        _append_state_carry_forward_lot(state, working)
+    lots = _materialize_carry_forward_lots(working, as_of_year=as_of_year)
+    return IvaCompensationCarryForwardReport(
+        as_of_year=as_of_year,
+        lots=lots,
+        unallocated_applied_amount=unallocated_applied,
+    )
+
+
+def _validate_carry_forward_as_of_year(as_of_year: int) -> None:
     if not 2000 <= as_of_year <= 2099:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
             context={"as_of_year": as_of_year, "min_year": 2000, "max_year": 2099},
         )
-    ordered = tuple(sorted(states, key=lambda item: (item.filing_year, iva_compensation_period_sort_key(item.period))))
-    working: list[_WorkingCarryForwardLot] = []
-    unallocated_applied = ZERO
-    for state in ordered:
-        applied = state.applied_amount or ZERO
-        remaining_to_allocate = applied
-        for lot in working:
-            if remaining_to_allocate <= ZERO:
-                break
-            consumed = min(lot.remaining_amount, remaining_to_allocate)
-            lot.applied_amount = lot.applied_amount + consumed
-            lot.remaining_amount = lot.remaining_amount - consumed
-            remaining_to_allocate -= consumed
-        if remaining_to_allocate > ZERO:
-            unallocated_applied += remaining_to_allocate
-        # A filed period contributes a lot equal to the credit it GENERATED this
-        # period. An operator-declared opening balance generated nothing in a
-        # filed period (generated_amount == 0) but declares a prior carry-forward
-        # in available_end_amount; surface that balance as a lot too, so
-        # `iva-wallet balance` reflects it (lot_count > 0) instead of reporting an
-        # empty wallet. The two cases are mutually exclusive (an operator-declared
-        # opening balance never carries generated_amount), so no double-counting.
-        lot_amount = state.generated_amount
-        if lot_amount <= ZERO and state.provenance in _OPERATOR_DECLARED_PROVENANCES:
-            lot_amount = state.available_end_amount
-        if lot_amount > ZERO:
-            working.append(
-                _WorkingCarryForwardLot(
-                    taxpayer_nif=state.taxpayer_nif,
-                    source_filing_year=state.filing_year,
-                    source_period=state.period,
-                    generated_amount=lot_amount,
-                    applied_amount=ZERO,
-                    remaining_amount=lot_amount,
-                    source_observation_key=state.source_observation_key,
-                ),
-            )
-    lots = tuple(
+
+
+def _allocate_state_application(
+    state: IvaCompensationPeriodState,
+    working: list[_WorkingCarryForwardLot],
+) -> Decimal:
+    remaining_to_allocate = state.applied_amount or ZERO
+    for lot in working:
+        if remaining_to_allocate <= ZERO:
+            break
+        consumed = min(lot.remaining_amount, remaining_to_allocate)
+        lot.applied_amount = lot.applied_amount + consumed
+        lot.remaining_amount = lot.remaining_amount - consumed
+        remaining_to_allocate -= consumed
+    return remaining_to_allocate
+
+
+def _append_state_carry_forward_lot(
+    state: IvaCompensationPeriodState,
+    working: list[_WorkingCarryForwardLot],
+) -> None:
+    # A filed period contributes a lot equal to the credit it GENERATED this
+    # period. An operator-declared opening balance generated nothing in a
+    # filed period (generated_amount == 0) but declares a prior carry-forward
+    # in available_end_amount; surface that balance as a lot too, so
+    # `iva-wallet balance` reflects it (lot_count > 0) instead of reporting an
+    # empty wallet. The two cases are mutually exclusive (an operator-declared
+    # opening balance never carries generated_amount), so no double-counting.
+    lot_amount = _state_carry_forward_amount(state)
+    if lot_amount <= ZERO:
+        return
+    working.append(
+        _WorkingCarryForwardLot(
+            taxpayer_nif=state.taxpayer_nif,
+            source_filing_year=state.filing_year,
+            source_period=state.period,
+            generated_amount=lot_amount,
+            applied_amount=ZERO,
+            remaining_amount=lot_amount,
+            source_observation_key=state.source_observation_key,
+        ),
+    )
+
+
+def _state_carry_forward_amount(state: IvaCompensationPeriodState) -> Decimal:
+    if state.generated_amount > ZERO:
+        return state.generated_amount
+    if state.provenance in _OPERATOR_DECLARED_PROVENANCES:
+        return state.available_end_amount
+    return ZERO
+
+
+def _materialize_carry_forward_lots(
+    working: list[_WorkingCarryForwardLot],
+    *,
+    as_of_year: int,
+) -> tuple[IvaCompensationCarryForwardLot, ...]:
+    return tuple(
         IvaCompensationCarryForwardLot(
             taxpayer_nif=item.taxpayer_nif,
             source_filing_year=item.source_filing_year,
@@ -314,11 +350,6 @@ def build_iva_compensation_carry_forward_report(
             source_observation_key=item.source_observation_key,
         )
         for item in working
-    )
-    return IvaCompensationCarryForwardReport(
-        as_of_year=as_of_year,
-        lots=lots,
-        unallocated_applied_amount=unallocated_applied,
     )
 
 

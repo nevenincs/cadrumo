@@ -207,7 +207,9 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     # The Ubuntu leg captures the aggregate's exit status (`|| status=$?`) so the
     # evidence checkpoint still runs when the gate fails, so the canonical gate is
     # asserted as a line prefix rather than an exact match.
-    assert any(line == "just test-packaging-smoke-ci" or line.startswith("just test-packaging-smoke-ci ") for line in commands)
+    assert any(
+        line == "just test-packaging-smoke-ci" or line.startswith("just test-packaging-smoke-ci ") for line in commands
+    )
     assert "uv run --no-sync python -m dev.packaging.evidence" in commands
     assert "just packaging-smoke-linux" not in commands
     assert "just packaging-smoke-split" not in commands

@@ -157,7 +157,7 @@ class RegistryCasillaCollection:
     def __post_init__(self) -> None:
         """Reject ambiguous or dangling casilla schema references at construction."""
         ids = tuple(casilla.casilla_id for casilla in self.casillas)
-        duplicates = tuple(sorted(casilla_id for casilla_id, count in Counter(ids).items() if count > 1))
+        duplicates = _duplicate_casilla_ids(ids)
         if duplicates:
             raise ModeloBuilderError(
                 translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
@@ -165,16 +165,7 @@ class RegistryCasillaCollection:
             )
 
         known_ids = frozenset(ids)
-        dangling_formula_input_casilla_ids = {
-            casilla.casilla_id: tuple(
-                input_id for input_id in casilla.formula_input_casilla_ids if input_id not in known_ids
-            )
-            for casilla in self.casillas
-            if casilla.formula_input_casilla_ids
-        }
-        dangling_formula_input_casilla_ids = {
-            casilla_id: missing for casilla_id, missing in dangling_formula_input_casilla_ids.items() if missing
-        }
+        dangling_formula_input_casilla_ids = _dangling_formula_input_casilla_ids(self.casillas, known_ids=known_ids)
         if dangling_formula_input_casilla_ids:
             details = "; ".join(
                 f"{casilla_id}: {','.join(missing)}"
@@ -208,6 +199,25 @@ class RegistryCasillaCollection:
         Each element is a :class:`CasillaSchema`.
         """
         return self.casillas
+
+
+def _duplicate_casilla_ids(ids: Sequence[CasillaId]) -> tuple[CasillaId, ...]:
+    return tuple(sorted(casilla_id for casilla_id, count in Counter(ids).items() if count > 1))
+
+
+def _dangling_formula_input_casilla_ids(
+    casillas: Sequence[RegistryCasillaSchema],
+    *,
+    known_ids: frozenset[CasillaId],
+) -> dict[CasillaId, tuple[CasillaId, ...]]:
+    candidates = {
+        casilla.casilla_id: tuple(
+            input_id for input_id in casilla.formula_input_casilla_ids if input_id not in known_ids
+        )
+        for casilla in casillas
+        if casilla.formula_input_casilla_ids
+    }
+    return {casilla_id: missing for casilla_id, missing in candidates.items() if missing}
 
 
 @dataclass(frozen=True, slots=True)
@@ -452,34 +462,34 @@ def build_runtime_schema_provider(
     )
 
 
-@lru_cache(maxsize=32)
-def _build_runtime_schema_provider_cached(
-    root: Path,
-    resolved_source_root: Path,
+def _select_runtime_modelos(
+    loaded_modelos: Sequence[ModeloDefinition],
+    *,
+    selected_tuple: tuple[str, ...] | None,
+) -> Sequence[ModeloDefinition]:
+    if selected_tuple is None:
+        return loaded_modelos
+    selected_ids = set(selected_tuple)
+    by_id = {modelo.id: modelo for modelo in loaded_modelos}
+    missing = sorted(selected_ids.difference(by_id))
+    if missing:
+        raise ModeloBuilderError(
+            translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
+            context={"modelos": ", ".join(missing)},
+        )
+    return tuple(by_id[modelo_id] for modelo_id in selected_tuple)
+
+
+def _runtime_snapshots_for_modelos(
+    authority: ValidatedRegistryAuthority,
+    modelos: Sequence[ModeloDefinition],
+    *,
     filing_year: int | None,
     period: Period | None,
     selected_tuple: tuple[str, ...] | None,
-    _fingerprint: tuple[tuple[str, int, int], ...],
-) -> RegistrySchemaAccessor:
-    authority = ValidatedRegistryAuthority.load(root, source_root=resolved_source_root)
-    loaded_modelos = authority.modelos
-    if not loaded_modelos:
-        raise ModeloBuilderError(
-            translated_message="application.filing.runtime.errors.registry_empty",
-            context={"registry_root_name": root.name},
-        )
-    if selected_tuple is not None:
-        selected_ids = set(selected_tuple)
-        by_id = {modelo.id: modelo for modelo in loaded_modelos}
-        missing = sorted(selected_ids.difference(by_id))
-        if missing:
-            raise ModeloBuilderError(
-                translated_message="application.filing.runtime.errors.registry_missing_requested_modelos",
-                context={"modelos": ", ".join(missing)},
-            )
-        loaded_modelos = tuple(by_id[modelo_id] for modelo_id in selected_tuple)
+) -> dict[str, RegistrySnapshot]:
     snapshots: dict[str, RegistrySnapshot] = {}
-    for modelo in loaded_modelos:
+    for modelo in modelos:
         try:
             snapshots[modelo.id] = _snapshot_for_provider(
                 authority,
@@ -505,6 +515,33 @@ def _build_runtime_schema_provider_cached(
                     exc=exc,
                 ) from exc
             continue
+    return snapshots
+
+
+@lru_cache(maxsize=32)
+def _build_runtime_schema_provider_cached(
+    root: Path,
+    resolved_source_root: Path,
+    filing_year: int | None,
+    period: Period | None,
+    selected_tuple: tuple[str, ...] | None,
+    _fingerprint: tuple[tuple[str, int, int], ...],
+) -> RegistrySchemaAccessor:
+    authority = ValidatedRegistryAuthority.load(root, source_root=resolved_source_root)
+    loaded_modelos = authority.modelos
+    if not loaded_modelos:
+        raise ModeloBuilderError(
+            translated_message="application.filing.runtime.errors.registry_empty",
+            context={"registry_root_name": root.name},
+        )
+    loaded_modelos = _select_runtime_modelos(loaded_modelos, selected_tuple=selected_tuple)
+    snapshots = _runtime_snapshots_for_modelos(
+        authority,
+        loaded_modelos,
+        filing_year=filing_year,
+        period=period,
+        selected_tuple=selected_tuple,
+    )
     if not snapshots:
         raise ModeloBuilderError(
             translated_message="application.filing.runtime.errors.registry_empty_for_period",

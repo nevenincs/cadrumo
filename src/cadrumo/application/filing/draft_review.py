@@ -139,6 +139,36 @@ class ModeloApprovalStaleReason(StrEnum):
     REVIEW_CHECKSUM_MISMATCH = "SUMA_VERIFICACION_REVISION_NO_COINCIDE"
 
 
+_STALE_REASON_TRANSLATION_KEYS: Final[dict[ModeloApprovalStaleReason, str]] = {
+    ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH: (
+        "application.filing.review.stale_reasons.review_checksum_mismatch"
+    ),
+    ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED: (
+        "application.filing.review.stale_reasons.approval_basis_version_changed"
+    ),
+    ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED: "application.filing.review.stale_reasons.draft_payload_changed",
+    ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED: "application.filing.review.stale_reasons.draft_review_changed",
+    ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED: (
+        "application.filing.review.stale_reasons.transaction_catalogue_changed"
+    ),
+    ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED: (
+        "application.filing.review.stale_reasons.invoice_catalogue_changed"
+    ),
+    ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED: (
+        "application.filing.review.stale_reasons.prior_filing_observations_changed"
+    ),
+    ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED: (
+        "application.filing.review.stale_reasons.profile_activity_changed"
+    ),
+    ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED: (
+        "application.filing.review.stale_reasons.category_profiles_changed"
+    ),
+    ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED: (
+        "application.filing.review.stale_reasons.schema_formula_changed"
+    ),
+}
+
+
 def compute_current_approval_basis(
     draft: ModeloDraft,
     *,
@@ -417,6 +447,89 @@ def approve_draft(
     return updated
 
 
+def _refresh_downstream_status(draft: ModeloDraft, *, timestamp: datetime) -> ModeloDraft | None:
+    if draft.status not in _DOWNSTREAM_STATUSES:
+        return None
+    cleared = _review_metadata_reset()
+    if any(getattr(draft, key) != value for key, value in cleared.items()):
+        cleared["updated_at"] = timestamp
+        _logger.debug(
+            "refresh: cleared stale approval metadata for downstream draft draft_id=%s status=%s",
+            draft.draft_id,
+            draft.status.value,
+        )
+        return draft.model_copy(update=cleared)
+    return draft
+
+
+def _refresh_incomplete_approval_status(draft: ModeloDraft, *, timestamp: datetime) -> ModeloDraft | None:
+    if (
+        draft.approval_basis is not None
+        and draft.approved_at is not None
+        and draft.approved_by is not None
+        and draft.review_checksum is not None
+    ):
+        return None
+    incomplete_reset = _review_metadata_reset()
+    incomplete_reset["status"] = derive_validation_status(draft.findings)
+    if any(getattr(draft, key) != value for key, value in incomplete_reset.items()):
+        incomplete_reset["updated_at"] = timestamp
+        _logger.warning(
+            "refresh: incomplete approval metadata cleared draft_id=%s modelo=%s period=%s",
+            draft.draft_id,
+            draft.modelo,
+            draft.period,
+        )
+        return draft.model_copy(update=incomplete_reset)
+    return draft
+
+
+def _refresh_approved_status(
+    draft: ModeloDraft,
+    *,
+    bucket_id: str,
+    schema_provider: CasillaSchemaProvider,
+    transaction_catalogue: TransactionCatalogue | None,
+    invoice_catalogue: InvoiceCatalogue | None,
+    prior_filing_observations_fingerprint: str | None,
+    profile_activity_fingerprint: str | None,
+    category_profiles: Mapping[SpendingCategory, CategoryProfile] | None,
+    timestamp: datetime,
+) -> ModeloDraft:
+    reasons = approval_stale_reasons(
+        draft,
+        bucket_id=bucket_id,
+        schema_provider=schema_provider,
+        transaction_catalogue=transaction_catalogue,
+        invoice_catalogue=invoice_catalogue,
+        prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
+        profile_activity_fingerprint=profile_activity_fingerprint,
+        category_profiles=category_profiles,
+    )
+    next_status = ModeloDraftStatus.APROBACION_CADUCADA if reasons else ModeloDraftStatus.APROBADO
+    if draft.status is next_status:
+        _logger.debug(
+            "refresh: no transition needed draft_id=%s status=%s",
+            draft.draft_id,
+            draft.status.value,
+        )
+        return draft
+    if next_status is ModeloDraftStatus.APROBACION_CADUCADA:
+        _logger.warning(
+            "draft approval marked stale draft_id=%s modelo=%s period=%s reasons=%s",
+            draft.draft_id,
+            draft.modelo,
+            draft.period,
+            [r.value for r in reasons],
+        )
+    return draft.model_copy(
+        update={
+            "status": next_status,
+            "updated_at": timestamp,
+        },
+    )
+
+
 def refresh_review_status(
     draft: ModeloDraft,
     *,
@@ -461,40 +574,16 @@ def refresh_review_status(
     """
     timestamp = refreshed_at or now()
     has_review_metadata = _has_review_metadata(draft)
-    if draft.status in _DOWNSTREAM_STATUSES:
-        cleared = _review_metadata_reset()
-        if any(getattr(draft, key) != value for key, value in cleared.items()):
-            cleared["updated_at"] = timestamp
-            _logger.debug(
-                "refresh: cleared stale approval metadata for downstream draft draft_id=%s status=%s",
-                draft.draft_id,
-                draft.status.value,
-            )
-            return draft.model_copy(update=cleared)
-        return draft
+    downstream = _refresh_downstream_status(draft, timestamp=timestamp)
+    if downstream is not None:
+        return downstream
     if draft.status not in _REVIEW_STATUSES and not has_review_metadata:
         return draft
 
-    if (
-        draft.approval_basis is None
-        or draft.approved_at is None
-        or draft.approved_by is None
-        or draft.review_checksum is None
-    ):
-        incomplete_reset = _review_metadata_reset()
-        incomplete_reset["status"] = derive_validation_status(draft.findings)
-        if any(getattr(draft, key) != value for key, value in incomplete_reset.items()):
-            incomplete_reset["updated_at"] = timestamp
-            _logger.warning(
-                "refresh: incomplete approval metadata cleared draft_id=%s modelo=%s period=%s",
-                draft.draft_id,
-                draft.modelo,
-                draft.period,
-            )
-            return draft.model_copy(update=incomplete_reset)
-        return draft
-
-    reasons = approval_stale_reasons(
+    incomplete = _refresh_incomplete_approval_status(draft, timestamp=timestamp)
+    if incomplete is not None:
+        return incomplete
+    return _refresh_approved_status(
         draft,
         bucket_id=bucket_id,
         schema_provider=schema_provider,
@@ -503,28 +592,7 @@ def refresh_review_status(
         prior_filing_observations_fingerprint=prior_filing_observations_fingerprint,
         profile_activity_fingerprint=profile_activity_fingerprint,
         category_profiles=category_profiles,
-    )
-    next_status = ModeloDraftStatus.APROBACION_CADUCADA if reasons else ModeloDraftStatus.APROBADO
-    if draft.status is next_status:
-        _logger.debug(
-            "refresh: no transition needed draft_id=%s status=%s",
-            draft.draft_id,
-            draft.status.value,
-        )
-        return draft
-    if next_status is ModeloDraftStatus.APROBACION_CADUCADA:
-        _logger.warning(
-            "draft approval marked stale draft_id=%s modelo=%s period=%s reasons=%s",
-            draft.draft_id,
-            draft.modelo,
-            draft.period,
-            [r.value for r in reasons],
-        )
-    return draft.model_copy(
-        update={
-            "status": next_status,
-            "updated_at": timestamp,
-        },
+        timestamp=timestamp,
     )
 
 
@@ -537,27 +605,9 @@ def describe_stale_reason(reason: ModeloApprovalStaleReason) -> str:
     Returns:
         A localized phrase suitable for inline UI display.
     """
-    match reason:
-        case ModeloApprovalStaleReason.REVIEW_CHECKSUM_MISMATCH:
-            return tr("application.filing.review.stale_reasons.review_checksum_mismatch")
-        case ModeloApprovalStaleReason.APPROVAL_BASIS_VERSION_CHANGED:
-            return tr("application.filing.review.stale_reasons.approval_basis_version_changed")
-        case ModeloApprovalStaleReason.DRAFT_PAYLOAD_CHANGED:
-            return tr("application.filing.review.stale_reasons.draft_payload_changed")
-        case ModeloApprovalStaleReason.DRAFT_REVIEW_CHANGED:
-            return tr("application.filing.review.stale_reasons.draft_review_changed")
-        case ModeloApprovalStaleReason.TRANSACTION_CATALOGUE_CHANGED:
-            return tr("application.filing.review.stale_reasons.transaction_catalogue_changed")
-        case ModeloApprovalStaleReason.INVOICE_CATALOGUE_CHANGED:
-            return tr("application.filing.review.stale_reasons.invoice_catalogue_changed")
-        case ModeloApprovalStaleReason.PRIOR_FILING_OBSERVATIONS_CHANGED:
-            return tr("application.filing.review.stale_reasons.prior_filing_observations_changed")
-        case ModeloApprovalStaleReason.PROFILE_ACTIVITY_CHANGED:
-            return tr("application.filing.review.stale_reasons.profile_activity_changed")
-        case ModeloApprovalStaleReason.CATEGORY_PROFILES_CHANGED:
-            return tr("application.filing.review.stale_reasons.category_profiles_changed")
-        case ModeloApprovalStaleReason.SCHEMA_FORMULA_CHANGED:
-            return tr("application.filing.review.stale_reasons.schema_formula_changed")
+    translation_key = _STALE_REASON_TRANSLATION_KEYS.get(reason)
+    if translation_key is not None:
+        return tr(translation_key)
     return tr("application.filing.review.stale_reasons.unknown", reason=reason.value.lower().replace("_", " "))
 
 

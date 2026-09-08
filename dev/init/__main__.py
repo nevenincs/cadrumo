@@ -4,7 +4,6 @@ Usage, one form per justfile recipe::
 
     python -m dev.init all      # just init
     python -m dev.init python   # just init-python
-    python -m dev.init node     # just init-node
     python -m dev.init tools    # just init-tools
     python -m dev.init check    # just init-check
 
@@ -23,8 +22,7 @@ and a developer wants the whole list in one pass.
 `init` is the opposite shape, and follows the opposite rule deliberately. Its
 phases are a DEPENDENCY CHAIN that builds one artifact. ``init-tools`` installs
 git hooks and enrolls the framework by running executables out of the
-environment ``init-python`` creates; in ``vaultspec-dashboard`` those same hooks
-lint the SPA that ``init-node`` restores. Running ``init-tools`` after
+environment ``init-python`` creates. Running ``init-tools`` after
 ``init-python`` failed does not produce a second independent finding - it
 produces a cascade of "command not found" that buries the one real cause, and
 it produces it slowly.
@@ -85,7 +83,6 @@ from dev.init.stamp import (
 SELECTIONS = {
     "all": PHASES,
     "python": ("python",),
-    "node": ("node",),
     "tools": ("tools",),
 }
 
@@ -119,10 +116,12 @@ def _preflight(
     """Run the steps that must happen before any phase, and probe the host.
 
     Two things live here rather than in a phase. The first is `.env`
-    materialization: ``vaultspec-a2a``'s justfile sets ``dotenv-load``, so a
-    worktree without a `.env` is under-configured for `just` itself - including
-    for the very `init` that would have created it. Making it a preflight means
-    every entry point fixes it, not only ``init-tools``.
+    materialization. It is a preflight rather than a step of ``init-tools``
+    because the file is a PRECONDITION for other recipes rather than a product
+    of initialization: a worktree without one runs its services and its
+    credential-scoped commands on defaults, silently. Every entry point
+    therefore fixes it, not only ``init-tools``, and it is fixed before any
+    phase runs rather than after the longest one.
 
     The second is the host-tool probe. A missing `uv` or `node` is not a step
     failure to be discovered halfway through a sync; it is a precondition, and

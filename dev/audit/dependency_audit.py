@@ -226,12 +226,8 @@ def _read_binaries(path: Path) -> list[Coordinate]:
     for entry in data.get("binary", ()):
         missing = [k for k in ("ecosystem", "name", "version") if not entry.get(k)]
         if missing:
-            raise AuditError(
-                f"{path.name}: a [[binary]] entry is missing {', '.join(missing)}"
-            )
-        out.append(
-            Coordinate(entry["ecosystem"], entry["name"], entry["version"], path.name)
-        )
+            raise AuditError(f"{path.name}: a [[binary]] entry is missing {', '.join(missing)}")
+        out.append(Coordinate(entry["ecosystem"], entry["name"], entry["version"], path.name))
     return out
 
 
@@ -311,9 +307,7 @@ def load_suppressions(path: Path = ALLOWLIST_PATH) -> list[Suppression]:
                 f"{expires!r}; write it as a bare TOML date, e.g. 2026-12-31."
             )
         if not str(entry["reason"]).strip():
-            raise AuditError(
-                f"{path.name}: suppression {entry['id']} has an empty reason."
-            )
+            raise AuditError(f"{path.name}: suppression {entry['id']} has an empty reason.")
         out.append(Suppression(str(entry["id"]), str(entry["reason"]), expires))
     return out
 
@@ -338,9 +332,7 @@ def _open(url: str, body: bytes | None) -> dict[str, Any]:
     headers = {"Accept": "application/json"}
     if body is not None:
         headers["Content-Type"] = "application/json"
-    connection = http.client.HTTPSConnection(
-        parts.hostname, parts.port or 443, timeout=_TIMEOUT
-    )
+    connection = http.client.HTTPSConnection(parts.hostname, parts.port or 443, timeout=_TIMEOUT)
     try:
         method = "POST" if body is not None else "GET"
         connection.request(method, parts.path, body, headers)
@@ -443,12 +435,8 @@ class Finding:
             "packages": self.packages,
             "surfaces": self.surfaces,
             "suppressed": self.suppressed_by is not None,
-            "suppression_reason": (
-                self.suppressed_by.reason if self.suppressed_by else None
-            ),
-            "suppression_expires": (
-                self.suppressed_by.expires.isoformat() if self.suppressed_by else None
-            ),
+            "suppression_reason": (self.suppressed_by.reason if self.suppressed_by else None),
+            "suppression_expires": (self.suppressed_by.expires.isoformat() if self.suppressed_by else None),
         }
 
 
@@ -483,8 +471,7 @@ class Report:
             "gating": True,
             "findings": [f.as_dict() for f in self.findings],
             "expired_suppressions": [
-                {"id": s.id, "reason": s.reason, "expires": s.expires.isoformat()}
-                for s in self.expired
+                {"id": s.id, "reason": s.reason, "expires": s.expires.isoformat()} for s in self.expired
             ],
             "stale_suppressions": [s.id for s in self.stale],
             "probes": self.probes,
@@ -509,9 +496,7 @@ def build_report(
         report.surfaces[coord.surface] = report.surfaces.get(coord.surface, 0) + 1
 
     live = {s.id: s for s in suppressions if not s.expired(today)}
-    report.expired = sorted(
-        (s for s in suppressions if s.expired(today)), key=lambda s: s.id
-    )
+    report.expired = sorted((s for s in suppressions if s.expired(today)), key=lambda s: s.id)
     used: set[str] = set()
     # OSV returns the same advisory under several ids (GHSA-..., PYSEC-...,
     # CVE-...). Report each advisory once, under the first id encountered,
@@ -547,9 +532,7 @@ def build_report(
             )
         )
 
-    report.stale = sorted(
-        (s for s in live.values() if s.id not in used), key=lambda s: s.id
-    )
+    report.stale = sorted((s for s in live.values() if s.id not in used), key=lambda s: s.id)
     return report
 
 
@@ -561,9 +544,7 @@ def build_report(
 def render(report: Report) -> str:
     """Return the human summary."""
     lines: list[str] = []
-    scanned = ", ".join(
-        f"{count} {surface}" for surface, count in sorted(report.surfaces.items())
-    )
+    scanned = ", ".join(f"{count} {surface}" for surface, count in sorted(report.surfaces.items()))
     lines.append(f"dependency audit (GATES) -- scanned {scanned or 'nothing'}")
     for probe in report.probes:
         lines.append(f"  probe: {probe} (injected via --extra-package)")
@@ -577,8 +558,7 @@ def render(report: Report) -> str:
             lines.append(f"      {finding.summary}")
         if finding.suppressed_by:
             lines.append(
-                f"      accepted until {finding.suppressed_by.expires.isoformat()}: "
-                f"{finding.suppressed_by.reason}"
+                f"      accepted until {finding.suppressed_by.expires.isoformat()}: {finding.suppressed_by.reason}"
             )
 
     for suppression in report.expired:
@@ -587,10 +567,7 @@ def render(report: Report) -> str:
             f"{suppression.expires.isoformat()}; re-triage it or fix the dependency."
         )
     for suppression in report.stale:
-        lines.append(
-            f"  stale       {suppression.id} matches nothing in the tree; "
-            "delete its allowlist entry."
-        )
+        lines.append(f"  stale       {suppression.id} matches nothing in the tree; delete its allowlist entry.")
 
     if report.exit_code == EXIT_OK:
         suppressed = len(report.findings)
@@ -598,12 +575,8 @@ def render(report: Report) -> str:
         lines.append(f"PASS: no unaccepted advisories{tail}.")
     else:
         plural = "y" if len(report.blocking) == 1 else "ies"
-        expired = (
-            f", {len(report.expired)} expired suppression(s)" if report.expired else ""
-        )
-        lines.append(
-            f"FAIL: {len(report.blocking)} unaccepted advisor{plural}{expired}."
-        )
+        expired = f", {len(report.expired)} expired suppression(s)" if report.expired else ""
+        lines.append(f"FAIL: {len(report.blocking)} unaccepted advisor{plural}{expired}.")
     return "\n".join(lines)
 
 
@@ -644,10 +617,7 @@ def _parse_extra(raw: str) -> Coordinate:
     """Parse an ``ECOSYSTEM:NAME:VERSION`` self-test coordinate."""
     parts = raw.split(":")
     if len(parts) != 3 or not all(parts):
-        raise AuditError(
-            f"--extra-package {raw!r} is not ECOSYSTEM:NAME:VERSION, "
-            "e.g. PyPI:requests:2.19.0"
-        )
+        raise AuditError(f"--extra-package {raw!r} is not ECOSYSTEM:NAME:VERSION, e.g. PyPI:requests:2.19.0")
     return Coordinate(parts[0], parts[1], parts[2], "--extra-package")
 
 
@@ -657,9 +627,7 @@ def main(argv: list[str] | None = None) -> int:
         prog="dependency-audit",
         description="Gate on published advisories against pinned dependencies.",
     )
-    parser.add_argument(
-        "--json", action="store_true", help="emit the machine report on stdout"
-    )
+    parser.add_argument("--json", action="store_true", help="emit the machine report on stdout")
     parser.add_argument(
         "--extra-package",
         action="append",
@@ -678,8 +646,7 @@ def main(argv: list[str] | None = None) -> int:
             probes.append(f"{extra.ecosystem}:{extra.name}:{extra.version}")
         if not coordinates:
             raise AuditError(
-                "no lockfile found; the audit has nothing to check, "
-                "which is not the same as a clean tree."
+                "no lockfile found; the audit has nothing to check, which is not the same as a clean tree."
             )
         suppressions = load_suppressions()
         hits = query_osv(coordinates)

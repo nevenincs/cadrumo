@@ -374,6 +374,93 @@ def calculate_modelo_work_revision(
     )
 
 
+def _validated_string_casilla_override(
+    raw_value: str,
+    *,
+    key: CasillaId,
+    casilla_def: CasillaDefinition,
+) -> tuple[str, str | None]:
+    """Validate one registry-declared string casilla and return its projection."""
+    if casilla_def.semantic_role == "irnr_tipo_renta":
+        official_code = _validated_m210_official_tipo_renta_code(raw_value, key=key)
+        return _projected_m210_tipo_renta_code(official_code), official_code
+    if casilla_def.semantic_role == _DECLARANTE_SELECTOR_SEMANTIC_ROLE:
+        return _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def), None
+    return _typed_text_value(raw_value, key=key, casilla_def=casilla_def), None
+
+
+def _resolve_casilla_overrides(
+    casilla_overrides: Mapping[str, str],
+    revision: ModeloRevision,
+) -> tuple[dict[CasillaId, Decimal], dict[CasillaId, str], str | None]:
+    """Resolve canonical casilla overrides onto their registry-declared channels."""
+    revision_casillas_by_id = casillas_by_id(revision)
+    casilla_inputs: dict[CasillaId, Decimal] = {}
+    text_casilla_inputs: dict[CasillaId, str] = {}
+    m210_official_tipo_renta_code: str | None = None
+    for raw_key, raw_value in casilla_overrides.items():
+        _refuse_detail_casilla_override(raw_key)
+        key = _validated_canonical_casilla_id(raw_key, revision)
+        casilla_def = revision_casillas_by_id.get(key)
+        if casilla_def is not None and registry_scalar_value_type(casilla_def.data_type) == "str":
+            text_value, official_code = _validated_string_casilla_override(
+                raw_value,
+                key=key,
+                casilla_def=casilla_def,
+            )
+            text_casilla_inputs[key] = text_value
+            if official_code is not None:
+                m210_official_tipo_renta_code = official_code
+            continue
+        casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
+    return (
+        validate_casilla_input_ids(revision, casilla_inputs),
+        text_casilla_inputs,
+        m210_official_tipo_renta_code,
+    )
+
+
+def _resolve_binding_overrides(
+    binding_overrides: Mapping[BindingId, str],
+    revision: ModeloRevision,
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    """Resolve binding overrides using the revision's declared input channels."""
+    binding_values: dict[BindingId, Decimal] = {}
+    enum_binding_values: dict[BindingId, str] = {}
+    if not binding_overrides:
+        return binding_values, enum_binding_values
+
+    bindings_by_id = {binding.id: binding for binding in revision.bindings}
+    known_binding_ids = set(bindings_by_id)
+    enum_channel_ids = enum_consumed_binding_ids(revision)
+    date_channel_ids = revision_date_binding_ids(revision)
+    for raw_key, raw_value in binding_overrides.items():
+        if raw_key in date_channel_ids:
+            raise ModeloCalculateBindingInputError(
+                context={"key": raw_key},
+                translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
+            )
+        key, channel = _validated_binding_input_channel(raw_key, revision, known_binding_ids, enum_channel_ids)
+        if channel == "enum":
+            enum_binding_values[key] = raw_value
+            continue
+        binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key])
+    return binding_values, enum_binding_values
+
+
+def _resolve_relation_overrides(
+    relation_overrides: Mapping[RelationId, str],
+    revision: ModeloRevision,
+) -> dict[RelationId, Decimal]:
+    """Resolve relation overrides against the active revision and decimal grammar."""
+    known_relation_ids = {relation.id for relation in revision.relations}
+    relation_values: dict[RelationId, Decimal] = {}
+    for raw_key, raw_value in relation_overrides.items():
+        key = _validated_relation_id(raw_key, known_relation_ids)
+        relation_values[key] = _decimal(raw_value, flag="--relation", key=key)
+    return relation_values
+
+
 def build_work_calculate_input_bundle(
     *,
     work_unit_id: str,
@@ -426,44 +513,11 @@ def build_work_calculate_input_bundle(
     catalogue, bucket_id = _capture_work_catalogue(work_unit_id)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
     revision = _revision_for_work_unit(work_unit)
-    revision_casillas_by_id = casillas_by_id(revision)
-    casilla_inputs: dict[CasillaId, Decimal] = {}
-    text_casilla_inputs: dict[CasillaId, str] = {}
-    m210_official_tipo_renta_code: str | None = None
-    for raw_key, raw_value in casilla_overrides.items():
-        _refuse_detail_casilla_override(raw_key)
-        key = _validated_canonical_casilla_id(raw_key, revision)
-        casilla_def = revision_casillas_by_id.get(key)
-        if casilla_def is not None and registry_scalar_value_type(casilla_def.data_type) == "str":
-            if casilla_def.semantic_role == "irnr_tipo_renta":
-                m210_official_tipo_renta_code = _validated_m210_official_tipo_renta_code(raw_value, key=key)
-                text_casilla_inputs[key] = _projected_m210_tipo_renta_code(m210_official_tipo_renta_code)
-            elif casilla_def.semantic_role == _DECLARANTE_SELECTOR_SEMANTIC_ROLE:
-                text_casilla_inputs[key] = _validated_declarante_selector(raw_value, key=key, casilla_def=casilla_def)
-            else:
-                text_casilla_inputs[key] = _typed_text_value(raw_value, key=key, casilla_def=casilla_def)
-        else:
-            casilla_inputs[key] = _decimal(raw_value, flag="--casilla", key=key)
-    casilla_inputs = validate_casilla_input_ids(revision, casilla_inputs)
-
-    binding_values: dict[BindingId, Decimal] = {}
-    enum_binding_values: dict[BindingId, str] = {}
-    if binding_overrides:
-        bindings_by_id = {binding.id: binding for binding in revision.bindings}
-        known_binding_ids = set(bindings_by_id)
-        enum_channel_ids = enum_consumed_binding_ids(revision)
-        date_channel_ids = revision_date_binding_ids(revision)
-        for raw_key, raw_value in binding_overrides.items():
-            if raw_key in date_channel_ids:
-                raise ModeloCalculateBindingInputError(
-                    context={"key": raw_key},
-                    translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
-                )
-            key, channel = _validated_binding_input_channel(raw_key, revision, known_binding_ids, enum_channel_ids)
-            if channel == "enum":
-                enum_binding_values[key] = raw_value
-            else:
-                binding_values[key] = _decimal_binding_value(raw_value, bindings_by_id[key])
+    casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = _resolve_casilla_overrides(
+        casilla_overrides,
+        revision,
+    )
+    binding_values, enum_binding_values = _resolve_binding_overrides(binding_overrides, revision)
 
     casilla_inputs, binding_values, shortcut_diagnostics = apply_calculation_shortcut_inputs(
         work_unit=work_unit,
@@ -482,11 +536,7 @@ def build_work_calculate_input_bundle(
         autoconsumo_promotor_base=autoconsumo_promotor_base,
     )
 
-    known_relation_ids = {relation.id for relation in revision.relations}
-    relation_values: dict[RelationId, Decimal] = {}
-    for raw_key, raw_value in relation_overrides.items():
-        key = _validated_relation_id(raw_key, known_relation_ids)
-        relation_values[key] = _decimal(raw_value, flag="--relation", key=key)
+    relation_values = _resolve_relation_overrides(relation_overrides, revision)
     return WorkCalculateInputBundle.build(
         casilla_inputs=casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,

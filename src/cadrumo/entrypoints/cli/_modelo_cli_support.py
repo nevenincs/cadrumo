@@ -15,7 +15,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, cast, get_args
 
 import typer
-from pydantic import TypeAdapter, ValidationError
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from ...application.modelo.action_errors import WorkUnitNotFoundError
 from ...application.modelo.calculate_input import (
@@ -92,18 +92,13 @@ _BINDING_MAX_LEN = _declared_max_length(BindingId)
 _CASILLA_MAX_LEN = _declared_max_length(CasillaId)
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
-_ROW_TYPES_SUPPORTED: frozenset[str] = frozenset({"miembro", "vinculada", "operador", "rectificacion", "contraparte"})
-_ROW_DECIMAL_FIELDS: frozenset[str] = frozenset(
-    {
-        "porcentaje",
-        "importe",
-        "importe_Q1",
-        "importe_Q2",
-        "importe_Q3",
-        "importe_Q4",
-        "base_rectificada",
-        "base_anterior",
-    },
+# Routing only: each model owns its row_type, fields, and validation contract.
+_SUPPORTED_ROW_MODELS: tuple[type[BaseModel], ...] = (
+    Modelo184MemberRow,
+    Modelo232VinculadaRow,
+    Modelo349OperadorRow,
+    Modelo349RectificacionRow,
+    Modelo347ContraparteRow,
 )
 
 
@@ -317,38 +312,22 @@ def validate_work_calculate_casilla_key(key: str, spec: str) -> None:
     validate_casilla_key(key, spec)
 
 
-def parse_row_spec(spec: str) -> ModeloDetailRow:
-    """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model."""
-    try:
-        parts = shlex.split(spec)
-    except ValueError as exc:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.row_validation_error",
-                default=f"--row 'spec' failed validation: {exc}",
-                row_type="spec",
-                error=str(exc),
-            ),
-        ) from exc
-    if not parts:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.row_empty_spec",
-                default="--row spec cannot be empty; expected TYPE FIELD=value [...]",
-            ),
-        )
-    row_type = parts[0].lower()
-    if row_type not in _ROW_TYPES_SUPPORTED:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.row_unknown_type",
-                default=(f"--row type {row_type!r} is not recognised; supported types: {sorted(_ROW_TYPES_SUPPORTED)}"),
-                row_type=row_type,
-                supported=", ".join(sorted(_ROW_TYPES_SUPPORTED)),
-            ),
-        )
-    kv_raw: dict[str, str] = {}
-    for token in parts[1:]:
+def _supported_row_type_names() -> tuple[str, ...]:
+    return tuple(
+        sorted(str(row_model.model_fields["row_type"].default) for row_model in _SUPPORTED_ROW_MODELS),
+    )
+
+
+def _row_model_for_type(row_type: str) -> type[BaseModel] | None:
+    for row_model in _SUPPORTED_ROW_MODELS:
+        if row_model.model_fields["row_type"].default == row_type:
+            return row_model
+    return None
+
+
+def _parse_row_field_tokens(tokens: list[str]) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for token in tokens:
         if "=" not in token:
             raise typer.BadParameter(
                 tr(
@@ -370,52 +349,95 @@ def parse_row_spec(spec: str) -> ModeloDetailRow:
                     token=token,
                 ),
             )
-        kv_raw[key] = value
+        values[key] = value
+    return values
+
+
+def _parse_row_spec_tokens(
+    spec: str,
+) -> tuple[str, type[BaseModel], dict[str, str]]:
     try:
-        kv_pairs: dict[str, str | Decimal] = {
-            k: Decimal(v) if k in _ROW_DECIMAL_FIELDS else v for k, v in kv_raw.items()
-        }
-        if row_type == "miembro":
-            return Modelo184MemberRow.model_validate({"row_type": "miembro", **kv_pairs})
-        if row_type == "vinculada":
-            return Modelo232VinculadaRow.model_validate({"row_type": "vinculada", **kv_pairs})
-        if row_type == "operador":
-            row_m349 = Modelo349OperadorRow.model_validate({"row_type": "operador", **kv_pairs})
-            nif = str(kv_pairs.get("nif_comunitario", ""))
-            pais = str(kv_pairs.get("codigo_pais", ""))
-            if nif and pais and not validate_m349_nif_format(nif, pais):
-                raise typer.BadParameter(
-                    tr(
-                        "cli.app.modelo.work.row_m349_invalid_nif",
-                        default=(
-                            f"--row operador: nif_comunitario {nif!r} does not match "
-                            f"the expected NIF-IVA format for country {pais!r} "
-                            f"(Council Directive 2006/112/EC Annex XI)"
-                        ),
-                        nif=nif,
-                        pais=pais,
-                    ),
-                )
-            return row_m349
-        if row_type == "rectificacion":
-            row_m349_rect = Modelo349RectificacionRow.model_validate({"row_type": "rectificacion", **kv_pairs})
-            nif = str(kv_pairs.get("nif_comunitario", ""))
-            pais = str(kv_pairs.get("codigo_pais", ""))
-            if nif and pais and not validate_m349_nif_format(nif, pais):
-                raise typer.BadParameter(
-                    tr(
-                        "cli.app.modelo.work.row_m349_invalid_nif",
-                        default=(
-                            f"--row rectificacion: nif_comunitario {nif!r} does not match "
-                            f"the expected NIF-IVA format for country {pais!r} "
-                            f"(Council Directive 2006/112/EC Annex XI)"
-                        ),
-                        nif=nif,
-                        pais=pais,
-                    ),
-                )
-            return row_m349_rect
-        return Modelo347ContraparteRow.model_validate({"row_type": "contraparte", **kv_pairs})
+        parts = shlex.split(spec)
+    except ValueError as exc:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_validation_error",
+                default=f"--row 'spec' failed validation: {exc}",
+                row_type="spec",
+                error=str(exc),
+            ),
+        ) from exc
+    if not parts:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_empty_spec",
+                default="--row spec cannot be empty; expected TYPE FIELD=value [...]",
+            ),
+        )
+    row_type = parts[0].lower()
+    row_model = _row_model_for_type(row_type)
+    if row_model is None:
+        supported = _supported_row_type_names()
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.work.row_unknown_type",
+                default=(f"--row type {row_type!r} is not recognised; supported types: {list(supported)}"),
+                row_type=row_type,
+                supported=", ".join(supported),
+            ),
+        )
+    return row_type, row_model, _parse_row_field_tokens(parts[1:])
+
+
+def _annotation_contains_decimal(annotation: object) -> bool:
+    return annotation is Decimal or any(_annotation_contains_decimal(argument) for argument in get_args(annotation))
+
+
+def _row_decimal_field_names() -> frozenset[str]:
+    return frozenset(
+        field_name
+        for row_model in _SUPPORTED_ROW_MODELS
+        for field_name, field in row_model.model_fields.items()
+        if _annotation_contains_decimal(field.annotation)
+    )
+
+
+def _coerce_row_field_values(
+    values: Mapping[str, str],
+) -> dict[str, str | Decimal]:
+    decimal_fields = _row_decimal_field_names()
+    return {key: Decimal(value) if key in decimal_fields else value for key, value in values.items()}
+
+
+def _validate_m349_row_nif(row_type: str, values: Mapping[str, str | Decimal]) -> None:
+    if row_type not in {"operador", "rectificacion"}:
+        return
+    nif = str(values.get("nif_comunitario", ""))
+    country_code = str(values.get("codigo_pais", ""))
+    if not nif or not country_code or validate_m349_nif_format(nif, country_code):
+        return
+    raise typer.BadParameter(
+        tr(
+            "cli.app.modelo.work.row_m349_invalid_nif",
+            default=(
+                f"--row {row_type}: nif_comunitario {nif!r} does not match "
+                f"the expected NIF-IVA format for country {country_code!r} "
+                "(Council Directive 2006/112/EC Annex XI)"
+            ),
+            nif=nif,
+            pais=country_code,
+        ),
+    )
+
+
+def parse_row_spec(spec: str) -> ModeloDetailRow:
+    """Parse a ``--row TYPE FIELD=value ...`` spec into a typed row model."""
+    row_type, row_model, kv_raw = _parse_row_spec_tokens(spec)
+    try:
+        kv_pairs = _coerce_row_field_values(kv_raw)
+        row = row_model.model_validate({"row_type": row_type, **kv_pairs})
+        _validate_m349_row_nif(row_type, kv_pairs)
+        return cast(ModeloDetailRow, row)
     except typer.BadParameter:
         raise
     except (ValidationError, TypeError, ValueError, ArithmeticError) as exc:
@@ -462,6 +484,26 @@ def optional_decimal_option(raw: str | None, *, translation_key: str, default: s
     return parsed
 
 
+def _parse_work_calculate_cli_specs(
+    *,
+    casilla: list[str] | None,
+    binding: list[str] | None,
+    relation: list[str] | None,
+    row: list[str] | None,
+) -> tuple[
+    dict[str, str],
+    dict[BindingId, str],
+    dict[RelationId, str],
+    tuple[ModeloDetailRow, ...],
+]:
+    return (
+        dict(parse_work_calculate_casilla_override(spec) for spec in (casilla or ())),
+        dict(parse_binding_override(spec) for spec in (binding or ())),
+        dict(parse_relation_override(spec) for spec in relation or ()),
+        tuple(parse_row_spec(spec) for spec in (row or ())),
+    )
+
+
 def work_calculate_input_bundle_from_cli(
     *,
     work_unit_id: str,
@@ -485,10 +527,12 @@ def work_calculate_input_bundle_from_cli(
     filing_instance_evidence: FilingInstanceEvidence | None = None,
 ) -> WorkCalculateInputBundle:
     """Build a :class:`WorkCalculateInputBundle` from raw Typer option values."""
-    casilla_pairs = dict(parse_work_calculate_casilla_override(spec) for spec in (casilla or ()))
-    binding_pairs = dict(parse_binding_override(spec) for spec in (binding or ()))
-    relation_pairs = dict(parse_relation_override(spec) for spec in relation or ())
-    detail_rows: tuple[ModeloDetailRow, ...] = tuple(parse_row_spec(spec) for spec in (row or ()))
+    casilla_pairs, binding_pairs, relation_pairs, detail_rows = _parse_work_calculate_cli_specs(
+        casilla=casilla,
+        binding=binding,
+        relation=relation,
+        row=row,
+    )
     try:
         _validate_m349_detail_rows_for_work_unit(work_unit_id, detail_rows)
         return build_work_calculate_input_bundle(
@@ -574,37 +618,71 @@ def work_calculate_input_bundle_from_cli(
         raise typer.BadParameter(str(exc)) from exc
 
 
-def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[ModeloDetailRow, ...]) -> None:
-    operador_rows = tuple(row for row in rows if isinstance(row, Modelo349OperadorRow))
-    rectification_rows = tuple(row for row in rows if isinstance(row, Modelo349RectificacionRow))
-    if not operador_rows and not rectification_rows:
-        return
-    unit = get_work_unit(work_unit_id)
-    if str(unit.modelo) != Modelo.M349.value:
-        return
-    for row in operador_rows:
+def _m349_detail_rows(
+    rows: tuple[ModeloDetailRow, ...],
+) -> tuple[tuple[Modelo349OperadorRow, ...], tuple[Modelo349RectificacionRow, ...]]:
+    return (
+        tuple(row for row in rows if isinstance(row, Modelo349OperadorRow)),
+        tuple(row for row in rows if isinstance(row, Modelo349RectificacionRow)),
+    )
+
+
+def _validate_m349_operador_rows(
+    rows: tuple[Modelo349OperadorRow, ...],
+    *,
+    filing_year: int,
+    period: str,
+) -> None:
+    for row in rows:
         try:
             validate_m349_country_prefix_context(
                 country_code=row.codigo_pais,
                 clave_operacion=row.clave_operacion,
-                filing_year=unit.filing_year,
-                period=unit.period.registry_token,
+                filing_year=filing_year,
+                period=period,
             )
         except Modelo349CountryPrefixContextError as exc:
             raise bad_parameter_from_error(exc) from exc
-    for row in rectification_rows:
+
+
+def _validate_m349_rectification_rows(
+    rows: tuple[Modelo349RectificacionRow, ...],
+    *,
+    filing_year: int,
+    period: str,
+) -> None:
+    for row in rows:
         try:
             validate_m349_country_prefix_context(
                 country_code=row.codigo_pais,
                 clave_operacion=row.clave_operacion,
-                filing_year=unit.filing_year,
-                period=unit.period.registry_token,
+                filing_year=filing_year,
+                period=period,
                 is_rectification=True,
                 rectified_year=int(row.ejercicio),
                 rectified_period=row.periodo,
             )
         except Modelo349CountryPrefixContextError as exc:
             raise bad_parameter_from_error(exc) from exc
+
+
+def _validate_m349_detail_rows_for_work_unit(work_unit_id: str, rows: tuple[ModeloDetailRow, ...]) -> None:
+    operador_rows, rectification_rows = _m349_detail_rows(rows)
+    if not operador_rows and not rectification_rows:
+        return
+    unit = get_work_unit(work_unit_id)
+    if str(unit.modelo) != Modelo.M349.value:
+        return
+    _validate_m349_operador_rows(
+        operador_rows,
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+    )
+    _validate_m349_rectification_rows(
+        rectification_rows,
+        filing_year=unit.filing_year,
+        period=unit.period.registry_token,
+    )
 
 
 def bad_parameter_from_error(exc: BaseException) -> typer.BadParameter:

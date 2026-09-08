@@ -253,7 +253,9 @@ def checksum_valid_spans(text: str, kinds: frozenset[ResidualKind]) -> Iterator[
     for kind in sorted(kinds, key=lambda candidate: candidate.value):
         pattern, is_valid = _VALIDATORS[kind]
         for match in pattern.finditer(text):
-            candidate: str = match.group(1)
+            # Group 1 is non-optional in every validator pattern, so the
+            # match is always a `str`; `group` is typed `str | Any`.
+            candidate = str(match.group(1))
             if is_valid(candidate):
                 yield kind, match.start(1), candidate
 

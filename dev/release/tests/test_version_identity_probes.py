@@ -32,7 +32,7 @@ import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, override
 
 import pytest
 
@@ -67,6 +67,7 @@ def _index_answering(status: int) -> Iterator[_Origin]:
             self.send_header("Content-Length", "0")
             self.end_headers()
 
+        @override
         def log_message(self, format: str, *args: object) -> None:
             """Stay silent: the subject of these cases is the client."""
 

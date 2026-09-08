@@ -118,7 +118,7 @@ linter's, and a reader who ran one of them wants every answer, not the first.
 provisions the environment the rest run inside — `uv sync` for `ci`,
 `init-python` for `init` — so a later step is not an independent measurement of
 anything: it is a step whose result is unreadable once the step before it
-failed. Running `init-node` after `init-python` failed does not add a second
+failed. Running a downstream initialization phase after `init-python` failed does not add a second
 data point, it adds a second error message about the same cause. Reporting
 "nine steps failed" where one thing broke is the same loss of signal that
 fail-fast aggregation causes, arrived at from the other direction.

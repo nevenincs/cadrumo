@@ -105,6 +105,75 @@ class ResolvedRegistryQueryContext(BaseModel):
     registry_period: RegistrySelectorPeriodCode | None = None
 
 
+def _latest_revision(definition: ModeloDefinition) -> ModeloRevision:
+    """Return the latest revision under the query service's deterministic tie-break."""
+    return max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
+
+
+def _raise_unscoped_as_of_query(modelo: str) -> None:
+    """Refuse a point-in-time argument when no filing year can scope it."""
+    raise RegistryValidationError(
+        "as_of point-in-time selection requires a filing-year-scoped query; "
+        "the unscoped period query resolves the latest revision by period.",
+        registry_failure=RegistryFailureClassification(
+            condition=RegistryFailureCondition.QUERY_FILING_YEAR_SCOPED,
+            facts={
+                "modelo": modelo.strip(),
+                "as_of_supplied": True,
+                "filing_year_supplied": False,
+                "query_scope": "unscoped_period",
+            },
+        ),
+    )
+
+
+def _period_revision_candidates(
+    definition: ModeloDefinition,
+    period: str,
+) -> tuple[ModeloRevision, ...]:
+    """Return revisions declaring ``period`` in the authority's order."""
+    return tuple(
+        revision
+        for revision in definition.revisions.values()
+        if selector_token_for_request(revision.period_selector.periods, period) is not None
+    )
+
+
+def _resolve_declared_period_revision(
+    definition: ModeloDefinition,
+    *,
+    period: str,
+) -> ResolvedRegistryQueryContext:
+    """Resolve a bare declared period to its latest declaring revision."""
+    bare = period.strip()
+    declared_by_revision = tuple(
+        token for revision in definition.revisions.values() for token in revision.period_selector.periods
+    )
+    token_is_declared = selector_token_for_request(declared_by_revision, bare) is not None
+    if not (_BARE_PERIOD_RE.fullmatch(bare.upper()) or token_is_declared):
+        raise RegistryValidationError(
+            f"period must be a bare registry token; pass the filing year separately; got {period!r}",
+        )
+    candidates = _period_revision_candidates(definition, bare)
+    if not candidates:
+        declared = sorted(set(declared_by_revision))
+        raise RegistryValidationError(
+            f"period {period!r} is not declared by any revision of modelo "
+            f"{definition.id}; declared periods: {', '.join(declared)}",
+        )
+    revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
+    registry_token = selector_token_for_request(revision.period_selector.periods, bare)
+    if registry_token is None:
+        raise RegistryValidationError(
+            f"period {period!r} is not declared by revision {revision.id} of modelo {definition.id}",
+        )
+    return ResolvedRegistryQueryContext(
+        definition=definition,
+        revision=revision,
+        registry_period=registry_token,
+    )
+
+
 class RegistryQueryService:
     """Stable Python facade over the validated modelo registry authority."""
 
@@ -495,69 +564,11 @@ class RegistryQueryService:
         as_of: date | None,
     ) -> ResolvedRegistryQueryContext:
         if as_of is not None:
-            # The unscoped path resolves the latest revision by period and has no
-            # filing-year context to gate an as_of date against a revision's
-            # validity window, so honouring the argument here is impossible.
-            # Refuse explicitly rather than accept-and-ignore (the accepted-parameter
-            # lie this contract closes); the *_for_scope queries honour as_of.
-            raise RegistryValidationError(
-                "as_of point-in-time selection requires a filing-year-scoped query; "
-                "the unscoped period query resolves the latest revision by period.",
-                registry_failure=RegistryFailureClassification(
-                    condition=RegistryFailureCondition.QUERY_FILING_YEAR_SCOPED,
-                    facts={
-                        "modelo": modelo.strip(),
-                        "as_of_supplied": True,
-                        "filing_year_supplied": False,
-                        "query_scope": "unscoped_period",
-                    },
-                ),
-            )
+            _raise_unscoped_as_of_query(modelo)
         definition = self._authority.validate_modelo(modelo.strip())
         if period is None:
-            revision = max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
-            return ResolvedRegistryQueryContext(definition=definition, revision=revision)
-        bare = period.strip()
-        bare_upper = bare.upper()
-        # A bare period token is one of: a registry time-code
-        # (``0A``, ``1T``-``4T``, ``01``-``12``, ...) matched by
-        # ``_BARE_PERIOD_RE``, or a non-date censo / event token
-        # (``alta``, ``modificacion``, ``baja``, ``AD-HOC``, ``EVENT-N``) declared
-        # verbatim by a censo modelo's ``period_selector``. Both are
-        # resolved by matching the token against each revision's
-        # declared periods, so a censo token is accepted on the same
-        # path as a quarterly time-code.
-        declared_by_revision = tuple(
-            token for revision in definition.revisions.values() for token in revision.period_selector.periods
-        )
-        token_is_declared = selector_token_for_request(declared_by_revision, bare) is not None
-        if _BARE_PERIOD_RE.fullmatch(bare_upper) or token_is_declared:
-            candidates = [
-                revision
-                for revision in definition.revisions.values()
-                if selector_token_for_request(revision.period_selector.periods, bare) is not None
-            ]
-            if not candidates:
-                declared = sorted(set(declared_by_revision))
-                raise RegistryValidationError(
-                    f"period {period!r} is not declared by any revision of modelo "
-                    f"{definition.id}; declared periods: {', '.join(declared)}",
-                )
-            revision = max(candidates, key=lambda item: (item.valid_from, str(item.id)))
-            # Return the registry's own casing for the period token.
-            registry_token = selector_token_for_request(revision.period_selector.periods, bare)
-            if registry_token is None:
-                raise RegistryValidationError(
-                    f"period {period!r} is not declared by revision {revision.id} of modelo {definition.id}",
-                )
-            return ResolvedRegistryQueryContext(
-                definition=definition,
-                revision=revision,
-                registry_period=registry_token,
-            )
-        raise RegistryValidationError(
-            f"period must be a bare registry token; pass the filing year separately; got {period!r}",
-        )
+            return ResolvedRegistryQueryContext(definition=definition, revision=_latest_revision(definition))
+        return _resolve_declared_period_revision(definition, period=period)
 
     def _resolve_revision_for_scope(
         self,
@@ -798,6 +809,51 @@ def _binding_rows(
     )
 
 
+def _find_casilla_for_detail(
+    context: ResolvedRegistryQueryContext,
+    casilla: str,
+) -> CasillaDefinition:
+    """Resolve a detail query by canonical id first, then by printed number."""
+    definition = context.definition
+    revision = context.revision
+    needle = casilla.strip()
+    matched = next(
+        (item for item in revision.casillas if str(item.id) == needle or item.number == needle),
+        None,
+    )
+    if matched is not None:
+        return matched
+    valid_ids = [str(item.id) for item in revision.casillas]
+    sample = ", ".join(valid_ids[:20])
+    overflow = "" if len(valid_ids) <= 20 else f" (+{len(valid_ids) - 20} more)"
+    raise RegistryValidationError(
+        f"casilla {casilla!r} is not defined by revision {revision.id} of modelo {definition.id}; "
+        f"valid casilla ids include: {sample}{overflow}.",
+        registry_failure=RegistryFailureClassification(
+            condition=RegistryFailureCondition.QUERY_CASILLA_DECLARED,
+            facts={
+                "modelo": str(definition.id),
+                "revision": str(revision.id),
+                "casilla": needle,
+                "casilla_declared": False,
+            },
+        ),
+    )
+
+
+def _casilla_formula_expression(
+    revision: ModeloRevision,
+    casilla: CasillaDefinition,
+) -> Mapping[str, object] | None:
+    """Return a computed casilla's public formula expression, when present."""
+    if casilla.formula is None:
+        return None
+    formula = next((item for item in revision.formulas if item.id == casilla.formula), None)
+    if formula is None:
+        return None
+    return _public_mapping(formula.expression.model_dump(mode="json"))
+
+
 def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) -> ModeloCasillaDetailReport:
     """Build the single-casilla detail report, resolving the formula expression.
 
@@ -810,33 +866,8 @@ def _casilla_detail_report(context: ResolvedRegistryQueryContext, casilla: str) 
     """
     definition = context.definition
     revision = context.revision
-    needle = casilla.strip()
-    matched = next(
-        (item for item in revision.casillas if str(item.id) == needle or item.number == needle),
-        None,
-    )
-    if matched is None:
-        valid_ids = [str(item.id) for item in revision.casillas]
-        sample = ", ".join(valid_ids[:20])
-        overflow = "" if len(valid_ids) <= 20 else f" (+{len(valid_ids) - 20} more)"
-        raise RegistryValidationError(
-            f"casilla {casilla!r} is not defined by revision {revision.id} of modelo {definition.id}; "
-            f"valid casilla ids include: {sample}{overflow}.",
-            registry_failure=RegistryFailureClassification(
-                condition=RegistryFailureCondition.QUERY_CASILLA_DECLARED,
-                facts={
-                    "modelo": str(definition.id),
-                    "revision": str(revision.id),
-                    "casilla": needle,
-                    "casilla_declared": False,
-                },
-            ),
-        )
-    formula_expression: Mapping[str, object] | None = None
-    if matched.formula is not None:
-        formula = next((item for item in revision.formulas if item.id == matched.formula), None)
-        if formula is not None:
-            formula_expression = _public_mapping(formula.expression.model_dump(mode="json"))
+    matched = _find_casilla_for_detail(context, casilla)
+    formula_expression = _casilla_formula_expression(revision, matched)
     return ModeloCasillaDetailReport(
         code=str(definition.id),
         revision=str(revision.id),
@@ -887,6 +918,23 @@ def _relation_inputs_by_target_binding(
     }
 
 
+def _relation_prefill_is_period_default(
+    source: BindingSourceKind,
+    relations: tuple[RelationDefinition, ...],
+    *,
+    modelo: str,
+    period: str,
+) -> bool:
+    """Return whether a relation-prefill binding has only same-model prior defaults."""
+    if source is not BindingSourceKind.RELATION_PREFILL:
+        return False
+    if not relations:
+        return False
+    if any(not relation.target_periods or period in relation.target_periods for relation in relations):
+        return False
+    return all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations)
+
+
 def _operator_input_required_by_binding(
     revision: ModeloRevision,
     *,
@@ -899,14 +947,8 @@ def _operator_input_required_by_binding(
         return required
     relations_by_target = relations_by_target_binding(revision)
     for binding in revision.bindings:
-        if binding.source is not BindingSourceKind.RELATION_PREFILL:
-            continue
         relations = tuple(relations_by_target.get(binding.id, ()))
-        if not relations:
-            continue
-        if any(not relation.target_periods or period in relation.target_periods for relation in relations):
-            continue
-        if all(relation.kind == "previous_period" and str(relation.source_modelo) == modelo for relation in relations):
+        if _relation_prefill_is_period_default(binding.source, relations, modelo=modelo, period=period):
             required[binding.id] = False
     return required
 

@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
     from ...application.workflow.profile_bucket_models import ProfileBucketPointer
+    from ._profile_session_gate import RootAuthenticator
 
 
 _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
@@ -154,18 +155,13 @@ def _resolve_login_target_or_refuse(raw: str):
         raise
 
 
-def preflight_parsed_leaf(
+def _select_preflight_channels(
     ctx: typer.Context,
     *,
-    graph: CommandSpecGraph,
     spec: CommandSpec,
     arguments: Mapping[str, object],
-) -> None:
-    """Preflight parsed root/leaf sources, then run the ordinary root gate."""
-    from ._profile_session_gate import activate_profile_session, bind_profile_target, normalize_ambient_profile
-
-    node = next(node for node in graph.nodes() if node.spec.key == spec.key)
-    posture = profile_authentication_posture(node)
+) -> tuple[ProfileSecretSelection | None, MachineSecretSelection | None]:
+    """Select both secret scopes and reject any cross-scope channel collision."""
     source = _root_source(ctx)
     root = select_profile_secret_channel(
         profile_secrets_stdin=source.stdin,
@@ -173,9 +169,11 @@ def preflight_parsed_leaf(
     )
     leaf = _leaf_selection(spec, arguments)
     _preflight_sources(root=root, leaf=leaf)
-    if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
-        _refuse("profile_secrets_inapplicable")
-    root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
+    return root, leaf
+
+
+def _configure_root_logging(root_state: dict[str, object]) -> None:
+    """Restore the parsed root logging selection before profile resolution."""
     from ...core.logging import resume_logging_configuration
     from ._log_levels import LogLevel, apply_to_root_logger
 
@@ -183,6 +181,19 @@ def preflight_parsed_leaf(
     if isinstance(log_level, LogLevel):
         resume_logging_configuration()
         apply_to_root_logger(log_level)
+
+
+def _resolve_profile_targets(
+    ctx: typer.Context,
+    *,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+    posture: ProfileAuthenticationPosture,
+    root_state: dict[str, object],
+) -> tuple[str | None, str | None]:
+    """Resolve command and root profile targets in their established order."""
+    from ._profile_session_gate import bind_profile_target, normalize_ambient_profile
+
     explicit_target = None
     explicit_label = None
     if spec.profile_target_parameter is not None:
@@ -204,6 +215,104 @@ def preflight_parsed_leaf(
                 bind_profile_target(ctx, bucket_id=explicit_target)
         else:
             normalize_ambient_profile(ctx)
+    return explicit_target, explicit_label
+
+
+def _diagnose_unregistered_profile(*, spec: CommandSpec, root: ProfileSecretSelection | None) -> bool:
+    """Handle the one diagnostic that may finish dispatch before session activation."""
+    if not spec.allow_unregistered_profile_diagnostic:
+        return False
+    from ...application.workflow.profile_bucket_scan import read_profile_bucket_by_id
+    from ...core.bucket_pointer import resolve_active_bucket_id
+
+    active = resolve_active_bucket_id()
+    if active is None or read_profile_bucket_by_id(active) is not None:
+        return False
+    if root is not None:
+        _refuse("profile_secrets_inapplicable")
+    from ...core.storage_materialization import ensure_storage_tree
+
+    ensure_storage_tree()
+    return True
+
+
+def _require_resume_target(root: ProfileSecretSelection | None, explicit_target: str | None) -> None:
+    """Refuse root credentials that have no exact profile target to authenticate."""
+    if root is None or explicit_target is not None:
+        return
+    from ...core.bucket_pointer import resolve_active_bucket_id
+
+    if resolve_active_bucket_id() is None:
+        _refuse("profile_secrets_missing_target")
+
+
+def _activate_parsed_profile_session(
+    ctx: typer.Context,
+    *,
+    posture: ProfileAuthenticationPosture,
+    root: ProfileSecretSelection | None,
+    leaf: MachineSecretSelection | None,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+    explicit_target: str | None,
+    explicit_label: str | None,
+    command_path: tuple[str, ...],
+    authenticate_root: RootAuthenticator,
+) -> None:
+    """Delegate session policy and authentication to the neutral session gate."""
+    from ._profile_session_gate import activate_profile_session
+
+    if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
+        activate_profile_session(
+            ctx,
+            posture=posture,
+            root_selection=None,
+            leaf_selection=leaf,
+            spec=spec,
+            arguments=arguments,
+            target_bucket_id=explicit_target,
+            target_profile_label=explicit_label,
+            command_path=command_path,
+            authenticate_root=authenticate_root,
+        )
+        return
+    _require_resume_target(root, explicit_target)
+    activate_profile_session(
+        ctx,
+        posture=posture,
+        root_selection=root,
+        leaf_selection=leaf,
+        spec=spec,
+        arguments=arguments,
+        target_bucket_id=explicit_target,
+        target_profile_label=explicit_label,
+        command_path=command_path,
+        authenticate_root=authenticate_root,
+    )
+
+
+def preflight_parsed_leaf(
+    ctx: typer.Context,
+    *,
+    graph: CommandSpecGraph,
+    spec: CommandSpec,
+    arguments: Mapping[str, object],
+) -> None:
+    """Preflight parsed root/leaf sources, then run the ordinary root gate."""
+    node = next(node for node in graph.nodes() if node.spec.key == spec.key)
+    posture = profile_authentication_posture(node)
+    root, leaf = _select_preflight_channels(ctx, spec=spec, arguments=arguments)
+    if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
+        _refuse("profile_secrets_inapplicable")
+    root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
+    _configure_root_logging(root_state)
+    explicit_target, explicit_label = _resolve_profile_targets(
+        ctx,
+        spec=spec,
+        arguments=arguments,
+        posture=posture,
+        root_state=root_state,
+    )
 
     def authenticate(
         bucket_id: str,
@@ -221,49 +330,20 @@ def preflight_parsed_leaf(
             arguments=arguments,
         )
 
-    if spec.allow_unregistered_profile_diagnostic:
-        from ...application.workflow.profile_bucket_scan import read_profile_bucket_by_id
-        from ...core.bucket_pointer import resolve_active_bucket_id
-
-        active = resolve_active_bucket_id()
-        if active is not None and read_profile_bucket_by_id(active) is None:
-            if root is not None:
-                _refuse("profile_secrets_inapplicable")
-            from ...core.storage_materialization import ensure_storage_tree
-
-            ensure_storage_tree()
-            return
-    if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK:
-        activate_profile_session(
-            ctx,
-            posture=posture,
-            root_selection=None,
-            leaf_selection=leaf,
-            spec=spec,
-            arguments=arguments,
-            target_bucket_id=explicit_target,
-            target_profile_label=explicit_label,
-            command_path=node.path[1:],
-            authenticate_root=authenticate,
-        )
-    else:
-        if root is not None and explicit_target is None:
-            from ...core.bucket_pointer import resolve_active_bucket_id
-
-            if resolve_active_bucket_id() is None:
-                _refuse("profile_secrets_missing_target")
-        activate_profile_session(
-            ctx,
-            posture=posture,
-            root_selection=root,
-            leaf_selection=leaf,
-            spec=spec,
-            arguments=arguments,
-            target_bucket_id=explicit_target,
-            target_profile_label=explicit_label,
-            command_path=node.path[1:],
-            authenticate_root=authenticate,
-        )
+    if _diagnose_unregistered_profile(spec=spec, root=root):
+        return
+    _activate_parsed_profile_session(
+        ctx,
+        posture=posture,
+        root=root,
+        leaf=leaf,
+        spec=spec,
+        arguments=arguments,
+        explicit_target=explicit_target,
+        explicit_label=explicit_label,
+        command_path=node.path[1:],
+        authenticate_root=authenticate,
+    )
     _materialize_storage_for(spec)
 
 

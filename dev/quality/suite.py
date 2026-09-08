@@ -92,8 +92,6 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
             "-m",
             "pytest",
             "-v",
-            "-rsf",
-            "--tb=short",
             "-n0",
             "dev/tests/test_cross_package_private_imports.py",
             "dev/tests/test_import_edge_integrity_gate.py",

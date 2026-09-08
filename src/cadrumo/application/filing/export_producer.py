@@ -904,15 +904,49 @@ def m200_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingP
     }
 
 
-def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
-    """Resolve every canonical producer identity from one immutable snapshot."""
+def _amendment_marker(amendment: AmendmentEvidence | None) -> str | None:
+    if amendment is None:
+        return None
+    if amendment.is_sustitutiva:
+        return "S"
+    if amendment.is_complementaria:
+        return "C"
+    return None
+
+
+def _amendment_producer_values(
+    amendment: AmendmentEvidence | None,
+    m303_motive: dict[FilingProducerKey, bool | None],
+) -> dict[FilingProducerKey, object]:
+    return {
+        FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
+        FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
+        FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
+        # ONE official slot holding "S", "C" or blank. Derived from the amendment KIND,
+        # never from the boolean pair: rendering "S" because is_complementaria is false
+        # would assert a substitution nobody declared, which is why this is its own key.
+        FilingProducerKey.AMENDMENT_SUSTITUTIVA_OR_COMPLEMENTARIA_MARKER: _amendment_marker(amendment),
+        FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES: m303_motive[
+            FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES
+        ],
+        FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO: m303_motive[
+            FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO
+        ],
+    }
+
+
+def _m111_colegio_concertado(model_profile: FilingModelProfileFacts) -> bool | None:
+    return model_profile.colegio_concertado if isinstance(model_profile, Modelo111ProfileFacts) else None
+
+
+def _shared_filing_producer_values(
+    snapshot: FilingProducerSnapshot,
+    account: SelectedAccountLexicals,
+    m303_profile: M303ProfileLexicals,
+    m303_filing: M303FilingLexicals,
+    m303_motive: dict[FilingProducerKey, bool | None],
+) -> dict[FilingProducerKey, object]:
     identity = snapshot.taxpayer_identity
-    amendment = snapshot.amendment_evidence
-    account = selected_account_lexicals(snapshot)
-    iva_profile = snapshot.model_profile if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
-    m303_profile = m303_profile_lexicals(iva_profile, snapshot.m303_filing_facts)
-    m303_filing = m303_filing_lexicals(snapshot.m303_filing_facts)
-    m303_motive = m303_rectificativa_motive_producer_values(amendment)
     values: dict[FilingProducerKey, object] = {
         FilingProducerKey.PRESENTER_TAX_ID: str(snapshot.presenter.tax_id),
         FilingProducerKey.FILING_RESULT_DISPOSITION: snapshot.elections.result_disposition.value,
@@ -934,27 +968,7 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
         FilingProducerKey.CONTACT_PERSON_NAME: snapshot.declaration_contact.full_name,
         FilingProducerKey.CONTACT_PERSON_SECONDARY_PHONE: snapshot.declaration_contact.secondary_phone,
         FilingProducerKey.CONTACT_PERSON_EMAIL: snapshot.declaration_contact.email,
-        FilingProducerKey.AMENDMENT_IS_RECTIFICATIVA: amendment.is_rectificativa if amendment else None,
-        FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: amendment.is_complementaria if amendment else None,
-        FilingProducerKey.AMENDMENT_ORIGINAL_AEAT_RECEIPT: amendment.original_aeat_receipt if amendment else None,
-        # ONE official slot holding "S", "C" or blank. Derived from the amendment KIND,
-        # never from the boolean pair: rendering "S" because is_complementaria is false
-        # would assert a substitution nobody declared, which is why this is its own key.
-        FilingProducerKey.AMENDMENT_SUSTITUTIVA_OR_COMPLEMENTARIA_MARKER: (
-            None
-            if amendment is None
-            else "S"
-            if amendment.is_sustitutiva
-            else "C"
-            if amendment.is_complementaria
-            else None
-        ),
-        FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES: m303_motive[
-            FilingProducerKey.AMENDMENT_M303_MOTIVE_RECTIFICACIONES
-        ],
-        FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO: m303_motive[
-            FilingProducerKey.AMENDMENT_M303_MOTIVE_DISCREPANCIA_CRITERIO_ADMINISTRATIVO
-        ],
+        **_amendment_producer_values(snapshot.amendment_evidence, m303_motive),
         FilingProducerKey.SELECTED_ACCOUNT_IBAN: account.iban,
         FilingProducerKey.SELECTED_ACCOUNT_SWIFT_BIC: account.swift_bic,
         FilingProducerKey.SELECTED_ACCOUNT_BANK_NAME: account.bank_name,
@@ -983,38 +997,51 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
         FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: (
             m303_profile.hydrocarbon_deposit_advance_payment_deduction_entitled
         ),
-        FilingProducerKey.M111_COLEGIO_CONCERTADO: (
-            snapshot.model_profile.colegio_concertado
-            if isinstance(snapshot.model_profile, Modelo111ProfileFacts)
-            else None
-        ),
+        FilingProducerKey.M111_COLEGIO_CONCERTADO: (_m111_colegio_concertado(snapshot.model_profile)),
     }
-    if m303_profile.is_foral:
-        foral = m303_foral_lexicals(m303_filing)
-        values.update(
-            {
-                FilingProducerKey.M303_REDEME_ENROLLED: "2",
-                FilingProducerKey.M303_EXCLUSIVELY_FORAL: "1",
-                FilingProducerKey.M303_REGIME_COMPOSITION_CODE: "3",
-                FilingProducerKey.M303_JOINT_RETURN_ELECTED: "2",
-                FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: "2",
-                FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: "2",
-                FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: foral.prorrata_special_option,
-                FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: foral.prorrata_special_revocation,
-                FilingProducerKey.M303_INSOLVENCY_DECLARED: None,
-                FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: None,
-                FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
-                FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
-                FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
-                FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
-            },
-        )
-    values.update(m222_producer_values(snapshot.model_profile))
-    values.update(m202_producer_values(snapshot.model_profile))
-    values.update(m210_producer_values(snapshot.model_profile))
-    values.update(m200_producer_values(snapshot.model_profile))
-    values.update(m296_producer_values(snapshot.model_profile))
-    values.update(m353_producer_values(snapshot.model_profile))
+    return values
+
+
+def _apply_foral_m303_overrides(
+    values: dict[FilingProducerKey, object],
+    m303_profile: M303ProfileLexicals,
+    m303_filing: M303FilingLexicals,
+) -> None:
+    if not m303_profile.is_foral:
+        return
+    foral = m303_foral_lexicals(m303_filing)
+    values.update(
+        {
+            FilingProducerKey.M303_REDEME_ENROLLED: "2",
+            FilingProducerKey.M303_EXCLUSIVELY_FORAL: "1",
+            FilingProducerKey.M303_REGIME_COMPOSITION_CODE: "3",
+            FilingProducerKey.M303_JOINT_RETURN_ELECTED: "2",
+            FilingProducerKey.M303_CASH_ACCOUNTING_REGIME_ENROLLED: "2",
+            FilingProducerKey.M303_RECIPIENT_OF_CASH_ACCOUNTING_OPERATIONS: "2",
+            FilingProducerKey.M303_PRORRATA_SPECIAL_OPTION: foral.prorrata_special_option,
+            FilingProducerKey.M303_PRORRATA_SPECIAL_REVOCATION: foral.prorrata_special_revocation,
+            FilingProducerKey.M303_INSOLVENCY_DECLARED: None,
+            FilingProducerKey.M303_INSOLVENCY_JUDICIAL_ORDER_DATE: None,
+            FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
+            FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
+            FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
+            FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
+        },
+    )
+
+
+def _model_specific_producer_values(model_profile: FilingModelProfileFacts) -> dict[FilingProducerKey, object]:
+    values: dict[FilingProducerKey, object] = {}
+    values.update(m222_producer_values(model_profile))
+    values.update(m202_producer_values(model_profile))
+    values.update(m210_producer_values(model_profile))
+    values.update(m200_producer_values(model_profile))
+    values.update(m296_producer_values(model_profile))
+    values.update(m353_producer_values(model_profile))
+    return values
+
+
+def _validate_shared_producer_values(values: dict[FilingProducerKey, object]) -> None:
     shared_owned = {
         key
         for key, owner in _filing_producer_ownership(
@@ -1024,6 +1051,19 @@ def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProdu
     }
     if set(values) != shared_owned:
         raise FilingExportValidationError("shared filing producer resolver is not exhaustive over its owned keys")
+
+
+def filing_producer_values(snapshot: FilingProducerSnapshot) -> dict[FilingProducerKey, object]:
+    """Resolve every canonical producer identity from one immutable snapshot."""
+    account = selected_account_lexicals(snapshot)
+    iva_profile = snapshot.model_profile if isinstance(snapshot.model_profile, ModeloIVAProfile) else None
+    m303_profile = m303_profile_lexicals(iva_profile, snapshot.m303_filing_facts)
+    m303_filing = m303_filing_lexicals(snapshot.m303_filing_facts)
+    m303_motive = m303_rectificativa_motive_producer_values(snapshot.amendment_evidence)
+    values = _shared_filing_producer_values(snapshot, account, m303_profile, m303_filing, m303_motive)
+    _apply_foral_m303_overrides(values, m303_profile, m303_filing)
+    values.update(_model_specific_producer_values(snapshot.model_profile))
+    _validate_shared_producer_values(values)
     return values
 
 

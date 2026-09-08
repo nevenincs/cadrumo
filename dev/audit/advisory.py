@@ -4,7 +4,7 @@
 Replaces the old ``audit-all`` recipe, which chained five raw tool
 passthroughs (`complexity`, `dead code`, `duplication`,
 `security`) with no structure and no persistence. Measured on this tree, the
-raw `check-security` step alone produced 55,378 lines for 365 findings --
+raw `audit-security` step alone produced 55,378 lines for 365 findings --
 each rendering matched code plus surrounding context, and several bundled
 corpus/HTML fixtures carry single "lines" thousands of characters wide that
 wrap across dozens of terminal rows.

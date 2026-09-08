@@ -40,7 +40,6 @@ from typing import Final
 
 from pydantic import ValidationError
 
-from ...core.casilla_id import CasillaId
 from ...core.hashing import sha256_hex
 from ...domain.calculations.registry.ids import LEGAL_REFS_ADAPTER, SOURCE_REFS_ADAPTER, LegalRefId, SourceRefId
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
@@ -383,36 +382,6 @@ def compute_ledger_filing_evidence(
     )
 
 
-def project_manual_fact_basis_entries(
-    input_values_by_casilla_id: Mapping[CasillaId, str],
-    *,
-    legal_refs_by_casilla_id: Mapping[CasillaId, Iterable[LegalRefId]],
-    source_refs_by_casilla_id: Mapping[CasillaId, Iterable[SourceRefId]],
-) -> tuple[ManualFactBasisEntry, ...]:
-    """Project operator-entered casilla inputs into :class:`ManualFactBasisEntry` entries.
-
-    The calculation revision stores caller-supplied casilla inputs as rendered
-    strings. Non-empty values are part of the evidence bundle because no ledger
-    row explains them.
-    """
-    return tuple(
-        ManualFactBasisEntry(
-            casilla_id=casilla,
-            value=value,
-            legal_refs=_normalised_legal_refs(
-                legal_refs_by_casilla_id.get(casilla, ()),
-                field_name=f"legal_refs for manual fact {casilla}",
-            ),
-            source_refs=_normalised_source_refs(
-                source_refs_by_casilla_id.get(casilla, ()),
-                field_name=f"source_refs for manual fact {casilla}",
-            ),
-        )
-        for casilla, value in sorted(input_values_by_casilla_id.items())
-        if value.strip()
-    )
-
-
 def assert_evidence_covers_snapshot(snapshot: LedgerFilingSnapshot, evidence: LedgerFilingEvidence) -> None:
     """Raise when bundled evidence omits or invents fingerprinted contributors."""
     snapshot_ids = {row.transaction_id for row in snapshot.rows}
@@ -492,7 +461,6 @@ __all__ = [
     "compute_ledger_filing_evidence",
     "compute_ledger_filing_snapshot",
     "evaluate_ledger_filing_staleness",
-    "project_manual_fact_basis_entries",
     "row_fingerprint",
     "stale_filed_revisions",
 ]

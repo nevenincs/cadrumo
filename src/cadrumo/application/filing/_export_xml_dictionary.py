@@ -550,6 +550,19 @@ def _modelo_100_unfiled_comunidad_paths(
             to more than one comunidad. The schema admits only one, so there is
             no correct rendering and picking one would launder the conflict.
     """
+    own_casillas_by_block = _modelo_100_comunidad_casillas(entries)
+    filed = _modelo_100_filed_comunidades(own_casillas_by_block, casilla_values)
+    resident = _modelo_100_resident_comunidad(filed)
+    unfiled = _modelo_100_unfiled_block_paths(entries, resident)
+    if resident is None:
+        unfiled.update(_modelo_100_shared_total_paths(entries))
+    return frozenset(unfiled)
+
+
+def _modelo_100_comunidad_casillas(
+    entries: tuple[XmlDictionaryEntry, ...],
+) -> dict[str, set[CasillaId]]:
+    """Collect each comunidad block's own casillas, excluding the shared total."""
     own_casillas_by_block: dict[str, set[CasillaId]] = {}
     for entry in entries:
         block = _modelo_100_comunidad_block(entry.path)
@@ -557,29 +570,46 @@ def _modelo_100_unfiled_comunidad_paths(
             continue
         if entry.casilla_id != _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA:
             own_casillas_by_block.setdefault(block, set()).add(entry.casilla_id)
+    return own_casillas_by_block
 
-    filed = sorted(
+
+def _modelo_100_filed_comunidades(
+    own_casillas_by_block: Mapping[str, set[CasillaId]],
+    casilla_values: Mapping[CasillaId, object],
+) -> list[str]:
+    """Return comunidad blocks with at least one populated own casilla."""
+    return sorted(
         block
         for block, own in own_casillas_by_block.items()
         if any(_modelo_100_casilla_is_populated(casilla_values.get(casilla)) for casilla in own)
     )
+
+
+def _modelo_100_resident_comunidad(filed: list[str]) -> str | None:
+    """Require at most one filed comunidad and return the selected block."""
     if len(filed) > 1:
         raise FilingExportValidationError(
             "draft populates autonomic deductions for more than one comunidad "
             f"({', '.join(filed)}); a declaration may carry only one",
         )
+    return filed[0] if filed else None
 
-    resident = filed[0] if filed else None
-    unfiled = {
+
+def _modelo_100_unfiled_block_paths(
+    entries: tuple[XmlDictionaryEntry, ...],
+    resident: str | None,
+) -> set[str]:
+    """Return all dictionary paths belonging to non-resident comunidad blocks."""
+    return {
         entry.path
         for entry in entries
         if (block := _modelo_100_comunidad_block(entry.path)) is not None and block != resident
     }
-    if resident is None:
-        unfiled.update(
-            entry.path for entry in entries if entry.casilla_id == _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA
-        )
-    return frozenset(unfiled)
+
+
+def _modelo_100_shared_total_paths(entries: tuple[XmlDictionaryEntry, ...]) -> frozenset[str]:
+    """Return shared total paths when no comunidad block is filed."""
+    return frozenset(entry.path for entry in entries if entry.casilla_id == _MODELO_100_SHARED_COMUNIDAD_TOTAL_CASILLA)
 
 
 # Casilla 0695 is declared against two sibling fields that are opposite branches
@@ -688,79 +718,94 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
     """
     normalized_type = data_type.upper()
     if isinstance(value, bool):
-        # A boolean renders on exactly the two rows AEAT declares boolean, and is
-        # a type error anywhere else. Stated this way round on purpose: asking
-        # what the row IS keeps the declared type in charge, which is the rule
-        # this whole function exists to enforce, while asking what it is NOT
-        # inverts the dependency and leaves every unlisted row inheriting the
-        # last branch by accident.
-        #
-        # The damage that makes this worth refusing rather than rendering is
-        # clearest on an amount row: ``True`` on a euro-cent row reads as one
-        # euro, the XSD accepts it, nothing on the export path validates anyway,
-        # and a taxpayer files a figure they never stated. Same decision the
-        # unreadable-amount branch below makes, for the same reason -- a wrong
-        # number that satisfies every downstream check is worse than a refusal,
-        # because the refusal is the only place the error is still visible.
-        #
-        # No route delivers a boolean here today: the casilla input door refuses
-        # one for every declared family, and no Modelo 100 revision declares a
-        # boolean casilla on a non-boolean row. This guards a route added later,
-        # so it stays total and cheap rather than trying to interpret the value.
-        if normalized_type not in XML_DICTIONARY_BOOLEAN_TYPES:
-            raise FilingExportValidationError(
-                f"a {data_type} row cannot carry the boolean {value!r}. Only "
-                f"{'/'.join(sorted(XML_DICTIONARY_BOOLEAN_TYPES))} rows are declared boolean by AEAT. "
-                "The value reaching this row has the wrong type; correct it at the source rather "
-                "than rendering it, because a boolean written to an amount row is filed as 1 or 0.",
-            )
-        if normalized_type == SINO_DICTIONARY_TYPE:
-            return "SI" if value else "NO"
-        return "1" if value else "0"
+        return _format_xml_dictionary_boolean_value(data_type, normalized_type, value)
     if isinstance(value, date):
         return f"{value.day}/{value.month}/{value.year}"
     numeric = _NUMERIC_DICTIONARY_TYPE.match(normalized_type)
     if numeric is not None:
-        scale = int(numeric["scale"])
-        # A text amount is read through the canonical grammar, which refuses on
-        # two independent grounds and they are easy to confuse.
-        #
-        # The CAP is precision: at most ``scale`` fractional digits, never below
-        # two. Capping an integer row at its own scale of zero would refuse
-        # ``1.6``, unambiguous input this renderer has always rounded.
-        #
-        # The AMBIGUITY guard is separate and the row's scale does not relax it.
-        # ``european_thousands_reading_is_ambiguous`` refuses a token that could
-        # equally be read as a Spanish thousands group -- a lead of one to three
-        # digits with no leading zero, then exactly three fractional digits. The
-        # scale disambiguates the FIELD, never the STRING: an operator writing
-        # one thousand types the same characters whatever the row declares, so
-        # ``1.000`` refuses on a three-decimal row exactly as it does on a
-        # euro-cent one. Tokens carrying their own evidence still parse at any
-        # scale -- ``0.239`` (a lead of zero was never grouped) and ``1234.239``
-        # (a four-digit lead would itself have been grouped).
-        #
-        # A value that already arrives typed carries no such ambiguity and skips
-        # the text grammar entirely.
-        amount = (
-            try_parse_canonical_decimal(value, max_fraction_digits=max(scale, 2))
-            if isinstance(value, str)
-            else coerce_decimal(value)
+        return _format_xml_dictionary_numeric_value(data_type, value, numeric)
+    return _format_xml_dictionary_text_value(data_type, normalized_type, value)
+
+
+def _format_xml_dictionary_boolean_value(data_type: str, normalized_type: str, value: bool) -> str:
+    """Render a boolean only for the two dictionary types AEAT declares boolean."""
+    # A boolean renders on exactly the two rows AEAT declares boolean, and is a
+    # type error anywhere else. Stated this way round on purpose: asking what the
+    # row IS keeps the declared type in charge, which is the rule this whole
+    # function exists to enforce, while asking what it is NOT inverts the
+    # dependency and leaves every unlisted row inheriting the last branch by
+    # accident.
+    #
+    # The damage that makes this worth refusing rather than rendering is clearest
+    # on an amount row: ``True`` on a euro-cent row reads as one euro, the XSD
+    # accepts it, nothing on the export path validates anyway, and a taxpayer
+    # files a figure they never stated. Same decision the unreadable-amount
+    # branch below makes, for the same reason -- a wrong number that satisfies
+    # every downstream check is worse than a refusal, because the refusal is the
+    # only place the error is still visible.
+    #
+    # No route delivers a boolean here today: the casilla input door refuses one
+    # for every declared family, and no Modelo 100 revision declares a boolean
+    # casilla on a non-boolean row. This guards a route added later, so it stays
+    # total and cheap rather than trying to interpret the value.
+    if normalized_type not in XML_DICTIONARY_BOOLEAN_TYPES:
+        raise FilingExportValidationError(
+            f"a {data_type} row cannot carry the boolean {value!r}. Only "
+            f"{'/'.join(sorted(XML_DICTIONARY_BOOLEAN_TYPES))} rows are declared boolean by AEAT. "
+            "The value reaching this row has the wrong type; correct it at the source rather "
+            "than rendering it, because a boolean written to an amount row is filed as 1 or 0.",
         )
-        if amount is None:
-            raise FilingExportValidationError(
-                f"amount for a {data_type} row could not be read: {value!r}. "
-                f"The accepted form is a dot decimal separator with at most {scale} "
-                "fractional digit(s) and no thousands grouping, e.g. 1234.56. A value "
-                "is also refused when its shape cannot be told from a Spanish thousands "
-                "group -- a lead of one to three digits with no leading zero, then "
-                "exactly three more, as in 1.000 or 100.000 -- because that text reads "
-                "as both one and one thousand and no parser can choose. This row's "
-                "declared scale does not settle it: the scale says what the field can "
-                "hold, not which reading was meant. Write the amount unambiguously "
-                "(1000 or 1.0) at the source.",
-            )
-        return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
+    if normalized_type == SINO_DICTIONARY_TYPE:
+        return "SI" if value else "NO"
+    return "1" if value else "0"
+
+
+def _format_xml_dictionary_numeric_value(data_type: str, value: object, numeric: re.Match[str]) -> str:
+    """Parse and quantize one dictionary numeric value at its declared scale."""
+    scale = int(numeric["scale"])
+    # A text amount is read through the canonical grammar, which refuses on two
+    # independent grounds and they are easy to confuse.
+    #
+    # The CAP is precision: at most ``scale`` fractional digits, never below two.
+    # Capping an integer row at its own scale of zero would refuse ``1.6``,
+    # unambiguous input this renderer has always rounded.
+    #
+    # The AMBIGUITY guard is separate and the row's scale does not relax it.
+    # ``european_thousands_reading_is_ambiguous`` refuses a token that could
+    # equally be read as a Spanish thousands group -- a lead of one to three
+    # digits with no leading zero, then exactly three fractional digits. The
+    # scale disambiguates the FIELD, never the STRING: an operator writing one
+    # thousand types the same characters whatever the row declares, so ``1.000``
+    # refuses on a three-decimal row exactly as it does on a euro-cent one. Tokens
+    # carrying their own evidence still parse at any scale -- ``0.239`` (a lead
+    # of zero was never grouped) and ``1234.239`` (a four-digit lead would itself
+    # have been grouped).
+    #
+    # A value that already arrives typed carries no such ambiguity and skips the
+    # text grammar entirely.
+    amount = (
+        try_parse_canonical_decimal(value, max_fraction_digits=max(scale, 2))
+        if isinstance(value, str)
+        else coerce_decimal(value)
+    )
+    if amount is None:
+        raise FilingExportValidationError(
+            f"amount for a {data_type} row could not be read: {value!r}. "
+            f"The accepted form is a dot decimal separator with at most {scale} "
+            "fractional digit(s) and no thousands grouping, e.g. 1234.56. A value "
+            "is also refused when its shape cannot be told from a Spanish thousands "
+            "group -- a lead of one to three digits with no leading zero, then "
+            "exactly three more, as in 1.000 or 100.000 -- because that text reads "
+            "as both one and one thousand and no parser can choose. This row's "
+            "declared scale does not settle it: the scale says what the field can "
+            "hold, not which reading was meant. Write the amount unambiguously "
+            "(1000 or 1.0) at the source.",
+        )
+    return f"{amount.quantize(Decimal(1).scaleb(-scale), rounding=ROUND_HALF_UP)}"
+
+
+def _format_xml_dictionary_text_value(data_type: str, normalized_type: str, value: object) -> str:
+    """Pass through text values, validating the XML dictionary date shape."""
     text = str(value).strip()
     if normalized_type == _DATE_DICTIONARY_TYPE and not _DATE_DICTIONARY_TEXT.fullmatch(text):
         # A date row reached by text rather than by a ``date``. The typed value
@@ -769,10 +814,10 @@ def _format_xml_dictionary_value(data_type: str, value: object) -> str:
         # verbatim, which AEAT's own ``tipo_Fecha`` pattern rejects.
         #
         # Checked rather than parsed, deliberately. Reading ``03/04/2024`` would
-        # mean choosing between day-month and month-day, and this renderer has
-        # no basis for that choice; the numeric branch above refuses an
-        # ambiguous amount for the same reason. Text already in AEAT's form
-        # passes through untouched, so the check costs a correct caller nothing.
+        # mean choosing between day-month and month-day, and this renderer has no
+        # basis for that choice; the numeric branch above refuses an ambiguous
+        # amount for the same reason. Text already in AEAT's form passes through
+        # untouched, so the check costs a correct caller nothing.
         raise FilingExportValidationError(
             f"date for a {data_type} row is not in the form AEAT accepts: {value!r}. "
             "The accepted form is d/m/yyyy with a four-digit year, e.g. 2/1/1980. "
@@ -797,7 +842,7 @@ def _set_xml_dictionary_path(
     arrive in that order. Placement is the only thing the order decides: an
     element's tag, text, and attributes are unaffected.
     """
-    parts = tuple(part for part in absolute_path.strip("/").split("/") if part)
+    parts = _xml_dictionary_path_parts(absolute_path)
     if not parts:
         raise FilingExportValidationError("XML dictionary entry path must not be empty")
     current = root
@@ -805,18 +850,53 @@ def _set_xml_dictionary_path(
     for index, part in enumerate(parts):
         if index == 0 and part == root.tag:
             continue
-        if part.startswith("@"):
-            if index != len(parts) - 1:
-                raise FilingExportValidationError("XML dictionary attribute must terminate its path")
-            current.set(part[1:], value)
+        if _set_xml_dictionary_attribute(current, part, index=index, final_index=len(parts) - 1, value=value):
             return
-        child = next((candidate for candidate in current if candidate.tag == part), None)
-        if child is None:
-            child = ElementTree.Element(part)
-            current.insert(_declared_child_position(current, part, element_order.get(current_path)), child)
-        current = child
+        current = _get_or_create_xml_dictionary_child(
+            current,
+            part,
+            current_path=current_path,
+            element_order=element_order,
+        )
         current_path = f"{current_path}/{part}"
     current.text = value
+
+
+def _xml_dictionary_path_parts(absolute_path: str) -> tuple[str, ...]:
+    """Split an XML dictionary path into its non-empty components."""
+    return tuple(part for part in absolute_path.strip("/").split("/") if part)
+
+
+def _set_xml_dictionary_attribute(
+    current: ElementTree.Element[str],
+    part: str,
+    *,
+    index: int,
+    final_index: int,
+    value: str,
+) -> bool:
+    """Set a terminating attribute component and report whether it was one."""
+    if not part.startswith("@"):
+        return False
+    if index != final_index:
+        raise FilingExportValidationError("XML dictionary attribute must terminate its path")
+    current.set(part[1:], value)
+    return True
+
+
+def _get_or_create_xml_dictionary_child(
+    current: ElementTree.Element[str],
+    part: str,
+    *,
+    current_path: str,
+    element_order: dict[str, tuple[str, ...]],
+) -> ElementTree.Element[str]:
+    """Find a path child or create it at its XSD-declared sibling position."""
+    child = next((candidate for candidate in current if candidate.tag == part), None)
+    if child is None:
+        child = ElementTree.Element(part)
+        current.insert(_declared_child_position(current, part, element_order.get(current_path)), child)
+    return child
 
 
 def _declared_child_position(

@@ -44,6 +44,7 @@ permissions:
 
 jobs:
   publish-docs:
+    timeout-minutes: 45
     name: Build and publish the documentation site
     runs-on: [self-hosted, Linux, X64]
     # The protected environment is the product boundary on a shared runner
