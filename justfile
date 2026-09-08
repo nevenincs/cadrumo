@@ -556,6 +556,18 @@ rag-service-status:
 check-semantic:
     @uv run --no-sync python -m dev.audit.semantic
 
+# Two questions about the same artifacts. actionlint asks whether the YAML is
+# well-formed and its expressions resolve; the CI contract asks whether a `run:`
+# step is calling a recipe or re-implementing one. A workflow can be perfectly
+# valid YAML and still install `just` with an unpinned `scoop install`, which
+# is what two Windows legs here did.
+
+# Lint the workflows, then hold them to the CI/justfile contract.
+[group('check')]
+check-workflow:
+    @uv run --no-sync python -m dev.actionlint
+    @uv run --no-sync python -m dev.ci_contract
+
 # Run all pre-commit hooks via prek. Silent on success; replays hook output on failure.
 [group('check')]
 check-pre-commit:
@@ -1425,3 +1437,32 @@ release-rollback version:
 [group('release')]
 release-publish:
     uv run --no-sync python -m dev.release preview
+
+# ===========================================================================
+#  meta
+# ===========================================================================
+
+# The composed pipeline, in the order CI runs it, so a green local run means
+# what a green CI run means. The composition is the fleet's, and the two
+# rulings inside it are worth stating where they are made:
+#
+#   `audit-dependencies` and NOTHING else from the audit group. (The other
+#   four repositories spell that recipe `audit-deps`; the name differs here
+#   and the role does not - both run `dev/audit/dependency_audit.py`.) Every other audit
+#   dimension is advisory by construction - each finding is a lead to confirm,
+#   and a pipeline that fails on a lead teaches people to stop reading it. A
+#   published advisory against a pinned version is not a lead, it is a verdict.
+#
+#   BUILD IS PART OF IT. A break on the release path otherwise surfaces at
+#   release, when the tag is already cut and the only remedies are a revert or
+#   a hotfix. The gates before it prove the source is well-formed and the tests
+#   pass; only this one proves the artifact a user receives can still be
+#   produced from it.
+
+# Run the full local gate: static analysis, dependency audit, tests, build.
+[group('check')]
+ci:
+    @just check-all
+    @just audit-dependencies
+    @just test-unit
+    @just build-all

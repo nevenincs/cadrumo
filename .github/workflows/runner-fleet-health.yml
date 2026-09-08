@@ -135,8 +135,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Install just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
 
       - name: Build and verify the runner image
         # `runner-image-test` depends on `runner-image-build`, so this covers
@@ -171,8 +173,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Install just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
 
       - name: Build and verify the devcontainer image
         run: just test-devcontainer

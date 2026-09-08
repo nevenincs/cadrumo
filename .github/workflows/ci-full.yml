@@ -41,8 +41,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Install just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
@@ -61,13 +63,8 @@ jobs:
           restore-keys: |
             prek-${{ runner.os }}-
 
-      - name: CI Bootstrap
-        # `--frozen`: an unfrozen sync re-resolves the graph against the index
-        # on every run; the lock is committed, so frozen is both faster and
-        # attributable. Same change as ci.yml's two bootstraps.
-        run: |
-          uv sync --frozen
-          uv run vaultspec-core install --force
+      - name: Initialize the worktree
+        run: just init
 
       - name: Provision Playwright Chromium
         run: just setup-playwright
@@ -94,7 +91,7 @@ jobs:
         run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
 
       - name: Registry verify
-        run: uv run --no-sync aeat app registry verify
+        run: just check-registry
 
       - name: Audit oracle bindings
         run: uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles
@@ -107,13 +104,15 @@ jobs:
         # .github/ci-control-plane.md; 8 is a working pin, not a derivation). Routed
         # through the same recipe ci.yml uses so the selection has one
         # declaration site.
-        run: CADRUMO_PYTEST_WORKERS=8 just test-unit 100
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
+        run: just test-unit 100
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
       - name: Tooling and workflow conformance gates
         # Dev-tree ceiling raised over the 300 s ini default: real install/
         # harness tests legitimately run 300-900 s (see ci.yml).
-        run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests dev/tests
+        run: just test-dev-ci
 
       - name: Test (integration)
         # NOTHING RAN THE src/ INTEGRATION SUITE. Every lane in this repository
@@ -177,7 +176,9 @@ jobs:
         #
         # FLIP `continue-on-error` OFF once the 13 close; do not let it become
         # permanent.
-        run: CADRUMO_PYTEST_WORKERS=8 just test-integration-parallel
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
+        run: just test-integration-parallel
         continue-on-error: true
 
       - name: Test (integration, serial)
@@ -204,7 +205,9 @@ jobs:
         # SIZING WARNING: the 6 errors were a local artefact (a stale on-disk
         # cohort directory). On CI that path is absent, so the fixture takes the
         # BUILD branch instead — expect these to build 3 wheels and 3 sdists here.
-        run: CADRUMO_PYTEST_WORKERS=8 just test-integration-serial
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
+        run: just test-integration-serial
         continue-on-error: true
 
       - name: Build the documentation site
@@ -270,7 +273,9 @@ jobs:
         #
         # Re-measure before acting rather than trusting these figures: at least
         # one population moves under peer commits.
-        run: CADRUMO_PYTEST_WORKERS=8 just test-dev-tooling
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
+        run: just test-dev-tooling
         continue-on-error: true
 
       - name: Registry conformance suite
@@ -294,7 +299,9 @@ jobs:
         # local stub that does. This suite is the only thing that exercises the
         # real authority, which is why the gap survived in a directory no lane
         # swept. Flip this step to blocking once that one test is green.
-        run: CADRUMO_PYTEST_WORKERS=8 just test-registry-conformance
+        env:
+          CADRUMO_PYTEST_WORKERS: "8"
+        run: just test-registry-conformance
         continue-on-error: true
 
       - name: Channel artifact conformance (Homebrew formula and Scoop manifest)

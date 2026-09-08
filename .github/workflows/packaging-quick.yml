@@ -99,8 +99,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
@@ -110,8 +112,8 @@ jobs:
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
 
-      - name: Sync frozen development environment
-        run: uv sync --frozen
+      - name: Initialize the worktree
+        run: just init
 
       - name: Cadrumo quick packaging probe
         run: just test-packaging-quick
@@ -130,13 +132,10 @@ jobs:
       # taiki-e/install-action mangles its own path under Git Bash on the
       # self-hosted Windows runner; provision just natively (see the full
       # campaign workflow for the incident note).
-      - name: Ensure just is available
-        shell: powershell
-        run: |
-          if (-not (Get-Command just -ErrorAction SilentlyContinue)) {
-            scoop install just
-          }
-          just --version
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
@@ -146,8 +145,8 @@ jobs:
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
 
-      - name: Sync frozen development environment
-        run: uv sync --frozen
+      - name: Initialize the worktree
+        run: just init
 
       - name: Cadrumo quick packaging probe
         run: just test-packaging-quick
@@ -163,8 +162,10 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
@@ -174,8 +175,8 @@ jobs:
           # jobs; the GitHub cache round-trip only adds network time here.
           enable-cache: false
 
-      - name: Sync frozen development environment
-        run: uv sync --frozen
+      - name: Initialize the worktree
+        run: just init
 
       - name: Cadrumo quick packaging probe
         run: just test-packaging-quick

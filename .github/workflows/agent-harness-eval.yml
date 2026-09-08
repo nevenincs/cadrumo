@@ -51,10 +51,13 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Sync frozen development environment
-        # No separate harness install step: the package ships inside `cadrumo`,
-        # so a plain frozen sync installs it from the checkout.
-        run: uv sync --frozen
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
+
+      - name: Initialize the worktree
+        run: just init
 
       - name: Cadrumo agent-harness eval surface
         # -n 8, never -n auto: this machine's 24 logical CPUs are shared with
