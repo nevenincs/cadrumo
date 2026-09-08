@@ -877,6 +877,27 @@ _DOUBLED_COORDINATE_ROW_RE = re.compile(
 )
 
 
+def _tail_fragment_candidate(
+    line: str,
+    following: str,
+    previous: PdfRow | None,
+) -> tuple[str, str] | None:
+    """Split a leading fragment when the following tail continues ``previous``."""
+    if previous is None or previous.ordinal is None or not previous.ordinal.isdigit():
+        return None
+    if REVERSED_ROW_TAIL_RE.match(line) is not None:
+        return None
+    head = _REVERSED_ROW_HEAD_RE.match(following) or _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(following)
+    if head is None or not _continues(previous, head.group("ordinal"), int(head.group("offset"))):
+        return None
+    tokens = line.split()
+    for cut in range(1, len(tokens)):
+        suffix = " ".join(tokens[cut:])
+        if REVERSED_ROW_TAIL_RE.match(suffix) is not None:
+            return " ".join(tokens[:cut]), suffix
+    return None
+
+
 def split_tail_from_leading_fragment(lines: tuple[str, ...]) -> tuple[str, ...]:
     """Separate a reversed-column TAIL from the previous row's trailing fragment.
 
@@ -913,28 +934,17 @@ def split_tail_from_leading_fragment(lines: tuple[str, ...]) -> tuple[str, ...]:
             previous = parsed
             split.append(line)
             continue
-        recovered = False
-        if (
-            previous is not None
-            and previous.ordinal is not None
-            and previous.ordinal.isdigit()
-            and index + 1 < len(lines)
-            and REVERSED_ROW_TAIL_RE.match(line) is None
-        ):
-            head = _REVERSED_ROW_HEAD_RE.match(lines[index + 1]) or _REVERSED_ROW_HEAD_WITH_TAIL_RE.match(
-                lines[index + 1],
-            )
-            if head is not None and _continues(previous, head.group("ordinal"), int(head.group("offset"))):
-                tokens = line.split()
-                for cut in range(1, len(tokens)):
-                    suffix = " ".join(tokens[cut:])
-                    if REVERSED_ROW_TAIL_RE.match(suffix) is not None:
-                        split.append(" ".join(tokens[:cut]))
-                        split.append(suffix)
-                        recovered = True
-                        break
-        if not recovered:
+        candidate = (
+            _tail_fragment_candidate(line, lines[index + 1], previous)
+            if index + 1 < len(lines)
+            else None
+        )
+        if candidate is None:
             split.append(line)
+            continue
+        fragment, tail = candidate
+        split.append(fragment)
+        split.append(tail)
     return tuple(split)
 
 

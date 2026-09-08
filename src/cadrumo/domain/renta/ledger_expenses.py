@@ -658,26 +658,52 @@ def _resolve_statutory_cap(
     context: RentaDeductibilityContext,
 ) -> Decimal | None:
     if rule.statutory_cap_eur is not None:
-        if rule.statutory_cap_period is StatutoryCapPeriod.YEAR_PER_PERSON:
-            return rule.statutory_cap_eur * Decimal(context.statutory_cap_person_count)
-        return rule.statutory_cap_eur
+        return _resolve_fixed_statutory_cap(rule, context=context)
     if rule.statutory_cap_eur_per_day is not None:
-        if context.statutory_cap_days is None:
-            return None
-        return rule.statutory_cap_eur_per_day * context.statutory_cap_days
+        return _resolve_daily_statutory_cap(rule, context=context)
     if rule.statutory_cap_variants:
-        annual = [variant for variant in rule.statutory_cap_variants if not variant.is_per_day]
-        if annual:
-            return _resolve_annual_variant_cap(annual, context=context)
-        if context.statutory_cap_variant_id is None or context.statutory_cap_days is None:
-            return None
-        for variant in rule.statutory_cap_variants:
-            if variant.id == context.statutory_cap_variant_id:
-                per_day = variant.statutory_cap_eur_per_day
-                if per_day is None:
-                    return None
-                return per_day * context.statutory_cap_days
+        return _resolve_variant_statutory_cap(rule, context=context)
+    return None
+
+
+def _resolve_fixed_statutory_cap(rule: ProportionalityRule, *, context: RentaDeductibilityContext) -> Decimal:
+    if rule.statutory_cap_period is StatutoryCapPeriod.YEAR_PER_PERSON:
+        # The model guarantees this field whenever the fixed amount mode is selected.
+        assert rule.statutory_cap_eur is not None
+        return rule.statutory_cap_eur * Decimal(context.statutory_cap_person_count)
+    # The caller only enters this helper when the amount is present.
+    assert rule.statutory_cap_eur is not None
+    return rule.statutory_cap_eur
+
+
+def _resolve_daily_statutory_cap(
+    rule: ProportionalityRule,
+    *,
+    context: RentaDeductibilityContext,
+) -> Decimal | None:
+    if context.statutory_cap_days is None:
         return None
+    # The caller only enters this helper when the daily amount is present.
+    assert rule.statutory_cap_eur_per_day is not None
+    return rule.statutory_cap_eur_per_day * context.statutory_cap_days
+
+
+def _resolve_variant_statutory_cap(
+    rule: ProportionalityRule,
+    *,
+    context: RentaDeductibilityContext,
+) -> Decimal | None:
+    annual = [variant for variant in rule.statutory_cap_variants if not variant.is_per_day]
+    if annual:
+        return _resolve_annual_variant_cap(annual, context=context)
+    if context.statutory_cap_variant_id is None or context.statutory_cap_days is None:
+        return None
+    for variant in rule.statutory_cap_variants:
+        if variant.id == context.statutory_cap_variant_id:
+            per_day = variant.statutory_cap_eur_per_day
+            if per_day is None:
+                return None
+            return per_day * context.statutory_cap_days
     return None
 
 
