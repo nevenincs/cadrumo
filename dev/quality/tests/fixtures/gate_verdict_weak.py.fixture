@@ -1,0 +1,51 @@
+import subprocess
+
+LINT_IMPORTS_COMMAND = "lint-imports"
+
+
+def weak_helper(candidate: str) -> None:
+    candidate.endswith("KEPT")
+
+
+def intermediate_helper(candidate: str) -> None:
+    weak_helper(candidate)
+
+
+def unrelated_helper(candidate: str) -> None:
+    candidate.endswith("KEPT")
+
+
+def audit() -> None:
+    result = subprocess.run([LINT_IMPORTS_COMMAND])
+    output = result.stdout + result.stderr
+    for line in output.splitlines():
+        line.strip().endswith("KEPT")
+        line.strip().startswith("KEPT")
+        line.strip().endswith("BROKEN")
+        line.strip().startswith("BROKEN")
+        "KEPT" in line
+        "KEPT" not in line
+        line.endswith(("KEPT", dynamic_token, "BROKEN"), 0, len(line))
+        for verdict in ("KEPT", "BROKEN"):
+            line.endswith(verdict)
+        assigned_verdict = "KEPT"
+        line.endswith(assigned_verdict)
+        declaration_only: str
+        annotated_verdict: str = "BROKEN"
+        line.startswith(annotated_verdict)
+        line.endswith(unbound_verdict)
+        intermediate_helper(line)
+
+    annotated_output: str = output
+    for annotated_line in annotated_output.splitlines():
+        annotated_line.startswith("BROKEN")
+
+    filename = "report-KEPT"
+    filename.endswith("KEPT")
+    "KEPT" in filename
+    unrelated_helper(filename)
+    for ordinary_line in ("KEPT",):
+        ordinary_line.endswith("KEPT")
+
+
+NON_ASCII_SENTINEL = "ā"

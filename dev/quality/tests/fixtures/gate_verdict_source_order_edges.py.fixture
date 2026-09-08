@@ -1,0 +1,30 @@
+import subprocess
+
+LINT_IMPORTS_COMMAND = "lint-imports"
+EXPECTED = "KEPT"
+
+
+def containment(candidate: str) -> bool:
+    return "KEPT" in candidate
+
+
+def audit() -> None:
+    result = subprocess.run([LINT_IMPORTS_COMMAND])
+    output = result.stdout
+    containment(output)
+
+    line.endswith("KEPT")
+    for line in output.splitlines():
+        pass
+
+    future.endswith("KEPT")
+    future = output
+
+    first = second
+    second = first
+    first.startswith("BROKEN")
+
+    recursive = recursive
+    recursive.endswith("BROKEN")
+
+    same_line = "ordinary"; same_line = output; same_line.endswith("KEPT")

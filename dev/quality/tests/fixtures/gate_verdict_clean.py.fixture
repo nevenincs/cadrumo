@@ -1,0 +1,11 @@
+LINT_IMPORTS_COMMAND = "lint-imports"
+EXPECTED_VERDICTS = {"KEPT", "BROKEN"}
+
+
+def dynamic_verdict(line: str, verdict: str) -> bool:
+    return line.strip().endswith(verdict)
+
+
+def parsed_verdict(line: str) -> str | None:
+    text = line.rsplit("(", 1)[0].strip()
+    return "KEPT" if text.endswith(" verdict") else None
