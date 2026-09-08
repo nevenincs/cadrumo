@@ -224,10 +224,35 @@ def test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously()
     assert members, "no justfile recipe named test-harness declares any member"
     commands = resolved_recipe_commands(_REPOSITORY_ROOT, "test-harness")
 
-    pytest_prefix = "uv run --no-sync pytest -q -m integration"
+    # A lane names only what SELECTS it: markers, paths, worker count, and the
+    # wall ceiling. How pytest REPORTS is declared once in
+    # `[tool.pytest.ini_options] addopts` and asserted there instead, so this
+    # pin cannot drift from the reporting decision the way it did while every
+    # lane restated `-rsf --tb=short`.
+    #
+    # `-v` is the exception, and only on the real proof: it streams each
+    # verdict as its test finishes, which is what makes a lane running for
+    # minutes readable while it is still going. A collect-only preflight
+    # finishes instantly and has nothing to stream, so it stays quiet.
     assert commands == (
-        *(f"{pytest_prefix} --collect-only -n0 {member}" for member in members),
-        f"{pytest_prefix} -rsf -n0 --timeout={_HARNESS_WALL_CEILING_SECONDS} {' '.join(members)}",
+        *(f"uv run --no-sync pytest -q -m integration --collect-only -n0 {member}" for member in members),
+        f"uv run --no-sync pytest -v -m integration -n0 --timeout={_HARNESS_WALL_CEILING_SECONDS} {' '.join(members)}",
+    )
+
+    # The other half of that contract: the reporting flags must actually be in
+    # addopts. Without this, dropping them from the lane above would silently
+    # lose the skip report and the bounded traceback rather than relocate them.
+    addopts = re.search(r'(?m)^addopts\s*=\s*"(.*)"', _PYPROJECT.read_text(encoding="utf-8"))
+    assert addopts is not None, "no addopts declaration to carry the reporting flags"
+    for flag in ("-ra", "--tb=short"):
+        assert flag in addopts.group(1), (
+            f"{flag} is on neither the lane nor addopts; a red lane then loses its "
+            "skip report, or writes the unbounded tracebacks that once produced a "
+            "ten-million-line log"
+        )
+    assert "-rsf" not in addopts.group(1), (
+        "-ra already reports every non-passing outcome, skips included; -rsf beside "
+        "it is the restatement this pin exists to prevent"
     )
     assert all("-n0" in command for command in commands)
     assert all("||" not in command and ";" not in command for command in commands)
@@ -260,14 +285,17 @@ def test_the_harness_real_proof_outruns_the_default_per_test_wall_ceiling() -> N
 
 def test_harness_member_preflight_rejects_empty_collection_even_when_another_member_exists(tmp_path: Path) -> None:
     """A per-member preflight catches the empty proof an aggregate would hide."""
+    # Both fixture members carry a `hex_*` marker beside `integration`: this
+    # repository requires exactly one of them on every collected item and
+    # enforces that during collection. Without it the populated control fails
+    # the marker gate instead of collecting, and a control that never collects
+    # proves nothing about the empty member it exists to contrast with.
+    header = "import pytest\n\npytestmark = [pytest.mark.integration, pytest.mark.hex_core]\n"
     empty_member = tmp_path / "test_empty_harness_member.py"
-    empty_member.write_text("import pytest\n\npytestmark = pytest.mark.integration\n", encoding="utf-8")
+    empty_member.write_text(header, encoding="utf-8")
     populated_member = tmp_path / "test_populated_harness_member.py"
     populated_member.write_text(
-        "import pytest\n\n"
-        "pytestmark = pytest.mark.integration\n\n"
-        "def test_real_item_is_collectable() -> None:\n"
-        "    pass\n",
+        header + "\n\ndef test_real_item_is_collectable() -> None:\n    pass\n",
         encoding="utf-8",
     )
 
@@ -367,7 +395,12 @@ def test_the_dev_ci_recipe_carries_the_substance_the_workflow_delegates() -> Non
         None,
     )
     assert recipe is not None, "no justfile line names dev/ci/tests; the delegated lane has no home"
-    assert 'pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)"' in recipe
+    # `-v`, not `-q`: this lane streams each verdict as it finishes, so a run
+    # that is killed or still going has already named what failed. The
+    # reporting flags it used to restate (`-rsf --tb=short`) now live in
+    # `[tool.pytest.ini_options] addopts`, pinned by
+    # `test_harness_recipe_runs_every_real_proof_outer_serially_and_non_vacuously`.
+    assert 'pytest -v -n 8 --timeout=900 -m "unit or (integration and not serial)"' in recipe
     for directory in ("dev/ci/tests", "dev/packaging/tests", "dev/quality/tests", "dev/release/tests"):
         assert directory in recipe, f"the delegated lane no longer reaches {directory}"
 
