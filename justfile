@@ -20,24 +20,54 @@ default:
 
 # ── Bootstrap / Install ──────────────────────────────────────────────────────
 
-# Initialize a fresh clone or worktree: create its pinned Python environment,
-# additively install every dev dependency, install vaultspec, and provision
-# env/.env. Avoid `uv sync` here because shared Windows worktrees can hold
-# long-lived executable locks under `.venv/Scripts`.
-[doc('Provision a fresh clone or worktree: Python, dev dependencies, vaultspec, and env/.env.')]
-[group('setup')]
-bootstrap:
-    just _setup-venv
-    just setup-install
-    uv run --no-sync vaultspec-core install --upgrade
-    just setup-env
-    -just doctor-check
+# PowerShell's `-Command` host exits 1 for ANY failing native command rather
+# than forwarding that command's own status, which would collapse every
+# `init` exit code onto 1 and destroy the distinction between "a host tool is
+# missing", "the lockfile drifted", and "an editor is holding .venv open".
+# Appending an explicit propagation is the whole remedy; it is empty on unix,
+# where `sh` already forwards the status, so no recipe needs a platform pair.
+propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
 
-# Create the virtual environment `bootstrap` then fills.
-[private]
+# `init` is the one command a fresh worktree needs, and the command git
+# tooling and the worktree provisioner call after creating one. It runs on an
+# ephemeral interpreter because it must work before `.venv` exists, and every
+# step it runs delegates to `dev/env`, which already owns this repository's
+# venv provisioning, its exclusive install lock, and `env/.env`.
+#
+# `uv pip install` rather than `uv sync` stays load bearing: a sync prunes
+# before it installs, and on a shared Windows worktree the prune fails against
+# the executable locks held under `.venv/Scripts`.
+#
+# Idempotent: a second run costs a stamp comparison and touches nothing.
+# `just init-check` verifies without mutating, exiting 3 when the worktree is
+# not initialized. Set VAULTSPEC_INIT_JSON=1 for an NDJSON event stream,
+# VAULTSPEC_INIT_FORCE=1 to ignore the stamp. Every run writes
+# `.venv/init-report.json`; an environment held open by a live session exits 6.
+
+[doc('Initialize a fresh clone or worktree: Python, dev dependencies, vaultspec, and env/.env.')]
 [group('setup')]
-_setup-venv:
-    uv run --no-sync python -m dev.env init-venv
+init:
+    uv run --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
+
+[doc('Create the pinned environment and additively install every dependency.')]
+[group('setup')]
+init-python:
+    uv run --no-project --python 3.13.11 -- python -m dev.init python{{propagate}}
+
+[doc('Restore the pinned Node dependency graph. A no-op in this repository.')]
+[group('setup')]
+init-node:
+    uv run --no-project --python 3.13.11 -- python -m dev.init node{{propagate}}
+
+[doc('Install the Vaultspec tooling and report the resulting configuration.')]
+[group('setup')]
+init-tools:
+    uv run --no-project --python 3.13.11 -- python -m dev.init tools{{propagate}}
+
+[doc('Report whether this worktree is initialized. Mutates nothing; exits 3 if not.')]
+[group('setup')]
+init-check:
+    uv run --no-project --python 3.13.11 -- python -m dev.init check{{propagate}}
 
 # Verify the workstation for the services the active profile opts into: external
 # dependency availability (Ollama vision, provider CLIs, Playwright) + the profile's

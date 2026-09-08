@@ -20,8 +20,9 @@ just bootstrap
 
 This creates the pinned Python environment, installs the project and all
 development dependencies, installs the repository tooling, provisions
-`env/.env`, and runs the readiness check at the end. The command is safe to
-run again; `just bootstrap` remains an alias for existing workflows.
+`env/.env`, and runs the readiness check at the end. It is safe to run again
+and costs nothing when there is nothing to do. `just init-check` reports
+whether a worktree is ready without changing anything.
 
 ### Option B: open in a devcontainer
 

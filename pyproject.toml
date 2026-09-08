@@ -663,6 +663,15 @@ convention = "google"
 # repository-owned paths is not an injection surface.
 # Developer quality/docs/audit runners invoke fixed tool argv or explicit
 # wrapper argv; Ruff's subprocess heuristic cannot infer those local contracts.
+# `just bootstrap` runs every bootstrap step through a fixed argv declared as
+# data in `dev/init/plan.py` and resolved through `shutil.which`. Nothing
+# reaches it from a user, an environment variable, or a file: the argv is
+# literal in the plan, and the resolution exists only so Windows `.cmd`
+# shims spawn without a shell. There is no injection surface to check for.
+"dev/init/process.py" = ["S603"]
+"dev/init/venv.py" = ["S603"]
+"dev/init/hooks.py" = ["S603"]
+"dev/init/probe.py" = ["S603"]
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]

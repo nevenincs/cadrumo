@@ -40,16 +40,16 @@ OK = 0
 #: Generic failure: the command ran and reported a gating result.
 FAILED = 1
 
-#: `just bootstrap`: a required HOST tool is absent (L6). Reserved fleet-wide so
+#: `just init`: a required HOST tool is absent (L6). Reserved fleet-wide so
 #: nothing else claims it. Outside `init`, an absent executable discovered at
 #: dispatch time is :data:`TOOL_MISSING`, which carries the shell's own
 #: command-not-found meaning and needs no lookup table.
 INIT_HOST_TOOL_MISSING = 2
 
-#: `just bootstrap`: the environment exists but is stale relative to its inputs.
+#: `just init`: the environment exists but is stale relative to its inputs.
 INIT_STALE = 3
 
-#: `just bootstrap`: one bootstrap step failed.
+#: `just init`: one bootstrap step failed.
 INIT_STEP_FAILED = 4
 
 #: Managed content drifted from its generated form. Emitted by `fix` under
@@ -57,7 +57,7 @@ INIT_STEP_FAILED = 4
 #: disagree (L6).
 DRIFT = 5
 
-#: `just bootstrap`: the environment is held open by another process (L6).
+#: `just init`: the environment is held open by another process (L6).
 INIT_LOCKED = 6
 
 #: A tool failed to RUN: it crashed, was misconfigured, or exited with a status
