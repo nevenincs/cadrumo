@@ -22,26 +22,48 @@ declaration's own shape would reveal the difference.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Final
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
-from ..pipeline._export_tree import ExportTreeTransportProfile, _literal_derivation
-from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
+from ..pipeline._export_tree import (
+    ExportTreeTransportProfile,
+    _literal_derivation,
+    _numeric_derivation,
+    render_complete_export_tree,
+)
+from ..pipeline._record_design_ir import (
+    RecordDesignIntermediate,
+    RecordDesignIntermediateField,
+    RecordDesignWorkbookFormat,
+    load_record_design_intermediate,
+)
+from ..pipeline._render_profile import load_render_profile, load_render_profile_source_evidence
 from ..pipeline._semantic_map import SemanticMapEntry
-from ..pipeline._semantic_map_join import JoinedRecordDesignField
+from ..pipeline._semantic_map_join import JoinedRecordDesignField, join_record_design_semantics
+from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline.source_defects import (
+    NoteGovernedAmountDeclaration,
     SourceDefectDeclaration,
     adjudicated_literal_for,
+    note_governed_amounts_for,
     source_defects_for,
+    validate_note_governed_amount_declarations,
     validate_source_defect_declarations,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+#: The hash-pinned 2025 Modelo 390 design both adjudication mechanisms are read from.
+_M390_2025_SOURCE_REF: Final = "aeat-dr-390-2025"
 
 #: The real modelo 390 filing-year 2022 workbook digest this mechanism was built for.
 _SHA: Final = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
@@ -292,3 +314,248 @@ class TestTheValidatorMatchesWhatTheRendererPassesIt:
     def test_the_validator_accepts_a_real_joined_source(self) -> None:
         """Drives the actual object the renderer holds, not a stand-in."""
         validate_source_defect_declarations((_declaration(),), _intermediate().source)
+
+
+class TestNoteGovernedAmountAdjudication:
+    """A ``Contenido`` cell holding only a footnote pointer states no scale.
+
+    Modelo 390's 2025 design replaced the ``15 enteros 2 decimales`` clause of
+    its expired temporary-rate amount slots with the bare pointer ``Nota 2``,
+    whose note reads "estas casillas deben estar rellenas a 0" -- it withholds
+    the VALUE and says nothing about how digits are written. Read as an unscaled
+    integer, those slots emit euros into a run of monetary casillas whose every
+    surviving member emits cents, which is a filing wrong by two orders of
+    magnitude and the one condition no per-field rule can see.
+
+    These tests pin the same three properties the literal adjudication above
+    relies on -- exact published content, parser-read digest, and geometry fed
+    back through the normal width check -- plus the one this mechanism adds: an
+    unadjudicated pointer keeps the historical reading rather than being
+    silently re-scaled by a rule nobody reviewed for that document.
+    """
+
+    _M390_2025_SHA: Final = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
+    _POINTER: Final = "Nota 2"
+
+    @staticmethod
+    def _declaration(**overrides: object) -> NoteGovernedAmountDeclaration:
+        fields: dict[str, object] = {
+            "source_ref": "aeat-dr-390-2025",
+            "source_sha256": TestNoteGovernedAmountAdjudication._M390_2025_SHA,
+            "sheet": "Pág. 2",
+            "published_content": TestNoteGovernedAmountAdjudication._POINTER,
+            "note_cell": "A119",
+            "note_statement": "Nota 2: estas casillas deben estar rellenas a 0",
+            "integer_digits": 15,
+            "decimal_digits": 2,
+            "evidence": "the surviving rates on the same sheet state 15 enteros 2 decimales at the same width",
+        }
+        fields.update(overrides)
+        return NoteGovernedAmountDeclaration.model_validate(fields)
+
+    @staticmethod
+    def _joined_amount_field(*, sheet: str = "Pág. 2", length: int = 17) -> JoinedRecordDesignField:
+        parser_field = RecordDesignIntermediateField.model_validate(
+            {
+                "sheet": sheet,
+                "record_identity": sheet,
+                "source_row": 14,
+                "source_cell": "A14",
+                "ordinal": "9",
+                "offset": 64,
+                "length": length,
+                "aeat_type": "N",
+                "normalized_description": "Reg. ordin. - Tipo 2% - Cuota [668]",
+                "content": TestNoteGovernedAmountAdjudication._POINTER,
+            }
+        )
+        entry = SemanticMapEntry.model_validate(
+            {
+                "anchor": {
+                    "sheet": parser_field.sheet,
+                    "source_row": parser_field.source_row,
+                    "source_cell": parser_field.source_cell,
+                    "ordinal": parser_field.ordinal,
+                    "record_identity": parser_field.record_identity,
+                },
+                "export_field_id": "modelo-390-page-02-casilla-tipo-2-cuota",
+                "kind": "casilla",
+                "casilla_id": "iva.anual.repercutido.tipo-2.cuota",
+                "legal_refs": ("ley-37-1992:art-90",),
+                "source_refs": ("aeat-dr-390-2025",),
+            }
+        )
+        return JoinedRecordDesignField(parser_field=parser_field, semantic_entry=entry)
+
+    def test_the_live_catalogue_covers_every_sheet_the_2025_design_points_from(self) -> None:
+        declarations = note_governed_amounts_for("aeat-dr-390-2025")
+
+        assert {item.sheet for item in declarations} == {"Pág. 2", "Pág. 2 bis", "Pág. 3", "Pág. 4"}
+        for declaration in declarations:
+            assert declaration.source_sha256 == self._M390_2025_SHA
+            assert declaration.published_content == self._POINTER
+            assert (declaration.integer_digits, declaration.decimal_digits) == (15, 2)
+
+    def test_an_adjudicated_pointer_renders_the_scale_its_run_states(self) -> None:
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(self._declaration(),),
+        )
+
+        assert derived.derivation_code == "numeric-note-governed-amount-v1"
+        assert str(derived.field.data_type) == "decimal"
+        assert derived.field.decimals == 2
+
+    def test_an_unadjudicated_pointer_keeps_the_reading_it_always_had(self) -> None:
+        """The correction is opt-in per design; it never re-scales a document nobody read."""
+        derived = _numeric_derivation(
+            self._joined_amount_field(),
+            export_record_id="modelo-390-page-02",
+            note_governed_amounts=(),
+        )
+
+        assert derived.derivation_code == "numeric-integer-v1"
+        assert str(derived.field.data_type) == "integer"
+
+    def test_a_declaration_does_not_reach_another_sheets_note_of_the_same_number(self) -> None:
+        """A note label identifies a note only together with the sheet printing it."""
+        derived = _numeric_derivation(
+            self._joined_amount_field(sheet="Pág. 5"),
+            export_record_id="modelo-390-page-05",
+            note_governed_amounts=(self._declaration(),),
+        )
+
+        assert derived.derivation_code == "numeric-integer-v1"
+
+    def test_the_declared_representation_cannot_contradict_the_slots_own_width(self) -> None:
+        with pytest.raises(RegistryValidationError, match="content declares 17"):
+            _numeric_derivation(
+                self._joined_amount_field(length=16),
+                export_record_id="modelo-390-page-02",
+                note_governed_amounts=(self._declaration(),),
+            )
+
+    def test_a_declaration_pinned_to_another_digest_is_refused(self) -> None:
+        with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
+            validate_note_governed_amount_declarations(
+                (self._declaration(source_sha256=_OTHER_SHA),),
+                _intermediate(source_ref="aeat-dr-390-2025", sha=self._M390_2025_SHA).source,
+            )
+
+
+@pytest.fixture(scope="module")
+def m390_2025_render_authorities():
+    """Assemble the real 390/2025 render inputs the drift gate itself assembles.
+
+    Deliberately the shipped semantic map, render profile, registry tree and
+    hash-verified design binary rather than a constructed stand-in: the property
+    under test is that the renderer resolves its adjudication set from the
+    PARSER-READ source, which a synthetic source could not prove.
+    """
+    epoch = "2025"
+    semantic_map = load_semantic_map(Path("dev/registry/mappings/modelo_390") / epoch)
+    render_profile = load_render_profile(Path("dev/registry/render_profiles/modelo_390") / epoch)
+    modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    modelo = next(item for item in modelos if str(item.id) == "390")
+    inspection = RegistryRevisionInspection.from_revision(
+        modelo=modelo,
+        revision=modelo.revisions["2025"],
+        source_root=bundled_path(),
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
+    )
+    intermediate = load_record_design_intermediate(
+        bundled_path(),
+        catalogues.sources,
+        source_ref=_M390_2025_SOURCE_REF,
+        filing_year=2025,
+        design_epoch=epoch,
+    )
+    joined = join_record_design_semantics(semantic_map, intermediate, inspection)
+    transport = ExportTreeTransportProfile(
+        modelo="390",
+        design_epoch=epoch,
+        source_ref=_M390_2025_SOURCE_REF,
+        source_sha256=intermediate.source.source_sha256,
+        layout_id="generated-modelo-390-2025-fichero",
+        format="fixed_width",
+        encoding=ExportEncoding.ISO_8859_1,
+        line_ending="crlf",
+        serializer_convention="rtoml-pretty-v1",
+    )
+    evidence = load_render_profile_source_evidence(
+        bundled_path() / catalogues.sources[_M390_2025_SOURCE_REF].corpus_path,
+        render_profile,
+    )
+    return joined, semantic_map, transport, render_profile, evidence
+
+
+class TestNoteGovernedAmountsReachTheRenderer:
+    """The renderer owns the adjudication set; a caller cannot supply or suppress one.
+
+    ``render_complete_export_tree`` takes no note-governed parameter. It resolves
+    the set from the joined source it was handed and validates the digest pin
+    before rendering, so these two tests drive the real entry point over the real
+    390/2025 design rather than asserting that the wiring is spelled a particular
+    way in the module text.
+    """
+
+    def test_the_expired_rate_slots_render_scaled_with_no_caller_involvement(
+        self,
+        m390_2025_render_authorities,
+        tmp_path: Path,
+    ) -> None:
+        joined, semantic_map, transport, render_profile, evidence = m390_2025_render_authorities
+
+        rendered = render_complete_export_tree(
+            tmp_path / "export",
+            revision_id="2025",
+            joined=joined,
+            semantic_map=semantic_map,
+            transport_profile=transport,
+            render_profile=render_profile,
+            render_profile_source_evidence=evidence,
+        )
+
+        adjudicated = tuple(
+            derivation
+            for derivation in rendered.field_derivations
+            if derivation.derivation_code == "numeric-note-governed-amount-v1"
+        )
+        assert len(adjudicated) == 80, "the expired-rate slots the 2025 design points at Nota 2"
+        assert {derivation.parser_field.sheet for derivation in adjudicated} == {
+            "Pág. 2",
+            "Pág. 2 bis",
+            "Pág. 3",
+            "Pág. 4",
+        }
+        for derivation in adjudicated:
+            assert derivation.parser_field.content == "Nota 2"
+            assert str(derivation.field.data_type) == "decimal"
+            assert derivation.field.decimals == 2
+        assert not any(
+            derivation.derivation_code == "numeric-integer-v1" and derivation.parser_field.length == 17
+            for derivation in rendered.field_derivations
+        ), "no width-17 amount may still emit unscaled"
+
+    def test_a_source_the_declarations_are_not_pinned_to_is_refused_by_the_renderer(
+        self,
+        m390_2025_render_authorities,
+        tmp_path: Path,
+    ) -> None:
+        """Validation runs inside the render path, not merely beside it."""
+        joined, semantic_map, transport, render_profile, evidence = m390_2025_render_authorities
+        drifted = joined.model_copy(update={"source": joined.source.model_copy(update={"source_sha256": _OTHER_SHA})})
+        drifted_transport = transport.model_copy(update={"source_sha256": _OTHER_SHA})
+
+        with pytest.raises(RegistryValidationError, match="not pinned to the parser"):
+            render_complete_export_tree(
+                tmp_path / "export",
+                revision_id="2025",
+                joined=drifted,
+                semantic_map=semantic_map,
+                transport_profile=drifted_transport,
+                render_profile=render_profile,
+                render_profile_source_evidence=evidence,
+            )

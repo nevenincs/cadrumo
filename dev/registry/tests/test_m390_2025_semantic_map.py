@@ -3,16 +3,13 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
-from cadrumo.domain.calculations.registry.schema import DataBindingDefinition
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 
 from ..pipeline._export_tree import render_complete_export_tree
@@ -51,6 +48,9 @@ _RESERVED_ANCHORS = {
     ("Pág. 7", "A52"),
     ("Pág. 8", "A65"),
 }
+_COMPLEMENTARIA_INDICATOR_ANCHORS = {
+    (record, "A10") for record in ("Pág. 1", "Pág. 2", "Pág. 2 bis", "Pág. 3", "Pág. 4", "Pág. 6", "Pág. 8")
+}
 _REMOVED_PAGE_5_ANCHORS = {("Pág. 5", f"A{row}") for row in range(103, 112)}
 _RETIRED_PAGE_5_SLOTS = {("Pág. 5", cell) for cell in ("A27", "A51", "A101")}
 
@@ -86,23 +86,6 @@ def _stable_payload(entry: SemanticMapEntry, revision: str) -> tuple[str, str | 
         None if entry.draft_attribute is None else str(entry.draft_attribute),
         None if entry.computed_key is None else str(entry.computed_key),
     )
-
-
-def _selector_parts(binding: DataBindingDefinition) -> tuple[str, int, int, str] | None:
-    selector = binding.selector
-    if isinstance(selector, BaseModel):
-        raw: Mapping[str, object] = selector.model_dump()
-    else:
-        raw = selector
-    record = raw.get("record")
-    offset = raw.get("offset")
-    length = raw.get("length")
-    field = raw.get("field")
-    if not isinstance(record, str) or not isinstance(offset, int) or not isinstance(length, int):
-        return None
-    if not isinstance(field, str):
-        return None
-    return record, offset, length, field
 
 
 def _assert_layout_owner(entry: SemanticMapEntry, field: ExportFieldDefinition) -> None:
@@ -148,20 +131,17 @@ def test_m390_2025_bijects_every_parser_anchor_to_the_reviewed_revision_owner() 
     layout_records: dict[str, ExportRecordDefinition] = {
         str(record.record_type): record for record in revision.export_layouts[0].records
     }
-    bindings: dict[tuple[str, int, int], DataBindingDefinition] = {}
-    for binding in revision.bindings:
-        parts = _selector_parts(binding)
-        if parts is not None:
-            record, offset, length, _field = parts
-            key = record, offset, length
-            assert key not in bindings
-            bindings[key] = binding
 
-    ownership_counts: Counter[str] = Counter()
+    bindings_by_id = {str(binding.id): binding for binding in revision.bindings}
+
+    owned_field_ids: set[str] = set()
+    owned_kinds: Counter[str] = Counter()
+    covered_record_types: set[str] = set()
+    filler_anchors: set[tuple[str, str]] = set()
     for sheet in design.sheets:
         suffix = "02b" if sheet.record_identity == "Pág. 2 bis" else sheet.record_identity.split()[-1].zfill(2)
         record_type = f"page_{suffix}"
-        binding_record = f"page_{suffix if suffix == '02b' else int(suffix)}"
+        covered_record_types.add(record_type)
         layout = layout_records[record_type]
         layout_fields = {
             (field.offset, field.length): field
@@ -169,26 +149,29 @@ def test_m390_2025_bijects_every_parser_anchor_to_the_reviewed_revision_owner() 
             if field.offset is not None and field.length is not None
         }
         for field in sheet.fields:
-            entry = entries[(sheet.record_identity, field.source_cell)]
-            layout_field = layout_fields.get((field.offset, field.length))
-            if layout_field is not None:
-                _assert_layout_owner(entry, layout_field)
-                ownership_counts["layout"] += 1
-                continue
-            binding = bindings.get((binding_record, field.offset, field.length))
-            if binding is not None:
-                assert entry.kind.value == "binding"
-                assert entry.binding == binding.id
-                assert entry.legal_refs == binding.legal_refs
-                assert entry.source_refs == binding.source_refs
-                ownership_counts["binding"] += 1
-                continue
-            assert (sheet.record_identity, field.source_cell) in _RESERVED_ANCHORS
-            assert entry.kind.value == "filler"
-            ownership_counts["filler"] += 1
+            anchor = (sheet.record_identity, field.source_cell)
+            entry = entries[anchor]
+            layout_field = layout_fields[(field.offset, field.length)]
+            _assert_layout_owner(entry, layout_field)
+            assert str(layout_field.id) not in owned_field_ids
+            owned_field_ids.add(str(layout_field.id))
+            owned_kinds[layout_field.kind.value] += 1
+            if layout_field.kind.value == "filler":
+                filler_anchors.add(anchor)
+                if anchor in _COMPLEMENTARIA_INDICATOR_ANCHORS:
+                    assert str(layout_field.id).endswith("-complementaria-indicator")
+            if layout_field.kind.value == "binding":
+                binding = bindings_by_id[str(layout_field.binding)]
+                assert tuple(binding.legal_refs) == tuple(layout_field.legal_refs)
+                assert tuple(binding.source_refs) == tuple(layout_field.source_refs)
 
-    assert ownership_counts == Counter({"layout": 477, "binding": 119, "filler": 16})
-    assert {key for key in _RETIRED_PAGE_5_SLOTS if entries[key].kind.value == "filler"} == _RETIRED_PAGE_5_SLOTS
+    assert covered_record_types == set(layout_records)
+    published_fields = [field for record in revision.export_layouts[0].records for field in record.fields]
+    assert owned_field_ids == {str(field.id) for field in published_fields}
+    assert owned_kinds == Counter(field.kind.value for field in published_fields)
+    assert sum(owned_kinds.values()) == len(fields)
+    assert filler_anchors == _RESERVED_ANCHORS | _COMPLEMENTARIA_INDICATOR_ANCHORS
+    assert {anchor for anchor in filler_anchors if anchor[0] == "Pág. 5"} == _RETIRED_PAGE_5_SLOTS
 
 
 def test_m390_2025_profile_and_map_render_all_numbered_anchors_from_the_exact_source(tmp_path: Path) -> None:
