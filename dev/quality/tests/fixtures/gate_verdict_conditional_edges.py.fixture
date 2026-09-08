@@ -1,0 +1,96 @@
+import subprocess
+
+LINT_IMPORTS_COMMAND = "lint-imports"
+EXPECTED = "KEPT"
+
+
+def audit(flag: bool) -> None:
+    conditionally_output = "ordinary"
+    if flag:
+        conditionally_output = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+    conditionally_output.endswith("KEPT")
+
+    conditionally_raw = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+    if flag:
+        conditionally_raw = "ordinary"
+    conditionally_raw.endswith("KEPT")
+
+    output = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+    overwritten_verdict = "KEPT"
+    overwritten_verdict = "ordinary"
+    output.endswith(overwritten_verdict)
+
+    output.endswith(future_verdict)
+    future_verdict = "KEPT"
+
+    stable_verdict = "KEPT"
+    output.endswith(stable_verdict)
+
+    foreign = subprocess.run(["git", "--version"]).stdout
+    foreign.endswith("KEPT")
+
+    overwritten_command = LINT_IMPORTS_COMMAND
+    overwritten_command = "git"
+    subprocess.run([overwritten_command]).stdout.endswith("KEPT")
+
+    subprocess.run([future_command]).stdout.endswith("KEPT")
+    future_command = LINT_IMPORTS_COMMAND
+
+    overwritten_alias = LINT_IMPORTS_COMMAND
+    overwritten_alias = "git"
+    subprocess.run([overwritten_alias]).stdout.endswith("KEPT")
+
+    subprocess.run(["git", LINT_IMPORTS_COMMAND]).stdout.endswith("KEPT")
+    subprocess.run(["git"], cwd=LINT_IMPORTS_COMMAND).stdout.endswith("KEPT")
+
+    cyclic_command = command_alias
+    command_alias = cyclic_command
+    subprocess.run([cyclic_command]).stdout.endswith("KEPT")
+
+    if flag:
+        joined = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+    else:
+        joined = subprocess.run([LINT_IMPORTS_COMMAND]).stderr
+    joined.endswith("KEPT")
+
+    if flag:
+        nested_partial = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+        if flag:
+            nested_partial = "ordinary"
+    else:
+        nested_partial = subprocess.run([LINT_IMPORTS_COMMAND]).stderr
+    nested_partial.endswith("KEPT")
+
+    if flag:
+        annotated_join: str = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+    else:
+        annotated_join = subprocess.run([LINT_IMPORTS_COMMAND]).stderr
+    annotated_join.endswith("KEPT")
+
+    try:
+        might_fail()
+    except OSError:
+        raise
+    else:
+        try_joined = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+    try_joined.endswith("KEPT")
+
+    try:
+        might_fail()
+    except OSError:
+        pass
+    else:
+        partial_try = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+    partial_try.endswith("KEPT")
+
+    for _ in range(1):
+        loop_join = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+    loop_join.endswith("KEPT")
+
+    for loop_output in (subprocess.run([LINT_IMPORTS_COMMAND]).stdout,):
+        loop_output.endswith("KEPT")
+    loop_output.endswith("KEPT")
+
+    if flag:
+        same_branch = subprocess.run([LINT_IMPORTS_COMMAND]).stdout
+        same_branch.endswith("KEPT")

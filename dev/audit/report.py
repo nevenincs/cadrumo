@@ -141,10 +141,11 @@ def _verdict_of(line: str) -> str | None:
     text = line.strip()
     if text.endswith(")") and "(" in text:
         text = text[: text.rindex("(")].strip()
-    for verdict in ("KEPT", "BROKEN"):
-        if text.endswith(verdict) and text != verdict:
-            return verdict
-    return None
+    words = text.rsplit(maxsplit=1)
+    if len(words) != 2:
+        return None
+    verdict = words[1]
+    return verdict if verdict in {"KEPT", "BROKEN"} else None
 
 
 def _load_import_hygiene_baseline() -> dict[str, object]:

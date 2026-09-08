@@ -1,0 +1,10 @@
+import subprocess
+
+PREFIX = ""
+LINT_IMPORTS_COMMAND = "lint-imports"
+EXPECTED = "KEPT"
+
+
+def audit() -> None:
+    executable = PREFIX + LINT_IMPORTS_COMMAND
+    subprocess.run([executable]).stdout.endswith("KEPT")
