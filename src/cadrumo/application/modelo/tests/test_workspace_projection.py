@@ -34,6 +34,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.external_constants import OutputLanguage
@@ -170,7 +171,7 @@ def test_static_inspection_result_strict_round_trip_and_anti_tautology(repos) ->
     # rather than silently defaulting or reconstructing it.
     corrupted = json.loads(payload)
     del corrupted["projection"]["target"]["bucket_id"]
-    with pytest.raises(Exception, match=r"(?i)bucket_id|field required|missing"):
+    with pytest.raises(ValidationError, match=r"(?i)bucket_id|field required|missing"):
         ModeloWorkspaceStaticInspectionResultV1.model_validate_json(json.dumps(corrupted))
 
 
@@ -200,7 +201,7 @@ def test_graded_snapshot_result_strict_round_trip_and_anti_tautology(repos) -> N
 
     corrupted = json.loads(payload)
     del corrupted["projection"]["baseline"]["contributor_epoch_digest"]
-    with pytest.raises(Exception, match=r"(?i)contributor_epoch_digest|field required|missing"):
+    with pytest.raises(ValidationError, match=r"(?i)contributor_epoch_digest|field required|missing"):
         ModeloWorkspaceGradedSnapshotResultV1.model_validate_json(json.dumps(corrupted))
 
 
@@ -439,7 +440,7 @@ def test_resolved_target_is_isolated_from_a_work_unit_mutation_after_capture(rep
     a_casilla_id = next(iter(mutated_casilla_values))
     mutated_casilla_values[a_casilla_id] = mutated_casilla_values[a_casilla_id] + Decimal("999999.99")
     mutated_revision = stored_revision.model_copy(update={"casilla_values": mutated_casilla_values})
-    with pytest.raises(Exception, match=r"(?i)does not match the derived id"):
+    with pytest.raises(ValidationError, match=r"(?i)does not match the derived id"):
         calculation_repo.save(upsert_calculation_revision(catalogue, mutated_revision))
 
     # Real mutation of the SAME work unit's mutable ``state`` field,
