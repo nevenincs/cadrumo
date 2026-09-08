@@ -73,15 +73,19 @@ def os_credential_store_refusal() -> str | None:
 
 
 def require_os_credential_store() -> None:
-    """Skip THIS case on a measured refusal, never unconditionally.
+    """Fail THIS case on a measured refusal, naming what the host refused.
 
     ``mint_profile_session`` has no file-store fallback: the persisted receipt
     is split knowledge whose on-disk half is written only once the store has
     taken the session key. A case whose subject needs a receipt that EXISTS
-    cannot reach it here, and a skip naming the measured reason is honest where
-    a red no code change can close is not. Pinning a null or file backend
-    instead would leave the mint asserting nothing about the writer it names.
+    cannot reach it on a refusing host, so the case must not run there -- which
+    is exactly what the ``os_keychain`` marker decides, and every lane excludes
+    it. Once a lane has explicitly enrolled the marker, an absent prerequisite
+    is a red naming the measured reason, never a green skip: the same shape
+    ``requires_live_enabled`` uses for the live opt-in. Pinning a null or file
+    backend instead would leave the mint asserting nothing about the writer it
+    names.
     """
     refusal = os_credential_store_refusal()
     if refusal is not None:
-        pytest.skip(f"the OS credential store cannot custody a profile-session key on this host: {refusal}")
+        pytest.fail(f"the OS credential store cannot custody a profile-session key on this host: {refusal}")

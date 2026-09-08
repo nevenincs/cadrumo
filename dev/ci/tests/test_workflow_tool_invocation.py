@@ -21,6 +21,7 @@ misreading: the lane looked correctly guarded and was not guarded at all.
 from __future__ import annotations
 
 import re
+from importlib import import_module
 from pathlib import Path
 from typing import Any
 
@@ -185,6 +186,6 @@ def test_the_watchdog_is_importable_as_a_module() -> None:
     the test does not have. What must hold is that its module-level imports
     resolve, which is the exact thing script invocation broke.
     """
-    module = pytest.importorskip("dev.ci.runner_queue_watchdog")
+    module = import_module("dev.ci.runner_queue_watchdog")
 
     assert module.__package__ == "dev.ci", "the watchdog must resolve as part of its package"

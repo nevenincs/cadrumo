@@ -40,9 +40,7 @@
           "providers": [
             "certificate",
             "clave_movil",
-            "clave_pin",
-            "clave_permanente",
-            "dnie_pkcs"
+            "clave_permanente"
           ],
           "removed_certificate_secrets": 0,
           "removed_certificate_sources": 0,

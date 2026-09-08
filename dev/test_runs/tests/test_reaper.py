@@ -65,10 +65,10 @@ def test_symlinks_are_never_assessed_or_removed(tmp_path: Path) -> None:
     date = tmp_path / "2026-09-08"
     date.mkdir()
     link = date / "stamp-pytest-999-dddddddd"
-    try:
-        link.symlink_to(target, target_is_directory=True)
-    except OSError:
-        pytest.skip("directory symlinks are unavailable")
+    # Unguarded: a host that cannot create a directory symlink raises here and
+    # is reported as a red naming the OS refusal, rather than a green skip that
+    # retires the "never follow a link" proof this case exists for.
+    link.symlink_to(target, target_is_directory=True)
 
     assert reaper.assess_run_directories(tmp_path) == ()
     assert target.is_dir()
