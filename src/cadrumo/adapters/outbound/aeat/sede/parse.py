@@ -17,7 +17,7 @@ from html import unescape
 from typing import Final
 from urllib.parse import urljoin, urlparse
 
-from bs4 import Tag
+from bs4 import BeautifulSoup, Tag
 from pydantic import AnyHttpUrl
 
 from .....core.config import Settings
@@ -78,6 +78,19 @@ def parse_resumen_tree(html: str, *, base_url: str) -> tuple[Expediente, ...]:
         SedeParseError: If the page has no category tree at all (the
             authenticated session likely expired).
     """
+    soup = _parse_resumen_html(html)
+    _require_resumen_heading(soup)
+
+    results: list[Expediente] = []
+    for anchor in soup.find_all("a"):
+        expediente = _parse_resumen_anchor(anchor, base_url=base_url)
+        if expediente is not None:
+            results.append(expediente)
+    return tuple(results)
+
+
+def _parse_resumen_html(html: str) -> BeautifulSoup:
+    """Parse and clean one authenticated ResumenVlt document."""
     try:
         soup = parse_html(html)
     except Exception as exc:
@@ -86,52 +99,81 @@ def parse_resumen_tree(html: str, *, base_url: str) -> tuple[Expediente, ...]:
     # Strip script/style so text traversal is clean.
     for tag in soup(["script", "style"]):
         tag.decompose()
+    return soup
 
+
+def _require_resumen_heading(soup: BeautifulSoup) -> None:
+    """Refuse a document that is not the authenticated expediente summary."""
     # Sanity check: every ResumenVlt page has the "Mis Expedientes"
     # page title as an <h1>/<h2>. Missing → page drift or bad session.
     heading_regex = re.compile(r"Mis\s+Expedientes", re.I)
-    heading = None
     for candidate in soup.find_all(["h1", "h2"]):
         if heading_regex.search(candidate.get_text(" ", strip=True)):
-            heading = candidate
-            break
-    if heading is None:
-        raise SedeParseError("ResumenVlt page missing 'Mis Expedientes' heading")
+            return
+    raise SedeParseError("ResumenVlt page missing 'Mis Expedientes' heading")
 
-    results: list[Expediente] = []
-    for anchor in soup.find_all("a"):
-        onclick = str(anchor.get("onclick") or "").strip()
-        if not any(h in onclick for h in _EXPEDIENTE_LINK_HANDLERS):
-            continue
-        href = str(anchor.get("href") or "").strip()
-        if not href or href.startswith("#"):
-            continue
-        expediente_id = anchor.get_text(" ", strip=True)
-        if not expediente_id or " " in expediente_id:
-            continue
-        category_path = _collect_category_path(anchor)
-        modelo = _infer_modelo_from_category(category_path)
-        ejercicio = _infer_ejercicio(expediente_id, href)
-        absolute_url = urljoin(base_url, href) if not urlparse(href).netloc else href
-        try:
-            expediente = Expediente(
-                expediente_id=expediente_id,
-                modelo=modelo,
-                ejercicio=ejercicio,
-                category_path=category_path,
-                detail_url=AnyHttpUrl(absolute_url),
-            )
-        except Exception as exc:  # pragma: no cover — schema drift guard
-            _log.debug(
-                "parse_resumen_tree: skipping malformed expediente row id=%r href=%r: %s",
-                expediente_id,
-                href,
-                exc,
-                exc_info=True,
-            )
-            continue
-        results.append(expediente)
-    return tuple(results)
+
+def _parse_resumen_anchor(anchor: Tag, *, base_url: str) -> Expediente | None:
+    """Decode one summary-tree anchor, ignoring non-expediente anchors."""
+    payload = _resumen_anchor_payload(anchor)
+    if payload is None:
+        return None
+    expediente_id, href = payload
+    category_path = _collect_category_path(anchor)
+    modelo = _infer_modelo_from_category(category_path)
+    ejercicio = _infer_ejercicio(expediente_id, href)
+    absolute_url = urljoin(base_url, href) if not urlparse(href).netloc else href
+    return _build_resumen_expediente(
+        expediente_id=expediente_id,
+        modelo=modelo,
+        ejercicio=ejercicio,
+        category_path=category_path,
+        absolute_url=absolute_url,
+        href=href,
+    )
+
+
+def _resumen_anchor_payload(anchor: Tag) -> tuple[str, str] | None:
+    """Return the expediente id and href when *anchor* is a valid leaf."""
+    onclick = str(anchor.get("onclick") or "").strip()
+    if not any(handler in onclick for handler in _EXPEDIENTE_LINK_HANDLERS):
+        return None
+    href = str(anchor.get("href") or "").strip()
+    if not href or href.startswith("#"):
+        return None
+    expediente_id = anchor.get_text(" ", strip=True)
+    if not expediente_id or " " in expediente_id:
+        return None
+    return expediente_id, href
+
+
+def _build_resumen_expediente(
+    *,
+    expediente_id: str,
+    modelo: str | None,
+    ejercicio: int | None,
+    category_path: tuple[str, ...],
+    absolute_url: str,
+    href: str,
+) -> Expediente | None:
+    """Construct one strict expediente, retaining the schema-drift guard."""
+    try:
+        return Expediente(
+            expediente_id=expediente_id,
+            modelo=modelo,
+            ejercicio=ejercicio,
+            category_path=category_path,
+            detail_url=AnyHttpUrl(absolute_url),
+        )
+    except Exception as exc:  # pragma: no cover — schema drift guard
+        _log.debug(
+            "parse_resumen_tree: skipping malformed expediente row id=%r href=%r: %s",
+            expediente_id,
+            href,
+            exc,
+            exc_info=True,
+        )
+        return None
 
 
 def parse_expediente_detail(

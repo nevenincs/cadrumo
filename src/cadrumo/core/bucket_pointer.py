@@ -116,31 +116,40 @@ def _pointer_entry_signature(target: Path) -> tuple[str, int, int] | None:
         return None
 
 
-def _read_pointer_bytes(target: Path) -> bytes | None:
-    """Read one complete record, waiting out a Windows replacement race."""
+def _open_pointer_descriptor(target: Path) -> int:
+    from .link_safety import is_link_like
 
-    def read_once() -> bytes:
-        from .link_safety import is_link_like
+    if is_link_like(target):
+        raise OSError("active-profile pointer must not be link-like")
+    return os.open(target, os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0))
 
-        if is_link_like(target):
-            raise OSError("active-profile pointer must not be link-like")
-        descriptor = os.open(target, os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0))
-        try:
-            metadata = os.fstat(descriptor)
-            if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > _POINTER_MAXIMUM_BYTES:
-                raise OSError("active-profile pointer must be a bounded regular file")
-            payload = os.read(descriptor, _POINTER_MAXIMUM_BYTES + 1)
-            if len(payload) != metadata.st_size or len(payload) > _POINTER_MAXIMUM_BYTES:
-                raise OSError("active-profile pointer changed during read")
-            return payload
-        finally:
-            os.close(descriptor)
 
-    if sys.platform != "win32":
-        try:
-            return read_once()
-        except FileNotFoundError:
-            return None
+def _read_bounded_pointer_descriptor(descriptor: int) -> bytes:
+    metadata = os.fstat(descriptor)
+    if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > _POINTER_MAXIMUM_BYTES:
+        raise OSError("active-profile pointer must be a bounded regular file")
+    payload = os.read(descriptor, _POINTER_MAXIMUM_BYTES + 1)
+    if len(payload) != metadata.st_size or len(payload) > _POINTER_MAXIMUM_BYTES:
+        raise OSError("active-profile pointer changed during read")
+    return payload
+
+
+def _read_pointer_once(target: Path) -> bytes:
+    descriptor = _open_pointer_descriptor(target)
+    try:
+        return _read_bounded_pointer_descriptor(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def _read_pointer_bytes_without_contention(target: Path) -> bytes | None:
+    try:
+        return _read_pointer_once(target)
+    except FileNotFoundError:
+        return None
+
+
+def _read_pointer_bytes_with_windows_contention(target: Path) -> bytes | None:
     from .windows_contention import is_windows_contention
 
     started = time.monotonic()
@@ -149,7 +158,7 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
     signature = _pointer_entry_signature(target)
     while True:
         try:
-            return read_once()
+            return _read_pointer_once(target)
         except FileNotFoundError:
             return None
         except PermissionError as exc:
@@ -164,6 +173,13 @@ def _read_pointer_bytes(target: Path) -> bytes | None:
             if not transient_windows_refusal or now >= deadline or now >= ceiling:
                 raise
             time.sleep(_POINTER_READ_POLL_SECONDS)
+
+
+def _read_pointer_bytes(target: Path) -> bytes | None:
+    """Read one complete record, waiting out a Windows replacement race."""
+    if sys.platform == "win32":
+        return _read_pointer_bytes_with_windows_contention(target)
+    return _read_pointer_bytes_without_contention(target)
 
 
 def read_pointer(root: Path) -> BucketPointer:

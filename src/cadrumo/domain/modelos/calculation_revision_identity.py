@@ -27,6 +27,7 @@ from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Model
 
 if TYPE_CHECKING:
     from .calculation_revision import CalculationRevisionIdentityInputs, CalculationSourceIssue, CalculationSourceRef
+    from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity
 
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 
@@ -323,6 +324,71 @@ def _m303_regimen_simplificado_annual_summary_handoff_revision_id_payload(
     return {"m303_regimen_simplificado_annual_summary_handoff": handoff.unsigned_identity_payload()}
 
 
+def _relation_overrides_revision_id_payload(
+    relation_overrides: Mapping[RelationId, str] | None,
+) -> dict[str, object]:
+    """Build the optional canonical relation-override payload."""
+    if not relation_overrides:
+        return {}
+    return {
+        "relation_overrides": dict(
+            sorted(
+                (_validated_relation_id(k, surface="relation_overrides"), v.strip())
+                for k, v in relation_overrides.items()
+            ),
+        ),
+    }
+
+
+def _row_identity_revision_id_payload(
+    *,
+    row_binding_values: Mapping[BindingId, Mapping[str, str]] | None,
+    row_source_identities: Mapping[RowBindingKey, RowSourceIdentity],
+    row_casilla_values: Mapping[RowCasillaKey, Decimal],
+    row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance],
+) -> dict[str, object]:
+    """Build the optional payload for repeating-row identity channels."""
+    payload: dict[str, object] = {}
+    raw_row_bindings: dict[object, object] = {
+        binding_id: rows for binding_id, rows in (row_binding_values or {}).items()
+    }
+    canonical_row_bindings = canonical_row_binding_values(
+        raw_row_bindings,
+        surface="row_binding_values",
+    )
+    if canonical_row_bindings:
+        payload["row_binding_values"] = canonical_row_bindings
+    canonical_row_identities = canonical_row_source_identities(row_source_identities)
+    if canonical_row_identities:
+        payload["row_source_identities"] = canonical_row_identities
+    canonical_casilla_values = canonical_row_casilla_values(row_casilla_values)
+    if canonical_casilla_values:
+        payload["row_casilla_values"] = canonical_casilla_values
+    canonical_casilla_provenance = canonical_row_casilla_provenance(row_casilla_provenance)
+    if canonical_casilla_provenance:
+        payload["row_casilla_provenance"] = canonical_casilla_provenance
+    return payload
+
+
+def _detail_rows_revision_id_payload(
+    detail_rows: Sequence[ModeloDetailRow],
+) -> dict[str, object]:
+    """Build the optional canonical detail-row payload."""
+    canonical_rows = _canonical_detail_rows(tuple(detail_rows))
+    if not canonical_rows:
+        return {}
+    return {"detail_rows": canonical_rows}
+
+
+def _amendment_revision_id_payload(
+    amendment_identity: CalculationRevisionAmendmentIdentity | None,
+) -> dict[str, object]:
+    """Build the optional immutable amendment identity payload."""
+    if amendment_identity is None:
+        return {}
+    return {"amendment_identity": amendment_identity.model_dump(mode="json")}
+
+
 def derive_calculation_revision_id_from_identity_inputs(
     identity_inputs: CalculationRevisionIdentityInputs,
 ) -> str:
@@ -379,40 +445,22 @@ def derive_calculation_revision_id_from_identity_inputs(
         casilla_values=casilla_values,
         source_transaction_ids=source_transaction_ids,
     )
-    if relation_overrides:
-        payload["relation_overrides"] = dict(
-            sorted(
-                (_validated_relation_id(k, surface="relation_overrides"), v.strip())
-                for k, v in relation_overrides.items()
-            ),
-        )
+    payload.update(_relation_overrides_revision_id_payload(relation_overrides))
     payload.update(
         _m210_revision_id_payload(m210_official_tipo_renta_code, m210_gross_income_source_mode),
     )
-    raw_row_bindings: dict[object, object] = {
-        binding_id: rows for binding_id, rows in (row_binding_values or {}).items()
-    }
-    canonical_row_bindings = canonical_row_binding_values(
-        raw_row_bindings,
-        surface="row_binding_values",
+    payload.update(
+        _row_identity_revision_id_payload(
+            row_binding_values=row_binding_values,
+            row_source_identities=row_source_identities,
+            row_casilla_values=row_casilla_values,
+            row_casilla_provenance=row_casilla_provenance,
+        ),
     )
-    if canonical_row_bindings:
-        payload["row_binding_values"] = canonical_row_bindings
-    canonical_row_identities = canonical_row_source_identities(row_source_identities)
-    if canonical_row_identities:
-        payload["row_source_identities"] = canonical_row_identities
-    canonical_casilla_values = canonical_row_casilla_values(row_casilla_values)
-    if canonical_casilla_values:
-        payload["row_casilla_values"] = canonical_casilla_values
-    canonical_casilla_provenance = canonical_row_casilla_provenance(row_casilla_provenance)
-    if canonical_casilla_provenance:
-        payload["row_casilla_provenance"] = canonical_casilla_provenance
     payload.update(
         _borrador_revision_id_payload(borrador_snapshot_id, bindings_sourced_from_borrador),
     )
-    canonical_rows = _canonical_detail_rows(tuple(detail_rows))
-    if canonical_rows:
-        payload["detail_rows"] = canonical_rows
+    payload.update(_detail_rows_revision_id_payload(detail_rows))
     payload.update(_source_issues_revision_id_payload(source_issues))
     payload.update(_source_provenance_revision_id_payload(source_provenance))
     payload.update(_filing_instance_evidence_revision_id_payload(filing_instance_evidence))
@@ -421,8 +469,7 @@ def derive_calculation_revision_id_from_identity_inputs(
             m303_regimen_simplificado_annual_summary_handoff,
         ),
     )
-    if amendment_identity is not None:
-        payload["amendment_identity"] = amendment_identity.model_dump(mode="json")
+    payload.update(_amendment_revision_id_payload(amendment_identity))
     payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
     return content_hash_hex(payload)
 

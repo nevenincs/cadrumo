@@ -608,6 +608,31 @@ def _flag_bool(raw: str, *, key: str) -> bool:
     return parsed
 
 
+def _parse_flag_parts(raw: str) -> dict[str, str]:
+    """Parse and validate the closed key vocabulary of a descendant flag."""
+    parts = {k.strip().upper(): v.strip() for k, _, v in (p.partition("=") for p in raw.split(","))}
+    unknown = sorted(key for key in parts if key not in _DESCENDIENTE_FLAG_KEYS)
+    if unknown:
+        raise ProfileAnswerTypeError(
+            f"--descendiente does not accept {', '.join(unknown)}; "
+            f"accepted keys are {', '.join(sorted(_DESCENDIENTE_FLAG_KEYS))}",
+        )
+    return parts
+
+
+def _flag_birth_date(parts: dict[str, str], *, raw: str) -> date:
+    """Read the required birth date from parsed descendant flag parts."""
+    nacimiento_raw = parts.get("NACIMIENTO")
+    if not nacimiento_raw:
+        raise ProfileAnswerTypeError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
+    # parse_iso8601_date returns None only for absent/empty input (it raises on a
+    # malformed non-empty string); nacimiento_raw is non-empty here.
+    birth_date = parse_iso8601_date(nacimiento_raw)
+    if birth_date is None:
+        raise ProfileAnswerTypeError(f"--descendiente NACIMIENTO carries no readable date; got: {raw!r}")
+    return birth_date
+
+
 def parse_descendiente_flag(raw: str) -> DescendantInfo:
     """Parse a ``--descendiente NACIMIENTO=YYYY-MM-DD,...`` flag value.
 
@@ -673,23 +698,8 @@ def parse_descendiente_flag(raw: str) -> DescendantInfo:
     Returns a validated :class:`DescendantInfo`.  Raises ``ValueError``
     on missing required keys or invalid values.
     """
-    parts = {k.strip().upper(): v.strip() for k, _, v in (p.partition("=") for p in raw.split(","))}
-
-    unknown = sorted(key for key in parts if key not in _DESCENDIENTE_FLAG_KEYS)
-    if unknown:
-        raise ProfileAnswerTypeError(
-            f"--descendiente does not accept {', '.join(unknown)}; "
-            f"accepted keys are {', '.join(sorted(_DESCENDIENTE_FLAG_KEYS))}",
-        )
-
-    nacimiento_raw = parts.get("NACIMIENTO")
-    if not nacimiento_raw:
-        raise ProfileAnswerTypeError(f"--descendiente flag requires NACIMIENTO=YYYY-MM-DD; got: {raw!r}")
-    # parse_iso8601_date returns None only for absent/empty input (it raises on a
-    # malformed non-empty string); nacimiento_raw is non-empty here.
-    birth_date = parse_iso8601_date(nacimiento_raw)
-    if birth_date is None:
-        raise ProfileAnswerTypeError(f"--descendiente NACIMIENTO carries no readable date; got: {raw!r}")
+    parts = _parse_flag_parts(raw)
+    birth_date = _flag_birth_date(parts, raw=raw)
 
     # RELACION is read through the same stored-token authority the fact-index
     # path uses, so the flag door and the profile-read door refuse an unknown

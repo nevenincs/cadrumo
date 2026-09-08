@@ -96,6 +96,104 @@ _AWAIT_TERMINAL_INITIAL_BACKOFF_SECONDS = 0.025
 _AWAIT_TERMINAL_MAX_BACKOFF_SECONDS = 0.25
 
 
+def _financial_operand_broker(
+    custody: OperationFinancialOperandCustodyRepository | None,
+    clock: Callable[[], datetime],
+) -> OperationTransientFinancialOperandBroker | None:
+    if custody is None:
+        return None
+    return OperationTransientFinancialOperandBroker(custody=custody, clock=clock)
+
+
+def _require_positive_duration(name: str, duration: timedelta | None) -> None:
+    if duration is not None and duration <= timedelta():
+        raise ValueError(f"{name} must be positive when configured")
+
+
+def _validate_supervisor_configuration(
+    registry: OperationRegistry,
+    lease_duration: timedelta,
+    execution_timeout: timedelta | None,
+    cleanup_timeout: timedelta | None,
+    financial_operands: OperationTransientFinancialOperandBroker | None,
+) -> None:
+    if lease_duration <= timedelta():
+        raise ValueError("operation lease duration must be positive")
+    _require_positive_duration("operation execution timeout", execution_timeout)
+    _require_positive_duration("operation cleanup timeout", cleanup_timeout)
+    for definition in registry.definitions:
+        declaration = definition.ephemeral_secret
+        if declaration is not None and declaration.lifetime >= lease_duration:
+            raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
+        if definition.transient_financial_operands and financial_operands is None:
+            raise ValueError("transient financial operand operations require a durable custody repository")
+
+
+def _advance_events(
+    snapshot: OperationPersistedSnapshot,
+    events: tuple[OperationEvent, ...],
+    revision: int,
+    now: datetime,
+) -> tuple[OperationEvent, ...]:
+    return tuple(
+        event.model_copy(update={"revision": revision, "sequence": snapshot.event_cursor + index + 1, "timestamp": now})
+        for index, event in enumerate(events)
+    )
+
+
+def _advance_phase_code(snapshot: OperationPersistedSnapshot, emitted: tuple[OperationEvent, ...]) -> str | None:
+    phase_events = tuple(event for event in emitted if isinstance(event, OperationPhaseEvent))
+    return snapshot.phase_code if not phase_events else phase_events[-1].phase_code
+
+
+def _advance_value[T](current: T, requested: T | None) -> T:
+    return current if requested is None else requested
+
+
+def _advanced_snapshot(
+    snapshot: OperationPersistedSnapshot,
+    *,
+    revision: int,
+    lifecycle: OperationLifecycle,
+    now: datetime,
+    emitted: tuple[OperationEvent, ...],
+    pending: OperationPendingInteraction | None,
+    consumed: tuple[OperationConsumedInteraction, ...] | None,
+    effect: OperationEffect | None,
+    execution_deadline: datetime | None,
+    cleanup_deadline: datetime | None,
+    cancellation_requested_at: datetime | None,
+    cancellation_acknowledged_at: datetime | None,
+    cancellation_deferred: bool | None,
+    executor_entered_at: datetime | None,
+) -> OperationPersistedSnapshot:
+    return snapshot.model_copy(
+        update={
+            "revision": revision,
+            "lifecycle": lifecycle,
+            "updated_at": now,
+            "event_cursor": snapshot.event_cursor + len(emitted),
+            "events": emitted,
+            "phase_code": _advance_phase_code(snapshot, emitted),
+            "pending_interaction": pending,
+            "consumed_interactions": _advance_value(snapshot.consumed_interactions, consumed),
+            "effect": _advance_value(snapshot.effect, effect),
+            "execution_deadline": _advance_value(snapshot.execution_deadline, execution_deadline),
+            "cleanup_deadline": _advance_value(snapshot.cleanup_deadline, cleanup_deadline),
+            "cancellation_requested_at": _advance_value(
+                snapshot.cancellation_requested_at,
+                cancellation_requested_at,
+            ),
+            "cancellation_acknowledged_at": _advance_value(
+                snapshot.cancellation_acknowledged_at,
+                cancellation_acknowledged_at,
+            ),
+            "cancellation_deferred": _advance_value(snapshot.cancellation_deferred, cancellation_deferred),
+            "executor_entered_at": _advance_value(snapshot.executor_entered_at, executor_entered_at),
+        }
+    )
+
+
 class OperationSupervisor(OperationSupervisorLeaseMixin):
     """Coordinate durable execution, interactions, recovery, and settlement."""
 
@@ -141,26 +239,14 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         self._durable_change_events: dict[OperationId, asyncio.Event] = {}
         self._durable_revisions: dict[OperationId, int] = {}
         self._ephemeral_secrets = EphemeralSecretBroker()
-        self._financial_operands = (
-            OperationTransientFinancialOperandBroker(custody=financial_operand_custody, clock=clock)
-            if financial_operand_custody is not None
-            else None
+        self._financial_operands = _financial_operand_broker(financial_operand_custody, clock)
+        _validate_supervisor_configuration(
+            registry,
+            lease_duration,
+            execution_timeout,
+            cleanup_timeout,
+            self._financial_operands,
         )
-
-        if lease_duration <= timedelta():
-            raise ValueError("operation lease duration must be positive")
-        for name, duration in (
-            ("operation execution timeout", execution_timeout),
-            ("operation cleanup timeout", cleanup_timeout),
-        ):
-            if duration is not None and duration <= timedelta():
-                raise ValueError(f"{name} must be positive when configured")
-        for definition in registry.definitions:
-            declaration = definition.ephemeral_secret
-            if declaration is not None and declaration.lifetime >= lease_duration:
-                raise ValueError("ephemeral secret lifetime must be shorter than the owner lease")
-            if definition.transient_financial_operands and self._financial_operands is None:
-                raise ValueError("transient financial operand operations require a durable custody repository")
 
     async def submit[RequestPayloadT: BaseModel](
         self, request: OperationRequest[RequestPayloadT], *, operation_id: OperationId | None = None
@@ -677,45 +763,22 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         async with self._lease_lock(snapshot.identity.operation_id):
             lease = await self._require_owned_lease_unlocked(snapshot.identity, now)
             revision = snapshot.revision + 1
-            emitted = tuple(
-                event.model_copy(
-                    update={"revision": revision, "sequence": snapshot.event_cursor + index + 1, "timestamp": now}
-                )
-                for index, event in enumerate(events)
-            )
-            phase_events = tuple(event for event in emitted if isinstance(event, OperationPhaseEvent))
-            successor = snapshot.model_copy(
-                update={
-                    "revision": revision,
-                    "lifecycle": lifecycle,
-                    "updated_at": now,
-                    "event_cursor": snapshot.event_cursor + len(emitted),
-                    "events": emitted,
-                    "phase_code": snapshot.phase_code if not phase_events else phase_events[-1].phase_code,
-                    "pending_interaction": pending,
-                    "consumed_interactions": snapshot.consumed_interactions if consumed is None else consumed,
-                    "effect": snapshot.effect if effect is None else effect,
-                    "execution_deadline": (
-                        snapshot.execution_deadline if execution_deadline is None else execution_deadline
-                    ),
-                    "cleanup_deadline": snapshot.cleanup_deadline if cleanup_deadline is None else cleanup_deadline,
-                    "cancellation_requested_at": (
-                        snapshot.cancellation_requested_at
-                        if cancellation_requested_at is None
-                        else cancellation_requested_at
-                    ),
-                    "cancellation_acknowledged_at": (
-                        snapshot.cancellation_acknowledged_at
-                        if cancellation_acknowledged_at is None
-                        else cancellation_acknowledged_at
-                    ),
-                    "cancellation_deferred": (
-                        snapshot.cancellation_deferred if cancellation_deferred is None else cancellation_deferred
-                    ),
-                    "executor_entered_at": (
-                        snapshot.executor_entered_at if executor_entered_at is None else executor_entered_at
-                    ),
-                }
+            emitted = _advance_events(snapshot, events, revision, now)
+            successor = _advanced_snapshot(
+                snapshot,
+                revision=revision,
+                lifecycle=lifecycle,
+                now=now,
+                emitted=emitted,
+                pending=pending,
+                consumed=consumed,
+                effect=effect,
+                execution_deadline=execution_deadline,
+                cleanup_deadline=cleanup_deadline,
+                cancellation_requested_at=cancellation_requested_at,
+                cancellation_acknowledged_at=cancellation_acknowledged_at,
+                cancellation_deferred=cancellation_deferred,
+                executor_entered_at=executor_entered_at,
             )
             await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
             if discard_ephemeral_secret:
@@ -779,36 +842,35 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         """Consume a rejected REVIEW response through the shared response transition."""
         return await self.respond(response)
 
-    async def request_cancel(
+    async def _cancel_pre_entry_secret(
         self,
-        operation_id: OperationId,
-        *,
-        expected_revision: int | None = None,
-    ) -> OperationPersistedSnapshot:
-        """Request cooperative cancellation at an optional exact revision."""
-        snapshot = await self.inspect(operation_id)
-        if expected_revision is not None and snapshot.revision != expected_revision:
-            raise ValueError("operation cancellation expected revision is stale")
-        if snapshot.secret_requirement is not None and snapshot.executor_entered_at is None:
-            requested_at = self._clock()
-            event = OperationNoticeEvent(
-                identity=snapshot.identity,
-                revision=0,
-                sequence=1,
-                timestamp=requested_at,
-                code="operation.secret.cancelled",
-                notice_code="operation.secret.cancelled",
-            )
-            acknowledged = await self._advance(
-                snapshot,
-                lifecycle=OperationLifecycle.SETTLING,
-                events=(event,),
-                cleanup_deadline=requested_at + self._lease_duration,
-                cancellation_requested_at=requested_at,
-                cancellation_acknowledged_at=requested_at,
-                discard_ephemeral_secret=True,
-            )
-            return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)
+        snapshot: OperationPersistedSnapshot,
+    ) -> OperationPersistedSnapshot | None:
+        """Acknowledge and settle a cancellation before executor entry."""
+        if snapshot.secret_requirement is None or snapshot.executor_entered_at is not None:
+            return None
+        requested_at = self._clock()
+        event = OperationNoticeEvent(
+            identity=snapshot.identity,
+            revision=0,
+            sequence=1,
+            timestamp=requested_at,
+            code="operation.secret.cancelled",
+            notice_code="operation.secret.cancelled",
+        )
+        acknowledged = await self._advance(
+            snapshot,
+            lifecycle=OperationLifecycle.SETTLING,
+            events=(event,),
+            cleanup_deadline=requested_at + self._lease_duration,
+            cancellation_requested_at=requested_at,
+            cancellation_acknowledged_at=requested_at,
+            discard_ephemeral_secret=True,
+        )
+        return await self._settle_pre_entry_secret_wait(acknowledged, OperationTerminalCondition.CANCELLED)
+
+    def _validate_cancellation_request(self, snapshot: OperationPersistedSnapshot) -> timedelta:
+        """Validate cancellation policy and return the configured cleanup window."""
         cancellation = self._require_pinned_definition(snapshot).capabilities.cancellation
         if cancellation is OperationCancellation.UNSUPPORTED:
             raise ValueError("operation does not support cancellation")
@@ -817,11 +879,18 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             raise ValueError("terminal operation cannot receive a cancellation request")
         if snapshot.lifecycle in LIFECYCLES_BEFORE_EXECUTOR_ENTRY:
             raise ValueError("operation must be running before cancellation can be requested")
-        if snapshot.cancellation_requested_at is not None:
-            return snapshot
         cleanup_timeout = self._cleanup_timeout
         if cleanup_timeout is None:
             raise ValueError("cancellable operation requires a configured cleanup timeout")
+        return cleanup_timeout
+
+    async def _persist_cancellation_request(
+        self,
+        operation_id: OperationId,
+        snapshot: OperationPersistedSnapshot,
+        cleanup_timeout: timedelta,
+    ) -> OperationPersistedSnapshot:
+        """Persist the cancellation state and update its in-memory context."""
         requested_at = self._clock()
         successor = await self._advance(
             snapshot,
@@ -833,6 +902,24 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
         if context is not None:
             context.cancellation.record_request(successor)
         return successor
+
+    async def request_cancel(
+        self,
+        operation_id: OperationId,
+        *,
+        expected_revision: int | None = None,
+    ) -> OperationPersistedSnapshot:
+        """Request cooperative cancellation at an optional exact revision."""
+        snapshot = await self.inspect(operation_id)
+        if expected_revision is not None and snapshot.revision != expected_revision:
+            raise ValueError("operation cancellation expected revision is stale")
+        pre_entry = await self._cancel_pre_entry_secret(snapshot)
+        if pre_entry is not None:
+            return pre_entry
+        cleanup_timeout = self._validate_cancellation_request(snapshot)
+        if snapshot.cancellation_requested_at is not None:
+            return snapshot
+        return await self._persist_cancellation_request(operation_id, snapshot, cleanup_timeout)
 
     async def _acknowledge_cancellation(
         self,
@@ -890,9 +977,12 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             return snapshot
         return await self._advance(snapshot, lifecycle=OperationLifecycle.SETTLING)
 
-    async def settle(self, operation_id: OperationId, receipt: OperationTerminalReceipt) -> OperationPersistedSnapshot:
-        """Persist one validated terminal receipt after owned cleanup completes."""
-        snapshot = await self.inspect(operation_id)
+    def _validate_settlement_request(
+        self,
+        snapshot: OperationPersistedSnapshot,
+        receipt: OperationTerminalReceipt,
+    ) -> None:
+        """Validate receipt identity, declared effects, and local stop proof."""
         if receipt.identity != snapshot.identity or receipt.revision != snapshot.revision + 1:
             raise ValueError("terminal receipt does not match successor revision")
         definition = self._require_pinned_definition(snapshot)
@@ -905,55 +995,91 @@ class OperationSupervisor(OperationSupervisorLeaseMixin):
             self._validate_executor_stopped_for_settlement(snapshot, receipt.condition)
         if receipt.condition is OperationTerminalCondition.CANCELLED:
             self._validate_cancelled_settlement(snapshot)
+
+    @staticmethod
+    def _settlement_events(
+        snapshot: OperationPersistedSnapshot,
+        receipt: OperationTerminalReceipt,
+        now: datetime,
+    ) -> tuple[OperationEvent, ...]:
+        """Build diagnostic and terminal events in their durable sequence order."""
+        diagnostic_event = (
+            OperationDiagnosticEvent(
+                identity=snapshot.identity,
+                revision=receipt.revision,
+                sequence=snapshot.event_cursor + 1,
+                timestamp=now,
+                code="operation.diagnostic",
+                diagnostic_ref=receipt.diagnostic_ref,
+            )
+            if receipt.diagnostic_ref is not None
+            else None
+        )
+        terminal_event = OperationTerminalEvent(
+            identity=snapshot.identity,
+            revision=receipt.revision,
+            sequence=snapshot.event_cursor + (2 if diagnostic_event is not None else 1),
+            timestamp=now,
+            code="operation.terminal",
+            receipt=receipt,
+        )
+        return (diagnostic_event, terminal_event) if diagnostic_event is not None else (terminal_event,)
+
+    @staticmethod
+    def _settlement_successor(
+        snapshot: OperationPersistedSnapshot,
+        receipt: OperationTerminalReceipt,
+        events: tuple[OperationEvent, ...],
+    ) -> OperationPersistedSnapshot:
+        """Materialize the terminal snapshot from the committed receipt events."""
+        return snapshot.model_copy(
+            update={
+                "revision": receipt.revision,
+                "lifecycle": OperationLifecycle.TERMINAL,
+                "terminal_condition": receipt.condition,
+                "effect": receipt.effect,
+                "updated_at": receipt.settled_at,
+                "event_cursor": events[-1].sequence,
+                "events": events,
+                "terminal_receipt": receipt,
+                "pending_interaction": None,
+            }
+        )
+
+    async def _commit_settlement(
+        self,
+        operation_id: OperationId,
+        snapshot: OperationPersistedSnapshot,
+        receipt: OperationTerminalReceipt,
+        lease: OperationOwnerLease,
+    ) -> tuple[OperationPersistedSnapshot | None, bool]:
+        """Complete cleanup and atomically commit terminal events and state."""
+        try:
+            await self._complete_cleanup_before_settlement(snapshot)
+        except TimeoutError:
+            return None, True
+        events = self._settlement_events(snapshot, receipt, receipt.settled_at)
+        successor = self._settlement_successor(snapshot, receipt, events)
+        await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
+        await self._release_exact_lease(lease, observed_at=receipt.settled_at)
+        self._ephemeral_secrets.discard(operation_id)
+        return successor, False
+
+    async def settle(self, operation_id: OperationId, receipt: OperationTerminalReceipt) -> OperationPersistedSnapshot:
+        """Persist one validated terminal receipt after owned cleanup completes."""
+        snapshot = await self.inspect(operation_id)
+        self._validate_settlement_request(snapshot, receipt)
         now = receipt.settled_at
-        cleanup_deadline_elapsed = False
         successor: OperationPersistedSnapshot | None = None
+        cleanup_deadline_elapsed = False
         async with self._lease_lock(snapshot.identity.operation_id):
             lease = await self._require_owned_lease_unlocked(snapshot.identity, now)
-            try:
-                await self._complete_cleanup_before_settlement(snapshot)
-            except TimeoutError:
-                cleanup_deadline_elapsed = True
-            if not cleanup_deadline_elapsed:
-                diagnostic_event = (
-                    OperationDiagnosticEvent(
-                        identity=snapshot.identity,
-                        revision=receipt.revision,
-                        sequence=snapshot.event_cursor + 1,
-                        timestamp=now,
-                        code="operation.diagnostic",
-                        diagnostic_ref=receipt.diagnostic_ref,
-                    )
-                    if receipt.diagnostic_ref is not None
-                    else None
-                )
-                event = OperationTerminalEvent(
-                    identity=snapshot.identity,
-                    revision=receipt.revision,
-                    sequence=snapshot.event_cursor + (2 if diagnostic_event is not None else 1),
-                    timestamp=now,
-                    code="operation.terminal",
-                    receipt=receipt,
-                )
-                events: tuple[OperationEvent, ...] = (
-                    (diagnostic_event, event) if diagnostic_event is not None else (event,)
-                )
-                successor = snapshot.model_copy(
-                    update={
-                        "revision": receipt.revision,
-                        "lifecycle": OperationLifecycle.TERMINAL,
-                        "terminal_condition": receipt.condition,
-                        "effect": receipt.effect,
-                        "updated_at": now,
-                        "event_cursor": event.sequence,
-                        "events": events,
-                        "terminal_receipt": receipt,
-                        "pending_interaction": None,
-                    }
-                )
-                await self._journal.commit(successor, expected_revision=snapshot.revision, lease=lease)
-                await self._release_exact_lease(lease, observed_at=now)
-                self._ephemeral_secrets.discard(operation_id)
+            successor, cleanup_deadline_elapsed = await self._commit_settlement(
+                operation_id,
+                snapshot,
+                receipt,
+                lease,
+            )
         if cleanup_deadline_elapsed:
             await self._escalate_cleanup_deadline(operation_id)
             raise TimeoutError("operation cleanup deadline elapsed before terminal settlement")

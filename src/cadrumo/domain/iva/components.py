@@ -285,6 +285,14 @@ class IvaCategoryComponents(IvaStrictFrozen):
         label = f"IvaCategoryComponents[{self.category.value}/{self.kind.value}]"
         self._validate_retencion_role(label)
         self._validate_applicability(label)
+        self._validate_reference_integrity(label)
+        self._validate_cuota_settlement(label)
+        self._validate_retencion_notes(label)
+        self._validate_grounding_references(label)
+        return self
+
+    def _validate_reference_integrity(self, label: str) -> None:
+        """Refuse duplicate or cross-state legal-reference declarations."""
         if len(set(self.legal_refs)) != len(self.legal_refs):
             raise IvaValidationError(f"{label}: legal_refs must be unique")
         if len(set(self.pending_legal_refs)) != len(self.pending_legal_refs):
@@ -293,10 +301,16 @@ class IvaCategoryComponents(IvaStrictFrozen):
             raise IvaValidationError(
                 f"{label}: a legal ref cannot be both bundled and pending",
             )
+
+    def _validate_cuota_settlement(self, label: str) -> None:
+        """Refuse a cuota whose declared settlement disagrees with its presence."""
         if (self.cuota is IvaComponentPresence.ZERO_BY_LAW) != (self.cuota_settlement is IvaCuotaSettlement.NONE):
             raise IvaValidationError(
                 f"{label}: a zero-by-law cuota must declare settlement NONE, and vice versa",
             )
+
+    def _validate_retencion_notes(self, label: str) -> None:
+        """Require caveats for weakly grounded or default retención expectations."""
         if self.retencion_grounding is not IvaGroundingConfidence.BUNDLED_CORPUS and not self.retencion_note.strip():
             raise IvaValidationError(
                 f"{label}: retención grounding {self.retencion_grounding.value!r} "
@@ -317,6 +331,9 @@ class IvaCategoryComponents(IvaStrictFrozen):
                 f"{label}: a not-expected retención requires a retencion_note stating the "
                 "carve-outs under which the obligation nevertheless arises",
             )
+
+    def _validate_grounding_references(self, label: str) -> None:
+        """Require every grounding claim to carry the reference set it names."""
         for name, grounding in (
             ("cuota", self.cuota_grounding),
             ("recargo", self.recargo_grounding),
@@ -331,7 +348,6 @@ class IvaCategoryComponents(IvaStrictFrozen):
                 raise IvaValidationError(
                     f"{label}: {name} grounding claims bundled corpus but the row cites no legal_refs",
                 )
-        return self
 
     def _validate_retencion_role(self, label: str) -> None:
         """Refuse a retención role that contradicts the row's kind or expectation.

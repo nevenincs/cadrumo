@@ -259,48 +259,98 @@ def _exterior_detail_binding_values(
     """
     if revision.id != "esquema-exterior":
         return {}, {}
+    grouped = _group_exterior_service_observations(observations)
+    return _bind_exterior_detail_values(revision, grouped)
+
+
+def _group_exterior_service_observations(
+    observations: Sequence[OssIossLedgerObservation],
+) -> dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]]:
+    """Group Exterior service observations by destination and supported rate."""
     grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
     for observation in observations:
-        if (
-            observation.regime is OssIossRegime.EXTERNAL_SCHEME
-            and observation.transaction_kind is TransactionKind.EXTERNAL_SCHEME_SERVICES
-        ):
-            if observation.rate_kind not in {IvaRateKind.GENERAL, IvaRateKind.REDUCED}:
-                raise AggregationValidationError(
-                    t("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
-                    context={
-                        "ledger_id": observation.ledger_id,
-                        "rate_kind": observation.rate_kind.value,
-                    },
-                )
-            grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
-    decimal_values: dict[BindingId, Decimal] = {}
-    enum_values: dict[BindingId, str] = {}
+        if observation.regime is not OssIossRegime.EXTERNAL_SCHEME:
+            continue
+        if observation.transaction_kind is not TransactionKind.EXTERNAL_SCHEME_SERVICES:
+            continue
+        _validate_exterior_rate_kind(observation)
+        grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
+    return grouped
+
+
+def _validate_exterior_rate_kind(observation: OssIossLedgerObservation) -> None:
+    """Refuse Exterior rate tiers that have no official positional code."""
+    if observation.rate_kind in {IvaRateKind.GENERAL, IvaRateKind.REDUCED}:
+        return
+    raise AggregationValidationError(
+        t("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
+        context={
+            "ledger_id": observation.ledger_id,
+            "rate_kind": observation.rate_kind.value,
+        },
+    )
+
+
+def _exterior_detail_row_fields(
+    row: int,
+    country: EUMemberState,
+    rate_kind: IvaRateKind,
+    observations: Sequence[OssIossLedgerObservation],
+) -> tuple[dict[str, str], dict[str, Decimal]]:
+    """Build the workbook field values for one destination/rate row."""
+    rate = lookup_rate(country, rate_kind, observations[0].transaction_date).pct
     rate_codes = {
         IvaRateKind.GENERAL: "S",
         IvaRateKind.REDUCED: "R",
     }
+    fields = {
+        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country.name,
+        f"3-prestaciones-de-servicios-tipo-iva-{row}": rate_codes[rate_kind],
+    }
+    decimals = {
+        f"3-prestaciones-de-servicios-tipo-de-iva-{row}": rate,
+        f"3-prestaciones-de-servicios-base-imponible-{row}": sum(
+            (item.base_amount for item in observations),
+            Decimal("0"),
+        ),
+        f"3-prestaciones-de-servicios-cuota-iva-{row}": sum(
+            (item.iva_amount for item in observations),
+            Decimal("0"),
+        ),
+    }
+    return fields, decimals
+
+
+def _bind_exterior_detail_values(
+    revision: ModeloRevision,
+    grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]],
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    """Resolve generated revision selectors against Exterior row fields."""
+    decimal_values: dict[BindingId, Decimal] = {}
+    enum_values: dict[BindingId, str] = {}
     for row, ((country, rate_kind), rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
-        rate = lookup_rate(country, rate_kind, rows[0].transaction_date).pct
-        fields = {
-            f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country.name,
-            f"3-prestaciones-de-servicios-tipo-iva-{row}": rate_codes[rate_kind],
-        }
-        decimals = {
-            f"3-prestaciones-de-servicios-tipo-de-iva-{row}": rate,
-            f"3-prestaciones-de-servicios-base-imponible-{row}": sum((item.base_amount for item in rows), Decimal("0")),
-            f"3-prestaciones-de-servicios-cuota-iva-{row}": sum((item.iva_amount for item in rows), Decimal("0")),
-        }
-        for binding in revision.bindings:
-            selector = binding.selector
-            if getattr(selector, "record", None) != "modelo-369-exterior-t36901":
-                continue
-            field = getattr(selector, "field", None)
-            if field in fields:
-                enum_values[binding.id] = fields[field]
-            elif field in decimals:
-                decimal_values[binding.id] = decimals[field]
+        fields, decimals = _exterior_detail_row_fields(row, country, rate_kind, rows)
+        _assign_exterior_detail_bindings(revision, fields, decimals, decimal_values, enum_values)
     return decimal_values, enum_values
+
+
+def _assign_exterior_detail_bindings(
+    revision: ModeloRevision,
+    fields: dict[str, str],
+    decimals: dict[str, Decimal],
+    decimal_values: dict[BindingId, Decimal],
+    enum_values: dict[BindingId, str],
+) -> None:
+    """Copy matching generated selector values into their binding channels."""
+    for binding in revision.bindings:
+        selector = binding.selector
+        if getattr(selector, "record", None) != "modelo-369-exterior-t36901":
+            continue
+        field = getattr(selector, "field", None)
+        if field in fields:
+            enum_values[binding.id] = fields[field]
+        elif field in decimals:
+            decimal_values[binding.id] = decimals[field]
 
 
 def _candidate_for_invoice_line(

@@ -14,9 +14,9 @@ a new step identifier.
 from __future__ import annotations
 
 import uuid
-from collections.abc import Generator, Sequence
+from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
-from contextvars import ContextVar
+from contextvars import ContextVar, Token
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -147,6 +147,222 @@ def _step_payload(step_id: str, label: str) -> RunEventPayload:
     return RunEventPayload(step=StepBoundaryPayload(step_id=step_id, label=label))
 
 
+def _emit_nested_step_end(
+    record_event: Callable[..., object],
+    *,
+    outer: RunContextInfo,
+    nested_step: str,
+    entrypoint: str,
+) -> None:
+    """Best-effort close for a nested step, without masking its body."""
+    try:
+        record_event(
+            RunEventKind.STEP_END,
+            payload=_step_payload(nested_step, label=entrypoint),
+            module=__name__,
+        )
+    except Exception:
+        # A recorder/sink failure here must never mask the yielded body's
+        # outcome. Broad catch because the recorder swallows any sink-level
+        # disk / serialisation error and re-raises an opaque type (logged with
+        # traceback above).
+        _log.warning(
+            "failed to record nested STEP_END (run=%s step=%s)",
+            outer.run_id,
+            nested_step,
+            exc_info=True,
+        )
+
+
+@contextmanager
+def _nested_run_context(
+    outer: RunContextInfo,
+    *,
+    entrypoint: str,
+    step_id: str | None,
+    record_event: Callable[..., object],
+) -> Generator[RunContextInfo]:
+    """Push and pop one nested step while reusing the outer run metadata."""
+    nested_step = step_id or f"{outer.initial_step_id}.{_mint_run_id()[:8]}"
+    step_token = STEP_CONTEXT_VAR.set(nested_step)
+    try:
+        record_event(
+            RunEventKind.STEP_START,
+            payload=_step_payload(nested_step, label=entrypoint),
+            module=__name__,
+        )
+        try:
+            yield outer
+        finally:
+            _emit_nested_step_end(
+                record_event,
+                outer=outer,
+                nested_step=nested_step,
+                entrypoint=entrypoint,
+            )
+    finally:
+        STEP_CONTEXT_VAR.reset(step_token)
+
+
+@contextmanager
+def _outer_step_context(
+    info: RunContextInfo,
+    *,
+    record_event: Callable[..., object],
+    outcome: list[RunOutcome],
+) -> Generator[None]:
+    """Emit outer step boundaries and retain a pessimistic outcome default."""
+    record_event(
+        RunEventKind.STEP_START,
+        payload=_step_payload(info.initial_step_id, label=info.entrypoint),
+        module=__name__,
+    )
+    try:
+        yield
+        outcome[0] = RunOutcome.OK
+    finally:
+        try:
+            record_event(
+                RunEventKind.STEP_END,
+                payload=_step_payload(info.initial_step_id, label=info.entrypoint),
+                module=__name__,
+            )
+        except Exception:
+            # A failed STEP_END emit must not mask the yielded exception (if
+            # any) nor the outcome already captured.
+            _log.warning("failed to record STEP_END for run %s", info.run_id, exc_info=True)
+
+
+def _persist_outer_trace(info: RunContextInfo, outcome: RunOutcome) -> Exception | None:
+    """Persist the final trace and return a failure for post-cleanup handling."""
+    try:
+        trace = RunTrace(
+            run_id=info.run_id,
+            started_at=info.started_at,
+            finished_at=now(),
+            entrypoint=info.entrypoint,
+            arguments=info.arguments,
+            corpus_sha256=info.corpus_sha256,
+            db_sha256=info.db_sha256,
+            cert_fingerprint=info.cert_fingerprint,
+            outcome=outcome,
+        )
+        save_trace(trace)
+    except Exception as exc:
+        _log.warning("failed to persist RunTrace for run %s", info.run_id, exc_info=True)
+        return exc
+    return None
+
+
+def _persist_outer_envelope(
+    info: RunContextInfo,
+    *,
+    owns_capture: bool,
+    envelope_sink: list[dict[str, object]],
+) -> None:
+    """Best-effort persist the last envelope owned by the outer context."""
+    if not owns_capture or not envelope_sink:
+        return
+    try:
+        save_envelope(info.run_id, dict(envelope_sink[-1]))
+    except Exception:
+        # An envelope-persist failure must never mask the run outcome. Only
+        # the owning context persists; a reused sink belongs to the outer scope.
+        _log.warning("failed to persist result envelope for run %s", info.run_id, exc_info=True)
+
+
+def _detach_outer_sink(sink: JsonlRunSink, *, run_id: str) -> None:
+    """Detach a run sink without allowing teardown logging to escape."""
+    try:
+        detach_run_sink(sink)
+    except Exception:
+        _log.warning("failed to detach sink for run %s", run_id, exc_info=True)
+
+
+def _reset_outer_context(
+    *,
+    step_token: Token[str | None],
+    run_token: Token[RunContextInfo | None],
+    capture_token: Token[list[dict[str, object]] | None] | None,
+) -> None:
+    """Restore context variables after the sink is detached."""
+    STEP_CONTEXT_VAR.reset(step_token)
+    RUN_CONTEXT_VAR.reset(run_token)
+    if capture_token is not None:
+        CAPTURE_SINK.reset(capture_token)
+
+
+def _close_outer_sink(sink: JsonlRunSink, *, run_id: str) -> None:
+    """Close a run sink without masking its completed run."""
+    try:
+        sink.close()
+    except Exception:
+        # Sink teardown is infallible-by-policy: a close failure cannot be
+        # allowed to mask the run's real outcome.
+        _log.warning("failed to close sink for run %s", run_id, exc_info=True)
+
+
+def _finalize_outer_context(
+    info: RunContextInfo,
+    *,
+    sink: JsonlRunSink,
+    owns_capture: bool,
+    envelope_sink: list[dict[str, object]],
+    capture_token: Token[list[dict[str, object]] | None] | None,
+    run_token: Token[RunContextInfo | None],
+    step_token: Token[str | None],
+    outcome: RunOutcome,
+) -> None:
+    """Persist outer artifacts, release resources, then surface clean-run errors."""
+    persistence_error = _persist_outer_trace(info, outcome)
+    _persist_outer_envelope(info, owns_capture=owns_capture, envelope_sink=envelope_sink)
+    _detach_outer_sink(sink, run_id=info.run_id)
+    _reset_outer_context(
+        step_token=step_token,
+        run_token=run_token,
+        capture_token=capture_token,
+    )
+    _close_outer_sink(sink, run_id=info.run_id)
+    if persistence_error is not None and outcome is RunOutcome.OK:
+        raise persistence_error
+
+
+@contextmanager
+def _outer_run_context(info: RunContextInfo, record_event: Callable[..., object]) -> Generator[RunContextInfo]:
+    """Own the outer sink, context variables, boundary events, and teardown."""
+    target = run_dir(info.run_id)
+    sink = JsonlRunSink(target / EVENTS_FILENAME, run_id=info.run_id)
+
+    # Arm result-envelope capture for the run so the emitted ``SchemaEnvelope``
+    # is persisted as run evidence. Nesting-aware: an outer capture scope owns
+    # its sink and persistence.
+    pre_existing_capture = CAPTURE_SINK.get()
+    owns_capture = pre_existing_capture is None
+    envelope_sink: list[dict[str, object]] = [] if owns_capture else pre_existing_capture
+    capture_token = CAPTURE_SINK.set(envelope_sink) if owns_capture else None
+
+    # Bind contextvars before attaching the sink. This keeps records emitted by
+    # another thread during attachment from carrying a stale run id.
+    run_token = RUN_CONTEXT_VAR.set(info)
+    step_token = STEP_CONTEXT_VAR.set(info.initial_step_id)
+    attach_run_sink(sink)
+    outcome = [RunOutcome.FAILED]
+    try:
+        with _outer_step_context(record_event=record_event, info=info, outcome=outcome):
+            yield info
+    finally:
+        _finalize_outer_context(
+            info,
+            sink=sink,
+            owns_capture=owns_capture,
+            envelope_sink=envelope_sink,
+            capture_token=capture_token,
+            run_token=run_token,
+            step_token=step_token,
+            outcome=outcome[0],
+        )
+
+
 @contextmanager
 def run_context(
     *,
@@ -192,38 +408,13 @@ def run_context(
 
     outer = RUN_CONTEXT_VAR.get(None)
     if outer is not None:
-        nested_step = step_id or f"{outer.initial_step_id}.{_mint_run_id()[:8]}"
-        step_token = STEP_CONTEXT_VAR.set(nested_step)
-        try:
-            record_event(
-                RunEventKind.STEP_START,
-                payload=_step_payload(nested_step, label=entrypoint),
-                module=__name__,
-            )
-            try:
-                yield outer
-            finally:
-                # STEP_END is always emitted exactly once here.
-                try:
-                    record_event(
-                        RunEventKind.STEP_END,
-                        payload=_step_payload(nested_step, label=entrypoint),
-                        module=__name__,
-                    )
-                except Exception:
-                    # Best-effort emit: a recorder/sink failure here must
-                    # never mask the yielded body's outcome. Broad catch
-                    # because the recorder swallows any sink-level disk /
-                    # serialisation error and re-raises an opaque type
-                    # (logged with traceback above).
-                    _log.warning(
-                        "failed to record nested STEP_END (run=%s step=%s)",
-                        outer.run_id,
-                        nested_step,
-                        exc_info=True,
-                    )
-        finally:
-            STEP_CONTEXT_VAR.reset(step_token)
+        with _nested_run_context(
+            outer,
+            entrypoint=entrypoint,
+            step_id=step_id,
+            record_event=record_event,
+        ):
+            yield outer
         return
 
     info = _build_initial_context(
@@ -232,108 +423,8 @@ def run_context(
         run_id=run_id,
         step_id=step_id,
     )
-    target = run_dir(info.run_id)
-    sink = JsonlRunSink(target / EVENTS_FILENAME, run_id=info.run_id)
-
-    # Arm result-envelope capture for the run so the emitted
-    # ``SchemaEnvelope`` is persisted as run evidence. Nesting-aware:
-    # an outer capture scope owns its sink and persistence. Capture is a
-    # no-op cost when no JSON is emitted.
-    pre_existing_capture = CAPTURE_SINK.get()
-    owns_capture = pre_existing_capture is None
-    envelope_sink: list[dict[str, object]] = [] if owns_capture else pre_existing_capture
-    capture_token = CAPTURE_SINK.set(envelope_sink) if owns_capture else None
-
-    # Set the contextvars BEFORE attaching the sink. Symmetric with
-    # detach-before-reset on unwind. Without this ordering, log records
-    # emitted by another thread on the root logger during the window
-    # between addHandler and set() would land on this sink but carry the
-    # previous context's run_id (or an empty one) — the sink's run_id
-    # filter drops them, but the semantics are cleaner when the var is
-    # bound first.
-    run_token = RUN_CONTEXT_VAR.set(info)
-    step_token = STEP_CONTEXT_VAR.set(info.initial_step_id)
-    attach_run_sink(sink)
-    # Pessimistic default: only flip to OK once the yielded body returns
-    # cleanly. If STEP_START itself raises, or the yield is never reached,
-    # outcome stays FAILED so the persisted trace does not lie.
-    outcome = RunOutcome.FAILED
-    try:
-        record_event(
-            RunEventKind.STEP_START,
-            payload=_step_payload(info.initial_step_id, label=entrypoint),
-            module=__name__,
-        )
-        try:
-            yield info
-            outcome = RunOutcome.OK
-        finally:
-            try:
-                record_event(
-                    RunEventKind.STEP_END,
-                    payload=_step_payload(info.initial_step_id, label=entrypoint),
-                    module=__name__,
-                )
-            except Exception:
-                # A failed STEP_END emit must not mask the yielded
-                # exception (if any) nor the outcome we already set.
-                _log.warning("failed to record STEP_END for run %s", info.run_id, exc_info=True)
-    finally:
-        persistence_error: Exception | None = None
-        try:
-            trace = RunTrace(
-                run_id=info.run_id,
-                started_at=info.started_at,
-                finished_at=now(),
-                entrypoint=info.entrypoint,
-                arguments=info.arguments,
-                corpus_sha256=info.corpus_sha256,
-                db_sha256=info.db_sha256,
-                cert_fingerprint=info.cert_fingerprint,
-                outcome=outcome,
-            )
-            save_trace(trace)
-        except Exception as exc:
-            persistence_error = exc
-            _log.warning("failed to persist RunTrace for run %s", info.run_id, exc_info=True)
-        finally:
-            # Persist the last emitted result envelope (a command emits
-            # exactly one success envelope) as this run's golden artifact.
-            # Best-effort: an envelope-persist failure must never mask the
-            # run outcome. Only the owning context persists; a reused sink
-            # belongs to the outer scope.
-            if owns_capture and envelope_sink:
-                try:
-                    save_envelope(info.run_id, dict(envelope_sink[-1]))
-                except Exception:
-                    _log.warning(
-                        "failed to persist result envelope for run %s",
-                        info.run_id,
-                        exc_info=True,
-                    )
-            # Detach the sink BEFORE resetting the contextvars so a
-            # trailing log record from another thread can't land on
-            # this sink with a stale run_id. Mirror of the attach
-            # ordering above.
-            try:
-                detach_run_sink(sink)
-            except Exception:
-                _log.warning("failed to detach sink for run %s", info.run_id, exc_info=True)
-            STEP_CONTEXT_VAR.reset(step_token)
-            RUN_CONTEXT_VAR.reset(run_token)
-            if capture_token is not None:
-                CAPTURE_SINK.reset(capture_token)
-            try:
-                sink.close()
-            except Exception:
-                # Sink teardown is infallible-by-policy: a close failure
-                # cannot be allowed to mask the run's real outcome.
-                # Broad catch because the file-handle close path can
-                # surface OSError, ValueError, or RuntimeError depending
-                # on platform and sink lifecycle state.
-                _log.warning("failed to close sink for run %s", info.run_id, exc_info=True)
-            if persistence_error is not None and outcome is RunOutcome.OK:
-                raise persistence_error
+    with _outer_run_context(info, record_event):
+        yield info
 
 
 __all__ = [
