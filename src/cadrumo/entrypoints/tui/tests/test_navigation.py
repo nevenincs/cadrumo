@@ -138,7 +138,7 @@ def test_each_explicit_admission_state_has_truthful_reason_contract(
 def test_catalogue_requires_all_admissions_and_injected_factory_for_available_routes() -> None:
     missing = _admissions()
     del missing["workbench.profile"]
-    with pytest.raises(Exception, match="every destination"):
+    with pytest.raises(NavigationContractError, match="every destination"):
         build_destination_catalogue(admissions=missing, factories=_factories())
 
     with pytest.raises(DestinationFactoryError, match="injected screen factory"):
