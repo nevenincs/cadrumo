@@ -148,6 +148,7 @@ def run_lanes(lanes: Sequence[str], repository: Path = REPO_ROOT) -> int:
             print(f"test-all run log: {log_path}", flush=True)
             results = [_run_lane(lane, env) for lane in lanes]
             _summarise(results)
+            print(f"test-all run log: {log_path}", flush=True)
         finally:
             sys.stdout, sys.stderr = original_out, original_err
 
