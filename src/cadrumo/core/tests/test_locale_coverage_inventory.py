@@ -16,8 +16,12 @@ new operator-error keys should be added here as they are introduced.
 
 from __future__ import annotations
 
-import pytest
+import pathlib
 
+import pytest
+import yaml
+
+from ..directory_scan import DirectoryEntryKind, scan_directory
 from ..i18n import tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -100,3 +104,38 @@ def test_operator_error_locale_keys_resolve_in_catalogues() -> None:
                 failures.append(f"Locale key {key!r} resolved to an empty string in the {locale!r} catalogue.")
 
     assert not failures, "\n".join(failures)
+
+
+#: Root of the installed package, the parent of the ``locales/`` tree.
+_SRC_ROOT = pathlib.Path(__file__).parent.parent.parent
+
+#: Floor for the locale census: the supported locale set is four today, and
+#: flooring below it keeps a new locale from failing the gate on arrival.
+_MINIMUM_LOCALES = 4
+
+
+def test_wizard_status_locale_key_exists_in_all_locales() -> None:
+    """The key application.wizard.output_labels.status must exist in all locale files."""
+    locales_dir = _SRC_ROOT / "locales"
+    # One catalogue per LOCALE, not every file. `locales/` holds a directory per
+    # locale, so the previous non-recursive `*.yml` scan matched 0 of 328 files
+    # and this gate -- named for checking all locales -- checked none of them.
+    # Sweeping recursively instead is the opposite error: catalogues are split
+    # by domain and only `application.yml` carries the wizard block, so every
+    # other file would fail for correctly not owning it.
+    catalogues = sorted(
+        directory / "application.yml"
+        for directory in scan_directory(locales_dir, select=DirectoryEntryKind.DIRECTORIES, require_root=True)
+    )
+    assert len(catalogues) >= _MINIMUM_LOCALES, (
+        f"the locale sweep reached only {len(catalogues)} locale(s) under {locales_dir}; "
+        "a scan matching nothing asserts the key exists in every locale by checking none"
+    )
+    for locale_file in catalogues:
+        assert locale_file.is_file(), f"{locale_file.parent.name}: application.yml is missing"
+        content = yaml.safe_load(locale_file.read_text(encoding="utf-8")) or {}
+        application = content.get("application", {})
+        wizard = application.get("wizard", {}) if isinstance(application, dict) else {}
+        output_labels = wizard.get("output_labels", {}) if isinstance(wizard, dict) else {}
+        assert isinstance(output_labels, dict), f"{locale_file.name}: application.wizard.output_labels block missing"
+        assert "status" in output_labels, f"{locale_file.name}: application.wizard.output_labels.status key missing"
