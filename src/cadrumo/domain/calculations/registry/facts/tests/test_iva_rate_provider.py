@@ -12,7 +12,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.providers import FACT_PROVIDER_REGISTRATIONS
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact, resolve_governed_fact
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue, GovernedFactVariant
+from cadrumo.domain.calculations.registry.facts.schema import (
+    GovernedFactCatalogue,
+    GovernedFactVariant,
+    MappingFactPayload,
+)
 from cadrumo.domain.iva.rates import (
     IVA_RATE_FACT_ID,
     IVA_RATE_PROVIDER_ID,
@@ -28,7 +32,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 def _catalogue() -> GovernedFactCatalogue:
     root = bundled_path("registry", "aeat")
-    fact, = compile_iva_rate_facts(root)
+    (fact,) = compile_iva_rate_facts(root)
     return GovernedFactCatalogue(facts={fact.fact_id: fact})
 
 
@@ -46,17 +50,19 @@ def test_iva_provider_projects_every_legacy_row_without_semantic_loss() -> None:
         for rows in load_iva_rate_table().values()
         for row in rows
     }
-    fact, = compile_iva_rate_facts(root)
-    projected = {
-        (
-            EUMemberState(str({item.name: item.value for item in variant.selectors}["member_state"])),
-            IvaRateKind(str({item.name: item.value for item in variant.selectors}["kind"])),
-            variant.valid_from,
-            Decimal(str({str(item.key): item.value for item in variant.payload.entries}["pct"])),
-            bool({str(item.key): item.value for item in variant.payload.entries}["supersedes_tier_default"]),
+    (fact,) = compile_iva_rate_facts(root)
+    projected: set[tuple[EUMemberState, IvaRateKind, date, Decimal, bool]] = set()
+    for variant in fact.variants:
+        assert isinstance(variant.payload, MappingFactPayload)
+        projected.add(
+            (
+                EUMemberState(str({item.name: item.value for item in variant.selectors}["member_state"])),
+                IvaRateKind(str({item.name: item.value for item in variant.selectors}["kind"])),
+                variant.valid_from,
+                Decimal(str({str(item.key): item.value for item in variant.payload.entries}["pct"])),
+                bool({str(item.key): item.value for item in variant.payload.entries}["supersedes_tier_default"]),
+            )
         )
-        for variant in fact.variants
-    }
 
     assert projected == legacy
 
@@ -107,7 +113,7 @@ def test_iva_query_keeps_coexisting_rate_separate_from_ordinary_tier() -> None:
 
 
 def test_iva_provider_preserves_complete_legal_or_source_evidence_lanes() -> None:
-    fact, = compile_iva_rate_facts(bundled_path("registry", "aeat"))
+    (fact,) = compile_iva_rate_facts(bundled_path("registry", "aeat"))
     spanish = next(
         variant
         for variant in fact.variants
