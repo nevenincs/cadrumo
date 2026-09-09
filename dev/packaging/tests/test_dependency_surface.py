@@ -8,8 +8,8 @@ import sys
 
 import pytest
 
-from .._smoke_common import find_repo_root, pyproject_surfaces
 from ..dependency_surface import _summary
+from ..lane_verification_core import find_repo_root, pyproject_surfaces
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

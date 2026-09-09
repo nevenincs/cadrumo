@@ -15,7 +15,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
-from ._hashing import sha256_path, sha256_text
+from .hashing import sha256_path, sha256_text
 
 _UTF_8: Final[str] = UTF_8
 _SCHEMA: Final[Literal["cadrumo.release-cohort.v1"]] = "cadrumo.release-cohort.v1"

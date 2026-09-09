@@ -7,7 +7,7 @@ a consumer is a copy that can drift from the limit it claims to enforce.
 
 That is not hypothetical. This module replaced FIVE declarations of the cap
 feeding SIX assertion sites: ``python_cohort`` (checking wheels and sdists
-separately), ``smoke_split_install``, ``_smoke_common``, the companion
+separately), ``smoke_split_install``, ``lane_verification_core``, the companion
 distribution gate, and -- worst of the set -- a bare ``100 * 1_000_000``
 literal inside the core payload test. A test asserting against its own private
 copy of a threshold cannot fail when the real limit moves; it keeps passing and

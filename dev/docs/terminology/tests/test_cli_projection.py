@@ -2,9 +2,9 @@
 
 The emitter projects the immutable ``aeat`` command graph four times, once
 per output language, and emits one
-:class:`~dev.docs.terminology._cli_projection.CliSurfaceRecord` per leaf
+:class:`~dev.docs.terminology.cli_projection.CliSurfaceRecord` per leaf
 command plus one
-:class:`~dev.docs.terminology._cli_projection.CliOptionRecord` per option.
+:class:`~dev.docs.terminology.cli_projection.CliOptionRecord` per option.
 These gates assert the projection covers the graph exactly (independent path
 parity), carries four-language help, and that
 every target anchor resolves to the CLI-reference page shape.
@@ -22,7 +22,7 @@ from docutils.nodes import make_id
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 
-from .._cli_projection import CliOptionRecord, CliProjectionStats, CliSurfaceRecord
+from ..cli_projection import CliOptionRecord, CliProjectionStats, CliSurfaceRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
@@ -32,7 +32,7 @@ _FOUR_LANGUAGES = frozenset(OutputLanguage(code) for code in SUPPORTED_OUTPUT_LA
 @pytest.fixture(scope="module")
 def projection() -> tuple[tuple[CliSurfaceRecord, ...], tuple[CliOptionRecord, ...], CliProjectionStats]:
     """Project the live CLI tree once for the whole module (4 subprocess walks)."""
-    from .._cli_projection import project_cli_search_records
+    from ..cli_projection import project_cli_search_records
 
     return project_cli_search_records()
 

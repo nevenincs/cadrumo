@@ -19,14 +19,14 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignRelativeSuffixMarker,
 )
 
-from ..pipeline import _record_design_ir
-from ..pipeline._record_design_ir import (
+from ..pipeline import record_design_intermediate
+from ..pipeline.record_design_intermediate import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediateCompositeRelativeClosing,
     RecordDesignIntermediateRelativeSuffixMarker,
+    RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
-from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -573,7 +573,7 @@ def test_intermediate_refuses_a_hash_drifting_source_before_parser_projection() 
 
 def test_intermediate_loader_has_no_derivative_or_legacy_fallback_access_path() -> None:
     """The loader stays a two-authority handoff: catalogue selection then shipped parser."""
-    module = ast.parse(inspect.getsource(_record_design_ir))
+    module = ast.parse(inspect.getsource(record_design_intermediate))
     loader = next(
         node
         for node in module.body

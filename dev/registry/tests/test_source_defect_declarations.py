@@ -46,24 +46,24 @@ from ..pipeline._export_tree import (
     _numeric_derivation,
     render_complete_export_tree,
 )
-from ..pipeline._record_design_ir import (
-    RecordDesignIntermediate,
-    load_record_design_intermediate,
-)
-from ..pipeline._render_profile import (
-    load_render_profile,
-    load_render_profile_source_evidence,
-)
-from ..pipeline._semantic_map import SemanticMapEntry
-from ..pipeline._semantic_map_join import JoinedRecordDesignField, join_record_design_semantics
-from ..pipeline._semantic_map_loader import load_semantic_map
+from ..pipeline.joined_record_design import JoinedRecordDesignField, join_record_design_semantics
 from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediate,
     RecordDesignIntermediateField,
     RecordDesignWorkbookFormat,
+    load_record_design_intermediate,
+)
+from ..pipeline.render_profile import (
+    load_render_profile,
+    load_render_profile_source_evidence,
 )
 from ..pipeline.render_profile_eligibility import (
     _states_no_wire_fact,
     project_render_profile_eligibility,
+)
+from ..pipeline.semantic_map import (
+    SemanticMapEntry,
+    load_semantic_map,
 )
 from ..pipeline.source_defects import (
     NoteGovernedAmountDeclaration,

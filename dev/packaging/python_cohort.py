@@ -25,7 +25,6 @@ from cadrumo.core.directory_scan import scan_directory
 from .._paths import REPO_ROOT, UTF_8
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
-from ._hashing import sha256_path, sha256_text
 from ._proof_ledger import record_proof
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
@@ -33,6 +32,7 @@ from .build_scratch_reclaim import (
     COMMAND_SPEC_BYTECODE_FAMILY,
     var_scratch_name,
 )
+from .hashing import sha256_path, sha256_text
 from .runtime_wheelhouse import build_runtime_wheelhouse, load_runtime_wheelhouse
 
 _UTF_8: Final[str] = UTF_8

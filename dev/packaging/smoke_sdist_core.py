@@ -8,7 +8,7 @@ import tarfile
 from pathlib import Path
 
 from .._paths import REPO_ROOT
-from ._smoke_common import (
+from .lane_verification_core import (
     _configured_corpus_binary_suffixes,
     _is_corpus_source_binary,
     assert_attachment_and_llm_surfaces,

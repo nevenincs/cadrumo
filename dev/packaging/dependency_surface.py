@@ -6,7 +6,7 @@ import argparse
 import json
 from typing import TypedDict
 
-from ._smoke_common import (
+from .lane_verification_core import (
     assert_optional_extra_registry_matches_pyproject,
     find_repo_root,
     optional_extra_registry,

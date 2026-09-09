@@ -4,6 +4,12 @@ This development-only boundary consumes the typed parser intermediate and the
 reviewed semantic map after their complete authority validation.  It preserves
 parser coordinates and map meaning as separate typed values for the next
 generation boundary; it neither produces nor observes a fragment tree.
+
+The joined design is a shared contract, not a step-local value: the generator,
+its validation and publication steps, and the filing-export proof each address
+one of these, and the proof sits outside this package. So the pairing and the
+types it produces have a public defining module of their own, named for what
+they carry rather than for the join step.
 """
 
 from __future__ import annotations
@@ -18,30 +24,28 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
 
-from ._record_design_ir import (
+from ._semantic_map_validation import (
+    SemanticMapAnomalyException,
+    _validate_semantic_map_with_admissions,
+)
+from .record_design_intermediate import (
     AnchorKey,
     RecordDesignIntermediate,
     RecordDesignIntermediateAuxiliaryEnvelopeHeader,
+    RecordDesignIntermediateField,
     RecordDesignIntermediateSheet,
+    RecordDesignIntermediateSource,
     RecordDesignIntermediateVariableEnvelope,
     intermediate_anchor_key,
     intermediate_record_key,
 )
-from ._semantic_map import (
+from .semantic_map import (
     SemanticMap,
     SemanticMapEntry,
     SemanticMapRecord,
     VariableEnvelopeSemantic,
     semantic_anchor_key,
     semantic_record_key,
-)
-from ._semantic_map_validation import (
-    SemanticMapAnomalyException,
-    _validate_semantic_map_with_admissions,
-)
-from .record_design_intermediate import (
-    RecordDesignIntermediateField,
-    RecordDesignIntermediateSource,
 )
 
 __all__ = [

@@ -104,7 +104,7 @@ from dataclasses import dataclass
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
-from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .corpus import bundled_modelo_ids
 from .temporal_site_agreement import undated_window_years
 

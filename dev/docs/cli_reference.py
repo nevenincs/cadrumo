@@ -94,7 +94,7 @@ def _heading_char_for_depth(depth: int) -> str:
 #
 # The reference is organised into per-family and per-verb-group pages. Both the
 # page-writing loop in :func:`_generate_cli_reference_loaded` and the search
-# projection (``dev/docs/terminology/_cli_projection.py``, which deep-links each
+# projection (``dev/docs/terminology/cli_projection.py``, which deep-links each
 # command record) must agree on the exact page a given command lands on. These
 # two helpers plus :func:`cli_reference_page_for_command` are that one authority:
 # a layout change (family page -> group page, as happened once and stranded every

@@ -23,8 +23,8 @@ if not __package__:
     __package__ = "dev.packaging"
 
 from .._paths import REPO_ROOT  # noqa: E402
-from ._command import CommandResult, run_command  # noqa: E402
-from ._hashing import sha256_path, sha256_text  # noqa: E402
+from .command_execution import CommandResult, run_command  # noqa: E402
+from .hashing import sha256_path, sha256_text  # noqa: E402
 from .python_cohort import load_python_cohort  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"

@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from ..._paths import REPO_ROOT
-from .._smoke_common import installed_product_env, venv_bin_dir
+from ..lane_verification_core import installed_product_env, venv_bin_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -31,7 +31,7 @@ def test_isolated_product_env_refuses_host_settings_and_former_state(tmp_path: P
         import sys
         from pathlib import Path
 
-        from dev.packaging._smoke_common import isolated_product_env
+        from dev.packaging.lane_verification_core import isolated_product_env
 
         isolated = Path(sys.argv[1])
         os.environ.update(
