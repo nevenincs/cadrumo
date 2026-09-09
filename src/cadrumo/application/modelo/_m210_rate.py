@@ -5,8 +5,8 @@ unresolved outcomes when a Modelo 210 rate cannot be applied directly. This
 application helper replays the same single tipo-de-gravamen resolution path over a
 :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`: it reads the
 ``m210-tipo-gravamen-2025`` baseline table, consults the cross-cutting
-:class:`~cadrumo.domain.calculations.registry.ConvenioAuthority` treaty projection for
-the profile's ``country_of_fiscal_residence``, and returns either a scalar IRNR
+``irnr.convenio.override`` governed fact for the profile's
+``country_of_fiscal_residence`` at its explicit devengo coordinate, and returns either a scalar IRNR
 rate or blocking :class:`~ModeloVerificationFinding` records for
 deferred baseline coverage or missing treaty rows.
 
@@ -27,12 +27,12 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.decimal.constants import ZERO
 from ...core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from ...domain.calculations.registry.convenio import ConvenioOverride
 from ...domain.calculations.registry.ids import (
     LegalRefId,
     SourceRefId,
@@ -44,6 +44,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ._m210_convenio_facts import resolve_m210_convenio_override
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
@@ -108,13 +109,13 @@ def _resolve_convenio_override(
     country_code: str,
     tipo_renta: str,
     year: int,
+    devengo_date: date,
     baseline_rate: Decimal | None,
     casilla_id: CasillaId | None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the treaty override rate for a treaty-country profile.
 
-    Reads the cross-cutting :class:`~cadrumo.domain.calculations.registry.ConvenioAuthority`
-    projected onto the snapshot and branches on the typed
+    Reads the canonical, provider-selected treaty fact at ``devengo_date`` and branches on the typed
     :class:`~cadrumo.core.ConvenioOverrideKind`. Emits the
     ``m210-convenio-rate-missing`` BLOCKING finding when the treaty carries no
     row for the filed income type. Base-dependent kinds
@@ -122,13 +123,17 @@ def _resolve_convenio_override(
     the base-aware tariff branch in the registry runtime remains the calculation
     authority.
     """
-    override: ConvenioOverride | None = None
+    override = None
     try:
         tipo_enum = TipoRentaIrnr(tipo_renta)
     except ValueError:
         tipo_enum = None
     if tipo_enum is not None:
-        override = snapshot.convenio.resolve(country_code, tipo_enum, year)
+        override = resolve_m210_convenio_override(
+            country_code=country_code,
+            tipo_renta=tipo_enum,
+            devengo_date=devengo_date,
+        )
 
     legal_refs: tuple[LegalRefId, ...] = tuple(baseline_param.legal_refs)
     source_refs: tuple[SourceRefId, ...] = tuple(baseline_param.source_refs)
@@ -177,13 +182,13 @@ def resolve_m210_rate(
     year: int,
     snapshot: RegistrySnapshot,
     *,
+    devengo_date: date,
     casilla_id: CasillaId | None = None,
 ) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
     """Resolve the M210 rate for (profile, tipo_renta, year).
 
     The :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot` supplies the
-    ``m210-tipo-gravamen-2025`` baseline table and the cross-cutting
-    :class:`~cadrumo.domain.calculations.registry.ConvenioAuthority`; the
+    ``m210-tipo-gravamen-2025`` baseline table; the
     :class:`~cadrumo.domain.deadlines.TaxpayerProfile` supplies
     ``country_of_fiscal_residence`` for treaty lookup. Returns ``(rate,
     findings)`` where ``findings`` contains blocking
@@ -198,7 +203,7 @@ def resolve_m210_rate(
 
     See Also:
         :func:`cadrumo.domain.calculations.registry.formula_runtime_irnr.evaluate_irnr_resolve_tipo_gravamen`
-        :class:`cadrumo.domain.calculations.registry.ConvenioAuthority`
+        ``irnr.convenio.override``
         :class:`cadrumo.domain.deadlines.TaxpayerProfile`
     """
     baseline_param = None
@@ -238,6 +243,7 @@ def resolve_m210_rate(
         country_code=treaty_country.upper(),
         tipo_renta=tipo_renta,
         year=year,
+        devengo_date=devengo_date,
         baseline_rate=baseline_rate,
         casilla_id=casilla_id,
     )

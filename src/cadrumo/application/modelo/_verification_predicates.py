@@ -452,6 +452,7 @@ def _m210_unresolved_outcome_findings(
     profile: TaxpayerProfile,
     snapshot: RegistrySnapshot,
     year: int,
+    devengo_date: _date,
     tipo_renta: str,
     blocking_finding_observer: Callable[
         [ModeloVerificationFinding, RegistryCalculationUnresolvedOutcome],
@@ -476,6 +477,7 @@ def _m210_unresolved_outcome_findings(
             resolved_tipo_renta,
             year,
             snapshot,
+            devengo_date=devengo_date,
             casilla_id=outcome.casilla_id,
         )
         findings.extend(obs_findings)

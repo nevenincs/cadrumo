@@ -1287,7 +1287,12 @@ def _append_revision_advisory_findings(
             target.casilla_values,
             work_unit=work_unit,
         ),
-        _m210_convenio_lob_advisory_finding(snapshot, profile, target.input_values_by_casilla_id),
+        _m210_convenio_lob_advisory_finding(
+            snapshot,
+            profile,
+            target.input_values_by_casilla_id,
+            devengo_date=fact_coordinate,
+        ),
     ):
         if finding is not None:
             findings.append(finding)
@@ -1623,6 +1628,7 @@ def _append_unresolved_outcome_findings(
             profile=predicate_profile,
             snapshot=snapshot,
             year=work_unit.filing_year,
+            devengo_date=date(work_unit.filing_year, 12, 31),
             tipo_renta="",
             blocking_finding_observer=lambda finding, outcome: failures_by_finding_id.__setitem__(
                 id(finding),
