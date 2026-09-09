@@ -129,13 +129,6 @@ class AeatSedePathSection(_Frozen):
     notificaciones: str
     iva_compensation_wallet: str
     censal_datos: str
-    deudas_consulta: str
-    #: The *pagar todas mis deudas* launcher. Declared NOT to be navigated but
-    #: to be refused: it shares the ``/wlpl/SRVO-JDIT/`` application prefix with
-    #: :attr:`deudas_consulta`, so the deudas read guard must allow-list the
-    #: consulta ENDPOINT rather than that shared prefix. Naming it here keeps
-    #: the refusal case anchored to an observed route instead of a guess.
-    deudas_pagar_todas: str
 
 
 class AeatClaveMovilSurface(_Frozen):

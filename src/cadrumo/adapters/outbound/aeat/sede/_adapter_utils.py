@@ -271,6 +271,16 @@ def assert_read_landing(
     the scan knows. The path allow-list is what closes that half, so the two
     checks are complementary and both are required.
 
+    A prefix grants everything beneath it, and an AEAT application
+    directory is not a read-only unit: an authenticated capture of the live
+    sede found a payment launcher served from the SAME ``/wlpl/`` application
+    directory as a read-only consulta, under sibling paths. Widening a prefix
+    to the application segment therefore admits whatever else AEAT chose to
+    host there, which the write-verb scan will not necessarily catch. Take
+    each prefix at the narrowest level that still covers the intended
+    surface, and prefer the endpoint over the directory unless a surface has
+    per-surface evidence that it genuinely reads across the directory.
+
     The censal reader (:mod:`.censal_datos`) keeps its own marker-keyed
     refusal in addition to this one. Its consulta page and its modification
     siblings are reached through the same launcher, so it names the write

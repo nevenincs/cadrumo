@@ -172,7 +172,9 @@ async def _discover(provider: WorkbenchCommandProviderV1) -> list[DiscoveryHit]:
 @pytest.mark.asyncio
 async def test_search_provider_preserves_application_stable_identity_and_admitted_action() -> None:
     """A search choice routes the authoritative result identity, never a row index."""
-    action = TuiActionCandidateV1(action_candidate_id="operator.declaration.open", destination="workbench.declarations")
+    action = TuiActionCandidateV1(
+        action_candidate_id="operator.modelo.work.revisions", destination="workbench.declarations"
+    )
     service = WorkbenchSearchService([_document(action_candidate_id=action.action_candidate_id)])
     stable_id = service.search(WorkbenchSearchRequest(query="declaration")).results[0].stable_id
     app = SearchHostApp(service=service, catalogue=_catalogue(actions=(action,)))
@@ -198,7 +200,9 @@ async def test_search_provider_preserves_application_stable_identity_and_admitte
 @pytest.mark.asyncio
 async def test_search_provider_skips_nonadmitted_and_unresolved_result_routes() -> None:
     """The palette does not turn stale search data into a reachable route."""
-    action = TuiActionCandidateV1(action_candidate_id="operator.declaration.open", destination="workbench.declarations")
+    action = TuiActionCandidateV1(
+        action_candidate_id="operator.modelo.work.revisions", destination="workbench.declarations"
+    )
     service = WorkbenchSearchService(
         [
             _document(action_candidate_id="operator.declaration.missing"),
@@ -225,7 +229,9 @@ async def test_palette_providers_fail_closed_outside_a_workbench_search_host() -
 @pytest.mark.asyncio
 async def test_command_provider_discovers_admitted_destinations_and_action_identity() -> None:
     """Discovery exposes only catalogue-admitted routes and action IDs."""
-    action = TuiActionCandidateV1(action_candidate_id="operator.declaration.open", destination="workbench.declarations")
+    action = TuiActionCandidateV1(
+        action_candidate_id="operator.modelo.work.revisions", destination="workbench.declarations"
+    )
     app = SearchHostApp(service=WorkbenchSearchService([_document()]), catalogue=_catalogue(actions=(action,)))
 
     async with app.run_test() as pilot:
@@ -243,7 +249,7 @@ async def test_command_provider_discovers_admitted_destinations_and_action_ident
     assert app.targets == [
         TuiNavigationTargetV1(
             destination="workbench.declarations",
-            focus={"destination": "workbench.declarations", "semantic_key": "action.operator.declaration.open"},
+            focus={"destination": "workbench.declarations", "semantic_key": "action.operator.modelo.work.revisions"},
             action_candidate_id=action.action_candidate_id,
         )
     ]
@@ -258,7 +264,7 @@ def test_search_copy_is_available_and_human_facing_in_every_locale(locale: str) 
     try:
         rendered = _result_text(result, locale=locale)
         destination = _destination_text("workbench.declarations", locale=locale)
-        action = workbench_action_label("operator.declaration.open", locale=locale)
+        action = workbench_action_label("operator.modelo.work.revisions", locale=locale)
     finally:
         I18N_STRICT_MISSING_KEYS.reset(strict_token)
 
@@ -267,7 +273,7 @@ def test_search_copy_is_available_and_human_facing_in_every_locale(locale: str) 
         result.source.value,
         result.status.value,
         "workbench.declarations",
-        "operator.declaration.open",
+        "operator.modelo.work.revisions",
     )
     assert all(token not in rendered for token in protected_tokens)
     assert "tui.search." not in rendered
@@ -294,7 +300,9 @@ def test_search_copy_changes_with_locale_without_changing_stable_result_identity
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
 async def test_palette_help_is_localized_and_never_exposes_internal_identity(locale: str) -> None:
     """Both providers keep stable identities in callbacks, never visible help."""
-    action = TuiActionCandidateV1(action_candidate_id="operator.declaration.open", destination="workbench.declarations")
+    action = TuiActionCandidateV1(
+        action_candidate_id="operator.modelo.work.revisions", destination="workbench.declarations"
+    )
     service = WorkbenchSearchService([_document(action_candidate_id=action.action_candidate_id)])
     stable_id = service.search(WorkbenchSearchRequest(query="declaration")).results[0].stable_id
     with override_settings(cadrumo_output_language=locale):

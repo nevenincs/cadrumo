@@ -47,9 +47,8 @@ from ..analysis.footnote_only_wire_facts import (
     would_become_eligible,
 )
 from ..analysis.footnote_pointer_notes import note_definitions
-from ..pipeline._render_profile import project_render_profile_eligibility
 from ..pipeline.render_check import revision_render_inputs
-from ..pipeline.render_profile_eligibility import resolve_render_profile_eligibility
+from ..pipeline.render_profile_eligibility import project_render_profile_eligibility, resolve_render_profile_eligibility
 from ..pipeline.source_defects import NoteGovernedAmountDeclaration, NoteStatedApplicabilityDeclaration
 
 #: Named once per module rather than repeated at each read site, where a typo

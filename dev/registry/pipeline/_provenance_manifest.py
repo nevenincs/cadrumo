@@ -28,10 +28,7 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
 from ._pydantic_error_detail import validation_error_detail
-from ._record_design_ir import (
-    RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
-    RecordDesignIntermediateField,
-)
+from ._record_design_ir import RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION
 from ._render_profile import (
     RENDER_PROFILE_SCHEMA_VERSION,
     RenderProfile,
@@ -42,6 +39,7 @@ from ._render_profile import (
 from ._semantic_map import SemanticMap, SemanticMapEntry
 from ._semantic_map_join import JoinedRecordDesign
 from ._variable_envelope import FilingEnvelopeProvenance
+from .record_design_intermediate import RecordDesignIntermediateField
 
 __all__ = [
     "EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION",

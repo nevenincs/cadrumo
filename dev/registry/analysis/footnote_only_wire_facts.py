@@ -108,9 +108,12 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..pipeline._record_design_ir import RecordDesignIntermediateField, RecordDesignIntermediateSource
-from ..pipeline.render_profile_eligibility import resolve_render_profile_eligibility
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediateField,
+    RecordDesignIntermediateSource,
+)
 from ..pipeline.render_check import revision_render_inputs
+from ..pipeline.render_profile_eligibility import resolve_render_profile_eligibility
 from ..pipeline.source_defects import (
     NoteGovernedAmountDeclaration,
     NoteStatedApplicabilityDeclaration,

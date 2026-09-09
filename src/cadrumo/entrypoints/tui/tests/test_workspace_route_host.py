@@ -22,6 +22,7 @@ from __future__ import annotations
 from typing import cast
 
 import pytest
+from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.widgets import DataTable, Static
 
 from ....application.ledger.workspace import (
@@ -39,7 +40,6 @@ from ....application.operator_actions.models import ActionReference
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
 from ....core.identity import TransactionId
 from ..app import CadrumoTuiApp
-from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ..home import HomeScreen
 from ..ledger.entries import LedgerEntriesScreen
 from ..ledger.overview import LedgerOverviewScreen

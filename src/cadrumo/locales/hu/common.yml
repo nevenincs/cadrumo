@@ -1518,7 +1518,6 @@ tui:
     title: Cadrumo terminálmunkamenet
   search:
     action:
-      available: Elérhető munkafelületi művelet
       classify_ledger: Főkönyv osztályozása
       edit_profile: Profil szerkesztése
       explain_overview: Áttekintés magyarázata
@@ -1528,6 +1527,7 @@ tui:
       list_work_revisions: Munkaverziók megtekintése
       review_ledger: Főkönyv áttekintése
       review_ledger_evidence: Főkönyvi bizonyíték áttekintése
+      unknown: Ismeretlen munkafelületi művelet
       validate_ledger: Főkönyv ellenőrzése
     destination:
       aeat_sync: AEAT-szinkronizálás megnyitása

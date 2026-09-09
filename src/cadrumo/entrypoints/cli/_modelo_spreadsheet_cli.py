@@ -53,7 +53,7 @@ if TYPE_CHECKING:
         RowSetEdit,
     )
     from ...application.export.google_operation import GoogleSheetsExportPublicResultV1
-    from ...application.storage.calc_sheets._parity_comparison import CasillaParity
+    from ...application.storage.calc_sheets.casilla_parity import CasillaParity
     from ...application.storage.calc_sheets.parity_harness import OperatorInputScenario, ParityReport
     from ...domain.calculations.registry.formula_runtime import RegistryCalculationResult
     from ...domain.calculations.registry.schema import RegistrySnapshot
