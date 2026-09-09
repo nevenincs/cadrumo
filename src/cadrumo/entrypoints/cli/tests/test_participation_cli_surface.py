@@ -26,14 +26,15 @@ from ....domain.modelos.participation_index import (
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_runtime_profile
 from .._ledger_payloads import LedgerTrackResult, LedgerTransactionParticipationPayload
-from ..command_api import ArgumentSpec, OptionSpec, command_spec_for_path, command_spec_nodes
+from ..command_api import ArgumentSpec, OptionSpec
+from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_participation_verb_declares_subject_argument() -> None:
     """The participation group declares the transaction-id subject argument."""
-    spec = command_spec_for_path(("aeat", "app", "ledger", "participation"))
+    spec = COMMAND_GRAPH.resolve_path(("aeat", "app", "ledger", "participation"))
     assert any(
         isinstance(parameter, ArgumentSpec) and parameter.name == "transaction_id" for parameter in spec.parameters
     )
@@ -47,7 +48,7 @@ def test_participation_verb_carries_no_dead_borradores_flag() -> None:
     flag whose help admitted "no effect yet" was removed rather than shipped, so
     this guards against its re-introduction.
     """
-    spec = command_spec_for_path(("aeat", "app", "ledger", "participation"))
+    spec = COMMAND_GRAPH.resolve_path(("aeat", "app", "ledger", "participation"))
     declared_opts = {
         declaration
         for parameter in spec.parameters
@@ -59,7 +60,7 @@ def test_participation_verb_carries_no_dead_borradores_flag() -> None:
 
 def test_participation_rebuild_subcommand_is_registered() -> None:
     """The participation group exposes the ``rebuild`` subcommand."""
-    children = {node.spec.token for node in command_spec_nodes() if node.spec.parent_key == "app_ledger_participation"}
+    children = {node.spec.token for node in COMMAND_GRAPH.nodes() if node.spec.parent_key == "app_ledger_participation"}
     assert "rebuild" in children
 
 

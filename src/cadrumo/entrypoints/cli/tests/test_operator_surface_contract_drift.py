@@ -32,7 +32,6 @@ import pytest
 from typer.main import get_command as _typer_get_command
 
 from ....application.operator_surface.contract import get_operator_surface_contract
-from ..command_suggestions import materialise_lazy_subcommands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -77,7 +76,6 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
     """
     from .. import app as live_app
 
-    materialise_lazy_subcommands(live_app)
     root = _typer_get_command(live_app)
     root.name = live_app.info.name or "cadrumo"
 

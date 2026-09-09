@@ -101,10 +101,16 @@ def _enforce_write_policy(
     if write_policy.verdict is None:
         raise RuntimeError("root write-policy refusal is missing its verdict")
     projection = common.project_cli_policy_refusal(requested_leaf=leaf, verdict=write_policy.verdict)
+    context = {
+        key: value
+        for evidence in projection.precondition_action.evidence
+        for key, value in evidence.values.items()
+        if key.endswith("_setting")
+    }
     raise common.attach_cli_policy_refusal_projection(
         CliRefusedBoundaryError(
             write_policy.render_refusal_message(),
-            context=common.cli_policy_refusal_context(projection),
+            context=context or None,
         ),
         projection=projection,
     )

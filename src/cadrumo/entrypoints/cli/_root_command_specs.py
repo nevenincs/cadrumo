@@ -197,7 +197,7 @@ ROOT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
     CommandSpec(
         key="app_tui",
         parent_key="app",
-        token="tui",
+        token="tui",  # noqa: S106 - command token, not a credential
         kind=CommandNodeKind.LEAF,
         help_key=TranslationKey("cli.root.app_help"),
         short_help_key=None,

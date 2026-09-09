@@ -234,8 +234,7 @@ def _diff_formula_lines(report: RegistryRevisionDiffReport) -> list[str]:
     lines = [f"added_formula\t{formula_id}" for formula_id in report.added_formulas]
     lines.extend(f"removed_formula\t{formula_id}" for formula_id in report.removed_formulas)
     lines.extend(
-        "\t".join(("changed_formula", formula.id, formula.target_casilla_id))
-        for formula in report.changed_formulas
+        "\t".join(("changed_formula", formula.id, formula.target_casilla_id)) for formula in report.changed_formulas
     )
     return lines
 
@@ -245,8 +244,7 @@ def _diff_parameter_lines(report: RegistryRevisionDiffReport) -> list[str]:
     lines = [f"added_parameter\t{parameter_id}" for parameter_id in report.added_parameters]
     lines.extend(f"removed_parameter\t{parameter_id}" for parameter_id in report.removed_parameters)
     lines.extend(
-        "\t".join(("changed_parameter", parameter.id, parameter.data_type))
-        for parameter in report.changed_parameters
+        "\t".join(("changed_parameter", parameter.id, parameter.data_type)) for parameter in report.changed_parameters
     )
     return lines
 

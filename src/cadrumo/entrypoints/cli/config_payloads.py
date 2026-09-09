@@ -878,19 +878,6 @@ class ApoderadoCheckResult(OutputSchema):
 # ``config`` verb.
 
 
-class ConfigProfileExportReconcileFailurePayload(OutputSchema):
-    """JSON-safe projection of :class:`ProfileBundleExportReconcileFailure`.
-
-    One crash-recovery operation the pre-publication sweep could not
-    finalise. ``destination`` is ``None`` when the journal itself could not
-    be read; ``reason`` is the refusing error's class name.
-    """
-
-    journal_id: NonEmptyStr
-    destination: str | None = None
-    reason: NonEmptyStr
-
-
 class ConfigProfileDeleteResult(OutputSchema):
     """JSON envelope for ``aeat config profile delete``.
 
