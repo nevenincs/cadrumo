@@ -1,0 +1,102 @@
+# AEAT record-design corpus staleness detector
+#
+# Asks whether the captured official record designs still match what AEAT
+# publishes today. This is NOT the GROI drift detector: that one watches the
+# live form's shape and selectors, this one watches the bytes of the diseno de
+# registro documents the registry is generated from.
+#
+# Three outcomes, and they are deliberately different:
+#   0   the captured corpus matches the official pages
+#   75  the official source could not be read; staleness is UNKNOWN, not clean
+#   1   the corpus has drifted, and the differing URLs are named in the log
+#
+# Only drift opens an issue. An unreachable source is reported and the run is
+# neutral, because a network failure has established nothing about the corpus
+# and burning it down as a failure would train everyone to ignore this job.
+#
+# Dispatch-only, per the standing operator ruling of 2026-07-21: no schedules,
+# no standing compute. AEAT republishes on its own cadence, so run this before
+# relying on the corpus - ahead of a release, when a modelo's revision is being
+# authored, or when a republish is suspected.
+
+name: Cadrumo AEAT Corpus Staleness
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  corpus-staleness:
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # v2
+        with:
+          tool: just@1.38.0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          enable-cache: false
+
+      - name: Initialize the worktree
+        run: just init
+
+      - name: Compare the captured corpus against the official pages
+        id: staleness
+        run: |
+          set +e
+          uv run --no-sync python -m dev.corpus.sync_aeat_record_design_corpus --live-check
+          status=$?
+          set -e
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" -eq 0 ]; then
+            echo "Corpus matches the official pages."
+          elif [ "$status" -eq 75 ]; then
+            echo "::warning::The official source could not be read; staleness is UNKNOWN, not clean."
+          else
+            echo "::error::The captured corpus has drifted from the official pages."
+          fi
+          exit 0
+
+      - name: Open a staleness issue when the corpus has drifted
+        if: steps.staleness.outputs.status != '0' && steps.staleness.outputs.status != '75'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const body = [
+              'The captured AEAT record-design corpus no longer matches what AEAT publishes.',
+              'The differing URLs are named in the job log.',
+              '',
+              `Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              'This matters because every generated export tree is derived from the captured',
+              'documents. A republished design means the registry may now cite a document that',
+              'no longer says what it said when the tree was generated.',
+              '',
+              'Remediation: re-pull the corpus, review the byte differences against the',
+              'affected revisions, and regenerate the trees whose source changed.',
+            ].join('\n');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'AEAT corpus staleness: captured designs differ from the official pages',
+              body,
+              labels: ['aeat-drift'],
+            });
+
+      - name: Fail the run only when the corpus has drifted
+        if: steps.staleness.outputs.status != '0' && steps.staleness.outputs.status != '75'
+        run: exit 1
