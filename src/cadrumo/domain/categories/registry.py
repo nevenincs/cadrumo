@@ -213,8 +213,21 @@ def compile_category_profile_facts(registry_root: Path) -> tuple[GovernedFact, .
 
 
 def collect_category_profile_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-    """Fingerprint the retained category corpus for authority identity."""
+    """Fingerprint the retained category corpus for authority identity.
+
+    An absent corpus contributes NO fingerprint rather than raising. A partial
+    registry - the isolated candidate a generated tree is validated against, or a
+    minimal tree a fixture builds - carries only what its subject needs, and
+    demanding this file turned its absence into a load failure reported far from
+    its cause, as a fingerprint error naming a path nobody asked for.
+
+    Contributing nothing is also the correct identity: there is no content to
+    invalidate on. If the corpus later appears, the fingerprint set changes and
+    the cache invalidates exactly as it should.
+    """
     target = registry_root.resolve() / CATEGORY_FACT_PROVIDER_DIRECTORY / "profiles.toml"
+    if not target.is_file():
+        return ()
     return (toml_file_fingerprint(target),)
 
 
