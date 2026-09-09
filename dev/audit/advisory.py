@@ -37,7 +37,7 @@ existing policy it reuses.
 
 See Also:
     :mod:`dev.audit.report`
-        The sibling shadowing/duplication/layering/complexity dashboard this
+        The sibling duplication/layering/complexity dashboard this
         module deliberately does not merge into (different dimension set,
         different CI wiring, pinned test coverage).
     :func:`build_advisory_report`

@@ -40,8 +40,8 @@ from cadrumo.entrypoints.cli.command_api import (
     build_verb_input_schemas,
     command_schema_refs,
     command_schema_types,
-    command_spec_nodes,
 )
+from dev.command_graph import command_spec_nodes
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 from cadrumo.entrypoints.cli.command_spec import SchemaState
 

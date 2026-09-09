@@ -92,7 +92,10 @@ def test_modelo_193_gastos_total_is_explicit_while_rows_keep_their_own_source(re
     assert total.input_kind == "manual"
     assert total.binding is None
     assert gasto_bindings
-    assert all(binding.aggregation.op is BindingAggregationOp.ROWS for binding in gasto_bindings)
+    assert all(
+        binding.aggregation is not None and binding.aggregation.op is BindingAggregationOp.ROWS
+        for binding in gasto_bindings
+    )
 
 
 def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:

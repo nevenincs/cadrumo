@@ -52,9 +52,7 @@ from typing import override
 from pydantic import BaseModel
 
 from .... import __version__
-from ....core.atomic_write import atomic_write_best_effort_text
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.hashing import blake2b_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from .loader_cache import is_bundled_registry_root
 
@@ -68,7 +66,6 @@ REGISTRY_IDENTITY_SCHEMA_VERSION = "registry-identity-v1"
 """Bumped when the stamp's shape changes; a foreign version falls back to the walk."""
 
 _WALKED_DIGEST_LABEL = b"registry-identity-walked-v1"
-_INSTALLED_DIGEST_LABEL = b"registry-identity-installed-v1"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,81 +166,6 @@ def compute_walked_tree_digest(fingerprints: Iterable[Iterable[object]]) -> str:
     return hasher.hexdigest()
 
 
-def _file_content_digest(path: Path) -> str:
-    """Return a content digest for one registry file, or a marker when unreadable.
-
-    An unreadable file yields a stable per-path marker rather than raising: the
-    stamp is a description of what the build packaged, and a file it could not
-    read is a fact about that tree, not a reason to abort a release. The marker
-    differs from any real digest, so such a tree can never match one whose files
-    all read cleanly.
-
-    Returns:
-        The hex BLAKE2b digest of the file's bytes, or an ``unreadable:`` marker.
-    """
-    try:
-        return blake2b_hex(path.read_bytes())
-    except OSError:
-        _LOGGER.debug("Registry file %s could not be read while stamping identity", path, exc_info=True)
-        return "unreadable"
-
-
-def compute_installed_tree_digest(
-    fingerprints: FingerprintTuples,
-    *,
-    registry_root: Path,
-    package_version: str = __version__,
-) -> str:
-    """Digest a tree into the install-stable identity the build stamps.
-
-    The walked digest folds absolute paths and ``mtime_ns``, and neither
-    survives packaging: the cohort builds the wheel from a ``git archive``
-    extraction and installation rewrites mtimes and directory sizes. This
-    derivation keys on the package version plus the sorted
-    ``(relative-path, size, content-digest)`` of every registry FILE, all three
-    byte-stable from the build machine to every install because the bundled tree
-    is identical per release. Directory entries are dropped for the same
-    packaging-instability reason.
-
-    The CONTENT digest is what makes this an identity rather than a shape: path
-    and size alone cannot separate two files of equal length, so a same-size edit
-    anywhere in an installed tree would be invisible to a stamp that omitted it.
-    It is not cheap -- measured at roughly 24 seconds over the real 17,548-file
-    tree, dominated by first-touch reads rather than by hashing -- and that is
-    affordable only because it is paid ONCE on the build machine per release
-    while the runtime never pays it at all: a stamped install reads the digest in
-    about two milliseconds, and an unstamped tree takes
-    :func:`compute_walked_tree_digest`, which folds the tuples the caller already
-    collected and reads nothing. The trade works in exactly one direction, which
-    is why the walked derivation cannot borrow it and why the per-file bundled
-    fingerprint leaves its content slot empty.
-
-    This stats and reads every entry, so it is a BUILD-TIME derivation only.
-
-    Returns:
-        The hex SHA-256 install-stable identity of the tree.
-    """
-    resolved_root = registry_root.resolve()
-    entries: list[tuple[str, int, str]] = []
-    for path, size, _mtime_ns, _content_digest in fingerprints:
-        candidate = Path(path)
-        if not candidate.is_file():
-            continue
-        try:
-            relative = candidate.resolve().relative_to(resolved_root).as_posix()
-        except ValueError:
-            relative = candidate.name
-        entries.append((relative, size, _file_content_digest(candidate)))
-    hasher = hashlib.sha256()
-    hasher.update(_INSTALLED_DIGEST_LABEL)
-    hasher.update(package_version.encode("utf-8"))
-    for relative, size, content in sorted(entries):
-        hasher.update(relative.encode("utf-8"))
-        hasher.update(content.encode("utf-8"))
-        hasher.update(str(size).encode("utf-8"))
-    return hasher.hexdigest()
-
-
 def read_registry_identity_stamp(registry_root: Path) -> RegistryIdentityStamp | None:
     """Read the shipped identity stamp for ``registry_root``, or ``None``.
 
@@ -267,46 +189,6 @@ def read_registry_identity_stamp(registry_root: Path) -> RegistryIdentityStamp |
         return None
     if stamp.package_version != __version__:
         return None
-    return stamp
-
-
-def write_registry_identity_stamp(
-    *,
-    registry_fingerprints: FingerprintTuples,
-    registry_root: Path,
-    package_version: str = __version__,
-) -> RegistryIdentityStamp:
-    """Write the install-stable identity stamp beside ``registry_root``.
-
-    Called by the release build against the tree it is packaging. The caller
-    supplies the fingerprints so this module adds no loader import edge, which
-    is the same arrangement the verdict stamper uses.
-
-    Returns the stamp rather than its path so the caller can key dependent
-    records on the digest it just wrote, instead of re-deriving that digest or
-    reading the file back -- either of which would be a second derivation of the
-    thing this module exists to own. The path is
-    :func:`registry_identity_stamp_location` of the same root.
-
-    Returns:
-        The written :class:`RegistryIdentityStamp`.
-    """
-    resolved = registry_root.resolve()
-    stamp = RegistryIdentityStamp(
-        schema_version=REGISTRY_IDENTITY_SCHEMA_VERSION,
-        package_version=package_version,
-        tree_digest=compute_installed_tree_digest(
-            registry_fingerprints,
-            registry_root=resolved,
-            package_version=package_version,
-        ),
-        entry_count=len(registry_fingerprints),
-    )
-    atomic_write_best_effort_text(
-        registry_identity_stamp_location(resolved),
-        stamp.model_dump_json(),
-        encoding=UTF_8_ENCODING,
-    )
     return stamp
 
 
@@ -378,11 +260,9 @@ __all__ = [
     "RegistryIdentity",
     "RegistryIdentityOrigin",
     "RegistryIdentityStamp",
-    "compute_installed_tree_digest",
     "compute_walked_tree_digest",
     "read_registry_identity_stamp",
     "registry_identity_stamp_location",
     "resolve_registry_identity",
     "stamped_cache_key_tuples",
-    "write_registry_identity_stamp",
 ]

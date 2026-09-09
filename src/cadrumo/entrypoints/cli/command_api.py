@@ -29,18 +29,6 @@ from ._verb_input_schema import (
     is_exposable_command,
 )
 from .command_spec import ArgumentSpec, CommandSpec, CommandSpecNode, DefaultKind, JsonType, OptionSpec, ParameterKind
-from .command_specs import COMMAND_GRAPH
-
-
-def command_spec_nodes() -> tuple[CommandSpecNode, ...]:
-    """Return the immutable, path-derived production command projection."""
-    return COMMAND_GRAPH.nodes()
-
-
-def command_spec_for_path(path: tuple[str, ...]) -> CommandSpec:
-    """Resolve one exact operator path from the production command graph."""
-    return COMMAND_GRAPH.resolve_path(path)
-
 
 __all__ = [
     "ArgumentSpec",
@@ -67,7 +55,5 @@ __all__ = [
     "command_schema_refs",
     "command_schema_type",
     "command_schema_types",
-    "command_spec_for_path",
-    "command_spec_nodes",
     "is_exposable_command",
 ]

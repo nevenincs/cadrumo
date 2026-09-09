@@ -10,6 +10,7 @@ from pathlib import Path
 from shutil import copyfile
 
 import pytest
+from dev.registry.maintenance_support import check_m303_annual_orden_manifest
 from pydantic import ValidationError
 
 from .....core.resources.bundled_data import bundled_path
@@ -17,10 +18,7 @@ from .....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoSco
 from .._m303_orden_source import extract_m303_annual_orden_source
 from ..authority import bundled_authority
 from ..errors import RegistryLoadError, RegistryValidationError
-from ..m303_orden_manifest import (
-    check_m303_annual_orden_manifest,
-    load_m303_annual_orden_authority,
-)
+from ..m303_orden_manifest import load_m303_annual_orden_authority
 from ..m303_orden_projection_models import M303AnnualOrdenProjection
 from ..m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ..schema import ModeloDefinition, RegistryCatalogues

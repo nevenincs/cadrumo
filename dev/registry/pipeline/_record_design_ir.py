@@ -10,20 +10,16 @@ the source independently.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from itertools import accumulate
 from pathlib import Path
 from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from cadrumo.domain.calculations.registry.corpus_catalogue import (
-    ResolvedRecordDesignBinary,
-    resolve_record_design_binary,
-)
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
 from cadrumo.domain.calculations.registry.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_LENGTHS,
-    AUXILIARY_ENVELOPE_HEADER_OFFSETS,
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
     AUXILIARY_ENVELOPE_HEADER_ROWS,
     RecordDesignAuxiliaryEnvelopeHeader,
@@ -36,11 +32,16 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     validate_auxiliary_envelope_header_contents,
 )
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
+from dev.registry.maintenance_support import ResolvedRecordDesignBinary, resolve_record_design_binary
 
 from .record_design_intermediate import (
     RecordDesignIntermediateField,
     RecordDesignIntermediateSource,
     RecordDesignWorkbookFormat,
+)
+
+AUXILIARY_ENVELOPE_HEADER_OFFSETS: tuple[int, ...] = tuple(
+    accumulate(AUXILIARY_ENVELOPE_HEADER_LENGTHS[:-1], initial=1),
 )
 
 __all__ = [

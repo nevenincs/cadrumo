@@ -38,10 +38,8 @@ from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.schema_base import ThresholdComparison
 from ...invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
-from ..errors import IvaCatalogueError
 from ..lookup import lookup_rate
 from ..prorrata_especial_parameters import ProrrataEspecialMandatoryParameters
-from ..recargo_equivalencia import load_recargo_rates
 from ..schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -165,59 +163,6 @@ def test_liva_art_161_corpus_excerpt_quotes_all_four_recargo_rates() -> None:
     assert "Tipos" in body
     for needle in ("5,2 por ciento", "1,4 por ciento", "0,50 por ciento", "1,75 por ciento"):
         assert needle in body
-
-
-def test_liva_art_161_substrate_general_recargo_matches_5_2_per_cent() -> None:
-    """LIVA art 161 1° — 5,2% applied to 21% IVA tier supplies."""
-    assert load_recargo_rates().general_rate == Decimal("0.052")
-
-
-def test_liva_art_161_substrate_reduced_recargo_matches_1_4_per_cent() -> None:
-    """LIVA art 161 2° — 1,4% applied to 10% IVA tier (art 91 Uno)."""
-    assert load_recargo_rates().reducido_rate == Decimal("0.014")
-
-
-def test_liva_art_161_substrate_super_reduced_recargo_matches_0_5_per_cent() -> None:
-    """LIVA art 161 3° — 0,5% applied to 4% IVA tier (art 91 Dos)."""
-    assert load_recargo_rates().super_reducido_rate == Decimal("0.005")
-
-
-def test_liva_art_161_substrate_tabaco_recargo_matches_1_75_per_cent() -> None:
-    """LIVA art 161 4° — 1,75% on labores del tabaco (Impuesto Especial)."""
-    assert load_recargo_rates().tabaco_rate == Decimal("0.0175")
-
-
-def test_liva_art_161_recargo_matches_iva_tier_alignment() -> None:
-    """The recargo de equivalencia tiers align 1:1 with the IVA rate
-    tiers per LIVA art 161 1° (general) / 2° (art 91 Uno) / 3° (art
-    91 Dos). Each tier has matching IVA + recargo percentages
-    declared by separate articles. This test confirms the alignment
-    is consistent across the two rate tables."""
-    iva_general = lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, _BINDING_DATE).pct
-    iva_reducido = lookup_rate(EUMemberState.ES, IvaRateKind.REDUCED, _BINDING_DATE).pct
-    iva_super = lookup_rate(EUMemberState.ES, IvaRateKind.SUPER_REDUCED, _BINDING_DATE).pct
-
-    # Sanity: IVA tiers resolve to 21/10/4 per LIVA art 90/91
-    assert (iva_general, iva_reducido, iva_super) == (
-        Decimal("21"),
-        Decimal("10"),
-        Decimal("4"),
-    )
-
-    # Recargo tiers resolve to 5.2/1.4/0.5 per LIVA art 161
-    assert load_recargo_rates().general_rate * Decimal("100") == Decimal("5.200")
-    assert load_recargo_rates().reducido_rate * Decimal("100") == Decimal("1.400")
-    assert load_recargo_rates().super_reducido_rate * Decimal("100") == Decimal("0.500")
-
-
-def test_liva_art_161_missing_recargo_parameter_raises_iva_catalogue_error() -> None:
-    from ..recargo_equivalencia import _rates_from_catalogue
-
-    parameters = dict(bundled_authority().catalogues.parameters)
-    del parameters["liva-art-161:recargo-rate-tabaco"]
-
-    with pytest.raises(IvaCatalogueError, match=r"recargo-rate-tabaco"):
-        _rates_from_catalogue(parameters)
 
 
 # ---------------------------------------------------------------------------

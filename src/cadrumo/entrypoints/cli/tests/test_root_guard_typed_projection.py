@@ -19,7 +19,6 @@ from ...cli import app
 from .._common import (
     RequestedCliLeaf,
     attach_cli_policy_refusal_projection,
-    cli_policy_refusal_context,
     cli_policy_refusal_projection,
     current_requested_cli_leaf,
     preserve_requested_cli_leaf,
@@ -120,10 +119,6 @@ def test_explicit_database_verdict_projects_a_closed_operator_decision(tmp_path:
     assert projection.precondition_action.argument_bindings == ()
     assert projection.precondition_action.missing_argument_names == ()
     assert projection.precondition_action.no_recovery_outcome == "operator_decision"
-    assert cli_policy_refusal_context(projection) == {
-        "explicit_route_setting": "CADRUMO_DATABASE_URL",
-        "storage_root_setting": "CADRUMO_LOCAL_STORAGE_ROOT",
-    }
 
 
 def test_real_root_fallback_refusal_attaches_the_typed_projection(tmp_path: Path) -> None:

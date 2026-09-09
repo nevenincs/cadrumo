@@ -6,12 +6,12 @@ import re
 from collections import Counter
 
 import pytest
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 from .....core.filing_producer_key import FilingProducerKey
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
-from ..corpus_catalogue import resolve_record_design_binary
 from ..loader import load_catalogue_file
 from ..record_design import extract_record_design
 from ..schema_input_kind import InputKind

@@ -26,12 +26,10 @@ from ...iva.classification import InvoiceKind, TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ..decomposition import (
-    INVOICE_DECOMPOSITION_DEFECT_GUIDANCE,
     InvoiceComponents,
     InvoiceDecomposition,
     InvoiceDecompositionDefect,
     decompose_invoice,
-    partition_invoices,
 )
 from ..enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ..models import Invoice, InvoiceLine
@@ -262,24 +260,6 @@ def test_a_partial_record_is_still_a_valid_invoice() -> None:
     assert not decompose_invoice(invoice).is_grounded
 
 
-def test_partition_keeps_the_excluded_records_alongside_the_usable_ones() -> None:
-    """Nothing is dropped: both halves come back from one call."""
-    grounded_invoice = _invoice(invoice_number="F-1", iva_category=IvaCategory.DOMESTIC_GENERAL)
-    ungrounded_invoice = _invoice(invoice_number="F-2")
-
-    partition = partition_invoices((grounded_invoice, ungrounded_invoice))
-
-    assert [v.invoice_id for v in partition.grounded] == [grounded_invoice.invoice_id]
-    assert [v.invoice_id for v in partition.ungrounded] == [ungrounded_invoice.invoice_id]
-    assert partition.ungrounded[0].defects
-
-
-def test_every_defect_carries_operator_guidance() -> None:
-    """A new defect cannot ship without the sentence that tells an operator what to do."""
-    assert set(INVOICE_DECOMPOSITION_DEFECT_GUIDANCE) == set(InvoiceDecompositionDefect)
-    assert all(text.strip() for text in INVOICE_DECOMPOSITION_DEFECT_GUIDANCE.values())
-
-
 def test_a_verdict_carrying_both_components_and_defects_is_refused() -> None:
     """The two outcome classes must stay mutually exclusive."""
     with pytest.raises(ValidationError, match="never both and never neither"):
@@ -380,14 +360,3 @@ def test_the_same_category_on_its_real_side_is_not_flagged() -> None:
     defects = decompose_invoice(invoice).defects
 
     assert InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND not in defects
-
-
-def test_the_impossible_side_guidance_does_not_repeat_the_undeclared_advice() -> None:
-    """The two members must not resolve to the same sentence.
-
-    The whole reason for the split is that the remediation differs; identical
-    guidance would make the extra member cosmetic.
-    """
-    impossible = INVOICE_DECOMPOSITION_DEFECT_GUIDANCE[InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND]
-    undeclared = INVOICE_DECOMPOSITION_DEFECT_GUIDANCE[InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED]
-    assert impossible != undeclared

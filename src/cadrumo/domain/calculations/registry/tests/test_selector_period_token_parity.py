@@ -6,25 +6,16 @@ the core period vocabulary have to stay in lock-step in both directions:
 
 * a declared token the production validator refuses is an *orphan declaration* -
   the revision is addressed by a token nothing in the vocabulary admits; and
-* an enumerable accepted code no revision declares is an *undeclared code* -
-  vocabulary with no registry consumer, which is an inventory fact rather than a
-  defect (a code may legitimately exist ahead of the modelo that will use it).
-
-The two findings carry different remedies, so they are reported separately and
-at different severities: an orphan fails, an undeclared code only fails when it
-is one the pinned inventory does not already account for.
+The gate rejects orphan declarations through the canonical selector validator.
 
 Delegation, not restatement
 ---------------------------
 
 This gate validates through :data:`RegistrySelectorPeriodCode` itself and
-enumerates through :func:`accepted_period_codes`. It deliberately does NOT
+It deliberately does NOT
 restate which token families are accepted. Restating them would create a second
 authority for "what is a valid period token" that could drift from the validator
-while staying green - which is the failure this gate exists to prevent, not to
-reproduce. The open ``EVENT-N``-style family is out of the undeclared direction
-by construction, because :func:`accepted_period_codes` enumerates only the
-closed part of the vocabulary.
+while staying green - which is the failure this gate exists to prevent.
 """
 
 from __future__ import annotations
@@ -34,19 +25,10 @@ from collections.abc import Mapping
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from .....core.period import RegistrySelectorPeriodCode, accepted_period_codes
+from .....core.period import RegistrySelectorPeriodCode
 from .....tests.registry_tree import bundled_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
-
-#: Accepted codes that no shipped revision addresses. ``4P`` is the fourth
-#: instalment period: a real AEAT filing event the vocabulary carries, which no
-#: modelo revision currently selects on. Vocabulary is not pruned by usage, so
-#: this is recorded rather than removed; an entry is added here only with a
-#: stated reason.
-_ACCEPTED_CODES_NO_REVISION_DECLARES: Mapping[str, str] = {
-    "4P": "fourth instalment period; no shipped revision selects on it",
-}
 
 _SELECTOR_ADAPTER = TypeAdapter(RegistrySelectorPeriodCode)
 
@@ -104,15 +86,6 @@ def non_canonical_selector_tokens(declared: Mapping[str, tuple[str, ...]]) -> li
     return drifted
 
 
-def accepted_codes_without_a_declaration(declared: Mapping[str, tuple[str, ...]]) -> list[str]:
-    """Return enumerable accepted codes that no revision declares."""
-    return sorted(
-        selector_form
-        for selector_form in {_canonical_selector_form(str(code)) for code in accepted_period_codes()}
-        if selector_form not in declared
-    )
-
-
 def test_every_declared_selector_token_is_accepted() -> None:
     """No revision is addressed by a token the period vocabulary refuses."""
     orphans = orphan_selector_tokens(collect_declared_selector_tokens())
@@ -128,22 +101,6 @@ def test_declared_selector_tokens_are_in_canonical_form() -> None:
     assert not drifted, (
         "registry period_selector tokens whose declared spelling differs from the stored form; "
         "rewrite the TOML to the canonical spelling so the file matches the compiled value:\n" + "\n".join(drifted)
-    )
-
-
-def test_accepted_codes_without_a_declaration_are_all_accounted_for() -> None:
-    """An accepted code no revision declares is inventoried, not silently absent."""
-    undeclared = accepted_codes_without_a_declaration(collect_declared_selector_tokens())
-    unaccounted = [code for code in undeclared if code not in _ACCEPTED_CODES_NO_REVISION_DECLARES]
-    assert not unaccounted, (
-        "accepted period codes that no registry revision declares and that this gate does not "
-        "account for. This is NOT automatically a defect - vocabulary is not pruned by usage - "
-        "so either add the declaring revision or record the code here with a stated reason: "
-        f"{unaccounted}"
-    )
-    stale = [code for code in _ACCEPTED_CODES_NO_REVISION_DECLARES if code not in undeclared]
-    assert not stale, (
-        f"codes recorded as declared by no revision that a revision now declares; drop them from the inventory: {stale}"
     )
 
 
@@ -167,17 +124,6 @@ def test_the_orphan_check_reports_a_token_the_validator_refuses() -> None:
     assert len(orphans) == 1
     assert "NOT-A-PERIOD" in orphans[0]
     assert "999:synthetic" in orphans[0]
-
-
-def test_the_undeclared_check_reports_a_code_no_revision_declares() -> None:
-    """Removing a declared token surfaces its accepted code as undeclared."""
-    clean = collect_declared_selector_tokens()
-    assert "0A" in clean, "fixture assumption broken: 0A is declared by shipped revisions"
-    assert "0A" not in accepted_codes_without_a_declaration(clean)
-
-    without_annual = {declared_code: owners for declared_code, owners in clean.items() if declared_code != "0A"}
-
-    assert "0A" in accepted_codes_without_a_declaration(without_annual)
 
 
 def test_the_canonical_form_check_reports_a_drifted_spelling() -> None:

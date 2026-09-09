@@ -5,7 +5,6 @@ from typing import cast
 
 import pytest
 
-from ..errors.error_codes import ERROR_REGISTRY, get_registered_error_code
 from ..errors.hierarchy import RedactionError
 from ..redaction.rules import redact, redact_for_cli_output
 
@@ -26,8 +25,3 @@ def test_redaction_entrypoints_raise_redaction_error(call: Callable[[], object])
         call()
 
     assert raised.type is RedactionError
-
-
-def test_redaction_error_typing_and_registry() -> None:
-    assert not issubclass(RedactionError, ValueError)
-    assert get_registered_error_code(RedactionError("test")).code in ERROR_REGISTRY

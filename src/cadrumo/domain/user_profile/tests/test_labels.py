@@ -130,4 +130,3 @@ def test_section_and_field_key_families_cannot_collide() -> None:
 
     assert not colliding_field.startswith(f"{section_title}.")
     assert section_title != colliding_field
-

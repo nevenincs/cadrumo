@@ -29,16 +29,6 @@ so a new writer picks one deliberately instead of inventing a fifth dialect:
   unexpected pre-existing tempfile. A memoryview-and-offset loop completes
   short :func:`os.write` calls and refuses a write that makes no progress.
 
-- **Publish-once tier** (:func:`atomic_write_publish_once_bytes`): the hardened
-  tier's staging exactly, but published with :func:`os.link` rather than
-  :func:`os.replace`, so an existing target raises :exc:`FileExistsError` in one
-  uninterruptible step instead of being overwritten. For write-once evidence --
-  a provenance manifest, an attestation -- where a second write is a bug rather
-  than an update. This exists because ``if path.exists(): raise`` before a
-  replace is not the same guarantee: it leaves a window between the check and
-  the publication, and callers open-coding that pattern were re-implementing
-  the staging dialect around it.
-
 - **Deferred-publish tier** (:func:`hardened_staged_publication`): the hardened
   tier's staging and publication with the write itself left to the caller, for
   a producer that cannot hand over a ``bytes`` payload -- it needs a real file
@@ -103,7 +93,6 @@ __all__ = [
     "atomic_write_bytes",
     "atomic_write_hardened_bytes",
     "atomic_write_hardened_text",
-    "atomic_write_publish_once_bytes",
     "atomic_write_text",
     "durable_write_batch",
     "hardened_staged_publication",
@@ -437,90 +426,6 @@ def atomic_write_hardened_text(
         mode: POSIX file mode for the staged tempfile. Defaults to ``0o600``.
     """
     atomic_write_hardened_bytes(path, text.encode(encoding), mode=mode)
-
-
-def atomic_write_publish_once_bytes(
-    path: Path,
-    data: bytes,
-    *,
-    mode: int = _HARDENED_DEFAULT_MODE,
-) -> None:
-    """Atomically write ``data`` to ``path``, refusing a pre-existing target.
-
-    The publish-once tier. Stages exactly as the hardened tier does -- ``O_EXCL``
-    plus ``O_NOINHERIT``/``O_CLOEXEC`` where defined, file mode ``mode``, a
-    collision-hardened ``{name}.{pid}.{token_hex}.tmp`` sibling, a
-    memoryview-and-offset write loop, and an ``fsync`` before publication -- then
-    publishes with :func:`os.link` instead of :func:`os.replace`.
-
-    That substitution is the entire point of the tier. :func:`os.replace`
-    overwrites an existing target by definition; :func:`os.link` fails with
-    :exc:`FileExistsError` in one uninterruptible step. A caller that must never
-    overwrite therefore gets a real guarantee here, where open-coding
-    ``if path.exists(): raise`` before a replace leaves a window between the
-    check and the publication. Use this tier for write-once evidence: a
-    provenance manifest, an attestation, any record whose second write is a bug
-    rather than an update.
-
-    The staging file is unlinked after a successful link and on any failure,
-    including a :class:`BaseException` raised mid-write, so no orphan sibling
-    survives either path. Both names refer to one inode between the link and
-    that unlink, which is why the parent directory is fsynced only afterwards.
-
-    Args:
-        path: Destination file, which MUST NOT already exist. Parent directory
-            is created if absent.
-        data: Full file contents to write.
-        mode: POSIX file mode for the staged tempfile (and, transitively, the
-            published target). Defaults to ``0o600``.
-
-    Raises:
-        FileExistsError: When ``path`` already exists. This is the tier's
-            contract, not an incidental failure.
-        OSError: When staging, writing, or linking otherwise fails. The original
-            exception propagates unwrapped; the tempfile is cleaned up first.
-            Note that :func:`os.link` requires the staging sibling and the
-            target to share a filesystem, which holds by construction because
-            staging is always a sibling of ``path``.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = _hardened_staging_path(path)
-    flags = _hardened_staging_flags()
-    created = False
-    refused_existing_target = False
-    try:
-        fd = os.open(tmp_path, flags, mode)
-        created = True
-        try:
-            _write_all(fd, data)
-            os.fsync(fd)
-        finally:
-            os.close(fd)
-        try:
-            os.link(tmp_path, path)
-        except FileExistsError:
-            # Narrowed to the link step on purpose. Refusing an existing target
-            # is this tier's contract, not an incident, so it is not logged as
-            # an error -- but `FileExistsError` is NOT unique to that step:
-            # `mkdir` raises it when a parent path component is a regular file,
-            # and the `O_EXCL` open raises it on a staging-name collision.
-            # Both of those are genuine failures. Catching the bare type around
-            # the whole body silently reclassified them as the contract.
-            refused_existing_target = True
-            raise
-        fsync_parent_dir(path)
-    except BaseException as exc:
-        if refused_existing_target:
-            raise
-        _log.error(
-            "atomic_write: publish-once write failed target=%s error_type=%s",
-            path,
-            type(exc).__name__,
-        )
-        raise
-    finally:
-        if created:
-            tmp_path.unlink(missing_ok=True)
 
 
 class StagedPublication:

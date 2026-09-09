@@ -9,8 +9,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from dev.registry.maintenance_support import resolved_export_endpoints
 
 from ..analysis.monetary_scale import _SELF_SCALING_WIRE_TYPES, CENTS_SCALE, scale_findings, screen_authority
 

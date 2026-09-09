@@ -175,4 +175,3 @@ def validate_withholding296_binding_selector_shape(binding: DataBindingDefinitio
     except RegistryValidationError as exc:
         return [f"binding {binding.id!r} (source={binding.source!r}) withholding296 invariants violated: {exc}"]
     return []
-

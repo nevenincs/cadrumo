@@ -111,19 +111,6 @@ if TYPE_CHECKING:
     import typer
 
 
-class OAuthClientPayload(TypedDict):
-    """Typed shape for a Cloud Console Desktop OAuth client JSON file.
-
-    Cloud Console emits ``{"installed": {<client fields>}}`` for Desktop
-    application types. Only the ``installed`` key is accepted here; the
-    ``web`` variant is rejected by :func:`_coerce_client_json`.
-    """
-
-    # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud
-    # Console JSON envelope; narrowed to OAuthClient before production use.
-    installed: dict[str, Any]
-
-
 class _OAuthClientWrapper(BaseModel):
     """Pydantic wrapper that validates the outer Cloud Console envelope.
 

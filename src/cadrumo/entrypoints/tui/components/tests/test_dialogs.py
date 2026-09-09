@@ -7,7 +7,7 @@ from textual.app import App
 from textual.screen import ModalScreen
 from textual.widgets import Input, OptionList, SelectionList, Static
 
-from .....core.presentation import FormField, FormFieldKind, form_choices
+from .....core.presentation import FormChoice, FormField, FormFieldKind
 from ..dialogs import ChoiceEditScreen, ConfirmScreen, OneChoiceEditScreen, TextEditScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -79,7 +79,7 @@ async def test_text_dialog_refuses_an_invalid_value_before_dismissing() -> None:
                 key="scopes",
                 label="Scopes",
                 kind=FormFieldKind.MULTI_CHOICE,
-                choices=form_choices([("READ", "Read")]),
+                choices=(FormChoice("READ", "Read"),),
             ),
             cancel_label="Cancel",
             save_label="Save",
@@ -89,7 +89,7 @@ async def test_text_dialog_refuses_an_invalid_value_before_dismissing() -> None:
                 key="route",
                 label="Route",
                 kind=FormFieldKind.SINGLE_CHOICE,
-                choices=form_choices([("qr", "QR code")]),
+                choices=(FormChoice("qr", "QR code"),),
             ),
             cancel_label="Cancel",
             save_label="Save",
@@ -122,7 +122,7 @@ async def test_multi_choice_dialog_preserves_selected_storage_tokens() -> None:
         label="Scopes",
         value="READ",
         kind=FormFieldKind.MULTI_CHOICE,
-        choices=form_choices([("READ", "Read"), ("WRITE", "Write")]),
+        choices=(FormChoice("READ", "Read"), FormChoice("WRITE", "Write")),
     )
 
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:
@@ -146,7 +146,7 @@ async def test_one_choice_dialog_keeps_the_declared_value_highlighted() -> None:
         label="Route",
         value="app_request",
         kind=FormFieldKind.SINGLE_CHOICE,
-        choices=form_choices([("qr", "QR code"), ("app_request", "Request in app")]),
+        choices=(FormChoice("qr", "QR code"), FormChoice("app_request", "Request in app")),
     )
 
     async with app.run_test(size=_TERMINAL_SIZE) as pilot:

@@ -106,7 +106,6 @@ __all__ = [
     "record_country_code_status",
     "stated_country_code_status",
     "territorial_scope_for_country",
-    "territorial_scope_for_printed_country_name",
     "territorial_scope_for_spanish_postal_code",
 ]
 
@@ -1048,30 +1047,3 @@ def country_code_for_printed_country_name(printed_name: str | None) -> str | Non
     if not candidate:
         return None
     return _country_vocabulary.country_codes_by_printed_name().get(candidate)
-
-
-def territorial_scope_for_printed_country_name(printed_name: str | None) -> IvaTerritorialScope | None:
-    """Return the territorial scope a printed country NAME establishes.
-
-    The name rung expressed against the same target the other rungs resolve
-    into. It is deliberately a composition rather than a second rule set:
-    :func:`country_code_for_printed_country_name` answers "which country was
-    printed" and :func:`territorial_scope_for_country` stays the single authority
-    on "what does that country establish", so a change to either question is made
-    in one place.
-
-    Args:
-        printed_name: The country name transcribed from the document, or
-            ``None``.
-
-    Returns:
-        The scope the named country establishes, or ``None`` when no name was
-        recognised OR when the recognised country is Spain -- the country axis
-        returns nothing for Spain by design, because ``ES`` names the Member
-        State while the IVA territory inside it stays undetermined. A caller that
-        needs the Spanish territory resolves it from the postal code.
-
-    Raises:
-        IvaCatalogueError: When the bundled vocabulary cannot be read.
-    """
-    return territorial_scope_for_country(country_code_for_printed_country_name(printed_name))

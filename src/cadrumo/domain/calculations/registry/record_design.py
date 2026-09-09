@@ -11,7 +11,6 @@ import warnings
 from collections.abc import Generator
 from contextlib import contextmanager
 from functools import lru_cache
-from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -30,7 +29,7 @@ from ....core.external_constants import XLSM_EXTENSION as _XLSM_EXTENSION
 from ....core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
 from ....core.paths import path_stat_fingerprint
 from .errors import RegistryValidationError
-from .record_design_pdf_orchestration import extract_record_design_pdf_cached, extract_record_design_pdf_stream
+from .record_design_pdf_orchestration import extract_record_design_pdf_cached
 from .record_design_schema import (
     RecordDesignExtraction,
     RecordDesignSheet,
@@ -225,22 +224,8 @@ def extract_record_design_pdf(path: Path) -> RecordDesignExtraction:
 #: the description's tail.
 
 
-def extract_record_design_pdf_bytes(
-    pdf_bytes: bytes,
-    *,
-    source_label: str = "in-memory record-design PDF",
-) -> RecordDesignExtraction:
-    """Return the record design extracted from PDF bytes.
-
-    Returns:
-        The :class:`RecordDesignExtraction` for the PDF content.
-    """
-    return extract_record_design_pdf_stream(BytesIO(pdf_bytes), source_label=source_label)
-
-
 __all__ = [
     "extract_record_design",
     "extract_record_design_pdf",
-    "extract_record_design_pdf_bytes",
     "extract_record_design_workbook",
 ]

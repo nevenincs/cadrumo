@@ -347,29 +347,6 @@ class UsageRecord(BaseModel):
     cache_hit: bool = Field(description="Whether the response came from cache.")
     created_at: datetime = Field(description="Timestamp when the record was written.")
     request_id: str = Field(description="Stable request hash.")
-
-
-class Translation(BaseModel):
-    """Translation response built on top of :class:`~llm.LLMResponse`."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    text: str = Field(description="Translated text.")
-    source_lang: str = Field(description="ISO 639-1 source language code.")
-    target_lang: str = Field(description="ISO 639-1 target language code.")
-    provider: LLMProvider = Field(description="Provider used for the translation.")
-    model: str = Field(description="Resolved model identifier.")
-    input_tokens: int = Field(ge=0, description="Prompt-side token count.")
-    output_tokens: int = Field(ge=0, description="Completion-side token count.")
-    created_at: datetime = Field(description="Translation timestamp in UTC.")
-
-    @field_validator("source_lang", "target_lang")
-    @classmethod
-    def validate_translation_language(cls, value: str) -> str:
-        """Validate translation language codes."""
-        return value
-
-
 class CacheKey(BaseModel):
     """Derived cache key used by :class:`~adapters.outbound.llm.LLMCache`."""
 

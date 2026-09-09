@@ -9,14 +9,16 @@ layout after the future publication step has validated the generated tree.
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Mapping
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Final, Literal, cast
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
-from cadrumo.core.atomic_write import atomic_write_publish_once_bytes
+from cadrumo.core.atomic_write import hardened_staged_publication
 from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.fsync import fsync_parent_dir
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, hash_file
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -40,6 +42,18 @@ from ._semantic_map import SemanticMap, SemanticMapEntry
 from ._semantic_map_join import JoinedRecordDesign
 from ._variable_envelope import FilingEnvelopeProvenance
 from .record_design_intermediate import RecordDesignIntermediateField
+
+
+def _publish_once_bytes(path: Path, payload: bytes, *, mode: int = 0o600) -> None:
+    """Publish one development provenance payload without replacing an existing target."""
+    with hardened_staged_publication(path, mode=mode) as staged:
+        with staged.path.open("wb") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.link(staged.path, path)
+        fsync_parent_dir(path)
+
 
 __all__ = [
     "EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION",
@@ -853,7 +867,7 @@ def _require_field_derivations_match_layout(
 def _write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
     """Publish the sibling evidence write-once, refusing a pre-existing target.
 
-    Delegates to :func:`~cadrumo.core.atomic_write.atomic_write_publish_once_bytes`.
+    Uses the development-owned publish-once primitive above.
     The guarantee this writer needs -- a manifest that already exists means a
     second write, which is a bug rather than an update -- is that tier's
     contract: it publishes with :func:`os.link`, which fails with
@@ -881,7 +895,7 @@ def _write_canonical_manifest_atomically(path: Path, payload: bytes) -> None:
     if not path.parent.is_dir():
         raise RegistryValidationError(f"export provenance manifest parent is missing: {path.parent}")
     try:
-        atomic_write_publish_once_bytes(path, payload)
+        _publish_once_bytes(path, payload)
     except FileExistsError as exc:
         raise RegistryValidationError(f"export provenance manifest already exists: {path}") from exc
     except OSError as exc:

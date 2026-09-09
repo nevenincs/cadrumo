@@ -340,7 +340,7 @@ def test_the_box_marker_is_the_registry_canonical_one_and_reads_every_modelo() -
     keys zero boxes is not clean, it is unread, and it reports identically to a modelo
     with nothing to find.
     """
-    from ..record_design_coverage import _CASILLA_TAG_RE as _CANONICAL_TAG_RE
+    from ._revision_span_design_support import _CASILLA_TAG_RE as _CANONICAL_TAG_RE
 
     assert _BOX_MARKER is _CANONICAL_TAG_RE, (
         "this module re-declared the bracketed box-number pattern instead of using the registry's "

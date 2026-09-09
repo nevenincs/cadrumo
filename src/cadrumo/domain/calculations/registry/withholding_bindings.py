@@ -12,7 +12,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Final, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, TypeAdapter, ValidationError, field_validator
+from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
@@ -23,7 +23,6 @@ from .binding_aggregation import binding_aggregation_op
 from .binding_selector_utils import (
     BindingExportDataType,
     optional_uppercase_alpha_code,
-    unique_tuple,
 )
 from .binding_selector_utils import (
     selector_as_dict as _selector_as_dict,
@@ -35,11 +34,7 @@ from .schema import DataBindingDefinition, ModeloRevision
 __all__ = [
     "WithholdingClaveBreakdown",
     "WithholdingObservation",
-    "WithholdingObservationRequirement",
-    "WithholdingTotalsParity",
     "aggregate_withholding_by_clave",
-    "compute_withholding_totals_parity",
-    "resolve_withholding_binding_row_values",
     "resolve_withholding_binding_values",
     "validate_withholding_binding_selector_shape",
 ]
@@ -167,9 +162,6 @@ _WITHHOLDING_FACTS: Final[frozenset[_WithholdingFactKind]] = frozenset(_Withhold
 The selector field's comment below says this set and that type mirror each other. They
 did, by hand, as two lists of six tokens on adjacent lines -- so the mirror held only
 while someone maintained both. It is now one declaration and two views of it."""
-_CLAVE_TOKEN_SEQUENCE_ADAPTER: TypeAdapter[list[object] | tuple[object, ...]] = TypeAdapter(
-    list[object] | tuple[object, ...], config=ConfigDict(strict=True)
-)
 
 
 IDENTIFICATION_BLOCK_CLAVES: Final[frozenset[RetencionClave]] = frozenset(
@@ -284,7 +276,7 @@ class WithholdingObservation(BaseModel):
     """Annual food annuities to children by judicial decision (design positions
     210-222); the design's own zeros when none."""
     descendants_under_3_total: int | None = Field(default=None, ge=0, le=9)
-    """Descendants under 3 (design position 223), counted per art. 58 mínimo por
+    """Descendants under 3 (design position 223), counted per art. 58 m�nimo por
     descendientes rules; the design's own zero when none."""
     descendants_under_3_whole: int | None = Field(default=None, ge=0, le=9)
     """Of the position-223 descendants, those computed por entero (design 224)."""
@@ -522,30 +514,6 @@ class WithholdingObservation(BaseModel):
         return value
 
 
-class WithholdingObservationRequirement(BaseModel):
-    """Withholding-source slice declared by one or more withholding bindings."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
-    claves: tuple[RetencionClave, ...] = ()
-
-    @field_validator("claves", mode="before")
-    @classmethod
-    def _coerce_claves(cls, value: object) -> object:
-        """Hydrate each raw clave token to its :class:`RetencionClave` member (strict config)."""
-        try:
-            tokens = _CLAVE_TOKEN_SEQUENCE_ADAPTER.validate_python(value)
-        except ValidationError:
-            return value
-        return tuple(
-            RetencionClave(item) if isinstance(item, str) and not isinstance(item, RetencionClave) else item
-            for item in tokens
-        )
-
-    _values_unique = field_validator("binding_ids", "claves")(unique_tuple("withholding requirement tuple"))
-
-
 class _WithholdingSelector(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
@@ -629,10 +597,10 @@ def _filter_withholding_observations(
 def distinct_percepcion_keys(
     observations: Iterable[WithholdingObservation],
 ) -> set[tuple[str, RetencionClave, str]]:
-    """Return the distinct ``(perceptor, clave, subclave)`` percepción keys.
+    """Return the distinct ``(perceptor, clave, subclave)`` percepci�n keys.
 
-    Modelo 190's "número total de percepciones" counts DISTINCT type-2
-    "registro de perceptor" records (AEAT Diseño de Registros), not distinct
+    Modelo 190's "n�mero total de percepciones" counts DISTINCT type-2
+    "registro de perceptor" records (AEAT Dise�o de Registros), not distinct
     NIFs: one perceptor paid under two claves files two percepciones. The key is
     therefore clave-bearing.
 
@@ -679,7 +647,7 @@ def _retenciones_ingresadas_total(observations: Iterable[WithholdingObservation]
 
 
 def retencion_total(observations: Iterable[WithholdingObservation]) -> Decimal:
-    """Sum retención practicada, ingreso a cuenta, and the incap retentions.
+    """Sum retenci�n practicada, ingreso a cuenta, and the incap retentions.
 
     The base amount facts carry the NON-incapacidad part; the retentions on the
     incapacidad-laboral percepciones file in their own design block, so the
@@ -732,85 +700,12 @@ def resolve_withholding_binding_values(
     return resolved
 
 
-def _withholding_row_binding_cohorts(
-    revision: ModeloRevision,
-) -> dict[
-    tuple[WithholdingGrouping, tuple[str, ...]],
-    list[tuple[DataBindingDefinition, _WithholdingSelector]],
-]:
-    """Collect row-field bindings by their shared grouping and clave scope."""
-    cohorts: dict[
-        tuple[WithholdingGrouping, tuple[str, ...]],
-        list[tuple[DataBindingDefinition, _WithholdingSelector]],
-    ] = {}
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.WITHHOLDING:
-            continue
-        selector = _validated_withholding_selector(binding)
-        if selector.fact != "row_field":
-            continue
-        grouping = selector.grouping
-        if grouping is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key",
-            )
-        cohort_key: tuple[WithholdingGrouping, tuple[str, ...]] = (grouping, tuple(sorted(selector.claves)))
-        cohorts.setdefault(cohort_key, []).append((binding, selector))
-    return cohorts
-
-
-def _resolve_withholding_row_cohort(
-    cohort_key: tuple[WithholdingGrouping, tuple[str, ...]],
-    members: list[tuple[DataBindingDefinition, _WithholdingSelector]],
-    available: tuple[WithholdingObservation, ...],
-    resolved: dict[tuple[BindingId, int], Decimal | str],
-) -> None:
-    """Build one scoped row set and project each member's selected field."""
-    grouping = cohort_key[0]
-    _, sample_selector = members[0]
-    scope_filtered = tuple(_filter_withholding_observations(available, sample_selector))
-    required_fields = frozenset(selector.row_field for _, selector in members if selector.row_field is not None)
-    from ._withholding_rows import build_withholding_rows
-
-    rows = build_withholding_rows(grouping, scope_filtered, required_fields=required_fields)
-    for binding, selector in members:
-        row_field = selector.row_field
-        if row_field is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
-            )
-        for row_index, row in enumerate(rows, start=1):
-            value = row.get(row_field)
-            if value is None:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced for grouping {grouping!r}",
-                )
-            resolved[(binding.id, row_index)] = value
-
-
-def resolve_withholding_binding_row_values(
-    revision: ModeloRevision,
-    observations: Iterable[WithholdingObservation],
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Resolve row-producer withholding bindings into per-row indexed values.
-
-    The :class:`ModeloRevision` contributes row-field withholding bindings,
-    which are grouped into deterministic per-row output slots.
-    """
-    available = tuple(observations)
-    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
-    cohorts = _withholding_row_binding_cohorts(revision)
-    for cohort_key, members in cohorts.items():
-        _resolve_withholding_row_cohort(cohort_key, members, available, resolved)
-    return resolved
-
-
 class WithholdingClaveBreakdown(BaseModel):
-    """One per-clave row of the Modelo 190 retención reconciliation breakdown.
+    """One per-clave row of the Modelo 190 retenci�n reconciliation breakdown.
 
-    Groups the per-perceptor-clave withholding detail (the AEAT Diseño de
-    Registros type-2 records) by ``clave de percepción`` and carries that clave's
-    distinct percepción count and percibido / retención magnitudes. The figures
+    Groups the per-perceptor-clave withholding detail (the AEAT Dise�o de
+    Registros type-2 records) by ``clave de percepci�n`` and carries that clave's
+    distinct percepci�n count and percibido / retenci�n magnitudes. The figures
     reuse the scalar withholding-fact arithmetic
     (:func:`resolve_withholding_binding_values`): ``percepcion_count`` is the
     distinct ``(perceptor, clave, subclave)`` count, ``percibido_total`` is
@@ -835,7 +730,7 @@ def aggregate_withholding_by_clave(
     """Project withholding observations into :class:`WithholdingClaveBreakdown` rows.
 
     Pure function: identical observations in any order yield the same tuple,
-    sorted by ``clave``. No new aggregation is introduced — each magnitude is
+    sorted by ``clave``. No new aggregation is introduced � each magnitude is
     produced by the same :func:`distinct_percepcion_keys` /
     :func:`percibido_total` / :func:`retencion_total` helper that
     :func:`resolve_withholding_binding_values` uses for the corresponding bound
@@ -861,99 +756,6 @@ def aggregate_withholding_by_clave(
             retencion_total=retencion_total(group),
         )
         for clave, group in sorted(by_clave.items())
-    )
-
-
-class WithholdingTotalsParity(BaseModel):
-    """Totals-parity verdict between per-perceptor withholding rows and the Modelo 190 resumen-anual summary casillas.
-
-    Modelo 190's summary casillas (``decl.percepciones-total``,
-    ``decl.retenciones-total``) are computed by SUMMING the taxpayer's four
-    Modelo 111 quarterly filings (``source = "relation_prefill"``,
-    ``op = "sum"`` over casillas ``02/05/08/.../26`` and ``28`` respectively) —
-    an entirely INDEPENDENT source from the per-perceptor-clave
-    :class:`WithholdingObservation` detail (the AEAT Diseño de Registros type-2
-    "registro de perceptor" rows, ``source = "withholding"``) that materialises
-    the ``modelo-190-perceptor-row-*`` bindings and the distinct-percepción
-    count. Nothing in the registry cross-checks that the two sources agree.
-
-    This model is the pure comparison result of that cross-check: the sum of
-    every persisted perceptor's ``percibido_dinerario + percibido_especie``
-    against the resolved ``decl.percepciones-total`` value, and the sum of
-    every persisted perceptor's ``retencion_practicada + ingreso_a_cuenta``
-    against the resolved ``decl.retenciones-total`` value. ``is_consistent``
-    is ``True`` only when both deltas are within ``tolerance`` — a divergence
-    on either side surfaces as a loud, actionable finding
-    (``no-silent-under-declaration``), never a silent pass.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    percepciones_row_total: Decimal = Field(ge=Decimal("0"))
-    percepciones_summary_total: Decimal = Field(ge=Decimal("0"))
-    percepciones_delta: Decimal
-    retenciones_row_total: Decimal = Field(ge=Decimal("0"))
-    retenciones_summary_total: Decimal = Field(ge=Decimal("0"))
-    retenciones_delta: Decimal
-    row_count: NonNegativeInt
-    tolerance: Decimal = Field(ge=Decimal("0"))
-    is_consistent: bool
-
-
-def compute_withholding_totals_parity(
-    observations: Iterable[WithholdingObservation],
-    *,
-    percepciones_summary_total: Decimal,
-    retenciones_summary_total: Decimal,
-    tolerance: Decimal = Decimal("0"),
-) -> WithholdingTotalsParity:
-    """Cross-check summed per-perceptor withholding rows against the resolved Modelo 190 summary casillas.
-
-    Args:
-        observations: The persisted per-perceptor-clave
-            :class:`WithholdingObservation` rows (the AEAT Diseño de Registros
-            type-2 "registro de perceptor" detail).
-        percepciones_summary_total: The resolved value of casilla
-            ``decl.percepciones-total`` (the M111-relation-derived summary
-            total), typically read from
-            ``revision.casilla_values["decl.percepciones-total"]``.
-        retenciones_summary_total: The resolved value of casilla
-            ``decl.retenciones-total``, typically read from
-            ``revision.casilla_values["decl.retenciones-total"]``.
-        tolerance: Maximum absolute delta (EUR) that does not surface a
-            divergence. THE REGISTRY IS THE AUTHORITY FOR THIS VALUE and
-            publishes it per revision: resolve it with
-            ``snapshot.verification_policy().tolerance`` and pass it. The
-            default is exact equality rather than a cent, because Modelo 190's
-            own 2025 revision publishes exact equality (``0.00``) -- a
-            hardcoded cent here would silently absorb a genuine one-cent
-            under-declaration on exactly the modelo this function is named
-            for.
-
-    Returns:
-        A :class:`WithholdingTotalsParity` verdict. ``is_consistent`` is
-        ``False`` whenever either summed total diverges from its
-        corresponding summary casilla by more than ``tolerance`` — a missing
-        or dropped perceptor row under-declares the row-level total below the
-        summary casilla and must surface as a divergence, never silently
-        collapse into ``is_consistent=True``.
-    """
-    rows = tuple(observations)
-    percepciones_row_total = percibido_total(rows)
-    retenciones_row_total = retencion_total(rows)
-    percepciones_delta = percepciones_row_total - percepciones_summary_total
-    retenciones_delta = retenciones_row_total - retenciones_summary_total
-    is_consistent = abs(percepciones_delta) <= tolerance and abs(retenciones_delta) <= tolerance
-    return WithholdingTotalsParity(
-        percepciones_row_total=percepciones_row_total,
-        percepciones_summary_total=percepciones_summary_total,
-        percepciones_delta=percepciones_delta,
-        retenciones_row_total=retenciones_row_total,
-        retenciones_summary_total=retenciones_summary_total,
-        retenciones_delta=retenciones_delta,
-        row_count=len(rows),
-        tolerance=tolerance,
-        is_consistent=is_consistent,
     )
 
 

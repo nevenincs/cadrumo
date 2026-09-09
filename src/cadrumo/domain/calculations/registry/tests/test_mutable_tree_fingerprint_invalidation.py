@@ -44,9 +44,10 @@ from .._verdict_cache import (
 )
 from ..identity import RegistryIdentity, RegistryIdentityOrigin, compute_walked_tree_digest
 from ..loader import _load_registry_tree_cached, load_registry_tree
-from ..loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR, is_bundled_registry_root
+from ..loader_cache import is_bundled_registry_root
 from ..loader_fingerprints import _registry_fingerprint_cache, clear_fingerprint_cache
 from ..schema import ModeloDefinition
+from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

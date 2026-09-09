@@ -632,7 +632,9 @@ def _isolated_diagnostic_log() -> Generator[None]:
     :func:`~cadrumo.core.config.load_settings` returns the frozen override
     object regardless of environment changes.
     """
-    from cadrumo.core.logging import allow_logging_reconfiguration, configure_logging
+    from cadrumo.core.logging import configure_logging
+
+    from ..logging_rebind import allow_logging_reconfiguration
 
     log_dir = Path(load_settings().cadrumo_local_storage_root) / "logs"
     settings_context = override_settings(cadrumo_log_dir=str(log_dir))
@@ -980,7 +982,9 @@ def _drop_handlers_bound_to_a_dead_stream() -> None:
     leave the configure-once latch set and the root logger bare, so a rebind
     follows it.
     """
-    from cadrumo.core.logging import allow_logging_reconfiguration, configure_logging
+    from cadrumo.core.logging import configure_logging
+
+    from ..logging_rebind import allow_logging_reconfiguration
 
     evicted = False
     for handler in list(logging.getLogger().handlers):

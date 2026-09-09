@@ -326,7 +326,11 @@ def _coordinate_stutter_donor(
         measure = _ORPHAN_MEASURE_RE.match(lines[donor_index])
         if measure is None:
             return None
-        return measure.group("length"), measure.group("naturaleza"), measure.group("description")
+        return (
+            str(measure.group("length")),
+            str(measure.group("naturaleza")),
+            str(measure.group("description")),
+        )
     if _continues(anchor, donor.ordinal or "", donor.offset):
         return None
     return str(donor.length), donor.type_code, donor.description

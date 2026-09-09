@@ -20,11 +20,7 @@ from ....core.identity import ContentDigest
 from ....core.money.rounding import round_to_cents as _quantize
 from ...identifiers import canonical_decimal_string as _canonical_decimal_string
 from .records import (
-    InventoryAnexoDResult,
     InventoryClosingAuthority,
-    InventoryClosingAuthorityRecord,
-    InventoryClosingConflictDiagnostic,
-    InventoryClosingResolution,
     InventoryLedger,
     InventoryLedgerError,
     InventoryValidationError,
@@ -34,6 +30,15 @@ from .records import (
     StockLayer,
     ValuationMethod,
     resolve_inventory_authoritative_closing,
+)
+
+# The record module completes the cycle-breaking model bootstrap before these
+# concrete model modules are imported directly.
+from ._anexo_d_records import InventoryAnexoDResult
+from ._closing_authority_records import (
+    InventoryClosingAuthorityRecord,
+    InventoryClosingConflictDiagnostic,
+    InventoryClosingResolution,
 )
 
 

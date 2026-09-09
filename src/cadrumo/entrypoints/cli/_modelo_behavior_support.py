@@ -333,34 +333,6 @@ def bare_period_error(modelo: str, period: str, *, fallback: str = "") -> str:
     )
 
 
-def date_binding_profile_requirements(unit: WorkUnit | None, binding_id: str) -> str:
-    """Name the profile facts an unsatisfied date binding consumes.
-
-    The operator is being told to set something on their profile, so the
-    instruction has to name a PROFILE FACT. A binding id names the registry's
-    internal consumer of that fact and appears nowhere in the profile editor.
-
-    The resolution itself lives in the application layer, because it reads
-    registry binding definitions and this module is budgeted to hold no
-    registry-authority reads at all. Here it is a transport: address the work
-    unit, delegate, and fall back to the binding id when nothing resolves.
-    """
-    if unit is None:
-        return binding_id
-
-    from ...application.modelo.data_inventory import profile_requirements_for_binding
-
-    return (
-        profile_requirements_for_binding(
-            modelo=str(unit.modelo),
-            filing_year=unit.filing_year,
-            period=unit.period,
-            binding_id=binding_id,
-        )
-        or binding_id
-    )
-
-
 __all__ = [
     "bare_period_error",
     "require_active_profile",

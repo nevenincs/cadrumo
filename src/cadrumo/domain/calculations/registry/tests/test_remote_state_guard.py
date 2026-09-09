@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import pytest
+from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
 from pydantic import AnyUrl, ValidationError
 
 from .....core.resources.bundled_data import bundled_path
@@ -23,7 +24,6 @@ from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from .....tests.groi_oracle import GROI_ORACLE_ID, GroiOracle
 from .....tests.registry_snapshot import build_snapshot
 from ..errors import RegistrySnapshotError, RegistryValidationError
-from ..live_parity import LiveParityCatalogue, OracleEnvironment
 from ..remote_state_guard import (
     _FORBIDDEN_TOKENS,
     RemoteOperation,

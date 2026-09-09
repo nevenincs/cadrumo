@@ -243,4 +243,3 @@ def verify_manual_dir(
         part=part,
         issues=tuple(issues),
     )
-

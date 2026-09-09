@@ -29,16 +29,10 @@ SourceEvidenceFingerprint = tuple[tuple[str, int, int], ...]
 
 __all__ = (
     "SourceEvidenceFingerprint",
-    "clear_source_evidence_fingerprint_cache",
     "collect_source_evidence_fingerprints",
 )
 
 _evidence_fingerprint_cache: dict[tuple[Path, ...], tuple[float, SourceEvidenceFingerprint]] = {}
-
-
-def clear_source_evidence_fingerprint_cache() -> None:
-    """Clear the window-bounded source-evidence fingerprint cache."""
-    _evidence_fingerprint_cache.clear()
 
 
 def collect_source_evidence_fingerprints(

@@ -2,8 +2,7 @@
 
 Verifies JSON round-trip fidelity for
 :class:`cadrumo.llm.LLMRequest`,
-:class:`cadrumo.llm.LLMResponse`, and
-:class:`cadrumo.llm.Translation`.
+:class:`cadrumo.llm.LLMResponse`.
 """
 
 from __future__ import annotations
@@ -16,7 +15,7 @@ from pydantic import ValidationError
 
 from ...core.operator_action_enums import NoRecoveryOutcome
 from ..errors import LLMValidationError
-from ..models import LLMProvider, LLMRequest, LLMResponse, PromptDefinition, Translation
+from ..models import LLMProvider, LLMRequest, LLMResponse, PromptDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -89,19 +88,3 @@ def test_llm_response_round_trip() -> None:
         request_id="abc123",
     )
     assert LLMResponse.model_validate_json(response.model_dump_json()) == response
-
-
-def test_translation_round_trip() -> None:
-    """Translation should round-trip through JSON."""
-
-    translation = Translation(
-        text="Hola",
-        source_lang="en",
-        target_lang="es",
-        provider=LLMProvider.ANTHROPIC,
-        model="claude-sonnet-4-6",
-        input_tokens=8,
-        output_tokens=3,
-        created_at=_CREATED_AT,
-    )
-    assert Translation.model_validate_json(translation.model_dump_json()) == translation

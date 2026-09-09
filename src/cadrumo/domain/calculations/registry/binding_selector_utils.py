@@ -690,10 +690,8 @@ M347_OPERATION_CLAVES: frozenset[str] = frozenset({"A", "B", "C", "D", "E", "F",
 def intracommunity_clave_validator() -> Callable[[type, str | None], str | None]:
     """Build the shared ``intracommunity_clave`` field validator.
 
-    Both :class:`InvoiceObservation` and :class:`CounterpartAggregationObservation`
-    carried a byte-identical ``intracommunity_clave`` field validator: a clave is
-    optional, must be uppercase, and must be one of the closed AEAT clave de
-    operación set. The single factory replaces both copies.
+    An invoice observation's clave is optional, must be uppercase, and must be
+    one of the closed AEAT clave de operación set.
     """
     return operation_clave_validator(field_label="intracommunity_clave", claves=M349_OPERATION_CLAVES)
 
@@ -735,10 +733,8 @@ def validate_rectification_fields(observation: _RectifiableObservation) -> None:
 
     A rectification observation must declare ``rectified_year``,
     ``rectified_period`` and ``rectified_base_previous``; a non-rectification
-    observation must declare none of them. :class:`InvoiceObservation` and
-    :class:`CounterpartAggregationObservation` carried a byte-identical
-    ``_validate_rectification`` model validator; this one shared check replaces
-    both, raising :class:`RegistryValidationError` on a violation.
+    observation must declare none of them. The shared check raises
+    :class:`RegistryValidationError` on a violation.
     """
     if observation.is_rectification:
         if observation.rectified_year is None or observation.rectified_period is None:

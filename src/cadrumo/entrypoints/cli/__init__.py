@@ -25,7 +25,6 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING
 
 import typer
-from typer._click.core import Command as _TyCommand
 
 if TYPE_CHECKING:
     from .command_spec import CommandSpec
@@ -83,15 +82,6 @@ CommandExecutionPolicy = _CommandExecutionPolicy
 
 app = _build_command_app(_COMMAND_GRAPH)
 _decorate_typer_app(app)
-
-
-def full_command_tree() -> _TyCommand:
-    """Materialise the immutable production command graph as a Click tree."""
-    from typer.main import get_command
-
-    root = get_command(app)
-    root.name = app.info.name or _PRODUCT_IDENTITY.cli_executable
-    return root
 
 
 def _declared_execution_policy_for_cli_path(

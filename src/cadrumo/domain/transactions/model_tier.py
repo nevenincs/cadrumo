@@ -28,8 +28,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 
-from .errors import TransactionError
-
 
 class ModelTier(IntEnum):
     """Ordered capability tier. Comparison operators work as expected.
@@ -171,103 +169,10 @@ def catalogue() -> tuple[ModelProfile, ...]:
     return _CATALOGUE
 
 
-def profiles_for_provider(provider: str) -> tuple[ModelProfile, ...]:
-    """Return every profile registered for ``provider``.
-
-    Args:
-        provider: Provider name; matched case-insensitively against
-            :attr:`ModelProfile.provider`.
-
-    Returns:
-        A tuple of every :class:`ModelProfile` registered for the
-        normalised provider name. Empty tuple when no profile matches.
-    """
-    normalised = provider.lower().strip()
-    return tuple(p for p in _CATALOGUE if p.provider == normalised)
-
-
-def _resolve_default_profile(
-    provider: str,
-    candidates: tuple[ModelProfile, ...],
-    minimum_tier: ModelTier,
-) -> ModelProfile:
-    """Choose the cheapest provider profile meeting the capability floor."""
-    eligible = sorted(
-        (profile for profile in candidates if profile.tier >= minimum_tier),
-        key=lambda profile: profile.tier,
-    )
-    if not eligible:
-        available_tiers = sorted({profile.tier.name for profile in candidates})
-        raise TransactionError(
-            f"no {provider} model meets minimum tier {minimum_tier.name}; available: {available_tiers}",
-        )
-    return eligible[0]
-
-
-def _resolve_alias_profile(
-    provider: str,
-    candidates: tuple[ModelProfile, ...],
-    alias: str,
-    minimum_tier: ModelTier,
-) -> ModelProfile:
-    """Resolve one explicit alias and enforce the capability floor."""
-    normalised_alias = alias.lower().strip()
-    for profile in candidates:
-        if profile.alias != normalised_alias:
-            continue
-        if profile.tier < minimum_tier:
-            raise TransactionError(
-                f"model {profile.alias!r} is tier {profile.tier.name} "
-                f"but classification requires at least {minimum_tier.name}",
-            )
-        return profile
-    known_aliases = sorted(profile.alias for profile in candidates)
-    raise TransactionError(f"unknown alias {alias!r} for provider {provider}; known: {known_aliases}")
-
-
-def resolve_profile(
-    provider: str,
-    *,
-    alias: str | None = None,
-    minimum_tier: ModelTier = MINIMUM_CLASSIFICATION_TIER,
-) -> ModelProfile:
-    """Resolve an optional alias to a :class:`ModelProfile` for ``provider``.
-
-    When ``alias`` is None, the default is the LOWEST-tier profile at or
-    above ``minimum_tier`` for the provider (cheap but capable).
-
-    Args:
-        provider: Provider name (matched case-insensitively).
-        alias: Optional capability-tier alias; when ``None`` the
-            cheapest-meets-minimum profile is chosen.
-        minimum_tier: Refuses aliases (and default selections) below
-            this tier. Defaults to :data:`MINIMUM_CLASSIFICATION_TIER`.
-
-    Returns:
-        The resolved :class:`ModelProfile`.
-
-    Raises:
-        TransactionError: If the provider is unknown, if the alias is unknown
-            for that provider, or if the resolved profile's tier is
-            below ``minimum_tier``.
-    """
-    normalised_provider = provider.lower().strip()
-    candidates = profiles_for_provider(normalised_provider)
-    if not candidates:
-        known = sorted({p.provider for p in _CATALOGUE})
-        raise TransactionError(f"unknown provider {provider!r}; known: {known}")
-
-    if alias is None:
-        return _resolve_default_profile(normalised_provider, candidates, minimum_tier)
-    return _resolve_alias_profile(normalised_provider, candidates, alias, minimum_tier)
-
-
 __all__ = [
     "MINIMUM_CLASSIFICATION_TIER",
     "ModelCapability",
     "ModelProfile",
     "ModelTier",
     "catalogue",
-    "profiles_for_provider",
-    "resolve_profile",
 ]

@@ -36,7 +36,6 @@ from .credentials import (
     CredentialAttempt,
     CredentialScreen,
     assessment_copy,
-    run_credential_screen,
 )
 
 if TYPE_CHECKING:
@@ -50,7 +49,6 @@ __all__ = [
     "PassphraseChangeRefusal",
     "PassphraseScreen",
     "build_profile_passphrase_change_door",
-    "run_passphrase_change_tui",
 ]
 
 
@@ -298,16 +296,3 @@ def build_profile_passphrase_change_door(profile_id: str) -> Callable[[str, str,
         return PassphraseChangeAttempt(outcome=outcome)
 
     return rotate
-
-
-def run_passphrase_change_tui(
-    *,
-    assess: Callable[[str], ProfilePasswordAssessment],
-    rotate: Callable[[str, str, str], PassphraseChangeAttempt],
-) -> ProfilePassphraseRotationOutcome | None:
-    """Run the passphrase-change screen and return the new posture, or ``None``.
-
-    ``None`` means the operator abandoned the screen -- an ordinary outcome,
-    not an error.
-    """
-    return run_credential_screen(PassphraseScreen(assess=assess, rotate=rotate))

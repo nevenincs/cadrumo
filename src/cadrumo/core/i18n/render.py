@@ -514,12 +514,8 @@ def _load_locale_yaml(handle: IO[str]) -> object:
     # "construct Python objects from the parsed node tree" step is always
     # pure Python and scales with node count. The packaged catalogues now
     # carry a large modelo.schema.* block (compiled casilla labels/help,
-    # see domain.calculations.registry._modelo_localization), so even this
-    # accelerated path costs ~800 ms per process -- both loaders apply
-    # identical safe-load semantics. _packaged_locale_map's on-disk flat-map
-    # cache (._catalogue_cache) is what actually avoids paying this on every
-    # process start; this function is the (correct, still-necessary) slow
-    # path a cache miss falls back to.
+    # see domain.calculations.registry._modelo_localization). Both loaders
+    # apply identical safe-load semantics.
     if hasattr(yaml, "CSafeLoader"):
         return yaml.load(handle, Loader=yaml.CSafeLoader) or {}
     return yaml.safe_load(handle) or {}
@@ -620,11 +616,6 @@ def _humanise_key(translation_key: str) -> str:
     if not stripped:
         return translation_key
     return stripped.replace("_", " ").capitalize()
-
-
-def interpolate(translation_key: str, rendered: str, values: Mapping[str, object]) -> str:
-    rendered, _format_succeeded = _interpolate_with_status(translation_key, rendered, values)
-    return rendered
 
 
 def _interpolate_with_status(

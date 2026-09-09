@@ -44,8 +44,8 @@ from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_ent
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints import cli
 from cadrumo.entrypoints.cli.command_spec import DeferredTarget
-from cadrumo.entrypoints.cli.command_suggestions import walk_live_command_tree
-from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+from dev.command_graph import walk_live_command_tree
+from dev.command_graph import command_spec_nodes
 
 def translation_keys(value):
     from cadrumo.entrypoints.cli.command_spec import TranslationKey

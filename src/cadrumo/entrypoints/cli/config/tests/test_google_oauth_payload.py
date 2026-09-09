@@ -3,15 +3,9 @@
 import pytest
 from pydantic import ValidationError
 
-from ...config.google import OAuthClientPayload
 from ..google import _OAuthClientWrapper
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-
-def test_oauth_client_payload_typeddict_importable() -> None:
-    assert hasattr(OAuthClientPayload, "__annotations__")
-    assert "installed" in OAuthClientPayload.__required_keys__
 
 
 def test_oauth_client_wrapper_accepts_valid_desktop_payload() -> None:

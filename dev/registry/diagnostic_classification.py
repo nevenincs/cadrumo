@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
-from cadrumo.domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
+from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority

@@ -55,7 +55,7 @@ from ..evidence_draft_vision import (
     LocalVisionDocumentTranscriber,
     transcribe_document_images,
 )
-from ..invoice_extraction_prompt import build_invoice_extraction_prompt, default_extraction_period
+from ..invoice_extraction_prompt import default_extraction_period
 from ..invoice_field_contract import anchor_key_for_field, role_evidence_key_for_field
 from ..invoice_field_grounding import (
     ExtractedFieldAnchors,
@@ -66,6 +66,7 @@ from ..invoice_field_grounding import (
     parse_invoice_extraction_response,
 )
 from ..models import MultimodalImageInput
+from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

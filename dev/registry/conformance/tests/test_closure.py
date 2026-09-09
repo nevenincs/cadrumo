@@ -10,7 +10,6 @@ import pytest
 from pydantic import ValidationError
 from typer.testing import CliRunner
 
-from cadrumo.application.filing.export_proof import FilingExportProofAssessment, FilingExportProofCoordinate
 from cadrumo.application.registry.closure import (
     RegistryClosureEvidence,
     RegistryClosureFilingChannelRefusal,
@@ -18,10 +17,10 @@ from cadrumo.application.registry.closure import (
     RegistryClosureOwnerDisposition,
     RegistryClosureRefusalReason,
 )
-from cadrumo.application.registry.filing_export_coverage import FilingExportCoverageReport
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
+from ...export_proof import FilingExportProofAssessment, FilingExportProofCoordinate
 from ...temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverage
 from ..authorities import RegistryClosureAuthorities
 from ..cli import app
@@ -35,6 +34,7 @@ from ..closure import (
     load_registry_closure_report,
     render_registry_closure_report,
 )
+from ..filing_export_coverage import FilingExportCoverageReport
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.timeout(900)]
 """The 900-second budget is the live-mode closure walk, not a slow test.

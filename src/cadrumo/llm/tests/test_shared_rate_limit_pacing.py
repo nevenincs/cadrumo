@@ -34,15 +34,14 @@ from ...tests.loopback_llm import (
     serving_loopback,
     write_json_response,
 )
+from .. import client as client_module
 from ..client import (
     LLMClient,
     LLMRetryPolicy,
-    provider_pacing_remaining_s,
-    reset_on_host_inference_arena,
-    reset_provider_pacing,
 )
 from ..errors import LLMRateLimitError
 from ..models import LLMRequest
+from ._arena_fixtures import reset_client_process_state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -57,11 +56,9 @@ def _fresh_process_state() -> Iterator[None]:
     test -- so a case would otherwise inherit a window armed by its predecessor
     and observe a wait it did not cause.
     """
-    reset_provider_pacing()
-    reset_on_host_inference_arena()
+    reset_client_process_state()
     yield
-    reset_provider_pacing()
-    reset_on_host_inference_arena()
+    reset_client_process_state()
 
 
 @contextmanager
@@ -115,7 +112,7 @@ def test_a_rate_limit_on_one_item_paces_the_next_item(tmp_path: Path) -> None:
         with pytest.raises(LLMRateLimitError):
             asyncio.run(client.complete(LLMRequest(prompt="first item")))
 
-        assert provider_pacing_remaining_s(LLMProvider.LOCAL) > 0, "the shared window was never armed"
+        assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.LOCAL) > 0, "the shared window was never armed"
 
         response = asyncio.run(client.complete(LLMRequest(prompt="second item")))
 
@@ -141,7 +138,7 @@ def test_without_a_rate_limit_the_second_item_is_not_delayed(tmp_path: Path) -> 
         asyncio.run(client.complete(LLMRequest(prompt="first item")))
         asyncio.run(client.complete(LLMRequest(prompt="second item")))
 
-    assert provider_pacing_remaining_s(LLMProvider.LOCAL) == 0
+    assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.LOCAL) == 0
     assert len(arrivals) == 2
     gap = arrivals[1] - arrivals[0]
     assert gap < _RETRY_AFTER_S * 0.5, f"an unpaced second dispatch took {gap:.2f}s; the fixture is measuring overhead"
@@ -176,7 +173,7 @@ def test_a_limit_discovered_on_the_last_attempt_still_paces_the_run(tmp_path: Pa
         with pytest.raises(LLMRateLimitError):
             asyncio.run(_client(tmp_path, attempts=1).complete(LLMRequest(prompt="only attempt")))
 
-        assert provider_pacing_remaining_s(LLMProvider.LOCAL) > 0
+        assert client_module._PROVIDER_PACING.remaining_s(LLMProvider.LOCAL) > 0
 
 
 def test_the_shared_wait_is_bounded_by_the_retry_budget(tmp_path: Path) -> None:

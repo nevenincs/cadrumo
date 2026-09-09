@@ -10,6 +10,11 @@ from datetime import date
 from pathlib import Path
 
 import pytest
+from dev.registry.maintenance_support import (
+    coverage_assessment_horizon,
+    resolve_record_design_binary,
+    revision_selection_coordinates,
+)
 from pydantic import ValidationError
 
 from .....core.resources.bundled_data import bundled_path
@@ -24,14 +29,14 @@ from .....tests.registry_coverage import (
 from .....tests.registry_snapshot import build_snapshot
 from .._snapshot_internals import check_snapshot_filing_review_tier
 from ..authority import ValidatedRegistryAuthority, bundled_authority
-from ..corpus_catalogue import resolve_record_design_binary, verify_source_file
+from ..corpus_catalogue import verify_source_file
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..legal import verify_legal_catalogue_grounding
 from ..loader_fingerprints import clear_fingerprint_cache
 from ..schema import filing_period_from_scope
 from ..schema_base import EvidenceTier
 from ..schema_references import SourceReference
-from ..temporal import coverage_assessment_horizon, revision_selection_coordinates, select_revision
+from ..temporal import select_revision
 from ._catalogue_verification_support import _registry_tree
 from ._loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
 

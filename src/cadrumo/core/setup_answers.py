@@ -134,48 +134,6 @@ def register_project_answers(fn: ProjectAnswersFn) -> None:
     _log.debug("project_answers registered: %r", fn)
 
 
-def get_project_answers() -> ProjectAnswersFn:
-    """Return the registered project_answers implementation.
-
-    Returns:
-        The :class:`ProjectAnswersFn` registered via
-        :func:`register_project_answers`.
-
-    Raises:
-        ProjectAnswersNotRegisteredError: When the application layer has not yet
-            called :func:`register_project_answers`.
-    """
-    if not _PROJECT_ANSWERS_SLOT:
-        raise ProjectAnswersNotRegisteredError()
-    return _PROJECT_ANSWERS_SLOT[0]
-
-
-# KWARGS-ANY-RATIONALE-PROFILE-WIZARD-FLOW-CIRCULAR:
-# WizardFlow type lives in cadrumo.application.wizard; importing here would create
-# circular dependency.
-def project_answers(flow: Any, values: Mapping[str, str]) -> BaseModel:
-    """Invoke the registered project_answers implementation.
-
-    Delegates to the application-layer function registered via
-    :func:`register_project_answers`.  Domain callers import this function from
-    ``cadrumo.core.setup_answers`` so they never acquire a direct dependency on
-    ``cadrumo.application.wizard.persistence``.
-
-    Args:
-        flow: The wizard flow descriptor identifying which flow to
-            project answers for.
-        values: Mapping of canonical token keys to raw string values
-            collected from the wizard or read from profile storage. Blank
-            strings preserve undeclared optional facts for the registered
-            projector to interpret.
-
-    Returns:
-        A typed answers model instance produced by the registered
-        implementation.
-    """
-    return get_project_answers()(flow, values)
-
-
 # ---------------------------------------------------------------------------
 # Profile-record projection
 #
@@ -1052,8 +1010,6 @@ __all__ = [
     "ProjectAnswersRegistrationError",
     "SetupAnswers",
     "SetupFieldSpec",
-    "get_project_answers",
-    "project_answers",
     "project_setup_answers",
     "register_project_answers",
 ]

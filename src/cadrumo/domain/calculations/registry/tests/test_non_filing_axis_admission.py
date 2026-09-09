@@ -23,10 +23,7 @@ from datetime import date
 
 import pytest
 
-from .._validate_parameter_temporal import (
-    non_filing_axis_parameters,
-    validate_non_filing_axis_admission,
-)
+from .._validate_parameter_temporal import validate_non_filing_axis_admission
 from ..authority import ValidatedRegistryAuthority, bundled_authority
 from ..schema_formula import ParameterDefinition
 
@@ -152,25 +149,3 @@ def test_a_reason_too_short_to_be_a_reason_is_refused() -> None:
             values=_EVENT_VALUES,
             non_filing_axis_admission={**_ADMISSION, "reason": "event"},
         )
-
-
-def test_the_live_tree_declares_no_non_filing_axis_parameter(
-    registry_authority: ValidatedRegistryAuthority,
-) -> None:
-    """The enumerator answers the question the decision requires be answerable.
-
-    Today the answer is "none", and that is worth pinning: it is the baseline
-    against which the first admitted parameter will be read, and it proves the
-    gate above is not silently excusing something already shipped.
-    """
-    admitted: list[str] = []
-    # Every modelo the authority actually holds, so the sweep cannot silently
-    # miss one and report a false "none" -- and so no exception needs swallowing.
-    for modelo in registry_authority.modelos:
-        for revision in modelo.revisions.values():
-            admitted.extend(parameter.id for parameter, _ in non_filing_axis_parameters(revision))
-    assert admitted == [], (
-        f"parameters {admitted} are keyed to a non-filing axis. That is now permitted, but it "
-        "changes this gate's baseline: each must carry a declared admission naming the provision "
-        "and the axis, and this assertion should be updated to name them deliberately."
-    )

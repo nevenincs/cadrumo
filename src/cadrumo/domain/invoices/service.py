@@ -98,29 +98,6 @@ class LinkInconsistency(BaseModel):
     direction: LinkInconsistencyDirection
 
 
-def find_unmatched(
-    catalogue: InvoiceCatalogue,
-    *,
-    kind: InvoiceKind | None = None,
-) -> tuple[Invoice, ...]:
-    """Return the invoices that have no linked transactions yet.
-
-    Args:
-        catalogue: Source :class:`InvoiceCatalogue` to filter.
-        kind: Optional filter on :class:`InvoiceKind`.
-
-    Returns:
-        A tuple of :class:`Invoice` objects whose ``linked_transaction_ids`` is empty,
-        preserving insertion order. When ``kind`` is supplied, only
-        invoices of that kind are returned.
-    """
-    return tuple(
-        invoice
-        for invoice in catalogue.values()
-        if not invoice.linked_transaction_ids and (kind is None or invoice.kind is kind)
-    )
-
-
 def link_transaction(
     catalogue: InvoiceCatalogue,
     invoice_id: str,

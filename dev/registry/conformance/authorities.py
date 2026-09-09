@@ -5,13 +5,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from cadrumo.application.filing.export_proof import FilingExportProofAuthority
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import (
     ValidatedRegistryAuthority,
     bundled_authority,
 )
 
+from ..export_proof import FilingExportProofAuthority
 from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
 
 __all__ = [

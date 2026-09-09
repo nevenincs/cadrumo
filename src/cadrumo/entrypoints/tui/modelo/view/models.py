@@ -28,7 +28,6 @@ record, and there is nothing further to reach through to.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal
 from typing import Final, Literal
 
 from pydantic import BaseModel, model_validator
@@ -41,7 +40,6 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceDomainRefusalV1,
     ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceRecordLabelV1,
-    ModeloWorkspaceScalarMaterializationV1,
 )
 from .....core.models import STRICT_FROZEN_CONFIG
 
@@ -128,39 +126,6 @@ def display_text(label: ModeloWorkspaceRecordLabelV1) -> ModeloWorkspaceDisplayT
     if isinstance(label, ModeloWorkspaceLocalizedTextV1):
         return ModeloWorkspaceDisplayTextV1(text=label.value, translated=True)
     return ModeloWorkspaceDisplayTextV1(text=label.identifier, translated=False)
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloWorkspaceScalarRowV1:
-    """One materialized casilla value, keyed by its canonical casilla identity.
-
-    ``value`` stays the canonical typed scalar rather than a formatted
-    string: how a figure is rendered belongs to the widget and its locale,
-    and baking a format here would fix one presentation of a filing-grade
-    number inside a model several destinations share.
-
-    The producer's record is retained whole rather than reduced to a
-    provenance COUNT. A count would be actively misleading here: one source
-    reference fans out to one provenance record per casilla it names, so the
-    number says nothing an operator can reason about, while dropping the
-    records themselves would put the provenance destination in the position
-    of re-deriving what it was already handed.
-    """
-
-    casilla_id: str
-    value: Decimal | str | bool | None
-    source: ModeloWorkspaceScalarMaterializationV1
-
-
-@dataclass(frozen=True, slots=True)
-class ModeloWorkspaceSectionV1:
-    """One schema record-family label, presented as a grouping key.
-
-    The path is the projection's own ``record_family``; this model groups by
-    it and never synthesises a grouping a revision did not declare.
-    """
-
-    path: tuple[str, ...]
 
 
 class ModeloWorkspaceCompletePageV1(_ViewModel):
@@ -333,8 +298,6 @@ __all__ = [
     "ModeloWorkspacePageCompletenessV1",
     "ModeloWorkspaceRefusalKindV1",
     "ModeloWorkspaceRefusalViewV1",
-    "ModeloWorkspaceScalarRowV1",
-    "ModeloWorkspaceSectionV1",
     "capability_row",
     "constraint_disclosure",
     "display_text",

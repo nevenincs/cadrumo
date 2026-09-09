@@ -217,16 +217,6 @@ def cli_policy_refusal_projection(error: BaseException) -> CliPolicyRefusalProje
     )
 
 
-def cli_policy_refusal_context(projection: CliPolicyRefusalProjection) -> dict[str, object] | None:
-    """Render configuration identities from typed evidence, never recovery prose."""
-    context: dict[str, object] = {}
-    for evidence in projection.precondition_action.evidence:
-        for key, value in evidence.values.items():
-            if key.endswith("_setting"):
-                context[key] = value
-    return context or None
-
-
 def _next_requested_cli_child(ctx: typer.Context, command: object, token: str) -> object | None:
     """Resolve one non-option child while preserving the Click tree boundary."""
     if token.startswith("-") or not hasattr(command, "get_command"):
@@ -1085,13 +1075,6 @@ def load_drafts() -> tuple[ModeloDraft, ...]:
 
     repo = _draft_repo()
     return tuple(require_modelo_draft_coordinates_current(draft) for draft in repo.iter_drafts())
-
-
-def draft_by_id(draft_id: str) -> ModeloDraft:
-    for draft in load_drafts():
-        if draft.draft_id == draft_id:
-            return draft
-    raise _bad(tr("cli.common.errors.draft_id_not_found", draft_id=draft_id))
 
 
 # ---------------------------------------------------------------------

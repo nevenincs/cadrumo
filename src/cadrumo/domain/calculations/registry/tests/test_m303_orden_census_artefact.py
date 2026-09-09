@@ -26,6 +26,7 @@ from pathlib import Path
 from shutil import copyfile
 
 import pytest
+from dev.registry.maintenance_support import check_m303_annual_orden_census_artefact
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
@@ -40,7 +41,6 @@ from ..m303_orden_census_artefact import (
 )
 from ..m303_orden_manifest import (
     _generate_manifest_with_censuses,
-    check_m303_annual_orden_census_artefact,
     collect_m303_annual_orden_fingerprints,
     load_m303_annual_orden_authority,
 )

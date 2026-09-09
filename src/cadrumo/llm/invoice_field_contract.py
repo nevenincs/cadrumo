@@ -54,7 +54,6 @@ __all__ = [
     "InvoiceFieldForm",
     "anchor_key_for_field",
     "contract_for_field",
-    "identity_field_names",
     "role_evidence_key_for_field",
 ]
 
@@ -390,19 +389,6 @@ fails that gate, which is the whole reason the tuple exists.
 """
 
 
-def identity_field_names() -> tuple[str, ...]:
-    """Return the declared fields that name a party and so must evidence a role.
-
-    Derived from :data:`INVOICE_FIELD_CONTRACTS` rather than restated, so the
-    payload schema, the prompt and the grounding stage cannot disagree about
-    which fields carry role evidence. A hand-listed set is how a family ends up
-    half-covered: the collection describes the enrolled set while enforcing
-    nothing about it.
-
-    Returns:
-        The identity field names, in declaration order.
-    """
-    return tuple(contract.field_name for contract in INVOICE_FIELD_CONTRACTS if contract.carries_role_evidence)
 
 
 def contract_for_field(field_name: str) -> InvoiceFieldContract:

@@ -11,12 +11,8 @@ from pydantic import ValidationError
 from ....filing_evidence import FilingEvidenceReference
 from ..records import (
     InventoryClosingAuthority,
-    InventoryClosingAuthorityDecision,
-    InventoryClosingAuthorityRecord,
-    InventoryClosingConflictDiagnostic,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
-    InventoryClosingResolution,
     InventoryClosingValuationBasis,
     InventoryLedger,
     InventoryLedgerDocument,
@@ -24,11 +20,19 @@ from ..records import (
     PhysicalClosingEvidence,
     PhysicalClosingEvidenceRole,
     PhysicalClosingObservation,
-    PriorAuthoritativeClosingLink,
     PriorClosingContinuityEvidence,
     ValuationMethod,
     fingerprint_prior_authoritative_closing,
     resolve_inventory_authoritative_closing,
+)
+
+# Import concrete model classes only after the record bootstrap has completed.
+from .._closing_authority_records import (
+    InventoryClosingAuthorityDecision,
+    InventoryClosingAuthorityRecord,
+    InventoryClosingConflictDiagnostic,
+    InventoryClosingResolution,
+    PriorAuthoritativeClosingLink,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -15,12 +15,9 @@ from ..records import (
     InventoryAcquisitionCost,
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
-    InventoryAnexoDResult,
     InventoryAttributableCostComponent,
     InventoryAttributableCostKind,
     InventoryClosingAuthority,
-    InventoryClosingAuthorityDecision,
-    InventoryClosingAuthorityRecord,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
     InventoryClosingValuationBasis,
@@ -31,10 +28,17 @@ from ..records import (
     PhysicalClosingEvidence,
     PhysicalClosingEvidenceRole,
     PhysicalClosingObservation,
-    PriorAuthoritativeClosingLink,
     PriorClosingContinuityEvidence,
     ValuationMethod,
     fingerprint_prior_authoritative_closing,
+)
+
+# Import concrete model classes only after the record bootstrap has completed.
+from .._anexo_d_records import InventoryAnexoDResult
+from .._closing_authority_records import (
+    InventoryClosingAuthorityDecision,
+    InventoryClosingAuthorityRecord,
+    PriorAuthoritativeClosingLink,
 )
 from ..valuation import compute_inventory_anexo_d_projection
 

@@ -97,13 +97,7 @@ ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS: frozenset[Art104TresExclusion] = froz
 
 #: The four art. 104.Tres exclusions recognised structurally, from the IVA
 #: category, or from the bienes-inversión register — never operator-declared.
-ART_104_TRES_AUTO_DERIVED_EXCLUSIONS: frozenset[Art104TresExclusion] = frozenset(
-    member for member in Art104TresExclusion if member not in ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS
-)
-
-
 __all__ = [
-    "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
     "Art104TresExclusion",
 ]

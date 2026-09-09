@@ -76,7 +76,7 @@ from .donativo_bindings import (
 from .donativo_bindings import validate_donativo_binding
 from .errors import RegistryValidationError
 from .gasto193_bindings import _Gasto193Selector, validate_gasto193_binding_selector_shape
-from .ids import BindingId, FormulaId, LegalRefId, ModeloId, OracleId, SourceRefId
+from .ids import BindingId, FormulaId, LegalRefId, ModeloId, SourceRefId
 from .inventory_bindings import InventorySelector as _InventorySelector
 from .inventory_bindings import validate_inventory_binding
 from .invoice_bindings import (
@@ -156,7 +156,6 @@ from .withholding_bindings import (
 __all__ = [
     "CasillaObservation",
     "IvaCompensationAnnualPartitionRequirement",
-    "OracleModeloObservation",
     "ProfileSelector",
     "RegistryModeloObservation",
     "binding_source_casilla_ids",
@@ -419,25 +418,6 @@ class RegistryModeloObservation(BaseModel):
         the loader would refuse the duplicate field on the way back in.
         """
         return {obs.casilla_id: obs.value for obs in self.observations if isinstance(obs.value, Decimal)}
-
-
-class OracleModeloObservation(RegistryModeloObservation):
-    """Observed casilla values whose source is a live AEAT oracle adapter.
-
-    A subtype of :class:`RegistryModeloObservation` that marks the observation
-    tuple as oracle-originated rather than locally computed. The
-    :class:`~domain.calculations.registry.OracleId` field anchors the
-    observation to the
-    ``LiveCrossReferenceDecision`` that produced it, so the application
-    layer can route oracle-originated values through the
-    cross-reference policy (synthetic-payload verification, replay
-    quarantine, etc.) without ambiguity about provenance.
-
-    Distinct from the parent only by the typed ``oracle_id`` field;
-    every other invariant is inherited unchanged.
-    """
-
-    oracle_id: OracleId
 
 
 def resolve_bound_casilla_binding_value(

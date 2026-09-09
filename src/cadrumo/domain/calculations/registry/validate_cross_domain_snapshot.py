@@ -80,7 +80,6 @@ REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES: Mapping[str, str] = MappingProxyType(
 )
 
 _CROSS_DOMAIN_SNAPSHOT_CHECKS: list[CrossDomainSnapshotCheck] = []
-CROSS_DOMAIN_SNAPSHOT_CHECKS = _CROSS_DOMAIN_SNAPSHOT_CHECKS
 _CROSS_DOMAIN_CHECK_IDENTITIES: dict[str, list[CrossDomainSnapshotCheck]] = {}
 
 

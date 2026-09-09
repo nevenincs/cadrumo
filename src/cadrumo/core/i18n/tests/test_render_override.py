@@ -189,27 +189,3 @@ def test_profile_language_resolver_failure_logs_type_not_secret_message(
     assert "RuntimeError" in message
     assert "abc-secret-xyz" not in message
     assert records[-1].exc_info is not None
-
-
-def test_interpolation_failure_is_logged_without_values(caplog: pytest.LogCaptureFixture) -> None:
-    """Format failures preserve fallback output and do not log interpolation values."""
-
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.core.i18n.render"):
-        rendered = _render.interpolate(
-            "test.format.failure",
-            "{amount:.2f}",
-            {"amount": "abc-secret-xyz"},
-        )
-
-    assert rendered == "{amount:.2f}"
-    records = [
-        record
-        for record in caplog.records
-        if record.name == "cadrumo.core.i18n.render" and "unable to interpolate locale key" in record.getMessage()
-    ]
-    assert records
-    message = records[-1].getMessage()
-    assert "test.format.failure" in message
-    assert "ValueError" in message
-    assert "abc-secret-xyz" not in message
-    assert records[-1].exc_info is not None

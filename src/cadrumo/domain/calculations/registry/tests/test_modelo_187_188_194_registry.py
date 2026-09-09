@@ -20,12 +20,12 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.hashing import hash_file
 from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
-from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import NoRevisionForPeriodError, RegistryValidationError
 from ..temporal import select_revision
 from ._registry_schema_support import _committed_modelo

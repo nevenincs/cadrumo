@@ -32,7 +32,7 @@ from ..irpf_categories import (
     has_non_work_irpf_category,
     has_rent_irpf_category,
     ledger_irpf_category,
-    ledger_irpf_category_ids,
+    ledger_irpf_category_catalogue,
 )
 from ..models import Transaction
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -201,7 +201,7 @@ def test_predicates_resolve_through_the_closed_catalogue_with_direction() -> Non
 
 def test_catalogue_membership_is_closed_and_direction_aware() -> None:
     """Resolution answers both "is this catalogued" and "for this direction"."""
-    accepted = ledger_irpf_category_ids()
+    accepted = tuple(row.id for row in ledger_irpf_category_catalogue())
 
     assert set(accepted) == {
         IRPF_CATEGORY_ACTIVIDAD_ECONOMICA,

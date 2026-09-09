@@ -13,8 +13,8 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..pipeline import _semantic_map_validation
 from ..pipeline._record_design_ir import RecordDesignIntermediate

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import inspect
-import logging
 from pathlib import Path
 
 import pytest
@@ -13,22 +12,18 @@ from pydantic import ValidationError
 from ....application.modelo.action_errors import WorkUnitAlreadyDiscardedError, WorkUnitMutationRefusedError
 from ...access_gate.errors import LiveSubmitForbiddenError
 from ...i18n import UnmatchedPlaceholderError, tr
-from ...logging import SecretScrubbingFilter, configure_logging
 from ...observability.errors import RunContextMissingError, RunTracePersistenceError
 from ..error_codes import (
     _DEFERRED_BIND,
-    ERROR_REGISTRY,
     ErrorCategory,
     ErrorCode,
     _category_text_prefix,
     _flush_deferred_binds,
     get_error_exit_code,
     get_registered_error_code,
-    register,
     render_error_json,
     render_error_text,
 )
-from ..error_codes import logger as _registry_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -77,71 +72,6 @@ def test_category_prefix_resolution_has_no_in_code_translation_default() -> None
 
     assert translation_calls
     assert all(keyword.arg != "default" for call in translation_calls for keyword in call.keywords)
-
-
-def test_duplicate_registration_raises_clear_error() -> None:
-    existing = next(iter(ERROR_REGISTRY.values()))
-    duplicate = ErrorCode(
-        code=existing.code,
-        category=ErrorCategory.FAIL,
-        message_key="errors.fail.duplicate_error",
-        retryable=False,
-        runbook_id=None,
-    )
-    with pytest.raises(ValueError, match="duplicate ErrorCode registration"):
-        register(duplicate)
-
-
-def test_identical_duplicate_registration_raises_clear_error() -> None:
-    existing = next(iter(ERROR_REGISTRY.values()))
-    with pytest.raises(ValueError, match="duplicate ErrorCode registration"):
-        register(existing)
-
-
-def test_messages_do_not_leak_sphinx_role_markup() -> None:
-    """Verify that resolved messages do not contain Sphinx markup roles."""
-    for code in ERROR_REGISTRY.values():
-        for locale in ("es", "en", "ca", "hu"):
-            message = tr(code.message_key, locale=locale)
-            assert ":mod:" not in message
-            assert ":meth:" not in message
-            assert ":func:" not in message
-            assert ":class:" not in message
-            assert ":data:" not in message
-
-
-def test_messages_do_not_contain_known_broken_fragments() -> None:
-    """Verify that resolved messages do not contain known broken fragments."""
-    disallowed_fragments = (
-        "Error de no configured proveedor.",
-        "No configured szolgaltato hiba.",
-        "Error de no soportado financiero origen.",
-        "Error de cadrumo en vivo read no enabled.",
-        "Aeat elo read nem enabled hiba.",
-        "Error de cadrumo inicio de sesion assertion.",
-        "Aeat bejelentkezes assertion hiba.",
-        "Error de artefacto no recognised.",
-        "Artefaktum nem recognised hiba.",
-        "Error de proveedor no implemented.",
-        "Szolgaltato nem implemented hiba.",
-        "Error de no extractor registered.",
-        "No kinyero registered hiba.",
-        "Error de sitio health.",
-        "Oldal health hiba.",
-        "Error de presentacion draft.",
-        "Beadas draft hiba.",
-        "Error de l l m",
-        "Raised when a ``manifest.",
-        "Raised when persisted JSONL or trace.",
-        "Raised when a repository operation fails (not-found, integrity, etc.",
-        "Error de flujo de trabajo aborted.",
-        "Munkafolyamat aborted hiba.",
-    )
-    for code in ERROR_REGISTRY.values():
-        for locale in ("es", "en", "ca", "hu"):
-            message = tr(code.message_key, locale=locale)
-            for fragment in disallowed_fragments:
-                assert fragment not in message
 
 
 def test_deferred_bind_flushes_on_get_registered_error_code() -> None:
@@ -243,72 +173,3 @@ def test_modelo_lifecycle_terminal_errors_are_refused() -> None:
 # ---------------------------------------------------------------------------
 # contract — error-registry logger carries SecretScrubbingFilter
 # ---------------------------------------------------------------------------
-
-
-def test_error_registry_logger_is_module_level() -> None:
-    """_registry.logger is a module-level Logger, not created inline."""
-
-    assert isinstance(_registry_logger, logging.Logger), (
-        f"Expected a logging.Logger instance; got {type(_registry_logger)!r}"
-    )
-    assert _registry_logger.name == "cadrumo.core.errors.error_codes", (
-        f"Logger name mismatch: {_registry_logger.name!r}"
-    )
-
-
-def test_error_registry_debug_log_scrubs_sensitive_context(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Error-registry debug records must not leak token-shaped exception detail.
-
-    The registry logger uses logging.getLogger(__name__) to avoid the
-    circular import through cadrumo.core.logging.configure_logging → config →
-    cadrumo.core.errors.  SecretScrubbingFilter is attached to the root logger
-    by configure_logging(); we ensure it is present before capturing.
-    """
-
-    configure_logging()
-    root = logging.getLogger()
-    if not any(isinstance(f, SecretScrubbingFilter) for f in root.filters):
-        root.addFilter(SecretScrubbingFilter())  # ensure filter present in test isolation
-
-    sensitive_fragment = "oauth_refresh_token=abc-secret-xyz"
-    with caplog.at_level(logging.DEBUG, logger=_registry_logger.name):
-        _registry_logger.debug(
-            "i18n resolution failed (%s)",
-            sensitive_fragment,
-        )
-
-    assert caplog.records, "No debug records captured — logger propagation may be broken"
-
-    record = caplog.records[-1]
-    rendered = record.getMessage()
-    assert "abc-secret-xyz" not in rendered, (
-        f"Sensitive token fragment survived scrubbing in debug record; got: {rendered!r}"
-    )
-    assert "<redacted>" in rendered, f"Expected '<redacted>' marker in scrubbed record; got: {rendered!r}"
-
-
-def test_error_registry_debug_log_scrubs_nif_in_context(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """NIF-shaped values in the debug log arg position are scrubbed by the root filter."""
-
-    configure_logging()
-    root = logging.getLogger()
-    if not any(isinstance(f, SecretScrubbingFilter) for f in root.filters):
-        root.addFilter(SecretScrubbingFilter())
-
-    nif = "12345678Z"
-    with caplog.at_level(logging.DEBUG, logger=_registry_logger.name):
-        _registry_logger.debug(
-            "error rendering failed for tax_id=%s",
-            nif,
-        )
-
-    assert caplog.records, "No debug records captured"
-
-    record = caplog.records[-1]
-    rendered = record.getMessage()
-    assert nif not in rendered, f"NIF {nif!r} was not scrubbed in debug record; got: {rendered!r}"
-    assert "<redacted>" in rendered, f"Expected '<redacted>' in scrubbed debug record; got: {rendered!r}"

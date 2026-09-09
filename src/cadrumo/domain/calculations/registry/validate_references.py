@@ -21,17 +21,12 @@ from .ids import BindingId
 from .schema import ModeloRevision
 from .schema_input_kind import InputKind
 from .validate_cross_domain_snapshot import (
-    CROSS_DOMAIN_SNAPSHOT_CHECKS,
-    check_cross_domain_snapshot_routing,
-)
-from .validate_cross_domain_snapshot import (
     CrossDomainSnapshotCheck as CrossDomainSnapshotCheck,
 )
+from .validate_cross_domain_snapshot import check_cross_domain_snapshot_routing
 from .validate_cross_domain_snapshot import (
     register_cross_domain_snapshot_check as register_cross_domain_snapshot_check,
 )
-
-_CROSS_DOMAIN_SNAPSHOT_CHECKS = CROSS_DOMAIN_SNAPSHOT_CHECKS
 
 if TYPE_CHECKING:
     from .schema import RegistrySnapshot

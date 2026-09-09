@@ -100,11 +100,6 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.external_grounding import (
-    ExternalOracleInventory,
-    UnattributedOraclePayload,
-    load_bundled_external_oracle_inventory,
-)
 from cadrumo.tests.registry_conformance import (
     AnnualCasillaPopulationComparison,
     CoverageAuthorityScope,
@@ -114,6 +109,11 @@ from cadrumo.tests.registry_conformance import (
     RevisionConstructEvidence,
     audit_bundled_registry_conformance,
     compare_annual_casilla_population_for_revision,
+)
+from dev.registry.maintenance_support import (
+    ExternalOracleInventory,
+    UnattributedOraclePayload,
+    load_bundled_external_oracle_inventory,
 )
 
 

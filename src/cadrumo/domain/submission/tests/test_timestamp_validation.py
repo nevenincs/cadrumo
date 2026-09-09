@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.period import Period
-from ..models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ..models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -17,7 +17,7 @@ _UTC = datetime(2026, 8, 1, 10, 0, tzinfo=UTC)
 
 def _presented(*, submitted_at: datetime = _UTC, acknowledged_at: datetime | None = None) -> ModeloPresentado:
     """Build a real submission record with the supplied audit timestamps."""
-    submission_id = make_submission_id("draft-utc-boundary", 1)
+    submission_id = "0123456789abcdef"
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id="draft-utc-boundary",
@@ -49,7 +49,7 @@ def test_submission_attempt_refuses_naive_and_non_utc_timestamps(value: datetime
     """Attempt ordering never sees malformed timestamp shapes."""
     with pytest.raises(ValidationError, match=r"timezone-aware UTC|must be in UTC"):
         SubmissionAttempt(
-            attempt_id=f"{make_submission_id('draft-utc-boundary', 1)}.1",
+            attempt_id="0123456789abcdef.1",
             started_at=value,
             ended_at=value,
             status=SubmissionStatus.PRESENTADA,

@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.ids import (
     RevisionId,
 )
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration
-from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactInspection
+from dev.registry.maintenance_support import GeneratedArtifactInspection
 
 from ._record_design_ir import (
     AnchorKey,

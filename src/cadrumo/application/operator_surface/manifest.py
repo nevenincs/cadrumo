@@ -376,50 +376,6 @@ class ResolvedManifestActionProfile(BaseModel):
             )
         return self
 
-
-class ManifestActionResolution(BaseModel):
-    """Deterministic resolution evidence for catalogue actions and profiles.
-
-    ``catalogue_actions`` is a projection of the supplied canonical catalogue,
-    not a second declaration source.  It includes unreferenced catalogue entries
-    so an incrementally introduced action cannot retain a dead command target.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    catalogue_actions: tuple[ResolvedCatalogueAction, ...]
-    profiles: tuple[ResolvedManifestActionProfile, ...]
-
-    @field_validator("catalogue_actions")
-    @classmethod
-    def _catalogue_action_ids_are_unique(
-        cls,
-        value: tuple[ResolvedCatalogueAction, ...],
-    ) -> tuple[ResolvedCatalogueAction, ...]:
-        action_ids = tuple(action.action_id for action in value)
-        if len(action_ids) != len(set(action_ids)):
-            raise ValueError("resolved catalogue action IDs must be unique")
-        return tuple(sorted(value, key=lambda action: action.action_id))
-
-    @field_validator("profiles")
-    @classmethod
-    def _profile_identities_are_unique(
-        cls,
-        value: tuple[ResolvedManifestActionProfile, ...],
-    ) -> tuple[ResolvedManifestActionProfile, ...]:
-        identities = tuple(profile.declaration.identity for profile in value)
-        if len(identities) != len(set(identities)):
-            raise ValueError("manifest action-profile identities must be unique")
-        return tuple(sorted(value, key=lambda profile: profile.declaration.identity))
-
-    def action_for(self, action_id: str) -> ResolvedCatalogueAction:
-        """Return one resolved canonical action or fail closed."""
-        for action in self.catalogue_actions:
-            if action.action_id == action_id:
-                return action
-        raise KeyError(f"unresolved operator action ID: {action_id!r}")
-
-
 def _index_subject_rows[
     InventoryRow: ResultSchemaInventoryRow
     | InputSchemaInventoryRow
@@ -853,56 +809,6 @@ def resolve_action_catalogue(
         )
     _refuse("operator_action_catalogue", diagnostics)
     return tuple(sorted(resolved, key=lambda action: action.action_id))
-
-
-def resolve_manifest_action_profiles(
-    *,
-    profiles: tuple[ManifestActionProfile, ...],
-    catalogue: ActionCatalogue,
-    reconciliation: OperatorSurfaceReconciliation,
-) -> ManifestActionResolution:
-    """Resolve declarative profiles through one catalogue and live schema join."""
-    live_by_key = _index_reconciled_leaves(reconciliation)
-    catalogue_actions = resolve_action_catalogue(
-        catalogue=catalogue,
-        reconciliation=reconciliation,
-    )
-    action_by_id = {action.action_id: action for action in catalogue_actions}
-    diagnostics: list[str] = []
-    seen_profile_identities: set[tuple[str, str, str]] = set()
-    resolved_profiles: list[ResolvedManifestActionProfile] = []
-    for profile in profiles:
-        if profile.identity in seen_profile_identities:
-            diagnostics.append(
-                "duplicate manifest action-profile identity: "
-                f"{profile.subject_leaf_key} / {profile.condition_id} / {profile.scenario_id}"
-            )
-            continue
-        seen_profile_identities.add(profile.identity)
-
-        subject_leaf = live_by_key.get(profile.subject_leaf_key)
-        if subject_leaf is None:
-            diagnostics.append(f"orphan manifest action-profile subject identity: {profile.subject_leaf_key}")
-            continue
-
-        resolved_action: ResolvedCatalogueAction | None = None
-        if profile.action is not None:
-            resolved_action = action_by_id.get(profile.action.action_id)
-            if resolved_action is None:
-                diagnostics.append(f"unknown manifest action-profile action identity: {profile.action.action_id}")
-                continue
-        resolved_profiles.append(
-            ResolvedManifestActionProfile(
-                declaration=profile,
-                subject_leaf=subject_leaf,
-                resolved_action=resolved_action,
-            )
-        )
-    _refuse("manifest_action_profiles", diagnostics)
-    return ManifestActionResolution(
-        catalogue_actions=catalogue_actions,
-        profiles=tuple(resolved_profiles),
-    )
 
 
 class CommandSchemaRef(BaseModel):

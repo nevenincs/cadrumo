@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 from ....core.citation_grounding import CitationGrounding
 from ..catalogue import resolve_catalogue
-from ..lookup import cite
 from ..schema import IvaCategory, IvaCitation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -97,13 +96,6 @@ def test_iva_citation_rejects_an_unresolved_claim_that_carries_a_quotation() -> 
                 "valid_to": date(2026, 12, 31),
             },
         )
-
-
-def test_cite_domestic_general_renders_its_registry_legal_reference() -> None:
-    rendered = cite(IvaCategory.DOMESTIC_GENERAL, on=date(2025, 6, 15))
-    assert rendered
-    assert "BOE-A-1992-28740" in rendered
-    assert "Art. 90" in rendered
 
 
 def test_reagp_compensation_is_grounded_in_its_exact_statutory_compensation_article() -> None:

@@ -113,5 +113,3 @@ def test_all_five_are_registry_backed() -> None:
     authority = bundled_authority()
     for mid in ("181", "270"):
         assert authority.modelo(mid).id == mid
-
-

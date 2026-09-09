@@ -43,14 +43,15 @@ from cadrumo.core.directory_scan import (
 from cadrumo.core.hashing import sha256_file
 from cadrumo.core.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,
-    MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
+    ManualCorpusTextSchemaVersion,
     ManualCorpusTextSidecar,
 )
 
 from .._paths import REPO_ROOT, UTF_8
 
 _UTF_8: Final[str] = UTF_8
+_MANUAL_CORPUS_TEXT_SCHEMA_VERSION: Final[ManualCorpusTextSchemaVersion] = 2
 
 # dev/corpus/extract_manual_corpus_text.py is two levels below the repo root.
 _REPO_ROOT: Final[Path] = REPO_ROOT
@@ -137,7 +138,7 @@ def _write_sidecar(pdf_path: Path, sha256: str, normalised_text: str) -> Path:
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
     corpus_path = MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX + pdf_path.relative_to(_CORPUS_ROOT).as_posix()
     payload = ManualCorpusTextSidecar(
-        schema_version=MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
+        schema_version=_MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
         corpus_path=corpus_path,
         source_sha256=sha256,
         # pypdfium2 bundles a per-OS native pdfium binary whose text extraction

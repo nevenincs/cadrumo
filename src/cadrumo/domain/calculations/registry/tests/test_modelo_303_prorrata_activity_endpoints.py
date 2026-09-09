@@ -7,6 +7,7 @@ from collections import Counter
 from decimal import Decimal
 
 import pytest
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 from .....core.estado_casilla_oficial import EstadoCasillaOficial
 from .....core.filing_projection_ref import (
@@ -20,7 +21,6 @@ from .....core.resources.bundled_data import bundled_path
 from .....domain.prorrata_register.register import ProrrataActivityRow, ProrrataRegister, ProrrataRegisterEntry
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
-from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..export import clasificar_casillas_oficiales
 from ..formula_initial_values import initial_value_casilla_ids, initial_values

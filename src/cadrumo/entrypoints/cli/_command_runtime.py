@@ -28,7 +28,6 @@ from .command_spec import (
     DeferredTarget,
     OptionSpec,
     ParameterDefault,
-    SchemaState,
 )
 from .command_suggestions import CadrumoTyperGroup, LazyFactoryTarget, LazySubcommand
 
@@ -433,24 +432,9 @@ def build_command_subtree(graph: CommandSpecGraph, key: str) -> typer.Typer:
     return _node_app(graph, key)
 
 
-def command_schema_targets(graph: CommandSpecGraph) -> tuple[tuple[str, DeferredTarget], ...]:
-    """Project result identities without importing schema implementations."""
-    rows: list[tuple[str, DeferredTarget]] = []
-    for node in graph.nodes():
-        schema = node.spec.result_schema
-        if schema.state is SchemaState.TARGET:
-            if schema.target is None:  # guarded by ResultSchemaSpec itself
-                raise RuntimeError(f"command {node.spec.key!r} has an empty schema target")
-            if schema.identity is None:  # guarded by ResultSchemaSpec itself
-                raise RuntimeError(f"command {node.spec.key!r} has an empty schema identity")
-            rows.append((schema.identity, schema.target))
-    return tuple(rows)
-
-
 __all__ = [
     "CommandSpecTyperGroup",
     "build_command_app",
     "build_command_subtree",
-    "command_schema_targets",
     "resolve_deferred_target",
 ]

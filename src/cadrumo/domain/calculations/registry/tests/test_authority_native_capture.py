@@ -16,6 +16,7 @@ from threading import Barrier, Event, Lock, Thread
 from typing import Final, cast
 
 import pytest
+from dev.registry.maintenance_support import reset_registry_caches
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.directory_scan import scan_directory
@@ -28,7 +29,6 @@ from ..authority import (
     RegistryAuthorityProjection,
     ValidatedRegistryAuthority,
     bundled_authority,
-    reset_registry_caches,
 )
 from ..errors import RegistrySnapshotError
 from ..schema import RegistrySnapshot

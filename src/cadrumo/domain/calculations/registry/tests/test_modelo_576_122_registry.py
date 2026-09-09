@@ -158,5 +158,3 @@ def test_modelo_576_2007_filing_mutation_reaches_the_generic_no_layout_refusal()
             period="0A",
             revision_id="2007",
         )
-
-

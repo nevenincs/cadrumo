@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import build_error_envelope
 from ....core.i18n import Translatable as tr
 from ....core.requirement import Requirement
 from ..errors import ProfileKeysRegistrationError
@@ -13,7 +13,6 @@ from ..keys import (
     optional_profile_keys,
     profile_keys,
     register_profile_keys,
-    required_profile_keys,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -26,7 +25,7 @@ def test_registry_is_non_empty_and_unique() -> None:
 
 
 def test_required_and_optional_partition_covers_registry() -> None:
-    required = required_profile_keys()
+    required = tuple(entry for entry in profile_keys() if entry.requirement is Requirement.REQUIRED)
     optional = optional_profile_keys()
     assert {entry.key for entry in required + optional} == {entry.key for entry in profile_keys()}
     assert all(entry.requirement is Requirement.REQUIRED for entry in required)
@@ -125,11 +124,6 @@ def test_optional_spouse_keys_carry_no_conditional_requirement() -> None:
         assert entry.requirement is Requirement.OPTIONAL
         assert entry.required_when_key is None
         assert entry.required_when_value is None
-
-
-def test_profile_keys_registration_error_is_in_error_registry() -> None:
-    """ProfileKeysRegistrationError must be present in ERROR_REGISTRY."""
-    assert "INTERNAL_PROFILE_KEYS_REGISTRATION" in ERROR_REGISTRY
 
 
 def test_profile_keys_registration_error_round_trips_through_build_error_envelope() -> None:

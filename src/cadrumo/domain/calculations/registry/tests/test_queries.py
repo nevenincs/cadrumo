@@ -279,24 +279,6 @@ def test_binding_rows_report_decimal_input_channel_for_typed_enum_binding() -> N
     assert row.input_channel == "decimal"
 
 
-def test_input_casilla_id_map_exposes_only_canonical_ids() -> None:
-    """``input_casilla_id_map`` must not reintroduce printed-number references."""
-
-    from ..runtime_graph import input_casilla_id_map
-
-    service = _service()
-    described = service.describe_modelo("303", period="1T")
-    authority = service._authority
-    definition = authority.validate_modelo("303")
-    revision = definition.revisions[described.revision]
-
-    id_map = input_casilla_id_map(revision)
-
-    canonical = "iva.compensacion-pendiente-periodos-anteriores"
-    assert id_map[canonical] == canonical
-    assert "110" not in id_map
-
-
 def test_unscoped_query_refuses_as_of_instead_of_silently_ignoring_it() -> None:
     """The unscoped period query refuses an as_of argument rather than accepting-and-ignoring it.
 

@@ -22,7 +22,6 @@ from typing import TYPE_CHECKING
 from ...core.citation_grounding import CitationGrounding
 from ...core.errors.severity import BaseSeverity
 from ...core.logging import get_logger
-from ._grounding import registry_catalogues
 from .schema import (
     IvaCatalogue,
     IvaCategory,
@@ -38,24 +37,6 @@ if TYPE_CHECKING:
     from ..calculations.registry.schema_references import LegalReference
 
 _logger = get_logger(__name__)
-
-
-def verify_catalogue(catalogue: IvaCatalogue) -> IvaVerificationReport:
-    """Run every cross-record check on ``catalogue``.
-
-    Args:
-        catalogue: The :class:`cadrumo.domain.iva.IvaCatalogue` under audit.
-
-    Returns:
-        A :class:`cadrumo.domain.iva.IvaVerificationReport` aggregating every
-        finding.
-    """
-    # The registry authority constructs every modelo and consumes IVA modules
-    # while doing so.  Loading it here would therefore make a catalogue load
-    # re-enter that construction path.  The IVA grounding helper is the
-    # established cycle-safe access path for the parsed shared catalogues.
-    legal, _sources, source_root = registry_catalogues()
-    return verify_catalogue_against_legal(catalogue, legal=legal, source_root=source_root)
 
 
 def verify_catalogue_against_legal(
@@ -205,4 +186,4 @@ def _citation_issues(
     return issues
 
 
-__all__ = ["verify_catalogue"]
+__all__ = ["verify_catalogue_against_legal"]

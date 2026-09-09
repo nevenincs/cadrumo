@@ -54,9 +54,7 @@ from ..invoice_extraction_prompt import (
     INVOICE_EXTRACTION_PROMPT_ID,
     INVOICE_EXTRACTION_PROMPT_VERSION,
     PROMPT_TEMPLATE,
-    build_invoice_extraction_prompt,
     invoice_extraction_prompt_registry,
-    template_numeric_literals,
 )
 from ..invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
@@ -71,6 +69,7 @@ from ..invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
+from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -595,12 +594,6 @@ class TestTheTemplateIsRegisteredRatherThanOnlyAConstant:
 
         assert compiled.text.startswith(definition.template[: definition.template.index("{")])
         assert compiled.template_version == definition.version
-
-    def test_the_numeric_literal_scan_follows_the_registry(self) -> None:
-        """The digit-free gate must read the text the compiler will actually use."""
-        definition = invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID)
-
-        assert template_numeric_literals() == template_numeric_literals(definition.template)
 
     def test_the_version_and_the_fingerprint_are_different_facts(self) -> None:
         """Two periods share one template version but must not share a fingerprint.

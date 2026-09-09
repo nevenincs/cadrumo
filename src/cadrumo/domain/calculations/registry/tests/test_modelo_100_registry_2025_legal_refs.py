@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from .....core.casilla_id import validated_casilla_id
-from ..record_design_coverage import calculation_closure_legal_refs
 from ._modelo_100_registry_support import (
     _ANEXO_C_BASE_NEGATIVE_GENERAL_BINDING_ID,
     _ANEXO_C_BASE_NEGATIVE_GENERAL_CONSTRUCT_ID,
@@ -32,7 +31,6 @@ from ._modelo_100_registry_support import (
     _OBJECTIVE_ESTIMATION_2025_SECTION_COUNTS,
     _PAYMENTS_ON_ACCOUNT_2025_CASILLA_SECTIONS,
     _PAYMENTS_ON_ACCOUNT_ARTICLE_REF,
-    _loaded_registry,
     _modelo_100_snapshot,
 )
 
@@ -218,16 +216,6 @@ def test_modelo_100_2025_anexo_c_base_negative_general_uses_member_refs_only() -
     }
     assert member_refs == _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
     assert set(construct.legal_refs) == _ANEXO_C_BASE_NEGATIVE_GENERAL_REFS
-
-
-def test_modelo_100_2025_completeness_manifest_legal_refs_match_calculation_closure() -> None:
-    modelos_by_id, _catalogues = _loaded_registry()
-    modelo = modelos_by_id["100"]
-    revision = modelo.revisions["2025"]
-    manifest = revision.completeness_manifest
-
-    assert manifest is not None
-    assert set(manifest.legal_refs) == calculation_closure_legal_refs(revision, modelo.id)
 
 
 def test_modelo_100_2025_objective_estimation_sections_use_activity_refs_only() -> None:

@@ -243,26 +243,4 @@ is silently unrouted (``no-silent-under-declaration``,
 """
 
 
-def expected_casilla_for_category(category: SpendingCategory) -> CasillaId | None:
-    """Return the routed casilla id for ``category``, or ``None`` if outside the first slice."""
-    return FIRST_SLICE_EXPENSE_CASILLAS.get(category)
-
-
-def first_slice_target_casillas() -> frozenset[CasillaId]:
-    """Return every casilla id this routing table references.
-
-    The confirmation this exists for -- that every target the table can route
-    to is a real casilla on the modelo-100 registry -- is performed by this
-    package's own routing test, not by the snapshot-time referential-integrity
-    gate the sentence here used to name. The distinction is the whole value of
-    the claim: a casilla id removed from the registry without a corresponding
-    update here is caught when that test runs, and not at snapshot build.
-    """
-    return frozenset(FIRST_SLICE_EXPENSE_CASILLAS.values())
-
-
-__all__ = [
-    "FIRST_SLICE_EXPENSE_CASILLAS",
-    "expected_casilla_for_category",
-    "first_slice_target_casillas",
-]
+__all__ = ["FIRST_SLICE_EXPENSE_CASILLAS"]

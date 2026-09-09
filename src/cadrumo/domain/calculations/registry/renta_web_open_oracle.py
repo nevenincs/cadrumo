@@ -4,16 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
-from enum import StrEnum
-from json import JSONDecodeError, loads
 from typing import Final, Literal, Protocol
 
-from pydantic import AnyUrl, BaseModel, Field, field_validator
+from pydantic import AnyUrl, BaseModel, Field
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.decimal.coercion import coerce_finite_european_decimal, normalize_decimal_separators
-from ....core.identity import AeatBoxNumber
 from ....core.models import STRICT_FROZEN_CONFIG
 from .checker_oracle_flow import CheckerDriverMode, CheckerDriverModeValue
 from .errors import RegistryValidationError
@@ -38,89 +35,10 @@ _RENTA_WEB_OPEN_ORACLE_ID: OracleId = "modelo-100-renta-web-open"
 _RENTA_REPLAY_SURFACE_LABEL: Final[str] = "Renta WEB Open replay"
 
 
-class RentaWebSyntheticSex(StrEnum):
-    """The sex token the Renta WEB Open synthetic profile submits.
-
-    Spanish-cased because it is typed into an AEAT form exactly as written; this is a
-    wire value, not display text.
-    """
-
-    HOMBRE = "Hombre"
-    MUJER = "Mujer"
-
-
-RentaWebSyntheticSexValue = Literal[
-    RentaWebSyntheticSex.HOMBRE,
-    RentaWebSyntheticSex.MUJER,
-]
-"""The same vocabulary for a strict model field."""
-
-
 class RentaWebOpenModel(BaseModel):
     """Strict frozen base for Renta WEB Open parity records."""
 
     model_config = STRICT_FROZEN_CONFIG
-
-
-class RentaWebOpenSyntheticProfile(RentaWebOpenModel):
-    """Synthetic identifying data accepted by Renta WEB Open."""
-
-    nif: str = Field(default="12345678Z", min_length=1, max_length=16)
-    name: str = Field(default="DECLARANTE PRUEBA", min_length=1, max_length=80)
-    civil_status: str = Field(default="SOLTERO/A", min_length=1, max_length=64)
-    birth_date: str = Field(default="01/01/1980", min_length=10, max_length=10)
-    sex: RentaWebSyntheticSexValue = RentaWebSyntheticSex.HOMBRE
-    autonomous_community: str = Field(default="ANDALUCIA", min_length=1, max_length=80)
-
-    @field_validator("nif", "name", "civil_status", "birth_date", "autonomous_community")
-    @classmethod
-    def _trimmed(cls, value: str) -> str:
-        normalized = value.strip()
-        if not normalized:
-            raise RegistryValidationError("Renta WEB Open synthetic profile values must not be blank")
-        return normalized
-
-
-class RentaWebOpenDisplayOverride(RentaWebOpenModel):
-    """One browser-coordinate override keyed externally by canonical casilla id."""
-
-    display_number: AeatBoxNumber
-    value: str = Field(max_length=128)
-
-    @field_validator("display_number", "value")
-    @classmethod
-    def _trimmed(cls, value: str) -> str:
-        trimmed = value.strip()
-        if not trimmed:
-            raise RegistryValidationError("Renta WEB Open display overrides must not contain blank strings")
-        return trimmed
-
-
-class RentaWebOpenLivePayload(RentaWebOpenModel):
-    """Payload for a Renta WEB Open parity run.
-
-    Browser-visible labels and display numbers are external UI coordinates.
-    They are never output keys. ``summary_labels_by_casilla_id`` maps the
-    canonical registry casilla id to the Renta WEB summary label to scrape.
-    ``scrape_display_numbers_by_casilla_id`` maps the canonical registry
-    casilla id to a browser-visible display number that the driver should
-    navigate to and read. ``display_overrides_by_casilla_id`` is also keyed
-    by canonical casilla id; the nested display number is only the external
-    browser coordinate used to reach AEAT's input widget.
-    """
-
-    profile: RentaWebOpenSyntheticProfile = Field(default_factory=RentaWebOpenSyntheticProfile)
-    app_url: AnyUrl = Field(
-        default_factory=lambda: AnyUrl(
-            Settings.external_constants().aeat.oracles.renta_web_open_app_template.format(
-                year=_RENTA_WEB_OPEN_DEFAULT_YEAR,
-            ),
-        ),
-    )
-    timeout_ms: int = Field(default=60_000, ge=1_000, le=180_000)
-    display_overrides_by_casilla_id: dict[CasillaId, RentaWebOpenDisplayOverride] = Field(default_factory=dict)
-    summary_labels_by_casilla_id: dict[CasillaId, str] = Field(default_factory=dict)
-    scrape_display_numbers_by_casilla_id: dict[CasillaId, str] = Field(default_factory=dict)
 
 
 class RentaWebOpenObservation(RentaWebOpenModel):
@@ -418,31 +336,6 @@ class RentaWebOpenOracle:
         )
 
 
-def parse_renta_web_open_live_payload(payload: bytes) -> RentaWebOpenLivePayload:
-    """Parse the optional JSON payload and return a :class:`RentaWebOpenLivePayload`."""
-    if not payload:
-        return RentaWebOpenLivePayload()
-    try:
-        document = loads(payload.decode("utf-8"))
-    except (UnicodeDecodeError, JSONDecodeError) as exc:
-        raise RegistryValidationError("Renta WEB Open live payload must be UTF-8 JSON") from exc
-    if not isinstance(document, dict):
-        raise RegistryValidationError("Renta WEB Open live payload must be a JSON object")
-    return RentaWebOpenLivePayload.model_validate(document)
-
-
-def validate_renta_web_open_expected_casilla_ids[ExpectedKey](
-    expected: Mapping[ExpectedKey, object],
-) -> frozenset[CasillaId]:
-    """Return expected keys validated as canonical ``casilla.id`` values.
-
-    Renta WEB Open browser labels and display numbers are UI coordinates only.
-    They must be carried by the live payload's explicit casilla-id-keyed maps,
-    never by the oracle ``expected`` comparison surface.
-    """
-    return frozenset(validate_renta_web_open_expected_casilla_values(expected))
-
-
 def validate_renta_web_open_expected_casilla_values[ExpectedKey](
     expected: Mapping[ExpectedKey, object],
 ) -> dict[CasillaId, object]:
@@ -528,12 +421,6 @@ def _parse_decimal_text(value: str) -> Decimal | None:
     return coerce_finite_european_decimal(text)
 
 
-def serialize_renta_web_open_replay_decimal(value: str) -> str | None:
-    """Render a captured Renta WEB amount as a fixed-point replay expectation."""
-    parsed = _parse_decimal_text(value)
-    return None if parsed is None else format(parsed, "f")
-
-
 def _overall_verdict(fields: tuple[ParityFieldComparison, ...]) -> ParityFieldVerdict:
     if any(field.verdict == ParityVerdictKind.MISMATCH for field in fields):
         return ParityVerdictKind.MISMATCH
@@ -555,16 +442,10 @@ def _narrative_for_verdict(
 
 
 __all__ = [
-    "RentaWebOpenDisplayOverride",
     "RentaWebOpenDriver",
-    "RentaWebOpenLivePayload",
     "RentaWebOpenObservation",
     "RentaWebOpenOracle",
     "RentaWebOpenReplayDriver",
-    "RentaWebOpenSyntheticProfile",
     "equivalent_renta_web_open_value",
-    "parse_renta_web_open_live_payload",
-    "serialize_renta_web_open_replay_decimal",
-    "validate_renta_web_open_expected_casilla_ids",
     "validate_renta_web_open_expected_casilla_values",
 ]

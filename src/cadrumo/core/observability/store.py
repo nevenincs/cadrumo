@@ -423,29 +423,6 @@ def iter_events(
     return _stream()
 
 
-def load_events(
-    run_id: str,
-    *,
-    settings: Settings | None = None,
-) -> tuple[RunEvent, ...]:
-    """Load and strictly validate every JSONL event for a run.
-
-    Thin wrapper over :func:`iter_events` that drains the iterator
-    into a tuple. Prefer :func:`iter_events` for long-running traces
-    where the whole log may exceed available memory.
-
-    Read-only: does not create a run directory when absent.
-
-    Args:
-        run_id: 16-char lowercase hex run identifier.
-        settings: Optional :class:`core.config.Settings` override.
-
-    Returns:
-        Tuple of every recorded :class:`RunEvent` in append order.
-    """
-    return tuple(iter_events(run_id, settings=settings))
-
-
 def _is_listable_run_directory(entry: Path) -> bool:
     """Return whether ``entry`` is a canonical run directory, logging skips."""
     try:
@@ -644,7 +621,6 @@ __all__ = [
     "iter_events",
     "iter_runs",
     "load_envelope_document",
-    "load_events",
     "load_trace",
     "prune_run_traces",
     "runs_dir",

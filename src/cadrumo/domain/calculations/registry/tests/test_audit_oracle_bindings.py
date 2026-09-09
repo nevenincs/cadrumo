@@ -10,14 +10,14 @@ to diagnose the mismatch from the message alone.
 from __future__ import annotations
 
 import pytest
-
-from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
-from ..live_parity import (
+from dev.registry.maintenance_support import (
     LiveParityCatalogue,
     OracleEnvironment,
     audit_oracle_bindings,
     audit_registry_oracle_bindings,
 )
+
+from .....tests.aeat_nif_iva_oracle import ORACLE_ID, AeatNifIvaCheckerOracle
 from ..schema import ModeloDefinition
 from ._registry_schema_support import _committed_modelo
 

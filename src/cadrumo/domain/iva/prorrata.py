@@ -69,7 +69,6 @@ carry validated prorrata references on IVA ledger observations.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from decimal import ROUND_CEILING, Decimal
 from enum import StrEnum
 from typing import Annotated
@@ -251,30 +250,6 @@ class ProrrataReference(_ProrrataStrictFrozen):
         return self
 
 
-class ProrrataInputDeduction(_ProrrataStrictFrozen):
-    """One per-input deductibility decision under prorrata especial.
-
-    Used to enumerate every input IVA amount classified under art. 106.Uno
-    LIVA and the resulting deductible portion. The ``deductible_amount``
-    field equals ``input_iva_amount * deductible_percentage / 100``,
-    rounded to two decimals half-up via :func:`~cadrumo.core.money.round_to_cents`;
-    the caller's modelo binding provider is responsible for further rounding if
-    the registry casilla requires whole euros.
-
-    The rounding mode is load-bearing and this docstring previously named the
-    opposite one. ``core.money`` states that banker's rounding "does NOT match
-    AEAT and must never be used at the euro-cent boundary for any
-    operator-facing or filed value", and the implementation has always used
-    half-up; only this description was wrong -- in the exact register an
-    auditor reads to check a filed deduction.
-    """
-
-    classification: InputClassification
-    input_iva_amount: Decimal = Field(..., ge=Decimal("0"))
-    deductible_percentage: Percentage
-    deductible_amount: Decimal = Field(..., ge=Decimal("0"))
-
-
 class EspecialMandatoryRule(_ProrrataStrictFrozen):
     """The LIVA art. 103.Dos.2.º mandatory-especial rule in force for one filing year.
 
@@ -447,32 +422,6 @@ def deductible_percentage_for(
     # which routes to "el porcentaje a que se refiere el artículo 104,
     # apartados Dos y siguientes").
     return general_percentage
-
-
-def classify_input_deduction(
-    classification: InputClassification,
-    input_iva_amount: Decimal,
-    general_percentage: Decimal,
-) -> ProrrataInputDeduction:
-    """Compute one deductible amount and return a :class:`ProrrataInputDeduction`.
-
-    Implements prorrata especial (art. 106). The ``general_percentage`` is the
-    value produced by :func:`compute_prorrata_general` for the same window; it
-    only enters the calculation when the classification is ``COMMON``.
-    """
-    if input_iva_amount < 0:
-        raise ProrrataInputError(f"input_iva_amount must be non-negative, got {input_iva_amount}")
-    if general_percentage < 0 or general_percentage > 100:
-        raise ProrrataInputError(f"general_percentage out of range 0..100, got {general_percentage}")
-
-    deductible_percentage = deductible_percentage_for(classification, general_percentage)
-    deductible_amount = _round_to_cents(input_iva_amount * deductible_percentage / Decimal("100"))
-    return ProrrataInputDeduction(
-        classification=classification,
-        input_iva_amount=input_iva_amount,
-        deductible_percentage=deductible_percentage,
-        deductible_amount=deductible_amount,
-    )
 
 
 def especial_mandatory_rule(
@@ -728,22 +677,9 @@ def compute_regularizacion_prorrata_anual(
 # ---------------------------------------------------------------------------
 
 
-def sum_deductible_amounts(
-    deductions: Iterable[ProrrataInputDeduction],
-) -> Decimal:
-    """Sum the ``deductible_amount`` field across a collection of inputs.
-
-    Callers use this to roll up per-input deductions after running
-    :func:`classify_input_deduction` for each purchase invoice evidence
-    row. Modelo casilla routing remains registry-owned.
-    """
-    return sum((entry.deductible_amount for entry in deductions), Decimal("0"))
-
-
 __all__ = (
     "EspecialMandatoryRule",
     "InputClassification",
-    "ProrrataInputDeduction",
     "ProrrataInputs",
     "ProrrataKind",
     "ProrrataReference",
@@ -751,13 +687,11 @@ __all__ = (
     "ProrrataResult",
     "RegularizacionProrrataDireccion",
     "RegularizacionProrrataResult",
-    "classify_input_deduction",
     "compute_prorrata_definitiva_anual",
     "compute_prorrata_general",
     "compute_regularizacion_prorrata_anual",
     "deductible_percentage_for",
     "especial_mandatory_rule",
     "is_especial_mandatory",
-    "sum_deductible_amounts",
     "validate_prorrata_reference",
 )

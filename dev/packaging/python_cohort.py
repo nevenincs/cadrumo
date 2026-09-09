@@ -147,7 +147,7 @@ from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_ent
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints import cli
 from cadrumo.entrypoints.cli.command_spec import DeferredTarget, TranslationKey
-from cadrumo.entrypoints.cli.command_api import command_spec_for_path, command_spec_nodes
+from dev.command_graph import command_spec_for_path, command_spec_nodes
 
 def walk(value, kind):
     if isinstance(value, kind):
@@ -934,7 +934,7 @@ def _stamp_bundled_registry_records_into_build_tree(build_root: Path) -> frozens
         The wheel-relative paths of the stamped members, as the archive carries them.
     """
     from cadrumo import __version__
-    from cadrumo.domain.calculations.registry.authority import stamp_bundled_registry_release
+    from dev.registry.maintenance_support import stamp_bundled_registry_release
 
     source_root = build_root / _BUILD_TREE_SOURCE_DIR
     registry_root = source_root / "cadrumo" / "_data" / "registry" / "aeat"

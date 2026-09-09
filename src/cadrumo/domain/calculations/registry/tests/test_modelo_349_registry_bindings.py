@@ -14,8 +14,6 @@ from ..binding_selector_utils import selector_as_dict
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..invoice_bindings import (
     InvoiceObservation,
-    RectificationScope,
-    invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
@@ -111,60 +109,6 @@ def test_core_intracom_operation_type_covers_modelo_349_registry_claves() -> Non
     }
 
     assert {member.value for member in IntracomOperationType} == registry_claves
-
-
-def test_committed_modelo_349_invoice_binding_requirements_split_by_rectification_scope() -> None:
-    revision = _modelo_349_revision()
-    requirements = invoice_binding_requirements(revision)
-
-    by_scope_and_claves = {(req.rectification_scope, req.claves): req for req in requirements}
-    expected_collectible_claves = ("A", "C", "D", "E", "H", "I", "M", "R", "S", "T")
-    expected_payable_claves = ("A", "I", "T")
-    assert set(by_scope_and_claves) == {
-        (RectificationScope.EXCLUDE_RECTIFICATIONS, expected_collectible_claves),
-        (RectificationScope.ONLY_RECTIFICATIONS, expected_collectible_claves),
-        (RectificationScope.EXCLUDE_RECTIFICATIONS, expected_payable_claves),
-        (RectificationScope.ONLY_RECTIFICATIONS, expected_payable_claves),
-    }
-    expected_collectible_exclude = {
-        "iva-349-declarante-numero-operadores",
-        "iva-349-declarante-importe-operaciones",
-        "iva-349-operador-row-codigo-pais",
-        "iva-349-operador-row-nif",
-        "iva-349-operador-row-apellidos",
-        "iva-349-operador-row-clave",
-        "iva-349-operador-row-base",
-    }
-    expected_collectible_only = {
-        "iva-349-declarante-numero-rectificaciones",
-        "iva-349-declarante-importe-rectificaciones",
-        "iva-349-rectificacion-row-codigo-pais",
-        "iva-349-rectificacion-row-nif",
-        "iva-349-rectificacion-row-apellidos",
-        "iva-349-rectificacion-row-clave",
-        "iva-349-rectificacion-row-ejercicio",
-        "iva-349-rectificacion-row-periodo",
-        "iva-349-rectificacion-row-base-rectificada",
-        "iva-349-rectificacion-row-base-anterior",
-    }
-    expected_payable_exclude = {f"{binding_id}-adquisicion" for binding_id in expected_collectible_exclude}
-    expected_payable_only = {f"{binding_id}-adquisicion" for binding_id in expected_collectible_only}
-    assert (
-        set(by_scope_and_claves[(RectificationScope.EXCLUDE_RECTIFICATIONS, expected_collectible_claves)].binding_ids)
-        == expected_collectible_exclude
-    )
-    assert (
-        set(by_scope_and_claves[(RectificationScope.ONLY_RECTIFICATIONS, expected_collectible_claves)].binding_ids)
-        == expected_collectible_only
-    )
-    assert (
-        set(by_scope_and_claves[(RectificationScope.EXCLUDE_RECTIFICATIONS, expected_payable_claves)].binding_ids)
-        == expected_payable_exclude
-    )
-    assert (
-        set(by_scope_and_claves[(RectificationScope.ONLY_RECTIFICATIONS, expected_payable_claves)].binding_ids)
-        == expected_payable_only
-    )
 
 
 def test_committed_modelo_349_invoice_bindings_resolve_substantive_legal_refs() -> None:

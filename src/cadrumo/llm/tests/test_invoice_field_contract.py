@@ -35,14 +35,8 @@ from ...domain.iva.rates import load_iva_rate_table
 from ...domain.iva.schema import NO_PRINTED_TAX_IVA_CATEGORIES, EUMemberState, IvaCategory
 from ...domain.transactions.retencion_parameters import statutory_activity_retencion_rates
 from ...tests.attribute_scope import scoped_attribute
-from .. import invoice_extraction_prompt as _invoice_extraction_prompt
 from ..invoice_extraction_prompt import (
-    INVOICE_EXTRACTION_PROMPT_ID,
-    PROMPT_TEMPLATE,
-    build_invoice_extraction_prompt,
     default_extraction_period,
-    invoice_extraction_prompt_registry,
-    template_numeric_literals,
 )
 from ..invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,
@@ -59,6 +53,7 @@ from ..invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
+from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,34 +64,6 @@ _Q4_2024 = Period.from_year_and_code(2024, "4T")
 
 def _compiled(period: Period = _ANNUAL_2026) -> str:
     return build_invoice_extraction_prompt(period=period).text
-
-
-class TestTheTemplateCarriesNoRegulatoryLiteral:
-    """A rate baked into a prompt is the least-audited literal in the codebase.
-
-    ``aeat-registry-authority-flow`` forbids inlining an AEAT rate as a Python
-    literal because it is versioned by filing year plus revision. A prompt is
-    where such a literal hides best: nothing type-checks it and no gate reads
-    it, so a stale figure keeps steering a reading model indefinitely.
-    """
-
-    def test_the_template_contains_no_numeric_literal_at_all(self) -> None:
-        """Only the ISO-4217 standards token is allowed to carry digits."""
-        assert template_numeric_literals() == ()
-
-    def test_the_scan_finds_a_rate_planted_in_a_template(self) -> None:
-        """The gate discriminates: it reports a literal that IS there.
-
-        Without this the passing assertion above proves only that the scanner
-        found nothing, which an always-empty scanner also achieves.
-        """
-        assert template_numeric_literals(PROMPT_TEMPLATE + "\n- the rate is 21%.") == ("21",)
-        assert template_numeric_literals("charge 7,5 percent") == ("7,5",)
-
-    def test_the_iso_allowance_is_narrow(self) -> None:
-        """The allowlisted token is exempt; a bare number resembling it is not."""
-        assert template_numeric_literals("use the ISO-4217 code") == ()
-        assert template_numeric_literals("use code 4217") == ("4217",)
 
 
 class TestCompiledEnumerationsComeFromTheRegistry:
@@ -199,41 +166,6 @@ class TestTheAntiDriftGateBitesInBothDirections:
             assert planted in after.iva_rate_pcts
             assert "13.5" in after.text
             assert after.fingerprint != baseline.fingerprint
-
-    def test_the_literal_gate_reds_on_a_template_carrying_a_rate(self) -> None:
-        """Direction two: planting a literal in the REGISTERED template reds the gate.
-
-        The distinction from the scanner's positive control is the whole point.
-        That control passes a string to the scanner and proves the regex works;
-        this replaces the template the shipped gate actually reads, so it proves
-        the gate is pointed at the artefact that ships. A gate reading a stale
-        snapshot passes this file and misses a literal added to the real
-        template -- which is exactly the defect the compiler's own docstring
-        records a probe having caught.
-        """
-        assert template_numeric_literals() == (), "positive control: the gate is green before the mutation"
-
-        registry = invoice_extraction_prompt_registry()
-        definition = registry.get(INVOICE_EXTRACTION_PROMPT_ID)
-        poisoned = definition.model_copy(update={"template": definition.template + "\n- the IVA rate is 21."})
-        mutated_registry = type(registry)()
-        mutated_registry.register(poisoned)
-        with scoped_attribute(
-            _invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated_registry
-        ):
-            assert template_numeric_literals() == ("21",)
-
-    def test_neither_mutation_is_visible_to_the_other_direction(self) -> None:
-        """Both mutations are undone by their own context managers, so the gate is green again here.
-
-        Ordering-independent: each mutation above is scoped to its own ``with``
-        block and restored on exit, so a green here proves neither mutation
-        leaked into module state (the compiler caches its registry with
-        ``lru_cache``, which is exactly the kind of state a patch can strand).
-        """
-        assert template_numeric_literals() == ()
-        assert Decimal("13.5") not in build_invoice_extraction_prompt(period=_ANNUAL_2026).iva_rate_pcts
-
 
 class TestTheNoPrintedTaxLineAsksThePaperQuestion:
     """The list of tax-free reasons must describe INVOICES, not 303 cuota outcomes.

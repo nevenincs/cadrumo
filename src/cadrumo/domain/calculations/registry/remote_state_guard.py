@@ -49,17 +49,6 @@ RemoteEvidenceTier = Literal[
 # network or browser call leaves the process. Callers import this
 # constant rather than redeclaring it so the canonical set stays
 # centralised.
-AEAT_WRITE_FORBIDDEN_ACTIONS: tuple[str, ...] = (
-    "server-side-save",
-    "signing",
-    "presentation",
-    "payment",
-    "amendment",
-    "cancellation",
-    "document-submission",
-    "declaration-submission",
-)
-
 # Canonical AEAT write-action verb tokens — the universal, surface-agnostic
 # denylist of action labels (button text, URL action segments, English/Spanish
 # write verbs) that signal a state-modifying call. EVERY guard surface

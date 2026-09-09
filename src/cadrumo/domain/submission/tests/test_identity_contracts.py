@@ -26,7 +26,6 @@ from ..models import (
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
-    make_submission_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -43,7 +42,7 @@ def _filing(
     attempt_id: str | None = None,
 ) -> ModeloPresentado:
     """Build a valid presented filing, with the identity axes steerable."""
-    resolved_submission_id = submission_id if submission_id is not None else make_submission_id(_DRAFT_ID, 1)
+    resolved_submission_id = submission_id if submission_id is not None else "0123456789abcdef"
     return ModeloPresentado(
         submission_id=resolved_submission_id,
         draft_id=_DRAFT_ID,
@@ -119,7 +118,7 @@ def test_attempt_id_must_be_the_parent_plus_ordinal_coordinate(malformed_attempt
 
 def test_attempt_ordinals_must_follow_their_tuple_position() -> None:
     """The tuple index and the identifier ordinal are two spellings of one fact."""
-    submission_id = make_submission_id(_DRAFT_ID, 1)
+    submission_id = "0123456789abcdef"
 
     def _attempt(ordinal: int, started_at: datetime) -> SubmissionAttempt:
         return SubmissionAttempt(
@@ -156,7 +155,7 @@ def _aggregate(
     acknowledged_at: datetime | None = None,
 ) -> ModeloPresentado:
     """Build a multi-attempt filing whose aggregate coherence axes are steerable."""
-    submission_id = make_submission_id(_DRAFT_ID, 1)
+    submission_id = "0123456789abcdef"
     resolved_starts = starts or tuple(
         _SUBMITTED_AT + timedelta(minutes=5 * index) for index in range(len(attempt_statuses))
     )

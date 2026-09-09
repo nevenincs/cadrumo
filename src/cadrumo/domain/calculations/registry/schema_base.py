@@ -13,7 +13,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final, Literal, get_args, get_origin
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, BeforeValidator, Field, TypeAdapter, field_validator
 
@@ -55,10 +55,8 @@ __all__ = [
     "coerce_decimal_tuple",
     "coerce_enum_member",
     "coerce_enum_tuple",
-    "collection_shaped_fields",
     "governance_stamp_fields",
     "manifest_only_fields",
-    "schema_family_enrollment_failures",
     "schema_family_fields",
 ]
 
@@ -297,64 +295,6 @@ def schema_family_fields(model: type[BaseModel]) -> frozenset[str]:
         for name, field in model.model_fields.items()
         if any(isinstance(meta, SchemaFamilyMarker) for meta in field.metadata)
     )
-
-
-def collection_shaped_fields(model: type[BaseModel]) -> frozenset[str]:
-    """Return ``model``'s fields annotated as a ``tuple`` of a schema model.
-
-    The shape-derived counterpart to :func:`schema_family_fields`, computed from
-    the annotation and nothing else, so it cannot be forgotten when a field is
-    added.
-
-    A singleton sub-model and a required value object are deliberately outside
-    this set even though both hold schema content. The coverage question is
-    about an EMPTY collection, and neither shape can be empty in the sense the
-    question means: a singleton is present or absent, and a required value
-    object is always present. Folding them in would need a second disposition
-    vocabulary for a different question wearing the same words.
-    """
-    families: set[str] = set()
-    for name, field in model.model_fields.items():
-        if get_origin(field.annotation) is not tuple:
-            continue
-        args = get_args(field.annotation)
-        element = args[0] if args else None
-        if isinstance(element, type) and issubclass(element, BaseModel):
-            families.add(name)
-    return frozenset(families)
-
-
-def schema_family_enrollment_failures(model: type[BaseModel]) -> tuple[str, ...]:
-    """Return why ``model``'s declared families disagree with its shape-derived ones.
-
-    The completeness rule of the marker mechanism, expressed as a function rather
-    than inline in a test so the thing proven to bite is the thing that runs.
-
-    Accumulating rather than raising, and reporting both directions separately,
-    because the two failures have opposite fixes: an unmarked collection needs
-    the marker, while a marked non-collection needs the marker removed or the
-    field's shape reconsidered. A single combined message would leave the author
-    to work out which.
-
-    Args:
-        model: The schema model whose family enrolment to check.
-
-    Returns:
-        One message per disagreement, empty when the enrolment is complete.
-    """
-    declared = schema_family_fields(model)
-    shaped = collection_shaped_fields(model)
-    failures = [
-        f"field {name!r} is a collection of schema models but is not marked SCHEMA_FAMILY, so its emptiness "
-        f"would never be reported as a coverage disposition"
-        for name in sorted(shaped - declared)
-    ]
-    failures.extend(
-        f"field {name!r} is marked SCHEMA_FAMILY but is not a collection of schema models, so it has no "
-        f"emptiness for a disposition to describe"
-        for name in sorted(declared - shaped)
-    )
-    return tuple(failures)
 
 
 def governance_stamp_fields(model: type[BaseModel]) -> frozenset[str]:

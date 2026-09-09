@@ -17,17 +17,16 @@ what makes the guarded path reachable here.
 from __future__ import annotations
 
 import threading
-from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
 import pytest
 from textual.widgets import Button
 
-from .....application.auth.models import AuthState
 from .....application.user_profile.acquisition_sources import (
+    AcquisitionSourceCredentialPostureV1,
+    ProfileAcquisitionSourceKey,
     ProfileAcquisitionSourceV1,
-    resolve_acquisition_source_credential_postures,
 )
 from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.overview import ProfileOverview, build_profile_overview
@@ -74,12 +73,13 @@ def _screen(launch: _LaunchRecord) -> ProfileManagerScreen:
         _build_overview(),
         persist=_persist_not_exercised,
         launch_source=launch,
-        credential_postures=resolve_acquisition_source_credential_postures(
-            # Both halves matter: `credential_held` is False unless a provider
-            # AND an authentication time are present, and a source needing AEAT
-            # credentials with neither leaves its button disabled, where a press
-            # is inert for a reason that has nothing to do with the guard.
-            AuthState(provider="certificate", authenticated_at=datetime.now(UTC)),
+        credential_postures=(
+            AcquisitionSourceCredentialPostureV1(
+                source=ProfileAcquisitionSourceKey.CENSAL_REVIEW,
+                requires_aeat_authentication=True,
+                credential_held=True,
+                provider_id="certificate",
+            ),
         ),
     )
 

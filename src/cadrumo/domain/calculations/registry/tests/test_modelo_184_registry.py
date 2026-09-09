@@ -319,7 +319,7 @@ def _tipo2_sheets(design_ref: str) -> tuple[RecordDesignSheet, RecordDesignSheet
     """Return the (entidad, socio) Tipo 2 sheets of a Modelo 184 design."""
     from pathlib import Path
 
-    from ..record_design_coverage import _extract_record_design
+    from ..record_design import extract_record_design
 
     _, catalogues = _load_modelo_184()
     source = catalogues.sources[design_ref]
@@ -327,7 +327,7 @@ def _tipo2_sheets(design_ref: str) -> tuple[RecordDesignSheet, RecordDesignSheet
     if not path.exists():
         path = bundled_path() / source.corpus_path
 
-    sheets = [sheet for sheet in _extract_record_design(path) if sheet.name.startswith("Tipo 2")]
+    sheets = [sheet for sheet in extract_record_design(path).accept_partial() if sheet.name.startswith("Tipo 2")]
     assert len(sheets) == 2, f"{design_ref} must carry both Tipo 2 records, got {[s.name for s in sheets]}"
 
     socio = [s for s in sheets if any(_SOCIO_MARKER in f.description for f in s.fields)]

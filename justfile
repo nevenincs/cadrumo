@@ -238,11 +238,6 @@ check-docs-api:
 check-docs-synonyms:
     @uv run --no-sync python -m dev.docs.terminology.synonyms validate
 
-# Verify the core facade, import-edge, and no-shim architecture invariants.
-[group('check')]
-check-architecture:
-    @uv run --no-sync pytest -v -n0 dev/tests/test_cross_package_private_imports.py dev/tests/test_import_edge_integrity_gate.py
-
 # Verify the production registry compiler and the bundled parity-oracle bindings.
 # The two commands are dependent: a failed production verification invalidates
 # any downstream parity claim, so this health gate stops before the audit.
@@ -1211,11 +1206,11 @@ rag-search QUERY:
 audit-all *ARGS:
     @uv run --no-sync python -m dev.audit.advisory {{ARGS}}
 
-# Monthly code-health report: shadowing, duplication, layering, complexity,
+# Monthly code-health report: duplication, layering, complexity,
 # each classified red/amber/green. Composes the scanners above (plus
 # lint-imports) into one contributor-facing verdict. Exits 1 if any
 # dimension is RED; AMBER dimensions are advisory debt, not a gate.
-[doc('Monthly code-health report: shadowing, duplication, layering, and complexity, each classified red/amber/green.')]
+[doc('Monthly code-health report: duplication, layering, and complexity, each classified red/amber/green.')]
 [group('audit')]
 audit-health-report *ARGS:
     @uv run --no-sync python -m dev.audit.report {{ARGS}}

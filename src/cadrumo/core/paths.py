@@ -275,28 +275,9 @@ def _resolved_path(path_text: str) -> Path:
     path's resolution does not change when it is created: measured on this
     platform across deep nesting, mixed case, and files. What DOES change a
     resolution is replacing a real directory with a symlink or junction
-    pointing elsewhere, which is why :func:`clear_resolved_path_cache`
-    exists and why any caller re-materialising a storage tree under a live
-    process must call it.
+    pointing elsewhere.
     """
     return Path(path_text).resolve()
-
-
-def clear_resolved_path_cache() -> None:
-    """Drop memoised path resolutions after the filesystem moves underneath.
-
-    Required only when a path already resolved during this process is made
-    to resolve somewhere ELSE -- replacing a directory with a symlink or
-    junction to a different target. Creating, deleting, or re-creating a
-    directory at the same location does not change its resolution and needs
-    no invalidation.
-
-    This is the path-resolution counterpart of the engine and routed-settings
-    invalidations a bucket re-materialisation already performs; a caller that
-    swaps a storage root's identity beneath a running process calls all of
-    them.
-    """
-    _resolved_path.cache_clear()
 
 
 def normalize_project_relative_path(

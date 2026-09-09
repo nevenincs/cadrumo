@@ -24,7 +24,6 @@ from ..storage_taxonomy import (
     ROOT_DERIVED_STORAGE_FIELDS,
     STORAGE_FIELD_CATEGORIES,
     STORAGE_TAXONOMY,
-    ExternalPathRole,
     FingerprintParticipation,
     StorageCategory,
     StorageGrouping,
@@ -63,24 +62,6 @@ def test_an_undeclared_axis_value_is_rejected_at_model_validation() -> None:
 
     with pytest.raises(ValidationError):
         StorageLocation.model_validate(declared)
-
-
-def test_external_path_role_carries_the_six_escape_roles() -> None:
-    """An escape is a positive declaration of why, not an absence from a list."""
-    assert _axis_members(ExternalPathRole) == {
-        "bundled_resource",
-        "operator_input",
-        "third_party_cache",
-        "external_executable",
-        "operator_directed_output",
-        "maintainer_tooling_output",
-    }
-
-
-def test_an_undeclared_escape_role_is_not_a_member() -> None:
-    """A reason nobody declared cannot be used to excuse a path."""
-    with pytest.raises(ValueError, match="oversight"):
-        ExternalPathRole("oversight")
 
 
 def test_the_taxonomy_is_total_over_the_category_enum() -> None:

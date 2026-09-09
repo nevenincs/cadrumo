@@ -7,6 +7,7 @@ from datetime import date as _prov_date
 from decimal import Decimal
 
 import pytest
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 from .....application.aggregation import (
     IvaDifferentiatedDeductionContribution,
@@ -38,7 +39,6 @@ from .....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRat
 from .....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
 from .....tests.registry_snapshot import build_snapshot
 from ....bienes_inversion.regularizacion_parameters import BienesInversionParameterProvenance
-from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..ledger_iva_bindings import IvaLedgerObservation
 from ..loader import load_catalogue_file

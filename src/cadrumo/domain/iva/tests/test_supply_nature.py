@@ -34,7 +34,6 @@ from ..supply_nature import (
     derive_supply_nature_from_citation,
     match_statutory_citations,
     supply_nature_implied_by_category,
-    supply_nature_is_required,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -345,41 +344,6 @@ def test_a_suffixed_article_does_not_match_a_differently_suffixed_one() -> None:
     assert [citation.article for citation in mixed_only] == ["163 unvicies"]
 
 
-@pytest.mark.parametrize(
-    "category",
-    [
-        IvaCategory.DOMESTIC_GENERAL,
-        IvaCategory.DOMESTIC_REDUCED,
-        IvaCategory.DOMESTIC_SUPER_REDUCED,
-        IvaCategory.DOMESTIC_ZERO,
-        IvaCategory.DOMESTIC_EXEMPT,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-    ],
-)
-def test_a_domestic_operation_is_never_asked_for_the_distinction(category: IvaCategory) -> None:
-    """Laziness in the direction that matters: no invoice blocked on an idle fact.
-
-    A domestic supply is taxed at its registry rate whether it supplied a good or
-    a service, so demanding the nature here would refuse invoices for a
-    distinction their own treatment ignores.
-    """
-    assert supply_nature_is_required(category) is False
-
-
-@pytest.mark.parametrize(
-    "category",
-    [
-        IvaCategory.DOMESTIC_REVERSE_CHARGE,
-        IvaCategory.INTRA_COMMUNITY_SUPPLY,
-        IvaCategory.INTRA_COMMUNITY_SERVICE_SUPPLY,
-        IvaCategory.INTRA_COMMUNITY_ACQUISITION_REVERSE_CHARGE,
-    ],
-)
-def test_a_branch_where_the_law_forks_does_ask(category: IvaCategory) -> None:
-    """The other direction, so laziness cannot be a blanket "never ask"."""
-    assert supply_nature_is_required(category) is True
-
-
 def test_a_category_the_catalogue_names_a_service_derives_services() -> None:
     """The gap the place-of-supply rows closed, pinned as a consistency invariant.
 
@@ -434,17 +398,6 @@ def test_no_shipped_category_is_grounded_in_articles_that_disagree() -> None:
         assert derivation.outcome is not SupplyNatureDerivationOutcome.CONTRADICTED, (
             f"{category.value} is grounded in articles establishing different natures: {derivation.note}"
         )
-
-
-def test_an_unplaced_operation_is_asked_rather_than_assumed_domestic() -> None:
-    """Fail-closed on the open case.
-
-    Answering ``False`` for a category not yet established would skip the question
-    for exactly the invoices that have not been placed on a branch -- the
-    restrictive-provision-as-default shape, silently capturing the population the
-    narrow rule does not govern.
-    """
-    assert supply_nature_is_required(None) is True
 
 
 def test_every_qualifier_is_lowercase_so_the_casefolded_match_can_find_it() -> None:

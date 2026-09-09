@@ -24,9 +24,15 @@ from pathlib import Path
 import pytest
 
 from ....core.directory_scan import scan_directory
-from ..values import declared_field_paths, section_field_key
+from ..loader import load_user_profile_schema
+from ..values import section_field_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _declared_field_paths() -> frozenset[str]:
+    schema = load_user_profile_schema()
+    return frozenset(f"{section.key}.{field.key}" for section in schema.sections for field in section.fields)
 
 
 def _source_root() -> Path:
@@ -74,13 +80,13 @@ def test_the_scan_finds_the_call_sites_it_claims_to_check() -> None:
         for lineno, literal in _literal_fact_paths(ast.parse(path.read_text(encoding="utf-8")))
     ]
     assert sites, "the scan found no literal UserProfileFact path arguments; the matcher has stopped matching"
-    assert "identity.tax_id" in declared_field_paths()
+    assert "identity.tax_id" in _declared_field_paths()
 
 
 def test_every_shipped_literal_fact_path_is_declared() -> None:
     """The gate the undeclared-path escape needed and did not have."""
 
-    declared = declared_field_paths()
+    declared = _declared_field_paths()
     violations = [
         f"{path.relative_to(_source_root())}:{lineno} path={literal!r}"
         for path in _shipped_python_files()
@@ -120,4 +126,4 @@ def test_an_undeclared_path_would_be_caught() -> None:
     found = _literal_fact_paths(module)
 
     assert [literal for _lineno, literal in found] == ["residency.municipality_code"]
-    assert section_field_key("residency.municipality_code") not in declared_field_paths()
+    assert section_field_key("residency.municipality_code") not in _declared_field_paths()

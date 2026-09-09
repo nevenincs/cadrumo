@@ -103,5 +103,3 @@ def validate_gasto193_binding_selector_shape(binding: DataBindingDefinition) -> 
     except RegistryValidationError as exc:
         return [f"binding {binding.id!r} (source={binding.source!r}) gasto193 invariants violated: {exc}"]
     return []
-
-

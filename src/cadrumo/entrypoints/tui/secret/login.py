@@ -21,15 +21,14 @@ from ....core.i18n.render import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
 from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from ....entrypoints.tui.components.widgets import ContentScroll
-from .credentials import CREDENTIAL_PANEL_CSS, CredentialScreen, run_credential_screen
+from .credentials import CREDENTIAL_PANEL_CSS, CredentialScreen
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
-    from ....application.user_profile.login_session import ProfileLoginOutcome
 
-__all__ = ["LoginScreen", "run_login_tui"]
+__all__ = ["LoginScreen"]
 
 
 class LoginScreen(CredentialScreen["ProfileLoginOutcome"]):
@@ -179,15 +178,3 @@ class LoginScreen(CredentialScreen["ProfileLoginOutcome"]):
         self.query_one("#field-profile", Select).disabled = busy
         self.query_one("#btn-unlock", Button).disabled = busy
         self.query_one("#btn-cancel", Button).disabled = busy
-
-
-def run_login_tui(
-    *,
-    choices: Sequence[ProfileLoginChoice],
-    authenticate: Callable[[str, str], ProfileLoginAttempt],
-    preselected: str | None = None,
-) -> ProfileLoginOutcome | None:
-    """Run the login screen and return the opened session, or ``None``."""
-    return run_credential_screen(
-        LoginScreen(choices=choices, authenticate=authenticate, preselected=preselected),
-    )

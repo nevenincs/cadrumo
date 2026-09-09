@@ -16,10 +16,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from .. import _source_evidence_fingerprint
-from .._source_evidence_fingerprint import (
-    clear_source_evidence_fingerprint_cache,
-    collect_source_evidence_fingerprints,
-)
+from .._source_evidence_fingerprint import collect_source_evidence_fingerprints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -41,7 +38,7 @@ def test_a_specimen_evidence_root_is_never_served_from_the_window(tmp_path: Path
     well inside the window, so a served entry would return the pre-edit
     fingerprint.
     """
-    clear_source_evidence_fingerprint_cache()
+    _source_evidence_fingerprint._evidence_fingerprint_cache.clear()
     source_root = tmp_path / "specimen"
     _write_specimen_evidence(source_root, payload="before")
 
@@ -64,7 +61,7 @@ def test_the_bundled_evidence_root_is_served_from_the_window() -> None:
     correctness half above would still pass with the window removed entirely,
     and the cost the window exists to remove would silently come back.
     """
-    clear_source_evidence_fingerprint_cache()
+    _source_evidence_fingerprint._evidence_fingerprint_cache.clear()
     source_root = bundled_path()
 
     first = collect_source_evidence_fingerprints(source_root)
@@ -76,7 +73,7 @@ def test_the_bundled_evidence_root_is_served_from_the_window() -> None:
 
 def test_the_bundled_evidence_window_walks_once_before_serving_repeats(monkeypatch: pytest.MonkeyPatch) -> None:
     """The bounded path performs one filesystem walk, then reuses that result."""
-    clear_source_evidence_fingerprint_cache()
+    _source_evidence_fingerprint._evidence_fingerprint_cache.clear()
     source_root = bundled_path()
     original_walk = _source_evidence_fingerprint._walk_source_evidence
     walks = 0
@@ -104,7 +101,7 @@ def test_clearing_the_window_forces_a_fresh_walk() -> None:
     source_root = bundled_path()
     first = collect_source_evidence_fingerprints(source_root)
 
-    clear_source_evidence_fingerprint_cache()
+    _source_evidence_fingerprint._evidence_fingerprint_cache.clear()
 
     second = collect_source_evidence_fingerprints(source_root)
     assert second is not first, "clearing the window must force a fresh walk"

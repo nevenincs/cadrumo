@@ -18,7 +18,6 @@ from .errors import RegistryValidationError
 __all__ = [
     "assert_quantity_readers_cover_independent_facts",
     "independent_quantity_facts",
-    "screened_quantity_families",
 ]
 
 
@@ -76,25 +75,6 @@ def independent_quantity_facts(
     return supported_facts - set(alternative_measure_reasons)
 
 
-#: Families that have declared a quantity screen, recorded as a side effect of
-#: :func:`assert_quantity_readers_cover_independent_facts` at import. The
-#: enrolment gate diffs this against the families it drives end to end, so a new
-#: adapter that declares readers and never runs the screen fails loudly instead
-#: of shipping as dead capacity (the shape ``no-dormant-source-resolvers``
-#: forbids one level up, for resolvers).
-_SCREENED_FAMILIES: set[str] = set()
-
-
-def screened_quantity_families() -> frozenset[str]:
-    """Return every family that declared a quantity screen at import.
-
-    Reading this requires the family adapter modules to have been imported;
-    the enrolment gate imports them explicitly rather than relying on load
-    order.
-    """
-    return frozenset(_SCREENED_FAMILIES)
-
-
 def assert_quantity_readers_cover_independent_facts[ObservationT](
     family: str,
     independent_facts: frozenset[str],
@@ -105,9 +85,7 @@ def assert_quantity_readers_cover_independent_facts[ObservationT](
     Called at module scope by each family adapter so a partition break — a fact
     classified as an independent quantity with nothing able to read it off an
     observation — fails the registry build rather than waiting for a taxpayer
-    whose rows carry that quantity. Registers ``family`` in
-    :func:`screened_quantity_families` so the enrolment gate can tell a declared
-    screen from a wired one.
+    whose rows carry that quantity.
 
     Args:
         family: The family name, for the diagnostic and the enrolment registry.
@@ -130,4 +108,3 @@ def assert_quantity_readers_cover_independent_facts[ObservationT](
             f"{family} declares quantity readers for {sorted(extra)!r}, which are not screened as independent "
             "quantities; the reader is dead and its fact's classification is inconsistent",
         )
-    _SCREENED_FAMILIES.add(family)

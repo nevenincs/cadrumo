@@ -11,7 +11,6 @@ from .._command_runtime import (
     _parameter,
     build_command_app,
     build_command_subtree,
-    command_schema_targets,
     resolve_deferred_target,
 )
 from ..command_spec import (
@@ -131,7 +130,6 @@ def test_runtime_preflights_and_invokes_a_synthetic_graph_behavior() -> None:
 
 
 def test_runtime_schema_projection_and_public_target_boundary() -> None:
-    assert command_schema_targets(_graph()) == (("root.greet", DeferredTarget("builtins", "dict")),)
     assert resolve_deferred_target(DeferredTarget("builtins", "str")) is str
     assert build_command_subtree(_graph(), "greet").registered_commands[0].name == "greet"
 

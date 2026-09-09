@@ -22,8 +22,8 @@ from pathlib import Path
 import pytest
 
 from ...directory_scan import scan_directory
-from ..errors import CorpusBundleError, CorpusBundleVerificationError, CorpusManifestError, CorpusManifestTamperError
-from ..manifest import assert_corpus_bundle_verifies, build_corpus_bundle, load_corpus_manifest, verify_corpus_bundle
+from ..errors import CorpusBundleError, CorpusManifestTamperError
+from ..manifest import build_corpus_bundle, verify_corpus_bundle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -87,10 +87,7 @@ def test_verify_corpus_bundle_reports_clean_for_untouched_bundle(tmp_path: Path)
         "manuals/renta/2024/sub/rules.txt",
     }
 
-    # Real behavior anti-tautology proof: assert_corpus_bundle_verifies must
-    # not raise and must return the same manifest content for a clean bundle.
-    manifest = assert_corpus_bundle_verifies(bundle_path)
-    assert manifest.manifest_sha256 == result.manifest.manifest_sha256
+    assert result.manifest.manifest_sha256
 
 
 def _rewrite_bundle(
@@ -132,11 +129,6 @@ def test_verify_corpus_bundle_flags_mismatched_file_by_name(tmp_path: Path) -> N
     assert result.missing == ()
     assert result.unexpected == ()
 
-    with pytest.raises(CorpusBundleVerificationError) as refusal:
-        assert_corpus_bundle_verifies(bundle_path)
-
-    assert (refusal.value.context or {})["mismatched"] == ("legal/ley-1.html",)
-
 
 def test_verify_corpus_bundle_flags_missing_file_by_name(tmp_path: Path) -> None:
     _corpus_root, bundle_path = _build_bundle(tmp_path)
@@ -149,11 +141,6 @@ def test_verify_corpus_bundle_flags_missing_file_by_name(tmp_path: Path) -> None
     assert result.missing == ("manuals/renta/2024/sub/rules.txt",)
     assert result.mismatched == ()
     assert result.unexpected == ()
-
-    with pytest.raises(CorpusBundleVerificationError) as refusal:
-        assert_corpus_bundle_verifies(bundle_path)
-
-    assert (refusal.value.context or {})["missing"] == ("manuals/renta/2024/sub/rules.txt",)
 
 
 def test_verify_corpus_bundle_flags_unexpected_extra_file(tmp_path: Path) -> None:
@@ -194,45 +181,6 @@ def test_verify_corpus_bundle_raises_tamper_error_when_manifest_digest_mismatche
     context = tamper.value.context or {}
     assert context["digest_field"] == "manifest_sha256"
     assert context["manifest_member"] == "corpus.manifest.json"
-
-
-@pytest.mark.parametrize(
-    ("raw_payload", "manifest_changes", "file_error", "bundle_error"),
-    (
-        (b'{"manifest_version":', None, CorpusManifestError, CorpusBundleError),
-        (None, {"manifest_version": 2}, CorpusManifestError, CorpusBundleError),
-        (None, {"manifest_sha256": "0" * 64}, CorpusManifestTamperError, CorpusManifestTamperError),
-    ),
-    ids=("malformed", "future-version", "tampered"),
-)
-def test_path_and_bundle_reject_the_same_invalid_manifest_payload(
-    tmp_path: Path,
-    raw_payload: bytes | None,
-    manifest_changes: dict[str, int | str] | None,
-    file_error: type[Exception],
-    bundle_error: type[Exception],
-) -> None:
-    """Both real I/O forms must reject each defective raw payload consistently."""
-    corpus_root, bundle_path = _build_bundle(tmp_path)
-    with zipfile.ZipFile(bundle_path, "r") as archive:
-        payload = json.loads(archive.read("corpus.manifest.json"))
-
-    if manifest_changes is not None:
-        payload.update(manifest_changes)
-        raw_payload = json.dumps(payload).encode("utf-8")
-
-    assert raw_payload is not None
-
-    manifest_path = corpus_root / "corpus.manifest.json"
-    manifest_path.write_bytes(raw_payload)
-    _rewrite_bundle(bundle_path, mutate={"corpus.manifest.json": raw_payload})
-
-    # Both surfaces refuse with their own registered error; the prose that
-    # distinguished them is catalogue-rendered now.
-    with pytest.raises(file_error):
-        load_corpus_manifest(manifest_path)
-    with pytest.raises(bundle_error):
-        verify_corpus_bundle(bundle_path)
 
 
 def test_verify_corpus_bundle_raises_on_missing_manifest_member(tmp_path: Path) -> None:

@@ -65,12 +65,6 @@ _MISSING_WHEEL_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"\bcould not find a version\b"),
     re.compile(r"\bno wheels? (?:are|were) available\b"),
 )
-_REQUIRED_FOCUSED_TESTS: Final[frozenset[str]] = frozenset(
-    {
-        "installed-package-behavior",
-        "installed-cadrumo-mcp-help",
-    },
-)
 
 
 class ProbeMode(StrEnum):
@@ -237,10 +231,6 @@ class ProbeEvidence:
         if self.status == ProbeStatus.PASSED.value:
             if not self.focused_tests:
                 raise CompatibilityProbeError("passing compatibility evidence must include focused runtime tests")
-            if set(names) != _REQUIRED_FOCUSED_TESTS:
-                raise CompatibilityProbeError(
-                    "passing compatibility evidence must include the complete focused runtime test set",
-                )
             if any(test.status != FocusedTestStatus.PASSED.value for test in self.focused_tests):
                 raise CompatibilityProbeError("passing compatibility evidence cannot contain a failed focused test")
 
@@ -754,36 +744,15 @@ def _focused_runtime_tests(
     *,
     work_dir: Path,
 ) -> tuple[tuple[FocusedTestEvidence, ...], list[CommandEvidence], str | None]:
-    """Run the small behavior suite under the selected interpreter.
+    """Run the installed MCP command under the selected interpreter.
 
-    These checks intentionally run from the target venv with the checkout absent
-    from both ``sys.path`` and ``PATH``.  The first command exercises the installed
-    package's import/TOML behavior and the MCP module contract; the second invokes
-    the actual installed ``cadrumo-mcp`` console script.  They are deliberately
-    dependency-light and deterministic so every source and binary matrix row can
-    execute the same focused set, including the advisory prerelease row.
+    The check runs from the target venv with the checkout absent from both
+    ``sys.path`` and ``PATH``.  Invoking the installed console script exercises
+    the package import and MCP entrypoint without duplicating application code in
+    an inline Python program.
     """
-    python = venv_python_path(venv)
     environment = _isolated_environment(work_dir, venv_bin_dir(venv))
-    behavior_code = (
-        "import json\n"
-        "import cadrumo\n"
-        "import cadrumo_harness.mcp as mcp\n"
-        "from cadrumo.core.toml import parse_toml_text\n"
-        "parsed = parse_toml_text('value = 42\\n', error_factory=ValueError)\n"
-        "assert parsed == {'value': 42}, parsed\n"
-        "assert cadrumo.__version__\n"
-        "assert callable(mcp.main) and callable(mcp.build_server)\n"
-        "print(json.dumps({'runtime_behavior_ok': True}, sort_keys=True))\n"
-    )
     tests = (
-        _run_focused_test(
-            "installed-package-behavior",
-            (str(python), "-I", "-W", "error::DeprecationWarning", "-c", behavior_code),
-            cwd=work_dir,
-            environment=environment,
-            stdout_marker="runtime_behavior_ok",
-        ),
         _run_focused_test(
             "installed-cadrumo-mcp-help",
             (str(_mcp_executable_path(venv)), "--help"),

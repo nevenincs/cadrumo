@@ -22,8 +22,6 @@ from ..service import (
     add_attachment,
     link_attachment_invoice,
     link_attachment_transaction,
-    list_attachments,
-    load_attachment,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -62,7 +60,7 @@ def test_add_and_load_attachment_roundtrips_through_real_store(tmp_path: Path) -
         expected = hashlib.sha256(payload).hexdigest()
         assert added.attachment_id == expected
 
-        loaded = load_attachment(store, added.attachment_id)
+        loaded = store.load_manifest(added.attachment_id)
         assert loaded.attachment_id == added.attachment_id
         assert loaded.kind == AttachmentKind.OTHER
         assert loaded.source == AttachmentSource.LOCAL_FILE
@@ -74,7 +72,7 @@ def test_load_attachment_raises_on_unknown_id(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path):
         store = AttachmentStore()
         with pytest.raises(AttachmentNotFoundError):
-            load_attachment(store, "deadbeef" * 8)
+            store.load_manifest("deadbeef" * 8)
 
 
 def test_list_attachments_returns_every_persisted_record(tmp_path: Path) -> None:
@@ -89,7 +87,7 @@ def test_list_attachments_returns_every_persisted_record(tmp_path: Path) -> None
 
         a = _add_text_attachment(store, first, source_reference="first")
         b = _add_text_attachment(store, second, source_reference="second")
-        rows = list_attachments(store)
+        rows = tuple(store.iter_manifests())
         ids = {row.attachment_id for row in rows}
         assert a.attachment_id in ids
         assert b.attachment_id in ids
@@ -111,7 +109,7 @@ def test_link_attachment_invoice_appends_and_persists_through_real_store(tmp_pat
         assert updated.linked_invoice_ids == ("invoice-abc",)
         # Reload through a FRESH manifest read: the link is genuinely persisted,
         # not merely returned by this call.
-        reloaded = load_attachment(store, added.attachment_id)
+        reloaded = store.load_manifest(added.attachment_id)
         assert reloaded.linked_invoice_ids == ("invoice-abc",)
         # Every other field is unchanged: only the link tuple was touched.
         assert reloaded.sha256 == added.sha256
@@ -134,7 +132,7 @@ def test_link_attachment_invoice_is_idempotent_on_repeat_link(tmp_path: Path) ->
 
         assert first.linked_invoice_ids == ("invoice-xyz",)
         assert second.linked_invoice_ids == ("invoice-xyz",)
-        reloaded = load_attachment(store, added.attachment_id)
+        reloaded = store.load_manifest(added.attachment_id)
         assert reloaded.linked_invoice_ids == ("invoice-xyz",)
 
 
@@ -165,7 +163,7 @@ def test_link_attachment_invoice_makes_the_invoice_discoverable_via_list_attachm
         added = _add_text_attachment(store, source_file, source_reference="discoverable-evidence")
         link_attachment_invoice(store, attachment_id=added.attachment_id, invoice_id="invoice-findme")
 
-        found = list_attachments(store, linked_to="invoice-findme")
+        found = tuple(row for row in store.iter_manifests() if "invoice-findme" in row.linked_invoice_ids)
 
         assert len(found) == 1
         assert found[0].attachment_id == added.attachment_id
@@ -191,7 +189,7 @@ def test_link_attachment_transaction_appends_and_persists_through_real_store(tmp
             attachment_id=added.attachment_id,
             transaction_id="transaction-abc",
         )
-        reloaded = load_attachment(store, added.attachment_id)
+        reloaded = store.load_manifest(added.attachment_id)
 
     assert updated.linked_transaction_ids == ("transaction-abc",)
     assert reloaded.linked_transaction_ids == ("transaction-abc",)
@@ -275,8 +273,8 @@ def test_same_byte_reingestion_accumulates_links_and_keeps_the_first_capture(
             ),
         )
 
-        merged = load_attachment(store, first.attachment_id)
-        listed = list_attachments(store)
+        merged = store.load_manifest(first.attachment_id)
+        listed = tuple(store.iter_manifests())
 
     assert merged.linked_transaction_ids == ("tx-A", "tx-B")
     assert merged.captured_at == first_capture
@@ -317,7 +315,7 @@ def test_same_byte_merge_is_independent_of_ingestion_order(tmp_path: Path) -> No
                     ),
                 )
                 attachment_id = attachment.attachment_id
-            return load_attachment(store, attachment_id).linked_transaction_ids
+            return store.load_manifest(attachment_id).linked_transaction_ids
 
     forward = _ingest(("tx-A", "tx-B"), tmp_path / "forward")
     reversed_order = _ingest(("tx-B", "tx-A"), tmp_path / "reversed")
@@ -343,7 +341,7 @@ def test_repeated_identical_ingestion_is_a_stable_no_op(tmp_path: Path) -> None:
                 link_transaction_ids=("tx-A",),
             ),
         )
-        after_first = load_attachment(store, first.attachment_id)
+        after_first = store.load_manifest(first.attachment_id)
         add_attachment(
             store,
             content=AttachmentBytesContent(data=data),
@@ -357,7 +355,7 @@ def test_repeated_identical_ingestion_is_a_stable_no_op(tmp_path: Path) -> None:
                 link_transaction_ids=("tx-A",),
             ),
         )
-        after_third = load_attachment(store, after_first.attachment_id)
+        after_third = store.load_manifest(after_first.attachment_id)
 
     assert after_third == after_first
     assert after_third.linked_transaction_ids == ("tx-A",)

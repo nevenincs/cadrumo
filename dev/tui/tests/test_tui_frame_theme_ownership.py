@@ -34,6 +34,7 @@ from ..cli import THEMES, _resolve_themes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
+
 def _frame(theme: str) -> RenderedFrame:
     """A coherent ``small`` frame under ``theme``, and nothing else varied."""
     shape = VIEWPORTS[ViewportName.SMALL]

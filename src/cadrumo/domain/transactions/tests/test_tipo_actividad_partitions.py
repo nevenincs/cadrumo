@@ -16,17 +16,11 @@ from typing import Final
 
 import pytest
 
-from ....core.tipos_actividad import (
-    IAE_SUBJECT_TIPOS_ACTIVIDAD,
-    NON_IAE_SUBJECT_TIPOS_ACTIVIDAD,
-    TipoActividad,
-)
-from ...deadlines.models import IrpfActivityKind
+from ....core.tipos_actividad import TipoActividad
 from ..errors import TransactionValidationError
 from ..tipo_actividad_partitions import (
     _ART_95_SELECTORS,
     _code_set,
-    irpf_activity_kind_for,
     load_tipo_actividad_selectors,
 )
 
@@ -77,58 +71,6 @@ def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     """Selectors draw from the closed code set, never a free-form token."""
     for codes in load_tipo_actividad_selectors().values():
         assert all(isinstance(code, TipoActividad) for code in codes)
-
-
-def test_artisticas_partitions_as_professional_because_art_95_2_a_says_so() -> None:
-    """``A04`` is professional by apartado 2.a), not by resemblance.
-
-    Art. 95.2.a) counts *las actividades incluidas en las Secciones Segunda y
-    Tercera de las Tarifas del IAE* among rendimientos de actividades
-    profesionales. ``A05 Profesionales`` is Sección Segunda and ``A04 Artísticas y
-    Deportivas`` is Sección Tercera, so both select the same partition. Without
-    that paragraph the ``A04`` half would be a guess, which is why this assertion
-    names it.
-    """
-    assert irpf_activity_kind_for(TipoActividad.A04_ARTISTICAS_Y_DEPORTIVAS) is IrpfActivityKind.PROFESIONAL
-    assert irpf_activity_kind_for(TipoActividad.A05_PROFESIONALES) is IrpfActivityKind.PROFESIONAL
-
-
-def test_ganaderia_independiente_partitions_agrarian_across_the_iae_split() -> None:
-    """``A02`` partitions with the livestock codes although it sits on the IAE side.
-
-    The Modelo 036 table separates activities by IAE subjection, and ``A02
-    Ganadería independiente`` is on the subject side while ``B02 Ganadera`` is not.
-    Art. 95.4 crosses that line explicitly -- *Se entenderán incluidas entre las
-    actividades agrícolas y ganaderas: a) La ganadería independiente* -- so the
-    partition follows the activity's nature, not the table's own split.
-    """
-    assert TipoActividad.A02_GANADERIA_INDEPENDIENTE in IAE_SUBJECT_TIPOS_ACTIVIDAD
-    assert TipoActividad.B02_GANADERA in NON_IAE_SUBJECT_TIPOS_ACTIVIDAD
-    assert (
-        irpf_activity_kind_for(TipoActividad.A02_GANADERIA_INDEPENDIENTE)
-        is irpf_activity_kind_for(TipoActividad.B02_GANADERA)
-        is IrpfActivityKind.SECTORIAL
-    )
-
-
-@pytest.mark.parametrize(
-    "tipo",
-    [
-        TipoActividad.A01_ARRENDADORES_BIENES_INMUEBLES,
-        TipoActividad.A03_RESTO_EMPRESARIALES,
-        TipoActividad.B04_PRODUCCION_DE_MEJILLON,
-        TipoActividad.B05_PESQUERA,
-    ],
-)
-def test_codes_art_95_fixes_no_rate_for_select_nothing(tipo: TipoActividad) -> None:
-    """Arrendamiento, resto empresariales, mejillón and pesquera select no partition.
-
-    Arrendamiento retains under art. 100, and the other three reach art. 95 only
-    through apartado 6.1.º by estimación objetiva -- a method axis, not an activity
-    one. Returning ``None`` for them is correct; folding them into any partition
-    would apply a rate the article does not fix for that activity.
-    """
-    assert irpf_activity_kind_for(tipo) is None
 
 
 def test_parser_refuses_a_token_that_is_not_a_modelo_036_code() -> None:

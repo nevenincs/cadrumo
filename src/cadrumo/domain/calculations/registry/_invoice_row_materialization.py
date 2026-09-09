@@ -7,14 +7,12 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
+from pydantic import BaseModel, ConfigDict
 
 from ....core.identity import TaxIdIdentityToken
-from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .schema import ModeloRevision
 
 if TYPE_CHECKING:
     from .invoice_bindings import InvoiceObservation
@@ -69,211 +67,6 @@ _M349_RECTIFICACION_PUBLIC_ROW_BINDINGS: frozenset[BindingId] = frozenset(
         "iva-349-rectificacion-row-base-anterior",
     },
 )
-
-
-class Modelo349OperadorClaveTotal(BaseModel):
-    """One clave's operator count and base-imponible sum, reconstructed from the operador row set.
-
-    Groups the per-operador ``iva-349-operador-row-*`` detail (the AEAT Diseño
-    de Registros Tipo-2 "registro de operador" rows) by ``clave de operación``
-    and carries that clave's distinct-operator count and summed base
-    imponible. Mirrors :class:`WithholdingClaveBreakdown` for the Modelo 349
-    intracommunity-operator axis.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    clave: str = Field(min_length=1, max_length=1)
-    operator_count: NonNegativeInt
-    base_total: Decimal
-
-
-class Modelo349OperadorTotalsParity(BaseModel):
-    """Totals-parity verdict between the per-operador row set and the Modelo 349 declarant summary.
-
-    Modelo 349's declarant-summary scalar casillas (``decl.numero-operadores``,
-    ``decl.importe-operaciones``) and the per-operador-clave row-producer
-    bindings (``iva-349-operador-row-*``) are resolved by two structurally
-    INDEPENDENT code paths over the same :class:`InvoiceObservation` set:
-    :func:`resolve_invoice_binding_values` folds the observations directly
-    into a scalar (:func:`_aggregate_invoice_binding`'s ``operator_count`` /
-    ``base_sum`` facts), while :func:`resolve_invoice_binding_row_values`
-    groups them into per-``(country, party_tax_id, clave)`` rows
-    (:func:`_build_operator_clave_rows`). Nothing in the registry
-    cross-checks that the two paths agree, so a defect in either aggregator —
-    or a manual-entry :class:`~Modelo349OperadorRow` set
-    that omits an operator the summary already counted — would silently
-    under- or over-declare one side without detection.
-
-    This model is the pure comparison result of that cross-check: the sum of
-    every reconstructed operador row's base imponible against the resolved
-    ``decl.importe-operaciones`` value, and the count of distinct
-    ``(country_code, party_tax_id, clave)`` operador rows against the resolved
-    ``decl.numero-operadores`` value. ``is_consistent`` is ``True`` only when
-    the operator-count delta is exactly zero and the base-imponible delta is
-    within ``tolerance`` — a divergence on either axis surfaces as a loud,
-    actionable finding (``no-silent-under-declaration``), never a silent pass.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    by_clave: tuple[Modelo349OperadorClaveTotal, ...] = Field(default_factory=tuple)
-    operator_row_total: NonNegativeInt
-    operator_summary_total: NonNegativeInt
-    operator_delta: int
-    base_row_total: Decimal
-    base_summary_total: Decimal
-    base_delta: Decimal
-    tolerance: Decimal = Field(ge=Decimal("0"))
-    is_consistent: bool
-
-
-def compute_modelo_349_operador_totals_parity(
-    revision: ModeloRevision,
-    observations: Iterable[InvoiceObservation],
-    *,
-    operator_summary_total: Decimal,
-    base_summary_total: Decimal,
-    tolerance: Decimal = Decimal("0"),
-) -> Modelo349OperadorTotalsParity:
-    """Cross-check the per-operador row set against the resolved Modelo 349 declarant summary.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose ``iva-349-operador-row-*``
-            row-producer bindings are resolved into the operador row set.
-        observations: The :class:`InvoiceObservation` rows the revision's
-            invoice-source bindings aggregate (exclude-rectifications scope
-            only feeds the operador row set; rectification observations are a
-            distinct AEAT record type and are excluded from this axis by the
-            registry's own binding selectors).
-        operator_summary_total: The resolved value of casilla
-            ``decl.numero-operadores``, typically read from
-            ``revision.casilla_values["decl.numero-operadores"]``.
-        base_summary_total: The resolved value of casilla
-            ``decl.importe-operaciones``, typically read from
-            ``revision.casilla_values["decl.importe-operaciones"]``.
-        tolerance: Maximum absolute EUR delta on the base-imponible axis that
-            does not surface a divergence. THE REGISTRY IS THE AUTHORITY FOR
-            THIS VALUE and publishes it per revision: resolve it with
-            ``snapshot.verification_policy().tolerance`` and pass it. The
-            default is exact equality rather than a cent: Modelo 349's own
-            revisions declare no verification expectations at all, and with
-            no published contract there is no authority to widen the
-            comparison -- guessing strict yields a visible finding, guessing
-            loose yields a silent omission. The operator-count axis is an
-            exact integer match with no tolerance regardless.
-
-    Returns:
-        A :class:`Modelo349OperadorTotalsParity` verdict. ``is_consistent`` is
-        ``False`` whenever the reconstructed operator count differs at all, or
-        the reconstructed base imponible diverges from ``base_summary_total``
-        by more than ``tolerance`` — a dropped or double-counted operador row
-        must surface as a divergence, never silently collapse into
-        ``is_consistent=True``.
-    """
-    from .invoice_bindings import resolve_invoice_binding_row_values
-
-    rows = resolve_invoice_binding_row_values(revision, observations)
-    nif_by_row, country_by_row, clave_by_row, base_by_row = _modelo_349_operator_columns(rows)
-    operators, operator_base, base_row_total = _aggregate_modelo_349_operator_rows(
-        nif_by_row,
-        country_by_row,
-        clave_by_row,
-        base_by_row,
-    )
-    by_clave_operators, by_clave_base = _aggregate_modelo_349_clave_totals(operator_base)
-    by_clave = _build_modelo_349_clave_totals(by_clave_operators, by_clave_base)
-    operator_row_total = len(operators)
-    operator_delta = operator_row_total - int(operator_summary_total)
-    base_delta = base_row_total - base_summary_total
-    is_consistent = operator_delta == 0 and abs(base_delta) <= tolerance
-    return Modelo349OperadorTotalsParity(
-        by_clave=by_clave,
-        operator_row_total=operator_row_total,
-        operator_summary_total=int(operator_summary_total),
-        operator_delta=operator_delta,
-        base_row_total=base_row_total,
-        base_summary_total=base_summary_total,
-        base_delta=base_delta,
-        tolerance=tolerance,
-        is_consistent=is_consistent,
-    )
-
-
-def _modelo_349_operator_columns(
-    rows: Mapping[tuple[BindingId, int], Decimal | str],
-) -> tuple[dict[int, str], dict[int, str], dict[int, str], dict[int, Decimal]]:
-    """Project the four operator-row columns needed by the parity gate."""
-    return (
-        _modelo_349_operator_column(rows, "iva-349-operador-row-nif", str),
-        _modelo_349_operator_column(rows, "iva-349-operador-row-codigo-pais", str),
-        _modelo_349_operator_column(rows, "iva-349-operador-row-clave", str),
-        _modelo_349_operator_column(rows, "iva-349-operador-row-base", Decimal),
-    )
-
-
-def _modelo_349_operator_column[ValueT: (str, Decimal)](
-    rows: Mapping[tuple[BindingId, int], Decimal | str],
-    requested_binding: BindingId,
-    value_type: type[ValueT],
-) -> dict[int, ValueT]:
-    """Select one typed operator-row column without changing row ordering."""
-    return {
-        row_index: value
-        for (binding_id, row_index), value in rows.items()
-        if binding_id == requested_binding and isinstance(value, value_type)
-    }
-
-
-def _aggregate_modelo_349_operator_rows(
-    nif_by_row: Mapping[int, str],
-    country_by_row: Mapping[int, str],
-    clave_by_row: Mapping[int, str],
-    base_by_row: Mapping[int, Decimal],
-) -> tuple[set[tuple[str, str, str]], dict[tuple[str, str, str], Decimal], Decimal]:
-    """Group operator rows by country, tax identity, and intracommunity clave."""
-    operators: set[tuple[str, str, str]] = set()
-    operator_base: dict[tuple[str, str, str], Decimal] = {}
-    base_row_total = Decimal("0")
-    for row_index in sorted(base_by_row):
-        clave = clave_by_row.get(row_index)
-        country = country_by_row.get(row_index)
-        nif = nif_by_row.get(row_index)
-        if clave is None or country is None or nif is None:
-            continue
-        key = (country, nif, clave)
-        operators.add(key)
-        operator_base[key] = operator_base.get(key, Decimal("0")) + base_by_row[row_index]
-        base_row_total += base_by_row[row_index]
-    return operators, operator_base, base_row_total
-
-
-def _aggregate_modelo_349_clave_totals(
-    operator_base: Mapping[tuple[str, str, str], Decimal],
-) -> tuple[dict[str, set[tuple[str, str]]], dict[str, Decimal]]:
-    """Aggregate distinct operators and bases once more by Modelo 349 clave."""
-    by_clave_operators: dict[str, set[tuple[str, str]]] = {}
-    by_clave_base: dict[str, Decimal] = {}
-    for (country, nif, clave), base in operator_base.items():
-        by_clave_operators.setdefault(clave, set()).add((country, nif))
-        by_clave_base[clave] = by_clave_base.get(clave, Decimal("0")) + base
-    return by_clave_operators, by_clave_base
-
-
-def _build_modelo_349_clave_totals(
-    by_clave_operators: Mapping[str, set[tuple[str, str]]],
-    by_clave_base: Mapping[str, Decimal],
-) -> tuple[Modelo349OperadorClaveTotal, ...]:
-    """Build the stable, clave-sorted Modelo 349 parity breakdown."""
-    by_clave = tuple(
-        Modelo349OperadorClaveTotal(
-            clave=clave,
-            operator_count=len(by_clave_operators[clave]),
-            base_total=by_clave_base[clave],
-        )
-        for clave in sorted(by_clave_operators)
-    )
-    return by_clave
 
 
 def normalise_m349_nif_export_rows(
@@ -408,7 +201,7 @@ def _m347_quarter_of(value: date) -> Literal["1T", "2T", "3T", "4T"]:
     boundary authority (``aeat-registry-authority-flow``'s period-boundary
     rule) -- no locally re-derived month-range arithmetic. Uses ``value``'s
     OWN calendar year, not a filing-year argument this row-producer has no
-    access to: the diseño's Q1-Q4 fields are the ordinary calendar quarter an
+    access to: the dise�o's Q1-Q4 fields are the ordinary calendar quarter an
     operation falls in, independent of which filing year's declaration
     reports it.
     """
@@ -481,9 +274,9 @@ def _build_contraparte_clave_rows(
     binding inventory reference).
 
     Also buckets that same amount into the calendar quarter of
-    ``transaction_date`` -- the diseño's mandatory, unconditional "IMPORTE DE
+    ``transaction_date`` -- the dise�o's mandatory, unconditional "IMPORTE DE
     LAS OPERACIONES [Nth] TRIMESTRE" fields (RD 1065/2007 art. 33.1's "se
-    suministrará desglosada trimestralmente"), ungated by any "Sólo..."
+    suministrar� desglosada trimestralmente"), ungated by any "S�lo..."
     exception the way ``importe-metalico`` / ``operacion-seguro`` /
     ``arrendamiento-local-negocio`` / the transmisiones-inmuebles pair are.
     The quarterly buckets accumulate in the SAME loop that sums

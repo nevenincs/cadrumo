@@ -64,6 +64,8 @@ def _imported_pairs(tree: ast.Module) -> set[tuple[str, str]]:
 
 
 def _audit_key(path: Path, root: Path) -> str:
+    if root != _PACKAGE_ROOT:
+        return path.relative_to(root.parent).as_posix()
     try:
         return path.relative_to(REPO_ROOT).as_posix()
     except ValueError:
@@ -87,7 +89,9 @@ def find_unconsumed(
     if unread:
         raise RuntimeError(f"unconsumed-export scan unreadable for {len(unread)} file(s): {unread}")
 
-    consumed = set().union(*(_imported_pairs(tree) for tree in trees.values())) if trees else set()
+    consumed: set[tuple[str, str]] = set()
+    for tree in trees.values():
+        consumed.update(_imported_pairs(tree))
     return tuple(
         sorted(
             UnconsumedExport(path.relative_to(root).as_posix(), name)

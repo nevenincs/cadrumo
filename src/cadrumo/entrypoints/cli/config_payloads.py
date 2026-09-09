@@ -36,7 +36,6 @@ from ...application.diagnostic_models import (
     DiagnosticStatusValue,
 )
 from ...application.user_profile.aggregate import ProfileRestoreAuthority
-from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose, ProfileBundleExportTransport
 from ...application.workflow.events import WorkflowReasonClass
 from ...application.workflow.profile_health import ProfileHealthStatusValue, ProfileSource
 from ...core.errors.severity import BaseSeverity
@@ -927,31 +926,6 @@ class ConfigProfileDeleteResult(OutputSchema):
     retained_record_count: NonNegativeInt
     earliest_safe_erase_date: str | None = None
     completed_at: str | None = None
-
-
-class ConfigProfileExportResult(OutputSchema):
-    """JSON envelope retained for profile-bundle export evidence.
-
-    Projects :class:`~cadrumo.application.user_profile.ProfileBundleExportResult`:
-    the exported profile id, display label, output path, portable bundle
-    schema version, operator purpose, wire transport, the personal-data
-    categories the bundle carries and deliberately omits, and any
-    crash-recovery journal the pre-publication sweep could not finalise.
-    Bundle contents are written to ``out`` rather than embedded in the CLI
-    envelope.
-    """
-
-    profile_id: ProfileId
-    display_name: str
-    out: str
-    # bundle_schema_version is an int; the export handler passes the current
-    # version through verbatim.
-    schema_version: int
-    purpose: ProfileBundleExportPurpose
-    transport: ProfileBundleExportTransport
-    data_categories: list[str]
-    excluded_data_categories: list[str] = []
-    reconcile_failures: list[ConfigProfileExportReconcileFailurePayload] = []
 
 
 # Sealed bucket-archive result schemas (backup / restore / inspect)
