@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:d8a4ede1ad840ac2cdd6bf574bc1a07c8263294ea2270d3739f6fbee5b091c48'
+body_hash: 'sha256:6ed79886856cf1119910c531d484e321fc40cf8478506cd2a5480503eac2cd1e'
 ---
 
 # `facts-registry` plan
@@ -128,7 +128,7 @@ Move every classified consumer to typed provenance-bearing fact resolution in pa
 Rewire M347, M202, declaration thresholds, modelo group classifications, and aggregation consumers.
 
 - [x] `W03.P10.S48` - Rewire every M347 comparator validator and diagnostic to one fact; `src/cadrumo/domain/calculations/registry/_m347_threshold.py and dependent production callers`.
-- [ ] `W03.P10.S49` - Rewire Modelo 202 and modelo classification consumers; `src/cadrumo/domain/calculations/registry/applicability_modelo202.py and src/cadrumo/application/aggregation/_service.py`.
+- [x] `W03.P10.S49` - Rewire Modelo 202 and modelo classification consumers; `src/cadrumo/domain/calculations/registry/applicability_modelo202.py and src/cadrumo/application/aggregation/_service.py`.
 
 ### Phase `W03.P11` - Migrate renta and family consumers
 

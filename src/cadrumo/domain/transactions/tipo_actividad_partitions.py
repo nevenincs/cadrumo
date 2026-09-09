@@ -45,19 +45,24 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from functools import lru_cache
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, cast
 
 from ...core.resources.bundled_data import bundled_path
 from ...core.tipos_actividad import TipoActividad
+from ..calculations.registry.facts.resolution import EntitySetFactQuery, ResolvedEntitySetFact
+from ..calculations.registry.schema_base import DateAxis
 from ..deadlines.models import IrpfActivityKind
 from .errors import TransactionValidationError
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 __all__ = [
     "load_tipo_actividad_selectors",
+    "resolve_tipo_actividad_selector",
     "tipo_actividad_code_set",
 ]
 
@@ -118,7 +123,65 @@ def _code_set(parameters: Mapping[str, object], parameter_id: str) -> frozenset[
     return frozenset(codes)
 
 
-def tipo_actividad_code_set(parameter_id: str) -> frozenset[TipoActividad]:
+def resolve_tipo_actividad_selector(
+    parameter_id: str,
+    *,
+    effective_date: date,
+    authority: "ValidatedRegistryAuthority | None" = None,
+) -> ResolvedEntitySetFact:
+    """Resolve a migrated art. 95 selector through the canonical fact authority.
+
+    The result deliberately retains the fact's legal references, exact temporal
+    coordinate, and authority digest for a caller that must explain why an
+    activity was classified into this arm.
+    """
+    if parameter_id not in _ART_95_SELECTORS:
+        raise TransactionValidationError(
+            f"registry parameter {parameter_id!r} has no typed Modelo 036 activity-selector fact",
+        )
+    if authority is None:
+        from ..calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    try:
+        resolved = authority.resolve_governed_fact(
+            EntitySetFactQuery(
+                fact_id=parameter_id,
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=effective_date,
+            ),
+        )
+    except Exception as exc:
+        from ..calculations.registry.errors import RegistryError
+
+        if isinstance(exc, RegistryError):
+            raise TransactionValidationError(
+                f"failed to resolve Modelo 036 activity selector {parameter_id!r}: {exc}",
+            ) from exc
+        raise
+    return cast("ResolvedEntitySetFact", resolved)
+
+
+def _typed_code_set(selector: ResolvedEntitySetFact) -> frozenset[TipoActividad]:
+    """Narrow a resolved entity-set fact to the closed Modelo 036 code type."""
+    codes: set[TipoActividad] = set()
+    for token in selector.payload.entities:
+        try:
+            codes.add(TipoActividad(token))
+        except ValueError as exc:
+            raise TransactionValidationError(
+                f"registry parameter {selector.fact_id!r} names {token!r}, which is not a "
+                f"Modelo 036 activity code; accepted: {', '.join(sorted(t.value for t in TipoActividad))}",
+            ) from exc
+    return frozenset(codes)
+
+
+def tipo_actividad_code_set(
+    parameter_id: str,
+    *,
+    effective_date: date | None = None,
+    authority: "ValidatedRegistryAuthority | None" = None,
+) -> frozenset[TipoActividad]:
     """Return the Modelo 036 codes a registry selector parameter declares.
 
     The ONE way to read a ``m036-tipo-actividad-code-set`` parameter. Several
@@ -136,6 +199,14 @@ def tipo_actividad_code_set(parameter_id: str) -> frozenset[TipoActividad]:
         TransactionValidationError: If the parameter is absent, carries the wrong
             unit, names a non-code token, or the catalogue cannot be loaded.
     """
+    if parameter_id in _ART_95_SELECTORS:
+        return _typed_code_set(
+            resolve_tipo_actividad_selector(
+                parameter_id,
+                effective_date=effective_date or date.today(),
+                authority=authority,
+            ),
+        )
     return _code_set(_legal_parameters(), parameter_id)
 
 
@@ -175,8 +246,12 @@ def load_tipo_actividad_selectors() -> Mapping[str, frozenset[TipoActividad]]:
         TransactionValidationError: If a selector is absent or malformed, if the
             same code appears in two selectors, or if the catalogue cannot load.
     """
-    parameters = _legal_parameters()
-    selectors = {parameter_id: _code_set(parameters, parameter_id) for parameter_id in _ART_95_SELECTORS}
+    selectors = {
+        parameter_id: _typed_code_set(
+            resolve_tipo_actividad_selector(parameter_id, effective_date=date.today()),
+        )
+        for parameter_id in _ART_95_SELECTORS
+    }
 
     seen: dict[TipoActividad, str] = {}
     for parameter_id, codes in selectors.items():

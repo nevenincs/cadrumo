@@ -18,15 +18,15 @@ Providers: ``retenciones`` (111/115/123/180/190/193), ``counterpart``
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from enum import StrEnum
 from functools import lru_cache
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, NonNegativeInt, computed_field, field_validator, model_validator
 
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
-from ...core.external_constants import COUNTERPART_MODELOS, FOREIGN_ASSET_MODELOS, RETENCIONES_MODELOS
 from ...core.logging import LogExtra, get_logger
-from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
@@ -42,6 +42,9 @@ from ._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from ._retenciones import RetencionesAggregation, RetencionObservation
 from .errors import AggregationConfigError, AggregationUnsupportedModeloError, t
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.schema import DataBindingDefinition, ModeloDefinition
 
 LOGGER = get_logger(__name__)
 
@@ -68,12 +71,6 @@ AggregationErrorCodes: tuple[str, ...] = (
     "REFUSED_FINANCIAL_AGGREGATION_UNSUPPORTED_MODELO",
     "ERROR_FINANCIAL_AGGREGATION_VALIDATION",
 )
-
-_RETENCIONES_MODELOS = RETENCIONES_MODELOS
-_COUNTERPART_MODELOS = COUNTERPART_MODELOS
-_FOREIGN_ASSET_MODELOS = FOREIGN_ASSET_MODELOS
-_SUPPORTED_PER_MODELO_MODELOS = tuple(sorted((*_RETENCIONES_MODELOS, *_COUNTERPART_MODELOS, *_FOREIGN_ASSET_MODELOS)))
-
 
 class PerModeloAggregationContributorContract(BaseModel):
     """Backend-owned contract for one aggregation provider family."""
@@ -272,28 +269,89 @@ class PerModeloAggregationResult(BaseModel):
         return self
 
 
+def _counterpart_binding(binding: "DataBindingDefinition") -> bool:
+    """Return whether a canonical invoice binding declares the M349 counterpart shape."""
+    if binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION:
+        return True
+    if binding.source not in {BindingSourceKind.PAYABLE_INVOICE, BindingSourceKind.COLLECTIBLE_INVOICE}:
+        return False
+    grouping: object = getattr(binding.selector, "grouping", None)
+    return grouping in {"operator_clave", "operator_clave_period"}
+
+
+def _provider_for_modelo_definition(modelo: "ModeloDefinition") -> PerModeloAggregationContributor | None:
+    """Classify a modelo from its registered aggregation implementation and binding sources."""
+    bindings = tuple(binding for revision in modelo.revisions.values() for binding in revision.bindings)
+    providers: set[PerModeloAggregationContributor] = set()
+    # The retenciones resolver is itself the canonical aggregation registration:
+    # some annual forms consume ``withholding`` or relation-prefill bindings
+    # rather than a direct ``retenciones_aggregation`` binding, so source shape
+    # alone would silently drop M123 and M190. Its registered typed dispatch is
+    # therefore the authority for this application-owned provider family.
+    if RetencionesAggregationSourceResolver.supports_modelo(modelo.id):
+        providers.add(PerModeloAggregationContributor.RETENCIONES)
+    if any(_counterpart_binding(binding) for binding in bindings):
+        providers.add(PerModeloAggregationContributor.COUNTERPART)
+    if any(binding.source is BindingSourceKind.FOREIGN_ASSET for binding in bindings):
+        providers.add(PerModeloAggregationContributor.FOREIGN_ASSETS)
+    if len(providers) > 1:
+        raise AggregationConfigError(
+            translated_message="aggregation.service.errors.per_modelo_modelos_not_unique",
+            context={"modelo": modelo.id, "providers": ",".join(sorted(provider.value for provider in providers))},
+        )
+    return next(iter(providers), None)
+
+
+@lru_cache(maxsize=1)
+def _registered_per_modelo_provider_modelos() -> Mapping[PerModeloAggregationContributor, tuple[str, ...]]:
+    """Project aggregation ownership from the validated registry binding authority.
+
+    This is intentionally not a second static modelo catalogue: the binding
+    sources and selector shapes that calculation consumes are the canonical
+    answer to which aggregation family can service a modelo.
+    """
+    from ...domain.calculations.registry.authority import bundled_authority
+
+    authority = bundled_authority()
+    authority.validate_registry()
+    grouped: dict[PerModeloAggregationContributor, list[str]] = {
+        contributor: [] for contributor in PerModeloAggregationContributor
+    }
+    for modelo in authority.modelos:
+        if provider := _provider_for_modelo_definition(modelo):
+            grouped[provider].append(modelo.id)
+    return {contributor: tuple(sorted(modelos)) for contributor, modelos in grouped.items()}
+
+
+def _supported_per_modelo_modelos() -> tuple[str, ...]:
+    """Return the exact accepted modelo ids in canonical registry order."""
+    grouped = _registered_per_modelo_provider_modelos()
+    return tuple(sorted(modelo for modelos in grouped.values() for modelo in modelos))
+
+
 def build_per_modelo_aggregation_contract() -> PerModeloAggregationContract:
     """Build the immutable backend-owned aggregation contract.
 
     Returns a :class:`PerModeloAggregationContract` enumerating every
     registered provider, accepted source kinds, and known error codes.
     """
+    registered = _registered_per_modelo_provider_modelos()
     providers = (
         PerModeloAggregationContributorContract(
             provider=PerModeloAggregationContributor.RETENCIONES,
-            modelos=_RETENCIONES_MODELOS,
+            modelos=registered[PerModeloAggregationContributor.RETENCIONES],
             service_owner="cadrumo.application.aggregation",
             accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
         ),
         PerModeloAggregationContributorContract(
             provider=PerModeloAggregationContributor.COUNTERPART,
-            modelos=_COUNTERPART_MODELOS,
+            modelos=registered[PerModeloAggregationContributor.COUNTERPART],
             service_owner="cadrumo.application.aggregation",
             accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
         ),
         PerModeloAggregationContributorContract(
             provider=PerModeloAggregationContributor.FOREIGN_ASSETS,
-            modelos=_FOREIGN_ASSET_MODELOS,
+            modelos=registered[PerModeloAggregationContributor.FOREIGN_ASSETS],
             service_owner="cadrumo.application.aggregation",
             accepted_source_kinds=ACCEPTED_SOURCE_KINDS,
         ),
@@ -326,27 +384,25 @@ def provider_for_modelo(modelo: str) -> PerModeloAggregationContributor:
     Returns a :class:`PerModeloAggregationContributor` member identifying
     the aggregation family that owns the given modelo number.
     """
+    supported = _supported_per_modelo_modelos()
     if modelo != modelo.strip():
         raise AggregationUnsupportedModeloError(
             t("aggregation.per_modelo.errors.unsupported_modelo"),
             context={"modelo": modelo},
             precondition_verdict=aggregation_no_recovery_verdict(
                 AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
-                facts={"modelo": modelo, "supported_modelos": "|".join(_SUPPORTED_PER_MODELO_MODELOS)},
+                facts={"modelo": modelo, "supported_modelos": "|".join(supported)},
             ),
         )
-    if modelo in _RETENCIONES_MODELOS:
-        return PerModeloAggregationContributor.RETENCIONES
-    if modelo in _COUNTERPART_MODELOS:
-        return PerModeloAggregationContributor.COUNTERPART
-    if modelo in _FOREIGN_ASSET_MODELOS:
-        return PerModeloAggregationContributor.FOREIGN_ASSETS
+    for provider, modelos in _registered_per_modelo_provider_modelos().items():
+        if modelo in modelos:
+            return provider
     raise AggregationUnsupportedModeloError(
         t("aggregation.per_modelo.errors.unsupported_modelo"),
         context={"modelo": modelo},
         precondition_verdict=aggregation_no_recovery_verdict(
             AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
-            facts={"modelo": modelo, "supported_modelos": "|".join(_SUPPORTED_PER_MODELO_MODELOS)},
+            facts={"modelo": modelo, "supported_modelos": "|".join(supported)},
         ),
     )
 
@@ -408,7 +464,14 @@ def _aggregate_counterpart(
     period: Period,
     observations: tuple[CounterpartObservation, ...],
 ) -> CounterpartAggregation:
-    if modelo == Modelo.M347.value:
+    from ...domain.calculations.registry.authority import bundled_authority
+
+    definition = bundled_authority().modelo(modelo)
+    if any(
+        binding.source is BindingSourceKind.M347_THIRD_PARTY_OPERATION
+        for revision in definition.revisions.values()
+        for binding in revision.bindings
+    ):
         return aggregate_counterpart_347(observations, period=period)
     return aggregate_counterpart_349(observations, period=period)
 

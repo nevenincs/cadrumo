@@ -35,7 +35,7 @@ from .._modelo_bindings_invoice_iva_refusal import _raise_if_screened_invoice_iv
 from .._modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from .._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .._retencion_observations_repository import RetencionObservationRepository
-from .._service import _SUPPORTED_PER_MODELO_MODELOS, provider_for_modelo
+from .._service import _supported_per_modelo_modelos, provider_for_modelo
 from .._source_mesh import CalculationSourceContext
 from ..errors import AggregationError, AggregationUnsupportedModeloError, AggregationValidationError
 
@@ -68,11 +68,11 @@ def _contract(
 _AGGREGATION_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     "_service:provider_for_modelo:1": _contract(
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
-        (("modelo", "modelo"), ("supported_modelos", "'|'.join(_SUPPORTED_PER_MODELO_MODELOS)")),
+        (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
     ),
     "_service:provider_for_modelo:2": _contract(
         AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
-        (("modelo", "modelo"), ("supported_modelos", "'|'.join(_SUPPORTED_PER_MODELO_MODELOS)")),
+        (("modelo", "modelo"), ("supported_modelos", "'|'.join(supported)")),
     ),
     "_modelo_bindings_invoice_iva_refusal:_raise_if_screened_invoice_iva_would_be_silent:1": _contract(
         AggregationPreconditionCondition.INVOICE_LEDGER_COMPLETE,
@@ -294,7 +294,7 @@ def test_unsupported_modelo_has_an_exact_application_state_operator_decision_ver
     _assert_terminal_contract(
         raised.value,
         condition=AggregationPreconditionCondition.PER_MODELO_MODELO_SUPPORTED,
-        facts={"modelo": " 347 ", "supported_modelos": "|".join(_SUPPORTED_PER_MODELO_MODELOS)},
+        facts={"modelo": " 347 ", "supported_modelos": "|".join(_supported_per_modelo_modelos())},
     )
 
 
