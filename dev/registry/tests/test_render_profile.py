@@ -21,11 +21,9 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 
-from ..pipeline import _export_tree, _render_profile
+from ..pipeline import _export_tree, _render_profile, render_profile_eligibility
 from ..pipeline._record_design_ir import (
     RecordDesignIntermediate,
-    RecordDesignIntermediateField,
-    RecordDesignWorkbookFormat,
     load_record_design_intermediate,
 )
 from ..pipeline._render_profile import (
@@ -39,11 +37,9 @@ from ..pipeline._render_profile import (
     ReviewedPolicyDecision,
     SingletonNumericRule,
     Width17MembershipRule,
-    _is_source_reserved_field,
     load_and_validate_render_profile,
     load_render_profile,
     load_render_profile_source_evidence,
-    project_render_profile_eligibility,
     render_profile_digest,
     validate_render_profile,
     validate_render_profile_authority,
@@ -53,6 +49,14 @@ from ..pipeline._semantic_map_join import (
     JoinedRecordDesign,
     JoinedRecordDesignField,
     JoinedRecordDesignRecord,
+)
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediateField,
+    RecordDesignWorkbookFormat,
+)
+from ..pipeline.render_profile_eligibility import (
+    _is_source_reserved_field,
+    project_render_profile_eligibility,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -1197,21 +1201,19 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
     or the render profile stops being the thing that states an absent wire fact
     and starts inferring it from what was already generated.
 
-    ``source_defects`` is admitted on that test, not by accretion: it carries the
-    adjudicated declarations ABOUT the same pinned source -- which notes state
-    applicability rather than format, and which amounts a read note governs --
-    and the authority validates each against that source's own digest before
-    projecting eligibility. It is source-side evidence, not a tree or layout
-    oracle. A new local import outside this set still fails, which is the point.
+    The eligibility contract -- its projection, its predicates and the resolver
+    that pins a source's declarations to it -- lives in the public
+    ``render_profile_eligibility`` module, because consumers outside this package
+    must ask it and an underscore-private module is not a cross-package API. The
+    allow-list therefore covers BOTH modules: moving the projection out of the
+    authority must not move it out of the reach of this gate.
 
-    ``render_profile_eligibility`` is admitted on the same test and for a reason
-    that STRENGTHENS the allow-list rather than widening it. It is the public
-    defining module the shared eligibility contract was hard-moved to, because
-    consumers outside this package must ask it and an underscore-private module
-    is not a cross-package API. It holds nothing this module did not already
-    hold: it resolves the pinned source's own declarations and calls this
-    module's projection. Nothing downstream of the parser is reachable through
-    it, which is what this allow-list is for.
+    ``source_defects`` is admitted on the eligibility module, not by accretion:
+    it carries the adjudicated declarations ABOUT the same pinned source -- which
+    notes state applicability rather than format, and which amounts a read note
+    governs -- and the resolver validates each against that source's own digest
+    before projecting. It is source-side evidence, not a tree or layout oracle. A
+    new local import outside either set still fails, which is the point.
     """
     module = ast.parse(inspect.getsource(_render_profile))
     local_imports = {
@@ -1221,9 +1223,18 @@ def test_profile_authority_has_no_legacy_tree_or_layout_oracle() -> None:
     }
     assert local_imports == {
         "_pydantic_error_detail",
-        "_record_design_ir",
         "_semantic_map_join",
+        "record_design_intermediate",
         "render_profile_eligibility",
+    }
+    eligibility_module = ast.parse(inspect.getsource(render_profile_eligibility))
+    eligibility_imports = {
+        node.module
+        for node in ast.walk(eligibility_module)
+        if isinstance(node, ast.ImportFrom) and node.level and node.module is not None
+    }
+    assert eligibility_imports == {
+        "record_design_intermediate",
         "source_defects",
     }
     source_loader = next(

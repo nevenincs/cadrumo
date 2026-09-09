@@ -22,9 +22,7 @@ from ._record_design_ir import (
     AnchorKey,
     RecordDesignIntermediate,
     RecordDesignIntermediateAuxiliaryEnvelopeHeader,
-    RecordDesignIntermediateField,
     RecordDesignIntermediateSheet,
-    RecordDesignIntermediateSource,
     RecordDesignIntermediateVariableEnvelope,
     intermediate_anchor_key,
     intermediate_record_key,
@@ -40,6 +38,10 @@ from ._semantic_map import (
 from ._semantic_map_validation import (
     SemanticMapAnomalyException,
     _validate_semantic_map_with_admissions,
+)
+from .record_design_intermediate import (
+    RecordDesignIntermediateField,
+    RecordDesignIntermediateSource,
 )
 
 __all__ = [

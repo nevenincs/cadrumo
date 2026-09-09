@@ -26,11 +26,11 @@ from typing import Final
 
 from ..pipeline._record_design_ir import (
     RecordDesignIntermediate,
-    RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
     RecordDesignIntermediateVariableEnvelope,
 )
 from ..pipeline._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry
+from ..pipeline.record_design_intermediate import RecordDesignIntermediateField
 
 __all__ = [
     "M303_SEMANTIC_CENSUS_EXPECTATIONS",

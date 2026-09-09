@@ -45,7 +45,7 @@ from ..pipeline._provenance_manifest import (
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
-from ..pipeline._record_design_ir import RecordDesignIntermediate, RecordDesignWorkbookFormat
+from ..pipeline._record_design_ir import RecordDesignIntermediate
 from ..pipeline._render_profile import (
     RenderProfile,
     RenderProfileAnchor,
@@ -57,6 +57,7 @@ from ..pipeline._render_profile import (
 )
 from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -14,9 +14,7 @@ from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation
 
 from ..pipeline._record_design_ir import (
-    RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
-    RecordDesignIntermediateSource,
     RecordDesignIntermediateVariableEnvelope,
     load_record_design_intermediate,
 )
@@ -31,6 +29,10 @@ from ..pipeline._variable_envelope import (
     FilingEnvelopeProvenance,
     compile_filing_envelope_definition,
     validate_variable_envelope,
+)
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediateField,
+    RecordDesignIntermediateSource,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
