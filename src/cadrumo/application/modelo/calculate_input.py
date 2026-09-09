@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
@@ -38,7 +39,6 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.irnr import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
@@ -493,9 +493,9 @@ def build_work_calculate_input_bundle(
     translated into semantic-role casilla values or backend-owned bindings by
     :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
     """
-    _validate_detail_rows(detail_rows)
     catalogue, bucket_id = _capture_work_catalogue(work_unit_id)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
+    _validate_detail_rows(detail_rows, effective_date=date(work_unit.filing_year, 12, 31))
     revision = _revision_for_work_unit(work_unit)
     casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = _resolve_casilla_overrides(
         casilla_overrides,
@@ -536,7 +536,7 @@ def build_work_calculate_input_bundle(
     )
 
 
-def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
+def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...], *, effective_date: date | None = None) -> None:
     member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
     try:
         validate_m184_member_share_sum(member_rows)
@@ -548,10 +548,10 @@ def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
 
     contraparte_rows = [row for row in rows if isinstance(row, Modelo347ContraparteRow)]
     try:
-        validate_m347_threshold(contraparte_rows)
+        validate_m347_threshold(contraparte_rows, effective_date=effective_date)
     except Modelo347ThresholdError as exc:
         raise ModeloCalculateDetailRowsError(
-            context={"nif": exc.nif, "total": str(exc.total), "threshold": str(M347_THRESHOLD_EUR)},
+            context={"nif": exc.nif, "total": str(exc.total), "threshold": str(exc.threshold.payload.value)},
             translated_message="application.modelo.errors.calculate_m347_threshold_not_met",
         ) from exc
 
