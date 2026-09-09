@@ -24,13 +24,13 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final
 
-from ..pipeline._record_design_ir import (
+from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
+    RecordDesignIntermediateField,
     RecordDesignIntermediateRelativeSuffixMarker,
     RecordDesignIntermediateVariableEnvelope,
 )
-from ..pipeline._semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry
-from ..pipeline.record_design_intermediate import RecordDesignIntermediateField
+from ..pipeline.semantic_map import SemanticMap, SemanticMapAnchor, SemanticMapEntry
 
 __all__ = [
     "M303_SEMANTIC_CENSUS_EXPECTATIONS",

@@ -5,6 +5,10 @@ site-relative targets. This module supplies those rendered targets to the
 search-record seam while carrying the authored catalogue fields, including the
 BOE permalink, as typed record metadata. It does not invent a search
 destination or a translated legal description.
+
+The search-index injector in ``dev.docs`` consumes this projection alongside the
+sibling casilla and concept compilers, so it is public for the same reason they
+are: the record corpus is assembled outside this package.
 """
 
 from __future__ import annotations

@@ -4,6 +4,13 @@ This development-only module records how a later generator derived one export
 tree.  It deliberately does not locate, load, infer from, or fall back to a
 shipped export layout.  The caller supplies the loader-materialised target
 layout after the future publication step has validated the generated tree.
+
+The manifest is a published artifact, so its filename, its typed shape and the
+load/verify pair that reads it back are addressed from outside this package:
+the filing-export proof re-verifies a published manifest, and the tree-state and
+capability screens locate one by name. Writing and reading it are one contract --
+a reader that derived the shape independently would attest to a different thing --
+so both halves live in this public defining module.
 """
 
 from __future__ import annotations
@@ -30,18 +37,20 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
 from ._pydantic_error_detail import validation_error_detail
-from ._record_design_ir import RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION
-from ._render_profile import (
+from ._variable_envelope import FilingEnvelopeProvenance
+from .joined_record_design import JoinedRecordDesign
+from .record_design_intermediate import (
+    RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
+    RecordDesignIntermediateField,
+)
+from .render_profile import (
     RENDER_PROFILE_SCHEMA_VERSION,
     RenderProfile,
     RenderProfileSourceEvidence,
     render_profile_digest,
     validate_render_profile,
 )
-from ._semantic_map import SemanticMap, SemanticMapEntry
-from ._semantic_map_join import JoinedRecordDesign
-from ._variable_envelope import FilingEnvelopeProvenance
-from .record_design_intermediate import RecordDesignIntermediateField
+from .semantic_map import SemanticMap, SemanticMapEntry
 
 
 def _publish_once_bytes(path: Path, payload: bytes, *, mode: int = 0o600) -> None:

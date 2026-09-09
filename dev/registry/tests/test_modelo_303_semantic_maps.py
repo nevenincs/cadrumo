@@ -52,18 +52,20 @@ from ..pipeline._export_tree import (
     _split_official_note_references,
     render_complete_export_tree,
 )
-from ..pipeline._provenance_manifest import semantic_map_digest
-from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
-from ..pipeline._render_profile import (
+from ..pipeline.export_fragment_provenance import semantic_map_digest
+from ..pipeline.joined_record_design import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline.render_profile import (
     RenderProfile,
     RenderProfileDesignIdentity,
     RenderProfileSourceEvidence,
     load_and_validate_render_profile,
     render_profile_digest,
 )
-from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
-from ..pipeline._semantic_map_loader import load_semantic_map
+from ..pipeline.semantic_map import (
+    SemanticMap,
+    load_semantic_map,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

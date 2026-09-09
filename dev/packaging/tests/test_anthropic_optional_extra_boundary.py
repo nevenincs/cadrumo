@@ -19,7 +19,7 @@ import pytest
 
 from cadrumo.core.optional_extras import ANTHROPIC_EXTRA
 
-from .._smoke_common import (
+from ..lane_verification_core import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,

@@ -22,6 +22,10 @@ label - casilla ids are unique per modelo but repeat ACROSS modelos, so a
 global ``.. _name:`` target would collide), so this slug is the rendered id with
 no docutils re-normalisation. A post-slug collision WITHIN one modelo page is a
 generator build failure, never a silent merge.
+
+Both consumers named above sit in different packages -- the generator in
+``dev.docs``, the search funnel in ``dev.docs.terminology`` -- so this derivation
+is a public contract rather than an internal of either side.
 """
 
 from __future__ import annotations

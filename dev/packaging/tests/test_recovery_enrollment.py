@@ -22,7 +22,6 @@ from pathlib import Path
 import pytest
 
 from ..._paths import UTF_8
-from .._command import run_command
 from .._recovery_enrollment import (
     WINDOWS_BOOTSTRAP_MODULE,
     RecoveryEnrollmentError,
@@ -30,6 +29,7 @@ from .._recovery_enrollment import (
     shape_enrollment_invocation,
     windows_bootstrap_interpreter,
 )
+from ..command_execution import run_command
 from ..installed_tax_oracle import (
     PROFILE_LABEL,
     InstalledTaxOracleError,

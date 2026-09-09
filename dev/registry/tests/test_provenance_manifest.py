@@ -19,8 +19,8 @@ from cadrumo.domain.calculations.registry.export_value_policy import ExportValue
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
-from ..pipeline import _provenance_manifest
-from ..pipeline._provenance_manifest import (
+from ..pipeline import export_fragment_provenance
+from ..pipeline.export_fragment_provenance import (
     EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION,
     EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
@@ -34,20 +34,20 @@ from ..pipeline._provenance_manifest import (
     loader_semantic_digest,
     semantic_map_digest,
 )
-from ..pipeline._record_design_ir import (
+from ..pipeline.joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
+from ..pipeline.record_design_intermediate import (
     RECORD_DESIGN_INTERMEDIATE_SCHEMA_VERSION,
     RecordDesignIntermediate,
+    RecordDesignWorkbookFormat,
 )
-from ..pipeline._render_profile import (
+from ..pipeline.render_profile import (
     RENDER_PROFILE_SCHEMA_VERSION,
     RenderProfile,
     RenderProfileDesignIdentity,
     RenderProfileSourceEvidence,
     render_profile_digest,
 )
-from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
-from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
+from ..pipeline.semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -294,7 +294,7 @@ def _field_derivation() -> ExportFieldDerivation:
     )
 
 
-def _render_profile() -> RenderProfile:
+def _sample_render_profile() -> RenderProfile:
     return RenderProfile(
         schema_version=1,
         design_identity=RenderProfileDesignIdentity(
@@ -311,7 +311,7 @@ def _render_profile() -> RenderProfile:
 
 def _render_profile_evidence() -> RenderProfileSourceEvidence:
     return RenderProfileSourceEvidence(
-        design_identity=_render_profile().design_identity,
+        design_identity=_sample_render_profile().design_identity,
         entries=(),
     )
 
@@ -338,7 +338,7 @@ def _one_field_layout() -> ExportLayoutDefinition:
 
 
 def _manifest() -> ExportFragmentProvenanceManifest:
-    render_profile = _render_profile()
+    render_profile = _sample_render_profile()
     source_evidence = _render_profile_evidence()
     return ExportFragmentProvenanceManifest(
         manifest_schema_version=EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION,
@@ -374,7 +374,7 @@ def test_manifest_records_real_output_files_and_roundtrips_canonical_bytes(tmp_p
         loaded_layout=_one_field_layout(),
         export_root=export_root,
         field_derivations=(_field_derivation(),),
-        render_profile=_render_profile(),
+        render_profile=_sample_render_profile(),
         render_profile_source_evidence=_render_profile_evidence(),
     )
     serialised = export_fragment_provenance_manifest_json_bytes(manifest)
@@ -619,7 +619,7 @@ def test_manifest_contract_refusal_never_carries_a_sibling_fields_value() -> Non
 
 def test_provenance_contract_has_no_legacy_layout_lookup_or_fallback_surface() -> None:
     """A manifest must only attest supplied generated output, never consult old layouts."""
-    module = ast.parse(inspect.getsource(_provenance_manifest))
+    module = ast.parse(inspect.getsource(export_fragment_provenance))
     referenced_names = {node.id for node in ast.walk(module) if isinstance(node, ast.Name)}
     imported_modules = {
         node.module for node in ast.walk(module) if isinstance(node, ast.ImportFrom) and node.module is not None

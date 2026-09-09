@@ -44,19 +44,6 @@ from cadrumo.domain.calculations.registry.static_inspection import RegistryRevis
 from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree
-from ..pipeline._provenance_manifest import (
-    ExportFragmentTarget,
-    export_fragment_provenance_path,
-    load_export_fragment_provenance_manifest,
-)
-from ..pipeline._record_design_ir import load_record_design_intermediate
-from ..pipeline._render_profile import (
-    RenderProfileSourceEvidence,
-    load_render_profile,
-    load_render_profile_source_evidence,
-)
-from ..pipeline._semantic_map_join import join_record_design_semantics
-from ..pipeline._semantic_map_loader import load_semantic_map
 from ..pipeline._tree_check import GeneratedExportTreeCheckContext, check_generated_export_tree
 from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from ..pipeline.candidate_staging import (
@@ -64,7 +51,20 @@ from ..pipeline.candidate_staging import (
     stage_continuity_metadata,
     stage_generated_export_candidate,
 )
+from ..pipeline.export_fragment_provenance import (
+    ExportFragmentTarget,
+    export_fragment_provenance_path,
+    load_export_fragment_provenance_manifest,
+)
+from ..pipeline.joined_record_design import join_record_design_semantics
+from ..pipeline.record_design_intermediate import load_record_design_intermediate
 from ..pipeline.render_check import compare_revision_against_committed, parsed_tree_file, record_drift_dispositions
+from ..pipeline.render_profile import (
+    RenderProfileSourceEvidence,
+    load_render_profile,
+    load_render_profile_source_evidence,
+)
+from ..pipeline.semantic_map import load_semantic_map
 from ..pipeline.source_defects import source_defects_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

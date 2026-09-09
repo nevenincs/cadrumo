@@ -37,6 +37,7 @@ from .schema_surfaces import RelationDefinition
 from .schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 
 __all__ = [
+    "GeneratedArtifactInspection",
     "GeneratedArtifactSource",
     "RegistryRevisionInspection",
     "StaticGeneratedArtifactInspection",
@@ -97,6 +98,57 @@ class GeneratedArtifactSource(Protocol):
 
         See :meth:`SourceReference.applies_across` for the one definition of
         the overlap rule this Protocol member declares.
+        """
+        ...
+
+
+class GeneratedArtifactInspection(Protocol):
+    """The static revision facts required to verify a generated artefact."""
+
+    @property
+    def modelo_id(self) -> ModeloId:
+        """Return the modelo identity."""
+        ...
+
+    @property
+    def revision_id(self) -> RevisionId:
+        """Return the revision identity."""
+        ...
+
+    @property
+    def revision_source_refs(self) -> tuple[SourceRefId, ...]:
+        """Return the revision's source references."""
+        ...
+
+    @property
+    def legal_ref_ids(self) -> frozenset[LegalRefId]:
+        """Return the revision's legal-reference identities."""
+        ...
+
+    @property
+    def casilla_ids(self) -> frozenset[CasillaId]:
+        """Return the declared casilla identities."""
+        ...
+
+    @property
+    def binding_ids(self) -> frozenset[BindingId]:
+        """Return the declared binding identities."""
+        ...
+
+    @property
+    def projection_endpoints(self) -> tuple[ProjectionEndpointDeclaration, ...]:
+        """Return the declared projection endpoints."""
+        ...
+
+    @property
+    def sources(self) -> Mapping[SourceRefId, GeneratedArtifactSource]:
+        """The sources this revision cites, read-only.
+
+        Declared as a property rather than an attribute so the protocol matches
+        covariantly. A mutable attribute is invariant, which made a carrier
+        holding a richer source type fail to satisfy this protocol even though
+        every value satisfies :class:`GeneratedArtifactSource`. The verifier
+        only reads these, so read-only is the honest declaration.
         """
         ...
 

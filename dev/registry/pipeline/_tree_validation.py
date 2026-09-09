@@ -28,16 +28,16 @@ from cadrumo.domain.calculations.registry.validate_registry_scope import validat
 from cadrumo.tests.registry_snapshot import build_snapshot
 
 from ._export_tree import RenderedExportTree
-from ._provenance_manifest import (
+from ._tree_paths import require_existing_non_link
+from .export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     verify_export_fragment_provenance_manifest,
 )
-from ._render_profile import RenderProfile, RenderProfileSourceEvidence
-from ._semantic_map import SemanticMap
-from ._semantic_map_join import JoinedRecordDesign
-from ._tree_paths import require_existing_non_link
+from .joined_record_design import JoinedRecordDesign
+from .render_profile import RenderProfile, RenderProfileSourceEvidence
+from .semantic_map import SemanticMap
 
 __all__ = [
     "GeneratedExportTreeValidationContext",

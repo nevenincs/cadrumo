@@ -92,21 +92,21 @@ from .export_proof import (
     FilingExportSecureReplayReceipt,
 )
 from .export_proof import FilingExportProof as TwoChannelFilingExportProof
-from .pipeline._provenance_manifest import (
+from .pipeline.export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
-from .pipeline._record_design_ir import load_record_design_intermediate
-from .pipeline._render_profile import (
+from .pipeline.joined_record_design import join_record_design_semantics
+from .pipeline.record_design_intermediate import load_record_design_intermediate
+from .pipeline.render_profile import (
     RenderProfileSourceEvidence,
     load_render_profile,
     load_render_profile_source_evidence,
 )
-from .pipeline._semantic_map_join import join_record_design_semantics
-from .pipeline._semantic_map_loader import load_semantic_map
+from .pipeline.semantic_map import load_semantic_map
 
 _AuthorityToken = Annotated[str, Field(min_length=1, max_length=200, pattern=r"^[a-z0-9][a-z0-9._:/-]*$")]
 

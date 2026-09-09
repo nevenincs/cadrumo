@@ -17,14 +17,16 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..pipeline import _semantic_map_validation
-from ..pipeline._record_design_ir import RecordDesignIntermediate
-from ..pipeline._semantic_map import SemanticMap
 from ..pipeline._semantic_map_validation import (
     SemanticMapAnomalyException,
     resolve_semantic_map_casilla_tokens,
     validate_semantic_map,
 )
-from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediate,
+    RecordDesignWorkbookFormat,
+)
+from ..pipeline.semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -24,10 +24,12 @@ from cadrumo.domain.calculations.registry.static_inspection import RegistryRevis
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..analysis.m303_semantic_census import census_m303_semantic_map, resolve_semantic_home
-from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
-from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
-from ..pipeline._semantic_map_loader import load_semantic_map
+from ..pipeline.joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
+from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline.semantic_map import (
+    SemanticMap,
+    load_semantic_map,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

@@ -45,7 +45,11 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ProjectionEndpointDeclaration,
 )
 
-from ._provenance_manifest import (
+from ._variable_envelope import (
+    compile_auxiliary_envelope_header_definition,
+    compile_filing_envelope_definition,
+)
+from .export_fragment_provenance import (
     EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION,
     ExportFieldDerivation,
     ExportFieldDerivationCode,
@@ -53,7 +57,8 @@ from ._provenance_manifest import (
     ExportFragmentTarget,
     emit_export_fragment_provenance_manifest,
 )
-from ._render_profile import (
+from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
+from .render_profile import (
     RenderProfile,
     RenderProfileAnchor,
     RenderProfileSourceEvidence,
@@ -61,17 +66,12 @@ from ._render_profile import (
     Width17MembershipRule,
     validate_render_profile,
 )
-from ._semantic_map import SemanticMap
-from ._semantic_map_join import JoinedRecordDesign, JoinedRecordDesignField, JoinedRecordDesignRecord
-from ._variable_envelope import (
-    compile_auxiliary_envelope_header_definition,
-    compile_filing_envelope_definition,
-)
 from .render_profile_eligibility import (
     _has_absent_naturaleza,
     _is_numeric_aeat_type,
     _states_no_wire_fact,
 )
+from .semantic_map import SemanticMap
 from .source_defects import (
     NoteGovernedAmountDeclaration,
     NoteStatedApplicabilityDeclaration,
@@ -670,9 +670,9 @@ def _require_exact_record_geometry(joined_record: JoinedRecordDesignRecord) -> N
     ``joined_record.fields`` reaches this function via a zero-transformation
     pipeline: ``extract_record_design`` (the same extractor, which already
     runs this identical check unconditionally on every field) ->
-    ``_record_design_ir.py``'s ``_intermediate_sheet`` (a straight 1:1
+    ``record_design_intermediate.py``'s ``_intermediate_sheet`` (a straight 1:1
     projection, offset/length unchanged, order preserved) ->
-    ``_semantic_map_join.py``'s ``_join_record_design_semantics`` (wraps
+    ``joined_record_design.py``'s ``_join_record_design_semantics`` (wraps
     each field once more, still unreordered, unfiltered). Given that chain,
     this loop can never actually fire differently from the extractor's own
     check -- it is a backstop over an already-guaranteed invariant, kept
@@ -1372,7 +1372,7 @@ def _render_profile_anchor(joined_field: JoinedRecordDesignField) -> RenderProfi
     field = joined_field.parser_field
     # DERIVED, not authored: this anchor is built from the parser field, so a
     # missing ordinal is an observed fact about the design rather than a claim,
-    # exactly as in ``_render_profile._field_anchor``.
+    # exactly as in ``render_profile._field_anchor``.
     return RenderProfileAnchor(
         sheet=field.sheet,
         source_row=field.source_row,

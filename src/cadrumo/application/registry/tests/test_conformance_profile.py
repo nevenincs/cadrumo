@@ -29,7 +29,7 @@ from ....core.modelo import NON_REGISTRY_MODELOS, Modelo
 from ....core.revision_review import RevisionReviewStatus
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.export_parse import xml_dictionary_entries
-from ....domain.calculations.registry.external_grounding import (
+from ....tests.external_grounding import (
     RegistryExternalGroundingAudit,
     build_external_grounding_audit,
     load_bundled_external_oracle_inventory,

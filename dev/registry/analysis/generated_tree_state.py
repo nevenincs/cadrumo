@@ -43,7 +43,7 @@ from typing import Final
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
-from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..pipeline.render_check import compare_revision_against_committed
 from .corpus import bundled_modelo_ids
 

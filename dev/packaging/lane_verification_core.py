@@ -14,6 +14,10 @@ without building anything.
 The public API below is the deliberate contract; names prefixed with an
 underscore are internals of this module. Lanes import from here, never from a
 sibling lane.
+
+That contract is also proven from outside this package: the ``dev.ci`` runtime
+compatibility lane builds and probes the same artifacts under the same rules,
+so the shared core is a public module.
 """
 
 from __future__ import annotations
@@ -39,7 +43,6 @@ from typing import Any, Final
 from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
-from ._command import CommandResult, run_command
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
 from ._proof_ledger import (
@@ -48,6 +51,7 @@ from ._proof_ledger import (
     recorded_proofs,
     reset_proof_ledger,
 )
+from .command_execution import CommandResult, run_command
 from .evidence import PackagingSmokeManifest
 from .python_cohort import digest_install_target
 

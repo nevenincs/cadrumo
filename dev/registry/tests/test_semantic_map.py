@@ -14,7 +14,7 @@ from cadrumo.core.filing_projection_ref import (
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey, ExportDraftAttribute
 
-from ..pipeline._semantic_map import SemanticMap, SemanticMapEntry
+from ..pipeline.semantic_map import SemanticMap, SemanticMapEntry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

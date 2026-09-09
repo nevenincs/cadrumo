@@ -26,15 +26,15 @@ from cadrumo.domain.calculations.registry.schema_exports import (
 
 from ..pipeline import _tree_check
 from ..pipeline._export_tree import ExportTreeTransportProfile
-from ..pipeline._provenance_manifest import (
+from ..pipeline._tree_check import (
+    GeneratedExportTreeCheckContext,
+    check_generated_export_tree,
+)
+from ..pipeline.export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
     normalised_loader_semantics,
-)
-from ..pipeline._tree_check import (
-    GeneratedExportTreeCheckContext,
-    check_generated_export_tree,
 )
 from .test_generated_export_tree_validation import (
     _ISOLATED_TREE,
