@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:d122a20754e88c938ca31f18c5478300afc9aa5f5923b5ca70ffc2a0b115baa4'
+body_hash: 'sha256:fe9ff9c4a650561a5027406251269306c773a7970f8e71806728fa96f44e30db'
 step_id: 'S244'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Withdraw and delete the unreachable generic TUI error and log component slice now superseded by the live operation modal projection.
 

@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:d6bc0410fed8eea40258e34c46c5837f9c041eaea426628c965dc3dbdfc499c2'
+body_hash: 'sha256:1ef64bf4711b60c0e7c2ea5f0e475d08f6880371ed4f44696413ff1c7d4da5a7'
 step_id: 'S259'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Move the conformance and secure-replay request DTOs from the shipped proof contract into the development proof owner now that no production adapter consumes them; remove request-only production tests and exports without aliases, retain shared proof evidence contracts, run focused gates, remeasure exact reachability, update the cadence reference, and write the Step Record.
 

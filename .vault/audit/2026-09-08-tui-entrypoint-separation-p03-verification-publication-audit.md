@@ -3,47 +3,17 @@ tags:
   - '#audit'
   - '#tui-entrypoint-separation'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:884b9c1c0b359db92309912cbf369b74d5d12abf797454884998ee07f26198e5'
+body_hash: 'sha256:648871016407f6aa2b013b1ee8a1a07296793047cb9ee461e69fbb6ad3b81774'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace tui-entrypoint-separation with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
 
 # `tui-entrypoint-separation` audit: `p03 verification publication`
 
 ## Scope
 
-<!-- What was audited and why -->
-
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### p03 verification publication | {level} | {summary}
-
-     followed by a paragraph carrying the detail. p03 verification publication is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### stale-published-tui-route-docs | medium | Published documentation still names the retired global request and deleted destination module
 
@@ -56,7 +26,3 @@ module P02 removed. Regenerate or update the owning documentation outputs and re
 API page before closing P03.
 
 ## Recommendations
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->

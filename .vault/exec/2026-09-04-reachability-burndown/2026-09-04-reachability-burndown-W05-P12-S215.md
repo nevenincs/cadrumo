@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:7cfc6b835fbd4d10c5650a6d59dfe5c9617a5ae99b9029dc4fd0e50d830241f1'
+body_hash: 'sha256:89a374b8dc5d70f3d2cf119a3d93e7fe83f6224384448674733fc29bec3e7d2b'
 step_id: 'S215'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the wholly unused MODELO_WORK_VERIFY_PROGRESS_UNIT constant and export from Modelo operation definitions after proving verification progress is owned by the typed work-review denominator and the operation definition carries no progress-unit field.
 

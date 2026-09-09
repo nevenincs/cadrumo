@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f74744f24829e5f3f9f7f0e12498f77ba2940e0491a25ca4ab6785308a138a38'
+body_hash: 'sha256:7431a93951c82437c81111c4fedc972afc9849e2c6267b592836974f3dfeb6f3'
 step_id: 'S212'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Move the detail-row identity-table coverage comparison entirely out of production calculation adjustments by deleting the test-only uncovered_detail_row_kinds facade and private comparison helper, and make the focused gate derive ModeloDetailRow union members against the live identity table inside the test while retaining detector-teeth proof and all runtime union/conflict behavior.
 

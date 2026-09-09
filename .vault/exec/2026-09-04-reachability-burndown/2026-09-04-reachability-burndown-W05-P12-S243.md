@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:555d3ec0a58a7bd6bb4034e16117ca0d96a8b9aebd6a932f729775bf2169803a'
+body_hash: 'sha256:f688b7aa5cdf35e920b0ed9b166c0fd29179a4b0534b31cb970b2fffd044a668'
 step_id: 'S243'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the ownerless require_verified_aeat_session branch now that live reads are governed solely by ensure_authenticated_aeat_session.
 

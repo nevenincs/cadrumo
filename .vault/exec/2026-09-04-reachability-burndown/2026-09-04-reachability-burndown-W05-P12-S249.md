@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:b36cbf5cb94cd6a7bf9efd37c2b57eec9587d38aa0d897003d1b59f737e12f35'
+body_hash: 'sha256:342b31fbfa9fc773ef7f08b9ccdd10970bfb6f1d54d1f0ce76045933a20b2a6f'
 step_id: 'S249'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the Workspace refusal-union adjudication gate and remove its unproduced contract arms
 

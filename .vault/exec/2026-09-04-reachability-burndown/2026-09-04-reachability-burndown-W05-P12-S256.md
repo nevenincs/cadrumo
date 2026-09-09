@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:2dd0e44b0b93f9d21f25473a43ac27eba5395745e33655e9a73c73bae7db1b06'
+body_hash: 'sha256:fa4717f10cc287021881db148616c963c4a776a7a216d8346f33c303491ddd92'
 step_id: 'S256'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Move filing export proof execution out of the shipped application package
 

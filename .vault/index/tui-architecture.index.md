@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#tui-architecture'
 date: '2026-08-25'
-modified: '2026-09-07'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd18a676d2431d6f42fe9279a58a51045c51dcbe340976697313dee904b9b0f0'
+body_hash: 'sha256:12da1b7919f9161d1eedb145242eddbf168ab695b8bef31efda8501498dc2e94'
 related:
   - '[[2026-08-11-tui-architecture-W02-P19-S124]]'
   - '[[2026-08-11-tui-architecture-W03-P20-S128]]'
@@ -237,6 +237,7 @@ related:
   - '[[2026-08-11-tui-architecture-W06-P24-S156]]'
   - '[[2026-08-11-tui-architecture-W07-P16-S333]]'
   - '[[2026-08-11-tui-architecture-W07-P16-S334]]'
+  - '[[2026-08-11-tui-architecture-W07-P16-S340]]'
   - '[[2026-08-11-tui-architecture-W07-P16-S351]]'
   - '[[2026-08-11-tui-architecture-W07-P16-S92]]'
   - '[[2026-08-11-tui-architecture-W07-P16-S94]]'
@@ -378,6 +379,7 @@ related:
   - '[[2026-08-11-tui-architecture-W08-P30-S487]]'
   - '[[2026-08-11-tui-architecture-W08-P30-S488]]'
   - '[[2026-08-11-tui-architecture-W08-P30-S489]]'
+  - '[[2026-08-11-tui-architecture-W08-P30-S490]]'
   - '[[2026-08-11-tui-architecture-W08-P30-S491]]'
   - '[[2026-08-11-tui-architecture-W08-P30-S492]]'
   - '[[2026-08-11-tui-architecture-adr]]'
@@ -521,6 +523,7 @@ related:
   - '[[2026-09-03-tui-architecture-w08-p28-s402-review-audit]]'
   - '[[2026-09-03-tui-architecture-w08-p28-s403-review-audit]]'
   - '[[2026-09-04-tui-architecture-authenticated-tui-visibility-adr]]'
+  - '[[2026-09-08-tui-architecture-s340-audit]]'
 ---
 
 # `tui-architecture` feature index
@@ -661,6 +664,7 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-09-03-tui-architecture-w08-p28-s401-review-audit` - `tui-architecture` audit: `w08 p28 s401 review`
 - `2026-09-03-tui-architecture-w08-p28-s402-review-audit` - `tui-architecture` audit: `w08 p28 s402 review`
 - `2026-09-03-tui-architecture-w08-p28-s403-review-audit` - `tui-architecture` audit: `w08 p28 s403 review`
+- `2026-09-08-tui-architecture-s340-audit` - `tui-architecture` audit: `S340 supervised Google Sheets export`
 
 ### exec
 
@@ -1035,8 +1039,10 @@ Auto-generated index of all documents tagged with `#tui-architecture`.
 - `2026-08-11-tui-architecture-W08-P30-S487` - Prepare the parity prune as a reviewable removal manifest without applying it, deriving the one hundred and thirty two keys and a per key verdict from the live authority owning each namespace, and confirm none of them is declared anywhere so the list cannot remove a key the product resolves
 - `2026-08-11-tui-architecture-W08-P30-S488` - Record that the scoop packaging suite returns a different verdict run to run on this host, since one unchanged command produced a pass a timeout an error set and another pass within an hour varying only by machine load, which makes a single red from it unreadable as evidence
 - `2026-08-11-tui-architecture-W08-P30-S489` - Close the codebase to locale parity gate by narrowing the removal manifest against the four authorities the first sweep missed, since the wizard descriptor walk and the identity contract read keys the source scan cannot see, then teach the manager to discover the wizard flow help key it builds by interpolation and retire the google profile option sample whose option the live command specs no longer declare
+- `2026-08-11-tui-architecture-W08-P30-S490` - Establish that the modelo 390 2022 export tree is blocked on a reviewed bootstrap target row rather than on the check mode pin that earlier firings named, since the generated export bootstrap authority carries only two reviewed modelo 200 rows and each attests a reviewed official source by hash, and correct the reading that the pipeline module run as a script passes when it has no main guard and exits zero without running TUIMODELO_SCOPE: RETAINED_BY_SOURCE_OWNER; modelo-subject and UNCOVERED: searched the tuimodelo plan for the modelo 390 export-tree subject and found no step, so it is retained rather than assumed absorbed.
 - `2026-08-11-tui-architecture-W08-P30-S491` - Guard the twelve custody cases whose own body raises the keychain unavailable error behind the shared credential store probe, pairing each failure to its test through the junit report rather than a traceback dump, and leave the opaque handover assertions and the absent session action key error red because a marker keyed skip over all of them was measured to discard six passing cases
 - `2026-08-11-tui-architecture-W08-P30-S492` - Take the custody keychain lane from thirty three failures to two by diagnosing every case individually against its own locals refusal code or production log rather than the marker, guarding only those the store actually causes so the passing count never moves, and leaving the two that are not the store visible with their failing expressions recorded
+- `2026-08-11-tui-architecture-W07-P16-S340` - Route the spreadsheet export command through the operation supervisor instead of reaching around it into the service: the modelo spreadsheet command composes the export service directly and calls its execute method with a request, bypassing the supervisor entirely -- even though that export is a fully registered operation with a definition, a journal, a lease and a recovery action. So a live operator path executes an operation OUTSIDE the platform that exists to govern it: the run is not journalled, holds no lease, cannot be cancelled, cannot be resumed after a crash, and produces no observation any frontend can watch. Every safety property the operations platform provides is absent on the one path an operator actually takes for this export. Submit through the supervisor as the censal path does, and prove the run is journalled and leaseable rather than merely that it succeeds. NOTE deliberately NOT to encode a matcher for this shape: a rule forbidding a frontend from calling execute on an application service would match a NAME rather than a structure, which is the fourth such gate this campaign has found and rejected; if a gate is wanted here it must judge whether a registered definition exists for the work being done, not what the call is spelled; `the modelo spreadsheet export command's execution path and a journalled-and-leased proof of the routed run`. [A 'PREMISE CORRECTED' BLOCK ONCE STOOD HERE AND WAS RETRACTED; its three claims were all wrong and the row's original text is correct. Root cause kept because it outlives the error: the definition search grepped the literal kwarg form definition_id="...", which only TEST fixtures use, while every real registration builds an OperationDefinition from a module-level constant -- so the search enumerated a SPELLING and reported it as the population. A grep that finds nothing proves nothing until the pattern is shown to match a known-present case.] ROUTE CONFIRMED IMPLEMENTABLE 2026-08-31, with every piece located. The definition is registered with the supervisor the CLI would submit to: entrypoints/operation_composition.py:166 installs build_google_sheets_export_operation_registration, and :136 its definition. The bypass is entrypoints/cli/_modelo_spreadsheet_cli.py, in execute_google_sheets_export, which calls compose_google_sheets_export_service().execute(GoogleSheetsExportOperationRequest(...)) and returns (active, result). The exemplar for submit-and-start is entrypoints/cli/_config/_custody.py:281 -- compose_operation_dependencies(), await services.submission.submit(request, actor_ref=...), await services.submission.start(receipt.operation_id), bridged from Typer by asyncio.run, with services.shutdown() in a finally. RESULT RETRIEVAL, which the row's history left uncertain and which is the reason this is not a call-site swap: the logout exemplar needs NO result and so demonstrates none. The export does -- its envelope prints value_cells_written, formula_cells_written, protected_ranges_written and tab_count off a typed GoogleSheetsExportOperationResult, and the definition declares result_type accordingly. The mechanism EXISTS: OperationResultProjectionService.resolve at application/operations/projection_services.py:609, reachable as composed.result. Note it currently has no production caller, which is the same reach-without-a-surface shape W07.P17.S338 measures and W06.P12b.S77 carries as its one open clause -- so this row would be its FIRST consumer. THE UNSOLVED PART, and it is a design question rather than plumbing: the bypass maps four executor exceptions to typed CLI refusals -- GoogleSheetsExportCapabilityDisabledError, GoogleSheetsExportRootFolderRequiredError, GoogleAuthError and OutboundStorageError. Through the supervisor those stop being exceptions the caller catches and become FAILED OPERATIONS, so each refusal must be reconstructible from the failure the platform records or the operator loses four distinct, actionable messages in exchange for a generic one. Settle that before routing; a submission that journals correctly while degrading every refusal to 'export failed' trades one safety property for another. TUIMODELO_SCOPE: RETAINED_BY_SOURCE_OWNER; modelo-subject and PARTIALLY overlapping. Tuimodelo's W02.P06.S25 gives the spreadsheet round trip an application service and moves its staleness refusal off the outbound adapter, which is the application-service half only; routing the command through the operation supervisor is a different subject and stays here.
 
 ### plan
 

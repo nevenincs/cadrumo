@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:53f173f87ef49cf8452a58dd46a44a6a7bddab059c5ba166ecab6c673590fd82'
+body_hash: 'sha256:959861c2e97a4d5c29fcc80206f712cf000ec2515c88cc098ec9b6919465bd03'
 step_id: 'S175'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the displaced domain.iva sectoral-prorrata model, heuristic, calculator, constant, self-tests, now-unraisable error contract, and dangling implementation reference after proving the accepted operator-declared sector register and ledger apportionment path is already live; amend the governing differentiated-sectors ADR and clear the module-level production-metastate finding.
 

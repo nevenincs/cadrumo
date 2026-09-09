@@ -1,0 +1,799 @@
+schema_version = 1
+source_path = "src/cadrumo/core/external_constants.py"
+declaration_count = 37
+consumer_count = 53
+classification = "governed_fact"
+provider_step = "W02.P08.S20"
+deletion_step = "W04.P16.S31"
+declaration_disposition = "delete_after_provider_enrollment_and_consumer_migration"
+consumer_disposition = "retain_domain_behavior_and_rewire_fact_resolution"
+
+[preservation_boundary]
+technical_configuration_source = "src/cadrumo/core/external_constants.py"
+technical_configuration_data = "src/cadrumo/core/external_constants.toml"
+technical_configuration_disposition = "exclude_from_facts_and_retain"
+technical_configuration_rationale = "protocol tokens, encodings, MIME types, output language, provenance tokens, endpoints, paths, OAuth scopes, and strict configuration models are operational configuration rather than legally governed calculation facts"
+technical_configuration_condition = "every production reader continues to resolve these symbols or ExternalConstants fields through core.external_constants or Settings.external_constants; facts providers must not own or duplicate them"
+technical_constants = ["DEFAULT_CURRENCY", "BINARY_MIME_TYPE", "JSON_MIME_TYPE", "CSV_MIME_TYPE", "JSONL_MIME_TYPE", "XLSX_MIME_TYPE", "CLASSIFIED_BY_MANUAL", "CLASSIFIED_BY_AUTO", "PDF_MIME_TYPE", "PDF_EXTENSION", "XML_MIME_TYPE", "XLS_EXTENSION", "XLSX_EXTENSION", "XLSM_EXTENSION", "LATIN_1_ENCODING", "UTF_8_ENCODING", "BOE_ENCODING_CHOICES", "CSV_ENCODING_FALLBACK_CHAIN", "PROVENANCE_SOURCE_MANUAL_CLI", "PROVENANCE_SOURCE_CENSO_ARTEFACT", "SANDBOX_LABEL_PREFIX", "OUTPUT_LANGUAGE_ENV_VAR", "DEFAULT_OUTPUT_LANGUAGE", "SUPPORTED_OUTPUT_LANGUAGES"]
+technical_types = ["_Frozen", "AeatDomainSection", "AeatSedePathSection", "AeatClaveMovilSurface", "AeatClavePermanenteSurface", "AeatPre303Surface", "AeatHelpPageSection", "AeatNotificationsQuery", "AeatOracleSection", "AeatLiveSafety", "AeatPortalPathSection", "AeatSection", "GoogleOAuthScopeSection", "GoogleServiceSection", "OnlineServicesSection", "ExternalConstants", "OutputLanguage"]
+technical_functions = ["load_external_constants"]
+reader_kinds = ["direct_symbol_import", "Settings.external_constants", "load_external_constants"]
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/iva/lookup.py"
+symbols = ["lookup_rate", "cite", "coexisting_tier_rates", "rate_kinds_for_declared_rate"]
+rationale = "typed IVA resolution and citation behavior remains the domain projection"
+condition = "rewire its table input to authority results and provenance; do not preserve direct TOML reads or provider-local caches"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/iva/recargo_equivalencia.py"
+symbols = ["LivaArt161RecargoRates", "RecargoRateRecord", "load_recargo_rates", "recargo_rate_for_applied_rate"]
+rationale = "typed recargo records and rate lookup remain domain contracts"
+condition = "authority owns values, dated selection, provenance and cache; raw legal-parameter and recargo-table loaders retire after callers migrate"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/iva/catalogue.py"
+symbols = ["bundled_iva_catalogue", "iva_catalogue_years", "resolve_catalogue"]
+rationale = "IVA catalogue resolution remains a domain-facing contract"
+condition = "provider owns parsing, validation, evidence and cache; load_iva_catalogue and its cached parser are not retained facades"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/iva/place_of_supply.py"
+symbols = ["IvaPlaceOfSupplyRule", "place_of_supply_rule", "place_of_supply_years"]
+rationale = "typed place-of-supply resolution remains domain behavior"
+condition = "provider owns table parsing, evidence, exact date selection and cache; load_place_of_supply_table is not retained"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/categories/registry.py"
+symbols = ["category_profile_years", "resolve_category_profiles"]
+rationale = "typed category-profile resolution remains the category domain projection"
+condition = "provider owns raw parsing, statutory caps, grounding, temporal resolution and cache; load_category_profiles is not retained"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/transactions/retencion_parameters.py"
+symbols = ["RirpfArt95RetencionRates", "AdministradorRetencionRates", "load_retencion_actividades_rates", "load_administrador_retencion_rates", "rirpf_art95_retencion_legal_refs", "administrador_retencion_legal_refs", "statutory_activity_retencion_rates"]
+rationale = "typed transaction-rate projections and legal-reference disclosures remain domain contracts"
+condition = "facts authority supplies typed values and provenance; LegalParameter.value parsing and load_legal_parameters_only calls retire"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/transactions/tipo_actividad_partitions.py"
+symbols = ["irpf_activity_kind_for", "load_tipo_actividad_selectors", "tipo_actividad_code_set"]
+rationale = "typed Modelo 036 activity classification remains transaction-domain behavior"
+condition = "facts authority supplies entity sets and provenance; local string splitting and load_legal_parameters_only calls retire"
+
+# One classification row exists for every declaration row below. Empty
+# counterparts mean the Python declaration is the only current value authority.
+# `closure` is evaluated together with the declaration row's complete consumer
+# list; product/extraction classifications deliberately have no fact identity.
+
+[[classifications]]
+symbol = "M347_THRESHOLD_EUR"
+kind = "governed_fact"
+destination_id = "m347-counterparty-declaration-threshold"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:M347_THRESHOLD_EUR"
+counterparts = ["src/cadrumo/_data/registry/aeat/modelos/347/revisions/2011-2024/parameters/0001-threshold.toml", "src/cadrumo/_data/registry/aeat/modelos/347/revisions/2025-y-siguientes/parameters/0001-threshold.toml"]
+dependencies = ["W02.P08.S20", "W03.P10.S48", "W04.P16.S31"]
+disposition = "delete_declaration_retain_counterpart_projection"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "M347_CLAVE_C_THRESHOLD_EUR"
+kind = "governed_fact"
+destination_id = "m347-clave-c-beneficiary-declaration-threshold"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:M347_CLAVE_C_THRESHOLD_EUR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P10.S48", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"
+kind = "governed_fact"
+destination_id = "iva-bien-inversion-escaso-valor-threshold"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W04.P16.S31"]
+disposition = "delete_unapplied_declaration"
+closure = "destination resolves with provenance; consumer list remains empty; declaration import count is zero"
+
+[[classifications]]
+symbol = "MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR"
+kind = "governed_fact"
+destination_id = "iae-cifra-negocios-exemption-threshold"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W04.P16.S31"]
+disposition = "delete_unapplied_declaration"
+closure = "destination resolves with provenance; consumer list remains empty; declaration import count is zero"
+
+[[classifications]]
+symbol = "ART_7P_EXEMPTION_CAP_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-art-7p-exemption-cap"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:ART_7P_EXEMPTION_CAP_EUR"
+counterparts = ["src/cadrumo/_data/registry/aeat/categories/trabajador_del_mar.toml"]
+dependencies = ["W02.P08.S20", "W03.P11.S24", "W04.P16.S31"]
+disposition = "delete_declaration_retain_counterpart_projection"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-multiple-pagadores-secondary-threshold"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P13.S53", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-work-income-general-declaration-limit"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W04.P16.S31"]
+disposition = "delete_unapplied_declaration"
+closure = "destination resolves with provenance; consumer list remains empty; declaration import count is zero"
+
+[[classifications]]
+symbol = "WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR"
+kind = "governed_fact"
+destination_id = "lirpf-work-income-multiple-pagadores-reduced-limit"
+destination_family = "mapping"
+authority = "src/cadrumo/core/external_constants.py:WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P13.S53", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves the filing-year schedule with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "MODELO_202_ART_40_3_INCN_THRESHOLD_EUR"
+kind = "governed_fact"
+destination_id = "lis-art-40-3-incn-threshold"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:MODELO_202_ART_40_3_INCN_THRESHOLD_EUR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P10.S49", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-art-20-trabajo-reduccion-rnt-ceiling"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves by filing year with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-art-52-individual-contribution-sublimit"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves by filing year with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DEFAULT_IVA_GENERAL_RATE_PCT"
+kind = "governed_fact"
+destination_id = "iva-general-rate"
+destination_family = "mapping"
+authority = "src/cadrumo/_data/registry/aeat/iva/rates.toml"
+counterparts = ["src/cadrumo/core/external_constants.py:DEFAULT_IVA_GENERAL_RATE_PCT"]
+dependencies = ["W02.P05.S13", "W03.P12.S51", "W04.P16.S31"]
+disposition = "delete_fallback_declaration_retain_iva_provider"
+closure = "dated IVA provider resolves with provenance; inventory default is removed or rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "RETENCIONES_MODELOS"
+kind = "extraction_rule"
+destination_id = ""
+destination_family = ""
+authority = "src/cadrumo/core/external_constants.py:RETENCIONES_MODELOS"
+counterparts = []
+dependencies = ["W03.P10.S49", "W04.P16.S31"]
+disposition = "move_to_typed_aggregation_routing"
+closure = "canonical aggregation routing owns the classification; every alias and branch is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "COUNTERPART_MODELOS"
+kind = "extraction_rule"
+destination_id = ""
+destination_family = ""
+authority = "src/cadrumo/core/external_constants.py:COUNTERPART_MODELOS"
+counterparts = []
+dependencies = ["W03.P10.S49", "W04.P16.S31"]
+disposition = "move_to_typed_aggregation_routing"
+closure = "canonical aggregation routing owns the classification; every alias and branch is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "FOREIGN_ASSET_MODELOS"
+kind = "extraction_rule"
+destination_id = ""
+destination_family = ""
+authority = "src/cadrumo/core/external_constants.py:FOREIGN_ASSET_MODELOS"
+counterparts = []
+dependencies = ["W03.P10.S49", "W04.P16.S31"]
+disposition = "move_to_typed_aggregation_routing"
+closure = "canonical aggregation routing owns the classification; every alias and branch is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "IVA_REGIME_MODELOS"
+kind = "implementation_coverage"
+destination_id = ""
+destination_family = ""
+authority = "src/cadrumo/core/external_constants.py:IVA_REGIME_MODELOS"
+counterparts = []
+dependencies = ["W03.P10.S49", "W04.P16.S31"]
+disposition = "move_to_calendar_warning_coverage_policy"
+closure = "calendar-warning coverage owns the set; the module alias is removed; declaration import count is zero"
+
+[[classifications]]
+symbol = "REBECA_MARITIME_EXEMPTION_FRACTION"
+kind = "governed_fact"
+destination_id = "rebeca-maritime-exemption-fraction"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:REBECA_MARITIME_EXEMPTION_FRACTION"
+counterparts = ["src/cadrumo/_data/registry/aeat/categories/trabajador_del_mar.toml"]
+dependencies = ["W02.P08.S20", "W03.P11.S24", "W04.P16.S31"]
+disposition = "delete_declaration_retain_counterpart_projection"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+# The remaining scalar declarations all have Python as their current authority.
+# Their per-symbol destination, dependencies, disposition and closure are kept
+# explicit even where several values migrate in one engineering step.
+[[classifications]]
+symbol = "DEDUCCION_MATERNIDAD_MENSUAL_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-art-81-maternity-monthly-amount"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DEDUCCION_MATERNIDAD_MENSUAL_EUR"
+counterparts = ["src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0067-renta-2025-maternidad-art-81-1.toml"]
+dependencies = ["W02.P08.S20", "W04.P16.S31"]
+disposition = "delete_declaration_retain_modelo_projection"
+closure = "destination projection resolves with provenance; consumer list remains empty; declaration import count is zero"
+
+[[classifications]]
+symbol = "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-art-81-maternity-annual-cap"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"
+counterparts = ["src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0067-renta-2025-maternidad-art-81-1.toml"]
+dependencies = ["W02.P08.S20", "W04.P16.S31"]
+disposition = "delete_declaration_retain_modelo_projection"
+closure = "destination projection resolves with provenance; consumer list remains empty; declaration import count is zero"
+
+[[classifications]]
+symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-art-81-maternity-post-birth-enrollment-increment"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR"
+counterparts = ["src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0067-renta-2025-maternidad-art-81-1.toml"]
+dependencies = ["W02.P08.S20", "W04.P16.S31"]
+disposition = "delete_declaration_retain_modelo_projection"
+closure = "destination projection resolves with provenance; consumer list remains empty; declaration import count is zero"
+
+[[classifications]]
+symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR"
+kind = "governed_fact"
+destination_id = "lirpf-art-81-maternity-post-birth-enrollment-annual-cap"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR"
+counterparts = ["src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0067-renta-2025-maternidad-art-81-1.toml"]
+dependencies = ["W02.P08.S20", "W04.P16.S31"]
+disposition = "delete_derived_duplicate_declaration"
+closure = "annual cap is derived from resolved base and increment; consumer list remains empty; declaration import count is zero"
+
+[[classifications]]
+symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR"
+kind = "governed_fact"
+destination_id = "lirpf-art-81-maternity-post-birth-enrollment-effective-year"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S25", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every direct and transitive consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR"
+kind = "governed_fact"
+destination_id = "lirpf-art-81-contribution-ceiling-retired-effective-year"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S25", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "MINIMO_DESCENDIENTE_MAX_AGE"
+kind = "governed_fact"
+destination_id = "lirpf-art-58-descendant-ordinary-maximum-age"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:MINIMO_DESCENDIENTE_MAX_AGE"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S25", "W04.P16.S31"]
+disposition = "delete_declaration_and_family_types_alias"
+closure = "destination resolves with provenance; alias and every transitive consumer are rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DT12_RESCATE_REDUCCION_RATE"
+kind = "governed_fact"
+destination_id = "lirpf-dt12-rescate-reduction-rate"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DT12_RESCATE_REDUCCION_RATE"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DT12_GENERAL_WINDOW_FOLLOWING_YEARS"
+kind = "governed_fact"
+destination_id = "lirpf-dt12-general-window-following-years"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DT12_GENERAL_WINDOW_FOLLOWING_YEARS"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR"
+kind = "governed_fact"
+destination_id = "lirpf-dt12-transitional-contingency-first-year"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR"
+kind = "governed_fact"
+destination_id = "lirpf-dt12-transitional-contingency-last-year"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS"
+kind = "governed_fact"
+destination_id = "lirpf-dt12-transitional-window-following-years"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DT12_CLIFF_LAST_YEAR"
+kind = "governed_fact"
+destination_id = "lirpf-dt12-cliff-last-year"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DT12_CLIFF_LAST_YEAR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "SAL_RESERVA_DOTACION_RATE"
+kind = "governed_fact"
+destination_id = "sal-special-reserve-allocation-rate"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:SAL_RESERVA_DOTACION_RATE"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "SAL_RESERVA_CAPITAL_MULTIPLE"
+kind = "governed_fact"
+destination_id = "sal-special-reserve-capital-multiple"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:SAL_RESERVA_CAPITAL_MULTIPLE"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S50", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "DEHU_RECHAZO_TACITO_DIAS_NATURALES"
+kind = "governed_fact"
+destination_id = "dehu-tacit-rejection-natural-days"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:DEHU_RECHAZO_TACITO_DIAS_NATURALES"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P13.S53", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "MINIMO_MENOR_TRES_MAX_AGE"
+kind = "governed_fact"
+destination_id = "lirpf-art-58-under-three-maximum-age"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:MINIMO_MENOR_TRES_MAX_AGE"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S25", "W04.P16.S31"]
+disposition = "delete_declaration_and_family_types_alias"
+closure = "destination resolves with provenance; alias and every transitive consumer are rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "CUSTODIA_COMPARTIDA_PRORRATA_FACTOR"
+kind = "governed_fact"
+destination_id = "lirpf-art-61-shared-custody-proration-factor"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:CUSTODIA_COMPARTIDA_PRORRATA_FACTOR"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S25", "W04.P16.S31"]
+disposition = "delete_declaration"
+closure = "destination resolves with provenance; every consumer is rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "ART_81_1_ENTRY_WINDOW_YEARS"
+kind = "governed_fact"
+destination_id = "lirpf-art-81-adoption-entry-window-years"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:ART_81_1_ENTRY_WINDOW_YEARS"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S25", "W04.P16.S31"]
+disposition = "delete_declaration_and_family_types_alias"
+closure = "destination resolves with provenance; alias and every transitive consumer are rewired; declaration import count is zero"
+
+[[classifications]]
+symbol = "NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS"
+kind = "governed_fact"
+destination_id = "madrid-birth-adoption-following-periods"
+destination_family = "scalar"
+authority = "src/cadrumo/core/external_constants.py:NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS"
+counterparts = []
+dependencies = ["W02.P08.S20", "W03.P11.S25", "W04.P16.S31"]
+disposition = "delete_declaration_and_family_types_alias"
+closure = "destination resolves with provenance; alias and every transitive consumer are rewired; declaration import count is zero"
+
+# This ledger records direct production bindings only. Tests, docstring-only
+# references, and the retained operational-configuration surface are excluded.
+
+[[declarations]]
+symbol = "M347_THRESHOLD_EUR"
+family = "scalar"
+migration_step = "W03.P10.S48"
+consumers = [
+  { path = "src/cadrumo/application/aggregation/_counterpart.py", symbol = "declarable_counterparty_nifs_347" },
+  { path = "src/cadrumo/application/modelo/calculate_input.py", symbol = "_validate_detail_rows" },
+  { path = "src/cadrumo/domain/calculations/registry/_m347_threshold.py", symbol = "m347_declarable_party_ids" },
+  { path = "src/cadrumo/domain/modelos/row_models.py", symbol = "Modelo347ThresholdError.__init__" },
+  { path = "src/cadrumo/domain/modelos/row_models.py", symbol = "validate_m347_threshold" },
+]
+
+[[declarations]]
+symbol = "M347_CLAVE_C_THRESHOLD_EUR"
+family = "scalar"
+migration_step = "W03.P10.S48"
+consumers = [{ path = "src/cadrumo/domain/calculations/registry/_m347_threshold.py", symbol = "m347_clave_c_declarable_party_ids" }]
+
+[[declarations]]
+symbol = "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"
+family = "scalar"
+migration_required = false
+consumers = []
+
+[[declarations]]
+symbol = "MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR"
+family = "scalar"
+migration_required = false
+consumers = []
+
+[[declarations]]
+symbol = "ART_7P_EXEMPTION_CAP_EUR"
+family = "scalar"
+migration_step = "W03.P11.S24"
+consumers = [{ path = "src/cadrumo/domain/renta/maritime_exemption.py", symbol = "calculate_art_7p_exemption" }]
+
+[[declarations]]
+symbol = "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR"
+family = "scalar"
+migration_step = "W03.P13.S53"
+consumers = [{ path = "src/cadrumo/domain/deadlines/models.py", symbol = "_MULTIPLE_PAGADORES_SECONDARY_THRESHOLD" }]
+
+[[declarations]]
+symbol = "WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR"
+family = "scalar"
+migration_required = false
+consumers = []
+
+[[declarations]]
+symbol = "WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR"
+family = "mapping"
+migration_step = "W03.P13.S53"
+consumers = [{ path = "src/cadrumo/domain/deadlines/models.py", symbol = "resolve_multiple_pagadores_reduced_limit" }]
+
+[[declarations]]
+symbol = "MODELO_202_ART_40_3_INCN_THRESHOLD_EUR"
+family = "scalar"
+migration_step = "W03.P10.S49"
+consumers = [{ path = "src/cadrumo/domain/calculations/registry/applicability_modelo202.py", symbol = "modelo_202_modality_from_inputs" }]
+
+[[declarations]]
+symbol = "MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/application/modelo/_art20_advisory.py", symbol = "_art20_reduccion_advisory_finding" }]
+
+[[declarations]]
+symbol = "MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/application/modelo/_art52_advisory.py", symbol = "_art52_reduccion_advisory_finding" }]
+
+[[declarations]]
+symbol = "DEFAULT_IVA_GENERAL_RATE_PCT"
+family = "scalar"
+migration_step = "W03.P12.S51"
+consumers = [{ path = "src/cadrumo/domain/contribuyente/inventory/records.py", symbol = "MovementRecord.iva_rate" }]
+
+[[declarations]]
+symbol = "RETENCIONES_MODELOS"
+family = "entity_set"
+migration_step = "W03.P10.S49"
+consumers = [
+  { path = "src/cadrumo/application/aggregation/_service.py", symbol = "_RETENCIONES_MODELOS" },
+  { path = "src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py", symbol = "_persist_cli_owned_observations" },
+  { path = "src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py", symbol = "_route_invoice_retenciones_into_command" },
+]
+
+[[declarations]]
+symbol = "COUNTERPART_MODELOS"
+family = "entity_set"
+migration_step = "W03.P10.S49"
+consumers = [{ path = "src/cadrumo/application/aggregation/_service.py", symbol = "_COUNTERPART_MODELOS" }]
+
+[[declarations]]
+symbol = "FOREIGN_ASSET_MODELOS"
+family = "entity_set"
+migration_step = "W03.P10.S49"
+consumers = [{ path = "src/cadrumo/application/aggregation/_service.py", symbol = "_FOREIGN_ASSET_MODELOS" }]
+
+[[declarations]]
+symbol = "IVA_REGIME_MODELOS"
+family = "entity_set"
+migration_step = "W03.P10.S49"
+consumers = [{ path = "src/cadrumo/application/overview/calendar_warnings.py", symbol = "_IVA_REGIME_MODELOS" }]
+
+[[declarations]]
+symbol = "REBECA_MARITIME_EXEMPTION_FRACTION"
+family = "scalar"
+migration_step = "W03.P11.S24"
+consumers = [{ path = "src/cadrumo/domain/renta/maritime_exemption.py", symbol = "calculate_rebeca_exemption" }]
+
+[[declarations]]
+symbol = "DEDUCCION_MATERNIDAD_MENSUAL_EUR"
+family = "scalar"
+migration_required = false
+consumers = []
+
+[[declarations]]
+symbol = "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR"
+family = "scalar"
+migration_required = false
+consumers = []
+
+[[declarations]]
+symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR"
+family = "scalar"
+migration_required = false
+consumers = []
+
+[[declarations]]
+symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR"
+family = "scalar"
+migration_required = false
+consumers = []
+
+[[declarations]]
+symbol = "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR"
+family = "scalar"
+migration_step = "W03.P11.S25"
+consumers = [{ path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "maternidad_alta_posterior_increment_applies" }]
+
+[[declarations]]
+symbol = "DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR"
+family = "scalar"
+migration_step = "W03.P11.S25"
+consumers = [{ path = "src/cadrumo/application/modelo/profile_binding.py", symbol = "_resolve_maternidad_meses_from_fact_index" }]
+
+[[declarations]]
+symbol = "MINIMO_DESCENDIENTE_MAX_AGE"
+family = "scalar"
+migration_step = "W03.P11.S25"
+consumers = [{ path = "src/cadrumo/domain/contribuyente/family_types.py", symbol = "MAX_AGE_ORDINARY" }]
+transitive_consumers = [{ path = "src/cadrumo/domain/contribuyente/descendant_record.py", symbol = "DescendantRecordBase.meets_non_income_conditions" }]
+
+[[declarations]]
+symbol = "MINIMO_MENOR_TRES_MAX_AGE"
+family = "scalar"
+migration_step = "W03.P11.S25"
+consumers = [{ path = "src/cadrumo/domain/contribuyente/family_types.py", symbol = "MAX_AGE_MENOR_TRES" }]
+transitive_consumers = [
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin._segundo_ciclo_window" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin.guarderia_contributing_spend" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin.guarderia_needs_monthly_detail" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin.guarderia_needs_segundo_ciclo_month" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin.guarderia_qualifying_meses" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin.guarderia_qualifying_months" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin.is_eligible_guarderia" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin.is_eligible_minimo_incremento_menor_tres" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_madrid.py", symbol = "DescendantMadridMixin.art_58_2_window_anchor_missing" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_maternity.py", symbol = "DescendantMaternityMixin._maternidad_edad_months" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_record.py", symbol = "DescendantRecordBase.is_eligible_menor_tres" },
+  { path = "src/cadrumo/domain/contribuyente/family_profile.py", symbol = "RentaFamilyProfile.guarderia_cotizaciones_ceiling_is_unbounded" },
+]
+
+[[declarations]]
+symbol = "CUSTODIA_COMPARTIDA_PRORRATA_FACTOR"
+family = "scalar"
+migration_step = "W03.P11.S25"
+consumers = [
+  { path = "src/cadrumo/domain/contribuyente/descendant_madrid.py", symbol = "nacimiento_adopcion_prorrateo_share" },
+  { path = "src/cadrumo/domain/contribuyente/family_profile.py", symbol = "RentaFamilyProfile.minimo_prorrata_factor" },
+]
+
+[[declarations]]
+symbol = "ART_81_1_ENTRY_WINDOW_YEARS"
+family = "scalar"
+migration_step = "W03.P11.S25"
+consumers = [{ path = "src/cadrumo/domain/contribuyente/family_types.py", symbol = "ART_81_1_ENTRY_WINDOW_YEARS" }]
+transitive_consumers = [{ path = "src/cadrumo/domain/contribuyente/descendant_maternity.py", symbol = "DescendantMaternityMixin._maternidad_entry_window_months" }]
+
+[[declarations]]
+symbol = "NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS"
+family = "scalar"
+migration_step = "W03.P11.S25"
+consumers = [{ path = "src/cadrumo/domain/contribuyente/family_types.py", symbol = "NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS" }]
+transitive_consumers = [
+  { path = "src/cadrumo/domain/contribuyente/descendant_guarderia.py", symbol = "DescendantGuarderiaMixin.is_eligible_minimo_incremento_menor_tres" },
+  { path = "src/cadrumo/domain/contribuyente/descendant_madrid.py", symbol = "DescendantMadridMixin.is_nacimiento_adopcion_eligible" },
+]
+
+[[declarations]]
+symbol = "DT12_RESCATE_REDUCCION_RATE"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/domain/modelos/dt12_reduccion.py", symbol = "compute_dt12_reduccion_plan_pensiones" }]
+
+[[declarations]]
+symbol = "DT12_GENERAL_WINDOW_FOLLOWING_YEARS"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/domain/modelos/dt12_reduccion.py", symbol = "dt12_regime_window_eligibility" }]
+
+[[declarations]]
+symbol = "DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/domain/modelos/dt12_reduccion.py", symbol = "dt12_regime_window_eligibility" }]
+
+[[declarations]]
+symbol = "DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/domain/modelos/dt12_reduccion.py", symbol = "dt12_regime_window_eligibility" }]
+
+[[declarations]]
+symbol = "DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/domain/modelos/dt12_reduccion.py", symbol = "dt12_regime_window_eligibility" }]
+
+[[declarations]]
+symbol = "DT12_CLIFF_LAST_YEAR"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/domain/modelos/dt12_reduccion.py", symbol = "dt12_regime_window_eligibility" }]
+
+[[declarations]]
+symbol = "SAL_RESERVA_DOTACION_RATE"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/domain/modelos/sal_reserva_especial.py", symbol = "compute_sal_reserva_especial_dotacion" }]
+
+[[declarations]]
+symbol = "SAL_RESERVA_CAPITAL_MULTIPLE"
+family = "scalar"
+migration_step = "W03.P11.S50"
+consumers = [{ path = "src/cadrumo/domain/modelos/sal_reserva_especial.py", symbol = "compute_sal_reserva_especial_dotacion" }]
+
+[[declarations]]
+symbol = "DEHU_RECHAZO_TACITO_DIAS_NATURALES"
+family = "scalar"
+migration_step = "W03.P13.S53"
+consumers = [{ path = "src/cadrumo/core/notificacion_estado_servicio.py", symbol = "resolve_notificacion_estado_servicio" }]
+
+[[legal_parameter_adapters]]
+symbol = "load_legal_parameters_only"
+source_path = "src/cadrumo/domain/calculations/registry/loader.py"
+classification = "temporary_legal_parameter_adapter"
+disposition = "delete_after_last_caller"
+deletion_step = "W04.P17.S34"
+retained_symbols = ["load_shared_catalogues", "load_catalogue_file", "RegistryCatalogues.parameters", "LegalParameter"]
+retained_authority_path = "src/cadrumo/_data/registry/aeat/legal"
+closure = "all 21 parameter ids resolve through authority providers with provenance; all six call sites stop importing the adapter and parsing LegalParameter.value; no production import remains; then delete only load_legal_parameters_only"
+
+[[legal_parameter_adapters.callers]]
+path = "src/cadrumo/domain/iva/recargo_equivalencia.py"
+symbol = "_load_rates"
+destination_family = "mapping"
+destination_fact_ids = ["liva-art-161:recargo-rate-general", "liva-art-161:recargo-rate-reducido", "liva-art-161:recargo-rate-super-reducido", "liva-art-161:recargo-rate-tabaco"]
+authority_path = "src/cadrumo/_data/registry/aeat/legal/iva-recargo-equivalencia.toml"
+dependencies = ["W02.P05.S14", "W03.P12.S26", "W04.P17.S34"]
+consumer_disposition = "retain_typed_recargo_facade_rewire_resolution"
+
+[[legal_parameter_adapters.callers]]
+path = "src/cadrumo/domain/transactions/retencion_parameters.py"
+symbol = "_legal_refs_of"
+destination_family = "scalar"
+destination_fact_ids = ["rirpf-art-95:retencion-actividades-profesionales-general", "rirpf-art-95:retencion-actividades-profesionales-inicio", "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general", "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura", "rirpf-art-95:retencion-actividades-forestales", "rirpf-art-95:retencion-actividades-estimacion-objetiva"]
+authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml"
+dependencies = ["W02.P08.S21", "W03.P12.S51", "W04.P17.S34"]
+consumer_disposition = "retain_legal_reference_facade_rewire_provenance"
+
+[[legal_parameter_adapters.callers]]
+path = "src/cadrumo/domain/transactions/retencion_parameters.py"
+symbol = "load_retencion_actividades_rates"
+destination_family = "scalar"
+destination_fact_ids = ["rirpf-art-95:retencion-actividades-profesionales-general", "rirpf-art-95:retencion-actividades-profesionales-inicio", "rirpf-art-95:retencion-actividades-agricolas-ganaderas-general", "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura", "rirpf-art-95:retencion-actividades-forestales", "rirpf-art-95:retencion-actividades-estimacion-objetiva"]
+authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml"
+dependencies = ["W02.P08.S21", "W03.P12.S51", "W04.P17.S34"]
+consumer_disposition = "retain_typed_rate_facade_rewire_resolution"
+
+[[legal_parameter_adapters.callers]]
+path = "src/cadrumo/domain/transactions/retencion_parameters.py"
+symbol = "load_administrador_retencion_rates"
+destination_family = "scalar"
+destination_fact_ids = ["lirpf-art-101:retencion-administrador-general", "lirpf-art-101:retencion-administrador-reducida", "lirpf-art-101:retencion-administrador-incn-umbral-eur"]
+authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-retencion-administradores.toml"
+dependencies = ["W02.P08.S21", "W03.P12.S51", "W04.P17.S34"]
+consumer_disposition = "retain_typed_rate_facade_rewire_resolution"
+
+[[legal_parameter_adapters.callers]]
+path = "src/cadrumo/domain/transactions/tipo_actividad_partitions.py"
+symbol = "_legal_parameters"
+destination_family = "entity_set"
+destination_fact_ids = ["rirpf-art-95:selector-m036-actividades-profesionales", "rirpf-art-95:selector-m036-actividades-agricolas-ganaderas", "rirpf-art-95:selector-m036-actividades-forestales", "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura"]
+authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml"
+dependencies = ["W02.P08.S21", "W03.P12.S51", "W04.P17.S34"]
+consumer_disposition = "retain_typed_activity_classifier_rewire_resolution"
+
+[[legal_parameter_adapters.callers]]
+path = "src/cadrumo/application/modelo/_objective_estimation_advisory.py"
+symbol = "_objective_estimation_exclusion_advisory_findings"
+destination_family = "scalar"
+destination_fact_ids = ["lirpf-dt-32:eo-exclusion-rendimientos-conjunto-eur", "lirpf-dt-32:eo-exclusion-rendimientos-factura-eur", "lirpf-art-31:eo-exclusion-rendimientos-agricolas-ganaderos-forestales-eur", "lirpf-dt-32:eo-exclusion-compras-eur"]
+authority_path = "src/cadrumo/_data/registry/aeat/legal/irpf-estimacion-objetiva.toml"
+dependencies = ["W02.P08.S21", "W03.P11.S50", "W04.P17.S34"]
+consumer_disposition = "retain_advisory_rewire_resolution_and_provenance"

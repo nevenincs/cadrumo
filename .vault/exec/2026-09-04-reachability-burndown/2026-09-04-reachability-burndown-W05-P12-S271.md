@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:7818ac6213f18526fd2335b78f084590fa55251170bf3bfe3f7e45b7e720010d'
+body_hash: 'sha256:5ccb6d2c4dc3d1e955ce85371ee26aa584965961c9566bef59b01da253a98af7'
 step_id: 'S271'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the uncomposed repair-remediation decision model/repository and its process-local storage namespace because no product command writes or reads it; remove its synthetic persistence tests and stale registrations while preserving live repair/quarantine session behavior and policy catalog, run focused gates, update cadence, and remeasure exact reachability.
 

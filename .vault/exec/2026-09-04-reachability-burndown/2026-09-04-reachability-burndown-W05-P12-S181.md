@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:3434d8a3596f816b8629ab863441209b6331ed6adcafa4d22413157e0aa27791'
+body_hash: 'sha256:a6d706b83b95a321c40bb2d375de4a937774949d547f12ea9fbb9eef9a48c8ee'
 step_id: 'S181'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unreached CasillaId-keyed apply_label_regex facade, its LabelHit result type, identity-only tests, and stale package claims after proving the live declaracion parser owns page provenance and ambiguity classification; preserve the shared PDF regex and decimal primitives required by production callers.
 

@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c3fae26d20e31e517f510c299ca4763478ffc172b5e1ce64810067600ca6285'
+body_hash: 'sha256:b9e6bc51324d3fed56057d417b853529ea3a9cb28b7b989a29a24c301c0daaa1'
 step_id: 'S279'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only recipient-encryption strict-load and public-key projection APIs, their DTO/error/locale residue, and newly exposed parser helper; migrate meaningful tests to the live ensure owner and raw public-key field, preserve cryptographic behavior, update cadence, and remeasure exact reachability.
 

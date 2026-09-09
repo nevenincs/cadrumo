@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-interface'
 date: '2026-08-11'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:0d18a89d7707d3e05bd5da315bf4200c85f6b549699e80f69a5942a2bb381f77'
+body_hash: 'sha256:9f74bc002f00c55746d39f6b67fd246ed3fc198f5643bacc6b806536c5190d55'
 related:
   - "[[2026-08-11-tui-interface-research]]"
   - "[[2026-08-11-tui-architecture-adr]]"
@@ -643,4 +643,3 @@ not CLI-to-TUI routing.
 Every earlier clause requiring root-owned frontend selection, `aeat --tui [COMMAND_PATH]`,
 per-command available/not-implemented posture, or `TUI_NOT_IMPLEMENTED` is superseded. The
 independent full-screen package and its inbound-only dependency boundary remain unchanged.
-

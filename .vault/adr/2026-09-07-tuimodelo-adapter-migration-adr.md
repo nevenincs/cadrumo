@@ -219,4 +219,3 @@ entrypoints have independent reachability, so neither adapter consumes the other
 posture. The deferred relocation described by `W01.P02.S13` and `W01.P02.S14` is retired rather
 than reopened. The adapter boundary continues to prohibit either entrypoint from importing the
 other; the only permitted CLI-to-TUI interaction is the opaque `aeat app tui` root launch.
-

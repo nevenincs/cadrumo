@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:4f5c96e0243b9c30b0ebd3d283986956f39535d69d845babcbb4e21014096e0d'
+body_hash: 'sha256:ee8418434b1091e14a316edb2b2603cc6c3c879daf2589fb7d6ffdccff72a884'
 step_id: 'S230'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unused LlmReviewRequest envelope, its export and self-only constructor tests, and documentation claiming it is part of the live typed spine; retain the directly consumed invocation-origin and decision enums and the execute_reviewed_decision workflow that every CLI caller actually uses.
 

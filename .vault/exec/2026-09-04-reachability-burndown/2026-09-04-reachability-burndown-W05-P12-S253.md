@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:4911c278930d423ffcbd094265d5d0b87596f24e31fc5702628f556401fb77d6'
+body_hash: 'sha256:f2d7b0de05bf5a12049a366ba0c6745b438b2c2ae48925b4a6c3d597e319fabf'
 step_id: 'S253'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the duplicate manual fact-basis projector superseded by live ledger anchor capture
 

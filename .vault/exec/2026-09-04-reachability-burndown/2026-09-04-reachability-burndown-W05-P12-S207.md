@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:37efb01a69879ca24f75096548c80eeb9c7c6a8064f95aff7f555b8150a899a0'
+body_hash: 'sha256:4c5c29f5b5852711cdcce03c9fe1b3fb7ffc45226a56e16db52eaee6086a9f86'
 step_id: 'S207'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Amend the accepted filing-lifecycle decision to forbid production mapped-versus-excluded event inventories before a live producer owns the conversion, then delete the test-only lifecycle event mapping, exclusion enum/inventory, exports, and inventory-conformance tests while retaining the sanitized lifecycle wire vocabulary and projection behavior.
 

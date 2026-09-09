@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb2cbe4fd3acfec6f977732cb22caffd47c64c749c2ef1fb41a171271dfeeb73'
+body_hash: 'sha256:a13d7d9c740e66a8341d55293ab7b89c73d253dc55bb8ca0771cd9af7569a9f2'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
   - "[[2026-09-04-reachability-burndown-W05-P12-S220]]"
@@ -35,7 +35,6 @@ The reopened review found the implementation decision had previously outpaced th
 The released-data-durability ADR withdraws preinstalled empty dispatch and vacuous chain governance while retaining explicit version stamps, fail-closed reads, and the requirement that a real transition ship its reader/upgrader and old-shape production-path proof. The compatibility-lifecycle ADR explicitly withdraws the dormant regime, floor placeholder, classification inventory, synthetic branch proofs, and central enrollment census while preserving readability of released taxpayer data. The current-schema-only-purge ADR now consistently requires exact-current markers and early refusal and no longer prescribes future-state scaffolding. The checkpoint reference has been reduced from an obsolete mechanical flip checklist to the same evidence-at-transition rule.
 
 The amended S220 plan row and regenerated Step Record name all four documents and the widened scope accurately. No contradictory authorization for the deleted production metastate remains in the reviewed decision chain. Final verdict: approved.
-
 
 ## Recommendations
 

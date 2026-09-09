@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:58eece50d8b0de0dc4fa7ba5ae4e7812c333dc758717484634f9774eccae2474'
+body_hash: 'sha256:c20cbdeafe2d1ed9b1aff185207a6e40eeead0160249c6ce4edd0afd867beba9'
 step_id: 'S275'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only Modelo edit version-header DTO and parser because no runtime dispatcher consumes them; retain live versioned edit models and integration behavior, update cadence, and remeasure exact reachability.
 

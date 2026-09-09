@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:19f9d5e811dfe959abd2d61763714a0fcae0d147fc62c2bcbe44a32b914b8a12'
+body_hash: 'sha256:be1e3843b6a2a648c89d86e89a7ed0ca81b528411263f9f09017716f2f55e252'
 step_id: 'S218'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the orphaned custody retryable-code declaration census and its hand-maintained owned-package fragments, retryable-code-to-prose map, and stale-entry checks; retain retryability decisions with their authoritative error registrations and the type/AST-derived handler-flattening gate with planted detector teeth.
 

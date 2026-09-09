@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:28886322bf823bd2d5e369280c7d36092c157524e8dee75efc638255c066c22d'
+body_hash: 'sha256:a4960d5971220bee4b6c54b8c76d88dd22f88f2a8f680da2518e94a873b21e88'
 step_id: 'S208'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only clear_runtime_fingerprint_cache facade and its export/documentation from production filing runtime, and make the focused cache test clear the two canonical cache owners directly while retaining the live one-second runtime cache, canonical registry collector cache, and fingerprint behavior.
 

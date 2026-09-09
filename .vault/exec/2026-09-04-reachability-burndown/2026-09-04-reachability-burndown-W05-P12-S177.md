@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:930e76a6236dc76c35911a09342e266c4a81d4494317e98dc6445d37ed111240'
+body_hash: 'sha256:6c4c78d5a24b99ec65cfa560edc338c4660adfbd403da0b2061d81a5b1f7ae27'
 step_id: 'S177'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unreached single-profile custody summary reader displaced by the live anchored multi-profile summary scan, and migrate its security assertions to exercise the canonical list path without preserving the redundant public helper.
 

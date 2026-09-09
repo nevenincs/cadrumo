@@ -1,0 +1,15 @@
+# Modelo 714 (Impuesto sobre el Patrimonio). Enrollment is calculation-backed:
+# the enrolling test persists same-year Modelo 100 observations for 2023 and
+# 2024, resolves the M714 Ley 19/1991 art.31 relation_prefill values through the
+# real local relation resolver, and calculates the M714 art.30/art.31 chain
+# through casilla 40. The registry revision is bounded to 2021-2025 because the
+# checked-in M100 source revisions currently cover those modeled years.
+#
+# Residual manual surface: art.31 exclusion slices that M100 does not expose at
+# filing-grade granularity are explicit M714 inputs (casillas 31, 32, 35, 36),
+# and the later deduction/bonification result chain (45/55) remains manual.
+[modelo]
+modelo = "714"
+renta_years = [2023, 2024]
+evidence_class = "calculation"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_714_patrimonio_joint_limit_calculation.py"

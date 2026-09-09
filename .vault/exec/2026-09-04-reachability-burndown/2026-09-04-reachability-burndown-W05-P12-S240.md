@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f9cf84e68d663f8d29d0fa39d573b79cf4b23d47d61364fe5e380e24ccf8e46'
+body_hash: 'sha256:58e42343050677e6fde91b86950ea6f4363df9c27e74c737bc3fc102eb1b6250'
 step_id: 'S240'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the _UNADJUDICATED_REPEATED_SLOTS development-status census and its mirror/staleness tests; retain the derived corpus anchor, split amount/date reconstruction, optional-slot, and planted-reversion renderer proofs.
 

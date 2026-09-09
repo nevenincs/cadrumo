@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:a734fc54a8e0a0688170e82b266987d8bc819cef59399cf613a252c5f52c5a83'
+body_hash: 'sha256:1e4cffc1da3b077b0458fd626672b57c2c4d7f0f0d4b11b7242784d6f3355a4f'
 step_id: 'S269'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Withdraw the writerless transcription-cache feature atomically: remove its cache-backed consent re-derivation surface, storage composition and namespace, facade/self-tests, amend the contradicted ingestion ADR, preserve consent-history enumeration, run focused consent/storage/CLI gates, and remeasure exact reachability.
 

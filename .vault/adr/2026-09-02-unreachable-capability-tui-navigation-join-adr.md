@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unreachable-capability'
 date: '2026-09-02'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:cfcc5bb3dacab49584366fdf2b1a785b1c4e0cafa11b1fb56ead2af4e53625e4'
+body_hash: 'sha256:ec0dbf3dbda218913be1a713bee81a6fe021b0ee2039f89e53884b9afca39d3a'
 related:
   - "[[2026-09-02-unreachable-capability-research]]"
   - '[[2026-09-02-unreachable-capability-fincas-unblock-research]]'
@@ -89,4 +89,3 @@ it starts the independent TUI root as an opaque child process and returns its pr
 does not address a destination or command path and does not make the CLI a TUI routing authority.
 The retired `aeat-tui` spelling remains retired. TUI root navigation remains wholly inside the
 full-screen entrypoint.
-

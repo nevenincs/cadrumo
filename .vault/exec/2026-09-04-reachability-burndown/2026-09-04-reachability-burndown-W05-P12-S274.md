@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:367ae3cf30c9b1f44a7bf094de3b2e03ef9160f9a450cdfd5a857995dbe0216f'
+body_hash: 'sha256:6ff3ccaec4ed670577cbeab1f4c073712ac189ca34de023f3abf907f2dfb31f5'
 step_id: 'S274'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only draft row-source fingerprint projection because the live review surface projects the same safe shape from the canonical persisted revision; retain replay attachment and live review privacy tests, update cadence, and remeasure exact reachability.
 

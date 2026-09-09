@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:6fb3233eb43c3df4a4ea93ae2568ab72909ba0d2e4b56b584716bf276c224327'
+body_hash: 'sha256:aac86de8adfed76c425359843147fc084507f06445cacdd9da47d4abf75c49de'
 step_id: 'S214'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the wholly unused CSV_EXTENSIONS constant and export from local-observation spreadsheet parsing while retaining the live XLSX discriminator and CSV/TXT fallback behavior in both decimal and lexical parsers.
 

@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:5fd9ed29d48f6c6a1d8527a8623284c176c5403a8cf7d6c4ed27f3fabce469e5'
+body_hash: 'sha256:aed074e2a0a6b3f5d7f095f21db8d8961925b09024f55f86b8bce8eb6450249f'
 step_id: 'S258'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unreachable filing export replay custody adapter and its self-contained synthetic tests because no product or development composition supplies it to the proof executor; remove any now-ownerless secure-object namespace registration, correct stale reachability reference prose, run focused secure-storage and proof gates, remeasure exact reachability, update the cadence reference, and write the Step Record.
 

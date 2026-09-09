@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:cd91a62910b8e525f0777b6041882d195da9312e40d85aa8b2be788b406fbcf4'
+body_hash: 'sha256:31074e59fc7c9891f0a88c86ffa63b2430429890d9d92311f8349f2f907fe725'
 step_id: 'S231'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unreachable review-kind reservation metastate: remove the test-only reserved-token map and accessor, dedicated ReviewKindReservedError, central error registration, and self-only registry/operator probes; retain the live source-kind selector and its generic fail-closed unknown-token refusal.
 
