@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:df477babd015d3aa448cf302484eaea8f54d8c332a85c890229852e3f74f2790'
+body_hash: 'sha256:e3394db4a727cb5f9c8799e5269f8414c899a4ac8ac45a0adfb74cd49b117bfa'
 step_id: 'S47'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Run both dead-code audits at the Wave 2 handoff
 
@@ -37,20 +32,3 @@ related:
 ## Notes
 
 The final exact reachability search reports no Wave 2 provider finding and zero unreachable shipped modules. The repository-wide command still reports 480 unused symbols outside this campaign.
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->

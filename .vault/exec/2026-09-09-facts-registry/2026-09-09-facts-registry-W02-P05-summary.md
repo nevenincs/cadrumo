@@ -5,29 +5,23 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:5f6d8f34566305cf2da8f6298dbb2cc7146ccb189aca9a17d14d9e75d924ed1a'
+body_hash: 'sha256:67e9ef96da1b4326128f64dbaa706c9714e7b7bf7a1a119872be84ad41ad6fe8'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: filename and frontmatter, scaffolded by
-     `vaultspec-core vault add exec`; never hand-edit. Add no frontmatter
-     fields. Wiki-links belong in `related:` only, never in the body.
-
-     Rolls up every Step Record (S##) of one Phase. -->
 
 # `facts-registry` `W02.P05` summary
 
 ## Changes
 
-<!-- MECHANICAL LOG. The union of paths touched across the Phase, deduplicated,
-     one line per path, same grammar as a Step Record:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     No prose. Do not restate the Step Records; this is their union, not a
-     narrative of them.
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception (see the Step Record
-     template). Omit it otherwise. -->
+- `M` `src/cadrumo/domain/calculations/registry/_validate.py`
+- `M` `src/cadrumo/domain/calculations/registry/facts/providers.py`
+- `M` `src/cadrumo/domain/calculations/registry/facts/resolution.py`
+- `M` `src/cadrumo/domain/calculations/registry/facts/schema.py`
+- `M` `src/cadrumo/domain/calculations/registry/facts/validation.py`
+- `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_iva_rate_provider.py`
+- `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_iva_recargo_provider.py`
+- `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_iva_provider_grounding.py`
+- `M` `src/cadrumo/domain/iva/rates.py`
+- `M` `src/cadrumo/domain/iva/recargo_equivalencia.py`
+- `M` `src/cadrumo/domain/iva/_grounding.py`

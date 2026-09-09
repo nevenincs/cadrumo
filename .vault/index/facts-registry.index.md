@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f210a07514555f4dbb8eebfc43c0d487982d62bbbbe80c77a02bf6e18afacb14'
+body_hash: 'sha256:0d9024747261e37955537af15324f9968d4e97fb18dfa27db581b6e9c8e1522c'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -29,6 +29,24 @@ related:
   - '[[2026-09-09-facts-registry-W01-P23-S44]]'
   - '[[2026-09-09-facts-registry-W01-P23-S45]]'
   - '[[2026-09-09-facts-registry-W01-P23-summary]]'
+  - '[[2026-09-09-facts-registry-W02-P05-S13]]'
+  - '[[2026-09-09-facts-registry-W02-P05-S14]]'
+  - '[[2026-09-09-facts-registry-W02-P05-S15]]'
+  - '[[2026-09-09-facts-registry-W02-P05-summary]]'
+  - '[[2026-09-09-facts-registry-W02-P06-S16]]'
+  - '[[2026-09-09-facts-registry-W02-P06-S17]]'
+  - '[[2026-09-09-facts-registry-W02-P06-summary]]'
+  - '[[2026-09-09-facts-registry-W02-P07-S18]]'
+  - '[[2026-09-09-facts-registry-W02-P07-S19]]'
+  - '[[2026-09-09-facts-registry-W02-P07-summary]]'
+  - '[[2026-09-09-facts-registry-W02-P08-S20]]'
+  - '[[2026-09-09-facts-registry-W02-P08-S21]]'
+  - '[[2026-09-09-facts-registry-W02-P08-S22]]'
+  - '[[2026-09-09-facts-registry-W02-P08-summary]]'
+  - '[[2026-09-09-facts-registry-W02-P09-S23]]'
+  - '[[2026-09-09-facts-registry-W02-P09-S46]]'
+  - '[[2026-09-09-facts-registry-W02-P09-S47]]'
+  - '[[2026-09-09-facts-registry-W02-P09-summary]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
@@ -70,6 +88,24 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W01-P23-S44` - Run the reviewed-whitelist Vulture audit at the Wave 1 handoff
 - `2026-09-09-facts-registry-W01-P23-S45` - Run shipped-entrypoint reachability at the Wave 1 handoff
 - `2026-09-09-facts-registry-W01-P23-summary` - `facts-registry` `W01.P23` summary
+- `2026-09-09-facts-registry-W02-P05-S13` - Register IVA rate schedules as typed dated provider adapters
+- `2026-09-09-facts-registry-W02-P05-S14` - Register recargo by applied rate and operation date
+- `2026-09-09-facts-registry-W02-P05-S15` - Move IVA evidence enforcement into provider validation
+- `2026-09-09-facts-registry-W02-P05-summary` - `facts-registry` `W02.P05` summary
+- `2026-09-09-facts-registry-W02-P06-S16` - Register statutory category profiles and dated caps
+- `2026-09-09-facts-registry-W02-P06-S17` - Register classified legal calendar and deadline facts
+- `2026-09-09-facts-registry-W02-P06-summary` - `facts-registry` `W02.P06` summary
+- `2026-09-09-facts-registry-W02-P07-S18` - Register convenio overrides as a typed provider adapter
+- `2026-09-09-facts-registry-W02-P07-S19` - Register confirmed apoderamientos legal-taxonomy facts
+- `2026-09-09-facts-registry-W02-P07-summary` - `facts-registry` `W02.P07` summary
+- `2026-09-09-facts-registry-W02-P08-S20` - Register statutory scalars schedules and classifications
+- `2026-09-09-facts-registry-W02-P08-S21` - Adapt global legal parameters without duplicating authority
+- `2026-09-09-facts-registry-W02-P08-S22` - Project modelo-owned facts without moving parameter files
+- `2026-09-09-facts-registry-W02-P08-summary` - `facts-registry` `W02.P08` summary
+- `2026-09-09-facts-registry-W02-P09-S23` - Verify provider compilation exact resolution and provenance at the Wave 2 handoff
+- `2026-09-09-facts-registry-W02-P09-S46` - Run canonical strict production type checking at the Wave 2 handoff
+- `2026-09-09-facts-registry-W02-P09-S47` - Run both dead-code audits at the Wave 2 handoff
+- `2026-09-09-facts-registry-W02-P09-summary` - `facts-registry` `W02.P09` summary
 
 ### plan
 
