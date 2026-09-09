@@ -5,7 +5,7 @@ articulo 40.2 de la LIS", "Ejemplo", paginas 811-812).
 
 Ground truth (bundled AEAT Manual practico de Sociedades 2024):
 
-    raw_evidence_locator: corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf#Pag.811-812
+    raw_evidence_locator: corpus/manuals/sociedades/2024/source.pdf#Pag.811-812
 
 The manual walks "la Sociedad Limitada <<M>>" (ejercicio economico coincide con
 el ano natural) through the THREE 2025 pagos fraccionados under modalidad art.

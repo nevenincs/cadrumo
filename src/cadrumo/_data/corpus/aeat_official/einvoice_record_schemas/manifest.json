@@ -1,34 +1,57 @@
 {
   "source": "Agencia Tributaria - SII (Suministro Inmediato de Informacion) and VERI*FACTU record-supply web-service schemas",
   "retrieved_at": "2026-08-07",
-  "why_bundled": "These schemas are the AUTHORITY for what a SII or VERI*FACTU record contains. The reader derives its mandatory-element set from them mechanically rather than from a hand-copied list, so they must ship with the package: a hand-maintained list would rot silently on the first AEAT schema revision, while a derived one cannot drift from its own source.",
+  "why_bundled": "These schemas are the AUTHORITY for two things production depends on. (1) The document probe in src/cadrumo/adapters/inbound/einvoice/shape.py classifies an AEAT record submission by its payload element, and every name in its two frozensets is held to the global xs:element declarations here by src/cadrumo/adapters/inbound/einvoice/tests/test_aeat_payload_elements_match_schemas.py -- so an AEAT schema revision that adds, renames, or withdraws a family fails a gate instead of silently reporting a real tax record as UNKNOWN. (2) The CountryType2 enumeration in sii/SuministroInformacion.xsd is the country set AEAT itself accepts on a submitted libro de registro, and grounds registry/aeat/iva/country_names.toml via src/cadrumo/domain/iva/tests/test_country_codes_against_aeat_register.py. Neither regime is transmitted by this product: recognising a record batch is how the reader REFUSES it by name (see .vault/adr/2026-07-02-verifactu-sii-scope-stance-adr.md).",
+  "scope_note": "Despite the directory name, these are libro-registro SUPPLY schemas for AEAT web services, not e-invoice document formats. The e-invoice format corpus is corpus/facturae/. VERI*FACTU is out of scope as a product capability; its schemas are bundled solely so the probe's refusal path stays grounded.",
   "layout_is_load_bearing": "Each family lives in its OWN directory and each file keeps its ORIGINAL AEAT filename. Both are required, for two independent reasons. (1) Every envelope declares <import schemaLocation=\"SuministroInformacion.xsd\"/> as a RELATIVE path, so renaming the imported file breaks the import and the envelope will not compile -- 11 of the 18 schemas in the acquisition corpus fail to compile for exactly this reason, because that corpus flattened them under prefixed names. (2) SII and VERI*FACTU BOTH import a file literally named SuministroInformacion.xsd, and they are DIFFERENT schemas in DIFFERENT target namespaces; a single flat directory would silently resolve one family's import against the other family's types. Do not flatten, do not rename.",
-  "namespaces": {
-    "sii": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/ssii/fact/ws/",
-    "verifactu": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/"
-  },
+  "provenance_note": "Each artefact's source_url is its own targetNamespace: AEAT publishes these schemas at the static_files URL it also uses as the namespace, which is why the two strings coincide. The URLs were reconstructed from the bundled targetNamespace declarations rather than recorded at acquisition time, and have NOT been re-fetched since 2026-08-07. Unlike the disenos_registro corpus, these artefacts carry no registry source entry, so this manifest is their only provenance; the hash and byte pins are gated by test_manifest_pins_every_bundled_schema_by_hash_and_namespace.",
+  "version_coverage": "AEAT publishes no version attribute on any of these four schemas, and this corpus is a SINGLE undated snapshot rather than a revision-indexed family like disenos_registro. There is therefore no way to state which published revision of SII (1.0/1.1/1.2) or VERI*FACTU these are beyond the retrieved_at date. Treat re-bundling as a full replacement and expect the payload-element and CountryType2 gates to speak if the surface moved.",
   "artefacts": [
     {
       "path": "sii/SuministroInformacion.xsd",
-      "role": "SII base types: Cabecera/Titular, Contraparte, FacturaExpedidaType, FacturaRecibidaType, DetalleIVA.",
+      "original_filename": "SuministroInformacion.xsd",
+      "regime": "sii",
+      "role": "SII base types: Cabecera/Titular, Contraparte, FacturaExpedidaType, FacturaRecibidaType, DetalleIVA. Declares no global element, so it contributes no payload name; it is bundled for CountryType2 and because the SII envelope imports it by relative path.",
+      "target_namespace": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/ssii/fact/ws/SuministroInformacion.xsd",
+      "source_url": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/ssii/fact/ws/SuministroInformacion.xsd",
+      "retrieved_at": "2026-08-07",
+      "content_type": "application/xml",
       "sha256": "b0d4577a0e14207da6a8eb413b091cddda69351e53b84151b2f16534d10090f7",
       "bytes": 83419
     },
     {
       "path": "sii/SuministroLR.xsd",
-      "role": "SII envelope. Declares 17 top-level record families; only FacturasEmitidas and FacturasRecibidas are invoice families. Registro* collections carry maxOccurs=10000.",
+      "original_filename": "SuministroLR.xsd",
+      "regime": "sii",
+      "role": "SII envelope. Declares 17 top-level record families; only FacturasEmitidas and FacturasRecibidas are invoice families. Registro* collections carry maxOccurs=10000. Its global elements ARE the reader's _SII_PAYLOAD_ELEMENTS set.",
+      "target_namespace": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/ssii/fact/ws/SuministroLR.xsd",
+      "source_url": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/ssii/fact/ws/SuministroLR.xsd",
+      "retrieved_at": "2026-08-07",
+      "content_type": "application/xml",
       "sha256": "fc6aefb4272fd45195239117c1b6df40a0fa6007f634dc863de232286409c607",
       "bytes": 19044
     },
     {
       "path": "verifactu/SuministroInformacion.xsd",
-      "role": "VERI*FACTU base types: RegistroFacturacionAltaType, RegistroFacturacionAnulacionType, SistemaInformaticoType, DesgloseType.",
+      "original_filename": "SuministroInformacion.xsd",
+      "regime": "verifactu",
+      "role": "VERI*FACTU base types: RegistroFacturacionAltaType, RegistroFacturacionAnulacionType, SistemaInformaticoType, DesgloseType. Unlike its SII namesake it DOES declare global elements -- RegistroAlta and RegistroAnulacion -- which real captures ship bare, with no envelope, so the reader's payload set is the union across both VERI*FACTU files.",
+      "target_namespace": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd",
+      "source_url": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd",
+      "retrieved_at": "2026-08-07",
+      "content_type": "application/xml",
       "sha256": "ee4c1655175644de44c4c25055ffeb8e5f4bb4bc3834ce8254d4222ef18c8aa1",
       "bytes": 49540
     },
     {
       "path": "verifactu/SuministroLR.xsd",
-      "role": "VERI*FACTU envelope. RegistroFactura is a CHOICE of RegistroAlta | RegistroAnulacion repeated to maxOccurs=1000, so one submission may mix registrations and cancellations and must be classified per record, never per file.",
+      "original_filename": "SuministroLR.xsd",
+      "regime": "verifactu",
+      "role": "VERI*FACTU envelope. RegistroFactura is a CHOICE of RegistroAlta | RegistroAnulacion repeated to maxOccurs=1000, so one submission may mix registrations and cancellations and must be classified per record, never per file. Declares the single global element RegFactuSistemaFacturacion.",
+      "target_namespace": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd",
+      "source_url": "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd",
+      "retrieved_at": "2026-08-07",
+      "content_type": "application/xml",
       "sha256": "cbdac8d427cc5ab5d77ca48974cab0f35d6bb819c4c66db361681e3710aeba36",
       "bytes": 1573
     }

@@ -15,7 +15,7 @@ source_refs = [
     "boe-modelo-322-2007-form",
     "aeat-calendario-contribuyente-2026",
     "aeat-calendario-contribuyente-2026-domiciliacion",
-    "aeat-calendario-contribuyente-2026-hasta-1-febrero-2027",
+    "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027",
     "aeat-calendario-contribuyente-2026-hasta-2-marzo",
 ]
 casilla_ids = [

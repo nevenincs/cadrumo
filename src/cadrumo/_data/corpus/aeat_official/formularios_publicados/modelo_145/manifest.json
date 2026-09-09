@@ -1,0 +1,27 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Formularios publicados",
+  "modelo": "145",
+  "retrieved_at": "2026-05-14",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/obligaciones-retenedor/modelo-145.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "145",
+      "title": "145 - Comunicacion de datos al pagador (formulario publicado, PDF)",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/obligaciones-retenedor/modelo-145.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G603/mod145_es_es.pdf",
+      "stored_path": "files/mod145_es_es.pdf",
+      "original_filename": "mod145_es_es.pdf",
+      "content_type": "application/pdf",
+      "bytes": 123230,
+      "sha256": "2061c0035b2ce7a4bd25dd7727798ed3754c6902306eac783112aa2824af5667",
+      "retrieved_at": "2026-05-14",
+      "locale": "es-ES",
+      "aeat_version_marker": null,
+      "content_dated_at_or_after": "2018-12-05",
+      "content_dating_evidence": "The form's own data-protection footer cites 'el articulo 11 de la Ley Organica 3/2018, de 5 de diciembre'. AEAT publishes this artefact at a stable, unversioned URL as the CURRENT form, so the capture cannot be dated from its filename or URL; this citation is the only internal lower bound the document carries."
+    }
+  ]
+}

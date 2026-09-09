@@ -76,6 +76,17 @@ def _sidecar_path_for(pdf_path: Path) -> Path:
     )
 
 
+def _corpus_path_for(pdf_path: Path) -> str:
+    """Return the prefixed corpus path a sidecar for ``pdf_path`` must declare.
+
+    This is the locator runtime reads the sidecar back by, so the writer and
+    the freshness predicate MUST derive it from one place: a sidecar whose
+    declared path disagrees with where its payload actually sits is the
+    defect :func:`_is_current` exists to catch.
+    """
+    return MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX + pdf_path.relative_to(_CORPUS_ROOT).as_posix()
+
+
 def _is_current(pdf_path: Path, sha256: str) -> bool:
     """Return True when an up-to-date sidecar exists for ``pdf_path``.
 
@@ -86,6 +97,17 @@ def _is_current(pdf_path: Path, sha256: str) -> bool:
     ``source_sha256`` equals the supplied ``sha256``.  Anything the runtime
     would refuse is stale here and gets regenerated, so the writer cannot
     leave behind a sidecar the reader silently falls back past.
+
+    Content equality is necessary but NOT sufficient: the declared
+    ``corpus_path`` must also be the one derived from where the payload now
+    sits.  Keying freshness on the digest alone made a *relocated* corpus PDF
+    read as current, because moving a file changes neither its bytes nor its
+    hash -- so the sidecar kept advertising the path the PDF had left, and
+    every reader that resolves by ``corpus_path`` (the registry evidence
+    validator among them) would miss it while this generator reported a clean
+    corpus.  The sibling ``dev.docs.preprocess`` sweep already enforces this
+    locality invariant over ``.extracted.json``; this is the same clause for
+    ``.corpus_text.json``.
     """
     sidecar_path = _sidecar_path_for(pdf_path)
     if not sidecar_path.is_file():
@@ -94,7 +116,7 @@ def _is_current(pdf_path: Path, sha256: str) -> bool:
         sidecar = ManualCorpusTextSidecar.model_validate_json(sidecar_path.read_text(encoding=_UTF_8))
     except (OSError, UnicodeDecodeError, ValidationError):
         return False
-    return sidecar.source_sha256 == sha256
+    return sidecar.source_sha256 == sha256 and sidecar.corpus_path == _corpus_path_for(pdf_path)
 
 
 def extract_raw_text(path: Path) -> str:
@@ -136,7 +158,7 @@ def _write_sidecar(pdf_path: Path, sha256: str, normalised_text: str) -> Path:
     """Write the corpus text sidecar and return its path."""
     sidecar_path = _sidecar_path_for(pdf_path)
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
-    corpus_path = MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX + pdf_path.relative_to(_CORPUS_ROOT).as_posix()
+    corpus_path = _corpus_path_for(pdf_path)
     payload = ManualCorpusTextSidecar(
         schema_version=_MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
         corpus_path=corpus_path,

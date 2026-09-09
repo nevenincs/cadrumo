@@ -39,7 +39,7 @@ legal_refs = ["rd-1624-1992:art-71", "orden-eha-3786-2008:art-7"]
 source_refs = [
     "boe-modelo-303-2008-form",
     "aeat-modelo-303-procedure",
-    "aeat-calendario-contribuyente-2026-hasta-1-febrero-2027",
+    "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027",
 ]
 
 # Monthly deadline windows for SII-enrolled taxpayers (Art. 62.6 RD 1624/1992,
@@ -73,7 +73,7 @@ legal_refs = ["rd-1624-1992:art-71"]
 source_refs = [
     "boe-modelo-303-2008-form",
     "aeat-modelo-303-procedure",
-    "aeat-calendario-contribuyente-2026-hasta-1-febrero-2027",
+    "aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027",
     "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
 

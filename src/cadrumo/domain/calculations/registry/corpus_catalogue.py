@@ -129,31 +129,39 @@ def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -
     Only meaningful when the manual PDF is present under the source tree (the
     full-checkout / dev path); a companion-resolved manual is proven by its
     byte-exact hash instead.
+
+    ``corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf`` is the ONE home for
+    practical manuals consumed by the structured manual loader. Other ``manual_pdf``
+    sources are evidence PDFs in a different corpus family (for example, EU IVA
+    rate studies or AEAT instruction artefacts) and do not carry the practical-
+    manual structure contract. The Sociedades practical manuals were moved into
+    the canonical tree so they now receive the same check as their IVA and Renta
+    peers.
     """
-    if not (source.kind is RegistrySourceKind.MANUAL_PDF and "corpus/manuals" in source.corpus_path):
+    if source.kind is not RegistrySourceKind.MANUAL_PDF or not source.corpus_path.startswith("corpus/manuals/"):
         return
     parts = source.corpus_path.split("/")
     try:
-        idx = parts.index("manuals")
-        if idx >= 0 and idx + 3 < len(parts):
-            manual_id_str = parts[idx + 1]
-            year_str = parts[idx + 2]
-            part_str = parts[idx + 3]
+        if parts[:2] != ["corpus", "manuals"] or len(parts) < 5:
+            raise ValueError(
+                "a manual_pdf source must live at 'corpus/manuals/<manual_id>/<year>[/<part>]/source.pdf'",
+            )
+        manual_id_str, year_str, part_str = parts[2], parts[3], parts[4]
 
-            from ....core.config import Settings
-            from ...manuals.loader import load_manual
-            from ...manuals.schema import ManualId, ManualPart
+        from ....core.config import Settings
+        from ...manuals.loader import load_manual
+        from ...manuals.schema import ManualId, ManualPart
 
-            manual_id = ManualId(manual_id_str)
-            year = int(year_str)
-            part = ManualPart.SINGLE if part_str == "source.pdf" else ManualPart(part_str)
+        manual_id = ManualId(manual_id_str)
+        year = int(year_str)
+        part = ManualPart.SINGLE if part_str == "source.pdf" else ManualPart(part_str)
 
-            manuals_dir = repo_root / "corpus" / "manuals"
-            if not manuals_dir.is_dir():
-                manuals_dir = repo_root / "src" / "cadrumo" / "_data" / "corpus" / "manuals"
+        manuals_dir = repo_root / "corpus" / "manuals"
+        if not manuals_dir.is_dir():
+            manuals_dir = repo_root / "src" / "cadrumo" / "_data" / "corpus" / "manuals"
 
-            settings = Settings(aeat_manuals_root=manuals_dir)
-            load_manual(manual_id=manual_id, year=year, part=part, settings=settings)
+        settings = Settings(aeat_manuals_root=manuals_dir)
+        load_manual(manual_id=manual_id, year=year, part=part, settings=settings)
     except Exception as exc:
         raise RegistryValidationError(
             f"source {source.id!r} manual structure check failed for path {source.corpus_path!r}: {exc}",

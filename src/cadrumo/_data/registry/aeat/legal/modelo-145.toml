@@ -81,14 +81,28 @@ applies_from = 2026-03-16
 source_url = "https://sede.agenciatributaria.gob.es/Sede/irpf/retenciones-ingresos-cuenta-pagos-fraccionados/retenciones-ingresos-cuenta/obligaciones-retenedor/modelo-145.html"
 review_status = "pending_review"
 
+# The AEAT-published form facsimile, NOT a record design and NOT a filing
+# artefact (Modelo 145 is presented to the payer, never to the AEAT). Lives
+# under `formularios_publicados/` because that is what it is; `form_spec`
+# sources whose authority is the promulgating order live under
+# `corpus/normatives/` instead.
+#
+# applies_from is derived from the document's own text, not from AEAT metadata:
+# the artefact is served at a stable, unversioned URL with no era marker, and
+# its data-protection footer cites Ley Organica 3/2018, de 5 de diciembre. That
+# citation is the only internal lower bound the form carries, so this capture
+# cannot be authority for a pre-2019 period. Leaving the window open would have
+# silently extended it back to the 2012 revision start, which this evidence
+# does not cover. See the sibling PROVENANCE.md on the residual gap.
 [sources."aeat-modelo-145-form"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "form_spec"
-corpus_path = "corpus/aeat_official/forms/modelo_145/files/mod145_es_es.pdf"
+corpus_path = "corpus/aeat_official/formularios_publicados/modelo_145/files/mod145_es_es.pdf"
 sha256 = "2061c0035b2ce7a4bd25dd7727798ed3754c6902306eac783112aa2824af5667"
 bytes = 123230
 retrieved_at = 2026-05-14
+applies_from = 2018-12-05
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Procedimiento_ayuda/G603/mod145_es_es.pdf"
 review_status = "pending_review"
 

@@ -5,7 +5,7 @@ tributaria", "Cuota liquida minima (casilla 00619)", paginas 392-396).
 
 Ground truth (bundled AEAT Manual practico de Sociedades 2024):
 
-    raw_evidence_locator: corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf#Pag.392-396
+    raw_evidence_locator: corpus/manuals/sociedades/2024/source.pdf#Pag.392-396
 
 The manual walks "la sociedad <<A>>" - importe neto de la cifra de negocios
 (INCN) en los 12 meses anteriores superior a 20 millones de euros, base

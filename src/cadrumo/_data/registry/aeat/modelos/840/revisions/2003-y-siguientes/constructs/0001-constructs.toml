@@ -11,6 +11,11 @@ source_refs = [
     "aeat-dr-840",
     "aeat-modelo-840-procedure",
     "boe-modelo-840-2003-form",
+    # The AEAT-published form facsimile: the only committed evidence for the
+    # printed casilla labels this construct's declaration_pdf extraction
+    # profile matches on. `boe-modelo-840-2003-form` approves the form but does
+    # not reproduce its numbered boxes.
+    "aeat-modelo-840-form",
 ]
 casilla_ids = [
     "decl.tipo-declaracion",
