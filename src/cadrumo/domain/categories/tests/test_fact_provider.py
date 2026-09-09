@@ -58,6 +58,13 @@ def test_provider_registers_exact_profile_and_dated_cap_identities() -> None:
     assert all(
         variant.date_axis is DateAxis.FILING_PERIOD for fact in catalogue.facts.values() for variant in fact.variants
     )
+    variant_ids = [variant.variant_id for fact in catalogue.facts.values() for variant in fact.variants]
+    assert len(variant_ids) == len(set(variant_ids))
+    assert all(
+        variant.variant_id.startswith(f"{fact.fact_id}:")
+        for fact in catalogue.facts.values()
+        for variant in fact.variants
+    )
 
 
 def test_profile_query_preserves_legacy_profile_values_and_provenance() -> None:

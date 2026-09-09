@@ -230,7 +230,7 @@ def _category_profile_fact_variant(profile: CategoryProfile, year: int) -> Gover
         citation for citation in citations if citation.source in _CATEGORY_CITATION_SOURCE_REFS and citation.quote
     )
     return GovernedFactVariant(
-        variant_id=f"{profile.category.value}:{year}",
+        variant_id=f"{CATEGORY_PROFILE_FACT_ID}:{profile.category.value}:{year}",
         selectors=(FactSelector(name="category", value=profile.category.value),),
         date_axis=DateAxis.FILING_PERIOD,
         valid_from=date(year, 1, 1),
@@ -254,7 +254,7 @@ def _category_cap_fact_variant(profile: CategoryProfile, amount: StatutoryCapAmo
         citation for citation in citations if citation.source in _CATEGORY_CITATION_SOURCE_REFS and citation.quote
     )
     return GovernedFactVariant(
-        variant_id=f"{profile.category.value}:{amount.window.valid_from.year}",
+        variant_id=f"{CATEGORY_STATUTORY_CAP_FACT_ID}:{profile.category.value}:{amount.window.valid_from.year}",
         selectors=(FactSelector(name="category", value=profile.category.value),),
         date_axis=DateAxis.FILING_PERIOD,
         valid_from=amount.window.valid_from,
