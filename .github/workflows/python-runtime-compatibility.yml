@@ -89,7 +89,7 @@ jobs:
         run: |
           set -euo pipefail
           uv run --no-sync pytest -q --tb=short \
-            dev/tests/test_import_hygiene_scan.py \
+            dev/tests/test_future_directive_policy.py \
             -k future_directive
 
   build-python-cohort:

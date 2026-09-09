@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..._paths import REPO_ROOT
 
@@ -22,7 +22,6 @@ _SOURCE_ROOT = _REPOSITORY_ROOT / "src" / "cadrumo"
 _INSPECTION_SYMBOLS = frozenset(
     {
         "RegistryRevisionInspection",
-        "bundled_revision_inspection",
         "inspect_revision",
     },
 )
@@ -114,8 +113,8 @@ def _handoff_sources() -> tuple[Path, ...]:
 
 def test_m303_midyear_designs_are_canonically_selected_without_a_snapshot() -> None:
     """Static inspection follows temporal selection yet retains no filing context."""
-    early = bundled_revision_inspection("303", filing_year=2024, period="2T")
-    late = bundled_revision_inspection("303", filing_year=2024, period="3T")
+    early = bundled_authority().inspect_revision("303", filing_year=2024, period="2T")
+    late = bundled_authority().inspect_revision("303", filing_year=2024, period="3T")
 
     assert isinstance(early, RegistryRevisionInspection)
     assert early.revision_id == "2024-hasta-08-y-2t"
@@ -136,7 +135,7 @@ def test_m038_inspection_retains_exact_model_law_and_construct_evidence() -> Non
     by that move. This test asserted the pre-move values and had therefore never
     passed since; four of its seven assertions were stale together.
     """
-    inspection = bundled_revision_inspection("038", filing_year=2025, period="01")
+    inspection = bundled_authority().inspect_revision("038", filing_year=2025, period="01")
 
     assert inspection.revision_id == "2025-y-siguientes"
     assert inspection.legal_ref_ids == frozenset(
@@ -233,9 +232,6 @@ def test_static_map_authority_has_no_snapshot_or_raw_loader_compatibility() -> N
 
 def test_inspection_census_understands_public_facade_and_private_module_aliases() -> None:
     """The boundary census is semantic AST inspection, not a text substring check."""
-    direct = ast.parse(
-        "from cadrumo.domain.calculations.registry import bundled_revision_inspection as inspect\n",
-    )
     public_facade = ast.parse(
         "import cadrumo.domain.calculations.registry as registry\nvalue = registry.RegistryRevisionInspection\n"
     )
@@ -249,7 +245,6 @@ def test_inspection_census_understands_public_facade_and_private_module_aliases(
         "from cadrumo.domain.calculations.registry import _authority as a\nvalue = a.inspect_revision\n"
     )
 
-    assert _registry_api_references(direct, _INSPECTION_SYMBOLS) == {"bundled_revision_inspection"}
     assert _registry_api_references(public_facade, _INSPECTION_SYMBOLS) == {"RegistryRevisionInspection"}
     assert _registry_api_references(module, _INSPECTION_SYMBOLS) == {"inspect_revision"}
     assert _registry_api_references(imported_public_facade, _INSPECTION_SYMBOLS) == {"RegistryRevisionInspection"}

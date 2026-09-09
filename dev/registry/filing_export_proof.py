@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Annotated, Literal, Protocol, cast, runtime_checkable
+from typing import Literal, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -75,23 +75,26 @@ from .diagnostic_classification import (
     derive_filing_revision_classifications,
 )
 from .export_proof import (
+    FilingExportProofAssessment,
+    FilingExportProofChannel,
+    FilingExportProofRefusal,
+    FilingExportProofRefusalReason,
+)
+from .filing_export_proof_contracts import (
     FilingExportConformanceReceipt,
     FilingExportConformanceRenderInputs,
     FilingExportConformanceVectorEvidence,
     FilingExportDictionaryValue,
     FilingExportGeneratedOutput,
     FilingExportOfficialProbe,
-    FilingExportProofAssessment,
-    FilingExportProofChannel,
+    FilingExportProof,
     FilingExportProofCoordinate,
-    FilingExportProofRefusal,
-    FilingExportProofRefusalReason,
+    FilingExportProofToken,
     FilingExportPublicProvenance,
     FilingExportSecureCustodyRecord,
     FilingExportSecureReplayEvidence,
     FilingExportSecureReplayReceipt,
 )
-from .export_proof import FilingExportProof as TwoChannelFilingExportProof
 from .pipeline.export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
@@ -108,8 +111,6 @@ from .pipeline.render_profile import (
 )
 from .pipeline.semantic_map import load_semantic_map
 
-_AuthorityToken = Annotated[str, Field(min_length=1, max_length=200, pattern=r"^[a-z0-9][a-z0-9._:/-]*$")]
-
 
 class FilingExportConformanceRequest(BaseModel):
     """Public development request carrying no filing values or producer identity."""
@@ -125,8 +126,8 @@ class FilingExportSecureReplayRequest(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     coordinate: FilingExportProofCoordinate
-    source_authority_id: _AuthorityToken
-    custody_authority_id: _AuthorityToken
+    source_authority_id: FilingExportProofToken
+    custody_authority_id: FilingExportProofToken
 
 
 @runtime_checkable
@@ -1473,7 +1474,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
             raise AssertionError("two-channel export proof reached an impossible incomplete state")
         return FilingExportProofAssessment(
             coordinate=coordinate,
-            proof=TwoChannelFilingExportProof(
+            proof=FilingExportProof(
                 coordinate=coordinate,
                 conformance=conformance,
                 secure_replay=replay,

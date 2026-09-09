@@ -206,6 +206,6 @@ def _walk_cli_verbs() -> Iterator[EnrolmentCandidate]:
 
 def _cli_leaf_command_paths() -> tuple[tuple[str, ...], ...]:
     """Return every operator leaf path from the immutable command authority."""
-    from dev.command_graph import command_spec_nodes
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
-    return tuple(node.path for node in command_spec_nodes() if node.spec.kind == "leaf")
+    return tuple(node.path for node in COMMAND_GRAPH.nodes() if node.spec.kind == "leaf")

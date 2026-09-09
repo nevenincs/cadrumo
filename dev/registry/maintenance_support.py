@@ -116,20 +116,6 @@ class OracleEnvironment(StrEnum):
     BOTH = "both"
 
 
-def bundled_revision_inspection(
-    modelo_id: str, *, filing_year: int, period: str, on: date | None = None
-) -> RegistryRevisionInspection:
-    """Return a static revision inspection without entering the filing gate.
-
-    The authority fully validates the bundled registry and its supporting
-    catalogues, then canonically selects the request's revision.  It
-    intentionally does not certify legal-review status or construct a filing
-    snapshot, because source-design inspection is not a filing operation and
-    must not be represented as one.
-    """
-    return bundled_authority().inspect_revision(modelo_id, filing_year=filing_year, period=period, on=on)
-
-
 def reset_registry_caches(
     *, lifecycle_observer: RegistryAuthorityLifecycleObserver = _SILENT_AUTHORITY_LIFECYCLE_OBSERVER
 ) -> None:

@@ -9,38 +9,17 @@ from pydantic import BaseModel, model_validator
 
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 
-from ._filing_export_proof_contracts import (
-    FilingExportConformanceReceipt,
-    FilingExportConformanceRenderInputs,
-    FilingExportConformanceVectorEvidence,
-    FilingExportDictionaryValue,
-    FilingExportGeneratedOutput,
-    FilingExportOfficialProbe,
-    FilingExportProof,
-    FilingExportProofCoordinate,
-    FilingExportProofToken,
-    FilingExportPublicProvenance,
-    FilingExportSecureCustodyRecord,
-    FilingExportSecureReplayEvidence,
-    FilingExportSecureReplayReceipt,
-    FilingExportSourcePinnedProbeExpectation,
+from .filing_export_proof_contracts import (
+    FilingExportProof as _FilingExportProof,
+)
+from .filing_export_proof_contracts import (
+    FilingExportProofCoordinate as _FilingExportProofCoordinate,
+)
+from .filing_export_proof_contracts import (
+    FilingExportProofToken as _FilingExportProofToken,
 )
 
-_Token = FilingExportProofToken
-
-FilingExportConformanceReceipt.__module__ = __name__
-FilingExportConformanceRenderInputs.__module__ = __name__
-FilingExportConformanceVectorEvidence.__module__ = __name__
-FilingExportDictionaryValue.__module__ = __name__
-FilingExportGeneratedOutput.__module__ = __name__
-FilingExportOfficialProbe.__module__ = __name__
-FilingExportProof.__module__ = __name__
-FilingExportProofCoordinate.__module__ = __name__
-FilingExportPublicProvenance.__module__ = __name__
-FilingExportSecureCustodyRecord.__module__ = __name__
-FilingExportSecureReplayEvidence.__module__ = __name__
-FilingExportSecureReplayReceipt.__module__ = __name__
-FilingExportSourcePinnedProbeExpectation.__module__ = __name__
+_Token = _FilingExportProofToken
 
 
 class FilingExportProofChannel(StrEnum):
@@ -67,7 +46,7 @@ class FilingExportProofRefusal(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    coordinate: FilingExportProofCoordinate
+    coordinate: _FilingExportProofCoordinate
     channel: FilingExportProofChannel
     reason: FilingExportProofRefusalReason
     authority_id: _Token | None = None
@@ -78,8 +57,8 @@ class FilingExportProofAssessment(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    coordinate: FilingExportProofCoordinate
-    proof: FilingExportProof | None = None
+    coordinate: _FilingExportProofCoordinate
+    proof: _FilingExportProof | None = None
     refusals: tuple[FilingExportProofRefusal, ...] = ()
 
     @model_validator(mode="after")
@@ -100,28 +79,15 @@ class FilingExportProofAssessment(BaseModel):
 class FilingExportProofAuthority(Protocol):
     """Composite authority consumed by dynamic release assessment."""
 
-    def assess_for(self, coordinate: FilingExportProofCoordinate) -> FilingExportProofAssessment:
+    def assess_for(self, coordinate: _FilingExportProofCoordinate) -> FilingExportProofAssessment:
         """Return complete two-channel proof or explicit per-channel refusal."""
         ...
 
 
 __all__ = [
-    "FilingExportConformanceReceipt",
-    "FilingExportConformanceRenderInputs",
-    "FilingExportConformanceVectorEvidence",
-    "FilingExportDictionaryValue",
-    "FilingExportGeneratedOutput",
-    "FilingExportOfficialProbe",
-    "FilingExportProof",
     "FilingExportProofAssessment",
     "FilingExportProofAuthority",
     "FilingExportProofChannel",
-    "FilingExportProofCoordinate",
     "FilingExportProofRefusal",
     "FilingExportProofRefusalReason",
-    "FilingExportPublicProvenance",
-    "FilingExportSecureCustodyRecord",
-    "FilingExportSecureReplayEvidence",
-    "FilingExportSecureReplayReceipt",
-    "FilingExportSourcePinnedProbeExpectation",
 ]

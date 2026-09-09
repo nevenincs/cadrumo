@@ -1,9 +1,8 @@
 """Pydantic contracts for the value-independent filing export proof channels.
 
-The public facade re-exports these contracts from ``export_proof``.  Keeping
-the evidence and render-input contracts together gives their shared binding
-invariants one home while leaving proof assessment and refusal taxonomy at
-the application boundary.
+Evidence and render-input contracts live together so their shared binding
+invariants have one owner. Consumers import that owner directly; proof
+assessment and refusal taxonomy remain in :mod:`.export_proof`.
 """
 
 from __future__ import annotations
