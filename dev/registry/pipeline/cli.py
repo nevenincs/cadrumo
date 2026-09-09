@@ -328,12 +328,24 @@ def _require_republication_eligibility(
     # ledger's own gate fails when its cause is gone. An unexplained record
     # change is refused exactly as before.
     subject = f"{invocation.modelo}/{invocation.revision}"
-    explained = {row.subject for row in record_drift_dispositions()}
-    if subject not in explained:
+    rows = {row.subject: row for row in record_drift_dispositions()}
+    disposition = rows.get(subject)
+    if disposition is None:
         raise ValueError(
             f"republish refuses an unexplained record change for {subject}: "
             "declare a disposition row stating why the shipped records differ from what the "
             "current inputs produce, with its source pin and reconsideration condition",
+        )
+    if disposition.remedy != "republish":
+        # A row saying the SHIPPED bytes are right must never be read as
+        # permission to overwrite them. Both directions produce identical record
+        # drift, so without this the informative modelo whose type-2 record must
+        # repeat per declarado would be republished into a return naming one
+        # counterparty and dropping the rest.
+        raise ValueError(
+            f"republish refuses {subject}: its disposition declares the shipped records correct "
+            f"and the inputs wrong (remedy={disposition.remedy!r}). Regenerating would ship the "
+            "defect. Repair the inputs and retire the row instead",
         )
 
 
