@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:b2ee16d50b558c738eef756747bc4f9422a8142c95feeef2c2963b113284f4fb'
+body_hash: 'sha256:601ac93d0565eac9b774b049ca8d016897cb4928fe7b465faa69e202f0c947b3'
 ---
 
 # `facts-registry` plan
@@ -87,7 +87,7 @@ Adapt IVA schedules, recargo schedules, typed lookup behavior, evidence, and pre
 
 - [x] `W02.P05.S13` - Register IVA rate schedules as typed dated provider adapters; `src/cadrumo/domain/iva/rates.py`.
 - [x] `W02.P05.S14` - Register recargo by applied rate and operation date; `src/cadrumo/domain/iva/recargo_equivalencia.py`.
-- [ ] `W02.P05.S15` - Move IVA evidence enforcement into provider validation; `src/cadrumo/domain/iva/_grounding.py`.
+- [x] `W02.P05.S15` - Move IVA evidence enforcement into provider validation; `src/cadrumo/domain/iva/_grounding.py`.
 
 ### Phase `W02.P06` - Enroll categories and calendar providers
 

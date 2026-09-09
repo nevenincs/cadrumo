@@ -218,6 +218,9 @@ class RegistryValidator:
                 self._facts,
                 legal_ref_ids=self._legal,
                 source_ref_ids=self._sources,
+                legal_refs=self._legal,
+                source_refs=self._sources,
+                source_root=self._source_root,
             ),
         )
         self._catalogue_failures = tuple(failures)

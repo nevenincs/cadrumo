@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Collection, Mapping
 from datetime import date
+from pathlib import Path
 
+from .....core.corpus_text import normalise_corpus_text
+from .._validate_evidence import EvidenceValidator
+from ..errors import RegistryValidationError
+from ..legal import verify_legal_reference_grounding
+from ..schema_references import LegalReference, SourceReference
 from .schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
 
 __all__ = ["governed_fact_catalogue_failures"]
@@ -15,9 +21,18 @@ def governed_fact_catalogue_failures(
     *,
     legal_ref_ids: Collection[str],
     source_ref_ids: Collection[str],
+    legal_refs: Mapping[str, LegalReference] | None = None,
+    source_refs: Mapping[str, SourceReference] | None = None,
+    source_root: Path | None = None,
 ) -> tuple[str, ...]:
-    """Return every unresolved legal or source reference in the catalogue."""
+    """Return structural and evidence-grounding failures for every governed variant."""
     failures: list[str] = []
+    verified_legal: set[str] = set()
+    evidence = EvidenceValidator(
+        legal_refs={} if legal_refs is None else legal_refs,
+        source_refs={} if source_refs is None else source_refs,
+        source_root=source_root,
+    )
     for fact_id, fact in sorted(catalogue.facts.items()):
         failures.extend(_fact_precedence_failures(fact))
         for variant in fact.variants:
@@ -36,6 +51,40 @@ def governed_fact_catalogue_failures(
                 failures.append(
                     f"governed fact {fact_id!r} variant {variant.variant_id!r} citations must cover every source_ref",
                 )
+            if legal_refs is not None and source_root is not None:
+                for ref_id in variant.legal_refs:
+                    if ref_id in verified_legal:
+                        continue
+                    reference = legal_refs.get(ref_id)
+                    if reference is None:
+                        continue
+                    try:
+                        verify_legal_reference_grounding(reference, source_root=source_root)
+                    except RegistryValidationError as exc:
+                        failures.append(
+                            f"governed fact {fact_id!r} variant {variant.variant_id!r} "
+                            f"has invalid legal evidence {ref_id!r}: {exc}"
+                        )
+                    else:
+                        verified_legal.add(ref_id)
+            if source_refs is not None and source_root is not None:
+                for citation in variant.source_citations:
+                    reference = source_refs.get(citation.source_ref)
+                    if reference is None:
+                        continue
+                    source_text = evidence.source_text(reference)
+                    if source_text is None:
+                        failures.append(
+                            f"governed fact {fact_id!r} variant {variant.variant_id!r} "
+                            f"cannot read source evidence {citation.source_ref!r}"
+                        )
+                        continue
+                    for required_text in citation.required_text:
+                        if normalise_corpus_text(required_text) not in source_text:
+                            failures.append(
+                                f"governed fact {fact_id!r} variant {variant.variant_id!r} source citation "
+                                f"{citation.source_ref!r} missing text {required_text!r}"
+                            )
     return tuple(failures)
 
 
