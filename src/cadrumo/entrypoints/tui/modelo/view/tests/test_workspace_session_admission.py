@@ -26,7 +26,6 @@ from ......core.external_constants import OutputLanguage
 from ..controller import (
     SUPPORTED_WORKSPACE_CONTRACT_VERSION,
     ModeloWorkspaceSessionAdmissionError,
-    admit_workspace_session,
     open_workspace_read_session,
 )
 from .conftest import resolve_real_result
@@ -39,10 +38,7 @@ def _admitted_projection(
     repository: WorkUnitCatalogueRepository,
 ) -> ModeloWorkspaceProjectionV1:
     """The real resolver's projection, already admitted once."""
-    session, refusal = admit_workspace_session(resolve_real_result(bucket_id, repository, OutputLanguage.ES))
-    assert refusal is None, f"expected an admitted projection, got: {refusal}"
-    assert session is not None
-    return session.projection
+    return resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection
 
 
 def test_a_projection_on_the_supported_contract_opens_a_session(bucket_and_repository) -> None:

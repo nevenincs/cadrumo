@@ -36,8 +36,6 @@ from .....application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
-    ModeloWorkspaceConstraintReferenceV1,
-    ModeloWorkspaceDomainRefusalV1,
     ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceRecordLabelV1,
 )
@@ -88,17 +86,6 @@ def _require_total_glyph_table() -> None:
 
 
 _require_total_glyph_table()
-
-
-def disposition_glyph(disposition: ModeloWorkspaceCapabilityDisposition) -> ModeloWorkspaceDispositionGlyphV1:
-    """Return the distinguishing mark this disposition is rendered by.
-
-    Public because the mark is part of what this module promises: a caller
-    proving that two dispositions stay distinguishable, or a destination
-    rendering one outside a capability row, needs the mapping without
-    reaching for a private table.
-    """
-    return _DISPOSITION_GLYPH[disposition]
 
 
 class _ViewModel(BaseModel):
@@ -203,44 +190,6 @@ def capability_row(capability: ModeloWorkspaceCapabilityV1) -> ModeloWorkspaceCa
     )
 
 
-type ModeloWorkspaceRefusalKindV1 = Literal["domain"]
-
-
-class ModeloWorkspaceRefusalViewV1(_ViewModel):
-    """One refusal presented with the facts it already carries, and no more.
-
-    ``responsible_owner`` and ``reconsideration_condition`` are ``None`` only
-    for the pre-parse version refusal, which structurally has neither -- it
-    is produced before a target is parsed. They are never defaulted to a
-    placeholder: a refusal that cannot name an owner must not appear to.
-    """
-
-    kind: ModeloWorkspaceRefusalKindV1
-    responsible_owner: str | None
-    reconsideration_condition: str | None
-    source: ModeloWorkspaceDomainRefusalV1
-
-    @model_validator(mode="after")
-    def _mirror_the_source_refusal(self) -> ModeloWorkspaceRefusalViewV1:
-        if self.kind != self.source.kind:
-            raise ValueError("refusal view must mirror the refusal's own discriminator")
-        if self.responsible_owner != self.source.responsible_owner:
-            raise ValueError("refusal view must mirror the refusal's responsible owner")
-        if self.reconsideration_condition != self.source.reconsideration_condition:
-            raise ValueError("refusal view must mirror the refusal's reconsideration condition")
-        return self
-
-
-def refusal_view(refusal: ModeloWorkspaceDomainRefusalV1) -> ModeloWorkspaceRefusalViewV1:
-    """Narrow any refusal arm to the presentation facts it actually carries."""
-    return ModeloWorkspaceRefusalViewV1(
-        kind=refusal.kind,
-        responsible_owner=refusal.responsible_owner,
-        reconsideration_condition=refusal.reconsideration_condition,
-        source=refusal,
-    )
-
-
 type ModeloWorkspaceConstraintDisclosureV1 = Literal["unmeasured", "none_declared", "declared"]
 """Three states, because the producer distinguishes three and a bool cannot.
 
@@ -253,15 +202,6 @@ constraints declared" the way an empty tuple would. Collapsing the two into
 one Boolean would make an unmeasured axis read as a satisfied one -- the
 same under-declaration-by-presentation the glyph table refuses.
 """
-
-
-def constraint_disclosure(
-    constraints: tuple[ModeloWorkspaceConstraintReferenceV1, ...] | None,
-) -> ModeloWorkspaceConstraintDisclosureV1:
-    """Narrow the producer's three-state constraint field without flattening it."""
-    if constraints is None:
-        return "unmeasured"
-    return "declared" if constraints else "none_declared"
 
 
 class ModeloWorkspaceChromeV1(_ViewModel):
@@ -296,11 +236,6 @@ __all__ = [
     "ModeloWorkspaceDisplayTextV1",
     "ModeloWorkspaceDispositionGlyphV1",
     "ModeloWorkspacePageCompletenessV1",
-    "ModeloWorkspaceRefusalKindV1",
-    "ModeloWorkspaceRefusalViewV1",
     "capability_row",
-    "constraint_disclosure",
     "display_text",
-    "disposition_glyph",
-    "refusal_view",
 ]

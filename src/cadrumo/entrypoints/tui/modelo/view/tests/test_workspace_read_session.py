@@ -18,7 +18,7 @@ from ......application.modelo.workspace_models import (
 from ......core.external_constants import OutputLanguage
 from ..controller import (
     ModeloWorkspaceReadSession,
-    admit_workspace_session,
+    open_workspace_read_session,
     semantic_identity,
 )
 from ..models import ModeloWorkspaceBoundedPageV1, ModeloWorkspaceCompletePageV1
@@ -28,10 +28,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _session(bucket_id, repository, language: OutputLanguage) -> ModeloWorkspaceReadSession:
-    session, refusal = admit_workspace_session(resolve_real_result(bucket_id, repository, language))
-    assert refusal is None, f"expected an admitted projection, got a refusal: {refusal}"
-    assert session is not None
-    return session
+    return open_workspace_read_session(resolve_real_result(bucket_id, repository, language).projection)
 
 
 def test_a_real_result_opens_a_session_carrying_its_semantic_identity(

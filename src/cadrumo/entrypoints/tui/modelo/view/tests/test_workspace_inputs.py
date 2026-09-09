@@ -15,7 +15,7 @@ from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalo
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
 from ....components.host import ScreenHostApp
-from ..controller import ModeloWorkspaceReadSession, admit_workspace_session
+from ..controller import ModeloWorkspaceReadSession, open_workspace_read_session
 from ..inputs import ModeloWorkspaceInputsScreen
 from .conftest import resolve_real_result
 
@@ -23,10 +23,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
-    session, refusal = admit_workspace_session(resolve_real_result(bucket_id, repository, OutputLanguage.ES))
-    assert refusal is None, f"expected an admitted projection, got: {refusal}"
-    assert session is not None
-    return session
+    return open_workspace_read_session(resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection)
 
 
 @pytest.mark.asyncio

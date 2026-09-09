@@ -23,10 +23,6 @@ if TYPE_CHECKING:
 CADRUMO_LIGHT_THEME_NAME: Final[str] = "cadrumo-light"
 CADRUMO_DARK_THEME_NAME: Final[str] = "cadrumo-dark"
 
-CONTENT_WIDTH_PERCENT: Final[str] = "100%"
-"""Share of the terminal the content column occupies."""
-
-
 CADRUMO_LIGHT: Final[Theme] = Theme(
     name=CADRUMO_LIGHT_THEME_NAME,
     # Warm paper and near-black ink, verbatim from the frontend :root.
@@ -216,9 +212,6 @@ Spatial tokens are deliberately outside the two ``Theme`` objects. Light and
 dark differ in colour, never in measure; duplicating the scale into both
 themes would create two places for one fact to drift apart.
 """
-
-SCROLLBAR_CELLS: Final[int] = int(CADRUMO_CSS_TOKENS["cadrumo-scrollbar"])
-"""Width of the vertical scrollbar track, in cells."""
 
 
 class UnknownDesignTokenError(KeyError):
@@ -460,9 +453,7 @@ __all__ = [
     "CADRUMO_LIGHT",
     "CADRUMO_LIGHT_THEME_NAME",
     "CADRUMO_THEMES",
-    "CONTENT_WIDTH_PERCENT",
     "NOTICE_BAND_CSS",
-    "SCROLLBAR_CELLS",
     "install_cadrumo_themes",
     "resolve_theme_name",
     "toggle_appearance",

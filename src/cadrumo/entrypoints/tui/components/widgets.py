@@ -8,7 +8,7 @@ from enum import StrEnum
 from typing import Any, Final, override
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Vertical, VerticalScroll
 from textual.geometry import Size
 from textual.widget import Widget
 from textual.widgets import Button, Collapsible, DataTable, Static
@@ -224,61 +224,6 @@ class NoticeBand(Vertical, can_focus=False):
                 )
 
 
-class StageNavigationStrip(Horizontal, can_focus=False):
-    """Render-only linear stage strip: which stage is current, done, or ahead.
-
-    Route and focus are presentation state owned by the host screen; this
-    widget only shows where the operator currently is in a fixed, ordered
-    sequence of stages. It carries
-    no navigation of its own and mounts no button -- a host wanting a
-    clickable strip composes its own controls around this render.
-    """
-
-    def __init__(self, stages: Sequence[str], *, current_index: int, id: str | None = None) -> None:
-        """Store the ordered, already-localized stage labels and current position."""
-        if not stages:
-            raise ValueError("a stage navigation strip requires at least one stage")
-        if not 0 <= current_index < len(stages):
-            raise ValueError("current_index must name a declared stage")
-        super().__init__(id=id)
-        self._stages = tuple(stages)
-        self._current_index = current_index
-
-    @property
-    def current_index(self) -> int:
-        """Return the stage currently marked as active."""
-        return self._current_index
-
-    def set_current_index(self, current_index: int) -> None:
-        """Advance the strip's own position and recompose in place.
-
-        A host tracking its own cursor (a wizard, a guided flow) updates
-        the SAME mounted strip instance rather than tearing it down and
-        remounting a fresh one each step -- `refresh(recompose=True)` is
-        the sync, in-place primitive for exactly that.
-        """
-        if not 0 <= current_index < len(self._stages):
-            raise ValueError("current_index must name a declared stage")
-        self._current_index = current_index
-        self.refresh(recompose=True)
-
-    @override
-    def compose(self) -> ComposeResult:
-        for index, label in enumerate(self._stages):
-            if index < self._current_index:
-                glyph, state = "✓", "done"
-            elif index == self._current_index:
-                glyph, state = "▸", "current"
-            else:
-                glyph, state = "·", "upcoming"
-            yield Static(
-                f"{glyph} {label}",
-                classes=f"cadrumo-stage cadrumo-stage-{state}",
-                id=f"stage-{index}",
-                markup=False,
-            )
-
-
 class DisclosureGroup(Collapsible):
     """A titled, collapsible task section -- the shared `Show optional` primitive.
 
@@ -449,5 +394,4 @@ __all__ = [
     "RequirementStatus",
     "SourceActionCard",
     "SourceActionDescriptor",
-    "StageNavigationStrip",
 ]
