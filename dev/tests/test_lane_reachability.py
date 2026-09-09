@@ -17,11 +17,8 @@ this file run" (too quiet). Reporting per test resolves both.
 No stored baseline and no allowlist. The worklist is recomputed from the tree on
 every run, so coverage can only ratchet up: a new test outside every lane fails
 immediately rather than being absorbed into an accepted set that nobody revisits.
-The one declaration channel that exists -- ``UNSWEPT_TEST_DIRECTORIES``, for a
-directory deliberately held out with its reason -- is held to the same standard
-rather than exempted from it: an entry is reported back as stale the moment a
-lane sweeps the directory or the directory stops existing, so it cannot decay
-into the accepted set this paragraph refuses.
+There is no declaration channel and no holdout: a test directory no lane sweeps
+is a finding, whose remedy is a lane path or deleting the directory.
 
 THIS MODULE'S LOCATION IS LOAD-BEARING, and the requirement is reach rather than
 a particular directory: a guard against unreachable tests must itself sit inside
@@ -334,37 +331,33 @@ def test_the_path_check_catches_what_the_per_test_check_cannot(tmp_path: Path) -
     assert report.unnamed == ("outside/tests/test_no_tests_at_all.py",)
 
 
-#: How many tracked test files may be unreadable before the reachability
-#: measurement is judged incomplete rather than merely racing a peer.
-_TOLERATED_MID_EDIT_SKIPS: int = 10
-
-
 def test_the_gate_measured_a_real_corpus() -> None:
     """A parser that found nothing would report perfect coverage.
 
     This is the gate's own failure mode: zero lanes means every test is
     unreachable, but zero *analysed files* would make the gate pass vacuously.
     Both sides are pinned so a broken reader cannot read as a clean tree.
+
+    A skipped file is an unreadable tracked test module, and it contributes no
+    entries at all -- every test inside it goes unmeasured while ``unreachable``
+    stays empty and the gate reads clean. The tolerance for that is DERIVED, not
+    a tuned number: this worktree runs many agents at once, so a file can be
+    caught between writes, and the honest discriminator is whether it is STILL
+    unreadable when asked again. A transient race re-reads cleanly and costs the
+    gate nothing; a file that stays unreadable is a real finding at any count.
     """
     report = analyse_reachability(_ROOT)
     lanes = declared_lanes(_ROOT)
 
     assert len(lanes) > 10, "lane discovery collapsed; the gate would be measuring nothing"
     assert report.analysed > 1000, f"only {report.analysed} files analysed; the reader has stopped matching"
-    # An absolute cap, not a proportion of the corpus. The condition this
-    # tolerance exists for is a peer mid-edit -- one or two files caught
-    # between writes -- while a tenth of the corpus is four hundred files at
-    # today's size, and it grows as the tree does. That headroom is the gap
-    # the class lives in: a skipped file contributes no entries at all, so
-    # every test inside it goes unmeasured while `unreachable` stays empty
-    # and the gate reads clean. Live skips are zero, so the cap costs
-    # nothing and is forty times tighter than the ratio it replaces. The
-    # skipped paths are named whatever the count, because a tolerated skip
-    # that nobody sees is the same silence one file smaller.
-    assert len(report.skipped) <= _TOLERATED_MID_EDIT_SKIPS, (
-        f"{len(report.skipped)} tracked files were unreadable against {report.analysed} analysed, "
-        f"over a cap of {_TOLERATED_MID_EDIT_SKIPS}; that is mass-skip, not a peer mid-edit: "
-        + ", ".join(report.skipped)
+
+    persistent = [relative for relative in report.skipped if marker_sets_in(_ROOT / relative) is None]
+
+    assert persistent == [], (
+        f"{len(persistent)} tracked test file(s) are still unreadable on a second read against "
+        f"{report.analysed} analysed, so every test inside them went unmeasured while the gate "
+        "read clean: " + ", ".join(persistent)
     )
 
 
@@ -387,8 +380,8 @@ def test_no_test_directory_sits_outside_every_lane_path() -> None:
 
     assert report.uncovered == (), (
         "no lane's path scope sweeps these test directories, so a module written into one is "
-        "collected by nothing -- name the directory in the lane that owns it, or declare it in "
-        "UNSWEPT_TEST_DIRECTORIES with the reason it is held out:\n  " + "\n  ".join(report.uncovered)
+        "collected by nothing -- name the directory in the lane that owns it, or delete the "
+        "directory:\n  " + "\n  ".join(report.uncovered)
     )
 
 
@@ -406,22 +399,6 @@ def test_the_directory_gate_measured_a_real_corpus() -> None:
     assert report.analysed > 100, f"only {report.analysed} test directories discovered; the walker has stopped matching"
     assert tracked_test_directories(_ROOT) == tuple(sorted(set(tracked_test_directories(_ROOT)))), (
         "directory discovery must be sorted and duplicate-free, or the finding's order is not stable"
-    )
-
-
-def test_no_holdout_declaration_has_gone_stale() -> None:
-    """A declaration stops being an explanation the moment it stops describing the tree.
-
-    An entry naming a directory a lane now sweeps, or one that no longer
-    exists, suppresses without explaining. Reporting it is what keeps the
-    declaration channel from ageing into the allowlist this gate exists to
-    avoid needing.
-    """
-    report = analyse_directory_coverage(_ROOT)
-
-    assert report.stale == (), (
-        "these holdout declarations no longer describe the tree -- the directory is either swept by a "
-        "lane now or gone -- so they only suppress; remove them:\n  " + "\n  ".join(report.stale)
     )
 
 
@@ -507,44 +484,6 @@ def test_a_collapsed_lane_parse_condemns_the_corpus_rather_than_absolving_it(tmp
 
     assert report.uncovered == discovered
     assert report.analysed == len(discovered)
-
-
-def test_a_holdout_declaration_is_honoured_and_a_rotted_one_is_reported(tmp_path: Path) -> None:
-    """The declaration channel, both halves, because only the pair keeps it from being an allowlist.
-
-    A directory deliberately outside every lane says so in one place with a
-    reason and is accepted. A declaration that has stopped describing the tree
-    -- because a lane now sweeps the directory, or because the directory is
-    gone -- is reported instead of honoured, so a parked problem surfaces
-    rather than ageing quietly behind an entry nobody rereads.
-    """
-    _repository_with_lanes(tmp_path, "pytest -q src -m unit")
-    _write_test(tmp_path / "src" / "tests" / "test_covered.py", _UNIT_MODULE.format(name="covered"))
-    _write_test(tmp_path / "outside" / "tests" / "test_held_out.py", _UNIT_MODULE.format(name="held_out"))
-    discovered = discover_test_directories(tmp_path)
-
-    honoured = analyse_directory_coverage(
-        tmp_path,
-        directories=discovered,
-        unswept={"outside/tests": "runs only under an operator-supplied device"},
-    )
-    assert honoured.uncovered == ()
-    assert honoured.declared == ("outside/tests",)
-    assert honoured.stale == ()
-
-    swept = analyse_directory_coverage(
-        tmp_path,
-        directories=discovered,
-        unswept={"src/tests": "a reason that stopped being true when a lane started sweeping it"},
-    )
-    assert swept.stale == ("src/tests",), "a declaration for a swept directory explains nothing and only suppresses"
-
-    absent = analyse_directory_coverage(
-        tmp_path,
-        directories=discovered,
-        unswept={"deleted/tests": "a reason for a directory that no longer exists"},
-    )
-    assert absent.stale == ("deleted/tests",)
 
 
 def test_a_file_level_exclusion_does_not_unsweep_its_directory(tmp_path: Path) -> None:
