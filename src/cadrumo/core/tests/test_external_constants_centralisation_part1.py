@@ -310,10 +310,10 @@ def test_export_mime_consumers_alias_core_constants() -> None:
 
     for module_name, attr_name, constant_name, message in (
         (
-            "cadrumo.adapters.outbound.aeat.sede.declarations",
+            "cadrumo.adapters.outbound.aeat.sede.declarations_observations",
             "_JSON_MIME_TYPE",
             "JSON_MIME_TYPE",
-            "_declarations must import JSON_MIME_TYPE under the alias _JSON_MIME_TYPE",
+            "declarations_observations must import JSON_MIME_TYPE under the alias _JSON_MIME_TYPE",
         ),
         (
             "cadrumo.application.export.tabular",
@@ -341,7 +341,7 @@ def test_export_mime_consumers_alias_core_constants() -> None:
             import_message=message,
         )
 
-    declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede.declarations")
+    declarations = importlib.import_module("cadrumo.adapters.outbound.aeat.sede.declarations_observations")
     tabular = importlib.import_module("cadrumo.application.export.tabular")
     assert declarations._JSON_MIME_TYPE == "application/json"
     assert tabular._CSV_MIME_TYPE == "text/csv"
@@ -356,7 +356,11 @@ def test_no_bare_json_or_csv_mime_literals_in_exporters(source_tree_ast: Mapping
 
     offenders: list[str] = []
     for relative_path, literal, replacement in (
-        ("src/cadrumo/adapters/outbound/aeat/sede/declarations.py", "application/json", "_JSON_MIME_TYPE"),
+        (
+            "src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py",
+            "application/json",
+            "_JSON_MIME_TYPE",
+        ),
         ("src/cadrumo/application/export/tabular.py", "text/csv", "_CSV_MIME_TYPE"),
     ):
         offenders.extend(
