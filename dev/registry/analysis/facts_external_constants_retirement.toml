@@ -2,7 +2,6 @@ schema_version = 1
 source_path = "src/cadrumo/core/external_constants.py"
 declaration_count = 37
 consumer_count = 53
-classification = "governed_fact"
 provider_step = "W02.P08.S20"
 deletion_step = "W04.P16.S31"
 declaration_disposition = "delete_after_provider_enrollment_and_consumer_migration"
