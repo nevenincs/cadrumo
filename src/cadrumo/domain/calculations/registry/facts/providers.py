@@ -211,13 +211,31 @@ def _iva_rate_provider_registration() -> FactProviderRegistration:
         compile_iva_rate_facts,
         reset_iva_rate_fact_provider,
     )
+    from ....iva.recargo_equivalencia import (
+        collect_iva_recargo_fact_fingerprints,
+        compile_iva_recargo_facts,
+        reset_iva_recargo_fact_provider,
+    )
+
+    def compile_iva_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
+        return (*compile_iva_rate_facts(registry_root), *compile_iva_recargo_facts(registry_root))
+
+    def collect_iva_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+        return (
+            *collect_iva_rate_fact_fingerprints(registry_root),
+            *collect_iva_recargo_fact_fingerprints(registry_root),
+        )
+
+    def reset_iva_facts() -> None:
+        reset_iva_rate_fact_provider()
+        reset_iva_recargo_fact_provider()
 
     return FactProviderRegistration(
         provider_id=IVA_RATE_PROVIDER_ID,
         owned_directories=("iva",),
-        compile=compile_iva_rate_facts,
-        collect_fingerprints=collect_iva_rate_fact_fingerprints,
-        reset=reset_iva_rate_fact_provider,
+        compile=compile_iva_facts,
+        collect_fingerprints=collect_iva_fingerprints,
+        reset=reset_iva_facts,
     )
 
 

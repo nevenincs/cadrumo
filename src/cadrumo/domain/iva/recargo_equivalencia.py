@@ -43,8 +43,22 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import path_stat_fingerprint
 from ...core.resources.bundled_data import bundled_path
+from ...core.revision_review import RevisionReviewStatus
 from ...core.type_guards import is_object_list
 from ...core.unit_proportion import UnitProportion
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.schema import (
+    FactOwnership,
+    FactSelector,
+    GovernedFact,
+    GovernedFactFamily,
+    GovernedFactVariant,
+    MappingFactEntry,
+    MappingFactPayload,
+)
+from ..calculations.registry.loader_cache import toml_file_fingerprint
+from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from ..calculations.registry.schema_base import DateAxis
 from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError, IvaValidationError
 
@@ -75,6 +89,7 @@ _GENERAL_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-general"
 _REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-reducido"
 _SUPER_REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-super-reducido"
 _TABACO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-tabaco"
+IVA_RECARGO_FACT_ID = "iva-recargo-by-applied-rate"
 
 
 def _load_rates() -> LivaArt161RecargoRates:
@@ -326,10 +341,82 @@ def recargo_rate_for_applied_rate(applied_rate: Decimal, on_date: date) -> Decim
     return None
 
 
+def compile_iva_recargo_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
+    """Project the legacy applied-rate schedule into governed facts."""
+    records = load_recargo_rate_table(registry_root.resolve() / "iva" / "recargo-rates.toml")
+    return (
+        GovernedFact(
+            fact_id=IVA_RECARGO_FACT_ID,
+            family=GovernedFactFamily.MAPPING,
+            variants=tuple(_recargo_fact_variant(record) for record in records),
+        ),
+    )
+
+
+def collect_iva_recargo_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+    """Fingerprint the exact recargo schedule owned by the IVA provider."""
+    path = (registry_root.resolve() / "iva" / "recargo-rates.toml").resolve()
+    return (toml_file_fingerprint(path),)
+
+
+def reset_iva_recargo_fact_provider() -> None:
+    """Clear the recargo parser cache under the authority reset barrier."""
+    _load_recargo_rate_table_cached.cache_clear()
+
+
+def iva_recargo_fact_query(applied_rate: Decimal, operation_date: date) -> MappingFactQuery:
+    """Build the exact typed authority query for an applied IVA rate and operation date."""
+    return MappingFactQuery(
+        fact_id=IVA_RECARGO_FACT_ID,
+        date_axis=DateAxis.DEVENGO_DATE,
+        effective_date=operation_date,
+        selectors=(FactSelector(name="applied_rate", value=applied_rate),),
+    )
+
+
+def recargo_rate_record_from_fact(resolved: ResolvedMappingFact) -> RecargoRateRecord:
+    """Project a provenance-bearing authority result onto the retained public record."""
+    selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
+    payload = {str(entry.key): entry.value for entry in resolved.payload.entries}
+    return RecargoRateRecord(
+        iva_rate=Decimal(str(selectors["applied_rate"])),
+        recargo_rate=Decimal(str(payload["recargo_rate"])),
+        effective_from=resolved.valid_from,
+        effective_until=resolved.valid_to,
+        legal_refs=resolved.legal_refs,
+        notes=str(payload["notes"]),
+    )
+
+
+def _recargo_fact_variant(record: RecargoRateRecord) -> GovernedFactVariant:
+    return GovernedFactVariant(
+        variant_id=f"iva-recargo.{record.iva_rate}.{record.effective_from}",
+        selectors=(FactSelector(name="applied_rate", value=record.iva_rate),),
+        date_axis=DateAxis.DEVENGO_DATE,
+        valid_from=record.effective_from,
+        valid_to=record.effective_until,
+        payload=MappingFactPayload(
+            entries=(
+                MappingFactEntry(key="recargo_rate", value=record.recargo_rate),
+                MappingFactEntry(key="notes", value=record.notes),
+            ),
+        ),
+        legal_refs=record.legal_refs,
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,
+        ownership=FactOwnership.GENERATED,
+    )
+
+
 __all__ = [
+    "IVA_RECARGO_FACT_ID",
     "LivaArt161RecargoRates",
     "RecargoRateRecord",
+    "collect_iva_recargo_fact_fingerprints",
+    "compile_iva_recargo_facts",
+    "iva_recargo_fact_query",
     "load_recargo_rate_table",
     "load_recargo_rates",
     "recargo_rate_for_applied_rate",
+    "recargo_rate_record_from_fact",
+    "reset_iva_recargo_fact_provider",
 ]
