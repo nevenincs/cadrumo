@@ -75,3 +75,13 @@ def test_registration_refuses_empty_or_overlapping_directory_ownership() -> None
         validate_fact_provider_registrations(
             (_registration("first", "facts"), _registration("second", "facts/iva")),
         )
+
+
+def test_combined_iva_lifecycle_and_modelo_inherited_identity_are_explicit() -> None:
+    iva = next(item for item in FACT_PROVIDER_REGISTRATIONS if item.provider_id == "iva-rate-schedule")
+    projection = next(
+        item for item in FACT_PROVIDER_REGISTRATIONS if item.provider_id == "modelo-parameter-projections"
+    )
+
+    assert iva.lifecycle_components == ("iva-rates", "iva-recargo-equivalencia")
+    assert projection.inherited_identity_domains == ("modelos",)

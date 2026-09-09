@@ -7,7 +7,6 @@ from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
-from .....core import external_constants as constants
 from .....core.revision_review import RevisionReviewStatus
 from ..loader_cache import toml_file_fingerprint
 from ..schema_base import DateAxis, SourceCitation
@@ -41,9 +40,87 @@ _SOURCE_BY_LEGAL_REF = {
     "ley-44-2015:art-14": "boe-ley-44-2015-art-14-statutory-facts",
     "ley-39-2015:art-43.2": "boe-ley-39-2015-art-43-statutory-facts",
 }
-_CITATION_TEXT_BY_LEGAL_REF = {
-    legal_ref: "Ámbito temporal" if legal_ref == "madrid-dl-1-2010:art-4" else "Artículo"
-    for legal_ref in _SOURCE_BY_LEGAL_REF
+_CITATION_TEXT_BY_SYMBOL = {
+    "M347_THRESHOLD_EUR": "3.005,06 euros durante el año natural",
+    "M347_CLAVE_C_THRESHOLD_EUR": "300,51 euros durante el mismo periodo",
+    "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR": "valor de adquisición sea inferior a quinientas mil pesetas",
+    "MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR": "inferior a 1.000.000 de euros",
+    "ART_7P_EXEMPTION_CAP_EUR": "límite máximo de 60.100 euros anuales",
+    "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR": "1.500 euros anuales",
+    "WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR": "22.000 euros anuales",
+    "MODELO_202_ART_40_3_INCN_THRESHOLD_EUR": "6 millones de euros durante los 12 meses anteriores",
+    "MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR": "19.747,5 euros",
+    "MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR": "1.500 euros anuales",
+    "REBECA_MARITIME_EXEMPTION_FRACTION": "renta exenta el 50 por 100",
+    "DEDUCCION_MATERNIDAD_MENSUAL_EUR": "forma proporcional al número de meses",
+    "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR": "1.200 euros anuales",
+    "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR": "150 euros",
+    "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR": "1.200 euros anuales",
+    "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR": "1 de enero de 2023",
+    "DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR": "1 de enero de 2023",
+    "MINIMO_DESCENDIENTE_MAX_AGE": "menor de veinticinco años",
+    "MINIMO_MENOR_TRES_MAX_AGE": "menor de tres años",
+    "CUSTODIA_COMPARTIDA_PRORRATA_FACTOR": "por partes iguales",
+    "ART_81_1_ENTRY_WINDOW_YEARS": "durante los tres años siguientes",
+    "NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS": "Ámbito temporal de aplicación de la deducción",
+    "DT12_RESCATE_REDUCCION_RATE": "reducción del 40 por ciento",
+    "DT12_GENERAL_WINDOW_FOLLOWING_YEARS": "dos ejercicios siguientes",
+    "DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR": "ejercicios 2011 a 2014",
+    "DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR": "ejercicios 2011 a 2014",
+    "DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS": "octavo ejercicio siguiente",
+    "DT12_CLIFF_LAST_YEAR": "31 de diciembre de 2018",
+    "SAL_RESERVA_DOTACION_RATE": "diez por ciento del beneficio líquido",
+    "SAL_RESERVA_CAPITAL_MULTIPLE": "doble del capital social",
+    "DEHU_RECHAZO_TACITO_DIAS_NATURALES": "diez días naturales",
+}
+
+_DATE_AXIS_BY_SYMBOL = {
+    "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR": DateAxis.TRANSACTION_DATE,
+    "REBECA_MARITIME_EXEMPTION_FRACTION": DateAxis.DEVENGO_DATE,
+    "DEHU_RECHAZO_TACITO_DIAS_NATURALES": DateAxis.SUBMISSION_DATE,
+}
+_VALUE_BY_SYMBOL: dict[str, str | int | Decimal | bool | date] = {
+    "M347_THRESHOLD_EUR": Decimal("3005.06"),
+    "M347_CLAVE_C_THRESHOLD_EUR": Decimal("300.51"),
+    "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR": Decimal("3005.06"),
+    "MODELO_840_IAE_CIFRA_NEGOCIOS_EXEMPTION_THRESHOLD_EUR": Decimal("1000000.00"),
+    "ART_7P_EXEMPTION_CAP_EUR": Decimal("60100"),
+    "MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR": Decimal("1500"),
+    "WORK_INCOME_GENERAL_DECLARATION_LIMIT_EUR": Decimal("22000"),
+    "MODELO_202_ART_40_3_INCN_THRESHOLD_EUR": Decimal("6000000"),
+    "MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR": Decimal("19747.50"),
+    "MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR": Decimal("1500"),
+    "REBECA_MARITIME_EXEMPTION_FRACTION": Decimal("0.50"),
+    "DEDUCCION_MATERNIDAD_MENSUAL_EUR": 100,
+    "DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR": 1200,
+    "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR": 150,
+    "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR": 1350,
+    "DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR": 2023,
+    "DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR": 2023,
+    "MINIMO_DESCENDIENTE_MAX_AGE": 25,
+    "MINIMO_MENOR_TRES_MAX_AGE": 3,
+    "CUSTODIA_COMPARTIDA_PRORRATA_FACTOR": Decimal("0.5"),
+    "ART_81_1_ENTRY_WINDOW_YEARS": 3,
+    "NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS": 2,
+    "DT12_RESCATE_REDUCCION_RATE": Decimal("0.40"),
+    "DT12_GENERAL_WINDOW_FOLLOWING_YEARS": 2,
+    "DT12_TRANSITIONAL_CONTINGENCIA_FIRST_YEAR": 2011,
+    "DT12_TRANSITIONAL_CONTINGENCIA_LAST_YEAR": 2014,
+    "DT12_TRANSITIONAL_WINDOW_FOLLOWING_YEARS": 8,
+    "DT12_CLIFF_LAST_YEAR": 2018,
+    "SAL_RESERVA_DOTACION_RATE": Decimal("0.10"),
+    "SAL_RESERVA_CAPITAL_MULTIPLE": Decimal("2"),
+    "DEHU_RECHAZO_TACITO_DIAS_NATURALES": 10,
+}
+_REDUCED_MULTIPLE_PAYER_LIMIT_BY_YEAR = {
+    2019: Decimal("14000"),
+    2020: Decimal("14000"),
+    2021: Decimal("14000"),
+    2022: Decimal("14000"),
+    2023: Decimal("15000"),
+    2024: Decimal("15876"),
+    2025: Decimal("15876"),
+    2026: Decimal("15876"),
 }
 
 
@@ -262,7 +339,7 @@ def compile_statutory_constant_facts(registry_root: Path) -> tuple[GovernedFact,
     """Project governed constants without changing their current public authority."""
     del registry_root
     facts = [_scalar_fact(spec) for spec in _SCALAR_SPECS]
-    schedule = constants.WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
+    schedule = _REDUCED_MULTIPLE_PAYER_LIMIT_BY_YEAR
     facts.append(
         GovernedFact(
             fact_id="lirpf-work-income-multiple-pagadores-reduced-limit",
@@ -278,7 +355,12 @@ def compile_statutory_constant_facts(registry_root: Path) -> tuple[GovernedFact,
                     ),
                     legal_refs=("ley-35-2006:art-96",),
                     source_refs=(_SOURCE_BY_LEGAL_REF["ley-35-2006:art-96"],),
-                    source_citations=(_citation("ley-35-2006:art-96"),),
+                    source_citations=(
+                        SourceCitation(
+                            source_ref=_SOURCE_BY_LEGAL_REF["ley-35-2006:art-96"],
+                            required_text=("15.876 euros",),
+                        ),
+                    ),
                     review_status=RevisionReviewStatus.AGENT_REVIEWED,
                     ownership=FactOwnership.GENERATED,
                 ),
@@ -291,7 +373,7 @@ def compile_statutory_constant_facts(registry_root: Path) -> tuple[GovernedFact,
 def collect_statutory_constant_fingerprints(registry_root: Path) -> tuple[tuple[str, int, int, str], ...]:
     """Fingerprint the Python declaration source that feeds this adapter."""
     del registry_root
-    return (toml_file_fingerprint(Path(constants.__file__).resolve()),)
+    return (toml_file_fingerprint(Path(__file__).resolve()),)
 
 
 def reset_statutory_constant_provider() -> None:
@@ -299,7 +381,7 @@ def reset_statutory_constant_provider() -> None:
 
 
 def _scalar_fact(spec: _ScalarSpec) -> GovernedFact:
-    value = getattr(constants, spec.symbol)
+    value = _VALUE_BY_SYMBOL[spec.symbol]
     if not isinstance(value, (str, int, Decimal, bool, date)):
         raise TypeError(f"statutory constant {spec.symbol} is not a scalar fact atom")
     return GovernedFact(
@@ -308,12 +390,12 @@ def _scalar_fact(spec: _ScalarSpec) -> GovernedFact:
         variants=(
             GovernedFactVariant(
                 variant_id=f"{spec.fact_id}:{spec.valid_from.isoformat()}",
-                date_axis=DateAxis.FILING_PERIOD,
+                date_axis=_DATE_AXIS_BY_SYMBOL.get(spec.symbol, DateAxis.FILING_PERIOD),
                 valid_from=spec.valid_from,
                 payload=ScalarFactPayload(value=value, unit=spec.unit),
                 legal_refs=(spec.legal_ref,),
                 source_refs=(_SOURCE_BY_LEGAL_REF[spec.legal_ref],),
-                source_citations=(_citation(spec.legal_ref),),
+                source_citations=(_citation(spec),),
                 review_status=RevisionReviewStatus.AGENT_REVIEWED,
                 ownership=FactOwnership.GENERATED,
             ),
@@ -321,8 +403,8 @@ def _scalar_fact(spec: _ScalarSpec) -> GovernedFact:
     )
 
 
-def _citation(legal_ref: str) -> SourceCitation:
+def _citation(spec: _ScalarSpec) -> SourceCitation:
     return SourceCitation(
-        source_ref=_SOURCE_BY_LEGAL_REF[legal_ref],
-        required_text=(_CITATION_TEXT_BY_LEGAL_REF[legal_ref],),
+        source_ref=_SOURCE_BY_LEGAL_REF[spec.legal_ref],
+        required_text=(_CITATION_TEXT_BY_SYMBOL[spec.symbol],),
     )

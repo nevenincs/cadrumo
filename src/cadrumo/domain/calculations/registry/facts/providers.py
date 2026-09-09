@@ -65,6 +65,8 @@ class FactProviderRegistration:
     collect_fingerprints: Callable[[Path], RegistryPathFingerprints]
     reset: Callable[[], None]
     project_modelos: ModeloFactProjector | None = None
+    lifecycle_components: tuple[str, ...] = ()
+    inherited_identity_domains: tuple[str, ...] = ()
 
 
 def validate_fact_provider_registrations(
@@ -83,6 +85,10 @@ def validate_fact_provider_registrations(
         if not registration.owned_directories and registration.project_modelos is None:
             raise RegistryValidationError(
                 f"governed fact provider {registration.provider_id!r} must own at least one directory",
+            )
+        if registration.project_modelos is not None and not registration.inherited_identity_domains:
+            raise RegistryValidationError(
+                f"projection provider {registration.provider_id!r} must declare its inherited identity domains",
             )
         local_directories: set[PurePosixPath] = set()
         for raw_directory in registration.owned_directories:
@@ -270,6 +276,7 @@ def _iva_rate_provider_registration() -> FactProviderRegistration:
         compile=compile_iva_facts,
         collect_fingerprints=collect_iva_fingerprints,
         reset=reset_iva_facts,
+        lifecycle_components=("iva-rates", "iva-recargo-equivalencia"),
     )
 
 
@@ -340,6 +347,7 @@ def _modelo_parameter_projection_registration() -> FactProviderRegistration:
         collect_fingerprints=_collect_no_direct_fingerprints,
         reset=_reset_no_direct_provider,
         project_modelos=compile_modelo_parameter_projection_facts,
+        inherited_identity_domains=("modelos",),
     )
 
 

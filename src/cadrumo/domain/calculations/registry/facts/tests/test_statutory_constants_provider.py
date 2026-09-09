@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 
 from ......core import external_constants as constants
+from ...errors import RegistryValidationError
+from ...schema_base import DateAxis
 from ..resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
@@ -60,3 +62,30 @@ def test_statutory_provider_preserves_scalar_and_schedule_values_with_provenance
     assert dict((entry.key, entry.value) for entry in schedule.payload.entries) == dict(
         constants.WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
     )
+
+
+def test_statutory_provider_uses_fact_specific_evidence_and_temporal_axes() -> None:
+    facts = {fact.fact_id: fact for fact in compile_statutory_constant_facts(Path())}
+
+    assert facts["m347-counterparty-declaration-threshold"].variants[0].source_citations[0].required_text == (
+        "3.005,06 euros durante el año natural",
+    )
+    assert facts["iva-bien-inversion-escaso-valor-threshold"].variants[0].date_axis is DateAxis.TRANSACTION_DATE
+    assert facts["rebeca-maritime-exemption-fraction"].variants[0].date_axis is DateAxis.DEVENGO_DATE
+    assert facts["dehu-tacit-rejection-natural-days"].variants[0].date_axis is DateAxis.SUBMISSION_DATE
+
+
+def test_reduced_multiple_payer_limit_fails_closed_after_last_grounded_year() -> None:
+    facts = compile_statutory_constant_facts(Path())
+    catalogue = GovernedFactCatalogue(facts={fact.fact_id: fact for fact in facts})
+
+    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
+        resolve_governed_fact(
+            catalogue,
+            MappingFactQuery(
+                fact_id="lirpf-work-income-multiple-pagadores-reduced-limit",
+                date_axis=DateAxis.FILING_PERIOD,
+                effective_date=date(2027, 1, 1),
+            ),
+            authority_digest="c" * 64,
+        )
