@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:e62400575530a4ead92a674b4c18b5cc2e77609f7a935654308f4ed20ffe729c'
+body_hash: 'sha256:741490bd08895d0d43783599b76843044526c2dee036d377556a1b67e79ac21c'
 step_id: 'S210'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the wholly unused did_page_required public alias and export from filing export parity while retaining the private canonical DID-page predicate and the live shared suppression path consumed by parity derivation and record rendering.
 

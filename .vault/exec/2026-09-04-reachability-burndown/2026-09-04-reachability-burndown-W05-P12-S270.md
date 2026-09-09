@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e4bd4faa749b6a0ed992b587cd2d61523f3583004a95573484d1a9f17cd5763'
+body_hash: 'sha256:4578cfe8060d14a15ab945c9eb1c8cdd129590eac361bed20f9b9e74f62b80ee'
 step_id: 'S270'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only IVA remote-state stored-evidence aggregate while preserving the live compensation-history, wallet capture, acquisition-manifest, and reconciliation owners; migrate or remove only aggregate-specific assertions, run focused IVA live-state gates, update cadence, and remeasure exact reachability.
 

@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:031cc022dff7cf74670233fd3168cb9e62c0db6417ffda052a2b884bd77f0d06'
+body_hash: 'sha256:0b4d72c452399191b501d8564993744404a875dfdf46c1b275cc8db3e12980ea'
 step_id: 'S174'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unused sectoral retención-rate classifier surface that production explicitly labelled declared but unreached, retain the canonical legal-parameter authority and active consumers, amend the contradicted calculation-chain decision, and extend the aggregated production-metastate detector across module and nested executable docstrings with discriminating teeth.
 

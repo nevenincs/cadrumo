@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f38f111597ed2dd3d039ff13983192032a3472d85fcd8acd6a840ccad61ee4be'
+body_hash: 'sha256:ec62814d4740b4a714a4128a7b8688dde95d24224f178b011a51b7a823eef1fa'
 step_id: 'S277'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only Modelo 145 list facade and migrate meaningful persistence assertions to the identity-bound read owner; retain create, validation, transition, idempotence, and transactional history behavior, update cadence, and remeasure exact reachability.
 

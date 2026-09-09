@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:24c1e7b9f91332297a07832f4a9e3dd2f3ce22c140b0ec9d3aa476faf9f97160'
+body_hash: 'sha256:e04b7303db7f47b408b2e71edbbb03d5e16c7974dca88b8e653dc602c2fe3958'
 step_id: 'S254'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unwired art 105 Cinco interrupted-seed projector and synthetic suite
 

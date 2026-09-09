@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:d8446e36d041371ea35bd7f2d488601417f66dc76f5101335acd16804473e169'
+body_hash: 'sha256:f6ce5daae3311421282abad4f10a27caf8cf279b910dc4e98df8989b57d41410'
 step_id: 'S209'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only load_default_filing_profile convenience bridge and its export/documentation from production filing runtime, and make the cross-surface profile-bucket test compose the canonical workflow-state, active-profile, and filing-profile projection owners directly while retaining their live behavior and single-bucket identity proof.
 

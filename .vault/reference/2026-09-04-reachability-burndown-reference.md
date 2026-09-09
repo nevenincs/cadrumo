@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa31d68114114877e768768f6250bed3c536d3a3c8d5376583438f5af547a097'
+body_hash: 'sha256:8f7c80efdc1702377559ba0c3a35638d84339f65fcea9a5f177cd7e28d3be6f3'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -54,7 +54,6 @@ For each Step:
 
 No Step is closed by increasing a threshold, recording a baseline, adding an allowlist,
 freezing a namespace, or assigning a development status to a production identity.
-
 
 A new detector's first non-empty result is a candidate population, not an implementation worklist. Before migrating any finding, sample each recurring AST role and prove the detector distinguishes regulatory policy from algebraic identities, unit conversions, schema bounds, documentation, and grammar literals. Narrow by semantic syntax shared across the class, add both positive and negative planted controls, and remeasure. Never encode the sampled paths, symbols, values, or adjudications as exclusions. The refined detector's remaining identities become the live backlog only after this calibration.
 

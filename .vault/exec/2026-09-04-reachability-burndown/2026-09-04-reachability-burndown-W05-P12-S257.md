@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e283fd1b8797dd97d50a905fd066720b3322292d0c6a715f91c5a2a9abaed31'
+body_hash: 'sha256:8a66345e66da72600b012ec7b536a41f32054ef8a7cced366a5791fd6a65bbcf'
 step_id: 'S257'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Move the three filing export proof authority protocols from the shipped contract module to their sole development owner; preserve the production proof DTOs, remove production exports and unused imports without compatibility aliases, update the focused proof lanes, remeasure exact reachability, update the cadence reference, and write the Step Record.
 

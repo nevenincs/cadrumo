@@ -12,9 +12,9 @@ related:
   - '[[2026-09-02-unreachable-capability-tui-navigation-join-adr]]'
   - '[[2026-09-02-tui-architecture-out-of-process-destination-protocol-adr]]'
   - '[[2026-09-07-tuimodelo-adapter-migration-adr]]'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:164b8eec8023e754f4c55fb06342b0b36c6a55b7800a7da434cd80960b1ff45e'
+body_hash: 'sha256:7c9e302c78d622c0403da107d90dd6db77bd612546cf195e6f78ced5e74a72f3'
 ---
 
 # `tui-entrypoint-separation` plan

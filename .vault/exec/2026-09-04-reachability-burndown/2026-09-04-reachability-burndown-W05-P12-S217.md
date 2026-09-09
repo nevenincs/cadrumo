@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:39a9b86ab811fad8cb8e495883f5d0dea515543c98e1db3d5b88434e5e384d2e'
+body_hash: 'sha256:ae64d2b6322954335878656185a95dd5e51995c30203d908b59134610bb1564b'
 step_id: 'S217'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the non-material reflective source-resolver enrollment test module instead of repairing its hand-maintained package census, qualified-name classifications, and pinned discovery counts; retain the production calculation-route validator for executable membership, unique resolver/source ownership and stage identity, with exact reachability as the dormant-resolver detector.
 

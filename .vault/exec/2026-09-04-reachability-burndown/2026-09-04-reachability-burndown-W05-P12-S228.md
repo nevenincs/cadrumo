@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed7c53e66c2c84fb1fe773b28be29338ad623de5b69e9a7f87c4578d39e5c6e4'
+body_hash: 'sha256:d43c7c1e813bdd01d798210343a2a71588f5bb1853d4201d0ce91308855f3664'
 step_id: 'S228'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the zero-consumer unapprove_draft writer and the two documentation claims that publish it as a supported review transition; preserve approval invalidation and the accepted immutable-revision recovery rule, where recovery creates an explicit successor rather than clearing approval metadata in place.
 
@@ -29,23 +24,6 @@ related:
 - `and independent code review.`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 - `M` `src/cadrumo/application/filing/draft_review.py`
 - `M` `src/cadrumo/application/filing/__init__.py`

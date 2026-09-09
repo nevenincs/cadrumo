@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf71852dc79fdf6a6d028313243ee92929cdbd7c70bcb4914ec08ba01325af59'
+body_hash: 'sha256:91641417650851183e33c08a7dcb129130d0d6ad968b64f68280db2059646d31'
 step_id: 'S272'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the production repair-policy command-surface catalog and its self-referential coverage suite because no runtime consumer uses the catalog; preserve and verify the live bucket repair session, update cadence, and remeasure exact reachability.
 

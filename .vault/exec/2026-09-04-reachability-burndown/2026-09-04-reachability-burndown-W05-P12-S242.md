@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:7ac2426a196132a15528b1ba8bd447fdbe62486b48e33f635460e7d8d3e19c87'
+body_hash: 'sha256:23a3c586ecb925aed4061fa58ab251b332a8541eb7ba0f21ed124d8c47c538d1'
 step_id: 'S242'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unreachable error-module resolve_output_language fallback and export; keep the canonical i18n resolver and preserve logger redaction tests without naming or simulating the dead helper.
 

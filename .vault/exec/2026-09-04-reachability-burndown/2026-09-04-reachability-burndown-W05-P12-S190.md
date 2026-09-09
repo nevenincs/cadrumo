@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:9014a6e35896fac7bce7001099f318b7b10a040bbfc882297a573f64cc7b282c'
+body_hash: 'sha256:a53c70c5f9964f07fa283a9004597ee55d4c0a8a42b3dc8fdfbf02cc76da95a8'
 step_id: 'S190'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the three test-only inventory persistence convenience facades create_inventory_ledger, load_inventory, and save_inventory; migrate their tests and shared runtime-storage proofs to the canonical InventoryLedgerRepository owner while retaining the live application inventory service, aggregation resolver, secure namespace, and repository behavior.
 

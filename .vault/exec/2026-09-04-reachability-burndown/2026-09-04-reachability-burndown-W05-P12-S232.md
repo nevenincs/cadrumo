@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:141dec6dbfee7520feb4e2c7f910ad54ce804dbfe2c96fefc95efb26f93f0ca1'
+body_hash: 'sha256:4f51f5d7b88fad65d67857ddb9c99a90e9eb26f194c993bc7d5e23a2ca580b5d'
 step_id: 'S232'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only BORRADOR_100_SNAPSHOT_NAMESPACE string alias and export from the live Modelo 100 snapshot service; make the retained secure-storage boundary tests read the canonical LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE definition directly while preserving encrypted namespace, schema-version, and lifecycle behavior.
 

@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:8a0b97f7b0773907c7fc49dd4e5d63e34861a5905770a0ac8a3049cb50ec1257'
+body_hash: 'sha256:109f66b97bb282f5cd9dd68bdaf0ca12fd9ce7ff1a9cb6d9ac4299d74d148104'
 step_id: 'S216'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only CALCULATION_ROUTE_ID alias, then follow the exposed reachability edge through the wholly unreachable core route enum and test-only operator-surface calculation-workflow catalogue; remove both abandoned modules, their synthetic/identity-census tests, and stale package documentation while retaining the live staged resolver ownership and real CLI calculation paths.
 

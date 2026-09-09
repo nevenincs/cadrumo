@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:736e11ee0f4ecfb3040e8de9092278f480c3586bab14549b301b800e8ca1dfbe'
+body_hash: 'sha256:15dcc7cb3689b43a87fe324fad8539706b88164e5a0b6fec733ab9538e9a2d2f'
 step_id: 'S182'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Wire the accepted Cl@ve Permanente remote-state action policy into the live credential-form driver immediately before username fill, password fill, and authentication click, and prove a policy refusal prevents the corresponding browser mutation rather than leaving the guard exercised only by its own tests.
 

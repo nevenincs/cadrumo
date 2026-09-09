@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:fcb2ea4b2f821061aa9aaafd76d47f96342d885b325061cdc464792b8c577daf'
+body_hash: 'sha256:d815f2c1f1c5627910ff0f653c807cfec084683da615236bd560065e0a6f630e'
 step_id: 'S206'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only calendar_censo_enrolment_profile_keys census accessor and its export from production calendar warnings, and rewrite focused calendar tests around externally observable required-key behavior while retaining the private live enrolment-key authority and production applicability computation.
 

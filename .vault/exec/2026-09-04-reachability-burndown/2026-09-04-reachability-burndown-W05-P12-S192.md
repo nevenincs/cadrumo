@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:e87521c935efe5a9f6e6eaa9946e035a19045a8c9ee865d199b2b5b341729a98'
+body_hash: 'sha256:3cc152b7e97be5298016dec2bae481adb99c3e53812592e9cdd265db6dec22c2'
 step_id: 'S192'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only trash_rename_and_remove filesystem primitive, its private error-policy machinery, self-tests, and qualified-docstring assertion; correct the bucket directory-layout documentation to resolution-only ownership while retaining the accepted custody transaction as the sole physical profile-deletion owner.
 

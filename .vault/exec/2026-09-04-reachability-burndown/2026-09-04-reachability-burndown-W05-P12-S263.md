@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:07f6d07d04ab0fcc43e8d1ac18de22c0b1515820b33d7074a1e20b47828f2a5e'
+body_hash: 'sha256:4babad47e94a07eb636657f5c2bc8791718d85eb907efb01a48972a2003db092'
 step_id: 'S263'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the two test-only FieldProvenance construction facades for anchored and self-reported values, their exports, stale module prose, and facade-specific tests; retain the live anchor evaluator, structured-value owner, model-level self-report invariant, and direct behavioral checks, run focused grounding gates, remeasure exact reachability, update cadence, and write the Step Record.
 

@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f383fc1ea428f70ce166b2e88acfadab00466e6ea1535f53584110cabab8045a'
+body_hash: 'sha256:d0a6d5708d1bc0d913113e835f3b69ef1f3780a5e0fbbef377ba885c7131ccb1'
 step_id: 'S252'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unwired portal-drift model and synthetic preflight injection path
 

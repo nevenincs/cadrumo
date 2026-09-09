@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:db2b34e2392af6a06c1ebf898c2297192977031340c561ac8a9aafec4b269cff'
+body_hash: 'sha256:00be24ce76b4878394f2334a966500d0399fab9821b76cae3b2b940cce571ba7'
 step_id: 'S266'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the hand-maintained external-constants centralisation part-two census that pins production module paths, aliases, constant names, literal tuples, and parallel test ids; remove the calendar-only IVA regime alias it kept alive while retaining the canonical external constant and live warning consumers, run focused calendar and external-constant gates, remeasure exact reachability and orphan tests, update cadence, and write the Step Record.
 

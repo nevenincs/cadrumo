@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:056ba61d3eaedd0f97e2eaa3d397e8f1ac3ddf520fc7641e79b7c409bdee1c12'
+body_hash: 'sha256:1dfe87eadb740ce0dce34c071b15b967a58f793d90cf6b6e19da894fa7c796e5'
 step_id: 'S211'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only byte-derived and non-identity notification-document field inventories and their persisted-field classification test/imports from production custody, while retaining the caller-supplied live comparison authority and focused behavioral proofs for idempotent re-store, divergence refusal, timestamps, and parsed-document custody.
 

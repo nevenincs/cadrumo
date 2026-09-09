@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:217a22ff9f5a3062c8d22ef128cd4fb68dda96cc9173da03b1b75aa6a23c0c37'
+body_hash: 'sha256:b83be7db507fd688a3528dc9670cb4490b18093b8388b545e3fe7e755283abf3'
 step_id: 'S176'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unreached profile secure-object inventory facade end to end—application protocol, custody-port method, default accessor, persistence adapter wrapper, exports, and orphan import—while preserving live repository inventory operations at their actual application owners.
 

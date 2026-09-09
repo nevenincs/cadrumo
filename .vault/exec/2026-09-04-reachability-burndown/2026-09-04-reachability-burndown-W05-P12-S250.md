@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:6eb47b1ae532af6ce588e2afd86862e42631f9cb6e99e42fad78861b3b1cac79'
+body_hash: 'sha256:938ae2ba4c69533c482219ff1ed343ff0c9d0239ab0af22a98d5d29b644d68eb'
 step_id: 'S250'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-owned address component vocabulary and its census gate
 

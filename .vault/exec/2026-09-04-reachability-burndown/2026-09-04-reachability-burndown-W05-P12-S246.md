@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:23088f446d8c5b0bb696795eceefe88adb187b231c436537bcffdeb397c7ba14'
+body_hash: 'sha256:7821f3308c8c28f59d23628df1496fc7c27515ccdaf8b8d6382aef879895b1cc'
 step_id: 'S246'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the disconnected fincas domain and persistence slice whose source-readiness owner is permanently false and which no product acquisition, calculation, or presentation path reaches.
 
@@ -32,7 +27,6 @@ related:
 - `and write the Step Record.`
 
 ## Changes
-
 
 - `D` `src/cadrumo/domain/fincas/__init__.py`
 - `D` `src/cadrumo/domain/fincas/aggregates.py`
@@ -81,7 +75,6 @@ related:
 - `verify:` `uv run --no-sync ruff check <focused S246 paths>` -> `pass`
 - `verify:` `uv run --no-sync pytest -q -n 0 -m "" <focused regulatory, error, schema, IVA, and SQL suites>` -> `pass`
 - `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
-
 
 ## Notes
 

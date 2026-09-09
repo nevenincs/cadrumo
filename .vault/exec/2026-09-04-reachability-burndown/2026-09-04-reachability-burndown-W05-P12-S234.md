@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:587f036451951032805923230122596684f5096a27c472ce01b68998e4b182cf'
+body_hash: 'sha256:9cc09cde1e344e8743a873d44085aa2883b33c743923891d15f9cd3318b7ece9'
 step_id: 'S234'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the unused profile-bundle import-event metadata that describes an event no production path emits, while retaining the accepted bundle deserializer authority.
 

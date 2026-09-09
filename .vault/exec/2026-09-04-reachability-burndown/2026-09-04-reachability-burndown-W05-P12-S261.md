@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:b73efa58523cd7a8a90f7e87aee3a7fd04a47ef40e0b961745584b63e9e70ae9'
+body_hash: 'sha256:8421761d929254d8c074d27c37f8cdc870da9ad9b5584f43a3fbf749cf670e21'
 step_id: 'S261'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only flow repeat-count mutation in favor of the live answer-driven count owner, and remove the regulatory-cap AST enrollment gate, module/function exemption census, witness registry, and registry-parameterized test that encode production identities as development classifications; retain real domain calculation and flow behavior tests, correct stale prose, run focused gates, remeasure exact reachability and orphan tests, update cadence, and write the Step Record.
 

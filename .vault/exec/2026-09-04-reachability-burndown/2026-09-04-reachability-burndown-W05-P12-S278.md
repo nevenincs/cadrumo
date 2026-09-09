@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:e072d7295da63ccc8a0d44cea69e16d0f22f22b8005cb8f50f5530bb9f8f9550'
+body_hash: 'sha256:24020313790eb34c71673d79718027cc8c7bfd315c96266d8eee50f9c40ebbc2'
 step_id: 'S278'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only M303 simplified-regime WorkUnit facade and compose its two live owners directly in retained tests; preserve secure-profile loading and canonical composition-to-scope behavior, update cadence, and remeasure exact reachability.
 

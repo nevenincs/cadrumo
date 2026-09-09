@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:78f9ac7a665bc5bde86ea9897fcc7531b6489da0b8ef1c1461d35cb3fa1c7653'
+body_hash: 'sha256:7381c474a44750760b54168495c478dc88cb1297fb997f16a56757897ca86a76'
 step_id: 'S255'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unused terminology exact-lookup facade and its test-only assertion
 

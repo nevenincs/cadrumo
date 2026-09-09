@@ -179,4 +179,3 @@ finding remains.
 The S115 execution record now states the seven-plus-one pre-repair hit set, keeps S116 repair ownership separate, names the isolated and real-repository runtime mechanisms, and records the final exact-byte mutation evidence. A fresh focused snapshot passed 63 tests. Its bounded run selected 475 mutants, killed 452, and left 23 individually disposed semantic equivalents; no behavior-changing survivor remains. The snapshot hashes match the current detector, test, and both fixture files, and its external scratch was removed. This closes `execution-record-preclaims-closure`.
 
 S115 is approved. All recorded high findings are closed; no high or critical finding remains.
-

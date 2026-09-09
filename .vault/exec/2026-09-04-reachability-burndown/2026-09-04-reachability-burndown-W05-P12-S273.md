@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:c9ede2bb598b36aa92e746fd0f5a3ed453a64f5b1d09fd5d9eba8cf59ebdd9ed'
+body_hash: 'sha256:2caa71c488f9c1c7bff62fe53cf54b49f45cb68d362df80b1cdfefd3208ad842'
 step_id: 'S273'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the uncomposed review-only workspace layer and its synthetic audit event because no command opens or consumes that workspace; retain the live recipient encryption/decryption and collaboration event paths, remove dormant errors/locales, run focused gates, update cadence, and remeasure exact reachability.
 

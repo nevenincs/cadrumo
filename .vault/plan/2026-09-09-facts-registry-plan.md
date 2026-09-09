@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:ff64013e5529d53018b99b75a3f746e98b49e9962909e6873d20beba6cbb2fef'
+body_hash: 'sha256:e70174017afc56f2b5a304dd5075d744333ca2fd6982f61213d46d4d94854072'
 ---
 
 <!-- LINK RULES:
@@ -213,9 +213,9 @@ Create catalogue-denominated structural gates and a broad report-only discovery 
 
 At the Wave 1 handoff, run strict production typing and the two complementary dead-code signals after the greenfield architecture and retirement census converge.
 
-- [ ] `W01.P23.S43` - Run canonical strict production type checking at the Wave 1 handoff; `justfile check-types and dev/quality/types.py`.
-- [ ] `W01.P23.S44` - Run the reviewed-whitelist Vulture audit at the Wave 1 handoff; `justfile audit-dead-code and dev/audit/dead_code.py`.
-- [ ] `W01.P23.S45` - Run shipped-entrypoint reachability at the Wave 1 handoff; `justfile audit-unreachable-code and dev/audit/unreachable_code.py`.
+- [x] `W01.P23.S43` - Run canonical strict production type checking at the Wave 1 handoff; `justfile check-types and dev/quality/types.py`.
+- [x] `W01.P23.S44` - Run the reviewed-whitelist Vulture audit at the Wave 1 handoff; `justfile audit-dead-code and dev/audit/dead_code.py`.
+- [x] `W01.P23.S45` - Run shipped-entrypoint reachability at the Wave 1 handoff; `justfile audit-unreachable-code and dev/audit/unreachable_code.py`.
 
 ## Wave `W02` - Enroll governed data providers
 

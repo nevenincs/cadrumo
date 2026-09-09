@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:0a08fff4cf6759a57f530df2d27f810093bea2affb8894e994c937f58f855b58'
+body_hash: 'sha256:104ccb6af426fbd9b21999cc238f8144fbcd0e96ddb64e8a09e042b4d44f1ddf'
 step_id: 'S237'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unused MODELO_CODE_CHOICE_ALL production constant and the development-only _MIGRATION_IN_PROGRESS classification that falsely clears every bare modelo axis; expose the live axes directly through the zero-target detector for owning-mechanism resolution.
 

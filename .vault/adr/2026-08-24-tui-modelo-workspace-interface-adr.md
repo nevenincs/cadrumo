@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-modelo-workspace-interface'
 date: '2026-08-24'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v1'
-body_hash: 'sha256:1e69547477118a0b9fb009871c62f79fe049df8b022861239d6a25776406b9bc'
+body_hash: 'sha256:d7c99d06864191c7bbac72c3140a30aeb1dbf2b868e35c5502334049675de38d'
 related:
   - "[[2026-08-24-tui-modelo-workspace-interface-research]]"
   - "[[2026-08-11-tui-interface-adr]]"
@@ -767,4 +767,3 @@ requirements are removed from Modelo admission proofs. A delivered Modelo screen
 TUI registration, admissibility, interaction/effect/refresh behavior, and supported-matrix
 coverage; work not registered is absent from TUI routing and remains plan work. No production or
 development table mirrors CLI command reachability as TUI state.
-

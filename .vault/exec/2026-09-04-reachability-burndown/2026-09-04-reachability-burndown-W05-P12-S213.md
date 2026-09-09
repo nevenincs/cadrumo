@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:276c43085e95e4acdfcc52ebaa82957b04de60bc7b2399667561ca80f322f8b5'
+body_hash: 'sha256:f6964532264a19c9a4f2cc667e18acd432207796a689938bb18b00b30909c00d'
 step_id: 'S213'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Amend the accepted Workspace API decision so the live eight producer contracts remain canonical while production no longer carries a conformance-only aggregate inventory; delete ModeloWorkspaceProducerContractInventoryV1, MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1, their exports and inventory-only tests, and rewrite the native-owner fixed-point gate to derive its set directly from live port contracts without a hand-maintained production list.
 
