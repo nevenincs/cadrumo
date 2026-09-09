@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:13e81822712cbce72a401235c90e6dc93906e867fc1eb476d2139c75da821b29'
+body_hash: 'sha256:37b70b5207beb7d5fa7c4e80c450d8dd5ca4962d2d9a4100621af6a34c071ef6'
 ---
 
 # `facts-registry` plan
@@ -150,7 +150,7 @@ Rewire invoice rate interpretation, IVA calculations, recargo lookup, inventory 
 
 Rewire convenio, apoderamientos, notification deadlines, amendment regimes, foreign-asset rules, and related mappings.
 
-- [ ] `W03.P13.S52` - Rewire treaty and authorization consumers; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
+- [x] `W03.P13.S52` - Rewire treaty and authorization consumers; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
 - [ ] `W03.P13.S53` - Rewire deadline notification amendment and foreign-asset facts; `src/cadrumo/domain/deadlines and src/cadrumo/core`.
 
 ### Phase `W03.P14` - Verify consumer boundary
