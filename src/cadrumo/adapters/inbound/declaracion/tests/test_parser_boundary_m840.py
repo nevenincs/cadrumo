@@ -27,8 +27,9 @@ def test_parser_extracts_modelo_840_synthetic_fixture_targets() -> None:
     """Round-trip the sanitized M840 synthetic fixture through the parser.
 
     Ground truth is the AEAT-published printed form PDF at:
-      src/cadrumo/_data/corpus/aeat_official/forms/modelo_840/files/
+      src/cadrumo/_data/corpus/aeat_official/formularios_publicados/modelo_840/files/
         01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf
+    (hash-pinned by registry source `aeat-modelo-840-form`)
 
     The fixture reproduces the corpus-confirmed labels "14Ejercicio:" and
     "15Declaracion de:" with sanitized values on the same line.

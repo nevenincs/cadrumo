@@ -12,6 +12,8 @@ import pytest
 
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.loader import load_shared_catalogues
 
 from ...docs.preprocess.normatives_html import HTML_EXTRACTOR_ID, build_outputs
 from ...docs.preprocess.schema import PreprocessOutput
@@ -45,23 +47,60 @@ def _repository_root_resolved() -> None:
 _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _MANUAL_CORPUS_TEXT_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
 _CORPUS_TEXT_SUFFIX = ".corpus_text.json"
-_SUPPORTED_CALENDAR_YEARS = range(2023, 2027)
-_SUPPORTED_MANUAL_YEARS = range(2023, 2026)
-_SUPPORTED_RENTA_PART2_YEARS = range(2024, 2026)
-_SUPPORTED_SOCIETIES_MANUAL_YEARS = range(2024, 2026)
-_PUBLICATION_BOUND_MANUAL_EXCEPTIONS = (
-    ("iva", 2026, Path("manuals/iva/2026/source.pdf")),
-    ("renta-part1", 2026, Path("manuals/renta/2026/part1/source.pdf")),
+
+
+def _canonical_supported_filing_years() -> tuple[int, ...]:
+    """Return the registry's sole declaration of supported filing years.
+
+    The support horizon is NOT a fact this gate owns.
+    ``registry/aeat/legal/supported-filing-years.toml`` is the one registry-wide
+    declaration, and it admits a year only after the coverage audit enumerates that
+    year's prerequisites. Restating it here as a literal ``range`` is what let the
+    corpus matrix drift: each family had grown its own narrower window
+    (manuals 2023-2025, Sociedades 2024-2025) that quietly redefined "supported"
+    as "whatever happens to be on disk", so a family missing a year the product
+    actually supports read as full coverage.
+    """
+    catalogues = load_shared_catalogues(bundled_path("registry", "aeat"))
+    declaration = catalogues.supported_filing_years
+    assert declaration is not None, "the bundled registry declares no supported filing years"
+    return declaration.years
+
+
+# (family, path template, substring the extracted text must carry).
+_MANUAL_FAMILIES: Final[tuple[tuple[str, str, str], ...]] = (
+    ("iva", "manuals/iva/{year}/source.pdf", "iva"),
+    ("renta-part1", "manuals/renta/{year}/part1/source.pdf", "renta"),
     (
         "renta-part2-deducciones-autonomicas",
-        2026,
-        Path("manuals/renta/2026/part2-deducciones-autonomicas/source.pdf"),
+        "manuals/renta/{year}/part2-deducciones-autonomicas/source.pdf",
+        "renta",
     ),
-    (
-        "sociedades",
-        2026,
-        Path("aeat_official/manuals/modelo_200/files/manual-sociedades-2026.pdf"),
-    ),
+    ("sociedades", "manuals/sociedades/{year}/source.pdf", "sociedades"),
+)
+
+# AEAT has not published these volumes yet, so their absence is lawful.
+_PUBLICATION_BOUND_MANUAL_GAPS: Final[frozenset[tuple[str, int]]] = frozenset(
+    {
+        ("iva", 2026),
+        ("renta-part1", 2026),
+        ("renta-part2-deducciones-autonomicas", 2026),
+        ("sociedades", 2026),
+    },
+)
+
+# Published by AEAT, inside the canonical support horizon, and NOT in the corpus.
+# These are real coverage holes rather than lawful absences. They are named here so
+# binding the matrix to the registry horizon does not silently narrow itself back to
+# the on-disk inventory; each entry is a standing acquisition debt, and the staleness
+# check below turns it red the moment the volume lands.
+_UNACQUIRED_MANUAL_GAPS: Final[frozenset[tuple[str, int]]] = frozenset(
+    {
+        ("renta-part2-deducciones-autonomicas", 2022),
+        ("renta-part2-deducciones-autonomicas", 2023),
+        ("sociedades", 2022),
+        ("sociedades", 2023),
+    },
 )
 
 
@@ -85,14 +124,40 @@ def _is_legal_citation_evidence_sidecar(json_path: Path) -> bool:
     return json_path.name.removesuffix(EXTRACTED_JSON_SUFFIX).endswith(EXTRACTED_TEXT_SUFFIX)
 
 
-def test_normative_html_sources_use_canonical_lf_bytes() -> None:
-    """Normative HTML hashes must be identical on Windows and Unix checkouts."""
-    html_root = _CORPUS_ROOT / "normatives" / "html"
-    sources = scan_directory(html_root, pattern="*.html")
-    noncanonical = [source.name for source in sources if b"\r" in source.read_bytes()]
+def test_enrolled_corpus_html_trees_use_canonical_lf_bytes() -> None:
+    """Enrolled HTML trees must hash identically on Windows and Unix checkouts.
 
-    assert sources, "no normative HTML sources found"
-    assert not noncanonical, f"normative HTML contains non-LF line endings: {noncanonical!r}"
+    A CR in a hash-pinned corpus file makes its ``sha256`` depend on how the
+    checkout materialised the bytes, so the registry pin stops being a
+    platform-independent integrity claim. That is why this gate exists.
+
+    ``aeat_official/calendars`` is enrolled because a CRLF file did slip into it
+    (``calendario-contribuyente-2026-hasta-2-febrero.html``) while three siblings
+    were LF, leaving one directory with two byte conventions and pins that could
+    not be reproduced by the same command.
+
+    The remaining ``aeat_official`` HTML trees are deliberately NOT enrolled yet:
+    36 files under ``instructions/`` and ``renta_web_open/`` still carry CR, so
+    enrolling them here would land this gate red on material this tree does not
+    own. Add a tree to the tuple in the same change that canonicalises it and
+    re-pins its sources -- never before.
+    """
+    enrolled = (Path("normatives") / "html", Path("aeat_official") / "calendars")
+    noncanonical: list[str] = []
+    scanned = 0
+
+    for relative_tree in enrolled:
+        tree = _CORPUS_ROOT / relative_tree
+        assert tree.is_dir(), f"enrolled canonical-LF tree is missing: {relative_tree.as_posix()}"
+        sources = scan_directory(tree, pattern="*.html", recursive=True)
+        assert sources, f"no HTML sources found under enrolled tree {relative_tree.as_posix()}"
+        scanned += len(sources)
+        noncanonical.extend(
+            source.relative_to(_CORPUS_ROOT).as_posix() for source in sources if b"\r" in source.read_bytes()
+        )
+
+    assert scanned, "canonical-LF gate scanned no HTML at all"
+    assert not noncanonical, f"enrolled corpus HTML contains non-LF line endings: {sorted(noncanonical)!r}"
 
 
 #: Below this the normative-HTML comparison has stopped covering the corpus.
@@ -400,7 +465,7 @@ def test_supported_taxpayer_calendars_ship_pdf_corpus_text() -> None:
     calendar_sidecar_root = _MANUAL_CORPUS_TEXT_ROOT / "aeat_official" / "calendars" / "files"
     missing: list[str] = []
 
-    for year in _SUPPORTED_CALENDAR_YEARS:
+    for year in _canonical_supported_filing_years():
         pdf_name = f"calendario-contribuyente-{year}.pdf"
         pdf_path = calendar_root / pdf_name
         sidecar_path = calendar_sidecar_root / f"{pdf_name}{_CORPUS_TEXT_SUFFIX}"
@@ -419,50 +484,46 @@ def test_supported_taxpayer_calendars_ship_pdf_corpus_text() -> None:
 
 
 def test_supported_tax_manual_matrix_ships_pdf_corpus_text() -> None:
-    expected: list[tuple[str, int, Path]] = []
-    for year in _SUPPORTED_MANUAL_YEARS:
-        expected.extend(
-            (
-                ("iva", year, Path("manuals") / "iva" / str(year) / "source.pdf"),
-                ("renta", year, Path("manuals") / "renta" / str(year) / "part1" / "source.pdf"),
-            ),
-        )
-    expected.extend(
-        (
-            "renta",
-            year,
-            Path("manuals") / "renta" / str(year) / "part2-deducciones-autonomicas" / "source.pdf",
-        )
-        for year in _SUPPORTED_RENTA_PART2_YEARS
-    )
-    expected.extend(
-        (
-            "sociedades",
-            year,
-            Path("aeat_official") / "manuals" / "modelo_200" / "files" / f"manual-sociedades-{year}.pdf",
-        )
-        for year in _SUPPORTED_SOCIETIES_MANUAL_YEARS
-    )
+    """Every manual family covers the canonical horizon, or declares the hole."""
+    supported_years = _canonical_supported_filing_years()
+    declared_gaps = _PUBLICATION_BOUND_MANUAL_GAPS | _UNACQUIRED_MANUAL_GAPS
+    known_families = {family for family, _template, _token in _MANUAL_FAMILIES}
 
     missing: list[str] = []
-    for family, year, relative_pdf in expected:
-        pdf_path = _CORPUS_ROOT / relative_pdf
-        sidecar_path = (_MANUAL_CORPUS_TEXT_ROOT / relative_pdf).with_name(pdf_path.name + _CORPUS_TEXT_SUFFIX)
-        if not pdf_path.is_file():
-            missing.append(pdf_path.relative_to(_REPO_ROOT).as_posix())
-        if not sidecar_path.is_file():
-            missing.append(sidecar_path.relative_to(_REPO_ROOT).as_posix())
-            continue
-        normalised_text = json.loads(sidecar_path.read_text(encoding="utf-8"))["normalised_text"]
-        if family not in normalised_text or str(year) not in normalised_text:
-            missing.append(
-                f"{sidecar_path.relative_to(_REPO_ROOT).as_posix()}: missing {family!r} or {year}",
+    stale: list[str] = []
+
+    for family, template, token in _MANUAL_FAMILIES:
+        for year in supported_years:
+            relative_pdf = Path(template.format(year=year))
+            pdf_path = _CORPUS_ROOT / relative_pdf
+            sidecar_path = (_MANUAL_CORPUS_TEXT_ROOT / relative_pdf).with_name(
+                pdf_path.name + _CORPUS_TEXT_SUFFIX,
             )
 
-    for family, year, relative_pdf in _PUBLICATION_BOUND_MANUAL_EXCEPTIONS:
-        pdf_path = _CORPUS_ROOT / relative_pdf
-        sidecar_path = (_MANUAL_CORPUS_TEXT_ROOT / relative_pdf).with_name(pdf_path.name + _CORPUS_TEXT_SUFFIX)
-        if pdf_path.exists() or sidecar_path.exists():
-            missing.append(f"remove stale {family} {year} publication exception")
+            if (family, year) in declared_gaps:
+                if pdf_path.exists() or sidecar_path.exists():
+                    stale.append(f"{family} {year}: volume has landed -- remove its declared gap entry")
+                continue
 
+            if not pdf_path.is_file():
+                missing.append(pdf_path.relative_to(_REPO_ROOT).as_posix())
+            if not sidecar_path.is_file():
+                missing.append(sidecar_path.relative_to(_REPO_ROOT).as_posix())
+                continue
+            normalised_text = json.loads(sidecar_path.read_text(encoding="utf-8"))["normalised_text"]
+            if token not in normalised_text or str(year) not in normalised_text:
+                missing.append(
+                    f"{sidecar_path.relative_to(_REPO_ROOT).as_posix()}: missing {token!r} or {year}",
+                )
+
+    # A gap may only be declared against a coordinate the matrix actually spans,
+    # so a gap entry cannot be used to excuse a family or year off the horizon.
+    orphaned = sorted(
+        f"{family} {year}"
+        for family, year in declared_gaps
+        if family not in known_families or year not in supported_years
+    )
+
+    assert not orphaned, "declared manual gaps outside the canonical matrix:\n" + "\n".join(orphaned)
+    assert not stale, "declared manual gaps that are no longer gaps:\n" + "\n".join(stale)
     assert not missing, "supported tax-manual corpus artifacts are missing:\n" + "\n".join(missing)

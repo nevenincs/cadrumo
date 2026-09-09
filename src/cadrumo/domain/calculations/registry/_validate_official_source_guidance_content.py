@@ -33,12 +33,25 @@ land its own dispositive-content check after the broad version failed twice:
   claim is testable directly: the text must carry a suppression-establishing
   stem (``suprim*``, ``derog*``, or an equivalent "queda sin efecto" /
   "deja de" turn of phrase). The population is exhaustive and currently one
-  source: ``boe-modelo-037-historical-suppression``, which points at Orden
-  HAC/1526/2024's ``disposicion final unica`` (its entry-into-force clause,
-  "se aplica ... a los modelos 030 y 036 ...") rather than the order's
-  article 1 (the amendment that actually retires modelo 037's active
-  surfaces) -- a source about WHEN the order took effect, cited as though it
-  were the source that says WHAT was suppressed.
+  source: ``boe-modelo-037-historical-suppression``, which points at the
+  verbatim BOE-A-2025-410 full text under
+  ``corpus/aeat_official/historical_retired_modelos/modelo_037/``. That file
+  carries the order's own operative sentence about the MODELO -- "esta orden
+  suprime el modelo 037 de Declaracion censal simplificada" -- so the claim
+  is backed by the text that actually performs the suppression.
+
+  Two earlier bindings for this same source did not clear that bar and are
+  worth recording, because both satisfied a tier check while mis-citing.
+  It first pointed at the order's ``disposicion final unica`` (the
+  entry-into-force clause, "se aplica ... a los modelos 030 y 036 ...") -- a
+  source about WHEN the order took effect, cited as though it said WHAT was
+  suppressed. It was then repointed at a hand-authored, accent-stripped
+  article-1 excerpt whose only suppression sentence is "Se suprimen los
+  articulos 14, 15 y 16" -- the articles of the amended Orden EHA/1274/2007,
+  not the modelo. That passed this very check on vocabulary alone while never
+  asserting the modelo's suppression, which is precisely the failure mode
+  the stem probe cannot catch on its own: the vocabulary gate proves a
+  document discusses suppression, never that it suppresses the thing cited.
 
 * :func:`deadline_window_content_failures` -- a ``deadline_window`` asserts
   official guidance for WHEN a filing is due. Unlike the other three sites,

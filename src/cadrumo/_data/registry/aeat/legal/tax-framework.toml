@@ -378,6 +378,20 @@ applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2025_es_es.pdf"
 review_status = "pending_review"
 
+# source_url is a landing page rather than a .pdf, and that is correct and
+# deliberate: AEAT publishes no static PDF for the LIVE year. 2022-2025 each sit
+# at static_files/.../Anyos_anteriores/Calendario_del_contribuyente_<year>_es_es.pdf
+# (all four re-verified byte-exact on 2026-09-09), but no such path exists for
+# 2026 in any spelling. This booklet is AEAT's own server-side export, produced
+# from the page below via its "Generar PDF" control with "Todo el documento"
+# selected; the 87 PDF pages correspond to the document's 87 Sede pages. It is
+# genuine AEAT output, not a browser print -- a Chrome print stamps a "Skia/PDF"
+# producer, and this file shares the metadata-stripped lineage of the 2024 and
+# 2025 booklets, the latter confirmed byte-identical to AEAT's static copy.
+# Do NOT "fix" source_url to a .pdf guess: every candidate 404s. Re-retrieval
+# means regenerating the export from this page, so sha256 is the integrity
+# authority here, not URL fetchability. Replace with the Anyos_anteriores static
+# PDF once 2026 becomes a past year and AEAT archives it there.
 [sources."aeat-calendario-contribuyente-2026"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -396,8 +410,8 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
 corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2026-hasta-2-febrero.html"
-sha256 = "1995b87ccfe80c79ba2b6ebc393fc7b609237fe138a7fa8205b00db698a77b36"
-bytes = 12966
+sha256 = "758350147538008ccc68f892e6675f4a41eeb97ebec5cfb83939abd14765a5f1"
+bytes = 12905
 retrieved_at = 2026-08-20
 applies_from = 2026-01-01
 applies_to = 2026-12-31
@@ -417,29 +431,21 @@ applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/calendario-anual/marzo/hasta-2-marzo.html"
 review_status = "pending_review"
 
-[sources."aeat-calendario-contribuyente-2026-hasta-1-febrero-2027"]
+# Not a page of the 2026 contributor calendar: this is the separate "lectura
+# facil" simplified calendar for personas fisicas, whose stem carries
+# -simplificado- so a citation site cannot mistake an easy-read summary for the
+# authoritative calendar above.
+[sources."aeat-calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "instructions"
-corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2026-hasta-1-febrero-2027.html"
-sha256 = "d0455c13450b74e2fdc6d4460b77ffabf4a5084cf2849bd06bb9d60ce8511fa1"
-bytes = 8261
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2026-simplificado-hasta-1-febrero-2027.html"
+sha256 = "57677a828c2fd55a67151f19d62aeae0b2380ecd3f1dc0e342c2fa49783252dd"
+bytes = 8259
 retrieved_at = 2026-08-25
 applies_from = 2026-01-01
 applies_to = 2027-02-01
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/contenidos-lectura-facil/calendario-contribuyente-2026-simplificado-personas-fisicas/calendario-anual/febrero-2027/hasta-1-febrero-2027.html"
-review_status = "pending_review"
-
-[sources."aeat-modelo-349-plazos-presentacion"]
-evidence_tier = "official_source_guidance"
-authority = "aeat"
-kind = "instructions"
-corpus_path = "corpus/aeat_official/instructions/modelo_349/files/modelo-349-plazos-presentacion.html"
-sha256 = "dd8b78e97a307d83c34dd8261a35cc195142baeb60ada450af1b5840888b1a2c"
-bytes = 6470
-retrieved_at = 2026-08-25
-applies_from = 2020-03-19
-source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/declaraciones-informativas/modelo-349-decla_____n-recapitulativa-operaciones-intracomunitarias_/plazos-presentacion.html"
 review_status = "pending_review"
 
 [sources."aeat-calendario-contribuyente-2026-domiciliacion"]
@@ -453,4 +459,16 @@ retrieved_at = 2026-06-29
 applies_from = 2026-01-01
 applies_to = 2026-12-31
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026/plazos-presentacion-autoliquidaciones-domiciliacion-bancaria.html"
+review_status = "pending_review"
+
+[sources."aeat-modelo-349-plazos-presentacion"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/instructions/modelo_349/files/modelo-349-plazos-presentacion.html"
+sha256 = "dd8b78e97a307d83c34dd8261a35cc195142baeb60ada450af1b5840888b1a2c"
+bytes = 6470
+retrieved_at = 2026-08-25
+applies_from = 2020-03-19
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-gestiones/impuestos-tasas/declaraciones-informativas/modelo-349-decla_____n-recapitulativa-operaciones-intracomunitarias_/plazos-presentacion.html"
 review_status = "pending_review"
