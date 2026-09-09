@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import Annotated
 
 from pydantic import Field, TypeAdapter
@@ -41,11 +40,6 @@ type ExportFieldId = Annotated[str, Field(min_length=1, max_length=160, pattern=
 type WorkbookFixtureId = Annotated[str, Field(min_length=1, max_length=160, pattern=_REF_RE)]
 type WorkbookOutputId = Annotated[str, Field(min_length=1, max_length=128, pattern=_REF_RE)]
 type OracleId = Annotated[str, Field(min_length=1, max_length=128, pattern=_ORACLE_ID_RE)]
-
-
-def is_registry_id(value: str) -> bool:
-    """Return whether ``value`` is a stable registry id."""
-    return re.fullmatch(_REF_RE, value) is not None
 
 
 LEGAL_REFS_ADAPTER: TypeAdapter[tuple[LegalRefId, ...]] = TypeAdapter(tuple[LegalRefId, ...])

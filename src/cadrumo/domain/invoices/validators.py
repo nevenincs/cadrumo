@@ -6,9 +6,8 @@ Each helper raises :class:`ValueError` on failure so pydantic
 surfaces the error as a validation error in the enclosing
 ``Invoice`` model.
 
-The registry-grounded helpers
-:func:`is_eu_member_state_code` and :func:`assert_eu_member_state_code`
-anchor the EU axis to the substrate's :class:`cadrumo.domain.iva.EUMemberState`
+The registry-grounded :func:`is_eu_member_state_code` helper anchors the EU
+axis to the substrate's :class:`cadrumo.domain.iva.EUMemberState`
 enum. Modelo 369 binding selectors and the OSS / IOSS classifier
 boundary checks consume these helpers so the EU membership decision
 flows from the substrate, not from a hand-maintained list.
@@ -25,7 +24,6 @@ from .errors import InvoiceValidationError
 
 __all__ = [
     "EU_MEMBER_STATE_CODES",
-    "assert_eu_member_state_code",
     "is_eu_member_state_code",
     "validate_counterparty_tax_id",
     "validate_country_code",
@@ -92,27 +90,6 @@ def is_eu_member_state_code(value: str) -> bool:
     except InvoiceValidationError:
         return False
     return normalized in EU_MEMBER_STATE_CODES
-
-
-def assert_eu_member_state_code(value: str) -> str:
-    """Validate ``value`` and assert it names an EU Member State.
-
-    Args:
-        value: Raw country code to validate.
-
-    Returns:
-        The uppercased two-letter EU Member State code.
-
-    Raises:
-        InvoiceValidationError: If the input is malformed or names a non-EU country.
-    """
-    normalized = validate_country_code(value)
-    if normalized not in EU_MEMBER_STATE_CODES:
-        raise InvoiceValidationError(
-            f"country code {normalized!r} is not one of the 27 EU Member States; "
-            "use validate_country_code if a non-EU counterparty is acceptable",
-        )
-    return normalized
 
 
 def validate_iva_number(value: str, country: str) -> str:

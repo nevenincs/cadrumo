@@ -17,7 +17,7 @@ from ..enums import (
     PaymentStatus,
     iva_rate_percentage,
     iva_rate_slot_percentage,
-    numeric_iva_rate_percentages,
+    numeric_iva_rate_slots,
 )
 from ..errors import InvoiceValidationError
 from ..models import (
@@ -551,17 +551,17 @@ def test_catalogue_iteration_yields_invoices() -> None:
 
 
 # ---------------------------------------------------------------------------
-# numeric_iva_rate_percentages helper
+# numeric IVA rate slots
 # ---------------------------------------------------------------------------
 
 
-def test_numeric_iva_rate_percentages_tracks_rate_members_only() -> None:
-    """The helper returns canonical percentages for ``RATE_*`` enum members only.
+def test_numeric_iva_rate_slots_track_rate_members_only() -> None:
+    """The slot mapping contains canonical percentages for ``RATE_*`` members only.
 
     Derivation test: if a new ``RATE_<n>`` slot is added to
     :class:`IvaRate` the helper must pick it up without code changes.
     """
-    result = numeric_iva_rate_percentages()
+    result = numeric_iva_rate_slots()
     rate_members = [m for m in IvaRate if m.value.startswith("RATE_")]
 
     # One percentage per RATE_ member, and nothing else. Pinning the literal set
@@ -574,7 +574,7 @@ def test_numeric_iva_rate_percentages_tracks_rate_members_only() -> None:
 
     # Anchors, so the length check above cannot pass over a set of the right
     # size but the wrong values -- the standing LIVA tiers must always resolve.
-    assert {Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")} <= result
+    assert {Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")} <= result.keys()
 
     # And the parse is by value, not by member name: RATE_7_5 names a slot whose
     # percentage is seven and a half, not seventy-five.

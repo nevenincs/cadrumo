@@ -27,7 +27,6 @@ from ..enums import (
     IvaRate,
     iva_rate_kind,
     iva_rate_percentage,
-    numeric_iva_rate_percentages,
     numeric_iva_rate_slots,
 )
 
@@ -88,7 +87,7 @@ def _registry_numeric_kinds_for_served_window() -> frozenset[IvaRateKind]:
 
 
 def test_iva_rate_numeric_members_match_registry_served_window() -> None:
-    """:func:`numeric_iva_rate_percentages` equals the registry's ES numeric rate set.
+    """Numeric invoice slots equal the registry's ES numeric rate set.
 
     Both sides are read from their own authority (the enum's ``RATE_<n>``
     member names; the registry's ``rates.toml`` rows) with no shared literal
@@ -96,7 +95,7 @@ def test_iva_rate_numeric_members_match_registry_served_window() -> None:
     restatement of one side.
     """
     registry_percentages = _registry_numeric_percentages_for_served_window()
-    enum_percentages = numeric_iva_rate_percentages()
+    enum_percentages = frozenset(numeric_iva_rate_slots())
 
     assert enum_percentages == registry_percentages, (
         "IvaRate numeric members are out of sync with the registry ES rate table "
@@ -293,7 +292,7 @@ def test_parity_gate_discriminates_on_either_side() -> None:
     would catch an enum addition the registry cannot resolve.
     """
     registry_percentages = _registry_numeric_percentages_for_served_window()
-    enum_percentages = numeric_iva_rate_percentages()
+    enum_percentages = frozenset(numeric_iva_rate_slots())
 
     assert enum_percentages == registry_percentages, "baseline agreement must hold before mutating either side"
 

@@ -50,7 +50,6 @@ PUBLIC_DEFINITIONS: dict[str, frozenset[str]] = {
             "profile_field_label_key",
             "profile_section_title",
             "profile_field_label",
-            "profile_schema_locale_keys",
         },
     ),
     "loader": frozenset(
