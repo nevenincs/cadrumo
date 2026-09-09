@@ -17,8 +17,9 @@ import pytest
 from .....domain.calculations.registry.authority import bundled_authority
 from .....domain.calculations.registry.schema_input_kind import InputKind
 from .....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from .. import _parity_comparison
-from .._parity_comparison import CasillaParity, collect_parity_rows, resolve_parity_verdict
+from .. import _parity_comparison, casilla_parity
+from .._parity_comparison import collect_parity_rows, resolve_parity_verdict
+from ..casilla_parity import CasillaParity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -33,11 +34,17 @@ def _computed_casillas() -> tuple[CasillaDefinition, ...]:
 
 
 def test_the_comparison_reaches_neither_the_harness_nor_google() -> None:
-    """Decoupling is the point of the extraction, so it is asserted rather than assumed."""
-    source = inspect.getsource(_parity_comparison)
+    """Decoupling is the point of the extraction, so it is asserted rather than assumed.
 
-    assert "_parity_harness" not in source
-    assert "google" not in source.lower()
+    Both halves of the extraction are scanned. Publishing :class:`CasillaParity` into its
+    own module moved 29 lines out of the algorithm module, and scanning only what stayed
+    would have quietly narrowed this assertion to less than it was written to cover.
+    """
+    for module in (_parity_comparison, casilla_parity):
+        source = inspect.getsource(module)
+
+        assert "_parity_harness" not in source
+        assert "google" not in source.lower()
 
 
 def test_agreeing_surfaces_produce_no_divergence() -> None:
