@@ -174,7 +174,8 @@ class OverrideFactPayload(RegistryModel):
     """A result that supersedes named variants under explicit selectors."""
 
     kind: Literal[GovernedFactFamily.OVERRIDE] = GovernedFactFamily.OVERRIDE
-    value: FactAtom
+    override_code: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
+    value: FactAtom | None = None
     unit: str | None = Field(default=None, min_length=1, max_length=64)
 
 

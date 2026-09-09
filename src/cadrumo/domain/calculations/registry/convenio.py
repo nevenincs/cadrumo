@@ -31,9 +31,18 @@ from ....core.directory_scan import scan_directory
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ....core.toml import freeze_toml, read_toml
 from .errors import RegistryLoadError, RegistryValidationError
+from .facts.resolution import OverrideFactQuery
+from .facts.schema import (
+    FactOwnership,
+    FactSelector,
+    GovernedFact,
+    GovernedFactFamily,
+    GovernedFactVariant,
+    OverrideFactPayload,
+)
 from .ids import LegalRefId
 from .loader_cache import toml_file_fingerprint
-from .schema_base import RegistryModel
+from .schema_base import DateAxis, RegistryModel, SourceCitation
 
 
 class ConvenioOverrideRow(RegistryModel):
@@ -242,6 +251,77 @@ def collect_convenio_fingerprints(root: Path) -> tuple[tuple[str, int, int, str]
     """
     treaties_dir = root.resolve() / "treaties"
     return tuple(toml_file_fingerprint(path.resolve()) for path in scan_directory(treaties_dir, pattern="*.toml"))
+
+
+CONVENIO_OVERRIDE_FACT_ID = "irnr.convenio.override"
+
+
+def convenio_override_query(
+    country_code: str,
+    tipo_renta: TipoRentaIrnr,
+    devengo_date: date,
+) -> OverrideFactQuery:
+    """Build the exact governed query used by the Wave 3 convenio migration."""
+    return OverrideFactQuery(
+        fact_id=CONVENIO_OVERRIDE_FACT_ID,
+        date_axis=DateAxis.DEVENGO_DATE,
+        effective_date=devengo_date,
+        selectors=(
+            FactSelector(name="country_code", value=country_code.upper()),
+            FactSelector(name="tipo_renta", value=tipo_renta.value),
+        ),
+    )
+
+
+def compile_convenio_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
+    """Project treaty rows into the governed override provider contract.
+
+    The legacy :class:`ConvenioAuthority` remains the public runtime facade until
+    its consumers migrate.  This projection gives those consumers an exact Wave
+    3 query contract without introducing a second parser or copying treaty data.
+    """
+    authority = load_convenio_authority(registry_root.resolve() / "treaties")
+    variants: list[GovernedFactVariant] = []
+    for country_code, treaty in sorted(authority.treaties.items()):
+        for row in treaty.overrides:
+            source_ref = f"registry-treaty-{country_code.lower()}"
+            variants.append(
+                GovernedFactVariant(
+                    variant_id=(
+                        f"{CONVENIO_OVERRIDE_FACT_ID}.{country_code.lower()}."
+                        f"{row.tipo_renta.value}.{row.valid_from.isoformat()}"
+                    ),
+                    selectors=(
+                        FactSelector(name="country_code", value=country_code),
+                        FactSelector(name="tipo_renta", value=row.tipo_renta.value),
+                    ),
+                    date_axis=DateAxis.DEVENGO_DATE,
+                    valid_from=row.valid_from,
+                    valid_to=row.valid_to,
+                    payload=OverrideFactPayload(
+                        override_code=row.kind.value,
+                        value=row.rate_decimal,
+                        unit="ratio" if row.rate_decimal is not None else None,
+                    ),
+                    legal_refs=row.legal_refs,
+                    source_refs=(source_ref,),
+                    source_citations=(
+                        SourceCitation(
+                            source_ref=source_ref,
+                            required_text=(row.legal_ref_anchor, row.kind.value),
+                        ),
+                    ),
+                    review_status="agent_reviewed",
+                    ownership=FactOwnership.GENERATED,
+                ),
+            )
+    return (
+        GovernedFact(
+            fact_id=CONVENIO_OVERRIDE_FACT_ID,
+            family=GovernedFactFamily.OVERRIDE,
+            variants=tuple(variants),
+        ),
+    ) if variants else ()
 
 
 def validate_convenio_legal_refs(

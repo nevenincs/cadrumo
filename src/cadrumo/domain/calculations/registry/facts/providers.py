@@ -181,6 +181,22 @@ def _reset_authored_fact_provider() -> None:
     """Reset the authored provider, which intentionally owns no local cache."""
 
 
+def _compile_convenio_provider(registry_root: Path) -> tuple[GovernedFact, ...]:
+    from ..convenio import compile_convenio_facts
+
+    return compile_convenio_facts(registry_root)
+
+
+def _collect_convenio_provider_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+    from ..convenio import collect_convenio_fingerprints
+
+    return collect_convenio_fingerprints(registry_root)
+
+
+def _reset_convenio_provider() -> None:
+    """Reset the convenio adapter, which deliberately reuses the uncached loader."""
+
+
 FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
     (
         FactProviderRegistration(
@@ -189,6 +205,13 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             compile=_compile_authored_facts,
             collect_fingerprints=_collect_authored_fact_fingerprints,
             reset=_reset_authored_fact_provider,
+        ),
+        FactProviderRegistration(
+            provider_id="convenio-overrides",
+            owned_directories=("treaties",),
+            compile=_compile_convenio_provider,
+            collect_fingerprints=_collect_convenio_provider_fingerprints,
+            reset=_reset_convenio_provider,
         ),
     ),
 )

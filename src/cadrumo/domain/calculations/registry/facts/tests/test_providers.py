@@ -48,7 +48,8 @@ def test_authored_provider_owns_compilation_identity_reset_and_directory(tmp_pat
     assert registration.owned_directories == ("facts",)
     assert len(registration.collect_fingerprints(tmp_path)) == 1
     registration.reset()
-    assert registered_fact_provider_directories() == {"facts": registration}
+    assert registered_fact_provider_directories()["facts"] == registration
+    assert registered_fact_provider_directories()["treaties"].provider_id == "convenio-overrides"
 
 
 @pytest.mark.parametrize(

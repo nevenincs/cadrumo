@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:162f971d8505366ead3c8d0c5e1334992ec75a24155c10a198f72f4311ad4b61'
+body_hash: 'sha256:c0dfdb480bf43ce5bce3a0f3025a9af990ad27240963e116a94403dcee1aa71e'
 ---
 
 # `facts-registry` plan
@@ -100,7 +100,7 @@ Adapt category profiles and legally governed calendar or deadline data into auth
 
 Adapt convenio overrides and apoderamientos catalogues into authority-managed providers.
 
-- [ ] `W02.P07.S18` - Register convenio overrides as a typed provider adapter; `src/cadrumo/domain/calculations/registry/convenio.py`.
+- [x] `W02.P07.S18` - Register convenio overrides as a typed provider adapter; `src/cadrumo/domain/calculations/registry/convenio.py`.
 - [ ] `W02.P07.S19` - Register confirmed apoderamientos legal-taxonomy facts; `src/cadrumo/domain/auth/apoderamientos/catalogue.py`.
 
 ### Phase `W02.P08` - Enroll scalar and revision-backed facts
