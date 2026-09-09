@@ -33,7 +33,6 @@ from ._verdict_cache import (
     compute_verdict_key,
     registry_validation_is_certified,
     shipped_verdict_location,
-    stamp_bundled_verdict,
 )
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .errors import RegistrySnapshotError, RegistryValidationError
@@ -49,7 +48,6 @@ from .identity import (
     RegistryIdentity,
     registry_identity_stamp_location,
     resolve_registry_identity,
-    write_registry_identity_stamp,
 )
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
 from .schema import (
@@ -1142,44 +1140,3 @@ class StampedRegistryRelease:
     verdict_path: Path
 
 
-def stamp_bundled_registry_release(
-    registry_root: Path,
-    *,
-    package_version: str = __version__,
-) -> StampedRegistryRelease:
-    """Stamp the install-stable identity and verdict beside ``registry_root``.
-
-    The release build calls this -- and only this -- against the registry tree
-    it is packaging. Both records are written here, in this order, from ONE
-    fingerprint collection, because they are not independent: the verdict is
-    keyed on the identity, so a caller free to write them separately could
-    certify one tree with another's identity. Fusing them removes that ordering
-    hazard rather than documenting it.
-
-    The fingerprints come from
-    :func:`collect_registry_identity_fingerprints`, the same collector the
-    runtime walk uses, so the stamp cannot describe a narrower set than the
-    runtime would check. The identity states which tree this is; the verdict
-    states that the build found it green. A mismatch of either at runtime falls
-    back to the full walk and a full re-validation.
-
-    Returns:
-        The paths both records were written to.
-    """
-    resolved = registry_root.expanduser().resolve()
-    fingerprints = collect_registry_identity_fingerprints(resolved)
-    stamp = write_registry_identity_stamp(
-        registry_fingerprints=fingerprints,
-        registry_root=resolved,
-        package_version=package_version,
-    )
-    verdict_path = shipped_verdict_location(resolved)
-    stamp_bundled_verdict(
-        identity_digest=stamp.tree_digest,
-        output_path=verdict_path,
-        package_version=package_version,
-    )
-    return StampedRegistryRelease(
-        identity_path=registry_identity_stamp_location(resolved),
-        verdict_path=verdict_path,
-    )
