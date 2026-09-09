@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:93e0f617b043d1aca32855fd4cd1f0e0b0a2830b6e7da5072dd89016db9608e4'
+body_hash: 'sha256:87daedcf64d9a1dced75fdaea2d022e093bf585b7f0f32c9f5246ec5462897ef'
 ---
 
 # `registry-generator` plan
@@ -90,11 +90,11 @@ Prerequisite for every refusal in this Wave. The reproduction gate renders uncon
 
 Implements the primary remedy: an arithmetic, decidable check that a row's type column and its content cell describe the same slot width, refusing when they do not.
 
-- [ ] `W02.P04.S13` - Implement the width arithmetic that reads a type column and a content cell as one slot; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W02.P04.S14` - Raise on a contradiction naming modelo, revision, field and both readings; `dev/registry/pipeline/_export_tree.py`.
+- [x] `W02.P04.S13` - Implement the width arithmetic that reads a type column and a content cell as one slot; `dev/registry/pipeline/_export_tree.py`.
+- [x] `W02.P04.S14` - Raise on a contradiction naming modelo, revision, field and both readings; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W02.P04.S15` - Decide and implement the disposition of the five hundred and seventy-nine rows whose type cell is a spelled-out word or a non-type; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W02.P04.S16` - Prove the detector with a planted contradiction in an isolated temporary tree; `dev/registry/tests/`.
-- [ ] `W02.P04.S17` - Prove a consistent unsigned design does not fire the detector; `dev/registry/tests/`.
+- [x] `W02.P04.S16` - Prove the detector with a planted contradiction in an isolated temporary tree; `dev/registry/tests/`.
+- [x] `W02.P04.S17` - Prove a consistent unsigned design does not fire the detector; `dev/registry/tests/`.
 
 ### Phase `W02.P05` - determine the sign or refuse
 

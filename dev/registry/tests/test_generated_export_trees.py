@@ -426,22 +426,30 @@ def test_every_reproduction_pending_pin_is_live_and_source_bound() -> None:
         assert source is not None
         assert source.sha256 == pin.source_sha256, f"{subject}: source was reissued; reconsider the pin"
         assert pin.reason.strip() and pin.reconsideration_condition.strip()
-        # A tree the generator REFUSES has no disposition class to be live or
-        # dormant against: comparing it would re-render and raise. The refusal
-        # supersedes the reproduction pin while it stands, so the pin is checked
-        # for source-binding above and its class check resumes the day the
-        # refusal retires. The refusal row is asserted source-bound in its place,
-        # so the pin is superseded by a declaration and never merely unchecked.
-        refusal = _RENDER_REFUSAL_DISPOSITIONS.get(subject)
-        if refusal is not None:
-            assert refusal.source_ref == pin.source_ref
-            assert refusal.source_sha256 == pin.source_sha256
-            continue
+        # A pin states that a tree differs from a fresh render only in its
+        # attestation. Once the tree also differs in its RECORDS it has a
+        # disposition row saying so, and that row is the stronger statement:
+        # source-pinned, self-retiring, and consulted by the reproduction gate
+        # before the pin ever is. The pin is not deleted, because it still
+        # carries the check-mode refusal this suite expects, but its class
+        # assertion defers to the disposition and resumes the day the row
+        # retires. The row is asserted source-bound in its place, so the pin is
+        # superseded by a declaration rather than left merely unchecked.
         comparison = compare_revision_against_committed(
             authority,
             modelo=tree.modelo,
             revision=tree.revision,
         )
+        # The pin table is keyed by the tree's own name; the ledger is keyed by
+        # modelo/revision. Look the row up the way the ledger spells it.
+        disposition = _RECORD_DRIFT_DISPOSITIONS.get(f"{tree.modelo}/{tree.revision}")
+        if disposition is not None:
+            assert disposition.source_ref == pin.source_ref
+            assert disposition.source_sha256 == pin.source_sha256
+            assert comparison.disposition_class == "record_drift", (
+                f"{subject}: a disposition row stands but the tree no longer drifts in its records"
+            )
+            continue
         assert comparison.disposition_class == "provenance_only", (
             f"{subject}: reproduction pin is dormant or its failure class changed"
         )
