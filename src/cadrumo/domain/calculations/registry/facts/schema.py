@@ -161,7 +161,7 @@ class EntitySetFactPayload(RegistryModel):
     """A closed set of stable entity tokens."""
 
     kind: Literal[GovernedFactFamily.ENTITY_SET] = GovernedFactFamily.ENTITY_SET
-    entities: frozenset[str] = Field(min_length=1)
+    entities: frozenset[str] = frozenset()
 
     @model_validator(mode="after")
     def _validate_entities(self) -> EntitySetFactPayload:
