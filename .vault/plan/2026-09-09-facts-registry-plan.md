@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:a9f143a479cc73ac62cd3c36038f0e67476b6ab1f8241a89f51e7fcf9e9e953f'
+body_hash: 'sha256:f6c1034cba64df447cda00f64918be9bde9e4957022816d2cbe3b42900b8678f'
 ---
 
 <!-- LINK RULES:
@@ -188,7 +188,7 @@ Create the registry-owned envelope, closed payload families, typed queries, and 
 
 Add provider enrollment, catalogue compilation, authority identity, validation, fingerprint, memoisation, reset, and directory-ownership plumbing without migrating legacy providers.
 
-- [ ] `W01.P02.S04` - Implement provider registration and directory ownership; `src/cadrumo/domain/calculations/registry/facts/providers.py`.
+- [x] `W01.P02.S04` - Implement provider registration and directory ownership; `src/cadrumo/domain/calculations/registry/facts/providers.py`.
 - [ ] `W01.P02.S05` - Attach the fact catalogue to authority construction; `src/cadrumo/domain/calculations/registry/authority.py`.
 - [ ] `W01.P02.S06` - Enroll facts in fingerprints authority identity memoisation validation and resets; `src/cadrumo/domain/calculations/registry`.
 
