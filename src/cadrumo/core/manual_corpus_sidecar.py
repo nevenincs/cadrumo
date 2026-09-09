@@ -12,9 +12,8 @@ on-demand extraction from the real PDF bytes whenever validation refuses, so
 refusing a malformed, truncated, or foreign sidecar costs correctness nothing
 and never serves text the writer would not have produced.
 
-:data:`MANUAL_CORPUS_TEXT_SCHEMA_VERSION` is pinned exactly: a sidecar
-carrying any other version is refused rather than interpreted, and the
-extractor regenerates it.
+The schema version is pinned exactly by :data:`ManualCorpusTextSchemaVersion`:
+a sidecar carrying any other version is refused rather than interpreted.
 """
 
 from __future__ import annotations
@@ -28,7 +27,6 @@ from .hex import HEX_PATTERN_64
 
 __all__ = [
     "MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX",
-    "MANUAL_CORPUS_TEXT_SCHEMA_VERSION",
     "MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX",
     "ManualCorpusTextSchemaVersion",
     "ManualCorpusTextSidecar",
@@ -36,14 +34,6 @@ __all__ = [
 
 ManualCorpusTextSchemaVersion = Literal[2]
 """The one accepted sidecar schema version, as a type."""
-
-MANUAL_CORPUS_TEXT_SCHEMA_VERSION: Final[ManualCorpusTextSchemaVersion] = 2
-"""The one accepted sidecar schema version, as a value.
-
-Pinned in lock-step with the :class:`ManualCorpusTextSidecar` field set: any
-change to the fields is a version bump, and the extractor rewrites every
-sidecar because the reader refuses the previous version outright.
-"""
 
 MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX: Final[str] = ".corpus_text.json"
 """Filename suffix appended to the source PDF name to address its sidecar."""

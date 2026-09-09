@@ -95,7 +95,7 @@ def _profile_seed_sequence(
     return parse_sequence(
         sequence_id=sequence_id,
         options={"verify": "Verify the seeded profile is readable.", "seed": seed},
-        body=('@result aeat --format json config profile show {profile_label}\n@expect status == "success"\n'),
+        body=('@result aeat --format json config profile history {profile_label}\n@expect status == "success"\n'),
         seeds_root=seeds_root,
     )
 

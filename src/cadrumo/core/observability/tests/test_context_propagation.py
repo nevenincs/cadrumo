@@ -21,7 +21,7 @@ from ...config import override_settings
 from ...directory_scan import scan_directory
 from ...storage_taxonomy import StorageCategory
 from ...storage_taxonomy_locations import storage_path
-from ..context import current_run_context, run_context
+from ..context import run_context
 from ..errors import RunTracePersistenceError
 from ..models import GenericPayload, RunEventKind, RunEventPayload, RunOutcome
 from ..recorder import record_event
@@ -125,7 +125,6 @@ class TestRunContextOutcome:
 
             assert excinfo.value.operation == "save_trace"
             assert excinfo.value.path == trace_path
-            assert current_run_context() is None
 
     def test_trace_persistence_failure_does_not_mask_body_error(
         self,
@@ -140,7 +139,6 @@ class TestRunContextOutcome:
             (storage_path(StorageCategory.RUNS) / run_id / TRACE_FILENAME).mkdir(parents=True)
             raise RuntimeError("primary failure")
 
-        assert current_run_context() is None
 
 
 class TestRunContextRunIdValidation:

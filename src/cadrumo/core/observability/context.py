@@ -98,11 +98,6 @@ STEP_CONTEXT_VAR: ContextVar[str | None] = ContextVar(
 """Active step identifier within the current run context, or ``None``."""
 
 
-def current_run_context() -> RunContextInfo | None:
-    """Return the :class:`RunContextInfo` bound to the current task, if any."""
-    return RUN_CONTEXT_VAR.get(None)
-
-
 def _mint_run_id() -> str:
     """Return a fresh 16-character lowercase hex run identifier."""
     return uuid.uuid4().hex[:16]
@@ -431,6 +426,5 @@ __all__ = [
     "RUN_CONTEXT_VAR",
     "STEP_CONTEXT_VAR",
     "RunContextInfo",
-    "current_run_context",
     "run_context",
 ]

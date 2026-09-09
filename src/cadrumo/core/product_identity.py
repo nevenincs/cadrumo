@@ -2,9 +2,7 @@
 
 This module is the single runtime authority for names that identify the
 application.  :data:`PRODUCT_IDENTITY` projects the accepted CADRUMO tuple into
-an immutable, import-light value.  :class:`IdentityReferent` supplies the closed
-vocabulary used to distinguish that product identity from references to the
-external Spanish tax authority.
+an immutable, import-light value.
 
 ``AEAT`` remains correct when it denotes the Agencia Estatal de Administracion
 Tributaria, its portals, protocols, credentials, official artefacts, legal
@@ -16,20 +14,12 @@ provides no legacy spelling, compatibility lookup, or fallback.
 from __future__ import annotations
 
 import re
-from enum import StrEnum
 from typing import Annotated, Final, NamedTuple
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
 
 from .identity import ContentDigest, SubjectTaxId
 from .models import STRICT_FROZEN_CONFIG
-
-
-class IdentityReferent(StrEnum):
-    """Closed vocabulary for deciding which entity an identity names."""
-
-    CADRUMO_PRODUCT = "cadrumo_product"
-    AEAT_AUTHORITY = "aeat_authority"
 
 
 class ProductIdentity(NamedTuple):
@@ -111,9 +101,6 @@ PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
     companion_namespace="cadrumo_data",
 )
 
-#: Short legal name retained only for the external tax authority referent.
-AEAT_AUTHORITY_SHORT_NAME: Final[str] = "AEAT"
-
 _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
 
 
@@ -123,12 +110,10 @@ def normalise_product_identity_references(value: str) -> str:
 
 
 __all__ = [
-    "AEAT_AUTHORITY_SHORT_NAME",
     "PRODUCT_IDENTITY",
     "AeatProductSoftwareEvidence",
     "AeatProductSoftwareIdentity",
     "AeatProgramIdentifier",
-    "IdentityReferent",
     "ProductIdentity",
     "normalise_product_identity_references",
 ]

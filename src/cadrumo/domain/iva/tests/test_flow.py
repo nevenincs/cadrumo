@@ -387,56 +387,26 @@ def test_autorepercutido_flow_contributes_to_both_sides() -> None:
     assert sides == frozenset({IvaSettlementSide.DEVENGADA, IvaSettlementSide.DEDUCIBLE})
 
 
-def test_devengada_flow_directions_set_matches_devengada_predicate() -> None:
-    from ..flow import DEVENGADA_FLOW_DIRECTIONS, is_devengada_flow
+def test_devengada_flow_predicate_matches_settlement_semantics() -> None:
+    from ..flow import is_devengada_flow
 
-    assert {
+    expected = {
         IvaFlowDirection.REPERCUTIDO,
         IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-    } == DEVENGADA_FLOW_DIRECTIONS
+    }
     for flow in IvaFlowDirection:
-        assert is_devengada_flow(flow) == (flow in DEVENGADA_FLOW_DIRECTIONS)
+        assert is_devengada_flow(flow) == (flow in expected)
 
 
-def test_deducible_flow_directions_set_matches_deducible_predicate() -> None:
-    from ..flow import DEDUCIBLE_FLOW_DIRECTIONS, is_deducible_flow
+def test_deducible_flow_predicate_matches_settlement_semantics() -> None:
+    from ..flow import is_deducible_flow
 
-    assert {
+    expected = {
         IvaFlowDirection.SOPORTADO,
         IvaFlowDirection.INVERSION_SUJETO_PASIVO,
-    } == DEDUCIBLE_FLOW_DIRECTIONS
+    }
     for flow in IvaFlowDirection:
-        assert is_deducible_flow(flow) == (flow in DEDUCIBLE_FLOW_DIRECTIONS)
-
-
-def test_devengada_and_deducible_flow_sets_intersect_at_autorepercutido() -> None:
-    """The intersection of the two cornerstone flow sets is exactly
-    INVERSION_SUJETO_PASIVO — the only flow that contributes to both sides on
-    the same operation."""
-    from ..flow import DEDUCIBLE_FLOW_DIRECTIONS, DEVENGADA_FLOW_DIRECTIONS
-
-    assert (
-        frozenset({IvaFlowDirection.INVERSION_SUJETO_PASIVO}) == DEVENGADA_FLOW_DIRECTIONS & DEDUCIBLE_FLOW_DIRECTIONS
-    )
-
-
-def test_devengada_and_deducible_flow_sets_union_to_every_settling_flow() -> None:
-    """The two cornerstone sets cover every flow that settles at all.
-
-    This asserted coverage of the WHOLE taxonomy until the supplier's side of a
-    reverse-charge operation was given its own member. That operation is turnover
-    bearing no cuota, so belonging to neither set is the fact being recorded
-    rather than a gap — and the old form would have forced it onto a side,
-    which is the mis-declaration the member exists to end.
-
-    The guard the original really provided — no flow falls through unclassified —
-    is preserved and sharpened in the mapping-totality test below, which checks
-    membership of the mapping rather than non-emptiness of its values.
-    """
-    from ..flow import DEDUCIBLE_FLOW_DIRECTIONS, DEVENGADA_FLOW_DIRECTIONS
-
-    settling = set(IvaFlowDirection) - {IvaFlowDirection.OPERACION_CON_INVERSION}
-    assert settling == DEVENGADA_FLOW_DIRECTIONS | DEDUCIBLE_FLOW_DIRECTIONS
+        assert is_deducible_flow(flow) == (flow in expected)
 
 
 def test_settlement_sides_mapping_is_total_over_flow_directions() -> None:
@@ -466,7 +436,7 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
     tiers) + INVERSION_SUJETO_PASIVO — the same flows as DEVENGADA_FLOW_DIRECTIONS.
     This test is a contract gate: if the substrate's devengada set ever
     changes, this test fires unless 303's formula updates in lockstep."""
-    from ..flow import DEVENGADA_FLOW_DIRECTIONS, IvaFlowDirection
+    from ..flow import IvaFlowDirection, is_devengada_flow
 
     m303 = bundled_authority().modelo("303")
     revision = m303.revisions["2022"]
@@ -487,4 +457,4 @@ def test_modelo_303_devengada_formula_matches_devengada_flow_set() -> None:
         flow_value = selector_as_dict(binding)["flow_direction"]
         binding_flows.add(IvaFlowDirection(flow_value))
 
-    assert binding_flows == DEVENGADA_FLOW_DIRECTIONS
+    assert binding_flows == {flow for flow in IvaFlowDirection if is_devengada_flow(flow)}

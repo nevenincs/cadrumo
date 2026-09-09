@@ -106,32 +106,6 @@ def read_profile_capsule_source(source: Path) -> ProfileCapsuleSource:
     )
 
 
-def restore_profile_from_source_with_password(
-    *,
-    label: str,
-    source: Path,
-    password: str,
-    root: Path | None = None,
-) -> ProfileRestoreOutcome:
-    """Republish the capsule at ``source`` under its own password.
-
-    Args:
-        label: Display name for the republished profile.
-        source: An unpublished capsule directory.
-        password: The profile's existing password. Never logged.
-        root: Storage root override; the effective root when omitted.
-
-    Returns:
-        A :class:`ProfileRestoreOutcome` naming the proving door.
-    """
-    return restore_profile_capsule_with_password(
-        label=label,
-        capsule=read_profile_capsule_source(source),
-        password=password,
-        root=root,
-    )
-
-
 def restore_profile_capsule_with_password(
     *,
     label: str,
@@ -158,41 +132,6 @@ def restore_profile_capsule_with_password(
         root=root,
     )
     return _outcome(view, material, authority="password")
-
-
-def restore_profile_from_source_with_recovery_artifact(
-    *,
-    label: str,
-    source: Path,
-    artifact_source: Path,
-    recovery_secret: str,
-    root: Path | None = None,
-) -> ProfileRestoreOutcome:
-    """Republish the capsule at ``source`` proving a portable artifact instead.
-
-    This recovers the DATA path only. The capsule is republished under its
-    EXISTING password envelope, so an operator who genuinely lost their
-    password gets their records back onto a valid capsule and still cannot log
-    in with a password they do not know. Changing that would be credential
-    rotation reached through the recovery door.
-
-    Args:
-        label: Display name for the republished profile.
-        source: An unpublished capsule directory.
-        artifact_source: The portable recovery artifact file.
-        recovery_secret: The 24-word phrase minted with that artifact.
-        root: Storage root override; the effective root when omitted.
-
-    Returns:
-        A :class:`ProfileRestoreOutcome` naming the proving door.
-    """
-    return restore_profile_capsule_with_recovery_artifact(
-        label=label,
-        capsule=read_profile_capsule_source(source),
-        artifact_source=artifact_source,
-        recovery_secret=recovery_secret,
-        root=root,
-    )
 
 
 def restore_profile_capsule_with_recovery_artifact(
@@ -243,6 +182,4 @@ __all__ = [
     "read_profile_capsule_source",
     "restore_profile_capsule_with_password",
     "restore_profile_capsule_with_recovery_artifact",
-    "restore_profile_from_source_with_password",
-    "restore_profile_from_source_with_recovery_artifact",
 ]

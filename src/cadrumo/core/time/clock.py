@@ -92,11 +92,6 @@ def today_madrid() -> date:
     return now().astimezone(MADRID_TZ).date()
 
 
-def clock_is_frozen() -> bool:
-    """Return whether a :func:`frozen_clock` scope is active for the current context."""
-    return _FROZEN_INSTANT.get() is not None
-
-
 def _refuse_under_live_opt_in() -> None:
     """Raise :class:`CoreValidationError` when the live-test opt-in is active.
 

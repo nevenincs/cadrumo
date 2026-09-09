@@ -11,9 +11,9 @@ import pytest
 from ....core.config import Settings
 from ....tests.aeat_literal_fixtures import manual_practicos_url
 from ....tests.fixtures.settings import EnvFileFreeSettings
-from ..errors import ManualNotFoundError, ManualReviewRequiredError
+from ..errors import ManualNotFoundError
 from ..schema import ManualId, ManualPart
-from ..verify import raise_on_errors, verify_manual_dir
+from ..verify import verify_manual_dir
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -171,19 +171,3 @@ class TestVerify:
         )
         assert not report.ok
         assert any(issue.code == "load-failed" for issue in report.errors)
-
-    def test_raise_on_errors_raises_for_non_ok(self, tmp_path: Path) -> None:
-        """raise_on_errors turns a failing report into an exception."""
-        root = tmp_path / "corpus" / "manuals"
-        _seed_structure(root)
-        (root / "iva" / "2025" / "structure" / "manual.json").write_text("{bad", encoding="utf-8")
-        settings = _settings(root)
-        report = verify_manual_dir(
-            manual_id=ManualId.IVA,
-            year=2025,
-            part=ManualPart.SINGLE,
-            settings=settings,
-        )
-        with pytest.raises(ManualReviewRequiredError) as excinfo:
-            raise_on_errors(report)
-        assert excinfo.value.translated_message == "cli.registry.manuals.verify_failed"

@@ -24,7 +24,6 @@ from ..errors.hierarchy import CoreValidationError
 from ..result_disposition import (
     ResultDisposition,
     derive_result_disposition,
-    modelo_has_codified_disposition,
     result_disposition_casilla_ids,
 )
 
@@ -138,7 +137,3 @@ def test_uncodified_modelo_returns_none_not_a_guess() -> None:
     documented fallback rather than a guessed disposition."""
     assert derive_result_disposition("390", _values(_M303_RESULT_CASILLA, "-1000.00")) is None
     assert result_disposition_casilla_ids("303") == (_M303_RESULT_CASILLA,)
-    assert modelo_has_codified_disposition("303") is True
-    assert modelo_has_codified_disposition("200") is True
-    assert modelo_has_codified_disposition("202") is True
-    assert modelo_has_codified_disposition("390") is False

@@ -9,7 +9,6 @@ import pytest
 from .....core.result_disposition import (
     ResultDisposition,
     derive_result_disposition,
-    modelo_has_codified_disposition,
     result_disposition_casilla_ids,
 )
 from ._registry_schema_support import _committed_registry_tree
@@ -23,13 +22,12 @@ def test_codified_result_disposition_specs_resolve_against_bundled_revisions() -
     checked_revisions: list[str] = []
     offences: list[str] = []
     for modelo in modelos:
-        if not modelo_has_codified_disposition(modelo.id):
+        result_ids = result_disposition_casilla_ids(modelo.id)
+        if result_ids is None:
             continue
         for revision_id, revision in modelo.revisions.items():
             checked_revisions.append(f"{modelo.id}:{revision_id}")
             declared_ids = {casilla.id for casilla in revision.casillas}
-            result_ids = result_disposition_casilla_ids(modelo.id)
-            assert result_ids is not None
             revision_result_ids = tuple(casilla_id for casilla_id in result_ids if casilla_id in declared_ids)
             if not revision_result_ids:
                 offences.append(

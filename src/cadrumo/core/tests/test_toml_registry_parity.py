@@ -8,8 +8,8 @@ shape would pass even if both parsers silently agreed on a WRONG value); it
 asserts the CURRENTLY WIRED parser reproduces expected values hand-derived
 directly from reading the real, committed registry source files, independent
 of any parser invocation. If a future change (a parser swap, a parser
-upgrade, a coercion regression) makes ``read_toml``/``parse_toml_text``
-diverge from what these real fragments actually declare, this test fails.
+upgrade, a coercion regression) makes ``read_toml`` diverge from what these
+real fragments actually declare, this test fails.
 
 The two fixtures are chosen to exercise the value shapes a type-coercion
 regression would most plausibly corrupt: a top-level table with string arrays
@@ -25,7 +25,7 @@ from pathlib import Path
 
 import pytest
 
-from ..toml import parse_toml_text, read_toml
+from ..toml import read_toml
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -153,21 +153,3 @@ def test_read_toml_reproduces_known_revision_values_including_date_and_inline_ta
     valid_from = revision_values["valid_from"]
     assert isinstance(valid_from, date)
     assert not hasattr(valid_from, "hour"), "valid_from must be a local date, not a datetime"
-
-
-def test_parse_toml_text_reproduces_known_revision_values_from_the_same_bytes() -> None:
-    """``parse_toml_text`` (the in-memory sibling) parses the same real bytes identically.
-
-    Pins the two parse entry points (:func:`read_toml`, :func:`parse_toml_text`)
-    to agree, using the SAME real registry fragment and the SAME hand-derived
-    expected values as the file-path test above -- not a second parser's
-    output, and not each other's.
-    """
-    text = _REVISION_PATH.read_text(encoding="utf-8")
-    parsed = parse_toml_text(text, error_factory=ValueError)
-    _assert_hand_derived_values_survive(parsed)
-
-    # The two entry points must agree on the WHOLE document, not merely on the
-    # hand-derived anchors: a coercion that differed only in an unpinned corner
-    # would otherwise slip through both.
-    assert parsed == read_toml(_REVISION_PATH, error_factory=ValueError)

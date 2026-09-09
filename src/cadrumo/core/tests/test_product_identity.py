@@ -11,11 +11,9 @@ from ... import core as core_package
 from .. import __all__ as core_all
 from .. import product_identity as identity_module
 from ..product_identity import (
-    AEAT_AUTHORITY_SHORT_NAME,
     PRODUCT_IDENTITY,
     AeatProductSoftwareEvidence,
     AeatProductSoftwareIdentity,
-    IdentityReferent,
     ProductIdentity,
     normalise_product_identity_references,
 )
@@ -24,12 +22,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _IDENTITY_EXPORTS = frozenset(
     {
-        "AEAT_AUTHORITY_SHORT_NAME",
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
         "AeatProgramIdentifier",
         "PRODUCT_IDENTITY",
-        "IdentityReferent",
         "ProductIdentity",
         "normalise_product_identity_references",
     }
@@ -142,19 +138,6 @@ def test_aeat_product_software_identity_requires_exact_values_and_evidence() -> 
         )
 
 
-def test_identity_referent_vocabulary_is_closed() -> None:
-    """Only the product and external tax authority are valid referents."""
-    assert tuple(IdentityReferent) == (
-        IdentityReferent.CADRUMO_PRODUCT,
-        IdentityReferent.AEAT_AUTHORITY,
-    )
-    assert IdentityReferent.CADRUMO_PRODUCT.value == "cadrumo_product"
-    assert IdentityReferent.AEAT_AUTHORITY.value == "aeat_authority"
-
-    with pytest.raises(ValueError):
-        IdentityReferent("former_product")
-
-
 def test_core_facade_reexports_the_exact_identity_objects() -> None:
     """The defining module and core facade expose one closed identity API."""
     assert set(identity_module.__all__) == _IDENTITY_EXPORTS
@@ -166,21 +149,15 @@ def test_core_facade_reexports_the_exact_identity_objects() -> None:
 
 
 def test_identity_api_exposes_no_former_product_aliases() -> None:
-    """AEAT is public only as the explicit external-authority short name or a genuine AEAT-format contract."""
-    assert AEAT_AUTHORITY_SHORT_NAME == "AEAT"
+    """AEAT-prefixed exports name genuine AEAT-format contracts."""
     # AEAT_CSV_* names the shape contract for AEAT's own Codigo Seguro de
     # Verificacion (the identifier AEAT prints on a justificante) -- a
     # legitimate AEAT-referent export per aeat-naming,
     # not a former-product alias.
-    # AEAT_RECORD_BATCH_SHAPES names the document shapes of AEAT's OWN record-
-    # supply submissions (SII and VERI*FACTU). The referent is the tax
-    # authority's published schema, not this product, so per aeat-naming it
-    # keeps the AEAT name -- renaming it would misname whose records they are.
     allowed_aeat_names = {
         "AEAT_CSV_MIN_LENGTH",
         "AEAT_CSV_MAX_LENGTH",
         "AEAT_CSV_PATTERN",
-        "AEAT_RECORD_BATCH_SHAPES",
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
     }
@@ -188,13 +165,11 @@ def test_identity_api_exposes_no_former_product_aliases() -> None:
     # spanning several owning modules, because the facade re-exported them all.
     # The facade is inert now, so the question is asked of the DEFINING module,
     # whose legitimate AEAT referents are its own:
-    #   AEAT_AUTHORITY_SHORT_NAME  the external authority's short name
     #   AeatProductSoftware*       the AEAT-format software identity contract
     #   AeatProgramIdentifier      AEAT's identifier for submitting software
     # and the stronger half is added: no AEAT-prefixed name is reachable
     # through the package at all.
     identity_aeat_names = {
-        "AEAT_AUTHORITY_SHORT_NAME",
         "AeatProductSoftwareEvidence",
         "AeatProductSoftwareIdentity",
         "AeatProgramIdentifier",

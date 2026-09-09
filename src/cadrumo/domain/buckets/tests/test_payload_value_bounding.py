@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ....tests import production_ast_items, repo_relative
-from ..event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, payload_value_fits
+from ..event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -248,9 +248,3 @@ def test_detector_scans_a_non_empty_production_surface() -> None:
     assert len(items) > 100, f"production AST surface implausibly small: {len(items)}"
     assert any(Path(path).name == "event.py" for path, _ in items)
 
-
-def test_payload_value_fits_answers_the_bound_without_building_an_event() -> None:
-    assert payload_value_fits("")
-    assert payload_value_fits("x" * BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH)
-    assert not payload_value_fits("x" * (BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH + 1))
-    assert payload_value_fits("  " + "x" * BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH + "  ")

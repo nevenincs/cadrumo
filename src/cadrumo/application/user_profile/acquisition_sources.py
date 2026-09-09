@@ -22,21 +22,16 @@ only locally-held facts would declare `requires_aeat_authentication=False`.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG
-
-if TYPE_CHECKING:
-    from ..auth.models import AuthState
 
 __all__ = [
     "AcquisitionSourceCredentialPostureV1",
     "ProfileAcquisitionSourceKey",
     "ProfileAcquisitionSourceV1",
     "known_profile_acquisition_sources",
-    "resolve_acquisition_source_credential_postures",
 ]
 
 
@@ -92,24 +87,3 @@ class AcquisitionSourceCredentialPostureV1(BaseModel):
     requires_aeat_authentication: bool
     credential_held: bool
     provider_id: str | None
-
-
-def resolve_acquisition_source_credential_postures(
-    auth: AuthState,
-) -> tuple[AcquisitionSourceCredentialPostureV1, ...]:
-    """Derive every declared source's credential posture from real auth state.
-
-    Pure: reads only the supplied :class:`AuthState`. A source that does
-    not require AEAT authentication always reports `credential_held=True`
-    -- there is nothing to hold.
-    """
-    held = auth.provider is not None and auth.authenticated_at is not None
-    return tuple(
-        AcquisitionSourceCredentialPostureV1(
-            source=source.key,
-            requires_aeat_authentication=source.requires_aeat_authentication,
-            credential_held=held if source.requires_aeat_authentication else True,
-            provider_id=auth.provider if source.requires_aeat_authentication else None,
-        )
-        for source in _KNOWN_SOURCES
-    )

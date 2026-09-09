@@ -42,24 +42,7 @@ def upsert_work_unit(catalogue: WorkUnitCatalogue, unit: WorkUnit) -> WorkUnitCa
     return WorkUnitCatalogue(work_units=mapping)
 
 
-def remove_work_unit(catalogue: WorkUnitCatalogue, work_unit_id: str) -> WorkUnitCatalogue:
-    """Return a new catalogue with ``work_unit_id`` removed.
-
-    Removing an absent id is a no-op that returns a value-equal
-    catalogue. The original is not mutated.
-
-    Returns:
-        A :class:`WorkUnitCatalogue` without the given work unit.
-    """
-    if work_unit_id not in catalogue.work_units:
-        return catalogue
-    mapping = dict(catalogue.work_units)
-    del mapping[work_unit_id]
-    return WorkUnitCatalogue(work_units=mapping)
-
-
 __all__ = [
     "WorkUnitPersistenceError",
-    "remove_work_unit",
     "upsert_work_unit",
 ]

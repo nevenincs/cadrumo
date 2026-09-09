@@ -65,13 +65,7 @@ def record_emitted_envelope(envelope: Mapping[str, object]) -> None:
         sink.append(dict(envelope))
 
 
-def capture_is_armed() -> bool:
-    """Return whether an envelope-capture scope is active for the current context."""
-    return CAPTURE_SINK.get() is not None
-
-
 __all__ = [
     "capture_envelopes",
-    "capture_is_armed",
     "record_emitted_envelope",
 ]

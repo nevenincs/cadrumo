@@ -1,10 +1,7 @@
 """Tests for the registry-grounded EU member state validators.
 
 Country code validation anchors to :class:`cadrumo.domain.iva.EUMemberState`
-rather than a hand-maintained list, and the
-:func:`assert_eu_member_state_code` helper rejects non-EU codes for
-callers (e.g. Modelo 369 binding selectors) that need an EU-only
-boundary.
+rather than a hand-maintained list.
 """
 
 from __future__ import annotations
@@ -14,7 +11,6 @@ import pytest
 from ...iva.schema import EUMemberState
 from ..validators import (
     EU_MEMBER_STATE_CODES,
-    assert_eu_member_state_code,
     is_eu_member_state_code,
     validate_country_code,
 )
@@ -44,28 +40,6 @@ def test_is_eu_member_state_code_rejects_non_eu_codes() -> None:
 def test_is_eu_member_state_code_rejects_malformed_inputs() -> None:
     for bad in ("", "X", "ESP", "1F", "&&", "  "):
         assert is_eu_member_state_code(bad) is False, bad
-
-
-def test_assert_eu_member_state_code_returns_uppercase_for_eu_member() -> None:
-    cases = (
-        ("es", "ES"),
-        ("DE", "DE"),
-        ("  fr  ", "FR"),
-    )
-    for raw, expected in cases:
-        assert assert_eu_member_state_code(raw) == expected, raw
-
-
-def test_assert_eu_member_state_code_raises_for_invalid_codes() -> None:
-    cases = (
-        ("GB", "not one of the 27 EU Member States"),
-        ("US", "not one of the 27 EU Member States"),
-        ("ESP", "ISO-3166 alpha-2"),
-        ("E1", "ISO-3166 alpha-2"),
-    )
-    for raw, message in cases:
-        with pytest.raises(ValueError, match=message):
-            assert_eu_member_state_code(raw)
 
 
 def test_validate_country_code_remains_permissive_for_general_invoice_use() -> None:

@@ -16,9 +16,7 @@ from __future__ import annotations
 from functools import lru_cache
 
 from ...core.aggregation import COUNTERPART_SOURCE_KIND_ORDER, BindingSourceKind
-from ...core.i18n import tr
 from ...core.logging import get_logger
-from .errors import OperatorSurfaceContractError, operator_surface_contract_verdict
 from .models import (
     LifecycleContract,
     ModeloLifecycleStep,
@@ -364,57 +362,3 @@ def get_operator_surface_contract() -> OperatorSurfaceContract:
     for the current process.
     """
     return build_operator_surface_contract()
-
-
-def require_accepted_root(name: str) -> RootSurface:
-    """Return the :class:`RootSurface` for an accepted root.
-
-    Raises :class:`OperatorSurfaceContractError` when ``name`` is outside the
-    backend-owned root contract. The refusal carries localized reason text,
-    while the accepted path returns the exact
-    :class:`RootSurface` record from :func:`get_operator_surface_contract`.
-    """
-    normalized = name.strip().lower()
-    for root in get_operator_surface_contract().roots:
-        if root.name.value == normalized:
-            return root
-    raise OperatorSurfaceContractError(
-        normalized or name,
-        reason=tr(
-            "cli.operator_surface.errors.accepted_roots_only",
-            default="accepted operator roots are config and app",
-        ),
-        precondition_verdict=operator_surface_contract_verdict(
-            "operator_surface.accepted_root",
-            facts={"requested_root": normalized or name},
-        ),
-    )
-
-
-def resolve_source_kind_alias(value: str) -> BindingSourceKind:
-    """Resolve canonical source kinds and parser-only aliases.
-
-    Returns a canonical :class:`BindingSourceKind` from either the enum token
-    itself or an input-only :class:`SourceKindAlias`. The accepted set is the
-    :data:`SOURCE_KINDS` subset, and aliases in :data:`SOURCE_KIND_ALIASES`
-    never introduce an operator-only source-kind taxonomy.
-    """
-    normalized = value.strip().lower()
-    for source_kind in SOURCE_KINDS:
-        if source_kind.value == normalized:
-            return source_kind
-    for alias in SOURCE_KIND_ALIASES:
-        if alias.alias == normalized:
-            return alias.canonical
-    raise OperatorSurfaceContractError(
-        value,
-        reason=tr(
-            "cli.operator_surface.errors.unknown_source_kind",
-            kind=value,
-            options=", ".join(source_kind.value for source_kind in SOURCE_KINDS),
-        ),
-        precondition_verdict=operator_surface_contract_verdict(
-            "operator_surface.source_kind_alias",
-            facts={"requested_source_kind": value},
-        ),
-    )

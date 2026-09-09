@@ -9,9 +9,7 @@ single source of that behaviour.
 :func:`read_toml` and :func:`freeze_toml` are used by the registry
 loader in :mod:`domain.calculations.registry._loader` and the
 user-profile schema loader in :mod:`domain.user_profile.loader`.
-:func:`parse_toml_text` gives the same decode-error wrapping to callers that
-already hold a TOML payload in memory, such as the secure bucket manifest
-reader. :func:`to_str_keyed_dict` is the narrow bridge from loosely typed
+:func:`to_str_keyed_dict` is the narrow bridge from loosely typed
 parsed TOML mappings into strict schema models that require string keys.
 
 The parse is backed by the Python standard-library :mod:`tomllib` module,
@@ -61,38 +59,6 @@ def read_toml(path: Path, *, error_factory: Callable[[str], Exception]) -> dict[
         raise error_factory(f"{path}: invalid TOML: {exc}") from exc
     except OSError as exc:
         raise error_factory(f"{path}: cannot read TOML: {exc}") from exc
-
-
-def parse_toml_text(text: str, *, error_factory: Callable[[str], Exception]) -> dict[str, object]:
-    """Parse an in-memory TOML string, re-raising decode failures via ``error_factory``.
-
-    The text-input sibling to :func:`read_toml` for callers that have
-    already loaded the bytes (e.g. through
-    :meth:`pathlib.Path.read_text`, secure-object payload decoding, or
-    in-memory test fixtures) and need consistent error wrapping
-    without the file-open layer.
-
-    Args:
-        text: TOML payload to decode.
-        error_factory: Callable that builds the domain-specific
-            exception from a message; invoked on ``tomllib.TOMLDecodeError``.
-
-    Returns:
-        The parsed top-level TOML mapping.
-
-    Raises:
-        Exception: The exception built by ``error_factory`` when the
-            payload is not valid TOML.
-    """
-    try:
-        loaded = tomllib.loads(text)
-        if not isinstance(loaded, Mapping):
-            raise error_factory("TOML root must be a mapping")
-        return to_str_keyed_dict(loaded, error_factory=error_factory)
-    except tomllib.TOMLDecodeError as exc:
-        raise error_factory(f"invalid TOML: {exc}") from exc
-    except UnicodeDecodeError as exc:
-        raise error_factory(f"invalid TOML: {exc}") from exc
 
 
 def to_str_keyed_dict[KeyT](

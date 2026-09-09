@@ -43,10 +43,7 @@ from ...calculations.registry.ids import RevisionId
 from ...user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..codes import ModeloCode
 from ..errors import ModeloValidationError
-from ..repository import (
-    remove_work_unit,
-    upsert_work_unit,
-)
+from ..repository import upsert_work_unit
 from ..work_unit import (
     WorkUnit,
     WorkUnitCatalogue,
@@ -315,12 +312,6 @@ def test_upsert_returns_a_new_catalogue_and_leaves_original_unchanged() -> None:
     assert len(catalogue) == 0
     assert len(updated) == 1
     assert updated.get(unit.work_unit_id) is unit
-
-
-def test_remove_returns_value_equal_catalogue_when_id_is_absent() -> None:
-    catalogue = WorkUnitCatalogue()
-    same = remove_work_unit(catalogue, "missing-id")
-    assert same == catalogue
 
 
 # ---------------------------------------------------------------------------

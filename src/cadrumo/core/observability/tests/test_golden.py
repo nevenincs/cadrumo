@@ -37,7 +37,7 @@ from ....tests.golden_comparison import (
 )
 from ...json_contract import OutputSchema, emit_json_success
 from ...time.clock import frozen_clock, now
-from ..capture import capture_envelopes, capture_is_armed, record_emitted_envelope
+from ..capture import capture_envelopes, record_emitted_envelope
 from ..context import _mint_run_id
 from ..errors import GoldenCaptureError, GoldenReplayMismatchError
 
@@ -91,15 +91,12 @@ def _capture_with_schema_violation() -> dict[str, object]:
 
 class TestCaptureSink:
     def test_unarmed_capture_is_a_noop(self) -> None:
-        assert not capture_is_armed()
         # Must not raise, must not record anywhere.
         record_emitted_envelope({"command": "x"})
-        assert not capture_is_armed()
 
     def test_emit_feeds_the_armed_sink(self) -> None:
         stream = io.StringIO()
         with capture_envelopes() as sink:
-            assert capture_is_armed()
             emit_json_success(
                 _COMMAND,
                 _GoldenResult(
@@ -122,7 +119,6 @@ class TestCaptureSink:
                 assert inner is outer
                 record_emitted_envelope({"command": "inner"})
             # The inner scope did not reset the outer sink on exit.
-            assert capture_is_armed()
             assert len(outer) == 1
 
 

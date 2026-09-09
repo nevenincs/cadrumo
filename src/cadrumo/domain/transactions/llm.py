@@ -58,7 +58,6 @@ from .errors import LLMClassifierError, TransactionValidationError
 from .model_tier import MINIMUM_CLASSIFICATION_TIER, ModelProfile, ModelTier
 from .models import Transaction
 
-_DEFAULT_TIMEOUT_SECONDS = 120.0
 _REASON_MAX_LENGTH = 2048
 
 # ── response model ────────────────────────────────────────────────

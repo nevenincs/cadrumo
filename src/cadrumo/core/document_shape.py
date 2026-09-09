@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 
-__all__ = ["AEAT_RECORD_BATCH_SHAPES", "PDF_CONTAINER_SHAPES", "STRUCTURED_DOCUMENT_SHAPES", "DocumentShape"]
+__all__ = ["PDF_CONTAINER_SHAPES", "STRUCTURED_DOCUMENT_SHAPES", "DocumentShape"]
 
 
 class DocumentShape(StrEnum):
@@ -118,18 +118,4 @@ remaining way a caller could be told "PDF" by something that never opened it.
 Hand-listed for the same reason as the sets above: a new PDF-carrying shape
 should force a decision about whether page rasterisation is meaningful for it,
 rather than being swept in by a name prefix.
-"""
-
-AEAT_RECORD_BATCH_SHAPES: frozenset[DocumentShape] = frozenset(
-    {
-        DocumentShape.XML_AEAT_SII,
-        DocumentShape.XML_AEAT_VERIFACTU,
-    },
-)
-"""Shapes carrying a batch of AEAT ledger records rather than one invoice.
-
-These are FILING ARTEFACTS -- records the taxpayer has already declared to
-AEAT -- not invoice documents a counterparty issued. The distinction matters
-downstream: a record the filer produced is not evidence of what a counterparty
-billed, and this codebase draws that line sharply elsewhere.
 """
