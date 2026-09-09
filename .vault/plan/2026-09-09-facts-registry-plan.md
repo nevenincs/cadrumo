@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:f6c1034cba64df447cda00f64918be9bde9e4957022816d2cbe3b42900b8678f'
+body_hash: 'sha256:eed50ce98d46218568b86c8b8f6394b75414e1632e4c28b670e035eb1da74339'
 ---
 
 <!-- LINK RULES:
@@ -205,7 +205,7 @@ Classify every discovered candidate and record exact source symbols, consumers, 
 
 Create catalogue-denominated structural gates and a broad report-only discovery sentinel while preserving modelo-specific tooling.
 
-- [ ] `W01.P04.S10` - Implement provider ownership identity temporal precedence and provenance gates; `dev/registry/analysis`.
+- [x] `W01.P04.S10` - Implement provider ownership identity temporal precedence and provenance gates; `dev/registry/analysis`.
 - [x] `W01.P04.S11` - Implement the report-only governed-literal discovery sentinel; `dev/registry/analysis`.
 - [ ] `W01.P04.S12` - Enroll facts checks without changing modelo denominators; `dev/quality/suite.py`.
 
