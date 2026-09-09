@@ -11,7 +11,12 @@ import pytest
 from cadrumo.domain.calculations.registry.facts.providers import FactProviderRegistration
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
 
-from ..analysis.facts_catalogue_quality import FactQualityKind, facts_catalogue_findings
+from ..analysis.facts_catalogue_quality import (
+    FactQualityKind,
+    facts_catalogue_findings,
+    live_facts_catalogue_findings,
+    main,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -146,3 +151,46 @@ def test_gate_imports_no_modelo_denominator() -> None:
     }
 
     assert not {name for name in imports if "modelo" in name.lower()}
+
+
+def test_live_gate_compiles_every_registered_provider_and_uses_its_directory_denominator(tmp_path: Path) -> None:
+    calls: list[Path] = []
+
+    def compile_provider(root: Path) -> tuple[GovernedFact, ...]:
+        calls.append(root)
+        return (_fact("iva-rate", _variant("ordinary", date(2025, 1, 1))),)
+
+    provider = FactProviderRegistration(
+        provider_id="live-provider",
+        owned_directories=("facts/iva",),
+        compile=compile_provider,
+        collect_fingerprints=lambda _root: (),
+        reset=lambda: None,
+    )
+
+    assert live_facts_catalogue_findings(tmp_path, (provider,)) == ()
+    assert calls == [tmp_path]
+
+
+def test_live_gate_reports_provider_compile_failure_and_main_blocks_on_findings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def broken_compile(_root: Path) -> tuple[GovernedFact, ...]:
+        raise ValueError("broken catalogue")
+
+    provider = FactProviderRegistration(
+        provider_id="broken-provider",
+        owned_directories=("facts",),
+        compile=broken_compile,
+        collect_fingerprints=lambda _root: (),
+        reset=lambda: None,
+    )
+    findings = live_facts_catalogue_findings(tmp_path, (provider,))
+    assert {finding.kind for finding in findings} == {FactQualityKind.INVALID_PROVIDER}
+
+    monkeypatch.setattr(
+        "dev.registry.analysis.facts_catalogue_quality.live_facts_catalogue_findings",
+        lambda _root: findings,
+    )
+    assert main(["--registry-root", str(tmp_path)]) == 1

@@ -54,14 +54,7 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-modelo-regulatory-embeds", (sys.executable, "-m", "dev.quality.modelo_regulatory_embeds")),
     (
         "check-facts-catalogue-structure",
-        (
-            sys.executable,
-            "-m",
-            "pytest",
-            "-q",
-            "-n0",
-            "dev/registry/tests/test_facts_catalogue_quality.py",
-        ),
+        (sys.executable, "-m", "dev.registry.analysis.facts_catalogue_quality"),
     ),
     (
         "report-governed-literal-discovery",

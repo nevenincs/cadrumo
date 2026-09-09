@@ -7,20 +7,30 @@ conformance denominator.
 
 from __future__ import annotations
 
+import argparse
+import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.providers import (
+    FACT_PROVIDER_REGISTRATIONS,
     FactProviderRegistration,
     validate_fact_provider_registrations,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactVariant
 
-__all__ = ["FactQualityFinding", "FactQualityKind", "facts_catalogue_findings"]
+__all__ = [
+    "FactQualityFinding",
+    "FactQualityKind",
+    "facts_catalogue_findings",
+    "live_facts_catalogue_findings",
+    "main",
+]
 
 
 class FactQualityKind(StrEnum):
@@ -194,3 +204,55 @@ def facts_catalogue_findings(
                     variant_owners[variant.variant_id] = (provider_id, fact.fact_id)
             findings.extend(_fact_findings(provider_id, fact))
     return tuple(sorted(set(findings)))
+
+
+def live_facts_catalogue_findings(
+    registry_root: Path,
+    registrations: Iterable[FactProviderRegistration] = FACT_PROVIDER_REGISTRATIONS,
+) -> tuple[FactQualityFinding, ...]:
+    """Compile every live registered provider and evaluate its owned directories."""
+    frozen = tuple(registrations)
+    compiled: dict[str, tuple[GovernedFact, ...]] = {}
+    compile_findings: list[FactQualityFinding] = []
+    for registration in frozen:
+        try:
+            compiled[registration.provider_id] = registration.compile(registry_root)
+        except Exception as error:
+            compile_findings.append(
+                FactQualityFinding(
+                    FactQualityKind.INVALID_PROVIDER,
+                    registration.provider_id,
+                    detail=f"compile failed: {type(error).__name__}: {error}",
+                )
+            )
+    governed_directories = tuple(
+        directory
+        for registration in frozen
+        for directory in registration.owned_directories
+    )
+    return tuple(
+        sorted(
+            {
+                *compile_findings,
+                *facts_catalogue_findings(frozen, compiled, governed_directories),
+            }
+        )
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the blocking live facts structural gate."""
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
+    parser.add_argument("--registry-root", type=Path, default=bundled_path("registry", "aeat"))
+    args = parser.parse_args(argv)
+    findings = live_facts_catalogue_findings(args.registry_root)
+    for finding in findings:
+        sys.stdout.write(
+            f"{finding.kind} provider={finding.provider_id} fact={finding.fact_id} "
+            f"variant={finding.variant_id} detail={finding.detail}\n"
+        )
+    return 1 if findings else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -185,8 +185,10 @@ def test_facts_checks_are_enrolled_without_changing_modelo_commands() -> None:
         "-m",
         "dev.quality.modelo_regulatory_embeds",
     )
-    assert commands["check-facts-catalogue-structure"][-1] == (
-        "dev/registry/tests/test_facts_catalogue_quality.py"
+    assert commands["check-facts-catalogue-structure"] == (
+        sys.executable,
+        "-m",
+        "dev.registry.analysis.facts_catalogue_quality",
     )
     assert commands["report-governed-literal-discovery"] == (
         sys.executable,
