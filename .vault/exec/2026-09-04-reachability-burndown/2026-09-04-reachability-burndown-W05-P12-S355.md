@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:9bf1a10992a3f66e09c3a4eae84da11739aef722035b9abaca608779e27bca84'
+body_hash: 'sha256:eb1c2ee4ed3f8c9baeb6e056263500604bfd474a0e56be933d61c51c07eef002'
 step_id: 'S355'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the displaced Modelo TUI action/edit/review/select generation and its synthetic helpers, fixture registries, and registry-completeness detector while retaining the routed installed workspace and application owners.
 

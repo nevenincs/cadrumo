@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:67180d35e62a0c7935d9f7c15bae23be63a56b7f726e95819a8cb6983cbd2f7d'
+body_hash: 'sha256:2919716b397d05e7a6ca65d797c10187b56f64a04ef799fa82ac64d856708af8'
 step_id: 'S307'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the date/boolean parsing AST enrollment engine, its whole-layer exclusions, seeded binding assumptions, production path/line exemptions, detector-authored token vocabulary, and embedded-code probes; retain canonical parser behavior.
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:647855b6d30e420504e27b3633f8a02f3708784eaffbb4e21b1f471675196c34'
+body_hash: 'sha256:3bee6b28104a7c51a054328daf1e908e0c56330b91b79a388e5a5aaa1c417cd5'
 step_id: 'S339'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the secure-storage namespace adoption census and embedded repository implementations
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:96c0514eee2c6bedbb4b914c8bd7ddb78e8f183b33c46340432f427979ce3722'
+body_hash: 'sha256:1db6ceea85d776dfcafe2d8f75ac1fd902f50f8df95452c2f868e75eec3443c1'
 step_id: 'S293'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Withdraw the unshipped offline XLSX/JSON calc-sheets transport atomically after its test-only facade exposed test-only serializers; move Guide and Evidencia tables to the live Google owner and retain direct plan/apply behavior tests.
 

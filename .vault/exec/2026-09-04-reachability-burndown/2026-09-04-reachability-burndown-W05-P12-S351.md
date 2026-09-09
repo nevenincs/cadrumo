@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:0bdde8a044da03565e28c6736e37177bdfa11711fb509e419aa7ec171f106511'
+body_hash: 'sha256:d97841e7a1c3343ba4d62f23086b88d26e2e8c33e0b820f11af7e0b6eed0de8f'
 step_id: 'S351'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the unreachable legacy Textual flow frontend and its test/dev-only fixtures, including the embedded Python subprocess program, while retaining canonical application-flow and CLI behavior coverage.
 

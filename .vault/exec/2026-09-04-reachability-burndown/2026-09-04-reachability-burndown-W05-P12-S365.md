@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:20a6c0938670b48732b80f4f03b5a96d6c47aed6025d23122b580b6185732367'
+body_hash: 'sha256:65b0d246fb744ebfc7061091a8103294654b84e20e9e4cc84396d1cbd0be8a59'
 step_id: 'S365'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unconsumed rich-progress terminal policy helper and its stale module contract.
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc5717049aec24ec885323b5897823b955fac32d608ad65eaaa6fec2c09249e3'
+body_hash: 'sha256:bbe76ec09c8f00aeac04df14f33b7a560b60c19b868dd273aafa12cf630fe547'
 step_id: 'S309'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the positional-translation AST census and its hard-coded exception-class and factory-name exclusions; retain deferred translation behavior at the CadrumoError and renderer boundaries.
 

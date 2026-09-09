@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:c140e0ebc9d07734b3b355262b4380666b1c9cbc42a81c81f7cdfcd36b356585'
+body_hash: 'sha256:f42f05cf6debc47a7df890462de47c0cb07520064919f614a67a869ecd3f7822'
 step_id: 'S311'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the canonical-record encoding AST owner census, its production path/function allowlist, trailing-name heuristics, formatting exemptions, and embedded encoder implementations; retain direct canonical-byte behavior.
 

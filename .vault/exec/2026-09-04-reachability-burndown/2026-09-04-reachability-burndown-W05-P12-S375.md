@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:a93c4d1b55c85b8b4156f071216317447f3f6d66b6c308e094b80d7d3004f693'
+body_hash: 'sha256:7da447212e0b591c7b6fa52f52fd93820432114009d76323cb2eaf6a727cfcf8'
 step_id: 'S375'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unused Google Sheets export-service composition wrapper and its wrapper-only imports.
 

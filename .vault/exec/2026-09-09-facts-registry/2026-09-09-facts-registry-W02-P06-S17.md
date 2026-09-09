@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c6266b633eb20cc67ead09355313f935093310ec1d01883fec578d4cf01c817'
+body_hash: 'sha256:19a1120820a3e8908b10a0919c965ed2491f364b6d2e5700b5592d56153d55d9'
 step_id: 'S17'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Register classified legal calendar and deadline facts
 

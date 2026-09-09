@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:ebe028e8c69cc78756e36d5634d9ba68a41ee390e20e5f2f488c4b3bf37bc4f6'
+body_hash: 'sha256:6263f20a4af9fe62ad2ceaa4e0dcc688c47d06727f4c20032b349985d59f5d05'
 step_id: 'S337'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the duplicate source-policy engine from the CI command-spec authority test
 

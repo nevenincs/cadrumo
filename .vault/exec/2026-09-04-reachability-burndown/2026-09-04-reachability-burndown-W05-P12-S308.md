@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:d797461005e4632de994b35cba6d2806f567d215798fdba5d6b7b012a1c5c7a5'
+body_hash: 'sha256:5298385268da4bd5862086eb23561654f5e5818c9394986b8ad0d8218cb43c10'
 step_id: 'S308'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the UTC-validator detector's embedded executable source probes while retaining its no-allowlist live-tree ownership assertion and canonical UTC behavior.
 

@@ -11,7 +11,6 @@ related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
 
-
 # Register confirmed apoderamientos legal-taxonomy facts
 
 ## Scope

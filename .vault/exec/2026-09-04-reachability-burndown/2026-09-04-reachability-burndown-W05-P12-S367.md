@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:0234445fa94d740264a3d72f1961eb3d4b44ce14c56f61d9835e7a9253ecb9df'
+body_hash: 'sha256:551066cdaacd8cf3935cf4925fb63591a1559f36e4eff7cd0a86314379f23696'
 step_id: 'S367'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unused fixed-width record-payload convenience renderer and its wrapper-only line-ending protocol state.
 

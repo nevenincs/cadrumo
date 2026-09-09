@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:aa0d649c58d29887a49f51ec3c0319b31b90b1028f8701544fe8bb41312f8267'
+body_hash: 'sha256:715fbeae88480f1b005c062d02788937555e33a189bc33a0e99272ea44c48890'
 step_id: 'S16'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Register statutory category profiles and dated caps
 

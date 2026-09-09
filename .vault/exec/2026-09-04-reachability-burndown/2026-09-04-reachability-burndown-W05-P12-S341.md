@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:9c0cc9d5f13f9a69296e848527d4b95dc85dde98759f11fde901eda8fe1fe13c'
+body_hash: 'sha256:78819515ae7d3c66c007c674a9aa38c95a7784fb4f057c064d28c6e60f2aa1c7'
 step_id: 'S341'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the storage-degradation source census while retaining direct canonical exception behavior checks.
 

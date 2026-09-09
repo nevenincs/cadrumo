@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:4c019a2f68c60e8965b15bd3c654a12693b5cd9bb09b5537ad5ba710b4c64da8'
+body_hash: 'sha256:d8ec7a138112263cebd1f7b0e7e855df95ca898fe66c91e53312a9ecaec2f423'
 step_id: 'S359'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unused fichero-BOE encoding-choice constant rather than retaining an unimplemented wire-vocabulary claim.
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:65613f5babe73f5246d9572f84dcdee230b68a6f74e2111821893a6ed14118b6'
+body_hash: 'sha256:762415fdf2ae9d0c679fe7f3f8f18f9095740968c6979bfc5a3a807c62aa4eb5'
 step_id: 'S344'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the skip-policy parser and invoice-kind singularity detector, retaining runner-visible outcomes and owner behavior tests.
 

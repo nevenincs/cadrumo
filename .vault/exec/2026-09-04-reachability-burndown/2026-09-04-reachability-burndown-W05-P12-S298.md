@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:027f6e328c6e38564b695484d70b33231affbbc52aaad8614b14965ed68fde08'
+body_hash: 'sha256:47e156ba643e759e23156f64639acc87f2b1109d432e071ff17bb3f87e3e6f9c'
 step_id: 'S298'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the bare-modelo-string AST census, its production-path allowlist, declaration-module skip, copied source fixtures, and metastate checks; retain Modelo typing at live command and domain boundaries.
 

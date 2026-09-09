@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c0b977735d460d54718a3aeaaed537888d4e7ef81e265bc6447ac3504f33aa9'
+body_hash: 'sha256:1679c071ddd91f14c1ef0d15626274fde64281340276a73539a9449f9f756442'
 step_id: 'S327'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the filename-keyed IVA observation source census and stale omission exemption
 

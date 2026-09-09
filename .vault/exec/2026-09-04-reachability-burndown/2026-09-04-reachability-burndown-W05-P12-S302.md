@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:b1d51c3be9f50eff24ffb9967bfd7deefcce2a17267b6492540dfad313677ffc'
+body_hash: 'sha256:2f67941724e487cb43a41e0501be954ad5ae3687843bc65a3c407c8c3eabe65b'
 step_id: 'S302'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the text-fold detector's copied production implementation fixture while retaining its no-allowlist live-tree assertion and the canonical fold behavior owner.
 

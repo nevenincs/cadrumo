@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:08481e0af6cd19773e453633f0c97b5976ef7ab7d985f39ae9bc8aa6b49bc5a2'
+body_hash: 'sha256:77f1799c74ac6ff09782e7eb0c0db400914e124be3fd0938ba162263d300a013'
 step_id: 'S330'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the Modelo 232 literal-set duplicate detector and raw type-hint assertions
 

@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:6bd9b1029151e93c32ce7c36593130b6470b8a440330e00e86c363b1fefa9ce1'
+body_hash: 'sha256:93e0f617b043d1aca32855fd4cd1f0e0b0a2830b6e7da5072dd89016db9608e4'
 ---
 
 # `registry-generator` plan
@@ -49,7 +49,7 @@ Establishes from the captured official document whether the annual IVA summary s
 
 - [x] `W01.P01.S01` - Extract the per-page legend text from the captured official design and record whether it states a sign position; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/`.
 - [x] `W01.P01.S02` - Cross-check the same legend question against a modelo whose design spells the sign inline rather than by legend; `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_200/`.
-- [ ] `W01.P01.S03` - Record the verified premise, or its refutation, as a digest-pinned reviewed adjudication; `dev/registry/pipeline/source_defects.py`.
+- [x] `W01.P01.S03` - Record the verified premise, or its refutation, as a digest-pinned reviewed adjudication; `dev/registry/pipeline/source_defects.py`.
 
 ### Phase `W01.P02` - resolve the failing sign assertions
 
@@ -100,10 +100,10 @@ Implements the primary remedy: an arithmetic, decidable check that a row's type 
 
 Removes the unconditional literals and the predicate fold that make the official distinction unavailable downstream, so the generator either determines the sign from the official column or refuses.
 
-- [ ] `W02.P05.S18` - Replace the unconditional signed literals with a value derived from the official type column; `dev/registry/pipeline/_export_tree.py`.
+- [x] `W02.P05.S18` - Replace the unconditional signed literals with a value derived from the official type column; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W02.P05.S19` - Unfold the numeric predicate that collapses the signed and unsigned type tokens into one class; `dev/registry/pipeline/render_profile_eligibility.py`.
 - [x] `W02.P05.S20` - Raise when the sign cannot be established from an authority rather than writing a constant; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W02.P05.S21` - Narrow the generator parameter type so an undetermined sign is not expressible at the call site; `dev/registry/pipeline/_export_tree.py`.
+- [x] `W02.P05.S21` - Narrow the generator parameter type so an undetermined sign is not expressible at the call site; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W02.P05.S71` - Add the runtime validator at the registry boundary that the primary control depends on; `src/cadrumo/domain/calculations/registry/`.
 - [x] `W02.P05.S22` - Prove the refusal with a planted undetermined sign in an isolated temporary tree; `dev/registry/tests/`.
 
@@ -150,16 +150,16 @@ Changes the authoring default so a new revision scaffolds the generated path and
 
 - [ ] `W04.P09.S34` - Scaffold the generated export path for a new revision instead of the hand-authored layout; `dev/registry/newmodelo/manager.py`.
 - [ ] `W04.P09.S35` - Rewrite the authoring checklist so hand-authoring is the declared exception stating why; `dev/registry/newmodelo/checklist.py`.
-- [ ] `W04.P09.S36` - Add a declaration recording whether a revision's values are derived or transcribed; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W04.P09.S37` - Prove a newly scaffolded revision arrives on the generated path; `dev/registry/tests/`.
+- [x] `W04.P09.S36` - Add a declaration recording whether a revision's values are derived or transcribed; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W04.P09.S37` - Prove a newly scaffolded revision arrives on the generated path; `dev/registry/tests/`.
 
 ### Phase `W04.P10` - wire the staleness detector
 
 Puts the existing live-source detector on a schedule with defined acceptance: it reports a republish as a finding, does not block a change-triggered gate, and reports an unreachable network as a limitation rather than as pass or fail.
 
-- [ ] `W04.P10.S38` - Invoke the detector's live-check flag from a scheduled workflow; `.github/workflows/`.
-- [ ] `W04.P10.S39` - Report a detected republish as a finding against the corpus without blocking a change-triggered gate; `dev/corpus/sync_aeat_record_design_corpus.py`.
-- [ ] `W04.P10.S40` - Report an unreachable network explicitly as a limitation rather than as pass or fail; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W04.P10.S38` - Invoke the detector's live-check flag from a scheduled workflow; `.github/workflows/`.
+- [x] `W04.P10.S39` - Report a detected republish as a finding against the corpus without blocking a change-triggered gate; `dev/corpus/sync_aeat_record_design_corpus.py`.
+- [x] `W04.P10.S40` - Report an unreachable network explicitly as a limitation rather than as pass or fail; `dev/corpus/sync_aeat_record_design_corpus.py`.
 
 ### Phase `W04.P11` - admit the generator package to the type gate
 
@@ -197,11 +197,11 @@ Examines how the consuming application behaves when handed a registry that is in
 
 Determines whether the consuming application refuses, degrades or proceeds when the registry is incoherent, and whether a calculation can distinguish an undetermined value from an adjudicated one.
 
-- [ ] `W05.P14.S51` - Determine whether the authority refuses, degrades or proceeds when a revision is internally inconsistent; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W05.P14.S51` - Determine whether the authority refuses, degrades or proceeds when a revision is internally inconsistent; `src/cadrumo/domain/calculations/registry/`.
 - [ ] `W05.P14.S52` - Determine whether a calculation can distinguish an undetermined value from an adjudicated one; `src/cadrumo/domain/calculations/`.
-- [ ] `W05.P14.S53` - Determine whether filing-grade paths distinguish a silent registry from one that states zero; `src/cadrumo/application/`.
-- [ ] `W05.P14.S54` - Determine whether a temporally incoherent revision selection is rejected at the authority boundary; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W05.P14.S55` - Record the consumer findings as a reference document for the held rulings; `.vault/reference/`.
+- [x] `W05.P14.S53` - Determine whether filing-grade paths distinguish a silent registry from one that states zero; `src/cadrumo/application/`.
+- [x] `W05.P14.S54` - Determine whether a temporally incoherent revision selection is rejected at the authority boundary; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W05.P14.S55` - Record the consumer findings as a reference document for the held rulings; `.vault/reference/`.
 
 ### Phase `W05.P15` - settle the held rulings
 

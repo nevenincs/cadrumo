@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:16f910d22911cfd59cf5f0283bbfa729a9f3fb725aca44125ee902800f04538c'
+body_hash: 'sha256:26e0c57ad3fea413daeba154040b5ea99406b410cbd0794abf030b171784e6d1'
 step_id: 'S314'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the persisted-version literal enrollment census and embedded constructor strings
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:116cb73a87e901f16f9f917bd67cea00ef8a040605ee22a14cc045ae6c6cee9a'
+body_hash: 'sha256:a5881c333696d61fb8e203559b6debfcf7ca819859b0e1ab9ef53b21af12b3fe'
 step_id: 'S305'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the cast-rationale comment census, its AST matcher and alias restrictions, shared test-inventory exports, copied source fixtures, and detector-only tests; retain configured type checking and useful local explanations.
 

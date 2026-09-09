@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd3e9d0f19d7bf61b38b642d6f0388a9c62c09bfaf51594c8d1bbee8954093b4'
+body_hash: 'sha256:896700b8f3ac87d661a1220676c19ac7102dc283f744ca937dd3d3a277c13aac'
 step_id: 'S15'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Move IVA evidence enforcement into provider validation
 

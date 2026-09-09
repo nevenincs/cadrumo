@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe259a482f570093272f7f5bb90fb2fa55290ce1265cf7c5ad6665237ce66d84'
+body_hash: 'sha256:a11933b0fafa2a2316c5356b5ae2f5a02eaebbddaea6aa78a7ac9292cd223549'
 step_id: 'S371'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unused Modelo record-catalogue query Protocol and its query-only type imports.
 

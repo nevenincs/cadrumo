@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:abc77ef15a3fbb3bcf4117c85a36d45f6e1510e1a847c8c1c04b50bf76130172'
+body_hash: 'sha256:7c5e695136ed411245824b977ccd2c9f7c0c3d36246c70c3f129ee4697e50b9e'
 step_id: 'S312'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove import-gate development metastate and retain strict live import resolution
 

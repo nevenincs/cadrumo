@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:6ee4846f34697c25c53b465d205be1840e6703645e4e5bac02434cf01940b339'
+body_hash: 'sha256:ea178feb9e22f3a71e2bf1ec85687693caaa7a4560f384ccfee0a421d1e69f16'
 step_id: 'S369'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete both unwired Modelo 296 export resolvers, their private row-builder vocabulary, and the builder-only test module.
 

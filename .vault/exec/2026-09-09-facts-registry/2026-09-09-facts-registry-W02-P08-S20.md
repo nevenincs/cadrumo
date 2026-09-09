@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:745b35a90379c96ecd21fc485d0701c69c573116bd54e1595aff3c0ee1036853'
+body_hash: 'sha256:ce5b491dd70e7ac771f1222c6c82ae53c86ba19c3faddd18ce204a9650bb2996'
 step_id: 'S20'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Register statutory scalars schedules and classifications
 

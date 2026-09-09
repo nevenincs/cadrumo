@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:20269db24a8d5df4c424088f816365aecd09460bf50e910887b07386df6a2145'
+body_hash: 'sha256:6c26e22ec64f2a5c1fecd1f619c069da0dac9cca876e7d0496545d2c9f1b8eac'
 step_id: 'S363'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unconsumed flow frontend-capability and intent enums and their self-referential taxonomy tests.
 

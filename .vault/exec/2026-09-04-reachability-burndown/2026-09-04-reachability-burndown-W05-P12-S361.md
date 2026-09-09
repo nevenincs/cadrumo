@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:42d1f8e8a9829d078eacc7a304aa3863552bfef5360a370dbddeb6deba3440a4'
+body_hash: 'sha256:e0b43cd1e00f37c3380dccb7a7ab85552d4cba6395f0607ca2b15eb00ead7a82'
 step_id: 'S361'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove ten unused Modelo 193 withholding-field aliases left by the extracted field-finalization module.
 

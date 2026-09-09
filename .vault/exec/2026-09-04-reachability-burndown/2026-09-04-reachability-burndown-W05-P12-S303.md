@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:9bdf1684463f68cad412b409c680742013f12b32557e21ffd14603fd7ce965ac'
+body_hash: 'sha256:e3e00e46707e1cfd263c71ecf043247e8b7287e8ebbb7d4d6505feb1480cf2e5'
 step_id: 'S303'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the paid-down type-ignore enrollment roster, subtraction logic, historical paydown prose, and stale-entry test; enforce the zero-state rationale rule directly without a baseline.
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:87ac3a07c7ba8220da4fc66b82f54bfff2c4a5cb2ee2110c92355dcc0af3b68d'
+body_hash: 'sha256:51cdfdb172650a0013725cbf78120ecc807708a536649479f7f70bc55c4dafc9'
 step_id: 'S349'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only CLI manager frontend helper and its source-policy and retired-symbol inventory test.
 

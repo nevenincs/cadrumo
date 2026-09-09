@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:ca3d78aefb8352ddf5e83711147a2e46076a639561eec3e9050fd100bd4641ba'
+body_hash: 'sha256:73b157be6638d77fb0f8f5c012fe985951bb861b62a219c28bf6a69d2941c3c4'
 step_id: 'S356'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove eleven unused operation-journal validator aliases while retaining the invoked consolidated snapshot validators and journal behavior.
 
