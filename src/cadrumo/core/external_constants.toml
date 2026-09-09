@@ -53,7 +53,6 @@ notifications_detail = "/wlpl/GNNO-JDIT/DetalleSede"
 # the values below are the current observed IdP form shape.
 selector_access_url_template = "https://sede.agenciatributaria.gob.es/static_files/common/html/selector_acceso/SelectorAccesos.html?rep=S&ref={target}&aut=CP"
 selector_access_path_marker = "SelectorAccesos"
-idp_host_marker = "clave.gob.es"
 username_input_selector = "#usuario_login"
 password_input_selector = "#password_login"
 submit_button_selector = "#enviar_login"
