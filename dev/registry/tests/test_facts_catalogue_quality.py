@@ -66,6 +66,58 @@ def test_clean_facts_provider_catalogue_has_no_findings() -> None:
     assert facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",)) == ()
 
 
+def test_complete_legal_only_and_source_only_provenance_lanes_are_accepted() -> None:
+    provider = _provider("authored", "facts")
+    legal_only = _fact(
+        "legal-only",
+        _variant("legal", date(2025, 1, 1), source_refs=(), citation_refs=()),
+    )
+    source_only_variant = _fact("source-only", _variant("source", date(2025, 1, 1))).variants[0].model_copy(
+        update={"legal_refs": ()},
+    )
+    source_only = _fact("source-only", _variant("source", date(2025, 1, 1))).model_copy(
+        update={"variants": (source_only_variant,)},
+    )
+
+    assert facts_catalogue_findings(
+        (provider,),
+        {"authored": (legal_only, source_only)},
+        ("facts",),
+    ) == ()
+
+
+def test_neither_partial_and_mismatched_provenance_lanes_are_rejected() -> None:
+    provider = _provider("authored", "facts")
+    base = _fact("broken", _variant("broken", date(2025, 1, 1)))
+    variant = base.variants[0]
+    neither = base.model_copy(
+        update={
+            "variants": (
+                variant.model_copy(update={"legal_refs": (), "source_refs": (), "source_citations": ()}),
+            ),
+        },
+    )
+    partial = _fact(
+        "partial",
+        _variant("partial", date(2025, 1, 1), source_refs=("aeat-source",), citation_refs=()),
+    )
+    mismatched = base.model_copy(
+        update={
+            "fact_id": "mismatched",
+            "variants": (variant.model_copy(update={"variant_id": "mismatched", "source_refs": ("other",)}),),
+        },
+    )
+
+    findings = facts_catalogue_findings(
+        (provider,),
+        {"authored": (neither, partial, mismatched)},
+        ("facts",),
+    )
+
+    assert len(findings) == 3
+    assert {finding.kind for finding in findings} == {FactQualityKind.MISSING_PROVENANCE}
+
+
 def test_provider_ownership_and_compilation_identity_bite() -> None:
     provider = _provider("authored", "facts")
     findings = facts_catalogue_findings((provider,), {"adapter": ()}, ("facts", "iva"))

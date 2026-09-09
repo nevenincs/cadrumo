@@ -96,14 +96,19 @@ def _fact_findings(provider_id: str, fact: GovernedFact) -> list[FactQualityFind
                 )
             )
         cited = {citation.source_ref for citation in variant.source_citations}
-        if not variant.legal_refs or not variant.source_refs or cited != set(variant.source_refs):
+        source_lane_declared = bool(variant.source_refs or variant.source_citations)
+        source_lane_complete = bool(variant.source_refs) and cited == set(variant.source_refs)
+        legal_lane_complete = bool(variant.legal_refs)
+        if (source_lane_declared and not source_lane_complete) or (
+            not source_lane_declared and not legal_lane_complete
+        ):
             findings.append(
                 FactQualityFinding(
                     FactQualityKind.MISSING_PROVENANCE,
                     provider_id,
                     fact.fact_id,
                     variant.variant_id,
-                    "legal_refs, source_refs and citations must form a complete evidence set",
+                    "declare a legal_refs lane or a complete source_refs/source_citations lane",
                 )
             )
     for index, left in enumerate(fact.variants):
