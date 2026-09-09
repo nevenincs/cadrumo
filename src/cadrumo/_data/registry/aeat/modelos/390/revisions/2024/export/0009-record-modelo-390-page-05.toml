@@ -10,26 +10,6 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2024.export_layouts.records.fields]]
-id = 'modelo-390-page-05-864-operaciones-reg-simplificado-act-agricolas-y-ganader'
-offset = 864
-length = 17
-kind = 'binding'
-binding = 'modelo-390-2024.page_5.864-880.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-derivada-regimen-simplif'
-data_type = 'decimal'
-required = false
-padding = 'left_zero'
-justification = 'right'
-decimals = 2
-signed = false
-legal_refs = [
-    'ley-37-1992:art-122',
-    'ley-37-1992:art-123',
-    'orden-eha-3111-2009:art-1',
-    'rd-1624-1992:art-71',
-]
-source_refs = ['aeat-dr-390-2024']
-
-[[revisions.2024.export_layouts.records.fields]]
 id = 'modelo-390-page-05-881-operaciones-reg-simplificado-act-agricolas-y-ganader'
 offset = 881
 length = 2
@@ -135,12 +115,11 @@ offset = 940
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.940-956.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-4-cuota-derivada-regimen-simplif'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -255,12 +234,11 @@ offset = 1016
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1016-1032.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-5-cuota-derivada-regimen-simpl'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -275,12 +253,11 @@ offset = 1033
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1033-1049.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-no-agric-ganad-y-forest'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -295,12 +272,11 @@ offset = 1050
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1050-1066.operaciones-reg-simplificado-iva-devengado-suma-cuotas-actividades-agric-ganad-y-forest'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -315,12 +291,11 @@ offset = 1067
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1067-1083.operaciones-reg-simplificado-iva-devengado-en-adquisiciones-intracomunitarias'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -335,12 +310,11 @@ offset = 1084
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1084-1100.operaciones-reg-simplificado-iva-devengado-iva-devengado-por-inversion-del-sujeto-pasivo'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -355,12 +329,11 @@ offset = 1101
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1101-1117.operaciones-reg-simplificado-iva-devengado-iva-devengado-en-entregas-de-activos-fijos'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -375,12 +348,11 @@ offset = 1118
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.reconciliacion.devengada-simplificado-303'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -395,12 +367,11 @@ offset = 1135
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1135-1151.operaciones-reg-simplificado-deducciones-iva-soportado-en-adquisicion-de-activos-fijos'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -415,12 +386,11 @@ offset = 1152
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1152-1168.operaciones-reg-simplificado-deducciones-regularizacion-de-bienes-de-inversion'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -435,12 +405,11 @@ offset = 1169
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1169-1185.operaciones-reg-simplificado-deducciones-suma-de-deducciones'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -455,12 +424,11 @@ offset = 1186
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2024.page_5.1186-1202.operaciones-reg-simplificado-resultado-regimen-simplificado'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',

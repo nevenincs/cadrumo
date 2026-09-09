@@ -167,12 +167,11 @@ offset = 81
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.recargo.tipo-0-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-88',
@@ -189,12 +188,11 @@ offset = 98
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.recargo.super-reducido'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -288,12 +286,11 @@ offset = 183
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.recargo.tipo-1-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-88',
@@ -310,12 +307,11 @@ offset = 200
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.recargo.reducido'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -329,12 +325,11 @@ offset = 217
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.recargo.tipo-5-2.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-88',
@@ -351,12 +346,11 @@ offset = 234
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.recargo.general'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'rd-1624-1992:art-71',
@@ -370,12 +364,11 @@ offset = 251
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.recargo.tipo-1-75.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-88',
@@ -392,12 +385,11 @@ offset = 268
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.recargo.tipo-1-75.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-88',
@@ -414,12 +406,11 @@ offset = 285
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.modificacion.recargo.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-80',
@@ -437,12 +428,11 @@ offset = 302
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.modificacion.recargo.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-80',
@@ -460,12 +450,11 @@ offset = 319
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.modificacion.recargo-concurso.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-80',
@@ -483,12 +472,11 @@ offset = 336
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.modificacion.recargo-concurso.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-161',
     'ley-37-1992:art-80',
@@ -506,12 +494,11 @@ offset = 353
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.cuota-devengada-total'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-161',

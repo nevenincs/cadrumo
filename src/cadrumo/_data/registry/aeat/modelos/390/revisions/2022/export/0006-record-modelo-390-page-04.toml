@@ -87,12 +87,11 @@ offset = 13
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.compensaciones-reagp.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-130',
     'ley-37-1992:art-131',
@@ -108,12 +107,11 @@ offset = 30
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.compensaciones-reagp.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-130',
     'ley-37-1992:art-131',
@@ -129,12 +127,11 @@ offset = 47
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.resolucion-firme-tipos-no-vigentes.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-89',
     'ley-37-1992:art-92',
@@ -150,12 +147,11 @@ offset = 64
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.resolucion-firme-tipos-no-vigentes.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-89',
     'ley-37-1992:art-92',
@@ -171,12 +167,11 @@ offset = 81
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.rectificacion.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-89',
     'ley-37-1992:art-92',
@@ -192,12 +187,11 @@ offset = 98
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.rectificacion.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-89',
     'ley-37-1992:art-92',
@@ -213,12 +207,11 @@ offset = 115
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.rectificacion-intragrupo.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -236,12 +229,11 @@ offset = 132
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.rectificacion-intragrupo.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -259,12 +251,11 @@ offset = 149
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.regularizacion-bienes-inversion'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-108',
@@ -281,12 +272,11 @@ offset = 166
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.regularizacion-prorrata-definitiva'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-104',
     'ley-37-1992:art-105',
@@ -304,12 +294,11 @@ offset = 183
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.cuota-deducible-total'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'rd-1624-1992:art-71',
@@ -323,12 +312,11 @@ offset = 200
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.resultado-regimen-general'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-92',
