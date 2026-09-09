@@ -47,6 +47,7 @@ from .temporal_site_agreement import screen_authority as temporal_site_screen
 from .type_convention_notes import screen_authority as type_convention_screen
 from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
 from .cross_revision_wire_shape import screen_authority as cross_revision_wire_shape_screen
+from .export_derivation_attestation import screen_authority as export_attestation_screen
 from .fabricated_required_ness import screen_authority as fabricated_required_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
@@ -206,6 +207,12 @@ SCREENS: tuple[ScreenEntry, ...] = (
         "cross_revision_wire_shape",
         cross_revision_wire_shape_screen,
         "fields whose emitted wire shape moves between revisions of one modelo",
+    ),
+    ScreenEntry(
+        "export_derivation_attestation",
+        export_attestation_screen,
+        "shipped export revisions, and whether each records a derivation or only cites a design",
+        entry_returns="census",
     ),
     ScreenEntry(
         "fabricated_required_ness",
