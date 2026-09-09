@@ -284,7 +284,7 @@ def compile_convenio_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
     variants: list[GovernedFactVariant] = []
     for country_code, treaty in sorted(authority.treaties.items()):
         for row in treaty.overrides:
-            source_ref = f"registry-treaty-{country_code.lower()}"
+            source_ref = f"boe-{row.legal_ref_anchor.replace(':', '-')}"
             variants.append(
                 GovernedFactVariant(
                     variant_id=(
@@ -308,7 +308,7 @@ def compile_convenio_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
                     source_citations=(
                         SourceCitation(
                             source_ref=source_ref,
-                            required_text=(row.legal_ref_anchor, row.kind.value),
+                            required_text=("Art", f"{row.legal_ref_anchor.rsplit('-', 1)[-1]}"),
                         ),
                     ),
                     review_status="agent_reviewed",

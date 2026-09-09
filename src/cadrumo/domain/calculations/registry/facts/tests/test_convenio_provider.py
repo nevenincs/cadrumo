@@ -9,6 +9,7 @@ import pytest
 
 from ......core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ......core.resources.bundled_data import bundled_path
+from ...authority import ValidatedRegistryAuthority
 from ...convenio import (
     CONVENIO_OVERRIDE_FACT_ID,
     compile_convenio_facts,
@@ -41,11 +42,8 @@ def test_convenio_provider_projects_exact_typed_overrides_with_provenance() -> N
         "convenio-es-gb-2013:art-6",
         "trlirnr-rdleg-5-2004:art-25.1.a",
     )
-    assert resolved.source_refs == ("registry-treaty-gb",)
-    assert resolved.source_citations[0].required_text == (
-        "convenio-es-gb-2013:art-6",
-        "flat",
-    )
+    assert resolved.source_refs == ("boe-convenio-es-gb-2013-art-6",)
+    assert resolved.source_citations[0].required_text == ("Art", "6")
 
 
 def test_convenio_provider_preserves_every_legacy_row_and_non_rate_kind() -> None:
@@ -65,3 +63,15 @@ def test_convenio_provider_preserves_every_legacy_row_and_non_rate_kind() -> Non
     assert resolved.payload.override_code == ConvenioOverrideKind.EXEMPT.value
     assert resolved.payload.value is None
     assert authority.resolve("DE", TipoRentaIrnr.INTEREST, 2025) is not None
+
+
+def test_convenio_provider_references_validate_through_full_authority(
+    registry_authority: ValidatedRegistryAuthority,
+) -> None:
+    registry_authority.validate_registry()
+    resolved = registry_authority.resolve_governed_fact(
+        convenio_override_query("GB", TipoRentaIrnr.GENERAL, date(2025, 1, 1)),
+    )
+
+    assert isinstance(resolved, ResolvedOverrideFact)
+    assert resolved.source_refs == ("boe-convenio-es-gb-2013-art-6",)
