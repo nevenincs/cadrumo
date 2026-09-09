@@ -52,6 +52,21 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
     ("check-modelo-regulatory-literals", (sys.executable, "-m", "dev.quality.modelo_regulatory_literals")),
     ("check-modelo-regulatory-embeds", (sys.executable, "-m", "dev.quality.modelo_regulatory_embeds")),
+    (
+        "check-facts-catalogue-structure",
+        (
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-n0",
+            "dev/registry/tests/test_facts_catalogue_quality.py",
+        ),
+    ),
+    (
+        "report-governed-literal-discovery",
+        (sys.executable, "-m", "dev.registry.analysis.governed_literal_discovery"),
+    ),
     # Aggregated deliberately: the recipe existed in the static-checks group
     # with no row here, so `just check-all` never ran it while the gate table
     # still looked complete. It is a fast pure-Python scan, unlike the six

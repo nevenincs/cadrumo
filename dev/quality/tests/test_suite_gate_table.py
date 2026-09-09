@@ -19,12 +19,14 @@ from __future__ import annotations
 
 import re
 import shlex
+import sys
+from pathlib import Path
 from typing import Final
 
 import pytest
 
 from ..._paths import REPO_ROOT
-from ..suite import GATES
+from ..suite import GATES, run_gate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -168,3 +170,44 @@ def test_the_recipe_command_scan_reads_real_commands() -> None:
     """A scan returning nothing would make the drift check vacuous."""
     commands = _recipe_commands()
     assert commands.get("check-style"), f"check-style recipe not parsed: {commands.get('check-style')!r}"
+
+
+def test_facts_checks_are_enrolled_without_changing_modelo_commands() -> None:
+    commands = dict(GATES)
+
+    assert commands["check-modelo-regulatory-literals"] == (
+        sys.executable,
+        "-m",
+        "dev.quality.modelo_regulatory_literals",
+    )
+    assert commands["check-modelo-regulatory-embeds"] == (
+        sys.executable,
+        "-m",
+        "dev.quality.modelo_regulatory_embeds",
+    )
+    assert commands["check-facts-catalogue-structure"][-1] == (
+        "dev/registry/tests/test_facts_catalogue_quality.py"
+    )
+    assert commands["report-governed-literal-discovery"] == (
+        sys.executable,
+        "-m",
+        "dev.registry.analysis.governed_literal_discovery",
+    )
+
+
+def test_governed_literal_discovery_findings_are_non_blocking_when_run_by_suite(tmp_path: Path) -> None:
+    (tmp_path / "policy.py").write_text("TAX_RATE = 21\n", encoding="utf-8")
+
+    result = run_gate(
+        "report-governed-literal-discovery",
+        (
+            sys.executable,
+            "-m",
+            "dev.registry.analysis.governed_literal_discovery",
+            "--source-root",
+            str(tmp_path),
+        ),
+    )
+
+    assert result.returncode == 0
+    assert "1 governed-literal candidate(s); report only" in result.output

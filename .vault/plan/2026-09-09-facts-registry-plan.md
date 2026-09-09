@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:567ecd7c6ca78b6aafafb1d625a4fb8b147ebff28bfbfb17ff8b7a0a304f2aa0'
+body_hash: 'sha256:f73ec2b450b68672a67ce88721e8ed7ca20d556aa6aed389b03d43343c21eeda'
 ---
 
 <!-- LINK RULES:
@@ -207,7 +207,7 @@ Create catalogue-denominated structural gates and a broad report-only discovery 
 
 - [x] `W01.P04.S10` - Implement provider ownership identity temporal precedence and provenance gates; `dev/registry/analysis`.
 - [x] `W01.P04.S11` - Implement the report-only governed-literal discovery sentinel; `dev/registry/analysis`.
-- [ ] `W01.P04.S12` - Enroll facts checks without changing modelo denominators; `dev/quality/suite.py`.
+- [x] `W01.P04.S12` - Enroll facts checks without changing modelo denominators; `dev/quality/suite.py`.
 
 ### Phase `W01.P23` - Verify foundation boundary
 
