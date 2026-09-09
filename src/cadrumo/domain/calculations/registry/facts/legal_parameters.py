@@ -13,7 +13,6 @@ from ..loader_cache import toml_file_fingerprint
 from ..loader_fingerprints import RegistryPathFingerprints
 from ..schema_base import DateAxis
 from ..schema_references import LegalParameter
-from .resolution import EntitySetFactQuery, ScalarFactQuery
 from .schema import (
     EntitySetFactPayload,
     FactOwnership,
@@ -80,28 +79,6 @@ def reset_legal_parameter_fact_provider() -> None:
     """Reset hook for the uncached legal-only loader."""
 
 
-def legal_parameter_scalar_query(parameter_id: str, effective_date: date) -> ScalarFactQuery:
-    """Build an exact typed query for one enrolled scalar legal parameter."""
-    if parameter_id not in _SCALAR_PARAMETER_IDS:
-        raise RegistryValidationError(f"legal parameter {parameter_id!r} is not an enrolled scalar")
-    return ScalarFactQuery(
-        fact_id=parameter_id,
-        date_axis=DateAxis.FILING_PERIOD,
-        effective_date=effective_date,
-    )
-
-
-def legal_parameter_entity_set_query(parameter_id: str, effective_date: date) -> EntitySetFactQuery:
-    """Build an exact typed query for one enrolled classification set."""
-    if parameter_id not in _ENTITY_SET_PARAMETER_IDS:
-        raise RegistryValidationError(f"legal parameter {parameter_id!r} is not an enrolled entity set")
-    return EntitySetFactQuery(
-        fact_id=parameter_id,
-        date_axis=DateAxis.FILING_PERIOD,
-        effective_date=effective_date,
-    )
-
-
 def _parameter_fact(parameter: LegalParameter) -> GovernedFact:
     if parameter.id in _ENTITY_SET_PARAMETER_IDS:
         family = GovernedFactFamily.ENTITY_SET
@@ -111,9 +88,7 @@ def _parameter_fact(parameter: LegalParameter) -> GovernedFact:
         try:
             value = Decimal(parameter.value)
         except InvalidOperation as exc:
-            raise RegistryValidationError(
-                f"global legal parameter {parameter.id!r} is not a decimal scalar"
-            ) from exc
+            raise RegistryValidationError(f"global legal parameter {parameter.id!r} is not a decimal scalar") from exc
         payload = ScalarFactPayload(value=value, unit=parameter.unit)
     return GovernedFact(
         fact_id=parameter.id,
@@ -138,7 +113,5 @@ __all__ = [
     "LEGAL_PARAMETER_PROVIDER_ID",
     "collect_legal_parameter_fact_fingerprints",
     "compile_legal_parameter_facts",
-    "legal_parameter_entity_set_query",
-    "legal_parameter_scalar_query",
     "reset_legal_parameter_fact_provider",
 ]

@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date
 from enum import StrEnum
 
 from ..errors import RegistryValidationError
 from ..schema import ModeloDefinition, ModeloRevision
-from ..schema_base import DateAxis
 from ..schema_formula import DatedValue, ParameterDefinition
-from .resolution import ScalarFactQuery
 from .schema import (
     FactOwnership,
     FactSelector,
@@ -25,7 +22,6 @@ __all__ = [
     "MODELO_PARAMETER_PROJECTION_PROVIDER_ID",
     "ModeloParameterFact",
     "compile_modelo_parameter_projection_facts",
-    "modelo_parameter_fact_query",
 ]
 
 
@@ -62,21 +58,6 @@ _TARGETS = (
         "renta-2025-maternidad-alta-posterior-incremento",
     ),
 )
-_TARGET_BY_FACT: Mapping[ModeloParameterFact, _ProjectionTarget] = {target.fact: target for target in _TARGETS}
-
-
-def modelo_parameter_fact_query(fact: ModeloParameterFact, on: date) -> ScalarFactQuery:
-    """Build an exact query for one projected modelo parameter."""
-    target = _TARGET_BY_FACT[fact]
-    return ScalarFactQuery(
-        fact_id=fact.value,
-        date_axis=DateAxis.FILING_PERIOD,
-        effective_date=on,
-        selectors=(
-            FactSelector(name="modelo", value=target.modelo_id),
-            FactSelector(name="parameter_id", value=target.parameter_id),
-        ),
-    )
 
 
 def compile_modelo_parameter_projection_facts(

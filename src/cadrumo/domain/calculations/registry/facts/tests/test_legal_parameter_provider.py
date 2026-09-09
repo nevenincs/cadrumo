@@ -8,24 +8,24 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.legal_parameters import (
     LEGAL_PARAMETER_FACT_IDS,
     LEGAL_PARAMETER_PROVIDER_DIRECTORY,
     LEGAL_PARAMETER_PROVIDER_ID,
     compile_legal_parameter_facts,
-    legal_parameter_entity_set_query,
-    legal_parameter_scalar_query,
 )
 from cadrumo.domain.calculations.registry.facts.providers import FACT_PROVIDER_REGISTRATIONS
 from cadrumo.domain.calculations.registry.facts.resolution import (
+    EntitySetFactQuery,
     ResolvedEntitySetFact,
     ResolvedScalarFact,
+    ScalarFactQuery,
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.facts.validation import governed_fact_catalogue_failures
 from cadrumo.domain.calculations.registry.loader import load_legal_parameters_only, load_shared_catalogues
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -67,7 +67,11 @@ def test_scalar_projection_preserves_value_unit_review_and_legal_provenance() ->
     legacy = load_legal_parameters_only(bundled_path("registry", "aeat"))[parameter_id]
     resolved = resolve_governed_fact(
         _catalogue(),
-        legal_parameter_scalar_query(parameter_id, date(2025, 12, 31)),
+        ScalarFactQuery(
+            fact_id=parameter_id,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(2025, 12, 31),
+        ),
         authority_digest="e" * 64,
     )
 
@@ -108,17 +112,19 @@ def test_classification_projection_preserves_nonempty_and_explicit_empty_sets() 
     catalogue = _catalogue()
     populated = resolve_governed_fact(
         catalogue,
-        legal_parameter_entity_set_query(
-            "rirpf-art-95:selector-m036-actividades-profesionales",
-            date(2025, 12, 31),
+        EntitySetFactQuery(
+            fact_id="rirpf-art-95:selector-m036-actividades-profesionales",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(2025, 12, 31),
         ),
         authority_digest="f" * 64,
     )
     empty = resolve_governed_fact(
         catalogue,
-        legal_parameter_entity_set_query(
-            "rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura",
-            date(2025, 12, 31),
+        EntitySetFactQuery(
+            fact_id="rirpf-art-95:selector-m036-actividades-ganaderas-engorde-porcino-avicultura",
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(2025, 12, 31),
         ),
         authority_digest="f" * 64,
     )
@@ -129,14 +135,8 @@ def test_classification_projection_preserves_nonempty_and_explicit_empty_sets() 
     assert empty.payload.entities == frozenset()
 
 
-def test_query_helpers_refuse_wrong_family_ids() -> None:
-    with pytest.raises(RegistryValidationError, match="is not an enrolled scalar"):
-        legal_parameter_scalar_query(
-            "rirpf-art-95:selector-m036-actividades-profesionales",
-            date(2025, 1, 1),
-        )
-    with pytest.raises(RegistryValidationError, match="is not an enrolled entity set"):
-        legal_parameter_entity_set_query(
-            "lirpf-art-101:retencion-administrador-general",
-            date(2025, 1, 1),
-        )
+def test_fact_families_define_the_canonical_query_contract() -> None:
+    facts = _catalogue().facts
+
+    assert facts["rirpf-art-95:selector-m036-actividades-profesionales"].family.value == "entity_set"
+    assert facts["lirpf-art-101:retencion-administrador-general"].family.value == "scalar"

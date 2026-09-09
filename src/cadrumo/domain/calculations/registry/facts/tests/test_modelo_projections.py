@@ -9,15 +9,16 @@ import pytest
 
 from ......core.revision_review import RevisionReviewStatus
 from ...schema import ModeloDefinition
+from ...schema_base import DateAxis
 from ...schema_formula import ParameterDefinition
 from ..modelo_projections import (
     MODELO_PARAMETER_PROJECTION_PROVIDER_ID,
     ModeloParameterFact,
     compile_modelo_parameter_projection_facts,
-    modelo_parameter_fact_query,
 )
 from ..providers import FACT_PROVIDER_REGISTRATIONS
-from ..schema import ScalarFactPayload
+from ..resolution import ScalarFactQuery
+from ..schema import FactSelector, ScalarFactPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -46,7 +47,15 @@ def _parameter(parameter_id: str, value: str, *, valid_from: date, valid_to: dat
 
 
 def test_query_contract_names_exact_modelo_parameter_coordinates() -> None:
-    query = modelo_parameter_fact_query(ModeloParameterFact.MATERNITY_ANNUAL_CAP, date(2025, 12, 31))
+    query = ScalarFactQuery(
+        fact_id=ModeloParameterFact.MATERNITY_ANNUAL_CAP,
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=date(2025, 12, 31),
+        selectors=(
+            FactSelector(name="modelo", value="100"),
+            FactSelector(name="parameter_id", value="renta-2025-maternidad-cap-anual"),
+        ),
+    )
 
     assert query.fact_id == "renta.maternity.annual-cap"
     assert {(selector.name, selector.value) for selector in query.selectors} == {

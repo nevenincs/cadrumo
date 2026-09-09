@@ -13,13 +13,25 @@ from ...authority import ValidatedRegistryAuthority
 from ...convenio import (
     CONVENIO_OVERRIDE_FACT_ID,
     compile_convenio_facts,
-    convenio_override_query,
     load_convenio_authority,
 )
-from ..resolution import ResolvedOverrideFact, resolve_governed_fact
-from ..schema import GovernedFactCatalogue
+from ...schema_base import DateAxis
+from ..resolution import OverrideFactQuery, ResolvedOverrideFact, resolve_governed_fact
+from ..schema import FactSelector, GovernedFactCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def convenio_override_query(country_code: str, tipo_renta: TipoRentaIrnr, devengo_date: date) -> OverrideFactQuery:
+    return OverrideFactQuery(
+        fact_id=CONVENIO_OVERRIDE_FACT_ID,
+        date_axis=DateAxis.DEVENGO_DATE,
+        effective_date=devengo_date,
+        selectors=(
+            FactSelector(name="country_code", value=country_code.upper()),
+            FactSelector(name="tipo_renta", value=tipo_renta.value),
+        ),
+    )
 
 
 def test_convenio_provider_projects_exact_typed_overrides_with_provenance() -> None:

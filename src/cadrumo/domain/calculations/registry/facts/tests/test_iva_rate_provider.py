@@ -11,23 +11,44 @@ from pydantic import ValidationError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.providers import FACT_PROVIDER_REGISTRATIONS
-from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact, resolve_governed_fact
+from cadrumo.domain.calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    resolve_governed_fact,
+)
 from cadrumo.domain.calculations.registry.facts.schema import (
+    FactSelector,
     GovernedFactCatalogue,
     GovernedFactVariant,
     MappingFactPayload,
 )
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.iva.rates import (
     IVA_RATE_FACT_ID,
     IVA_RATE_PROVIDER_ID,
     compile_iva_rate_facts,
-    iva_rate_fact_query,
     iva_rate_record_from_fact,
     load_iva_rate_table,
 )
 from cadrumo.domain.iva.schema import EUMemberState, IvaRateKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def iva_rate_fact_query(
+    member_state: EUMemberState, kind: IvaRateKind, on_date: date, *, superseding_percentage: Decimal | None = None
+) -> MappingFactQuery:
+    role = "ordinary" if superseding_percentage is None else f"coexisting-{superseding_percentage}"
+    return MappingFactQuery(
+        fact_id=IVA_RATE_FACT_ID,
+        date_axis=DateAxis.DEVENGO_DATE,
+        effective_date=on_date,
+        selectors=(
+            FactSelector(name="member_state", value=member_state.value),
+            FactSelector(name="kind", value=kind.value),
+            FactSelector(name="rate_role", value=role),
+        ),
+    )
 
 
 def _catalogue() -> GovernedFactCatalogue:

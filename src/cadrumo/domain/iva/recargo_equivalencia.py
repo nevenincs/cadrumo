@@ -45,7 +45,7 @@ from ...core.resources.bundled_data import bundled_path
 from ...core.revision_review import RevisionReviewStatus
 from ...core.type_guards import is_object_list
 from ...core.unit_proportion import UnitProportion
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.resolution import ResolvedMappingFact
 from ..calculations.registry.facts.schema import (
     FactOwnership,
     FactSelector,
@@ -61,8 +61,9 @@ from ..calculations.registry.schema_base import DateAxis
 from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError, IvaValidationError
 
-
 IVA_RECARGO_FACT_ID = "iva-recargo-by-applied-rate"
+
+
 class RecargoRateRecord(BaseModel):
     """One recargo de equivalencia rate, paired with the IVA rate it accompanies.
 
@@ -261,16 +262,6 @@ def reset_iva_recargo_fact_provider() -> None:
     _load_recargo_rate_table_cached.cache_clear()
 
 
-def iva_recargo_fact_query(applied_rate: Decimal, operation_date: date) -> MappingFactQuery:
-    """Build the exact typed authority query for an applied IVA rate and operation date."""
-    return MappingFactQuery(
-        fact_id=IVA_RECARGO_FACT_ID,
-        date_axis=DateAxis.DEVENGO_DATE,
-        effective_date=operation_date,
-        selectors=(FactSelector(name="applied_rate", value=applied_rate),),
-    )
-
-
 def recargo_rate_record_from_fact(resolved: ResolvedMappingFact) -> RecargoRateRecord:
     """Project a provenance-bearing authority result onto the retained public record."""
     selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
@@ -309,7 +300,6 @@ __all__ = [
     "RecargoRateRecord",
     "collect_iva_recargo_fact_fingerprints",
     "compile_iva_recargo_facts",
-    "iva_recargo_fact_query",
     "load_recargo_rate_table",
     "recargo_rate_for_applied_rate",
     "recargo_rate_record_from_fact",

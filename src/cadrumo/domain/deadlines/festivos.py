@@ -52,7 +52,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import bundled_path
 from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
-from ..calculations.registry.facts.resolution import EventFactQuery
 from ..calculations.registry.facts.schema import (
     EventFactPayload,
     FactOwnership,
@@ -336,28 +335,6 @@ def _load_holiday_calendar_path(year: int, path: Path) -> HolidayCalendar:
         raise DeadlineValidationError(f"{path}: invalid holiday calendar row: {exc}") from exc
 
 
-def holiday_event_fact_query(
-    on: date,
-    *,
-    jurisdiction: HolidayJurisdiction,
-    ccaa_code: CalendarCCAA | None = None,
-) -> EventFactQuery:
-    """Build an exact governed query for one legally grounded holiday."""
-    if jurisdiction is HolidayJurisdiction.CCAA and ccaa_code is None:
-        raise DeadlineValidationError("a CCAA holiday query requires ccaa_code")
-    if jurisdiction is HolidayJurisdiction.NATIONAL and ccaa_code is not None:
-        raise DeadlineValidationError("a national holiday query cannot carry ccaa_code")
-    selectors = [FactSelector(name="jurisdiction", value=jurisdiction.value)]
-    if ccaa_code is not None:
-        selectors.append(FactSelector(name="ccaa_code", value=ccaa_code.value))
-    return EventFactQuery(
-        fact_id=HOLIDAY_EVENT_FACT_ID,
-        date_axis=DateAxis.SUBMISSION_DATE,
-        effective_date=on,
-        selectors=tuple(selectors),
-    )
-
-
 def compile_holiday_calendar_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
     """Project BOE-identified calendars while excluding ungrounded bootstrap years."""
     calendar_root = registry_root.resolve() / HOLIDAY_CALENDAR_PROVIDER_DIRECTORY
@@ -627,7 +604,6 @@ __all__ = (
     "HolidayJurisdiction",
     "collect_holiday_calendar_fact_fingerprints",
     "compile_holiday_calendar_facts",
-    "holiday_event_fact_query",
     "is_business_day",
     "load_holiday_calendar",
     "next_business_day",

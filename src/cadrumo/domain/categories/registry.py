@@ -36,7 +36,6 @@ from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.validity_window import ValidityWindow, years_covered_by_any, years_covered_by_every_group
-from ..calculations.registry.facts.resolution import MappingFactQuery, ScalarFactQuery
 from ..calculations.registry.facts.schema import (
     FactOwnership,
     FactSelector,
@@ -182,35 +181,13 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
     return _resolve_category_profiles_cached(year, tuple(sorted(category_profile_years())))
 
 
-def category_profile_fact_query(category: SpendingCategory, year: int) -> MappingFactQuery:
-    """Build the exact governed query for one statutory category profile."""
-    return MappingFactQuery(
-        fact_id=CATEGORY_PROFILE_FACT_ID,
-        date_axis=DateAxis.FILING_PERIOD,
-        effective_date=date(year, 12, 31),
-        selectors=(FactSelector(name="category", value=category.value),),
-    )
-
-
-def category_statutory_cap_fact_query(category: SpendingCategory, on: date) -> ScalarFactQuery:
-    """Build the exact governed query for one year-referenced statutory cap."""
-    return ScalarFactQuery(
-        fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
-        date_axis=DateAxis.FILING_PERIOD,
-        effective_date=on,
-        selectors=(FactSelector(name="category", value=category.value),),
-    )
-
-
 def compile_category_profile_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
     """Project the retained category corpus into typed governed facts."""
     target = registry_root.resolve() / CATEGORY_FACT_PROVIDER_DIRECTORY / "profiles.toml"
     profiles = load_category_profiles(target)
     years = sorted(category_profile_years(target))
     profile_variants = tuple(
-        _category_profile_fact_variant(profile, year)
-        for profile in profiles.values()
-        for year in years
+        _category_profile_fact_variant(profile, year) for profile in profiles.values() for year in years
     )
     cap_variants = tuple(
         _category_cap_fact_variant(profile, amount)
@@ -271,8 +248,7 @@ def _category_cap_fact_variant(profile: CategoryProfile, amount: StatutoryCapAmo
     citations = tuple(
         citation
         for citation in profile.proportionality.citations
-        if citation.window.valid_from <= amount.window.valid_from
-        and citation.window.valid_to >= amount.window.valid_to
+        if citation.window.valid_from <= amount.window.valid_from and citation.window.valid_to >= amount.window.valid_to
     )
     authority_citations = tuple(
         citation for citation in citations if citation.source in _CATEGORY_CITATION_SOURCE_REFS and citation.quote
@@ -530,9 +506,7 @@ __all__ = [
     "CATEGORY_FACT_PROVIDER_ID",
     "CATEGORY_PROFILE_FACT_ID",
     "CATEGORY_STATUTORY_CAP_FACT_ID",
-    "category_profile_fact_query",
     "category_profile_years",
-    "category_statutory_cap_fact_query",
     "collect_category_profile_fact_fingerprints",
     "compile_category_profile_facts",
     "load_category_profiles",

@@ -32,7 +32,6 @@ from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ....core.revision_review import RevisionReviewStatus
 from ....core.toml import freeze_toml, read_toml
 from .errors import RegistryLoadError, RegistryValidationError
-from .facts.resolution import OverrideFactQuery
 from .facts.schema import (
     FactOwnership,
     FactSelector,
@@ -255,23 +254,6 @@ def collect_convenio_fingerprints(root: Path) -> tuple[tuple[str, int, int, str]
 
 
 CONVENIO_OVERRIDE_FACT_ID = "irnr.convenio.override"
-
-
-def convenio_override_query(
-    country_code: str,
-    tipo_renta: TipoRentaIrnr,
-    devengo_date: date,
-) -> OverrideFactQuery:
-    """Build the exact governed query used by the Wave 3 convenio migration."""
-    return OverrideFactQuery(
-        fact_id=CONVENIO_OVERRIDE_FACT_ID,
-        date_axis=DateAxis.DEVENGO_DATE,
-        effective_date=devengo_date,
-        selectors=(
-            FactSelector(name="country_code", value=country_code.upper()),
-            FactSelector(name="tipo_renta", value=tipo_renta.value),
-        ),
-    )
 
 
 def compile_convenio_facts(registry_root: Path) -> tuple[GovernedFact, ...]:

@@ -9,20 +9,41 @@ import pytest
 
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.errors import RegistryValidationError
-from ...calculations.registry.facts.resolution import resolve_governed_fact
-from ...calculations.registry.facts.schema import GovernedFactCatalogue, MappingFactPayload, ScalarFactPayload
+from ...calculations.registry.facts.resolution import MappingFactQuery, ScalarFactQuery, resolve_governed_fact
+from ...calculations.registry.facts.schema import (
+    FactSelector,
+    GovernedFactCatalogue,
+    MappingFactPayload,
+    ScalarFactPayload,
+)
 from ...calculations.registry.schema_base import DateAxis
 from ..registry import (
     CATEGORY_PROFILE_FACT_ID,
     CATEGORY_STATUTORY_CAP_FACT_ID,
-    category_profile_fact_query,
-    category_statutory_cap_fact_query,
     compile_category_profile_facts,
     resolve_category_profiles,
 )
 from ..spending_category import SpendingCategory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _profile_query(category: SpendingCategory, year: int) -> MappingFactQuery:
+    return MappingFactQuery(
+        fact_id=CATEGORY_PROFILE_FACT_ID,
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=date(year, 12, 31),
+        selectors=(FactSelector(name="category", value=category.value),),
+    )
+
+
+def _cap_query(category: SpendingCategory, on: date) -> ScalarFactQuery:
+    return ScalarFactQuery(
+        fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=on,
+        selectors=(FactSelector(name="category", value=category.value),),
+    )
 
 
 def _catalogue() -> GovernedFactCatalogue:
@@ -35,9 +56,7 @@ def test_provider_registers_exact_profile_and_dated_cap_identities() -> None:
 
     assert set(catalogue.facts) == {CATEGORY_PROFILE_FACT_ID, CATEGORY_STATUTORY_CAP_FACT_ID}
     assert all(
-        variant.date_axis is DateAxis.FILING_PERIOD
-        for fact in catalogue.facts.values()
-        for variant in fact.variants
+        variant.date_axis is DateAxis.FILING_PERIOD for fact in catalogue.facts.values() for variant in fact.variants
     )
 
 
@@ -46,7 +65,7 @@ def test_profile_query_preserves_legacy_profile_values_and_provenance() -> None:
     legacy = resolve_category_profiles(2025)[category]
     resolved = resolve_governed_fact(
         _catalogue(),
-        category_profile_fact_query(category, 2025),
+        _profile_query(category, 2025),
         authority_digest="a" * 64,
     )
     assert isinstance(resolved.payload, MappingFactPayload)
@@ -66,7 +85,7 @@ def test_dated_cap_query_matches_legacy_exact_year_without_fallback() -> None:
     legacy = resolve_category_profiles(2025)[category]
     resolved = resolve_governed_fact(
         _catalogue(),
-        category_statutory_cap_fact_query(category, date(2025, 6, 30)),
+        _cap_query(category, date(2025, 6, 30)),
         authority_digest="b" * 64,
     )
 
@@ -76,6 +95,6 @@ def test_dated_cap_query_matches_legacy_exact_year_without_fallback() -> None:
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         resolve_governed_fact(
             _catalogue(),
-            category_statutory_cap_fact_query(category, date(2099, 1, 1)),
+            _cap_query(category, date(2099, 1, 1)),
             authority_digest="b" * 64,
         )

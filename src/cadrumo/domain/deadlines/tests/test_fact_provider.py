@@ -8,18 +8,31 @@ import pytest
 
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.errors import RegistryValidationError
-from ...calculations.registry.facts.resolution import resolve_governed_fact
-from ...calculations.registry.facts.schema import EventFactPayload, GovernedFactCatalogue
+from ...calculations.registry.facts.resolution import EventFactQuery, resolve_governed_fact
+from ...calculations.registry.facts.schema import EventFactPayload, FactSelector, GovernedFactCatalogue
+from ...calculations.registry.schema_base import DateAxis
 from ..festivos import (
     HOLIDAY_EVENT_FACT_ID,
     CalendarCCAA,
     HolidayJurisdiction,
     compile_holiday_calendar_facts,
-    holiday_event_fact_query,
     load_holiday_calendar,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _holiday_query(
+    on: date, *, jurisdiction: HolidayJurisdiction, ccaa_code: CalendarCCAA | None = None
+) -> EventFactQuery:
+    if jurisdiction is HolidayJurisdiction.CCAA and ccaa_code is None:
+        raise ValueError("a CCAA holiday query requires ccaa_code")
+    selectors = [FactSelector(name="jurisdiction", value=jurisdiction.value)]
+    if ccaa_code is not None:
+        selectors.append(FactSelector(name="ccaa_code", value=ccaa_code.value))
+    return EventFactQuery(
+        fact_id=HOLIDAY_EVENT_FACT_ID, date_axis=DateAxis.SUBMISSION_DATE, effective_date=on, selectors=tuple(selectors)
+    )
 
 
 def _catalogue() -> GovernedFactCatalogue:
@@ -39,7 +52,7 @@ def test_exact_ccaa_holiday_query_preserves_legacy_value_and_provenance() -> Non
     legacy = next(holiday for holiday in load_holiday_calendar(2025).ccaa if holiday.holiday_date == on)
     resolved = resolve_governed_fact(
         _catalogue(),
-        holiday_event_fact_query(on, jurisdiction=HolidayJurisdiction.CCAA, ccaa_code=CalendarCCAA.MADRID),
+        _holiday_query(on, jurisdiction=HolidayJurisdiction.CCAA, ccaa_code=CalendarCCAA.MADRID),
         authority_digest="c" * 64,
     )
     assert isinstance(resolved.payload, EventFactPayload)
@@ -55,10 +68,10 @@ def test_exact_ccaa_holiday_query_preserves_legacy_value_and_provenance() -> Non
 
 def test_query_contract_refuses_incomplete_or_nonexistent_coordinates() -> None:
     with pytest.raises(ValueError, match="requires ccaa_code"):
-        holiday_event_fact_query(date(2025, 5, 2), jurisdiction=HolidayJurisdiction.CCAA)
+        _holiday_query(date(2025, 5, 2), jurisdiction=HolidayJurisdiction.CCAA)
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         resolve_governed_fact(
             _catalogue(),
-            holiday_event_fact_query(date(2025, 5, 3), jurisdiction=HolidayJurisdiction.NATIONAL),
+            _holiday_query(date(2025, 5, 3), jurisdiction=HolidayJurisdiction.NATIONAL),
             authority_digest="d" * 64,
         )

@@ -9,17 +9,30 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.facts.resolution import ResolvedMappingFact, resolve_governed_fact
-from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue, MappingFactPayload
+from cadrumo.domain.calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    resolve_governed_fact,
+)
+from cadrumo.domain.calculations.registry.facts.schema import FactSelector, GovernedFactCatalogue, MappingFactPayload
+from cadrumo.domain.calculations.registry.schema_base import DateAxis
 from cadrumo.domain.iva.recargo_equivalencia import (
     IVA_RECARGO_FACT_ID,
     compile_iva_recargo_facts,
-    iva_recargo_fact_query,
     load_recargo_rate_table,
     recargo_rate_record_from_fact,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def iva_recargo_fact_query(applied_rate: Decimal, operation_date: date) -> MappingFactQuery:
+    return MappingFactQuery(
+        fact_id=IVA_RECARGO_FACT_ID,
+        date_axis=DateAxis.DEVENGO_DATE,
+        effective_date=operation_date,
+        selectors=(FactSelector(name="applied_rate", value=applied_rate),),
+    )
 
 
 def _catalogue() -> GovernedFactCatalogue:

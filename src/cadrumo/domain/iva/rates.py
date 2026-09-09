@@ -24,7 +24,7 @@ from ...core.resources.bundled_data import bundled_path
 from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.resolution import ResolvedMappingFact
 from ..calculations.registry.facts.schema import (
     FactOwnership,
     FactSelector,
@@ -319,27 +319,6 @@ def reset_iva_rate_fact_provider() -> None:
     _load_iva_rate_table_cached.cache_clear()
 
 
-def iva_rate_fact_query(
-    member_state: EUMemberState,
-    kind: IvaRateKind,
-    on_date: date,
-    *,
-    superseding_percentage: Decimal | None = None,
-) -> MappingFactQuery:
-    """Build the exact query for an ordinary or coexisting IVA rate."""
-    role = "ordinary" if superseding_percentage is None else f"coexisting-{superseding_percentage}"
-    return MappingFactQuery(
-        fact_id=IVA_RATE_FACT_ID,
-        date_axis=DateAxis.DEVENGO_DATE,
-        effective_date=on_date,
-        selectors=(
-            FactSelector(name="member_state", value=member_state.value),
-            FactSelector(name="kind", value=kind.value),
-            FactSelector(name="rate_role", value=role),
-        ),
-    )
-
-
 def iva_rate_record_from_fact(resolved: ResolvedMappingFact) -> IvaRateRecord:
     """Project an authority result onto the retained public record."""
     selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
@@ -377,8 +356,7 @@ def _rate_fact_variant(rate: IvaRateRecord) -> GovernedFactVariant:
         legal_refs=rate.legal_refs,
         source_refs=rate.source_refs,
         source_citations=tuple(
-            SourceCitation(source_ref=source_ref, required_text=(str(rate.pct),))
-            for source_ref in rate.source_refs
+            SourceCitation(source_ref=source_ref, required_text=(str(rate.pct),)) for source_ref in rate.source_refs
         ),
         review_status=RevisionReviewStatus.AGENT_REVIEWED,
         ownership=FactOwnership.GENERATED,
@@ -390,7 +368,6 @@ __all__ = [
     "IVA_RATE_PROVIDER_ID",
     "collect_iva_rate_fact_fingerprints",
     "compile_iva_rate_facts",
-    "iva_rate_fact_query",
     "iva_rate_record_from_fact",
     "load_iva_rate_table",
     "reset_iva_rate_fact_provider",
