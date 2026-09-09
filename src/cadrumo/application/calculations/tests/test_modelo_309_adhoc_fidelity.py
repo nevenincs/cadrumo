@@ -267,10 +267,3 @@ def test_modelo_309_adhoc_calculation_enrolls_two_renta_years(tmp_path: Path) ->
     assert result_n.values[_CASILLA_TOTAL] == Decimal("4200.00")
     assert result_n1.values[_CASILLA_TOTAL] == Decimal("315.00")
     assert result_n.values[_CASILLA_TOTAL] != result_n1.values[_CASILLA_TOTAL]
-
-
-
-
-
-
-

@@ -82,7 +82,6 @@ _M303_BINDING_ID = "modelo-303-prorrata-regularizacion-casilla-44"
 _M390_BINDING_ID = "modelo-390-prorrata-regularizacion-anual"
 
 
-
 def _oracle_payload() -> dict[str, Any]:
     return json.loads(_ORACLE_PATH.read_text(encoding="utf-8"))
 
@@ -288,7 +287,6 @@ def test_resolver_refuses_construction_without_an_explicit_observation_repositor
             )
 
 
-
 def test_resolver_falls_back_to_stamped_prior_observation_for_modelo_390(tmp_path: Path) -> None:
     """A stamped prior M303 settlement observation can source the annual M390 binding."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
@@ -359,7 +357,3 @@ def test_resolver_marks_binding_unresolved_when_current_year_values_are_missing(
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
     assert diagnostic.binding_id == _M303_BINDING_ID
     assert str(_PORCENTAJE_ID) in diagnostic.message
-
-
-
-

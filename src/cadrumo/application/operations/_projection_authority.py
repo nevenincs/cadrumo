@@ -6,7 +6,7 @@ import secrets
 from collections.abc import Callable
 from datetime import datetime
 from threading import RLock
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from ...core.hashing import content_hash_hex
 from ...core.identity import ContentDigest
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     )
 
 
-class _AuthorityHost(Protocol):
+class _AuthorityHost:
     if TYPE_CHECKING:
 
         def __getattr__(self, name: str) -> Any: ...

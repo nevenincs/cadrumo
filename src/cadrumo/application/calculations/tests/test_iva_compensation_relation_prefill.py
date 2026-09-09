@@ -452,5 +452,3 @@ def test_annual_partition_refuses_underdeclared_and_conflicting_disposition_evid
                 (conflicting,),
                 filing_year=2025,
             )
-
-

@@ -308,10 +308,3 @@ def test_modelo_130_enrolls_two_renta_years_via_prior_year_minoracion(repos: _Re
 
     # Authorization-gate enrollment: the recorded two-year set must equal the
     # manifest's renta_years claim and span >= 2 distinct years.
-
-
-
-
-
-
-

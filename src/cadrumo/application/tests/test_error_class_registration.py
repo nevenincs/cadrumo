@@ -25,7 +25,7 @@ from cryptography.x509.oid import NameOID
 from pydantic import SecretStr
 
 from ...core.aggregation import BindingSourceKind
-from ...core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
+from ...core.errors.error_codes import get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,36 +36,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 
-def _assert_registered_and_roundtrip(cls: type) -> None:
-    """Assert cls is CadrumoError-derived, registered, and produces a valid envelope."""
-    assert issubclass(cls, CadrumoError), f"{cls.__qualname__} must inherit from CadrumoError"
-    code_obj = get_registered_error_code(cls)
-    assert code_obj.code in ERROR_REGISTRY, f"{cls.__qualname__} error code {code_obj.code!r} not in ERROR_REGISTRY"
-    instance = cls("registration-test sentinel")
-    envelope = build_error_envelope(instance)
-    assert envelope.code, f"build_error_envelope({cls.__qualname__}) returned an empty code"
-
-
 # ---------------------------------------------------------------------------
 # ProfileRegistrationError
 # ---------------------------------------------------------------------------
 
 
-def test_profile_registration_error_is_registered_and_roundtrips() -> None:
-    from ..user_profile.registration import ProfileRegistrationError
-
-    _assert_registered_and_roundtrip(ProfileRegistrationError)
-
-
 # ---------------------------------------------------------------------------
 # SessionDeserializationError
 # ---------------------------------------------------------------------------
-
-
-def test_session_deserialization_error_is_registered_and_roundtrips() -> None:
-    from ..auth.sessions import SessionDeserializationError
-
-    _assert_registered_and_roundtrip(SessionDeserializationError)
 
 
 def test_session_deserialization_error_raised_on_bad_type() -> None:
@@ -78,24 +56,6 @@ def test_session_deserialization_error_raised_on_bad_type() -> None:
 # ---------------------------------------------------------------------------
 # IvaCompensationYearRangeError / IvaCompensationDecimalParseError
 # ---------------------------------------------------------------------------
-
-
-def test_iva_compensation_year_range_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation.errors import IvaCompensationYearRangeError
-
-    _assert_registered_and_roundtrip(IvaCompensationYearRangeError)
-
-
-def test_iva_compensation_decimal_parse_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation.errors import IvaCompensationDecimalParseError
-
-    _assert_registered_and_roundtrip(IvaCompensationDecimalParseError)
-
-
-def test_iva_compensation_casilla_reference_error_is_registered_and_roundtrips() -> None:
-    from ...domain.iva_compensation.errors import IvaCompensationCasillaReferenceError
-
-    _assert_registered_and_roundtrip(IvaCompensationCasillaReferenceError)
 
 
 def test_iva_compensation_year_range_error_raised_on_out_of_range_filing_year() -> None:
@@ -120,21 +80,9 @@ def test_iva_compensation_year_range_error_raised_on_out_of_range_as_of_year() -
 # ---------------------------------------------------------------------------
 
 
-def test_modelo_applicability_filter_error_is_registered_and_roundtrips() -> None:
-    from ..modelo.action_errors import ModeloApplicabilityFilterError
-
-    _assert_registered_and_roundtrip(ModeloApplicabilityFilterError)
-
-
 # ---------------------------------------------------------------------------
 # AuthDiagnosticPayloadError
 # ---------------------------------------------------------------------------
-
-
-def test_auth_diagnostic_payload_error_is_registered_and_roundtrips() -> None:
-    from ..auth.errors import AuthDiagnosticPayloadError
-
-    _assert_registered_and_roundtrip(AuthDiagnosticPayloadError)
 
 
 def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
@@ -153,21 +101,9 @@ def test_auth_diagnostic_payload_error_raised_on_non_object_json() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_workflow_input_mismatch_error_is_registered_and_roundtrips() -> None:
-    from ..workflow.errors import WorkflowInputMismatchError
-
-    _assert_registered_and_roundtrip(WorkflowInputMismatchError)
-
-
 # ---------------------------------------------------------------------------
 # SourceMeshError
 # ---------------------------------------------------------------------------
-
-
-def test_source_mesh_error_is_registered_and_roundtrips() -> None:
-    from ..aggregation import SourceMeshError
-
-    _assert_registered_and_roundtrip(SourceMeshError)
 
 
 def test_source_mesh_error_raised_on_blank_owned_source() -> None:

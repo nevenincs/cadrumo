@@ -821,31 +821,9 @@ def resolve_modelo_work_target(
     )
 
 
-def resolve_modelo_work_unit_id(
-    target: ModeloWorkTarget,
-    *,
-    catalogue: WorkUnitCatalogue,
-    bucket_id: str,
-) -> WorkUnitId:
-    """Resolve a visible or exact modelo target to the authoritative work-unit id."""
-    resolution = resolve_modelo_work_target(target, catalogue=catalogue, bucket_id=bucket_id)
-    return _selected_work_unit(resolution).work_unit_id
-
-
 def project_modelo_work_unit(work_unit: WorkUnit) -> ModeloResolvedWorkProjection:
     """Project an internal work unit into the visible :class:`ModeloResolvedWorkProjection` addressing contract."""
     return ModeloResolvedWorkProjection.from_work_unit(work_unit)
-
-
-def project_modelo_work_target(
-    target: ModeloWorkTarget,
-    *,
-    catalogue: WorkUnitCatalogue,
-    bucket_id: str,
-) -> ModeloResolvedWorkProjection:
-    """Resolve a target and project it back to a :class:`ModeloResolvedWorkProjection`."""
-    resolution = resolve_modelo_work_target(target, catalogue=catalogue, bucket_id=bucket_id)
-    return project_modelo_work_unit(_selected_work_unit(resolution))
 
 
 def diverging_work_target_revision_axes(
@@ -1547,7 +1525,6 @@ __all__ = [
     "ensure_modelo_work_unit_for_active_target",
     "law_selected_revision_for_work_target",
     "modelo_work_address_from_operator_target",
-    "project_modelo_work_target",
     "project_modelo_work_unit",
     "read_modelo_work_current_coordinate",
     "resolve_exportable_modelo_calculation_revision_address",
@@ -1560,7 +1537,6 @@ __all__ = [
     "resolve_modelo_work_bucket",
     "resolve_modelo_work_target",
     "resolve_modelo_work_unit_for_operator_target",
-    "resolve_modelo_work_unit_id",
     "resolve_optional_modelo_work_address",
     "resolve_verifiable_modelo_calculation_revision_address",
     "select_modelo_work_resolution",

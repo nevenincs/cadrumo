@@ -628,5 +628,3 @@ def test_casilla_15_copy_and_casilla_05_sum_carries_resolve_on_shared_fixture(re
     assert resolved.get("modelo-130-pagos-fraccionados-anteriores") == expected_casilla_05
     # The single-offset op=copy carry still reads exactly the immediately-prior quarter's saldo.
     assert resolved.get(_CARRY_FORWARD_BINDING) == _PRIOR_2T_SALDO
-
-

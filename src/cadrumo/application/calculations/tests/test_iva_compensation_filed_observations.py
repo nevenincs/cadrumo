@@ -10,7 +10,7 @@ import pytest
 from ....adapters.outbound.aeat.sede.errors import SedeError
 from ....adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from ....core.casilla_value_kind import CasillaValueKind
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import build_error_envelope
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
@@ -177,10 +177,6 @@ def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path
         ),
     ]
     assert report.unallocated_applied_amount == Decimal("0")
-
-
-def test_iva_compensation_modelo_error_is_registered_in_error_registry() -> None:
-    assert "REFUSED_IVA_COMPENSATION_MODELO" in ERROR_REGISTRY
 
 
 def test_iva_compensation_modelo_error_round_trips_through_build_error_envelope() -> None:

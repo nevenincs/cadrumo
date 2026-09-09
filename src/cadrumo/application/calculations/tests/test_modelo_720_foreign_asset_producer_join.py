@@ -434,5 +434,3 @@ def test_declaring_the_grown_bloque_withdraws_the_producer_driven_advisory(tmp_p
     )
 
     assert [finding for finding in report.findings if finding.message_locale_key == _ADVISORY_LOCALE_KEY] == []
-
-

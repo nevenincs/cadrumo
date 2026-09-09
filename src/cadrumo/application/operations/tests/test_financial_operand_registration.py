@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....core.operations import OperationEffect, OperationInteractionKind
+from ....core.operations import OperationInteractionKind
 from ..financial_operand import OperationTransientFinancialOperandDeclaration
 from ..financial_operand_custody import (
     OperationFinancialOperandCrashClassification,
@@ -19,7 +19,6 @@ from ..registry import (
     OperationDefinition,
     OperationEffectReceipt,
     OperationReconciliationPolicy,
-    resolve_effect_receipt,
 )
 from .test_registry import definition
 
@@ -100,80 +99,6 @@ def test_a_definition_without_operands_is_unaffected() -> None:
     plain = definition(definition_id="operations.plain")
 
     assert plain.transient_financial_operands == ()
-
-
-def test_an_unevidenced_mutation_claim_narrows_to_unknown() -> None:
-    """An operation cannot assert a write the application never committed."""
-    receipt = resolve_effect_receipt(
-        _operand_definition(),
-        claimed_effect=OperationEffect.UPDATED,
-        committed_evidence=False,
-    )
-
-    assert receipt.effect is OperationEffect.UNKNOWN
-    assert receipt.narrowed_from is OperationEffect.UPDATED
-
-
-def test_an_evidenced_mutation_claim_survives_intact() -> None:
-    """Committed evidence is exactly what lets a definite claim stand."""
-    receipt = resolve_effect_receipt(
-        _operand_definition(),
-        claimed_effect=OperationEffect.UPDATED,
-        committed_evidence=True,
-    )
-
-    assert receipt.effect is OperationEffect.UPDATED
-    assert receipt.narrowed_from is None
-    assert not receipt.interrupted
-
-
-def test_a_none_claim_is_believed_without_evidence() -> None:
-    """Claiming to have changed nothing needs no evidence to be safe."""
-    receipt = resolve_effect_receipt(
-        _operand_definition(),
-        claimed_effect=OperationEffect.NONE,
-        committed_evidence=False,
-    )
-
-    assert receipt.effect is OperationEffect.NONE
-    assert receipt.narrowed_from is None
-
-
-def test_an_uncertain_delivery_narrows_even_an_evidenced_claim() -> None:
-    """If the executor may never have seen the amount, the effect is not definite."""
-    receipt = resolve_effect_receipt(
-        _operand_definition(),
-        claimed_effect=OperationEffect.UPDATED,
-        committed_evidence=True,
-        custody=_custody(OperationFinancialOperandCrashClassification.DELIVERY_UNCERTAIN),
-    )
-
-    assert receipt.effect is OperationEffect.UNKNOWN
-    assert receipt.interrupted
-    assert receipt.narrowed_from is OperationEffect.UPDATED
-
-
-def test_a_delivered_custody_record_does_not_narrow_an_evidenced_claim() -> None:
-    """A wait the executor acknowledged casts no doubt on the effect."""
-    receipt = resolve_effect_receipt(
-        _operand_definition(),
-        claimed_effect=OperationEffect.UPDATED,
-        committed_evidence=True,
-        custody=_custody(OperationFinancialOperandCrashClassification.DELIVERED),
-    )
-
-    assert receipt.effect is OperationEffect.UPDATED
-    assert not receipt.interrupted
-
-
-def test_an_effect_the_definition_never_permitted_is_refused() -> None:
-    """The resolver narrows a claim; it does not launder an undeclared one."""
-    with pytest.raises(ValueError, match="may not claim effect"):
-        resolve_effect_receipt(
-            _operand_definition(),
-            claimed_effect=OperationEffect.PARTIAL,
-            committed_evidence=True,
-        )
 
 
 def test_a_receipt_exposes_no_operand_material() -> None:

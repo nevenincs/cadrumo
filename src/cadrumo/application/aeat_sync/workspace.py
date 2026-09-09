@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Any, ClassVar, Final, Self, override
+from typing import Annotated, Any, ClassVar, Final, NotRequired, Self, TypedDict, Unpack, override
 
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
 
@@ -540,17 +540,18 @@ def aeat_sync_workspace_sources(zone: AeatSyncWorkspaceZone) -> tuple[AeatSyncWo
 
     return _workspace_projection.aeat_sync_workspace_sources(zone)
 
+
 _NOTIFICATION_SELECTION_NAMESPACE: Final[str] = "aeat_sync.notification.selection.v1"
 
 
-def _notification_selection_key(private_identity: str) -> AeatSyncNotificationSelectionKey:
+def notification_selection_key(private_identity: str) -> AeatSyncNotificationSelectionKey:
     """Derive a process-stable public focus key without retaining private data."""
     canonical = "\x1f".join((_NOTIFICATION_SELECTION_NAMESPACE, private_identity)).encode("utf-8")
     digest = hmac.digest(_NOTIFICATION_SELECTION_KEY, canonical, hashlib.sha256).hex()
     return f"{_NOTIFICATION_SELECTION_PREFIX}{digest}"
 
 
-def _public_notification_row(
+def public_notification_row(
     row: AeatSyncWorkspaceNotificationRowV1,
     selection_key: AeatSyncNotificationSelectionKey,
 ) -> AeatSyncWorkspaceNotificationRowV1:
@@ -558,7 +559,6 @@ def _public_notification_row(
     values = row.model_dump(include=set(AeatSyncWorkspaceNotificationRowV1.model_fields))
     values["selection_key"] = selection_key
     return AeatSyncWorkspaceNotificationRowV1.model_validate(values)
-
 
 
 def source_observation_is_observable(value: AeatSyncWorkspaceAvailability) -> bool:
@@ -619,35 +619,26 @@ def _discrepancy(local: AeatSyncSourceState, aeat: AeatSyncSourceState, kind: Ae
         expected = AeatSyncDiscrepancyKind.STATE_MISMATCH
     if kind is not expected:
         raise ValueError("discrepancy contradicts source states")
-def project_aeat_sync_workspace(
-    *,
-    bucket_id: BucketId,
-    subject_key: str,
-    zone_observations: tuple[AeatSyncWorkspaceZoneObservationV1, ...],
-    action_catalogue: ActionCatalogue,
-    operation_contracts: OperationPublicContractSetV1,
-    overview: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...] = (),
-    census: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...] = (),
-    filed_declarations: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...] = (),
-    notifications: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...] = (),
-    evidence_comparison: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceEvidenceComparisonRowV1], ...] = (),
-    reconciliation: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceReconciliationRowV1], ...] = (),
-) -> AeatSyncWorkspaceProjectionV1:
-    """Project already-loaded, scoped facts without retaining their scope."""
-    from . import _workspace_projection
 
-    return _workspace_projection.project_aeat_sync_workspace(
-        bucket_id=bucket_id,
-        subject_key=subject_key,
-        zone_observations=zone_observations,
-        action_catalogue=action_catalogue,
-        operation_contracts=operation_contracts,
-        overview=overview,
-        census=census,
-        filed_declarations=filed_declarations,
-        notifications=notifications,
-        evidence_comparison=evidence_comparison,
-        reconciliation=reconciliation,
-        notification_selection_key=_notification_selection_key,
-        public_notification_row=_public_notification_row,
-    )
+
+class _AeatSyncWorkspaceProjectionArguments(TypedDict):
+    bucket_id: BucketId
+    subject_key: str
+    zone_observations: tuple[AeatSyncWorkspaceZoneObservationV1, ...]
+    action_catalogue: ActionCatalogue
+    operation_contracts: OperationPublicContractSetV1
+    overview: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceOverviewRowV1], ...]]
+    census: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceCensusRowV1], ...]]
+    filed_declarations: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1], ...]]
+    notifications: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...]]
+    evidence_comparison: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceEvidenceComparisonRowV1], ...]]
+    reconciliation: NotRequired[tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceReconciliationRowV1], ...]]
+
+
+def project_aeat_sync_workspace(
+    **arguments: Unpack[_AeatSyncWorkspaceProjectionArguments],
+) -> AeatSyncWorkspaceProjectionV1:
+    """Project already-loaded, scoped facts through the single projection owner."""
+    from ._workspace_projection import project_aeat_sync_workspace as project
+
+    return project(**arguments)

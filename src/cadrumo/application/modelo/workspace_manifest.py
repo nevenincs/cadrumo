@@ -203,9 +203,7 @@ _ROOT_CLASSIFICATION_RULES: tuple[_RootClassificationRule, ...] = (
         "inspection",
     ),
 )
-_PROJECTED_PATH_DESTINATION_RULES: tuple[
-    tuple[str, frozenset[_SchemaType], _Destination], ...
-] = (
+_PROJECTED_PATH_DESTINATION_RULES: tuple[tuple[str, frozenset[_SchemaType], _Destination], ...] = (
     (".constraint", frozenset({"CasillaId"}), "ModeloWorkspaceConstraintReferenceV1"),
     (".export", frozenset({"CasillaId", "ExportFieldId"}), "ModeloWorkspaceExportExposureReferenceV1"),
     (".relation", frozenset({"BindingId", "CasillaId"}), "ModeloWorkspaceRelationEndpointReferenceV1"),
@@ -220,7 +218,6 @@ _PROJECTED_SCHEMA_DESTINATIONS: dict[_SchemaType, _Destination] = {
     "ParameterId": "ModeloWorkspaceParameterReferenceV1",
     "RelationId": "ModeloWorkspaceRelationReferenceV1",
 }
-
 
 
 def generate_modelo_workspace_field_manifest(snapshot: RegistrySnapshot) -> ModeloWorkspaceFieldManifestV1:
@@ -275,28 +272,6 @@ def _generate_manifest_from_roots(roots: tuple[_Root, ...]) -> ModeloWorkspaceFi
         entries=entries,
         manifest_digest=_manifest_digest(root_paths, entries),
     )
-
-
-def validate_modelo_workspace_field_manifest(
-    manifest: ModeloWorkspaceFieldManifestV1,
-    snapshot: RegistrySnapshot,
-) -> ModeloWorkspaceFieldManifestV1:
-    """Refuse a manifest that is missing, duplicated, stale, or no longer classified."""
-    current = generate_modelo_workspace_field_manifest(snapshot)
-    if manifest != current:
-        raise ValueError("workspace field manifest is not the current public-schema fixed point")
-    return manifest
-
-
-def validate_modelo_workspace_field_manifest_for_inspection(
-    manifest: ModeloWorkspaceFieldManifestV1,
-    inspection: RegistryRevisionInspection,
-) -> ModeloWorkspaceFieldManifestV1:
-    """Refuse a STATIC_INSPECTION manifest that is stale or no longer classified."""
-    current = generate_modelo_workspace_field_manifest_for_inspection(inspection)
-    if manifest != current:
-        raise ValueError("workspace field manifest is not the current static-inspection fixed point")
-    return manifest
 
 
 def _selector_roots() -> tuple[_Root, ...]:
@@ -992,6 +967,4 @@ __all__ = [
     "generate_modelo_workspace_field_manifest_for_inspection",
     "read_modelo_workspace_manifest_current_coordinate",
     "read_modelo_workspace_manifest_current_coordinate_for_inspection",
-    "validate_modelo_workspace_field_manifest",
-    "validate_modelo_workspace_field_manifest_for_inspection",
 ]

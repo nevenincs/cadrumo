@@ -371,10 +371,3 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
 
     # --- Enrollment recording (outside the profile context) -------------
-
-
-
-
-
-
-

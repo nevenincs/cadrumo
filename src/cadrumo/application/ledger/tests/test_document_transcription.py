@@ -169,5 +169,3 @@ def test_an_empty_or_pageless_transcription_is_refused() -> None:
 
     with pytest.raises(ValidationError):
         _transcription(page_count=0)
-
-

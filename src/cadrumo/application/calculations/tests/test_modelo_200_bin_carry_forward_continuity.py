@@ -242,7 +242,6 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
     assert Decimal(result_n1.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2025]
 
 
-
 # ---------------------------------------------------------------------------
 # Cap-formula worked example (LIS art. 26.1): when the base imponible previa is
 # large enough that 70% of it exceeds the EUR 1.000.000 floor, the computed
@@ -294,9 +293,3 @@ def test_modelo_200_bin_aplicada_maxima_selects_70_percent_branch(tmp_path: Path
     assert Decimal(result.values[_M200_BIN_PENDIENTE_INICIO]) == prior_year_bin_stock
     # The ceiling selects 70%·base previa over the EUR 1M floor and the stock.
     assert Decimal(result.values[_M200_BIN_APLICADA_MAXIMA]) == expected_ceiling
-
-
-
-
-
-

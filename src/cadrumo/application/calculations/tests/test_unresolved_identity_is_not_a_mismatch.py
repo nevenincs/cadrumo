@@ -126,5 +126,3 @@ def test_an_absent_identity_still_blocks(tmp_path: Path) -> None:
     gate for a filing nobody proved belongs to this taxpayer.
     """
     assert _blockers_for(tmp_path, None), "an unidentifiable receipt must still block"
-
-
