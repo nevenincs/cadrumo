@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:6a4e8fddc67766f47ece4bd36a20823c2eb3a86b09fb3f26234374612483f5c5'
+body_hash: 'sha256:b2ee16d50b558c738eef756747bc4f9422a8142c95feeef2c2963b113284f4fb'
 ---
 
 # `facts-registry` plan
@@ -94,7 +94,7 @@ Adapt IVA schedules, recargo schedules, typed lookup behavior, evidence, and pre
 Adapt category profiles and legally governed calendar or deadline data into authority-managed providers.
 
 - [x] `W02.P06.S16` - Register statutory category profiles and dated caps; `src/cadrumo/domain/categories/registry.py`.
-- [ ] `W02.P06.S17` - Register classified legal calendar and deadline facts; `src/cadrumo/domain/deadlines`.
+- [x] `W02.P06.S17` - Register classified legal calendar and deadline facts; `src/cadrumo/domain/deadlines`.
 
 ### Phase `W02.P07` - Enroll treaty and authorisation providers
 

@@ -50,8 +50,27 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstra
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import bundled_path
+from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
+from ..calculations.registry.facts.resolution import EventFactQuery
+from ..calculations.registry.facts.schema import (
+    EventFactPayload,
+    FactOwnership,
+    FactSelector,
+    GovernedFact,
+    GovernedFactFamily,
+    GovernedFactVariant,
+    NamedFactValue,
+)
+from ..calculations.registry.loader_cache import toml_file_fingerprint
+from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from ..calculations.registry.schema_base import DateAxis, SourceCitation
 from .errors import DeadlineValidationError
+
+HOLIDAY_CALENDAR_PROVIDER_ID = "legal-holiday-calendars"
+HOLIDAY_CALENDAR_PROVIDER_DIRECTORY = "calendars"
+HOLIDAY_EVENT_FACT_ID = "deadlines.public-holiday"
+_HOLIDAY_SHIFT_LEGAL_REF = "ley-39-2015:art-30.5"
 
 # ---------------------------------------------------------------------------
 # CCAA enumeration (ISO 3166-2:ES codes).
@@ -270,7 +289,12 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
     missing or malformed (caller-recoverable; the surrounding deadline
     engine can degrade to weekend-only shifts).
     """
-    path = _calendar_path(year)
+    return _load_holiday_calendar_path(year, _calendar_path(year).resolve())
+
+
+@lru_cache(maxsize=64)
+def _load_holiday_calendar_path(year: int, path: Path) -> HolidayCalendar:
+    """Load one exact calendar path for legacy and provider callers."""
     if not path.exists():
         raise DeadlineValidationError(f"holiday calendar for year {year} not registered (expected file: {path.name})")
     raw = read_toml(path, error_factory=DeadlineValidationError)
@@ -310,6 +334,94 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
         )
     except (KeyError, TypeError, ValueError, ValidationError) as exc:
         raise DeadlineValidationError(f"{path}: invalid holiday calendar row: {exc}") from exc
+
+
+def holiday_event_fact_query(
+    on: date,
+    *,
+    jurisdiction: HolidayJurisdiction,
+    ccaa_code: CalendarCCAA | None = None,
+) -> EventFactQuery:
+    """Build an exact governed query for one legally grounded holiday."""
+    if jurisdiction is HolidayJurisdiction.CCAA and ccaa_code is None:
+        raise DeadlineValidationError("a CCAA holiday query requires ccaa_code")
+    if jurisdiction is HolidayJurisdiction.NATIONAL and ccaa_code is not None:
+        raise DeadlineValidationError("a national holiday query cannot carry ccaa_code")
+    selectors = [FactSelector(name="jurisdiction", value=jurisdiction.value)]
+    if ccaa_code is not None:
+        selectors.append(FactSelector(name="ccaa_code", value=ccaa_code.value))
+    return EventFactQuery(
+        fact_id=HOLIDAY_EVENT_FACT_ID,
+        date_axis=DateAxis.SUBMISSION_DATE,
+        effective_date=on,
+        selectors=tuple(selectors),
+    )
+
+
+def compile_holiday_calendar_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
+    """Project BOE-identified calendars while excluding ungrounded bootstrap years."""
+    calendar_root = registry_root.resolve() / HOLIDAY_CALENDAR_PROVIDER_DIRECTORY
+    variants: list[GovernedFactVariant] = []
+    for path in sorted(calendar_root.glob("festivos-*.toml"), key=lambda candidate: candidate.name):
+        year_token = path.stem.removeprefix("festivos-")
+        if not year_token.isdigit():
+            continue
+        calendar = _load_holiday_calendar_path(int(year_token), path.resolve())
+        if calendar.boe_url is None:
+            continue
+        variants.extend(_holiday_fact_variant(calendar, holiday) for holiday in (*calendar.national, *calendar.ccaa))
+    if not variants:
+        return ()
+    return (
+        GovernedFact(
+            fact_id=HOLIDAY_EVENT_FACT_ID,
+            family=GovernedFactFamily.EVENT,
+            variants=tuple(variants),
+        ),
+    )
+
+
+def collect_holiday_calendar_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+    """Fingerprint every calendar, including excluded bootstrap declarations."""
+    calendar_root = registry_root.resolve() / HOLIDAY_CALENDAR_PROVIDER_DIRECTORY
+    return tuple(toml_file_fingerprint(path.resolve()) for path in sorted(calendar_root.glob("*.toml")))
+
+
+def reset_holiday_calendar_fact_provider() -> None:
+    """Clear both public and provider calendar caches on authority reset."""
+    load_holiday_calendar.cache_clear()
+    _load_holiday_calendar_path.cache_clear()
+
+
+def _holiday_fact_variant(calendar: HolidayCalendar, holiday: Holiday) -> GovernedFactVariant:
+    selectors = [FactSelector(name="jurisdiction", value=holiday.jurisdiction.value)]
+    if holiday.ccaa_code is not None:
+        selectors.append(FactSelector(name="ccaa_code", value=holiday.ccaa_code.value))
+    source_ref = f"aeat-calendario-contribuyente-{calendar.year}"
+    return GovernedFactVariant(
+        variant_id=(
+            f"{holiday.holiday_date.isoformat()}:{holiday.jurisdiction.value}:"
+            f"{holiday.ccaa_code.value.lower() if holiday.ccaa_code is not None else 'es'}"
+        ),
+        selectors=tuple(selectors),
+        date_axis=DateAxis.SUBMISSION_DATE,
+        valid_from=holiday.holiday_date,
+        valid_to=holiday.holiday_date,
+        payload=EventFactPayload(
+            event_date=holiday.holiday_date,
+            event_code="public_holiday",
+            outputs=(
+                NamedFactValue(name="name", value=holiday.name),
+                NamedFactValue(name="boe_ref", value=calendar.boe_ref),
+                NamedFactValue(name="boe_url", value=calendar.boe_url or ""),
+            ),
+        ),
+        legal_refs=(_HOLIDAY_SHIFT_LEGAL_REF,),
+        source_refs=(source_ref,),
+        source_citations=(SourceCitation(source_ref=source_ref, required_text=("Calendario del contribuyente",)),),
+        review_status=RevisionReviewStatus.PENDING_REVIEW,
+        ownership=FactOwnership.GENERATED,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -504,14 +616,21 @@ def shift_deadline(
 
 
 __all__ = (
+    "HOLIDAY_CALENDAR_PROVIDER_DIRECTORY",
+    "HOLIDAY_CALENDAR_PROVIDER_ID",
+    "HOLIDAY_EVENT_FACT_ID",
     "MODELOS_WITHOUT_SHIFT",
     "CalendarCCAA",
     "DeadlineShift",
     "Holiday",
     "HolidayCalendar",
     "HolidayJurisdiction",
+    "collect_holiday_calendar_fact_fingerprints",
+    "compile_holiday_calendar_facts",
+    "holiday_event_fact_query",
     "is_business_day",
     "load_holiday_calendar",
     "next_business_day",
+    "reset_holiday_calendar_fact_provider",
     "shift_deadline",
 )

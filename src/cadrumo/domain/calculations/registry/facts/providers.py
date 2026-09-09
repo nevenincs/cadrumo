@@ -239,6 +239,24 @@ def _iva_rate_provider_registration() -> FactProviderRegistration:
     )
 
 
+def _holiday_calendar_provider_registration() -> FactProviderRegistration:
+    from ....deadlines.festivos import (
+        HOLIDAY_CALENDAR_PROVIDER_DIRECTORY,
+        HOLIDAY_CALENDAR_PROVIDER_ID,
+        collect_holiday_calendar_fact_fingerprints,
+        compile_holiday_calendar_facts,
+        reset_holiday_calendar_fact_provider,
+    )
+
+    return FactProviderRegistration(
+        provider_id=HOLIDAY_CALENDAR_PROVIDER_ID,
+        owned_directories=(HOLIDAY_CALENDAR_PROVIDER_DIRECTORY,),
+        compile=compile_holiday_calendar_facts,
+        collect_fingerprints=collect_holiday_calendar_fact_fingerprints,
+        reset=reset_holiday_calendar_fact_provider,
+    )
+
+
 FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
     (
         FactProviderRegistration(
@@ -263,6 +281,7 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             reset=_reset_convenio_provider,
         ),
         _iva_rate_provider_registration(),
+        _holiday_calendar_provider_registration(),
     ),
 )
 """The sole canonical declaration of governed-fact providers and ownership."""
