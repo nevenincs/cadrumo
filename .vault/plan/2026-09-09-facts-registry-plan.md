@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:057abb0a8b6f44535e267941ba6916e2cb178f94ce14ce3ba680aa78c06d1cc6'
+body_hash: 'sha256:13e81822712cbce72a401235c90e6dc93906e867fc1eb476d2139c75da821b29'
 ---
 
 # `facts-registry` plan
@@ -136,7 +136,7 @@ Rewire maritime, maternity, descendant, Madrid, Art 20, Art 52, DT12, and SAL co
 
 - [x] `W03.P11.S24` - Rewire maritime Art 7p and REBECA inputs; `src/cadrumo/domain/renta/maritime_exemption.py`.
 - [x] `W03.P11.S25` - Rewire descendant maternity custody and Madrid windows; `src/cadrumo/domain/contribuyente`.
-- [ ] `W03.P11.S50` - Rewire Art 20 Art 52 DT12 and SAL calculations; `src/cadrumo/application/modelo and src/cadrumo/domain/modelos`.
+- [x] `W03.P11.S50` - Rewire Art 20 Art 52 DT12 and SAL calculations; `src/cadrumo/application/modelo and src/cadrumo/domain/modelos`.
 
 ### Phase `W03.P12` - Migrate IVA and invoice consumers
 

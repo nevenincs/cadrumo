@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:d68cc7aa3d06ab9e3c495b908e4baa4e77e01e194a9d91a757c719615c820249'
+body_hash: 'sha256:7616a8db43e57ea7caa965f1edd84b7707b94b050fcbd40f5590b3109787ca7a'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -51,8 +51,10 @@ related:
   - '[[2026-09-09-facts-registry-W03-P10-S49]]'
   - '[[2026-09-09-facts-registry-W03-P11-S24]]'
   - '[[2026-09-09-facts-registry-W03-P11-S25]]'
+  - '[[2026-09-09-facts-registry-W03-P11-S50]]'
   - '[[2026-09-09-facts-registry-W03-P12-S26]]'
   - '[[2026-09-09-facts-registry-W03-P12-S27]]'
+  - '[[2026-09-09-facts-registry-W03-P12-S51]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
@@ -116,8 +118,10 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W03-P10-S49` - Rewire Modelo 202 and modelo classification consumers
 - `2026-09-09-facts-registry-W03-P11-S24` - Rewire maritime Art 7p and REBECA inputs
 - `2026-09-09-facts-registry-W03-P11-S25` - Rewire descendant maternity custody and Madrid windows
+- `2026-09-09-facts-registry-W03-P11-S50` - Rewire Art 20 Art 52 DT12 and SAL calculations
 - `2026-09-09-facts-registry-W03-P12-S26` - Rewire IVA lookups while preserving domain facades
 - `2026-09-09-facts-registry-W03-P12-S27` - Rewire invoice slot percentage interpretation
+- `2026-09-09-facts-registry-W03-P12-S51` - Rewire extraction recargo aggregation and inventory defaults
 
 ### plan
 
