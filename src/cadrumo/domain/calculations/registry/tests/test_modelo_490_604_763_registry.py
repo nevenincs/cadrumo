@@ -207,5 +207,3 @@ def test_modelo_763_refuses_the_unevidenced_opening_coordinates(filing_year: int
 
     with pytest.raises(NoRevisionForPeriodError):
         select_revision(modelo, filing_year=filing_year, period=period)
-
-

@@ -582,7 +582,7 @@ def _quoted_constant(cells: tuple[str | None, str | None]) -> str | None:
             continue
         matched = _QUOTED_VALUE.search(text)
         if matched is not None:
-            return matched.group(1).strip()
+            return str(matched.group(1)).strip()
     return None
 
 
@@ -1151,7 +1151,7 @@ def _sheet_coverage_result(
     """Return missing-count and diagnostics for one resolved sheet."""
     missing = _sheet_missing_positions(required, coverage)
     intrusions = _reserved_write_failures(sheet, coverage.consulted)
-    lines = [f"design record {sheet.name!r}: {'; '.join(intrusions)}"] if intrusions else []
+    lines: list[str] = [f"design record {sheet.name!r}: {'; '.join(intrusions)}"] if intrusions else []
     if missing:
         lines.append(_missing_positions_line(sheet, required, missing, coverage.scope))
     return len(missing) + len(intrusions), lines

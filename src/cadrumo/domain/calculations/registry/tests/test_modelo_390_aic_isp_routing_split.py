@@ -296,4 +296,3 @@ def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_p
 
     assert mutated_field_28.casilla_id != _CASILLA_BOX_28
     assert mutated_field_28.casilla_id == _CASILLA_AIC_BLIND
-

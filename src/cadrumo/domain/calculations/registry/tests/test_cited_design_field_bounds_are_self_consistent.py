@@ -32,7 +32,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from ..export import derive_export_layouts_from_bindings
-from ..record_design_coverage import _extract_record_design
+from ..record_design import extract_record_design
 from ..record_design_schema import RecordDesignSheet
 from ..schema_references import SourceReference
 from ._registry_schema_support import _committed_registry_tree
@@ -90,7 +90,7 @@ def _sheets_for(source: SourceReference) -> tuple[RecordDesignSheet, ...]:
         path = bundled_path() / source.corpus_path
     if not path.exists():
         return ()
-    return _extract_record_design(path)
+    return extract_record_design(path).accept_partial()
 
 
 def _cited_design_ids(modelos, catalogues) -> set[str]:

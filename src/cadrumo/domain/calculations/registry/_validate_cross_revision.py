@@ -20,7 +20,6 @@ from ._cross_revision_divergence import (
     revisions_overlap,
 )
 from ._validate_cross_revision_evolution import strict_continuity_evolution_failures
-from .errors import RegistryValidationError
 from .ids import RevisionId
 from .schema import ModeloDefinition, ModeloRevision
 from .schema_surfaces import CasillaDefinition
@@ -32,23 +31,9 @@ from .schema_surfaces import CasillaDefinition
 
 __all__ = [
     "declared_cross_revision_continuity_semantic_linkage_failures",
-    "validate_cross_revision_casilla_consistency",
 ]
 
 type _ContinuityOccurrence = tuple[ModeloRevision, CasillaDefinition]
-
-
-def validate_cross_revision_casilla_consistency(modelos: Iterable[ModeloDefinition]) -> None:
-    """Raise when a repeated casilla id drifts across revisions.
-
-    Args:
-        modelos: Iterable of :class:`ModeloDefinition` entries to validate.
-    """
-    failures = _validate_cross_revision_casilla_consistency(modelos)
-    if failures:
-        raise RegistryValidationError(
-            "cross-revision casilla drift detected:\n" + "\n".join(f" - {failure}" for failure in failures),
-        )
 
 
 def declared_cross_revision_continuity_semantic_linkage_failures(

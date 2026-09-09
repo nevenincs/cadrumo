@@ -88,24 +88,6 @@ def m303_orden_census_artefact_path(root: Path) -> Path:
     return root.resolve() / "m303_orden_anual" / M303_ORDEN_CENSUS_ARTEFACT_FILENAME
 
 
-def render_m303_annual_orden_censuses(censuses: tuple[M303AnnualOrdenSourceCensus, ...]) -> str:
-    """Render the census artefact's committed bytes.
-
-    Indented and newline-terminated so a regeneration produces a reviewable diff
-    rather than one enormous line -- these are regulatory extractions, and a
-    reviewer has to be able to see what moved.
-
-    Returns:
-        The artefact text, exactly as the build commits it.
-    """
-    artefact = M303AnnualOrdenCensusArtefact(
-        schema_version=M303_ORDEN_CENSUS_SCHEMA_VERSION,
-        extractor_version=EXTRACTOR_VERSION,
-        censuses=censuses,
-    )
-    return artefact.model_dump_json(indent=2) + "\n"
-
-
 def load_m303_annual_orden_censuses(
     root: Path,
     *,
@@ -174,5 +156,4 @@ __all__ = [
     "M303AnnualOrdenCensusArtefact",
     "load_m303_annual_orden_censuses",
     "m303_orden_census_artefact_path",
-    "render_m303_annual_orden_censuses",
 ]

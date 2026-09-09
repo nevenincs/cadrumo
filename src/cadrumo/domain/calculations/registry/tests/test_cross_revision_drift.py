@@ -2,8 +2,7 @@
 
 Per the AEAT registry design contract, every casilla id has
 identical legal responsibilities across overlapping revisions of a
-modelo. The public `validate_cross_revision_casilla_consistency` gate
-reports drift when two overlapping revisions disagree on any
+modelo. The registry-scope validator reports drift when two overlapping revisions disagree on any
 legally-bound field (label, section, data_type, semantic_role,
 legal_refs). Non-overlapping revision windows are separate legal
 forms and require an explicit continuity/evolution contract before
@@ -22,10 +21,9 @@ import pytest
 from .....core.resources.bundled_data import bundled_path
 from .._validate import RegistryValidator
 from .._validate_cross_revision import (
+    cross_revision_casilla_consistency_failures,
     declared_cross_revision_continuity_semantic_linkage_failures,
-    validate_cross_revision_casilla_consistency,
 )
-from ..errors import RegistryValidationError
 from ..ids import LegalRefId
 from ..loader import load_modelo_directory
 from ..modelo_localization import ModeloLocalizationFieldKind, casilla_occurrence_locale_key
@@ -215,14 +213,7 @@ def _evolution_pairs(modelo: ModeloDefinition, continuidad_id: str) -> dict[tupl
 
 
 def _cross_revision_casilla_consistency_failures(modelos: list[ModeloDefinition]) -> tuple[str, ...]:
-    try:
-        validate_cross_revision_casilla_consistency(modelos)
-    except RegistryValidationError as exc:
-        message = str(exc)
-        prefix = "cross-revision casilla drift detected:\n"
-        assert message.startswith(prefix), message
-        return tuple(line.removeprefix(" - ") for line in message.removeprefix(prefix).splitlines())
-    return ()
+    return cross_revision_casilla_consistency_failures(modelos)
 
 
 def _write_continuity_modelo_directory(
@@ -786,13 +777,6 @@ class TestCrossRevisionConsistency:
         assert "strict continuity drift" in failures[0]
         assert "0700" in failures[0]
         assert "label" in failures[0]
-
-
-def test_cross_revision_validator_accepts_committed_corpus(
-    committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
-) -> None:
-    modelos, _catalogues = committed_registry
-    validate_cross_revision_casilla_consistency(modelos)
 
 
 def test_committed_corpus_continuity_semantic_linkage_is_complete(

@@ -146,11 +146,6 @@ _KNOWN_BAD_CITATIONS: tuple[KnownBadCitation, ...] = (
 )
 
 
-def known_bad_citations() -> tuple[KnownBadCitation, ...]:
-    """Return the reviewed :class:`KnownBadCitation` guardrail entries."""
-    return _KNOWN_BAD_CITATIONS
-
-
 def find_known_bad(source: CitationSource, article: str, role_text: str) -> KnownBadCitation | None:
     """Return the first blocklist entry that matches the supplied citation, or ``None``.
 
@@ -175,4 +170,4 @@ def find_known_bad(source: CitationSource, article: str, role_text: str) -> Know
     return None
 
 
-__all__ = ["CitationSource", "KnownBadCitation", "find_known_bad", "known_bad_citations"]
+__all__ = ["CitationSource", "KnownBadCitation", "find_known_bad"]

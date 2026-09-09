@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from io import BytesIO
 from pathlib import Path
 
 import pytest
@@ -12,8 +13,8 @@ from ..errors import RegistryValidationError
 from ..record_design import (
     extract_record_design,
     extract_record_design_pdf,
-    extract_record_design_pdf_bytes,
 )
+from ..record_design_pdf_orchestration import extract_record_design_pdf_stream
 from ._record_design_support import (
     _RECORD_DESIGN_ROOT,
     _committed_registry_tree,
@@ -60,7 +61,9 @@ def test_generated_compact_record_design_pdf_round_trips_from_path_and_bytes(tmp
     )
 
     from_path = extract_record_design_pdf(pdf_path).accept_partial()
-    from_bytes = extract_record_design_pdf_bytes(pdf_path.read_bytes(), source_label=pdf_path.name).accept_partial()
+    from_bytes = extract_record_design_pdf_stream(
+        BytesIO(pdf_path.read_bytes()), source_label=pdf_path.name
+    ).accept_partial()
 
     assert from_bytes == from_path
     sheet = from_path[0]

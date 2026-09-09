@@ -16,7 +16,6 @@ from .schema_formula import DatedValue, ParameterDefinition
 __all__ = [
     "FILING_PERIOD_AXIS",
     "_bracket_coverage_gaps",
-    "non_filing_axis_parameters",
     "validate_bracket_table_temporal_coverage",
     "validate_dated_values",
     "validate_non_filing_axis_admission",
@@ -198,27 +197,6 @@ def _parameter_axes(parameter: ParameterDefinition) -> frozenset[str]:
     if parameter.bracket_axis is not None:
         axes.add(parameter.bracket_axis)
     return frozenset(axes)
-
-
-def non_filing_axis_parameters(
-    revision: ModeloRevision,
-) -> tuple[tuple[ParameterDefinition, frozenset[str]], ...]:
-    """Enumerate every parameter in ``revision`` keyed to a non-filing date axis.
-
-    One half of the two-way enumerability the event-date decision requires: from
-    the registry alone it must be possible to list which parameters left the
-    filing-period axis. The other half -- naming the provision and reason for
-    each -- is on the parameter itself as
-    :class:`~domain.calculations.registry.schema_formula.NonFilingAxisAdmission`,
-    which :func:`validate_non_filing_axis_admission` requires to be present and
-    to agree with the data.
-    """
-    found: list[tuple[ParameterDefinition, frozenset[str]]] = []
-    for parameter in revision.parameters:
-        non_filing = frozenset(axis for axis in _parameter_axes(parameter) if axis != FILING_PERIOD_AXIS)
-        if non_filing:
-            found.append((parameter, non_filing))
-    return tuple(found)
 
 
 def validate_non_filing_axis_admission(

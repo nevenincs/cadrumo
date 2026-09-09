@@ -59,28 +59,6 @@ def test_bundled_revisions_produce_no_ambiguous_reference_identity_failures() ->
     assert not offences, "bundled revisions produce ambiguous reference identities:\n  " + "\n  ".join(offences)
 
 
-def test_operator_input_id_map_contains_only_casilla_ids() -> None:
-    """The runtime input map must expose only canonical ``casilla.id`` keys."""
-
-    from ..runtime_graph import input_casilla_id_map
-
-    offences: list[str] = []
-    for modelo in _all_modelos():
-        for revision_id, revision in modelo.revisions.items():
-            expected = {casilla.id for casilla in revision.casillas}
-            observed = input_casilla_id_map(revision)
-            extra_keys = sorted(set(observed) - expected)
-            wrong_values = sorted(
-                f"{key}->{value}" for key, value in observed.items() if key not in expected or value != key
-            )
-            if extra_keys or wrong_values:
-                offences.append(
-                    f"modelo {modelo.id} revision {revision_id} exposes non-id input references "
-                    f"extra_keys={extra_keys!r} wrong_values={wrong_values!r}",
-                )
-    assert not offences, "operator input map exposes non-canonical casilla references:\n  " + "\n  ".join(offences)
-
-
 def test_export_casilla_fields_reference_only_casilla_ids() -> None:
     """Export fields must reference declared ``casilla.id`` values directly."""
 

@@ -13,6 +13,7 @@ from __future__ import annotations
 from datetime import date
 
 import pytest
+from dev.registry.maintenance_support import resolved_export_casillas, resolved_export_endpoints, resolved_export_fields
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -21,12 +22,7 @@ from .....core.filing_projection_ref import (
     M303ProrrataActivityProjectionRef,
 )
 from ...export_field_kind import CasillaFieldKind
-from ..export import (
-    derive_export_layouts_from_bindings,
-    resolved_export_casillas,
-    resolved_export_endpoints,
-    resolved_export_fields,
-)
+from ..export import derive_export_layouts_from_bindings
 from ..fixed_width_codec import ExportEncoding
 from ..schema import DataBindingDefinition, ModeloRevision
 from ..schema_base import CasillaDataType

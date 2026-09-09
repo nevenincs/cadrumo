@@ -21,7 +21,6 @@ from .loader_cache import toml_file_fingerprint
 from .m303_orden_census_artefact import (
     M303_ORDEN_CENSUS_ARTEFACT_FILENAME,
     load_m303_annual_orden_censuses,
-    render_m303_annual_orden_censuses,
 )
 from .m303_orden_projection_models import (
     M303AnnualOrdenAuthority,
@@ -35,20 +34,6 @@ from .schema_references import LegalReference, SourceReference
 
 if TYPE_CHECKING:
     from .schema import ModeloDefinition
-
-
-def generate_m303_annual_orden_manifest(
-    *,
-    source_root: Path,
-    sources: Mapping[SourceRefId, SourceReference],
-) -> M303AnnualOrdenGeneratedManifest:
-    """Derive the exact source-integrity manifest from the pinned BOE corpus.
-
-    Takes no ``registry_root``, so it always EXTRACTS. That is what the generator
-    needs: an artefact regenerated from a shipped copy of itself would agree with
-    that copy by construction and could never detect drift.
-    """
-    return _generate_manifest_with_censuses(source_root=source_root, sources=sources)[0]
 
 
 def _generate_manifest_with_censuses(
@@ -133,67 +118,6 @@ def _generated_source_from_census(
     )
 
 
-def render_m303_annual_orden_manifest(
-    *,
-    source_root: Path,
-    sources: Mapping[SourceRefId, SourceReference],
-) -> str:
-    """Render the generated registry artefact in canonical TOML order."""
-    return _render_generated_manifest(
-        generate_m303_annual_orden_manifest(source_root=source_root, sources=sources),
-    )
-
-
-def render_m303_annual_orden_census_artefact(
-    *,
-    source_root: Path,
-    sources: Mapping[SourceRefId, SourceReference],
-) -> str:
-    """Extract every pinned annual Orden and render the committed census artefact.
-
-    Lives here rather than beside the artefact's other serialisation because it
-    is the one direction that needs the EXTRACTOR, and the artefact module is
-    deliberately free of that import edge. The rendering itself still belongs to
-    the artefact module, so there remains exactly one place that decides what the
-    committed bytes look like.
-
-    Returns:
-        The artefact text, exactly as the generator commits it.
-    """
-    _manifest, censuses = _generate_manifest_with_censuses(source_root=source_root, sources=sources)
-    return render_m303_annual_orden_censuses(tuple(censuses[key] for key in sorted(censuses)))
-
-
-def check_m303_annual_orden_census_artefact(
-    *,
-    artefact_path: Path,
-    source_root: Path,
-    sources: Mapping[SourceRefId, SourceReference],
-) -> None:
-    """Refuse a missing, hand-edited, or stale committed census artefact.
-
-    The build-side half of the annual-Orden proof. It re-extracts from the pinned
-    BOE corpus and compares against the committed bytes, so it is the only thing
-    standing between a stale census and every runtime that now trusts one. The
-    runtime cannot perform this check itself without paying the parse this
-    artefact exists to remove, which is exactly why it is a build and
-    continuous-integration gate.
-
-    Raises:
-        RegistryLoadError: When the artefact is absent, unreadable, or does not
-            equal a fresh extraction.
-    """
-    if not artefact_path.is_file():
-        raise RegistryLoadError(f"annual Orden census artefact is missing: {artefact_path}")
-    expected = render_m303_annual_orden_census_artefact(source_root=source_root, sources=sources)
-    try:
-        actual = artefact_path.read_text(encoding=UTF_8_ENCODING)
-    except OSError as exc:
-        raise RegistryLoadError(f"annual Orden census artefact cannot be read: {artefact_path}") from exc
-    if actual != expected:
-        raise RegistryLoadError(f"annual Orden census artefact is stale: regenerate {artefact_path}")
-
-
 def _render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> str:
     """Render an ALREADY-generated manifest in canonical TOML order.
 
@@ -237,20 +161,6 @@ def _render_generated_manifest(manifest: M303AnnualOrdenGeneratedManifest) -> st
             ),
         )
     return "\n".join(lines)
-
-
-def check_m303_annual_orden_manifest(
-    *,
-    manifest_path: Path,
-    source_root: Path,
-    sources: Mapping[SourceRefId, SourceReference],
-) -> M303AnnualOrdenGeneratedManifest:
-    """Refuse a missing, manually edited, or stale generated annual Orden artefact."""
-    return _check_manifest_with_censuses(
-        manifest_path=manifest_path,
-        source_root=source_root,
-        sources=sources,
-    )[0]
 
 
 def _check_manifest_with_censuses(

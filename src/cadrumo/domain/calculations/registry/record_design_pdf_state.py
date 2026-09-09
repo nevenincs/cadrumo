@@ -516,7 +516,7 @@ def _numeric_closing_page_token(sheet: RecordDesignSheet) -> str | None:
             match = _PDF_RECORD_END_IDENTIFIER_RE.search(str(text))
             if match is None:
                 continue
-            closing = match.group("page")
+            closing = str(match.group("page"))
             # The closing identifier is matched anywhere in a field's text, so a
             # token bled in from a neighbouring record can be picked up. That is
             # tolerable for a numeric page, which the width check still guards,

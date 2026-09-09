@@ -227,8 +227,7 @@ def previous_filing_observation_requirements(
                 dependency_treatments_by_source=dependency_treatments_by_source,
             )
     return tuple(
-        _materialise_previous_filing_requirement(key, accumulator)
-        for key in sorted(accumulator.binding_ids_by_key)
+        _materialise_previous_filing_requirement(key, accumulator) for key in sorted(accumulator.binding_ids_by_key)
     )
 
 

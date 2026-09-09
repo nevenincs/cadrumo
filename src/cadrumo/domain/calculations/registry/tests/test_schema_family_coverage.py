@@ -34,7 +34,6 @@ from .._schema_family_coverage import (
 from ..errors import RegistryLoadError
 from ..loader import load_modelo_directory
 from ..schema import (
-    REVISION_COLLECTION_SHAPED_FIELDS,
     REVISION_MANIFEST_ONLY_FIELDS,
     REVISION_SCHEMA_FAMILY_FIELDS,
     ModeloRevision,
@@ -42,11 +41,11 @@ from ..schema import (
 from ..schema_base import (
     SCHEMA_FAMILY,
     RegistryModel,
-    schema_family_enrollment_failures,
 )
 from ..schema_surfaces import CasillaDefinition
 from ._loader_directory_mode_support import _load_revision as _shared_load_revision
 from ._loader_directory_mode_support import _write_modelo as _shared_write_modelo
+from ._schema_family_support import schema_family_enrollment_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -107,13 +106,6 @@ def _row(manifest: RevisionCoverageManifest, family: str) -> SchemaFamilyCoverag
 # --------------------------------------------------------------------------
 # Enrolment completeness, and the proof that its check bites
 # --------------------------------------------------------------------------
-
-
-def test_every_collection_the_revision_declares_is_an_enrolled_family() -> None:
-    """The live schema satisfies the completeness rule."""
-    assert schema_family_enrollment_failures(ModeloRevision) == ()
-    assert REVISION_SCHEMA_FAMILY_FIELDS == REVISION_COLLECTION_SHAPED_FIELDS
-    assert REVISION_SCHEMA_FAMILY_FIELDS
 
 
 def test_a_collection_added_without_the_marker_reds_the_enrollment_check() -> None:

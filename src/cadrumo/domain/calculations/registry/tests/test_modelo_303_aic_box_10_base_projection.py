@@ -268,4 +268,3 @@ def test_mutation_reverting_box_10_to_manual_reds_the_gate(tmp_path: Path) -> No
 
     assert mutated_box_10.input_kind != "computed"
     assert mutated_box_10.input_kind == "manual"
-

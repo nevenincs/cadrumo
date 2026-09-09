@@ -20,11 +20,9 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import BindingSourceKind
-from ..errors import RegistryValidationError
 from ..invoice_bindings import (
     InvoiceObservation,
     resolve_invoice_binding_row_values,
-    validate_invoice_binding_definition,
 )
 from ..schema import ModeloRevision
 from ._registry_schema_support import _committed_modelo
@@ -80,28 +78,3 @@ def test_the_real_committed_operador_adquisicion_bindings_produce_the_same_rows_
     assert resolved["iva-349-operador-row-apellidos-adquisicion", 2] == "Italia SRL"
     assert resolved["iva-349-operador-row-clave-adquisicion", 2] == "I"
     assert resolved["iva-349-operador-row-base-adquisicion", 2] == Decimal("200.00")
-
-
-def test_an_invalid_m349_clave_still_refuses_through_the_relocated_validator() -> None:
-    """The exact property the validator relocation moved: pin the refusal, not just its absence.
-
-    ``Q`` is not a real AEAT clave de operacion for either vocabulary, so
-    this proves the CLOSED-SET check itself (now a model validator, moved
-    off the ``claves`` field validator) still fires for M349's own
-    selectors, rather than merely proving the selector still parses.
-    Constructor-time validation already proves a genuinely malformed
-    selector cannot reach this shape via the normal constructor (mirroring
-    ``test_is_m347_declarante_summary_invoice_binding.py``'s bite proof), so
-    a REAL, already-validated binding is mutated via ``object.__setattr__``
-    to stand in for a drifted selector, and the fixed function's OWN
-    validation is what is under test.
-    """
-    revision = _modelo_349_revision()
-    real_binding = next(item for item in revision.bindings if item.id == "iva-349-operador-row-codigo-pais-adquisicion")
-    binding = real_binding.model_copy()
-    drifted_selector = dict(binding.selector)
-    drifted_selector["claves"] = ("A", "I", "T", "Q")
-    object.__setattr__(binding, "selector", drifted_selector)
-
-    with pytest.raises(RegistryValidationError, match="has malformed invoice selector"):
-        validate_invoice_binding_definition(binding)

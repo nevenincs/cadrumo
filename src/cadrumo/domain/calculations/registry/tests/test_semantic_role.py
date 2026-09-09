@@ -20,6 +20,7 @@ from datetime import date
 from typing import Any, Literal, TypedDict
 
 import pytest
+from dev.registry.maintenance_support import load_modelo_path
 from pydantic import ValidationError
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
@@ -36,7 +37,6 @@ from .._validate_semantic_roles import (
     _validate_semantic_role_consistency,
     _validate_semantic_role_typo_twins,
 )
-from ..loader import load_modelo_path
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from ..schema_surfaces import CasillaAlias, CasillaConstraints, CasillaDefinition
