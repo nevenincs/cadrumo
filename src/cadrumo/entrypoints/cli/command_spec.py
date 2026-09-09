@@ -705,26 +705,23 @@ class CommandSpecGraph:
 
     def by_key(self) -> MappingProxyType[str, CommandSpec]:
         """Return every command spec indexed by its key."""
-        return cast(MappingProxyType[str, CommandSpec], _graph_by_key(self.specs))
+        return _graph_by_key(self.specs)
 
     def nodes(self) -> tuple[CommandSpecNode, ...]:
         """Return every command spec paired with its derived operator path."""
-        return cast(tuple[CommandSpecNode, ...], _graph_nodes(self.specs, node_type=CommandSpecNode))
+        return _graph_nodes(self.specs, node_type=CommandSpecNode)
 
     def by_path(self) -> MappingProxyType[tuple[str, ...], CommandSpec]:
         """Return the exact derived operator-path index."""
-        return cast(
-            MappingProxyType[tuple[str, ...], CommandSpec],
-            _graph_by_path(self.specs, node_type=CommandSpecNode),
-        )
+        return _graph_by_path(self.specs, node_type=CommandSpecNode)
 
     def resolve_path(self, path: tuple[str, ...]) -> CommandSpec:
         """Resolve one complete operator path, failing closed on absence."""
-        return cast(CommandSpec, _resolve_graph_path(self.specs, path, node_type=CommandSpecNode))
+        return _resolve_graph_path(self.specs, path, node_type=CommandSpecNode)
 
     def by_schema_identity(self) -> MappingProxyType[str, CommandSpec]:
         """Return the unique executable result-schema identity index."""
-        return cast(MappingProxyType[str, CommandSpec], _graph_by_schema_identity(self.specs))
+        return _graph_by_schema_identity(self.specs)
 
 
 #: The three builtin value contracts every command surface declares. They are

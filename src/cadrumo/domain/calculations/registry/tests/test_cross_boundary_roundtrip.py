@@ -41,7 +41,6 @@ from ....submission.models import ModeloDraftStatus
 from ..authority import bundled_authority
 from ..bindings import (
     CasillaObservation,
-    OracleModeloObservation,
     RegistryModeloObservation,
 )
 from ..schema_references import RegistrySnapshotRef
@@ -513,45 +512,6 @@ def test_workbook_parity_reference_rejects_malformed_output_identifier() -> None
             legal_refs=("ley-35-2006:art-99",),
             source_refs=("boe-modelo-130-workbook",),
         )
-
-
-def test_oracle_filing_observation_distinct_from_local_roundtrip() -> None:
-    """``OracleModeloObservation`` marks oracle-originated values as a distinct subtype.
-
-    The parent :class:`RegistryModeloObservation` carries locally-computed
-    casilla values. The :class:`OracleModeloObservation` subtype attaches
-    an ``oracle_id`` field linking the observation to the cross-reference
-    decision that produced it. Both the subtype attribution and the
-    ``oracle_id`` linkage must survive strict JSON round-trip.
-    """
-
-    obs = CasillaObservation(
-        casilla_id=_IVA_DEVENGADO_CASILLA,
-        value=Decimal("20000.00"),
-        formula_id=None,
-        legal_refs=("ley-37-1992:art-21",),
-        source_refs=("aeat-iva-2025",),
-    )
-    original = OracleModeloObservation(
-        modelo="303",
-        filing_year=2025,
-        period="1T",
-        observations=(obs,),
-        oracle_id="aeat-oracle-iva-q1",
-    )
-
-    roundtripped = OracleModeloObservation.model_validate_json(
-        original.model_dump_json(),
-    )
-
-    assert roundtripped == original
-    assert roundtripped.oracle_id == "aeat-oracle-iva-q1"
-    assert roundtripped.observations == (obs,)
-    # OracleModeloObservation IS a RegistryModeloObservation; the
-    # type distinction must be preserved structurally even though
-    # both have the same JSON shape on the wire.
-    assert isinstance(roundtripped, OracleModeloObservation)
-    assert isinstance(roundtripped, RegistryModeloObservation)
 
 
 def test_workflow_step_details_typed_envelope_roundtrip() -> None:

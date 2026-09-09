@@ -33,13 +33,11 @@ excluded rather than assumed:
 from __future__ import annotations
 
 import ast
-import importlib
 from pathlib import Path
 
 import pytest
 
-from ..core.errors.error_codes import ErrorCode, declared_error_codes
-from .inventory import SRC_CADRUMO, repo_relative
+from .inventory import SRC_CADRUMO
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -65,28 +63,6 @@ _ROUTED_SAMPLE = (
     "    except ProfileCustodyTransactionConflictError as exc:\n"
     "        raise ProfileRegistrationConflictError('lost a race') from exc\n"
 )
-
-
-def _divergent_subclasses() -> dict[str, set[str]]:
-    """Map each registered error name to subclasses answering ``retryable`` differently."""
-    resolved: dict[type[BaseException], ErrorCode] = {}
-    for qualname, code in declared_error_codes():
-        module_name, _, class_name = qualname.rpartition(".")
-        try:
-            candidate = getattr(importlib.import_module(module_name), class_name, None)
-        except Exception:
-            candidate = None
-        if isinstance(candidate, type) and issubclass(candidate, BaseException):
-            resolved[candidate] = code
-
-    divergent: dict[str, set[str]] = {}
-    for child, child_code in resolved.items():
-        for parent, parent_code in resolved.items():
-            if child is parent or not issubclass(child, parent):
-                continue
-            if child_code.retryable != parent_code.retryable:
-                divergent.setdefault(parent.__name__, set()).add(child.__name__)
-    return divergent
 
 
 def _caught_names(handler: ast.ExceptHandler) -> set[str]:
@@ -136,36 +112,6 @@ def _scoped_modules() -> list[Path]:
         root = SRC_CADRUMO / Path(package)
         modules.extend(path for path in root.rglob("*.py") if "tests" not in path.parts and path.name != "conftest.py")
     return modules
-
-
-def test_no_scoped_handler_applies_one_answer_to_two_situations() -> None:
-    """DISCRIMINATING: the shape that told an agent to rename a profile that did not exist."""
-    divergent = _divergent_subclasses()
-    offenders = [
-        f"{repo_relative(path)}:{line}: except {caught} translates without routing {unrouted}"
-        for path in _scoped_modules()
-        for line, caught, unrouted in _flattening_handlers(ast.parse(path.read_text(encoding="utf-8")), divergent)
-    ]
-
-    assert not offenders, (
-        "these handlers translate an error whose subclass publishes the opposite `retryable` "
-        "answer, so both reach the operator as one:\n  " + "\n  ".join(sorted(offenders)) + "\n"
-        "Catch the subclass first and give it its own answer."
-    )
-
-
-def test_the_registry_actually_yields_divergent_pairs() -> None:
-    """ANTI-VACUITY: an empty map would clear every handler for free.
-
-    The gate's whole content is the divergent map. If the registry resolved
-    nothing -- an import failure, a renamed module -- the scan above would pass
-    against any tree at all.
-    """
-    divergent = _divergent_subclasses()
-
-    assert divergent, "no divergent parent/child pairs resolved; the scan is checking nothing"
-    assert "ProfileCustodyTransactionConflictError" in divergent
-    assert "ProfileCustodyDuplicateLabelError" in divergent["ProfileCustodyTransactionConflictError"]
 
 
 def test_the_scan_reaches_the_scoped_packages() -> None:

@@ -16,10 +16,6 @@ from ..period import (
     PeriodKind,
     RegistryPeriodCode,
     StandardPeriodCode,
-    accepted_filing_period_codes,
-    accepted_filing_period_patterns,
-    accepted_period_codes,
-    accepted_period_patterns,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -109,53 +105,6 @@ class TestRegistryPeriodCodeValidator:
         # bare "event" accepted the word wherever it fell -- and it is a
         # substring of "event-n", so the specific token was never required.
         assert "event-n" in error_str
-
-
-class TestRegistryPeriodCodeAccessors:
-    """Verify accessor functions for period-code discovery."""
-
-    def test_accepted_period_codes_surface_expected_families(self) -> None:
-        codes = accepted_period_codes()
-        assert isinstance(codes, tuple)
-        for expected in (
-            "1T",
-            "0A",
-            "12",
-            "EXT-1T",
-            "EXT-4T",
-            "AD-HOC",
-            "ALTA",
-            "MODIFICACION",
-            "BAJA",
-            "COMUNICACION",
-            "VARIACION",
-        ):
-            assert expected in codes
-
-    def test_accepted_period_patterns_describe_event_regex(self) -> None:
-        patterns = accepted_period_patterns()
-        assert isinstance(patterns, tuple)
-        assert len(patterns) >= 3
-        pattern_str = " ".join(patterns).lower()
-        assert "event" in pattern_str
-        assert "integer" in pattern_str
-
-    def test_registry_patterns_report_every_administrative_token(self) -> None:
-        """The pattern listing and the code listing describe the same set."""
-        pattern_str = " ".join(accepted_period_patterns())
-        for token in ADMINISTRATIVE_TOKENS:
-            assert token in pattern_str, token
-            assert token in accepted_period_codes(), token
-
-    def test_filing_accessors_exclude_the_administrative_vocabulary(self) -> None:
-        codes = accepted_filing_period_codes()
-        patterns = " ".join(accepted_filing_period_patterns())
-        for token in ADMINISTRATIVE_TOKENS:
-            assert token not in codes, token
-            assert token not in patterns, token
-        for expected in ("1T", "0A", "12", "EXT-1T", "AD-HOC"):
-            assert expected in codes, expected
-        assert set(codes) < set(accepted_period_codes())
 
 
 class TestRegistryPeriodCodeRoundtrip:

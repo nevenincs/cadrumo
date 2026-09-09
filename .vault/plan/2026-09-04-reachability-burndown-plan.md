@@ -9,7 +9,7 @@ related:
   - '[[2026-09-04-reachability-burndown-reference]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:5f767f443b1b853e67fe9b471f3736c0f0cc354c05a2aca8e571604c07306ef0'
+body_hash: 'sha256:d10723049cc379bf5e937abdf67eba4a05163d78b2a7b03c086260378af1e626'
 ---
 
 <!-- RETIRED: S151 -->
@@ -475,9 +475,9 @@ The plan closed at 24/24 while the live audit still reports 58 unreachable modul
 - [x] `W05.P12.S373` - Collapse manual handling to live bundled-manifest verification, deleting the unwired HTTP fetch subsystem, exact URL-roster tests, and newly test-only atomic stream writer.; `manual fetch module and tests, core atomic-write helper and tests, application manual reader, exact unused-symbol signal`.
 - [x] `W05.P12.S374` - Delete the unconsumed AttachmentCatalogue aggregate and its catalogue-only coercion and collection vocabulary.; `attachment domain models, attachment store and service tests, exact unused-symbol signal`.
 - [x] `W05.P12.S375` - Delete the unused Google Sheets export-service composition wrapper and its wrapper-only imports.; `operation composition owner, operation composition tests, exact unused-symbol signal`.
-- [ ] `W05.P12.S376` - Resolve the remaining exact unreachable symbols in application and core ownership without compatibility surfaces.; `src/cadrumo/application, src/cadrumo/core`.
-- [ ] `W05.P12.S377` - Resolve the remaining exact unreachable symbols in registry and domain ownership without duplicate authority.; `src/cadrumo/domain`.
-- [ ] `W05.P12.S378` - Resolve the remaining exact unreachable symbols in entrypoint and LLM ownership while preserving live command behavior.; `src/cadrumo/entrypoints, src/cadrumo/llm`.
+- [x] `W05.P12.S376` - Resolve the remaining exact unreachable symbols in application and core ownership without compatibility surfaces.; `src/cadrumo/application, src/cadrumo/core`.
+- [x] `W05.P12.S377` - Resolve the remaining exact unreachable symbols in registry and domain ownership without duplicate authority.; `src/cadrumo/domain`.
+- [x] `W05.P12.S378` - Resolve the remaining exact unreachable symbols in entrypoint and LLM ownership while preserving live command behavior.; `src/cadrumo/entrypoints, src/cadrumo/llm`.
 
 ## Parallelization
 

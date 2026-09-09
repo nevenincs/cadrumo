@@ -25,7 +25,7 @@ if not __package__:
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory  # noqa: E402
 
-from ..packaging._hashing import sha256_path  # noqa: E402
+from ..packaging.hashing import sha256_path  # noqa: E402
 
 _CORPUS = _ROOT / "src/cadrumo/_data/corpus/aeat_official/disenos_registro"
 _HISTORICAL_EXCLUSIONS_PATH = _CORPUS / "historical_exclusions.json"

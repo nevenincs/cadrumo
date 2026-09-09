@@ -80,16 +80,6 @@ def load_modelo_directory(directory: Path) -> ModeloDefinition:
         return _load_modelo_directory_cached(str(resolved), refreshed)
 
 
-def load_modelo_path(path: Path) -> ModeloDefinition:
-    """Load a :class:`ModeloDefinition` from either supported on-disk layout."""
-    resolved = path.resolve()
-    if resolved.is_file():
-        return load_modelo_file(resolved)
-    if resolved.is_dir():
-        return load_modelo_directory(resolved)
-    raise RegistryLoadError(f"{resolved}: modelo source does not exist")
-
-
 def load_modelo_source(source: ModeloSource) -> ModeloDefinition:
     """Load a modelo from a discovered source descriptor.
 
@@ -280,13 +270,3 @@ def _load_all_modelo_definitions(modelos_dir: Path) -> tuple[ModeloDefinition, .
 
 
 collect_registry_tree_fingerprints = _collect_registry_tree_fingerprints
-
-
-def clear_registry_tree_cache() -> None:
-    """Drop the memoised registry-tree loads.
-
-    A test that writes a registry tree to a temp directory and loads it needs
-    the memo cleared between cases. Exposing the reset here keeps the cache
-    itself private: the reset is the contract, the cache is not.
-    """
-    _load_registry_tree_cached.cache_clear()

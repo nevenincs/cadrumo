@@ -25,7 +25,6 @@ from cadrumo.core.directory_scan import scan_directory
 from .._paths import REPO_ROOT, UTF_8
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
-from ._hashing import sha256_path, sha256_text
 from ._proof_ledger import record_proof
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
@@ -33,6 +32,7 @@ from .build_scratch_reclaim import (
     COMMAND_SPEC_BYTECODE_FAMILY,
     var_scratch_name,
 )
+from .hashing import sha256_path, sha256_text
 from .runtime_wheelhouse import build_runtime_wheelhouse, load_runtime_wheelhouse
 
 _UTF_8: Final[str] = UTF_8
@@ -147,7 +147,7 @@ from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_ent
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints import cli
 from cadrumo.entrypoints.cli.command_spec import DeferredTarget, TranslationKey
-from cadrumo.entrypoints.cli.command_api import command_spec_for_path, command_spec_nodes
+from dev.command_graph import command_spec_for_path, command_spec_nodes
 
 def walk(value, kind):
     if isinstance(value, kind):
@@ -934,7 +934,7 @@ def _stamp_bundled_registry_records_into_build_tree(build_root: Path) -> frozens
         The wheel-relative paths of the stamped members, as the archive carries them.
     """
     from cadrumo import __version__
-    from cadrumo.domain.calculations.registry.authority import stamp_bundled_registry_release
+    from dev.registry.maintenance_support import stamp_bundled_registry_release
 
     source_root = build_root / _BUILD_TREE_SOURCE_DIR
     registry_root = source_root / "cadrumo" / "_data" / "registry" / "aeat"

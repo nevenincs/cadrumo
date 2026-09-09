@@ -226,15 +226,6 @@ def _collect_parameter_refs(expression: FormulaExpression, refs: list[ParameterI
 # cheap — so they simply recompute on every call.
 
 
-def input_casilla_id_map(revision: ModeloRevision) -> dict[CasillaId, CasillaId]:
-    """Return the canonical casilla id map for a revision input.
-
-    The :class:`~cadrumo.domain.calculations.registry.ModeloRevision` supplies the
-    declared :class:`~cadrumo.core.CasillaId` values.
-    """
-    return {casilla.id: casilla.id for casilla in revision.casillas}
-
-
 def formula_evaluation_order(revision: ModeloRevision) -> tuple[CasillaId, ...]:
     """Return computed casilla ids in dependency order.
 

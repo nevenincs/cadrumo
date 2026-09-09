@@ -31,14 +31,12 @@ from .binding_selector_utils import (
     invariant_diagnostics,
     operation_clave_validator,
     selector_against_model,
-    unique_tuple,
     uppercase_alpha_code,
     validate_rectification_fields,
 )
 from .binding_selector_utils import selector_as_dict as _selector_as_dict
 from .errors import RegistryValidationError
 from .ids import BindingId
-from .quantity_screen_enrolment import independent_quantity_facts
 from .schema import DataBindingDefinition, ModeloRevision
 from .schema_base import coerce_enum_member
 
@@ -87,8 +85,6 @@ _InvoiceRowField = Literal[
 # this binding an invoice binding?" routes through this name.
 __all__ = [
     "InvoiceObservation",
-    "InvoiceObservationRequirement",
-    "invoice_binding_requirements",
     "is_m347_declarante_summary_invoice_binding",
     "m347_operation_clave",
     "resolve_invoice_binding_row_values",
@@ -96,7 +92,6 @@ __all__ = [
     "resolve_invoice_family_row_values",
     "resolve_invoice_family_scalar_values",
     "validate_invoice_binding",
-    "validate_invoice_binding_definition",
     "validate_invoice_family_fact_and_aggregation",
 ]
 
@@ -177,23 +172,6 @@ class InvoiceObservation(BaseModel):
     def _validate_rectification(self) -> InvoiceObservation:
         validate_rectification_fields(self)
         return self
-
-
-class InvoiceObservationRequirement(BaseModel):
-    """Invoice-fact slice declared by one or more invoice-source bindings.
-
-    Modelo runtimes use this introspection to ask the invoice ledger for the
-    minimal set of observations the bindings need.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    binding_ids: tuple[BindingId, ...] = Field(min_length=1)
-    claves: tuple[str, ...] = ()
-    rectification_scope: RectificationScopeField = RectificationScope.ANY
-    iva_regime: str | None = None
-
-    _values_unique = field_validator("binding_ids", "claves")(unique_tuple("invoice requirement tuple"))
 
 
 class _InvoiceSelector(BaseModel):
@@ -286,7 +264,7 @@ def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
       sale) is clave ``B``, entregas de bienes y prestaciones de servicios
       superiores a 3.005,06 EUR.
 
-    Claves F/G (mediación de agencia de viajes under RD 1619/2012 disposición
+    Claves F/G (mediaci�n de agencia de viajes under RD 1619/2012 disposici�n
     adicional cuarta) are classified by the resolver caller from a fact this
     function's single ``source_kind`` argument cannot carry -- the invoice's
     own travel-agency mediation flag, not its direction. The remaining three
@@ -294,7 +272,7 @@ def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
     caller has: ``C`` (cobros por cuenta de terceros) needs a
     professional-fees-collection classification distinct from ordinary
     purchase/sale direction; ``D``/``E`` key on the FILER's own type (entidad
-    pública, partido, sindicato, ...) rather than on any transaction
+    p�blica, partido, sindicato, ...) rather than on any transaction
     classification. Returns ``None`` for those and for any non-invoice source
     kind, rather than guessing -- a caller distinguishing them needs a fact
     this function does not have, not a default.
@@ -311,45 +289,6 @@ def m347_operation_clave(source_kind: BindingSourceKind | str) -> str | None:
     return None
 
 
-def invoice_binding_requirements(
-    revision: ModeloRevision,
-) -> tuple[InvoiceObservationRequirement, ...]:
-    """Return invoice ledger slices needed by ``revision``'s invoice bindings.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose invoice bindings
-            are inspected.
-
-    Returns:
-        Tuple of :class:`InvoiceObservationRequirement` records describing
-        each distinct invoice-fact slice the revision requires.
-    """
-    grouped: dict[
-        tuple[tuple[str, ...], RectificationScope, str | None],
-        set[BindingId],
-    ] = {}
-    for binding in revision.bindings:
-        if binding.source not in INVOICE_BINDING_SOURCE_KINDS:
-            continue
-        selector = _validated_invoice_selector(binding)
-        key = (tuple(sorted(selector.claves)), selector.rectification_scope, selector.iva_regime)
-        grouped.setdefault(key, set()).add(binding.id)
-    requirements: list[InvoiceObservationRequirement] = []
-    for (claves, scope, regime), binding_ids in sorted(
-        grouped.items(),
-        key=lambda item: (item[0][0], item[0][1], item[0][2] or ""),
-    ):
-        requirements.append(
-            InvoiceObservationRequirement(
-                binding_ids=tuple(sorted(binding_ids)),
-                claves=claves,
-                rectification_scope=scope,
-                iva_regime=regime,
-            ),
-        )
-    return tuple(requirements)
-
-
 _InvoiceFact = Literal["operator_count", "base_sum", "invoice_total_sum", "rectified_base_delta_sum", "row_field"]
 _INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
     {"operator_count", "base_sum", "invoice_total_sum", "rectified_base_delta_sum", "row_field"},
@@ -360,9 +299,6 @@ _INVOICE_FACTS: frozenset[_InvoiceFact] = frozenset(
 #: than aggregating anything; neither is a quantity, so neither is classified
 #: below. Restricting the classified set is deliberate: declaring a non-quantity
 #: "independent" would hand a future screen a fact it cannot sum.
-_INVOICE_SCALAR_MEASURE_FACTS: frozenset[str] = frozenset(
-    {"base_sum", "invoice_total_sum", "rectified_base_delta_sum"},
-)
 
 #: Facts that re-measure the SAME magnitude, each with the reason it does so.
 #:
@@ -372,18 +308,6 @@ _INVOICE_SCALAR_MEASURE_FACTS: frozenset[str] = frozenset(
 #: never ``base_sum``, M349 draws ``base_sum`` and never ``invoice_total_sum``.
 #: That mirror is why the pair is a classification rather than two coincidences
 #: -- either omission read alone looks like a gap.
-_INVOICE_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
-    "base_sum": (
-        "measures the invoice as its taxable base, IVA excluded; the reading Modelo 349 uses, "
-        "because an intra-EU supply carries no repercutido IVA and the recapitulative statement "
-        "declares the base. One of two magnitude measures a revision picks between"
-    ),
-    "invoice_total_sum": (
-        "measures the same invoice as its total with IVA included; the reading Modelo 347 uses, "
-        "whose declared magnitude is the importe total de la operación. The IVA-inclusive sibling "
-        "of base_sum, never declared alongside it"
-    ),
-}
 
 #: DERIVED as the complement, exactly as the ledger families derive theirs, so the
 #: two cannot drift apart -- and so the shared helper's refusals apply here too: a
@@ -400,10 +324,6 @@ _INVOICE_ALTERNATIVE_MEASURE_FACTS: Mapping[str, str] = {
 #: ``rectified_base_delta_sum`` is INDEPENDENT: a rectification delta is a separate
 #: declared quantity, not a third reading of the invoice's magnitude, so a revision
 #: declaring either magnitude measure still needs it drawn separately.
-_INVOICE_INDEPENDENT_QUANTITY_FACTS: frozenset[str] = independent_quantity_facts(
-    _INVOICE_SCALAR_MEASURE_FACTS,
-    _INVOICE_ALTERNATIVE_MEASURE_FACTS,
-)
 
 _M347_DECLARANTE_SUMMARY_RECORD = "m347_declarante_summary"
 
@@ -419,11 +339,6 @@ _OPERATOR_CLAVE_PERIOD_ONLY_FIELDS: frozenset[str] = frozenset(
 # real-data defect that must surface loudly at row-build time rather
 # than be filtered out by a binding-validation guard.
 _OPTIONAL_ONLY_INVOICE_ROW_FIELDS: frozenset[str] = frozenset[str]()
-
-
-def validate_invoice_binding_definition(binding: DataBindingDefinition) -> None:
-    """Validate an invoice-source binding before it reaches runtime."""
-    _validated_invoice_selector(binding)
 
 
 def validate_invoice_binding(binding: DataBindingDefinition) -> list[str]:
@@ -621,7 +536,7 @@ def resolve_invoice_family_row_values(
     source kind does not share rows; the invoice family does not.
 
     M347's ``contraparte_clave`` grouping needs every clave to share ONE row
-    sequence, because the diseño de registro's Tipo-2 declarado record is one
+    sequence, because the dise�o de registro's Tipo-2 declarado record is one
     shared physical sequence regardless of clave (grounded in the
     tui-architecture modelo 347 contraparte binding inventory reference).
     That now falls out of ``cohort_by_source`` directly rather than needing a
@@ -947,8 +862,8 @@ def _aggregate_operator_count(
     # AEAT defines this count as the number of Tipo 2 records (one per
     # (operator, clave) pair for the operador grouping; one per (operator,
     # clave, ejercicio, periodo) for the rectificacion grouping). Per
-    # Orden EHA/769/2010 Anexo positions 138-146 and 162-170: "Número de
-    # registros de tipo 2 con clave de operación, posición 133, igual a
+    # Orden EHA/769/2010 Anexo positions 138-146 and 162-170: "N�mero de
+    # registros de tipo 2 con clave de operaci�n, posici�n 133, igual a
     # 'E', 'M', 'H', 'T', 'A', 'S', 'I', 'R', 'D' o 'C'."
     keys = {_operator_count_key(observation, selector) for observation in observations}
     return Decimal(len(keys))

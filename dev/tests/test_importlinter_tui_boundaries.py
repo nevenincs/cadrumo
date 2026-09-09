@@ -80,7 +80,6 @@ def _write_real_tui_topology(root: Path) -> None:
         "cadrumo.entrypoints.tui.operations",
         "cadrumo.entrypoints.tui.profile",
         "cadrumo.entrypoints.tui.secret",
-        "cadrumo.entrypoints.tui.flows",
     ):
         _write_package(root, package)
 
@@ -90,7 +89,6 @@ def _write_real_tui_topology(root: Path) -> None:
     _write_module(root, "cadrumo.entrypoints.tui.operations.worker")
     _write_module(root, "cadrumo.entrypoints.tui.profile.screen")
     _write_module(root, "cadrumo.entrypoints.tui.secret.screen")
-    _write_module(root, "cadrumo.entrypoints.tui.flows.screen")
 
 
 def _run_import_linter(root: Path) -> tuple[int, str]:

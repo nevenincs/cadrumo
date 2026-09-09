@@ -18,13 +18,6 @@ from ..export import resolve_export_layout
 from ..record_design import (
     extract_record_design,
     extract_record_design_pdf,
-    extract_record_design_pdf_bytes,
-)
-from ..record_design_coverage import (
-    build_diseno_coverage_report,
-    calculation_closure_record_design_metadata,
-    derive_calculation_completeness_casillas,
-    derive_diseno_coverage_casillas,
 )
 from ..record_design_schema import RecordDesignSheet
 from ..schema import DataBindingDefinition, ModeloRevision
@@ -46,13 +39,8 @@ __all__ = [
     "_record_design_pdf",
     "_record_design_pdf_files",
     "_write_pdf_lines",
-    "build_diseno_coverage_report",
     "bundled_path",
-    "calculation_closure_record_design_metadata",
-    "derive_calculation_completeness_casillas",
-    "derive_diseno_coverage_casillas",
     "extract_record_design_pdf",
-    "extract_record_design_pdf_bytes",
     "resolve_export_layout",
 ]
 

@@ -376,8 +376,7 @@ def resolve_maternidad_meses(
 def _fact_index_declares_maternidad_months(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
     """Return whether the profile fact projection declares maternity months."""
     return any(
-        key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo")
-        for key in fact_index
+        key.startswith("renta_family.descendiente.") and key.endswith(".meses_madre_trabajo") for key in fact_index
     )
 
 
@@ -424,8 +423,7 @@ def _maternidad_alta_posterior_hijos(
     return frozenset(
         str(index)
         for index, descendant in enumerate(profile.descendientes)
-        if contributed.get(str(index), 0) > 0
-        and descendant.maternidad_alta_posterior_increment_applies(filing_year)
+        if contributed.get(str(index), 0) > 0 and descendant.maternidad_alta_posterior_increment_applies(filing_year)
     )
 
 

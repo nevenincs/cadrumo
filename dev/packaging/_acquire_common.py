@@ -28,9 +28,9 @@ from typing import TYPE_CHECKING, Final, NoReturn
 from cadrumo.core.directory_scan import scan_directory
 
 from .._paths import UTF_8
-from ._hashing import sha256_path
 from .cohort_manifest import LoadedReleaseCohort
 from .evidence import CommandTranscript
+from .hashing import sha256_path
 from .python_cohort import PythonCohort
 
 if TYPE_CHECKING:

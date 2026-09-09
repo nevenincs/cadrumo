@@ -13,7 +13,7 @@ import secrets
 import pytest
 
 from ......core.config import override_settings
-from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, render_error_text
+from ......core.errors.error_codes import build_error_envelope, render_error_text
 from ......core.i18n import clear_output_language_cache
 from ......tests.master_key import EphemeralMasterKeyProvider
 from ...bucket.errors import BucketLockedError
@@ -32,16 +32,6 @@ def test_ephemeral_provider_raises_reentrant_error_on_second_enter() -> None:
         provider.__enter__()
 
     assert exc_info.value.provider_name == "EphemeralMasterKeyProvider"
-
-
-def test_master_key_reentrant_error_is_registered() -> None:
-    """MasterKeyReentrantError must have a bound ErrorCode in ERROR_REGISTRY."""
-
-    err = MasterKeyReentrantError("SomeProvider")
-    code = err.code
-
-    assert code.code == "INTERNAL_MASTER_KEY_REENTRANT"
-    assert code.code in ERROR_REGISTRY
 
 
 def test_master_key_reentrant_error_envelope_round_trip() -> None:

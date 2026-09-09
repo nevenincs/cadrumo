@@ -8,17 +8,16 @@
 #   --target runner   Self-hosted GitHub Actions runner image for the Linux
 #                     fleet. Built by `just runner-image-build`.
 #
-# ── How the three container surfaces relate ──────────────────────────────
+# ── How the two container surfaces relate ────────────────────────────────
 # 1. The RUNNER containers execute every workflow job labelled
 #    `[self-hosted, Linux, X64]`. They mount the HOST docker socket.
-# 2. Through that socket, the packaging smoke lanes
-#    (`dev/packaging/smoke_docker.py`) start NESTED clean-Linux containers on
-#    the host daemon to prove a built wheel installs from scratch. Those
-#    nested containers use `PYTHON_BASE_IMAGE` below — the same base as the
-#    dev image, resolved by `dev/packaging/_base_image.py` so the string is
-#    written once.
-# 3. The DEV image is not used by CI at all; it is the contributor
-#    environment. It shares the Python base with (2), not with (1).
+# 2. The DEV image is not used by CI at all; it is the contributor
+#    environment. It does not share a base with (1).
+#
+# There was a third surface: nested clean-Linux containers, started on the
+# host daemon through that socket, that proved a built wheel installed from
+# scratch. That lane was retired along with its module, and the install proofs
+# no longer require a container daemon.
 #
 # The runner keeps a SEPARATE base by necessity, not by drift: its upstream
 # image carries the GitHub Actions runner agent itself (`run.sh`,
@@ -28,9 +27,17 @@
 #
 # ── One base, declared once ──────────────────────────────────────────────
 # `PYTHON_BASE_IMAGE` is the single declaration point for the Linux base
-# every Cadrumo container shares. `dev/packaging/smoke_docker.py` (the
-# clean-Linux wheel-install proof) defaults to the same string, so the dev
-# image and the packaging proof cannot drift onto different distributions.
+# every Cadrumo container shares, read back by
+# `dev/packaging/_base_image.py:linux_base_image`. Nothing may restate it:
+# `dev/packaging/tests/test_container_base_image_singularity.py` WALKS the
+# tree and fails on any surface that binds a bare `python:3.13-*` literal
+# instead of deriving it from here — a comment asserting singularity is what
+# this replaced, and a comment is exactly what did not hold.
+#
+# The interpreter minor inside this tag is separately joined to
+# `dev/ci/python-runtime-matrix.json` by
+# `dev/packaging/tests/test_runtime_floor_singularity.py`, so a base image
+# shipping a runtime the project no longer supports cannot pass.
 #
 # The tag is pinned to the DISTRIBUTION (`-trixie`), not just the Python
 # minor. `python:3.13-slim` is a moving tag: it silently rolled from Debian
@@ -284,11 +291,11 @@ RUN chmod 0755 /usr/local/bin/cadrumo-runner-entry.sh
 # live OUTSIDE /home/runner, which the runner state volume mounts over, or it
 # disappears the moment the volume is attached.
 #
-# These containers mount the host docker socket so the packaging smoke lanes can
-# start nested containers on the host daemon. Those nested runs leave anonymous
-# volumes and dangling images behind ON THE HOST, and nothing in the job
-# lifecycle reclaims them - only ACTIONS_RUNNER_HOOK_JOB_COMPLETED fires when a
-# job fails, cancels or times out.
+# These containers mount the host docker socket, so any job that drives the host
+# daemon leaves anonymous volumes and dangling images behind ON THE HOST — as the
+# retired nested-container install proof did — and nothing in the job lifecycle
+# reclaims them: only ACTIONS_RUNNER_HOOK_JOB_COMPLETED fires when a job fails,
+# cancels or times out.
 #
 # dev/runners/README.md already names cleanup-linux.sh as this runner's hygiene
 # script. It was never baked into the image, so the Linux runners have run

@@ -47,7 +47,6 @@ from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from .ids import RevisionId
 
-REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
 
 # The production branch's relative path, read off the taxonomy rather than an

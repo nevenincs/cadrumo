@@ -4,16 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from ..checker_oracle_flow import (
-    CheckerObservation,
-    CheckerReplayDriver,
+from .....tests.checker_oracle import (
     compare_verdict_field,
     normalize_expected_verdicts,
-    normalize_verdict_mapping,
     observed_verdict,
     replay_parse_operation,
 )
+from ..checker_oracle_flow import CheckerObservation, normalize_verdict_mapping
 from ..errors import RegistryValidationError
+from .checker_replay_driver import CheckerReplayDriver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

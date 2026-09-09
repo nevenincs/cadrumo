@@ -430,9 +430,3 @@ def test_modelo_210_irnr_continuity_enrolls_two_renta_years(tmp_path: Path) -> N
     assert values_n[_CUOTA_INTEGRA_CASILLA] != values_n1[_CUOTA_INTEGRA_CASILLA]
 
     # Authorization-gate enrollment.
-
-
-
-
-
-

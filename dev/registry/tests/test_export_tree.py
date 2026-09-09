@@ -36,7 +36,7 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 from ..pipeline import _export_tree
 from ..pipeline._casilla_export_refs import write_generated_casilla_export_refs
 from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree
-from ..pipeline._provenance_manifest import (
+from ..pipeline.export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
     _write_canonical_manifest_atomically,
@@ -45,8 +45,12 @@ from ..pipeline._provenance_manifest import (
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
-from ..pipeline._record_design_ir import RecordDesignIntermediate
-from ..pipeline._render_profile import (
+from ..pipeline.joined_record_design import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediate,
+    RecordDesignWorkbookFormat,
+)
+from ..pipeline.render_profile import (
     RenderProfile,
     RenderProfileAnchor,
     RenderProfileDesignIdentity,
@@ -55,9 +59,7 @@ from ..pipeline._render_profile import (
     SingletonNumericRule,
     Width17MembershipRule,
 )
-from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
-from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
+from ..pipeline.semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -1100,16 +1102,11 @@ def test_direct_manifest_emission_and_real_loader_verification(m130_inspection_s
 
 
 def test_manifest_writer_refuses_a_target_that_already_exists(tmp_path) -> None:
-    """Pin the refusal this writer delegates to the core publish-once tier.
+    """Pin the refusal this writer delegates to its publish-once primitive.
 
-    ``atomic_write_publish_once_bytes`` publishes with :func:`os.link`, which
-    fails with :exc:`FileExistsError` in one uninterruptible step rather than
-    overwriting. This test pins the refusal at THIS boundary anyway, because the
-    writer translates that failure into a registry error and a delegation that
-    dropped the translation would still be a defect here. Nothing else asserted
-    it: the emit-level test must ``unlink()`` the manifest before it can call
-    emit at all, so the behaviour was exercised by necessity and would have
-    survived its own deletion in green.
+    The development-owned primitive publishes with :func:`os.link`, which fails
+    with :exc:`FileExistsError` in one uninterruptible step rather than
+    overwriting. This test pins this boundary's registry-error translation.
 
     The first write is the positive control -- without it a refusal that fired
     unconditionally, or a writer that never wrote at all, would pass too.

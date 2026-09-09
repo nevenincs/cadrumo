@@ -6,6 +6,7 @@ import json
 from urllib.parse import urlparse
 
 import pytest
+from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
 from pydantic import ValidationError
 
 from .....core.config import Settings
@@ -15,16 +16,16 @@ from .....tests.aeat_nif_iva_oracle import (
     AeatNifIvaCheckerOracle,
     register_default,
 )
-from ..checker_oracle_flow import CheckerReplayDriver
 from ..errors import RegistryValidationError
-from ..live_parity import LiveParityCatalogue, LiveParityOracle, OracleEnvironment
+from ..live_parity import LiveParityOracle
 from ..remote_state_guard import (
-    AEAT_WRITE_FORBIDDEN_ACTIONS,
     RemoteOperation,
     RemoteStateGuardPolicy,
     assert_remote_operation_allowed,
 )
 from ..schema_base import EvidenceTier
+from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
+from .checker_replay_driver import CheckerReplayDriver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

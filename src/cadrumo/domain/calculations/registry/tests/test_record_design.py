@@ -6,9 +6,9 @@ import inspect
 from pathlib import Path
 
 import pytest
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 from .. import record_design_workbook as record_design_workbook_module
-from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..record_design import (
     extract_record_design,

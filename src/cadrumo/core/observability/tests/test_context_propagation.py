@@ -25,7 +25,7 @@ from ..context import run_context
 from ..errors import RunTracePersistenceError
 from ..models import GenericPayload, RunEventKind, RunEventPayload, RunOutcome
 from ..recorder import record_event
-from ..store import EVENTS_FILENAME, TRACE_FILENAME, load_events, load_trace
+from ..store import EVENTS_FILENAME, TRACE_FILENAME, iter_events, load_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -140,7 +140,6 @@ class TestRunContextOutcome:
             raise RuntimeError("primary failure")
 
 
-
 class TestRunContextRunIdValidation:
     def test_caller_supplied_bad_run_id_rejected_before_fs(self, tmp_path: Path) -> None:
         """A malicious run_id must never touch the filesystem.
@@ -195,7 +194,7 @@ class TestRunIdPropagation:
                 chain("beta")
                 run_id = info.run_id
 
-            events = load_events(run_id)
+            events = tuple(iter_events(run_id))
             assert events, "expected at least one event after running the chain"
             run_ids = {evt.run_id for evt in events}
             assert run_ids == {run_id}

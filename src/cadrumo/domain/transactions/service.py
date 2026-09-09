@@ -29,19 +29,6 @@ _DEFAULT_MANUAL_CONFIDENCE = Decimal("1.0")
 _EntrySignature = tuple[BusinessClassification, Decimal | None, str, str, str | None, str, Decimal | None]
 
 
-def find_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction | None:
-    """Return one transaction from a catalogue if present.
-
-    Args:
-        catalogue: The :class:`TransactionCatalogue` to search.
-        transaction_id: Stable transaction identifier.
-
-    Returns:
-        The matching :class:`Transaction`, or ``None`` when absent.
-    """
-    return catalogue.get(transaction_id)
-
-
 def link_invoice(catalogue: TransactionCatalogue, transaction_id: str, invoice_id: str) -> TransactionCatalogue:
     """Return a new catalogue with ``invoice_id`` linked to one transaction.
 

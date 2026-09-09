@@ -184,9 +184,3 @@ def test_modelo_322_enrolls_two_renta_years(tmp_path: Path) -> None:
             assert result.values[_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA] == (
                 result.values[_IVA_CUOTA_DEVENGADA_TOTAL_CASILLA] - result.values[_IVA_CUOTA_DEDUCIBLE_TOTAL_CASILLA]
             )
-
-
-
-
-
-

@@ -16,6 +16,7 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Footer, Input, Label, Select, Static
 
+from ....application.user_profile.login_session import ProfileLoginOutcome
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import tr
 from ....entrypoints.tui.components.status import PinnedStatusBar
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
 __all__ = ["LoginScreen"]
 
 
-class LoginScreen(CredentialScreen["ProfileLoginOutcome"]):
+class LoginScreen(CredentialScreen[ProfileLoginOutcome]):
     """Full-screen credential entry that unlocks one existing profile."""
 
     SCOPED_CSS = False

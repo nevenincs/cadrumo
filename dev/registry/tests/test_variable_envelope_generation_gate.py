@@ -8,21 +8,23 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
-from ..pipeline._record_design_ir import load_record_design_intermediate
-from ..pipeline._render_profile import (
+from ..pipeline.joined_record_design import join_record_design_semantics
+from ..pipeline.record_design_intermediate import load_record_design_intermediate
+from ..pipeline.render_profile import (
     RenderProfileSourceEvidence,
     load_render_profile,
     load_render_profile_source_evidence,
 )
-from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_join import join_record_design_semantics
-from ..pipeline._semantic_map_loader import load_semantic_map
+from ..pipeline.semantic_map import (
+    SemanticMap,
+    load_semantic_map,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

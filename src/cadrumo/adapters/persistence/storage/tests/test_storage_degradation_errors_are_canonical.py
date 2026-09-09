@@ -13,6 +13,7 @@ from ..errors import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
+
 def test_the_canonical_set_is_what_it_claims() -> None:
     assert (
         ClassificationError,

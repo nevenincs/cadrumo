@@ -18,12 +18,13 @@ from ..record_design import (
     extract_record_design_workbook,
     extract_record_design_xls_workbook,
 )
-from ..record_design_coverage import _CASILLA_TAG_RE
 from ..record_design_pdf_rows import clean_pdf_line
 from ..record_design_pdf_visual import extract_pdf_text_lines
 from ..record_design_schema import RecordDesignSheet
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import SourceReference
+
+_CASILLA_TAG_RE = re.compile(r"\[(\d{1,5})\]")
 
 _DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
 

@@ -71,7 +71,7 @@ from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 from .._paths import REPO_ROOT, UTF_8
 from ..quality.import_hygiene_scan import (
@@ -940,7 +940,6 @@ def forward_reference_names(value: str) -> Iterator[str]:
         ast.Constant,
         ast.BinOp,
         ast.BitOr,
-        ast.Index,
     )
     if any(not isinstance(node, allowed) for node in ast.walk(parsed)):
         return
@@ -964,7 +963,7 @@ def _type_position_strings(tree: ast.Module) -> Iterator[str]:
             first = node.args[0]
             if name == "cast" and isinstance(first, ast.Constant) and isinstance(first.value, str):
                 yield first.value
-        annotations = []
+        annotations: list[ast.expr | None] = []
         if isinstance(node, (ast.AnnAssign, ast.arg)):
             annotations.append(node.annotation)
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -1292,12 +1291,12 @@ def _declared_data_values(spec: ShippedTreeSpec) -> frozenset[str]:
 
     def collect(node: object) -> None:
         if isinstance(node, dict):
-            for key, item in node.items():
+            for key, item in cast("dict[object, object]", node).items():
                 if isinstance(key, str):
                     values.add(key)
                 collect(item)
         elif isinstance(node, list):
-            for item in node:
+            for item in cast("list[object]", node):
                 collect(item)
         elif isinstance(node, str):
             values.add(node)
@@ -1763,14 +1762,20 @@ def filter_by_confidence(result: UnreachableCodeResult, tier: Confidence) -> Unr
     A campaign picks the exact tier up first, so the narrowing is done here
     rather than by every consumer re-deriving it from the JSON.
     """
+    modules = tuple(f for f in result.modules if f.confidence is tier)
+    symbols = tuple(f for f in result.symbols if f.confidence is tier)
+    tests = tuple(f for f in result.tests if f.confidence is tier)
+    outcome = result.outcome
+    if outcome is not UnreachableCodeOutcome.ERROR:
+        outcome = UnreachableCodeOutcome.FINDINGS if modules or symbols or tests else UnreachableCodeOutcome.CLEAN
     return UnreachableCodeResult(
-        outcome=result.outcome,
+        outcome=outcome,
         roots=result.roots,
         shipped_modules=result.shipped_modules,
         reachable_modules=result.reachable_modules,
-        modules=tuple(f for f in result.modules if f.confidence is tier),
-        symbols=tuple(f for f in result.symbols if f.confidence is tier),
-        tests=tuple(f for f in result.tests if f.confidence is tier),
+        modules=modules,
+        symbols=symbols,
+        tests=tests,
         data_cleared=result.data_cleared,
         reason=result.reason,
     )

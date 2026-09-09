@@ -38,7 +38,7 @@ mechanism: AEAT publishes them in Spanish and the catalogues carry that Spanish
 string under every locale, so what renders is the form's own name.
 
 Anchors: every entry carries a page-local HTML id from
-:func:`~dev.docs.terminology._casilla_anchor.casilla_page_anchor`, the exact
+:func:`~dev.docs.terminology.casilla_anchor.casilla_page_anchor`, the exact
 target the search record deep-links to. A raw-HTML id (not a Sphinx ``.. _:``
 label) is used deliberately: casilla ids repeat across modelos, so a global
 label would collide project-wide, while a page-local HTML id may safely repeat
@@ -65,7 +65,7 @@ from cadrumo.core.directory_scan import scan_directory
 from .._paths import REPO_ROOT, UTF_8
 from ._locale_chrome import docs_chrome
 from .legal_reference import legal_reference_target, load_legal_provisions
-from .terminology._casilla_anchor import CASILLA_REFERENCE_DIR, casilla_page_anchor, casilla_page_relpath
+from .terminology.casilla_anchor import CASILLA_REFERENCE_DIR, casilla_page_anchor, casilla_page_relpath
 from .terminology.casilla_projection import project_casilla_search_records
 from .terminology.search_record import CasillaSearchRecord
 

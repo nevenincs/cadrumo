@@ -16,7 +16,6 @@ import yaml
 from textual.app import App, ComposeResult
 from textual.widgets import Button, Static
 
-from .....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ..theme import BASE_CSS, CADRUMO_CSS_TOKENS, tokenised
 from ..widgets import (
     DisclosureGroup,
@@ -24,49 +23,9 @@ from ..widgets import (
     RequirementStatus,
     SourceActionCard,
     SourceActionDescriptor,
-    StageNavigationStrip,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_STAGES = ("Overview", "Get data", "Required", "Review", "Ready")
-
-
-class _StageHarness(App[None]):
-    def __init__(self, *, current_index: int) -> None:
-        super().__init__()
-        self._current_index = current_index
-
-    @override
-    def compose(self) -> ComposeResult:
-        yield StageNavigationStrip(_STAGES, current_index=self._current_index, id="stages")
-
-
-def test_stage_strip_refuses_an_empty_or_out_of_range_construction() -> None:
-    with pytest.raises(ValueError, match="at least one stage"):
-        StageNavigationStrip((), current_index=0)
-    with pytest.raises(ValueError, match="declared stage"):
-        StageNavigationStrip(_STAGES, current_index=len(_STAGES))
-    with pytest.raises(ValueError, match="declared stage"):
-        StageNavigationStrip(_STAGES, current_index=-1)
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize("size", SUPPORTED_TERMINAL_SIZES, ids=SUPPORTED_TERMINAL_SIZE_IDS)
-async def test_stage_strip_shows_every_stage_with_a_distinct_non_colour_glyph(size: tuple[int, int]) -> None:
-    """Done, current, and upcoming stages each carry their own glyph, not only a colour class."""
-    app = _StageHarness(current_index=2)
-    async with app.run_test(size=size) as pilot:
-        await pilot.pause()
-        rendered = {index: str(app.query_one(f"#stage-{index}", Static).render()) for index in range(len(_STAGES))}
-
-    assert rendered[0].startswith("✓")
-    assert rendered[1].startswith("✓")
-    assert rendered[2].startswith("▸")
-    assert rendered[3].startswith("·")
-    assert rendered[4].startswith("·")
-    for index, label in enumerate(_STAGES):
-        assert label in rendered[index]
 
 
 class _RequirementHarness(App[None]):

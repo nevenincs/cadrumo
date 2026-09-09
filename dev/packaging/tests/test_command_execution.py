@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from .._command import run_command
+from ..command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

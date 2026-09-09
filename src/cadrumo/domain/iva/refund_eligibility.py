@@ -22,7 +22,6 @@ Ley 37/1992 (LIVA) art. 116 (the monthly-refund right of an inscribed taxpayer).
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Final
 
 from ...core.period import Period, StandardPeriodCode
@@ -39,19 +38,6 @@ LAST_FILING_PERIOD_TOKENS: Final[frozenset[StandardPeriodCode]] = frozenset(
 )
 
 
-class RefundEligibilityReason(StrEnum):
-    """Why a Modelo 303 refund (devolución) is or is not available for a period.
-
-    A machine code (not operator-facing prose) that a consumer maps to a grounded
-    message. ``REDEME_INSCRIBED`` and ``LAST_PERIOD_OF_YEAR`` permit the ``D``
-    election; ``NOT_ELIGIBLE`` permits only compensación (``C``).
-    """
-
-    REDEME_INSCRIBED = "redeme_inscribed"
-    LAST_PERIOD_OF_YEAR = "last_period_of_year"
-    NOT_ELIGIBLE = "not_eligible"
-
-
 def is_last_filing_period_of_year(period: Period) -> bool:
     """Return whether ``period`` is the last Modelo 303 filing period of its year."""
     return period.registry_token in LAST_FILING_PERIOD_TOKENS
@@ -66,20 +52,3 @@ def refund_disposition_available(*, redeme_enrolled: bool, period: Period) -> bo
     (``C``) is lawful and this returns ``False``.
     """
     return redeme_enrolled or is_last_filing_period_of_year(period)
-
-
-def refund_eligibility_reason(*, redeme_enrolled: bool, period: Period) -> RefundEligibilityReason:
-    """Classify the refund eligibility of a Modelo 303 period as a machine reason code.
-
-    REDEME enrolment takes precedence (it makes the refund available every period);
-    otherwise the last-period condition; otherwise ``NOT_ELIGIBLE`` (carry forward).
-    The consumer maps the code to a grounded operator message.
-
-    Returns:
-        The :class:`RefundEligibilityReason` for the supplied period.
-    """
-    if redeme_enrolled:
-        return RefundEligibilityReason.REDEME_INSCRIBED
-    if is_last_filing_period_of_year(period):
-        return RefundEligibilityReason.LAST_PERIOD_OF_YEAR
-    return RefundEligibilityReason.NOT_ELIGIBLE

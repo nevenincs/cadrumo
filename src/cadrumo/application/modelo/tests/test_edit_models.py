@@ -7,11 +7,9 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from pydantic import ValidationError
 
-from ....core.external_constants import OutputLanguage
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.schema_base import CasillaDataType
-from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.modelos.codes import ModeloCode
 from ...operations.registry import OperationSchemaIdentityV1
 from ..edit_models import (
@@ -30,7 +28,6 @@ from ..edit_models import (
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
     ModeloEditNewRowCorrelationV1,
-    ModeloEditParseRequestV1,
     ModeloEditPreflightEvaluatedV1,
     ModeloEditRefusalCode,
     ModeloEditRefusedV1,
@@ -298,7 +295,7 @@ def test_execution_result_discriminates_on_effect() -> None:
     assert no_effect.effect.value == "none"
 
 
-def test_admission_result_and_parse_request_round_trip_through_json() -> None:
+def test_admission_result_round_trips_through_json() -> None:
     """Success and refusal arms round-trip through strict JSON without loss."""
     admitted = ModeloEditAdmittedV1(baseline=_baseline())
     assert ModeloEditAdmittedV1.model_validate_json(admitted.model_dump_json()) == admitted
@@ -311,16 +308,6 @@ def test_admission_result_and_parse_request_round_trip_through_json() -> None:
         )
     )
     assert ModeloEditRefusedV1.model_validate_json(refused.model_dump_json()) == refused
-
-    parse_request = ModeloEditParseRequestV1(
-        baseline=_baseline(),
-        address=ModeloEditScalarAddressV1(casilla_id="casilla-01"),
-        input_kind=InputKind.MANUAL,
-        locale=OutputLanguage.ES,
-        raw_lexeme="1.234,56",
-    )
-    assert ModeloEditParseRequestV1.model_validate_json(parse_request.model_dump_json()) == parse_request
-
 
 def test_preflight_evaluated_findings_reference_the_shared_address_union() -> None:
     """A finding may cite a scalar or row address, or omit one for global scope."""

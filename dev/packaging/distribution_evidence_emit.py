@@ -38,8 +38,6 @@ from typing import TYPE_CHECKING, Any, Final
 from pydantic import JsonValue
 
 from .._paths import UTF_8
-from ._command import CommandResult
-from ._hashing import sha256_path, sha256_text
 from ._installed_wheel_binding import (
     assert_installed_console_entry_point,
     installed_distribution_payload_sha256,
@@ -47,6 +45,7 @@ from ._installed_wheel_binding import (
     sealed_wheel_payload_sha256,
 )
 from .cohort_manifest import LoadedReleaseCohort
+from .command_execution import CommandResult
 from .evidence import (
     AcquisitionIdentity,
     ClientIdentity,
@@ -62,6 +61,7 @@ from .evidence import (
     write_distribution_evidence,
 )
 from .evidence_scrub import scrub_distribution_evidence
+from .hashing import sha256_path, sha256_text
 from .installed_tax_oracle import InstalledTaxEvidence
 
 if TYPE_CHECKING:
@@ -79,7 +79,7 @@ def _command_transcript(command: CommandResult) -> CommandTranscript:
     """Map one captured installed-CLI invocation to a tamper-evident transcript.
 
     The wall-clock ``started_at`` / ``completed_at`` stamps and ``cwd`` are read
-    straight from the canonical :class:`~dev.packaging._command.CommandResult`;
+    straight from the canonical :class:`~dev.packaging.command_execution.CommandResult`;
     the stream digests are recomputed from the retained output by
     :meth:`~dev.packaging.evidence.CommandTranscript.from_output`.
     """

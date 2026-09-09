@@ -79,11 +79,6 @@ def ledger_irpf_category_catalogue() -> tuple[LedgerIrpfCategoryDescriptor, ...]
     return _LEDGER_IRPF_CATEGORY_CATALOGUE
 
 
-def ledger_irpf_category_ids() -> tuple[str, ...]:
-    """Return every public ledger IRPF category id in stable sorted order."""
-    return tuple(sorted(_CATALOGUE_BY_ID))
-
-
 def normalize_irpf_category(value: str | None) -> str | None:
     """Return the canonical catalogue spelling of an ``irpf_category`` token.
 

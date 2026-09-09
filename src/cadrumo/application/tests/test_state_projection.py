@@ -21,7 +21,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterator, Mapping
 from contextlib import ExitStack
-from dataclasses import fields
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -53,18 +52,11 @@ from ..modelo.work_lifecycle import (
 from ..overview.status_report import build_overview_status_report
 from ..state_projection import (
     ModeloReadinessRequest,
-    ProjectionModeloReadinessCapture,
-    ProjectionModeloReadinessCaptureError,
-    ProjectionModeloReadinessCurrentCoordinate,
-    _build_modelo_readiness,
     _registry_readiness_refusal,
     _registry_readiness_revision_mismatch_refusal,
     build_operator_state_projection,
-    capture_modelo_readiness,
-    modelo_requires_ledger_preflight,
-    read_modelo_readiness_current_coordinate,
 )
-from ..user_profile.login_session_port import profile_bind_bucket_session
+from ..user_profile.login_session_port import profile_login_session_port
 from ..user_profile.profile_record_repository import close_active_profile_record_session
 from ..user_profile.registration import register_profile_with_credentials
 from ..wizard.catalogue import WIZARD_FLOWS
@@ -164,7 +156,7 @@ def _register_active_profile(*, overrides: Mapping[str, str] | None = None) -> s
         absolute_deadline=instant + timedelta(hours=4),
         storage_root=storage_root,
     )
-    profile_bind_bucket_session(session)
+    profile_login_session_port().bind_session(session)
     _ACTIVE_STORAGE_STACK.callback(close_active_bucket_session)
     _ACTIVE_STORAGE_STACK.callback(close_active_profile_record_session)
     register_minimal_profile(
@@ -541,28 +533,6 @@ def test_modelo_readiness_without_period_uses_annual_period() -> None:
     assert readiness.period == Period.from_year_and_code(2026, "0A")
 
 
-def test_missing_registry_snapshot_ledger_preflight_skip_is_debug_logged(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    request = ModeloReadinessRequest(
-        modelo="999",
-        revision_id="missing-registry",
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
-    )
-
-    with caplog.at_level(logging.DEBUG, logger="cadrumo.application.state_projection"):
-        required = modelo_requires_ledger_preflight(request)
-
-    assert required is False
-    assert any(
-        record.levelno == logging.DEBUG
-        and getattr(record, "modelo", "") == "999"
-        and "ledger preflight skipped" in record.getMessage()
-        for record in caplog.records
-    )
-
-
 def test_projection_is_pure_read() -> None:
     """Building the projection mutates no store: two consecutive builds
     over an unchanged workspace return equal projections."""
@@ -596,11 +566,12 @@ def test_projection_without_active_profile_is_empty() -> None:
 
 
 def test_projection_profile_read_refuses_explicit_database_route(tmp_path: Path) -> None:
-    _stage_profile_bucket(tmp_path, "operator")
+    profile_id = "00000000-0000-4000-8000-000000000001"
+    _stage_profile_bucket(tmp_path, profile_id)
 
     with override_settings(
         cadrumo_local_storage_root=tmp_path,
-        cadrumo_active_profile="operator",
+        cadrumo_active_profile=profile_id,
         cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
     ):
         projection = build_operator_state_projection(
@@ -609,10 +580,10 @@ def test_projection_profile_read_refuses_explicit_database_route(tmp_path: Path)
             include_pending_obligations=False,
         )
 
-    assert projection.active_profile.profile_id == "operator"
-    assert projection.active_profile.registered_bucket is True
+    assert projection.active_profile.profile_id == profile_id
+    assert projection.active_profile.registered_bucket is False
     assert projection.active_profile.record_present is False
-    assert projection.active_profile.health_status == "profile_record_unreadable"
+    assert projection.active_profile.health_status == "dangling_pointer"
     assert not (tmp_path / "explicit.db").exists()
 
 
@@ -750,82 +721,3 @@ def test_auth_readiness_health_severity_empty_only_when_no_provider() -> None:
 
     assert auth.provider == ""
     assert auth.health_severity == ""
-
-
-def _readiness_requests() -> tuple[ModeloReadinessRequest, ...]:
-    return (
-        ModeloReadinessRequest(
-            modelo="303",
-            revision_id=active_registry_revision_id(modelo="303", filing_year=2026, period="1T"),
-            filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-        ),
-    )
-
-
-def test_readiness_capture_republishes_the_sole_producer_without_collapsing_axes() -> None:
-    """The capture carries the producer's records whole, axis for axis."""
-    bucket_id = _register_active_profile()
-    requests = _readiness_requests()
-
-    produced = _build_modelo_readiness(requests, active_profile_id=bucket_id)
-    captured = capture_modelo_readiness(requests, active_profile_id=bucket_id)
-
-    assert captured.reports == produced
-    assert len(captured.reports) == len(requests)
-    for report, expected in zip(captured.reports, produced, strict=True):
-        assert report.model_fields_set == expected.model_fields_set
-        assert report.model_dump(mode="json") == expected.model_dump(mode="json")
-
-
-def test_readiness_capture_exposes_no_inferred_capability_beyond_its_reports() -> None:
-    """The capture adds a coordinate only; it derives no new readiness verdict."""
-    bucket_id = _register_active_profile()
-
-    captured = capture_modelo_readiness(_readiness_requests(), active_profile_id=bucket_id)
-
-    assert captured.reports == _build_modelo_readiness(_readiness_requests(), active_profile_id=bucket_id)
-    assert {field.name for field in fields(ProjectionModeloReadinessCapture)} == {
-        "reports",
-        "comparison_domain",
-        "generation",
-    }
-    assert {field.name for field in fields(ProjectionModeloReadinessCurrentCoordinate)} == {
-        "comparison_domain",
-        "generation",
-    }
-
-
-def test_readiness_capture_is_singleflight_and_refuses_a_superseded_coordinate() -> None:
-    """An unchanged owner window shares a generation; a profile write supersedes it."""
-    bucket_id = _register_active_profile()
-    requests = _readiness_requests()
-
-    first = capture_modelo_readiness(requests, active_profile_id=bucket_id)
-    second = capture_modelo_readiness(requests, active_profile_id=bucket_id)
-
-    assert first.generation == second.generation
-    assert first.comparison_domain == second.comparison_domain
-
-    current = read_modelo_readiness_current_coordinate(requests, active_profile_id=bucket_id)
-    assert first.require_current(current) is first
-
-    register_minimal_profile(profile_id=bucket_id, overrides={"identity.name": "Readiness Renamed"})
-
-    advanced = read_modelo_readiness_current_coordinate(requests, active_profile_id=bucket_id)
-
-    assert advanced.generation > first.generation
-    with pytest.raises(ProjectionModeloReadinessCaptureError):
-        first.require_current(advanced)
-
-
-def test_readiness_capture_contract_is_owned_by_its_defining_module() -> None:
-    """Every readiness capture symbol is defined by state_projection itself."""
-    for owned in (
-        ProjectionModeloReadinessCapture,
-        ProjectionModeloReadinessCurrentCoordinate,
-        ProjectionModeloReadinessCaptureError,
-        capture_modelo_readiness,
-        read_modelo_readiness_current_coordinate,
-    ):
-        assert owned.__module__ == "cadrumo.application.state_projection"

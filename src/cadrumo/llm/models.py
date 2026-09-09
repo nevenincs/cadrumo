@@ -347,6 +347,8 @@ class UsageRecord(BaseModel):
     cache_hit: bool = Field(description="Whether the response came from cache.")
     created_at: datetime = Field(description="Timestamp when the record was written.")
     request_id: str = Field(description="Stable request hash.")
+
+
 class CacheKey(BaseModel):
     """Derived cache key used by :class:`~adapters.outbound.llm.LLMCache`."""
 

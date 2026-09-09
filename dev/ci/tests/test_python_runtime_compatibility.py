@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ...packaging._command import CommandResult
+from ...packaging.command_execution import CommandResult
 from .. import python_runtime_compatibility as compatibility
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -76,9 +76,7 @@ def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "re
         dependency=dependency,
         isolation={"checkout_imports_removed": True, "ambient_product_executables_removed": True},
         commands=(),
-        focused_tests=(_focused_test("installed-cadrumo-mcp-help"),)
-        if status == "passed"
-        else (),
+        focused_tests=(_focused_test("installed-cadrumo-mcp-help"),) if status == "passed" else (),
         failure={"category": "fixture", "detail": "failed"} if status == "failed" else None,
         observed_at="2026-09-02T00:00:00+00:00",
     )

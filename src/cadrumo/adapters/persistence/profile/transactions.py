@@ -812,9 +812,7 @@ class TransactionCatalogueRepository:
         end: date,
     ) -> LedgerDatePartition:
         """Partition through a complete plaintext date index and targeted decrypt."""
-        in_window_ids = {
-            transaction_id for transaction_id, dates in index_rows.items() if dates.overlaps(start, end)
-        }
+        in_window_ids = {transaction_id for transaction_id, dates in index_rows.items() if dates.overlaps(start, end)}
         transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
         out_of_window_rows = tuple(
             (transaction_id, dates.filing_date)
@@ -824,8 +822,7 @@ class TransactionCatalogueRepository:
         out_of_window_summary = _out_of_window_summary(out_of_window_rows)
         out_of_window_index_entries = _out_of_window_index_entries(out_of_window_rows)
         _log.debug(
-            "partitioned transaction catalogue via date index bucket_id=%s window=%s..%s in_window=%d "
-            "out_of_window=%d",
+            "partitioned transaction catalogue via date index bucket_id=%s window=%s..%s in_window=%d out_of_window=%d",
             self._bucket_id,
             start.isoformat(),
             end.isoformat(),

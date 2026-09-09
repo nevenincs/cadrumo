@@ -51,8 +51,9 @@ from .....core.resources.bundled_data import bundled_path
 from .....tests.env_scope import scoped_env_var
 from .._loader_internals import _collect_registry_tree_fingerprints
 from ..loader import _load_registry_tree_cached, load_registry_tree
-from ..loader_cache import REGISTRY_DISK_CACHE_DIR_ENV_VAR, is_bundled_registry_root, registry_disk_cache_enabled
+from ..loader_cache import is_bundled_registry_root, registry_disk_cache_enabled
 from ..loader_fingerprints import _registry_fingerprint_cache, clear_fingerprint_cache
+from ._loader_cache_support import REGISTRY_DISK_CACHE_DIR_ENV_VAR
 from ._loader_directory_mode_support import _standard_manifest_text, _standard_revision_preamble_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

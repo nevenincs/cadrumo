@@ -377,9 +377,3 @@ def test_modelo_180_115_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     # Authorization-gate enrollment for the 180 resumen.
 
     # Authorization-gate enrollment for the 115 feeder (standalone fleet modelo).
-
-
-
-
-
-

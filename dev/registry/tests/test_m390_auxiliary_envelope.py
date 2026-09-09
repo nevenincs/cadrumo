@@ -11,9 +11,9 @@ from pydantic import ValidationError
 from cadrumo.core.period import Period
 from cadrumo.core.product_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
+from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..pipeline import _m390_auxiliary_envelope
 from ..pipeline._m390_auxiliary_envelope import (
@@ -23,8 +23,8 @@ from ..pipeline._m390_auxiliary_envelope import (
     render_m390_auxiliary_envelope_bytes,
     validate_m390_auxiliary_envelope,
 )
-from ..pipeline._provenance_manifest import ExportFragmentTarget
-from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline.export_fragment_provenance import ExportFragmentTarget
+from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

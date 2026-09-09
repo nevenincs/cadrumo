@@ -167,5 +167,3 @@ def test_modelo_220_222_are_registry_backed() -> None:
     authority = bundled_authority()
     for modelo_id in ("220", "222"):
         assert authority.modelo(modelo_id).id == modelo_id
-
-

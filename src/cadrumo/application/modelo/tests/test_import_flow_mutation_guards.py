@@ -386,5 +386,3 @@ def _guard_work_unit(bucket_id: str) -> WorkUnit:
         created_at=_T0,
         updated_at=_T0,
     )
-
-

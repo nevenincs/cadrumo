@@ -22,7 +22,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.aggregation import RetencionClave
-from ..withholding_bindings import WithholdingObservation, WithholdingObservationRequirement
+from ..withholding_bindings import WithholdingObservation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,11 +86,3 @@ def test_withholding_observation_refuses_non_numeric_or_overlong_subclave() -> N
     for bad_subclave in ("XX", "A1", "1.2", "012345"):
         with pytest.raises(ValidationError):
             _observation(clave="A", subclave=bad_subclave)
-
-
-def test_withholding_requirement_claves_are_typed() -> None:
-    """WithholdingObservationRequirement.claves hydrates raw tokens to typed members."""
-    requirement = WithholdingObservationRequirement.model_validate({"binding_ids": ("b1",), "claves": ("A", "G")})
-    assert requirement.claves == (RetencionClave.A, RetencionClave.G)
-    with pytest.raises(ValidationError):
-        WithholdingObservationRequirement.model_validate({"binding_ids": ("b1",), "claves": ("A", "ZZ")})

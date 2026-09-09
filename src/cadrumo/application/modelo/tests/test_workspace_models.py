@@ -17,7 +17,6 @@ from ....core.revision_review import RevisionReviewStatus
 from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
 from ....domain.modelos.calculation_revision import CalculationSourceRef
 from ...registry.closure import RegistryClosureLimb, RegistryClosureOwnerDisposition, RegistryClosureRefusal
-from ..work_addressing import ModeloVisibleFilingTarget
 from ..workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBoundedFacetV1,
@@ -37,7 +36,6 @@ from ..workspace_models import (
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceProvenanceRecordV1,
     ModeloWorkspaceReadinessV1,
-    ModeloWorkspaceRequestV1,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
@@ -50,7 +48,6 @@ from ..workspace_models import (
     ModeloWorkspaceStaticInspectionScopeV1,
     ModeloWorkspaceTechnicalLabelV1,
     ModeloWorkspaceTextFactValueV1,
-    ModeloWorkspaceVisibleFilingTargetV1,
     ModeloWorkspaceWorkReviewFacetV1,
 )
 
@@ -229,38 +226,6 @@ def _static_projection(
         ),
         capabilities=_capabilities(resolved_target) if capabilities is None else capabilities,
     )
-
-
-def test_workspace_request_preserves_the_canonical_visible_target_through_a_strict_round_trip() -> None:
-    request = ModeloWorkspaceRequestV1.model_validate_json(
-        """{
-            "contract_version": 1,
-            "target": {
-                "kind": "visible_filing",
-                "target": {"modelo": "130", "filing_year": 2025, "period": {"filing_year": 2025, "code": "1T"}}
-            },
-            "admission": {"kind": "static_inspection"},
-            "output_language": "es"
-        }"""
-    )
-
-    assert isinstance(request.target, ModeloWorkspaceVisibleFilingTargetV1)
-    assert isinstance(request.target.target, ModeloVisibleFilingTarget)
-    assert request.target.target.period.filing_year == 2025
-    assert request.target.target.period == Period.from_year_and_code(2025, "1T")
-    assert request.output_language is OutputLanguage.ES
-    assert ModeloWorkspaceRequestV1.model_validate_json(request.model_dump_json()) == request
-    with pytest.raises(ValidationError):
-        ModeloWorkspaceRequestV1.model_validate_json(
-            """{
-                "contract_version": 1,
-                "target": {"modelo": "130", "filing_year": 2025, "period": "1T", "revision": "not-allowed"},
-                "admission": {"kind": "static_inspection"},
-                "output_language": "es"
-            }"""
-        )
-    with pytest.raises(ValidationError):
-        request.__setattr__("contract_version", 2)
 
 
 def test_workspace_bounded_facet_pins_all_root_consistency_coordinates() -> None:

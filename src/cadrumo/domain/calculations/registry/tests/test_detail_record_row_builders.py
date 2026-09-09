@@ -21,11 +21,9 @@ from .....core.foreign_asset_obligation import M720AssetClassCode
 from ..detail_record_bindings import (
     AtributionMemberObservation,
     Modelo720RowObservation,
-    RefundOperationObservation,
     _build_foreign_asset_rows,
     resolve_atribucion_binding_row_values,
     resolve_foreign_asset_binding_row_values,
-    resolve_refund_binding_row_values,
 )
 from ._registry_schema_support import _committed_registry_tree
 
@@ -132,34 +130,3 @@ def test_resolve_atribucion_binding_row_values_sorts_members_by_country_then_nif
     assert resolved[("modelo-184-member-row-nif", 2)] == "87654321Z"
     assert resolved[("modelo-184-member-row-base-assigned", 1)] == Decimal("4000")
     assert resolved[("modelo-184-member-row-share", 2)] == Decimal("60")
-
-
-def test_resolve_refund_binding_row_values_sorts_by_member_state_date_supplier() -> None:
-    revision = next(m for m in _modelos() if m.id == "360").revisions["2010-y-siguientes"]
-    obs = (
-        RefundOperationObservation(
-            source_id="r1",
-            member_state_code="FR",
-            operation_kind_code="01",
-            operation_date=date(2025, 6, 15),
-            supplier_tax_id="FR-supplier-1",
-            refund_amount=Decimal("500"),
-        ),
-        RefundOperationObservation(
-            source_id="r2",
-            member_state_code="DE",
-            operation_kind_code="02",
-            operation_date=date(2025, 3, 1),
-            supplier_tax_id="DE-supplier-1",
-            refund_amount=Decimal("750"),
-        ),
-    )
-
-    resolved = resolve_refund_binding_row_values(revision, obs)
-
-    # Sort by (member_state_code, operation_date, supplier_tax_id)
-    # → DE row first, then FR.
-    assert resolved[("modelo-360-refund-row-member-state", 1)] == "DE"
-    assert resolved[("modelo-360-refund-row-member-state", 2)] == "FR"
-    assert resolved[("modelo-360-refund-row-amount", 1)] == Decimal("750")
-    assert resolved[("modelo-360-refund-row-amount", 2)] == Decimal("500")

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
-from itertools import accumulate
 from typing import Annotated, Final, Literal, Self
 
 from pydantic import Field, NonNegativeInt, model_validator
@@ -17,7 +16,6 @@ from .schema_base import RegistryModel
 __all__ = [
     "AUXILIARY_ENVELOPE_HEADER_CONTENT",
     "AUXILIARY_ENVELOPE_HEADER_LENGTHS",
-    "AUXILIARY_ENVELOPE_HEADER_OFFSETS",
     "AUXILIARY_ENVELOPE_HEADER_ORDINALS",
     "AUXILIARY_ENVELOPE_HEADER_ROWS",
     "RecordDesignAuxiliaryEnvelopeHeader",
@@ -178,9 +176,6 @@ _AUXILIARY_ENVELOPE_HEADER_FOOTNOTE_RE: Final[re.Pattern[str]] = re.compile(r"^N
 #: Derived from the lengths, never authored: each slot opens where the previous
 #: one ends, from position 1. Written out as a literal beside the lengths it is a
 #: second encoding of one fact, and the two can only ever disagree by drifting.
-AUXILIARY_ENVELOPE_HEADER_OFFSETS: tuple[int, ...] = tuple(
-    accumulate(AUXILIARY_ENVELOPE_HEADER_LENGTHS[:-1], initial=1),
-)
 AUXILIARY_ENVELOPE_HEADER_ROWS: tuple[int, ...] = tuple(range(6, 19))
 AUXILIARY_ENVELOPE_HEADER_ORDINALS: tuple[str, ...] = tuple(str(i) for i in range(1, 14))
 

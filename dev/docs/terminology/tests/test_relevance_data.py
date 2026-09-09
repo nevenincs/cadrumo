@@ -143,10 +143,10 @@ def build_surfaces() -> _BuildSurfaces:
     # the concept id (for example, ``AEAT`` -> ``term-AEAT``).
     # Casilla modelos: every modelo with projected casilla records (read from
     # the same projection the resolver indexes, via the public projection API).
-    from .._cli_projection import project_cli_search_records
-    from .._concept_cards import project_concept_cards
-    from .._legal_projection import project_legal_search_records
     from ..casilla_projection import project_casilla_search_records
+    from ..cli_projection import project_cli_search_records
+    from ..concept_card_projection import project_concept_cards
+    from ..legal_projection import project_legal_search_records
     from ..unified_record import to_search_record
 
     concept_cards, _concept_stats = project_concept_cards(handbook)
@@ -162,7 +162,7 @@ def build_surfaces() -> _BuildSurfaces:
     legal_records = project_legal_search_records(_REPO_ROOT)
     legal_targets_by_record_id = {record.record_id: record.target for record in legal_records}
     # CLI targets: every live leaf command's real generated page+anchor, from
-    # the same projection (`_cli_projection.py`) that is the sole producer of
+    # the same projection (`cli_projection.py`) that is the sole producer of
     # committed CLI-kind relevance targets. A family-shaped regular expression
     # cannot tell a real command anchor from a fabricated one; membership in
     # this real, live-generated inventory can.
@@ -208,7 +208,7 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
         return _module_exists(api_match.group("dotted"))
 
     # CLI reference page+anchor: must be a real live leaf command's target
-    # exactly as `_cli_projection.py` generates it -- a family-shaped
+    # exactly as `cli_projection.py` generates it -- a family-shaped
     # regular expression cannot tell a real command anchor
     # (cli/app/ledger.html#aeat-app-ledger-add) from a fabricated one
     # (cli/app/not-real.html); real membership can.

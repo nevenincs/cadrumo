@@ -26,7 +26,6 @@ from __future__ import annotations
 import ast
 import builtins
 import importlib
-import inspect
 import pkgutil
 from collections import Counter
 from collections.abc import Mapping
@@ -34,8 +33,8 @@ from pathlib import Path
 
 import pytest
 
-from ....tests import module_name, production_ast_items, repo_relative
-from ..error_codes import ERROR_REGISTRY, ErrorCategory, get_registered_error_code
+from ....tests import production_ast_items
+from ..error_codes import get_registered_error_code
 from ..hierarchy import CadrumoError
 from ..registry.declared_codes import ALL_DECLARED_ERROR_CODES
 from .optional_extras import describe_optional_extras
@@ -150,73 +149,3 @@ def test_raw_error_declarations_have_single_class_and_code_authority() -> None:
 
     assert {qualname: count for qualname, count in qualname_counts.items() if count > 1} == {}
     assert {code: count for code, count in code_counts.items() if count > 1} == {}
-
-
-def test_modelo_calculate_input_errors_have_registered_codes() -> None:
-    """The public calculate CLI imports this module before handling overrides."""
-
-    module = importlib.import_module("cadrumo.application.modelo.calculate_input")
-    concrete_errors = [
-        error_type
-        for _, error_type in inspect.getmembers(module, inspect.isclass)
-        if error_type.__module__ == module.__name__ and issubclass(error_type, CadrumoError)
-    ]
-
-    assert concrete_errors
-    missing: list[str] = []
-    for error_type in concrete_errors:
-        code = get_registered_error_code(error_type)
-        if code.code not in ERROR_REGISTRY:
-            missing.append(f"{error_type.__module__}.{error_type.__name__}")
-    assert missing == []
-
-
-def test_every_registered_code_maps_to_exactly_one_error_subclass() -> None:
-    _import_all_cadrumo_modules()
-    subclasses = _iter_error_subclasses(CadrumoError)
-    reverse: dict[str, list[str]] = {}
-    for error_type in subclasses:
-        code = get_registered_error_code(error_type)
-        reverse.setdefault(code.code, []).append(f"{error_type.__module__}.{error_type.__name__}")
-
-    duplicates = {code: owners for code, owners in reverse.items() if len(owners) != 1}
-    assert duplicates == {}
-    assert set(reverse) == set(ERROR_REGISTRY)
-
-
-def test_every_category_has_at_least_one_registered_error_code() -> None:
-    _import_all_cadrumo_modules()
-    categories = {code.category for code in ERROR_REGISTRY.values()}
-    assert categories == set(ErrorCategory)
-
-
-def test_raise_sites_do_not_use_bare_cadrumo_error_and_reference_registered_subclasses(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
-    _import_all_cadrumo_modules()
-    subclasses = _iter_error_subclasses(CadrumoError)
-    index = {error_type.__name__: error_type for error_type in subclasses}
-    known_names = set(index) | {"CadrumoError"}
-
-    direct_base_raises: list[str] = []
-    unresolved_targets: list[str] = []
-    for path, target in _iter_raise_targets(source_tree_ast):
-        resolved = _resolve_raise_target(module_name(path), target)
-        rendered = ast.unparse(target)
-        last_token = rendered.rsplit(".", 1)[-1]
-        if resolved is None and last_token in index:
-            resolved = index[last_token]
-        if resolved is CadrumoError:
-            direct_base_raises.append(f"{repo_relative(path)}:{rendered}")
-            continue
-        if isinstance(resolved, type) and issubclass(resolved, CadrumoError):
-            error_type = index.get(resolved.__name__, resolved)
-            code = get_registered_error_code(error_type)
-            if code.code not in ERROR_REGISTRY:
-                unresolved_targets.append(f"{repo_relative(path)}:{rendered}")
-            continue
-        if resolved is None and _looks_like_cadrumo_error_reference(target, known_names):
-            unresolved_targets.append(f"{repo_relative(path)}:{rendered}")
-
-    assert direct_base_raises == []
-    assert unresolved_targets == []

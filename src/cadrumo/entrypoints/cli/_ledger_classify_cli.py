@@ -80,10 +80,7 @@ def _bulk_classification_output(
         ),
     ]
     # MACHINE-FORMAT-RATIONALE-LEDGER-BULK-CLASSIFY-FAILURE: tab-separated machine record (id, reason).
-    lines.extend(
-        f"  failed\t{failure.transaction_id}\t{failure.reason}"
-        for failure in result.failures
-    )
+    lines.extend(f"  failed\t{failure.transaction_id}\t{failure.reason}" for failure in result.failures)
     classify_result = LedgerClassifyBulkResult.model_validate(
         {
             "total": result.total,

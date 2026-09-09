@@ -288,11 +288,6 @@ def profile_current_bucket_session() -> ProfileBucketSessionPort | None:
     return profile_login_session_port().current_session()
 
 
-def profile_bind_bucket_session(session: ProfileBucketSessionPort) -> None:
-    """Bind one authenticated bucket session through the login-session port."""
-    profile_login_session_port().bind_session(session)
-
-
 __all__ = [
     "ProfileBucketSessionPort",
     "ProfileLoginSessionPort",
@@ -300,7 +295,6 @@ __all__ = [
     "ProfilePersistedSessionPort",
     "ProfileSessionResumeOutcomePort",
     "bind_profile_login_session_port",
-    "profile_bind_bucket_session",
     "profile_current_bucket_session",
     "profile_login_session_port",
     "profile_session_serves_bucket",

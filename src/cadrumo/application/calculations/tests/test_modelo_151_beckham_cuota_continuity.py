@@ -157,10 +157,3 @@ def test_modelo_151_beckham_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     # Independent oracle check: the two years' expected cuotas are the BOE values.
     assert _expected_cuota_from_boe_escala(_BASE_BY_YEAR[2025]) == Decimal("285000.00")
-
-
-
-
-
-
-

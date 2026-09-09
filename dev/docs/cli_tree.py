@@ -243,8 +243,8 @@ def _build_cli_tree_loaded() -> CliTree:
         ArgumentSpec,
         DefaultKind,
         command_registration_projection,
-        command_spec_nodes,
     )
+    from dev.command_graph import command_spec_nodes
 
     clear_output_language_cache()
 

@@ -12,12 +12,12 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.config import Settings
-from .._citation_blocklist import KnownBadCitation, _fold_diacritics, find_known_bad, known_bad_citations
+from .._citation_blocklist import _KNOWN_BAD_CITATIONS, KnownBadCitation, _fold_diacritics, find_known_bad
 from .._validate import RegistryValidator
 from .._validate_evidence import EvidenceValidator
 from ..corpus_catalogue import verify_source_catalogue, verify_source_file
 from ..errors import RegistryValidationError
-from ..legal import assert_legal_ref_ids_resolve, verify_legal_catalogue
+from ..legal import verify_legal_catalogue
 from ..schema import RegistryCatalogues
 from ..schema_base import EvidenceTier, SourceCitation
 from ..schema_references import LegalReference, SourceReference
@@ -137,7 +137,7 @@ def test_verify_legal_catalogue_rejects_known_bad_citation_role() -> None:
         verify_legal_catalogue({reference.id: reference})
 
 
-@pytest.mark.parametrize("blocked", known_bad_citations())
+@pytest.mark.parametrize("blocked", _KNOWN_BAD_CITATIONS)
 def test_verify_legal_catalogue_rejects_every_blocklisted_role(blocked: KnownBadCitation) -> None:
     reference = _legal_reference(
         ref_id=f"{blocked.source}:{blocked.article}",
@@ -178,7 +178,7 @@ def test_known_bad_citation_role_substrings_are_pure_ascii_after_folding() -> No
     this assertion, which is the intended tripwire: it means folding no
     longer produces the same comparison key the ascii-ignore predecessor did.
     """
-    for blocked in known_bad_citations():
+    for blocked in _KNOWN_BAD_CITATIONS:
         folded = _fold_diacritics(blocked.role_substring)
         assert folded.isascii(), (blocked.role_substring, folded)
 
@@ -903,41 +903,3 @@ def test_verify_legal_reference_checks_manual_section_json(tmp_path: Path) -> No
     _write_extracted_unit(section_path, anchor="sec1", text="Seccion 1")
 
     verify_legal_catalogue({reference.id: reference}, source_root=tmp_path)
-
-
-def test_assert_legal_ref_ids_resolve_refuses_an_id_absent_from_the_catalogue() -> None:
-    """A declared id that resolves to no catalogue entry is refused, naming the id and its subject."""
-    catalogue = _catalogues().legal
-
-    with pytest.raises(RegistryValidationError, match=r"eligibility-rule advisory.*not-a-real-provision") as exc_info:
-        assert_legal_ref_ids_resolve(
-            ("not-a-real-provision",),
-            legal=catalogue,
-            subject="eligibility-rule advisory",
-        )
-
-    assert "not-a-real-provision" in str(exc_info.value)
-
-
-def test_assert_legal_ref_ids_resolve_accepts_ids_the_catalogue_carries() -> None:
-    """A declared id that resolves cleanly does not fire, and passes silently."""
-    catalogue = _catalogues().legal
-    real_id = next(iter(catalogue))
-
-    assert assert_legal_ref_ids_resolve((real_id,), legal=catalogue, subject="eligibility-rule advisory") is None
-
-
-def test_assert_legal_ref_ids_resolve_reports_every_missing_id_at_once() -> None:
-    """A multi-id declaration names every absent id in one refusal, not just the first."""
-    catalogue = _catalogues().legal
-
-    with pytest.raises(RegistryValidationError) as exc_info:
-        assert_legal_ref_ids_resolve(
-            (next(iter(catalogue)), "bogus-one", "bogus-two"),
-            legal=catalogue,
-            subject="eligibility-rule advisory",
-        )
-
-    message = str(exc_info.value)
-    assert "bogus-one" in message
-    assert "bogus-two" in message

@@ -38,6 +38,7 @@ class TestManifestIO:
         with pytest.raises(ManifestError, match=r"manifest|absent|missing|not found"):
             load_manifest(tmp_path / "absent.json")
 
+
 class TestBundledManualCorpus:
     """Bundled manual manifests must describe materialized official PDFs."""
 

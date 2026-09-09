@@ -27,11 +27,11 @@ from ._acquire_common import (
     expected_oracle_target_value,
     require_command_succeeded,
 )
-from ._command import CommandResult, run_command
-from ._hashing import sha256_path
 from .cohort_manifest import load_release_cohort
+from .command_execution import CommandResult, run_command
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
+from .hashing import sha256_path
 from .installed_tax_oracle import run_installed_tax_oracle
 from .python_cohort import PythonCohort, load_python_cohort
 

@@ -225,5 +225,3 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     assert fourth_quarter_deductible == _MANUAL_FOURTH_QUARTER_CURRENT_DEDUCTION
     assert regularizacion_value + fourth_quarter_deductible == (_MANUAL_FOURTH_QUARTER_NET_DEDUCTION)
     assert definitive_deduction + fourth_quarter_deductible == _MANUAL_ANNUAL_DEDUCTION
-
-

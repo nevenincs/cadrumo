@@ -225,10 +225,3 @@ def test_dotaciones_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
     assert (
         Decimal(result_n1.values[_SALDO_INICIAL_NO_CUMPLIDO]) == _STOCK_BY_SOURCE_YEAR[2025][_SALDO_FINAL_NO_CUMPLIDO]
     )
-
-
-
-
-
-
-

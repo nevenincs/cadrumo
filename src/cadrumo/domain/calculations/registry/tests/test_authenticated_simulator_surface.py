@@ -10,12 +10,12 @@ canonical content the validator allows.
 from __future__ import annotations
 
 import pytest
+from dev.registry.maintenance_support import _COMPATIBLE_SURFACE_PAIRS
 from pydantic import ValidationError
 
 from .....tests.aeat_literal_fixtures import aeat_host
-from ..live_parity import _COMPATIBLE_SURFACE_PAIRS
-from ..remote_state_guard import AEAT_WRITE_FORBIDDEN_ACTIONS
 from ..schema_verification import LiveCrossReferenceDecision
+from ._remote_guard_support import AEAT_WRITE_FORBIDDEN_ACTIONS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

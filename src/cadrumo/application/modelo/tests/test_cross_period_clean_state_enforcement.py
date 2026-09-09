@@ -405,7 +405,6 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_p
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
 
 
-
 @pytest.mark.parametrize(
     ("modelo", "filing_year", "period"),
     (
@@ -926,5 +925,3 @@ def test_first_local_filing_still_persists_under_non_official_app_filing() -> No
     """
     assert APP_FILING_SOURCE_KIND == "app_filing"
     assert not APP_FILING_SOURCE_KIND.is_official_aeat
-
-

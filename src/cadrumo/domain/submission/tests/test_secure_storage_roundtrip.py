@@ -27,7 +27,6 @@ from ..models import (
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
-    make_submission_id,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -49,7 +48,7 @@ def _populated_filing() -> ModeloPresentado:
 
     now = _ACKNOWLEDGED_AT
     draft_id = "d" * 64
-    submission_id = make_submission_id(draft_id, attempt_ordinal=2)
+    submission_id = "0123456789abcdef"
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft_id,

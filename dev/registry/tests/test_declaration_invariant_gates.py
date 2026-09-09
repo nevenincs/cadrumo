@@ -269,7 +269,7 @@ def test_every_screen_searches_a_population_that_is_not_empty(
     lose: it is a filesystem walk, and a corpus moved or renamed would return an
     empty tuple, which reads exactly like a corpus with nothing to report.
     """
-    from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
+    from dev.registry.maintenance_support import resolved_export_endpoints
 
     from ..analysis.casilla_id_grammar import screen_authority as grammar
     from ..analysis.continuity_integrity import continuity_census
@@ -650,7 +650,7 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
     """
     from cadrumo.core.resources.bundled_data import bundled_path
 
-    from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
     from .test_generated_export_trees import _GENERATED_TREES
 
     committed = {

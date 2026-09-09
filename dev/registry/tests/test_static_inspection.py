@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..._paths import REPO_ROOT
 
@@ -33,7 +33,8 @@ _RUNTIME_BOUNDARY_ROOTS = (
 )
 _STATIC_CONSUMERS = (
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_semantic_map_validation.py",
-    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_semantic_map_join.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "record_design_intermediate.py",
+    _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "joined_record_design.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "analysis" / "_dp30302_field_matrix.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_export_tree.py",
     _REPOSITORY_ROOT / "dev" / "registry" / "pipeline" / "_variable_envelope.py",

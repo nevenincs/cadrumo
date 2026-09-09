@@ -12,23 +12,18 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ......application.modelo.work_addressing import ModeloVisibleFilingTarget
 from ......application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceCapabilityV1,
-    ModeloWorkspaceConstraintReferenceV1,
-    ModeloWorkspaceDomainRefusalV1,
     ModeloWorkspaceLocaleDisposition,
     ModeloWorkspaceLocaleSummaryV1,
     ModeloWorkspaceLocalizedTextV1,
-    ModeloWorkspaceRefusalCode,
     ModeloWorkspaceResolvedTargetV1,
     ModeloWorkspaceRevisionAssertionDisposition,
     ModeloWorkspaceRevisionAssertionSource,
     ModeloWorkspaceRevisionAssertionV1,
     ModeloWorkspaceTechnicalLabelV1,
-    ModeloWorkspaceVisibleFilingTargetV1,
 )
 from ......core.external_constants import OutputLanguage
 from ......core.period import Period
@@ -38,10 +33,7 @@ from ..models import (
     ModeloWorkspaceCapabilityRowV1,
     ModeloWorkspaceCompletePageV1,
     capability_row,
-    constraint_disclosure,
     display_text,
-    disposition_glyph,
-    refusal_view,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -83,14 +75,6 @@ def _capability(disposition: ModeloWorkspaceCapabilityDisposition) -> ModeloWork
     )
 
 
-def test_every_disposition_has_its_own_distinguishing_glyph() -> None:
-    """Non-colour safety: four dispositions, four marks, none shared."""
-    assert {d for d in ModeloWorkspaceCapabilityDisposition} == set(ModeloWorkspaceCapabilityDisposition)
-    assert len({disposition_glyph(d) for d in ModeloWorkspaceCapabilityDisposition}) == len(
-        ModeloWorkspaceCapabilityDisposition
-    )
-
-
 def test_refused_and_unmeasured_are_distinguishable_from_each_other_and_from_available() -> None:
     """The distinction the requirement vocabulary could not express is preserved.
 
@@ -98,10 +82,10 @@ def test_refused_and_unmeasured_are_distinguishable_from_each_other_and_from_ava
     different answers with different operator remedies. Rendering them
     alike would be an under-declaration performed by the view.
     """
-    refused = disposition_glyph(ModeloWorkspaceCapabilityDisposition.REFUSED)
-    unmeasured = disposition_glyph(ModeloWorkspaceCapabilityDisposition.UNMEASURED)
-    available = disposition_glyph(ModeloWorkspaceCapabilityDisposition.AVAILABLE)
-    not_applicable = disposition_glyph(ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE)
+    refused = capability_row(_capability(ModeloWorkspaceCapabilityDisposition.REFUSED)).glyph
+    unmeasured = capability_row(_capability(ModeloWorkspaceCapabilityDisposition.UNMEASURED)).glyph
+    available = capability_row(_capability(ModeloWorkspaceCapabilityDisposition.AVAILABLE)).glyph
+    not_applicable = capability_row(_capability(ModeloWorkspaceCapabilityDisposition.NOT_APPLICABLE)).glyph
 
     assert len({refused, unmeasured, available, not_applicable}) == 4
 
@@ -115,7 +99,6 @@ def test_capability_row_copies_the_producer_answer_for_every_disposition() -> No
         assert row.capability is capability.capability
         assert row.producer_owner == capability.producer_owner
         assert row.producer == capability.producer
-        assert row.glyph == disposition_glyph(disposition)
         assert row.source is capability
 
 
@@ -128,7 +111,7 @@ def test_a_capability_row_cannot_carry_a_glyph_its_disposition_does_not_declare(
     defect inside the builder.
     """
     capability = _capability(ModeloWorkspaceCapabilityDisposition.REFUSED)
-    wrong_glyph = disposition_glyph(ModeloWorkspaceCapabilityDisposition.AVAILABLE)
+    wrong_glyph = capability_row(_capability(ModeloWorkspaceCapabilityDisposition.AVAILABLE)).glyph
 
     with pytest.raises(ValidationError, match="glyph must be the one this disposition declares"):
         ModeloWorkspaceCapabilityRowV1(
@@ -149,19 +132,11 @@ def test_a_capability_row_cannot_restate_a_disposition_its_source_did_not_declar
         ModeloWorkspaceCapabilityRowV1(
             capability=capability.capability,
             disposition=ModeloWorkspaceCapabilityDisposition.AVAILABLE,
-            glyph=disposition_glyph(ModeloWorkspaceCapabilityDisposition.AVAILABLE),
+            glyph=capability_row(_capability(ModeloWorkspaceCapabilityDisposition.AVAILABLE)).glyph,
             producer_owner=capability.producer_owner,
             producer=capability.producer,
             source=capability,
         )
-
-
-def test_constraint_disclosure_keeps_unmeasured_apart_from_none_declared() -> None:
-    """The None-versus-() distinction survives the narrowing, as a bool could not."""
-    assert constraint_disclosure(None) == "unmeasured"
-    assert constraint_disclosure(()) == "none_declared"
-    assert constraint_disclosure((ModeloWorkspaceConstraintReferenceV1(casilla_id="0001"),)) == "declared"
-    assert constraint_disclosure(None) != constraint_disclosure(())
 
 
 def test_display_text_reports_a_registry_identifier_as_untranslated() -> None:
@@ -188,27 +163,6 @@ def test_display_text_reports_a_localized_label_as_translated() -> None:
 
     assert localized.text == "Base imponible"
     assert localized.translated is True
-
-
-def test_a_domain_refusal_view_carries_the_owner_and_condition_verbatim() -> None:
-    refusal = ModeloWorkspaceDomainRefusalV1(
-        code=ModeloWorkspaceRefusalCode.CALCULATION_UNAVAILABLE,
-        boundary="capability",
-        requested_target=ModeloWorkspaceVisibleFilingTargetV1(
-            target=ModeloVisibleFilingTarget(
-                modelo="303", filing_year=2026, period=Period.from_year_and_code(2026, "1T")
-            )
-        ),
-        responsible_owner="application.modelo.workspace",
-        reconsideration_condition="calculate this work unit first",
-    )
-
-    view = refusal_view(refusal)
-
-    assert view.kind == "domain"
-    assert view.responsible_owner == "application.modelo.workspace"
-    assert view.reconsideration_condition == "calculate this work unit first"
-    assert view.source is refusal
 
 
 def test_a_bounded_page_is_a_different_shape_from_a_complete_one() -> None:

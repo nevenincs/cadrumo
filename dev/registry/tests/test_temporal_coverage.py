@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
-from cadrumo.domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
+from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 from ..temporal_coverage import (
     TemporalCoverageReport,

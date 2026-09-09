@@ -50,7 +50,7 @@ from ..components.theme import (
     CADRUMO_LIGHT_THEME_NAME,
 )
 from ..modelo.routes import MODELO_WORKSPACE_DESTINATIONS
-from ..modelo.view.controller import ModeloWorkspaceReadSession, admit_workspace_session
+from ..modelo.view.controller import ModeloWorkspaceReadSession, open_workspace_read_session
 from ..modelo.view.models import ModeloWorkspaceDestinationIdV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -67,9 +67,7 @@ def workspace_session(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Mode
     """One admitted session, read-only for every assertion in this module."""
     root = tmp_path_factory.mktemp("themed")
     with real_workspace_inspection_result(root) as seeded:
-        session, refusal = admit_workspace_session(seeded.result)
-        assert refusal is None, f"expected an admitted projection, got: {refusal}"
-        assert session is not None
+        session = open_workspace_read_session(seeded.result.projection)
         yield session
 
 

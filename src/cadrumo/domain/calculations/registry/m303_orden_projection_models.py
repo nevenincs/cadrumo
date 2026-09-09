@@ -58,11 +58,10 @@ def _has_m303_2022_record_design_source(
     record_design_epoch: str | None = None,
 ) -> bool:
     """Return whether one source axis retains the pinned 2022 design identity."""
-    return (
-        (source_ref, source_content_digest)
-        == (_M303_2022_RECORD_DESIGN_SOURCE_REF, _M303_2022_RECORD_DESIGN_SOURCE_DIGEST)
-        and record_design_epoch in (None, "2022")
-    )
+    return (source_ref, source_content_digest) == (
+        _M303_2022_RECORD_DESIGN_SOURCE_REF,
+        _M303_2022_RECORD_DESIGN_SOURCE_DIGEST,
+    ) and record_design_epoch in (None, "2022")
 
 
 class ActividadOrdenAnualRef(RegistryModel):

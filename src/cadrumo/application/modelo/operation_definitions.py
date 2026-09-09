@@ -27,7 +27,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 
-from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
+from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, model_validator
 
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
@@ -1571,22 +1571,6 @@ type ModeloDetailRowWireV1 = Annotated[
     Field(discriminator="row_type"),
 ]
 """The wire mirror of the per-modelo detail-row union, discriminated as it is."""
-
-
-_DETAIL_ROW_ADAPTER: Final[TypeAdapter[ModeloDetailRowWireV1]] = TypeAdapter(
-    ModeloDetailRowWireV1,
-)
-
-
-def wire_detail_row(row: BaseModel) -> ModeloDetailRowWireV1:
-    """Mirror any domain detail row onto the discriminated wire union.
-
-    Dispatches through the union's own ``row_type`` discriminator rather than
-    a hand-written row-type-to-class map. A map would be a second declaration
-    of which shapes exist, free to fall behind the union it mirrors; adding a
-    seventh row kind should not require remembering this site.
-    """
-    return _DETAIL_ROW_ADAPTER.validate_python(_wire_row_payload(row))
 
 
 # ``ModeloWorkAmendRequest`` is declared above the wire union it carries, so its

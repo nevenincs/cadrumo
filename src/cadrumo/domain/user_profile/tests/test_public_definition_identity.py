@@ -98,7 +98,6 @@ PUBLIC_DEFINITIONS: dict[str, frozenset[str]] = {
     "values": frozenset(
         {
             "declared_provenance_sources",
-            "declared_field_paths",
             "section_field_key",
             "PayloadSchemaVersion",
             "UserProfileFactValue",

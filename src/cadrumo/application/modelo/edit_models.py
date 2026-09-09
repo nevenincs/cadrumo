@@ -23,7 +23,6 @@ from typing import Annotated, Literal
 from pydantic import Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
-from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity import (
     BucketId,
@@ -36,7 +35,6 @@ from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 from ...domain.calculations.registry.ids import BindingId, RevisionId
 from ...domain.calculations.registry.schema_base import CasillaDataTypeValue
-from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.filing.schema import ModeloScalar
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.row_models import ModeloDetailRow
@@ -49,7 +47,6 @@ from .edit_contract import (
     ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
 )
-from .workspace_models import ModeloWorkspaceTargetV1
 
 _MAX_FINDINGS = 500
 _MAX_INTENTS = 500
@@ -488,14 +485,6 @@ class ModeloEditBaselineV1(EditModel):
         return self
 
 
-class ModeloEditAdmissionRequestV1(EditModel):
-    """One request to admit an edit baseline for a target and mutation family."""
-
-    edit_contract_version: Literal[1] = 1
-    target: ModeloWorkspaceTargetV1
-    mutation_family: ModeloEditMutationFamily
-
-
 class ModeloEditAdmittedV1(EditModel):
     """A successful admission carrying the exact re-resolved baseline."""
 
@@ -671,24 +660,6 @@ class ModeloEditFindingV1(EditModel):
 ModeloEditPreflightEvaluatedV1.model_rebuild()
 
 
-class ModeloEditParseRequestV1(EditModel):
-    """One parse request for a single semantic address and transient raw lexeme.
-
-    Carries the complete admitted baseline rather than an opaque id: the
-    contract mints no server-side baseline store, so the frontend retains the
-    admission result in memory and resupplies it on every subsequent call, the
-    same posture :class:`ModeloEditSubmissionV1` takes for preflight and apply.
-    The raw lexeme is never echoed by any result derived from this request.
-    """
-
-    edit_contract_version: Literal[1] = 1
-    baseline: ModeloEditBaselineV1
-    address: ModeloEditScalarAddressV1
-    input_kind: InputKind
-    locale: OutputLanguage
-    raw_lexeme: _BoundedText
-
-
 class ModeloScalarEditIntentV1(EditModel):
     """One scalar edit intent; zero, false, and empty text remain distinct states."""
 
@@ -862,13 +833,6 @@ class ModeloEditSubmissionV1(EditModel):
         return self
 
 
-class ModeloEditPreflightRequestV1(EditModel):
-    """One preflight request over a baseline and its complete ordered intent set."""
-
-    edit_contract_version: Literal[1] = 1
-    submission: ModeloEditSubmissionV1
-
-
 class ModeloEditApplyRequestV1(EditModel):
     """The guarded apply request only the enrolled operation executor may invoke."""
 
@@ -901,7 +865,6 @@ __all__ = [
     "ModeloBindingEditIntentV1",
     "ModeloDetailRowEditIntentV1",
     "ModeloEditAddressV1",
-    "ModeloEditAdmissionRequestV1",
     "ModeloEditAdmissionResultV1",
     "ModeloEditAdmittedV1",
     "ModeloEditApplyRequestV1",
@@ -927,12 +890,10 @@ __all__ = [
     "ModeloEditNonWritableReason",
     "ModeloEditNonWritableRowGroupSurfaceEntryV1",
     "ModeloEditNonWritableScalarSurfaceEntryV1",
-    "ModeloEditParseRequestV1",
     "ModeloEditParseResultV1",
     "ModeloEditParsedValueV1",
     "ModeloEditPermittedSurfaceEntryV1",
     "ModeloEditPreflightEvaluatedV1",
-    "ModeloEditPreflightRequestV1",
     "ModeloEditPreflightResultV1",
     "ModeloEditRefusalCode",
     "ModeloEditRefusalV1",

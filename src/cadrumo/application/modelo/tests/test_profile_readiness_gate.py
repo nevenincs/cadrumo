@@ -410,7 +410,6 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
         assert len(repository.load()) == 0
 
 
-
 def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _store_incomplete_profile(_OPERATOR_PROFILE_ID)
@@ -746,7 +745,6 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
         assert len(calculation_repository.load()) == 1
 
 
-
 def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) -> None:
     period = Period.from_year_and_code(2026, "2T")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
@@ -971,4 +969,3 @@ def test_pre_activity_refusal_uses_the_effective_window_not_declaration_order() 
     message, context = refusal
     assert "pre-activity period" in message
     assert context["activity_start_date"] == "2026-01-01"
-

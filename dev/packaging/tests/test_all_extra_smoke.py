@@ -21,8 +21,8 @@ import sys
 
 import pytest
 
-from .._smoke_common import optional_extra_registry
 from ..all_extra_smoke import COMPANION_MODULES, build_parser, declared_claims, optional_import_probe_source
+from ..lane_verification_core import optional_extra_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

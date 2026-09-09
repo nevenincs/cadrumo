@@ -288,10 +288,3 @@ def test_modelo_369_oss_calculation_enrolls_two_renta_years(tmp_path: Path) -> N
     assert result_n.values[_CASILLA_TOTAL] == Decimal("4935.00")
     assert result_n1.values[_CASILLA_TOTAL] == Decimal("6615.00")
     assert result_n.values[_CASILLA_TOTAL] != result_n1.values[_CASILLA_TOTAL]
-
-
-
-
-
-
-

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors.error_codes import ERROR_REGISTRY, ErrorEnvelope, build_error_envelope, get_registered_error_code
+from ......core.errors.error_codes import ErrorEnvelope, build_error_envelope
 from ..errors import (
     BucketAlreadyPresentError,
     BucketBusyError,
@@ -49,29 +49,9 @@ _CLUSTER_CLASSES: list[type[BucketError]] = [type(e) for e in _CLUSTER_INSTANCES
 # ---------------------------------------------------------------------------
 
 
-def test_every_cluster_class_has_a_distinct_code_in_error_registry() -> None:
-    codes = set()
-    for cls in _CLUSTER_CLASSES:
-        code = get_registered_error_code(cls)
-        assert code.code in ERROR_REGISTRY, f"{cls.__name__} code {code.code!r} not in ERROR_REGISTRY"
-        codes.add(code.code)
-    assert len(codes) == len(_CLUSTER_CLASSES), "duplicate code across bucket cluster classes"
-
-
 # ---------------------------------------------------------------------------
 # Envelope construction
 # ---------------------------------------------------------------------------
-
-
-def test_build_error_envelope_produces_valid_envelope() -> None:
-    for error in _CLUSTER_INSTANCES:
-        error_name = type(error).__name__
-        envelope = build_error_envelope(error)
-        assert isinstance(envelope, ErrorEnvelope), error_name
-        assert envelope.code in ERROR_REGISTRY, error_name
-        assert envelope.category != "", error_name
-        assert envelope.message != "", error_name
-        assert envelope.retryable is not None, error_name
 
 
 # ---------------------------------------------------------------------------

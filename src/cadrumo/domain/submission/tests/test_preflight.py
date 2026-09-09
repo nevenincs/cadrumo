@@ -10,6 +10,7 @@ gate-2 -- the subject of this file -- runs before either.
 from __future__ import annotations
 
 from datetime import date
+from types import SimpleNamespace
 
 import pytest
 
@@ -17,7 +18,7 @@ from ....core.auth_provider import AuthProviderDescription
 from ....core.errors.severity import BaseSeverity
 from ....core.period import Period
 from ..errors import SubmissionPreflightError
-from ..models import ModeloDraftStatus, ModeloFinding
+from ..models import ModeloDraftStatus
 from ..preflight import Preflight
 from ..protocols import ModeloFindingLike
 
@@ -89,8 +90,8 @@ def test_a_clean_draft_with_only_non_error_findings_passes_gate_2() -> None:
     """The legitimate path: warning/info findings never block submission."""
     draft = _DraftWithFindings(
         findings=(
-            ModeloFinding(severity=BaseSeverity.WARNING, message="a warning"),
-            ModeloFinding(severity=BaseSeverity.INFO, message="an info note"),
+            SimpleNamespace(severity=BaseSeverity.WARNING, message="a warning"),
+            SimpleNamespace(severity=BaseSeverity.INFO, message="an info note"),
         ),
     )
     _check(draft)  # must not raise
@@ -98,7 +99,7 @@ def test_a_clean_draft_with_only_non_error_findings_passes_gate_2() -> None:
 
 def test_a_real_error_severity_finding_blocks_gate_2() -> None:
     """The legitimate path: a genuine ERROR-severity finding does block."""
-    draft = _DraftWithFindings(findings=(ModeloFinding(severity=BaseSeverity.ERROR, message="a real error"),))
+    draft = _DraftWithFindings(findings=(SimpleNamespace(severity=BaseSeverity.ERROR, message="a real error"),))
     with pytest.raises(SubmissionPreflightError, match="error-severity findings"):
         _check(draft)
 
@@ -121,7 +122,7 @@ def test_a_dropped_severity_field_is_refused_not_silently_treated_as_clean() -> 
     exception a legitimate error finding raises in the test above. The two
     must stay distinguishable.
     """
-    drifted = ModeloFinding(severity=BaseSeverity.ERROR, message="a real error, drifted selector")
+    drifted = SimpleNamespace(severity=BaseSeverity.ERROR, message="a real error, drifted selector")
     del drifted.__dict__["severity"]
     draft = _DraftWithFindings(findings=(drifted,))
 

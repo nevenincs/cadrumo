@@ -89,16 +89,18 @@ def test_period_state_keeps_the_declared_absent_case() -> None:
 
 def test_period_state_requires_the_canonical_registry_coordinate() -> None:
     with pytest.raises(ValidationError, match="registry_snapshot_ref"):
-        IvaCompensationPeriodState(
-            provenance=IvaCompensationStateProvenance.AEAT_CAPTURE,
-            taxpayer_nif=_VALID_NIF,
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "1T"),
-            expediente_id="202530300000001Z",
-            status="presented",
-            presented_at=_PRESENTED_AT,
-            generated_amount=Decimal("100.00"),
-            available_end_amount=Decimal("100.00"),
-            source_observation_key="303:2025:1T",
-            source_artefact_sha256=_VALID_DIGEST,
+        IvaCompensationPeriodState.model_validate(
+            {
+                "provenance": IvaCompensationStateProvenance.AEAT_CAPTURE,
+                "taxpayer_nif": _VALID_NIF,
+                "filing_year": 2025,
+                "period": Period.from_year_and_code(2025, "1T"),
+                "expediente_id": "202530300000001Z",
+                "status": "presented",
+                "presented_at": _PRESENTED_AT,
+                "generated_amount": Decimal("100.00"),
+                "available_end_amount": Decimal("100.00"),
+                "source_observation_key": "303:2025:1T",
+                "source_artefact_sha256": _VALID_DIGEST,
+            }
         )

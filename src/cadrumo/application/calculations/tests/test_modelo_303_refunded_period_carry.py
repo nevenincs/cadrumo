@@ -319,5 +319,3 @@ def test_carried_4t_period_carries_the_credit_forward_control(tmp_path: Path) ->
     assert carry_in > Decimal("0")
     assert history_state is not None
     assert history_state.generated_amount == carried_saldo
-
-

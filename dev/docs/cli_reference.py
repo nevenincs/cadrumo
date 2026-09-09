@@ -52,7 +52,7 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
-from cadrumo.entrypoints.cli.command_api import command_spec_for_path, command_spec_nodes
+from dev.command_graph import command_spec_for_path, command_spec_nodes
 
 from ._locale_chrome import docs_chrome
 
@@ -94,7 +94,7 @@ def _heading_char_for_depth(depth: int) -> str:
 #
 # The reference is organised into per-family and per-verb-group pages. Both the
 # page-writing loop in :func:`_generate_cli_reference_loaded` and the search
-# projection (``dev/docs/terminology/_cli_projection.py``, which deep-links each
+# projection (``dev/docs/terminology/cli_projection.py``, which deep-links each
 # command record) must agree on the exact page a given command lands on. These
 # two helpers plus :func:`cli_reference_page_for_command` are that one authority:
 # a layout change (family page -> group page, as happened once and stranded every
@@ -622,7 +622,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     """
     code = textwrap.dedent(
         """
-        from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+        from dev.command_graph import command_spec_nodes
 
         for node in command_spec_nodes():
             if node.spec.kind == "leaf":

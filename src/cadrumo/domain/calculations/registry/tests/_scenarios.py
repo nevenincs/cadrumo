@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, model_validator
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.models import STRICT_FROZEN_CONFIG
-from .....core.period import Period, hydrate_scenario_filing_period
+from .....core.period import Period
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
@@ -173,7 +173,17 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     @model_validator(mode="before")
     @classmethod
     def _hydrate_filing_period(cls, data: object) -> object:
-        return hydrate_scenario_filing_period(data)
+        if not isinstance(data, dict) or "filing_period" in data:
+            return data
+        filing_year = data.get("filing_year")
+        period = data.get("period")
+        if not isinstance(filing_year, int) or not isinstance(period, str):
+            return data
+        try:
+            filing_period = Period.from_year_and_code(filing_year, period)
+        except ValueError:
+            return data
+        return {**data, "filing_period": filing_period}
 
     @model_validator(mode="after")
     def _validate_scenario(self) -> RegistryCalculationScenario:

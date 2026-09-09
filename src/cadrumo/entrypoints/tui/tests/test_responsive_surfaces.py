@@ -38,7 +38,7 @@ from ....tests.modelo_workspace_session import real_workspace_inspection_result
 from ....tests.terminal_sizes import SUPPORTED_TERMINAL_SIZE_IDS, SUPPORTED_TERMINAL_SIZES
 from ..components.host import ScreenHostApp
 from ..modelo.routes import MODELO_WORKSPACE_DESTINATIONS
-from ..modelo.view.controller import ModeloWorkspaceReadSession, admit_workspace_session
+from ..modelo.view.controller import ModeloWorkspaceReadSession, open_workspace_read_session
 from ..modelo.view.models import ModeloWorkspaceDestinationIdV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -78,9 +78,7 @@ def workspace_session(request: pytest.FixtureRequest, tmp_path_factory: pytest.T
     """
     root: Path = tmp_path_factory.mktemp("responsive")
     with real_workspace_inspection_result(root, **request.param) as seeded:
-        session, refusal = admit_workspace_session(seeded.result)
-        assert refusal is None, f"expected an admitted projection, got: {refusal}"
-        assert session is not None
+        session = open_workspace_read_session(seeded.result.projection)
         yield session
 
 

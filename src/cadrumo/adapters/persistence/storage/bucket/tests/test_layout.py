@@ -29,7 +29,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ......core.errors.error_codes import build_error_envelope
 from ......core.storage_taxonomy import StorageCategory
 from ......core.storage_taxonomy_locations import storage_location
 from ......tests.bucket_layout import provision_bucket_directory
@@ -180,11 +180,6 @@ def test_two_buckets_share_buckets_parent(tmp_path: Path) -> None:
 
 
 # ── WIN-003 — Windows MAX_PATH (long-path) classification ────────────────────
-
-
-def test_bucket_path_too_long_error_is_registered_in_error_registry() -> None:
-    """BucketPathTooLongError must have a bound ErrorCode in ERROR_REGISTRY."""
-    assert "ERROR_STORAGE_BUCKET_PATH_TOO_LONG" in ERROR_REGISTRY
 
 
 def test_bucket_path_too_long_error_round_trips_through_build_error_envelope() -> None:

@@ -39,7 +39,7 @@ _REPO_ROOT = REPO_ROOT
 
 def _generated_casilla_dir(docs_root: Path) -> Path:
     """Return the directory the generator materialises its pages into."""
-    from ..terminology._casilla_anchor import CASILLA_REFERENCE_DIR
+    from ..terminology.casilla_anchor import CASILLA_REFERENCE_DIR
 
     return docs_root / CASILLA_REFERENCE_DIR
 

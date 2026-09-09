@@ -30,7 +30,6 @@ if not __package__:
 
 from cadrumo.core.directory_scan import scan_directory  # noqa: E402
 
-from ._hashing import sha256_path  # noqa: E402
 from .build_scratch_reclaim import (  # noqa: E402
     RELEASE_STAGING_FAMILY,
     matching_family,
@@ -46,6 +45,7 @@ from .cohort_manifest import (  # noqa: E402
     load_release_cohort,
     write_manifest,
 )
+from .hashing import sha256_path  # noqa: E402
 from .python_cohort import (  # noqa: E402
     PythonCohort,
     build_python_cohort,

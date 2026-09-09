@@ -7,7 +7,7 @@ source claims, deterministic ordering, and zone summaries.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any, Final, Protocol
 
 from pydantic import BaseModel, TypeAdapter
@@ -137,10 +137,6 @@ def project_aeat_sync_workspace(
     notifications: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...] = (),
     evidence_comparison: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceEvidenceComparisonRowV1], ...] = (),
     reconciliation: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceReconciliationRowV1], ...] = (),
-    notification_selection_key: Callable[[str], AeatSyncNotificationSelectionKey],
-    public_notification_row: Callable[
-        [AeatSyncWorkspaceNotificationRowV1, AeatSyncNotificationSelectionKey], AeatSyncWorkspaceNotificationRowV1
-    ],
 ) -> AeatSyncWorkspaceProjectionV1:
     """Project already-loaded, scoped facts without retaining their scope."""
     TypeAdapter(BucketId).validate_python(bucket_id)
@@ -174,8 +170,6 @@ def project_aeat_sync_workspace(
     )
     out_notifications = _project_notification_rows(
         notifications,
-        notification_selection_key=notification_selection_key,
-        public_notification_row=public_notification_row,
     )
     out_comparison = tuple(
         sorted(
@@ -487,6 +481,7 @@ def _canonical_census_path(path: str) -> str:
     """Normalize insignificant whitespace and case for logical identity."""
     return " ".join(path.split()).casefold()
 
+
 _COMPARISON_ZONES: Final = frozenset(
     {
         AeatSyncWorkspaceZone.EVIDENCE_COMPARISON,
@@ -557,24 +552,22 @@ class _NaturalRow(Protocol):
 def _natural(row: _NaturalRow) -> tuple[str, int, str]:
     return (str(row.modelo), row.filing_year, row.period.registry_token)
 
+
 def _project_notification_rows(
     facts: tuple[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1], ...],
-    *,
-    notification_selection_key: Callable[[str], AeatSyncNotificationSelectionKey],
-    public_notification_row: Callable[
-        [AeatSyncWorkspaceNotificationRowV1, AeatSyncNotificationSelectionKey], AeatSyncWorkspaceNotificationRowV1
-    ],
 ) -> tuple[AeatSyncWorkspaceNotificationRowV1, ...]:
     """Project notification rows with opaque keys and protected-value-free ordering."""
+    from . import workspace as workspace_contracts
+
     keyed: list[
         tuple[AeatSyncNotificationSelectionKey, AeatSyncWorkspaceFactV1[AeatSyncWorkspaceNotificationRowV1]]
     ] = []
     for fact in facts:
         if fact.private_identity is None:
             raise AeatSyncWorkspaceProjectionError("notification requires private identity")
-        keyed.append((notification_selection_key(fact.private_identity), fact))
+        keyed.append((workspace_contracts.notification_selection_key(fact.private_identity), fact))
     _unique((key for key, _ in keyed), "notification selection identities")
     return tuple(
-        public_notification_row(fact.row, key)
+        workspace_contracts.public_notification_row(fact.row, key)
         for key, fact in sorted(keyed, key=lambda item: (item[1].row.issued_on, item[0]))
     )

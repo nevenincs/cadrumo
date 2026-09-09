@@ -99,7 +99,6 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
         )
 
 
-
 def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos) -> None:
     """``work verify`` is independent of the AEAT filing calendar.
 
@@ -640,5 +639,3 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
             verification_repository=vr_repo,
         )
     assert excinfo.value.translated_message == "application.modelo.errors.verification_report_not_found"
-
-

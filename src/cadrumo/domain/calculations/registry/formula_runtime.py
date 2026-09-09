@@ -375,7 +375,8 @@ def _resolve_calculation_inputs[InputKey, InputValue, TextInputKey, TextInputVal
         else date(snapshot.filing_year, 12, 31)
     )
     resolved_date_context.setdefault("filing_period", default_filing_date)
-    supplied_bindings: Mapping[BindingId, Decimal] = binding_values or {}
+    empty_bindings: dict[BindingId, Decimal] = {}
+    supplied_bindings: Mapping[BindingId, Decimal] = binding_values if binding_values is not None else empty_bindings
     _reject_non_decimal(supplied_bindings, "binding")
     resolved_bindings = _binding_values_with_absent_by_design_defaults(
         revision,

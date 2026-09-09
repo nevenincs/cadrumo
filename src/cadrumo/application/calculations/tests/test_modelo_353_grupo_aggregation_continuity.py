@@ -339,10 +339,3 @@ def test_modelo_353_grupo_aggregation_enrolls_two_renta_years(tmp_path: Path) ->
             for source_casilla, reconciliation_casilla in _RECONCILIATION_BY_322_CASILLA.items():
                 expected = sum((member_results[nif][source_casilla] for nif in _MEMBER_NIFS), Decimal("0"))
                 assert aggregate.values[reconciliation_casilla] == expected
-
-
-
-
-
-
-

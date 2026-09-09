@@ -201,9 +201,7 @@ class LedgerWorkspaceController:
             return self.classify_action is None or self.classification_submitter is None
         if area is LedgerWorkspaceArea.IMPORT:
             return not self.prepared_imports or self.import_submitter is None
-        return area is LedgerWorkspaceArea.EVIDENCE and (
-            self.evidence_action is None or self.evidence_items is None
-        )
+        return area is LedgerWorkspaceArea.EVIDENCE and (self.evidence_action is None or self.evidence_items is None)
 
     def refusal_for(self, area: LedgerWorkspaceArea) -> LedgerRouteRefusalV1 | None:
         """Preserve application refusal separately from deferred screen availability."""
