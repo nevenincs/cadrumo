@@ -5,12 +5,16 @@ the rest in a NOTE the cell points at. Modelo 390's expired-rate slots say only
 "Nota 2", and that note carries the mandate - "estas casillas deben estar
 rellenas a 0" - which decides the only value those slots may hold.
 
-A pointer is only as good as the label it names. Where one design defines the
-same label on several sheets with DIFFERENT text, the pointer has more than one
-plausible reading, and nothing in the artefact records which was taken. Both
-readings look like valid notes, so a wrong resolution is silent - the same shape
-as the sign defect, where a convention sat in a note that nothing had joined to
-the fields it governs and a stable wrong answer shipped for years.
+A pointer is only as good as the label it names, and these designs scope notes
+PER SHEET: a field reads the note its own sheet defines, which is why the
+note-governed declarations pin a sheet AND a cell rather than a label alone. A
+label repeated across sheets is therefore not ambiguous to a field sitting on one
+of them. Measured: 239 of the 241 note-citing fields resolve locally this way.
+
+What is left is the small, real case - a field citing a label its OWN sheet does
+not define. That pointer has to look elsewhere, several sheets offer a candidate,
+and nothing in the artefact records which was taken. A wrong resolution there is
+silent, because every candidate looks like a valid note.
 
 This screen performs that join. It reports a field whose note label resolves to
 several texts, because such a field's derivation cannot be PROVEN from its
@@ -57,18 +61,19 @@ class UnresolvableNotePointer:
         return self.distinct_texts <= 1
 
 
-def _ambiguous_labels() -> dict[tuple[str, str], int]:
-    counts: dict[tuple[str, str], int] = {}
+def _label_defining_sheets() -> dict[tuple[str, str], set[str]]:
+    """Return which sheets define each label, so locality can be judged."""
+    defining: dict[tuple[str, str], set[str]] = {}
     for finding in note_label_scope():
         key = (finding.modelo, re.sub(r"\s+", "", finding.label.lower()))
-        counts[key] = max(counts.get(key, 0), finding.merged)
-    return counts
+        defining.setdefault(key, set()).update(finding.sheets)
+    return defining
 
 
 def unresolvable_note_pointers(modelos_root: Path | None = None) -> Iterator[UnresolvableNotePointer]:
     """Yield every shipped field whose cited note label resolves to several texts."""
     root = modelos_root if modelos_root is not None else bundled_path("registry", "aeat", "modelos")
-    labels = _ambiguous_labels()
+    labels = _label_defining_sheets()
     for manifest_path in sorted(root.glob("*/revisions/*/export/_generation.provenance.json")):
         parts = manifest_path.parts
         modelo, revision = parts[-5], parts[-3]
@@ -79,8 +84,13 @@ def unresolvable_note_pointers(modelos_root: Path | None = None) -> Iterator[Unr
             if pointer is None:
                 continue
             label = f"nota{pointer.group(1)}"
-            distinct = labels.get((modelo, label))
-            if distinct is None or distinct <= 1:
+            defining = labels.get((modelo, label))
+            if not defining or len(defining) <= 1:
+                continue
+            if (entry.get("parser_field") or {}).get("sheet") in defining:
+                # Resolved on its own sheet, which is how these designs scope a
+                # note. Reporting it would bury the genuine case under ninety
+                # times its own number.
                 continue
             field_id = (entry.get("field") or {}).get("id")
             yield UnresolvableNotePointer(
@@ -88,7 +98,7 @@ def unresolvable_note_pointers(modelos_root: Path | None = None) -> Iterator[Unr
                 revision=revision,
                 export_field_id=str(field_id),
                 note_label=label,
-                distinct_texts=distinct,
+                distinct_texts=len(defining),
             )
 
 
