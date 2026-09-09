@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:2acb8e17a1ea5868e5e2759337db0b8f59b8372c8686052142cacb6a8bce0606'
+body_hash: 'sha256:fc1711ea574d8a119254d844400f75e22e9cf46bf96c69dddfcb8f7aaed511e4'
 step_id: 'S313'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete copied retry constants from the extracted custody-record CAS owner
 

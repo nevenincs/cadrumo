@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Collection
+from collections.abc import Collection, Mapping
+from datetime import date
+from pathlib import Path
 
-from .schema import GovernedFactCatalogue
+from .....core.corpus_text import normalise_corpus_text
+from .._validate_evidence import EvidenceValidator
+from ..errors import RegistryValidationError
+from ..legal import verify_legal_reference_grounding
+from ..schema_references import LegalReference, SourceReference
+from .schema import GovernedFact, GovernedFactCatalogue, GovernedFactVariant
 
 __all__ = ["governed_fact_catalogue_failures"]
 
@@ -14,11 +21,26 @@ def governed_fact_catalogue_failures(
     *,
     legal_ref_ids: Collection[str],
     source_ref_ids: Collection[str],
+    legal_refs: Mapping[str, LegalReference] | None = None,
+    source_refs: Mapping[str, SourceReference] | None = None,
+    source_root: Path | None = None,
 ) -> tuple[str, ...]:
-    """Return every unresolved legal or source reference in the catalogue."""
+    """Return structural and evidence-grounding failures for every governed variant."""
     failures: list[str] = []
+    verified_legal: set[str] = set()
+    evidence = EvidenceValidator(
+        legal_refs={} if legal_refs is None else legal_refs,
+        source_refs={} if source_refs is None else source_refs,
+        source_root=source_root,
+    )
     for fact_id, fact in sorted(catalogue.facts.items()):
+        failures.extend(_fact_precedence_failures(fact))
         for variant in fact.variants:
+            if not variant.legal_refs and not variant.source_refs:
+                failures.append(
+                    f"governed fact {fact_id!r} variant {variant.variant_id!r} "
+                    "must declare a complete legal or source evidence lane",
+                )
             failures.extend(
                 f"governed fact {fact_id!r} variant {variant.variant_id!r} references unknown legal id {ref!r}"
                 for ref in variant.legal_refs
@@ -29,4 +51,96 @@ def governed_fact_catalogue_failures(
                 for ref in variant.source_refs
                 if ref not in source_ref_ids
             )
+            cited = {citation.source_ref for citation in variant.source_citations}
+            if cited != set(variant.source_refs):
+                failures.append(
+                    f"governed fact {fact_id!r} variant {variant.variant_id!r} citations must cover every source_ref",
+                )
+            if legal_refs is not None and source_root is not None:
+                for ref_id in variant.legal_refs:
+                    if ref_id in verified_legal:
+                        continue
+                    reference = legal_refs.get(ref_id)
+                    if reference is None:
+                        continue
+                    try:
+                        verify_legal_reference_grounding(reference, source_root=source_root)
+                    except RegistryValidationError as exc:
+                        failures.append(
+                            f"governed fact {fact_id!r} variant {variant.variant_id!r} "
+                            f"has invalid legal evidence {ref_id!r}: {exc}"
+                        )
+                    else:
+                        verified_legal.add(ref_id)
+            if source_refs is not None and source_root is not None:
+                for citation in variant.source_citations:
+                    reference = source_refs.get(citation.source_ref)
+                    if reference is None:
+                        continue
+                    source_text = evidence.source_text(reference)
+                    if source_text is None:
+                        failures.append(
+                            f"governed fact {fact_id!r} variant {variant.variant_id!r} "
+                            f"cannot read source evidence {citation.source_ref!r}"
+                        )
+                        continue
+                    for required_text in citation.required_text:
+                        if normalise_corpus_text(required_text) not in source_text:
+                            failures.append(
+                                f"governed fact {fact_id!r} variant {variant.variant_id!r} source citation "
+                                f"{citation.source_ref!r} missing text {required_text!r}"
+                            )
     return tuple(failures)
+
+
+def _fact_precedence_failures(fact: GovernedFact) -> tuple[str, ...]:
+    edges = {variant.variant_id: variant.precedence_over for variant in fact.variants}
+    failures: list[str] = []
+    for variant in fact.variants:
+        if _reaches(variant.variant_id, variant.variant_id, edges):
+            failures.append(
+                f"governed fact {fact.fact_id!r} variant {variant.variant_id!r} precedence graph contains a cycle",
+            )
+    for index, left in enumerate(fact.variants):
+        for right in fact.variants[index + 1 :]:
+            overlaps = _overlap(left, right)
+            ordered = _reaches(left.variant_id, right.variant_id, edges) or _reaches(
+                right.variant_id,
+                left.variant_id,
+                edges,
+            )
+            directly_ordered = right.variant_id in edges[left.variant_id] or left.variant_id in edges[right.variant_id]
+            if overlaps and not ordered:
+                failures.append(
+                    f"governed fact {fact.fact_id!r} variants {left.variant_id!r} and {right.variant_id!r} "
+                    "overlap without explicit precedence",
+                )
+            elif directly_ordered and not overlaps:
+                failures.append(
+                    f"governed fact {fact.fact_id!r} variants {left.variant_id!r} and {right.variant_id!r} "
+                    "declare precedence across non-overlapping coordinates",
+                )
+    return tuple(failures)
+
+
+def _selector_key(variant: GovernedFactVariant) -> tuple[tuple[str, str, str], ...]:
+    return tuple(sorted((item.name, type(item.value).__name__, repr(item.value)) for item in variant.selectors))
+
+
+def _overlap(left: GovernedFactVariant, right: GovernedFactVariant) -> bool:
+    if left.date_axis != right.date_axis or _selector_key(left) != _selector_key(right):
+        return False
+    return left.valid_from <= (right.valid_to or date.max) and right.valid_from <= (left.valid_to or date.max)
+
+
+def _reaches(start: str, target: str, edges: Mapping[str, tuple[str, ...]]) -> bool:
+    pending = list(edges.get(start, ()))
+    seen: set[str] = set()
+    while pending:
+        current = pending.pop()
+        if current == target:
+            return True
+        if current not in seen:
+            seen.add(current)
+            pending.extend(edges.get(current, ()))
+    return False

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:5cc4f156cc946b42e137723aeef4e90e1e221374f91211b7e544243109cc17d1'
+body_hash: 'sha256:51722c96fcb817a1ecd2091aba08f4bcc9b2d725477fa40a29961b4dbe133949'
 step_id: 'S364'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Collapse the wizard core registry to its live setup-flow slot, deleting the unused protocol, write-only wizard-flows slot/accessor, and source-code-string subprocess test.
 

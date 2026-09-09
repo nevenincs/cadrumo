@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:67ad87515179a7b688186cd8698a2748ccb9167bf74fa35f514e256307d75509'
+body_hash: 'sha256:6c5d87c70c0e58ae8550f16b8443e244aa37e21918a037839b1b3fa1cc9b1870'
 step_id: 'S292'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only amendment-regime membership probe and its modelo roster assertion; retain boundary-driven amendment behavior tests over the live resolver.
 

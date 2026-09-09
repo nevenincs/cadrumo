@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:d98486ca9a818897d62d0aa8adb39eb950051598187906ddab3ef19733d37126'
+body_hash: 'sha256:e3d5e9bc9732fd99779a4c787e12a8d9f16295fd33785e53b440aeeb0a1aa0ca'
 step_id: 'S322'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove invoice-kind singularity owner strings and embedded mapping implementations
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:49d0b25d3ab4a273d0037d0bc00d870af1b36cb8c99abbc28ac071bd8bd5ba92'
+body_hash: 'sha256:6e9447b0723e9bc9385a609035b204ebdfacc5d674463b95ac09a3f99fa52fc0'
 step_id: 'S357'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove unused operation-schema compatibility constants and a stale wizard locale-key export, replacing private-set inspection with validator behavior.
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:a41a4b406dd9571f1e41131afbff8933eeca1376d712e597690c736deabb7f97'
+body_hash: 'sha256:7a321ad4841c78d6a67e698f1ea995df30601e42ee3a4fba4475551d3a754591'
 step_id: 'S317'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the three-module per-modelo token baseline and embedded matcher corpus
 

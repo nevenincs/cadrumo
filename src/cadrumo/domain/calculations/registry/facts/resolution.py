@@ -8,7 +8,14 @@ from typing import Annotated, Literal
 from pydantic import Field, TypeAdapter, model_validator
 
 from ..errors import RegistryValidationError
-from ..schema_base import DateAxisField, LegalRefs, RegistryModel, RevisionReviewStatusField, SourceCitation, SourceRefs
+from ..schema_base import (
+    DateAxisField,
+    LegalRefId,
+    RegistryModel,
+    RevisionReviewStatusField,
+    SourceCitation,
+    SourceRefId,
+)
 from .schema import (
     BracketFactPayload,
     EntitySetFactPayload,
@@ -126,9 +133,9 @@ class _ResolvedFact(RegistryModel):
     valid_from: date
     valid_to: date | None = None
     matched_selectors: tuple[FactSelector, ...] = ()
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    source_citations: tuple[SourceCitation, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
+    source_citations: tuple[SourceCitation, ...] = ()
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
     authority_digest: str = Field(pattern=r"^[0-9a-f]{64}$")
@@ -145,6 +152,8 @@ class _ResolvedFact(RegistryModel):
         cited = {citation.source_ref for citation in self.source_citations}
         if not cited.issubset(set(self.source_refs)):
             raise RegistryValidationError("resolved governed fact citations must name a declared source_ref")
+        if not self.legal_refs and not self.source_refs:
+            raise RegistryValidationError("resolved governed fact must retain legal or source evidence")
         return self
 
 

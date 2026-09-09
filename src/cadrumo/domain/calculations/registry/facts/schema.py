@@ -14,11 +14,11 @@ from pydantic import BeforeValidator, Field, model_validator
 from ..errors import RegistryValidationError
 from ..schema_base import (
     DateAxisField,
-    LegalRefs,
+    LegalRefId,
     RegistryModel,
     RevisionReviewStatusField,
     SourceCitation,
-    SourceRefs,
+    SourceRefId,
     coerce_enum_member,
 )
 from ..schema_scalars import DecimalValue
@@ -161,7 +161,7 @@ class EntitySetFactPayload(RegistryModel):
     """A closed set of stable entity tokens."""
 
     kind: Literal[GovernedFactFamily.ENTITY_SET] = GovernedFactFamily.ENTITY_SET
-    entities: frozenset[str] = Field(min_length=1)
+    entities: frozenset[str] = frozenset()
 
     @model_validator(mode="after")
     def _validate_entities(self) -> EntitySetFactPayload:
@@ -174,7 +174,8 @@ class OverrideFactPayload(RegistryModel):
     """A result that supersedes named variants under explicit selectors."""
 
     kind: Literal[GovernedFactFamily.OVERRIDE] = GovernedFactFamily.OVERRIDE
-    value: FactAtom
+    override_code: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
+    value: FactAtom | None = None
     unit: str | None = Field(default=None, min_length=1, max_length=64)
 
 
@@ -249,9 +250,9 @@ class GovernedFactVariant(RegistryModel):
     valid_from: date
     valid_to: date | None = None
     payload: FactPayload
-    legal_refs: LegalRefs
-    source_refs: SourceRefs
-    source_citations: tuple[SourceCitation, ...] = Field(min_length=1)
+    legal_refs: tuple[LegalRefId, ...] = ()
+    source_refs: tuple[SourceRefId, ...] = ()
+    source_citations: tuple[SourceCitation, ...] = ()
     review_status: RevisionReviewStatusField
     ownership: FactOwnershipField
     precedence_over: tuple[FactVariantId, ...] = ()
@@ -270,6 +271,8 @@ class GovernedFactVariant(RegistryModel):
         cited = {citation.source_ref for citation in self.source_citations}
         if not cited.issubset(set(self.source_refs)):
             raise RegistryValidationError("governed fact citations must name a declared source_ref")
+        if not self.legal_refs and not self.source_refs:
+            raise RegistryValidationError("governed fact variant must declare legal or source evidence")
         return self
 
 

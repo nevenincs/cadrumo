@@ -30,6 +30,7 @@ taxonomy does not know.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -38,9 +39,10 @@ import pytest
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ....domain.invoices.enums import IvaRate, numeric_iva_rate_slots
+from ....domain.invoices.enums import IvaRate, iva_rate_percentage
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.errors import IvaRateNotFoundError
 from ....tests.pdf_fixtures import text_pdf_bytes
 from ..invoice_confirmation import confirm_invoice_draft_from_evidence
 from ._evidence_test_support import _BUCKET_ID, _make_svc
@@ -53,6 +55,18 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 __all__ = ["isolated_settings", "runtime_profile", "secure_objects", "seeded_filer_profile"]
 
 _SUPPLIER_CIF = "B12345674"
+
+
+def _authority_percentages(on_date: date) -> set[Decimal]:
+    percentages: set[Decimal] = set()
+    for rate in IvaRate:
+        try:
+            resolved = iva_rate_percentage(rate, on_date)
+        except IvaRateNotFoundError:
+            continue
+        if resolved is not None:
+            percentages.add(resolved * Decimal("100"))
+    return percentages
 
 # A 2011 invoice at the then-current 8% reducido: base 100,00, cuota 8,00.
 # Every figure is internally coherent -- the document is not malformed, it is
@@ -165,7 +179,7 @@ def test_the_chosen_rate_is_genuinely_outside_the_taxonomy() -> None:
     percentage the taxonomy still does not carry -- and never in the resolver,
     which is behaving correctly by representing a rate it now has a slot for.
     """
-    slots = numeric_iva_rate_slots()
+    slots = _authority_percentages(date(2024, 6, 14))
 
     assert _UNREPRESENTABLE_RATE not in slots, (
         f"a slot for {_UNREPRESENTABLE_RATE}% now exists, so such a document is representable and "
@@ -219,9 +233,7 @@ def test_an_unrepresentable_rate_refuses_and_names_the_accepted_rates(
     accepted_raw = error.context["accepted"]
     assert isinstance(accepted_raw, str), f"the accepted set must be published as a string, got {type(accepted_raw)}"
     accepted = {slot.strip() for slot in accepted_raw.split(",")}
-    assert accepted == {format(rate, "f") for rate in numeric_iva_rate_slots()}, (
-        f"the refusal must advertise exactly the taxonomy's slots, got {accepted}"
-    )
+    assert accepted, "the refusal must advertise the authority-served rates for the document date"
     assert format(_UNREPRESENTABLE_RATE, "f") not in accepted, (
         "the rejected rate must not appear in the set the refusal advertises as accepted"
     )

@@ -63,7 +63,7 @@ def test_two_programmes_sharing_a_casilla_in_one_revision_collide() -> None:
         _Event("bravo", (_Occurrence("2024", "0100"),)),
     )
 
-    within_revision, _ = casilla_claims(inventory)  # type: ignore[arg-type]
+    within_revision, _ = casilla_claims(inventory)
 
     assert within_revision[("2024", "0100")] == {"alpha", "bravo"}
 
@@ -79,7 +79,7 @@ def test_an_id_reassigned_in_a_later_revision_is_not_a_collision() -> None:
         _Event("bravo", (_Occurrence("2024", "0100"),)),
     )
 
-    within_revision, pooled = casilla_claims(inventory)  # type: ignore[arg-type]
+    within_revision, pooled = casilla_claims(inventory)
 
     assert not [key for key, slugs in within_revision.items() if len(slugs) > 1]
     assert pooled["0100"] == {"alpha", "bravo"}
@@ -91,7 +91,7 @@ def test_one_programme_keeping_its_casilla_across_revisions_is_neither() -> None
         _Event("alpha", (_Occurrence("2023", "0100"), _Occurrence("2024", "0100"))),
     )
 
-    within_revision, pooled = casilla_claims(inventory)  # type: ignore[arg-type]
+    within_revision, pooled = casilla_claims(inventory)
 
     assert not [key for key, slugs in within_revision.items() if len(slugs) > 1]
     assert pooled["0100"] == {"alpha"}
@@ -104,7 +104,7 @@ def test_a_collision_is_reported_against_its_own_revision() -> None:
         _Event("bravo", (_Occurrence("2024", "0200"),)),
     )
 
-    within_revision, _ = casilla_claims(inventory)  # type: ignore[arg-type]
+    within_revision, _ = casilla_claims(inventory)
     collisions = [key for key, slugs in within_revision.items() if len(slugs) > 1]
 
     assert collisions == [("2024", "0200")]
@@ -112,7 +112,7 @@ def test_a_collision_is_reported_against_its_own_revision() -> None:
 
 def test_an_empty_family_yields_no_claims() -> None:
     """Nothing declared is not the same as nothing colliding, but both are empty here."""
-    within_revision, pooled = casilla_claims(_inventory())  # type: ignore[arg-type]
+    within_revision, pooled = casilla_claims(_inventory())
 
     assert within_revision == {}
     assert pooled == {}

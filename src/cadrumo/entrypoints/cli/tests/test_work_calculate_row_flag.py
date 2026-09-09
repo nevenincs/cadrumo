@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -35,6 +36,8 @@ from ....domain.modelos.row_models import (
 from .._modelo_cli_support import parse_row_spec as _parse_row_spec
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_M347_EFFECTIVE_DATE = date(2025, 12, 31)
 
 
 def _output_language(language: str):
@@ -353,7 +356,7 @@ class TestValidateM347Threshold:
     def test_above_threshold_passes(self) -> None:
         """A contraparte row with total > €3,005.06 passes validation."""
         rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.07")),)
-        validate_m347_threshold(rows)  # Must not raise
+        validate_m347_threshold(rows, effective_date=_M347_EFFECTIVE_DATE)  # Must not raise
 
     def test_exactly_threshold_rejected(self) -> None:
         """A total equal to €3,005.06 is rejected (must exceed, not equal).
@@ -361,17 +364,17 @@ class TestValidateM347Threshold:
         Oracle: RD 1065/2007 art. 31.1 — 'supere' (exceed), not 'iguale'."""
         rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("3005.06")),)
         with pytest.raises(Modelo347ThresholdError):
-            validate_m347_threshold(rows)
+            validate_m347_threshold(rows, effective_date=_M347_EFFECTIVE_DATE)
 
     def test_below_threshold_rejected(self) -> None:
         """A total below €3,005.06 is rejected."""
         rows = (Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("1000")),)
         with pytest.raises(Modelo347ThresholdError):
-            validate_m347_threshold(rows)
+            validate_m347_threshold(rows, effective_date=_M347_EFFECTIVE_DATE)
 
     def test_empty_rows_skips_check(self) -> None:
         """Empty row tuple skips validation."""
-        validate_m347_threshold(())  # Must not raise
+        validate_m347_threshold((), effective_date=_M347_EFFECTIVE_DATE)  # Must not raise
 
     def test_antitautology_threshold_check_reads_total_not_individual_quarters(self) -> None:
         """Anti-tautology: the check sums Q1+Q2+Q3+Q4, not just Q1.
@@ -389,7 +392,7 @@ class TestValidateM347Threshold:
                 importe_Q4=Decimal("1005.07"),
             ),
         )
-        validate_m347_threshold(rows)  # total=4005.07 > 3005.06, must not raise
+        validate_m347_threshold(rows, effective_date=_M347_EFFECTIVE_DATE)  # total=4005.07 > 3005.06, must not raise
 
     def test_same_nif_split_across_rows_aggregates_over_threshold(self) -> None:
         """Two rows for the SAME counterparty (e.g. entregas + adquisiciones), each
@@ -402,7 +405,7 @@ class TestValidateM347Threshold:
             Modelo347ContraparteRow(nif="12345678A", importe_Q1=Decimal("2000")),
             Modelo347ContraparteRow(nif="12345678A", importe_Q3=Decimal("2000")),
         )
-        validate_m347_threshold(rows)  # per-NIF total 4000 > 3005.06, must not raise
+        validate_m347_threshold(rows, effective_date=_M347_EFFECTIVE_DATE)  # per-NIF total 4000 > 3005.06, must not raise
 
     def test_same_nif_split_across_rows_aggregate_below_threshold_rejected(self) -> None:
         """Same-NIF rows whose AGGREGATE is at/below the threshold are rejected,
@@ -412,7 +415,7 @@ class TestValidateM347Threshold:
             Modelo347ContraparteRow(nif="12345678A", importe_Q2=Decimal("1500")),
         )
         with pytest.raises(Modelo347ThresholdError) as exc:
-            validate_m347_threshold(rows)
+            validate_m347_threshold(rows, effective_date=_M347_EFFECTIVE_DATE)
         # The error reports the AGGREGATED per-NIF total = the sum of the two rows' totals.
         assert exc.value.total == rows[0].importe_total + rows[1].importe_total
         assert exc.value.nif == "12345678A"
@@ -425,7 +428,7 @@ class TestValidateM347Threshold:
             Modelo347ContraparteRow(nif="22222222J", importe_Q1=Decimal("1000")),
         )
         with pytest.raises(Modelo347ThresholdError) as exc:
-            validate_m347_threshold(rows)
+            validate_m347_threshold(rows, effective_date=_M347_EFFECTIVE_DATE)
         assert exc.value.nif == "22222222J"
 
 

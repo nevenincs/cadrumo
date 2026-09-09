@@ -27,6 +27,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
+from ...calculations.registry.authority import bundled_authority
 from ..errors import DeadlineValidationError
 from ..festivos import (
     MODELOS_WITHOUT_SHIFT,
@@ -42,6 +43,10 @@ from ..festivos import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _authority():
+    return bundled_authority()
 
 _NATIONAL_HOLIDAY_DATES_2025 = (
     date(2025, 1, 1),  # Año Nuevo
@@ -216,7 +221,7 @@ def test_shift_deadline_basic_cases() -> None:
         reason_fragments,
         expected_jurisdictions,
     ) in _SHIFT_DEADLINE_CASES:
-        result = shift_deadline(close_date, modelo=modelo, ccaa_code=ccaa_code)
+        result = shift_deadline(close_date, modelo=modelo, ccaa_code=ccaa_code, authority=_authority())
         assert result.shifted is expected_shifted, case_id
         assert result.original_close_date == close_date, case_id
         assert result.adjusted_close_date == expected_adjusted, case_id
@@ -234,13 +239,13 @@ def test_shift_deadline_handles_ccaa_holiday_when_residence_matches() -> None:
     with the same close date does NOT shift."""
 
     diada = date(2025, 9, 11)
-    catalan_result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.CATALUNA)
+    catalan_result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.CATALUNA, authority=_authority())
     assert catalan_result.shifted is True
     assert catalan_result.adjusted_close_date == date(2025, 9, 12)
     assert HolidayJurisdiction.CCAA in catalan_result.jurisdictions
     assert "Diada" in catalan_result.shift_reason
 
-    madrid_result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.MADRID)
+    madrid_result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.MADRID, authority=_authority())
     assert madrid_result.shifted is False
     assert madrid_result.adjusted_close_date == diada
 
@@ -273,7 +278,7 @@ def test_shift_deadline_records_holiday_refs_for_audit_trail() -> None:
     shift so operator-facing output can explain ``why``."""
 
     diada = date(2025, 9, 11)
-    result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.CATALUNA)
+    result = shift_deadline(diada, modelo="303", ccaa_code=CalendarCCAA.CATALUNA, authority=_authority())
     assert "Diada Nacional de Cataluña" in result.holiday_refs
 
 
@@ -281,7 +286,7 @@ def test_shift_deadline_handles_saturday_overlap_with_national_holiday() -> None
     """2025-11-01 is Todos los Santos AND a Saturday. The shift result
     cites both the weekend day and the national holiday."""
 
-    result = shift_deadline(date(2025, 11, 1), modelo="303", ccaa_code=CalendarCCAA.MADRID)
+    result = shift_deadline(date(2025, 11, 1), modelo="303", ccaa_code=CalendarCCAA.MADRID, authority=_authority())
     assert result.shifted is True
     # The reason carries both signals.
     assert "sabado" in result.shift_reason
@@ -307,7 +312,7 @@ def test_holiday_is_frozen_and_forbids_extras() -> None:
 
 
 def test_deadline_shift_is_frozen_and_immutable() -> None:
-    shift = shift_deadline(date(2025, 3, 4), modelo="303", ccaa_code=None)
+    shift = shift_deadline(date(2025, 3, 4), modelo="303", ccaa_code=None, authority=_authority())
     assert isinstance(shift, DeadlineShift)
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         shift.shifted = True

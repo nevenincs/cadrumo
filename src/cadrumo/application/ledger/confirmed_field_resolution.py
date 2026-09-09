@@ -265,6 +265,7 @@ def _document_breakdown_lines(
     *,
     draft: InvoiceDraft,
     invoice_number: str,
+    devengo_date: date,
     taxable_base: Decimal,
 ) -> tuple[InvoiceLine, ...] | None:
     """Build lines only when every document breakdown entry is fully priced."""
@@ -281,7 +282,7 @@ def _document_breakdown_lines(
             quantity=Decimal("1"),
             unit_price=taxable_base,
             subtotal=taxable_base,
-            iva_rate=resolve_iva_rate_slot(entry.iva_rate),
+            iva_rate=resolve_iva_rate_slot(entry.iva_rate, devengo_date),
             iva_amount=iva_amount,
         )
         for entry, taxable_base, iva_amount in priced
@@ -291,6 +292,7 @@ def _document_breakdown_lines(
 def _flat_confirmed_line(
     *,
     invoice_number: str,
+    devengo_date: date,
     taxable_base: Decimal,
     iva_rate: Decimal | None,
     iva_amount: Decimal | None,
@@ -307,7 +309,7 @@ def _flat_confirmed_line(
             # The SAME resolver the writer applies to the same value, so an
             # unrepresentable percentage refuses identically whether or not
             # the document printed a cuota.
-            iva_rate=resolve_iva_rate_slot(iva_rate),
+            iva_rate=resolve_iva_rate_slot(iva_rate, devengo_date),
             iva_amount=iva_amount,
         ),
     )
@@ -317,6 +319,7 @@ def confirmed_lines_from_the_document(
     *,
     draft: InvoiceDraft,
     invoice_number: str,
+    devengo_date: date,
     taxable_base: Decimal,
     iva_rate: Decimal | None,
     iva_amount: Decimal | None,
@@ -341,6 +344,7 @@ def confirmed_lines_from_the_document(
     Args:
         draft: The re-run extraction being confirmed.
         invoice_number: Resolved invoice number, used to label the lines.
+        devengo_date: Explicit date selecting the IVA rate fact.
         taxable_base: Resolved taxable base the lines must sum back to.
         iva_rate: Resolved IVA percentage, or ``None``.
         iva_amount: The operator-supplied printed cuota, or ``None``.
@@ -354,12 +358,14 @@ def confirmed_lines_from_the_document(
         lines = _document_breakdown_lines(
             draft=draft,
             invoice_number=invoice_number,
+            devengo_date=devengo_date,
             taxable_base=taxable_base,
         )
         if lines is not None:
             return lines
     return _flat_confirmed_line(
         invoice_number=invoice_number,
+        devengo_date=devengo_date,
         taxable_base=taxable_base,
         iva_rate=iva_rate,
         iva_amount=iva_amount,

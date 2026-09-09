@@ -35,8 +35,8 @@ from collections.abc import Mapping
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
-from ...core.external_constants import MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -50,11 +50,14 @@ _ART52_APORTACIONES_TRABAJADOR_CON_CONTRIBUCION_EMPRESARIAL_ROLE = (
 )
 _ART52_CONTRIBUCIONES_EMPRESARIALES_ROLE = "irpf_red_prevision_social_contribuciones_empresariales_excepto_scd"
 _ART52_APORTACIONES_AUTONOMOS_EMPRESARIOS_ROLE = "irpf_red_prevision_social_aportaciones_autonomos_empresarios"
+_ART52_INDIVIDUAL_SUBLIMIT_FACT_ID = "lirpf-art-52-individual-contribution-sublimit"
 
 
 def _art52_reduccion_advisory_finding(
     revision: object,
     casilla_values: Mapping[CasillaId, Decimal],
+    *,
+    context: ModeloFactResolutionContext,
 ) -> ModeloVerificationFinding | None:
     """Warn when the previsión-social reducción exceeds the individual sub-limit.
 
@@ -113,8 +116,9 @@ def _art52_reduccion_advisory_finding(
     empresarial_value = casilla_values.get(empresarial_id, Decimal(0))
     autonomos_empresarios_value = casilla_values.get(autonomos_empresarios_id, Decimal(0))
 
+    resolved_sublimit = context.resolved_decimal(_ART52_INDIVIDUAL_SUBLIMIT_FACT_ID)
     if (
-        reduccion_value > MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR
+        reduccion_value > resolved_sublimit.payload.value
         and trabajador_con_contribucion_value == Decimal(0)
         and empresarial_value == Decimal(0)
         and autonomos_empresarios_value == Decimal(0)
@@ -127,9 +131,9 @@ def _art52_reduccion_advisory_finding(
             message_facts={
                 "reduccion_id": reduccion_id,
                 "reduccion_value": reduccion_value,
-                "sublimit": MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR,
+                "sublimit": resolved_sublimit.payload.value,
             },
-            legal_refs=("ley-35-2006:art-52",),
+            legal_refs=resolved_sublimit.legal_refs,
         )
     return None
 

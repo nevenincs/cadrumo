@@ -28,9 +28,8 @@ from decimal import Decimal
 import pytest
 
 from ....core.period import Period
-from ....domain.iva import rates as _iva_rates_module
-from ....domain.iva.rates import load_iva_rate_table
-from ....domain.iva.schema import EUMemberState, IvaCategory
+from ....domain.iva import lookup as _iva_lookup_module
+from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....tests.attribute_scope import scoped_attribute
 from ..invoice_extraction_authority import (
     InvoiceExtractionAuthorityValues,
@@ -73,23 +72,21 @@ class TestTheResolverFollowsTheRateAuthority:
             "positive control: pick a percentage the registry does not already carry"
         )
 
-        real_table = load_iva_rate_table()
-        spain = real_table[EUMemberState.ES]
-        planted = spain[0].model_copy(
-            update={
-                "pct": _FABRICATED_PCT,
-                "effective_from": _ANNUAL_2026.start_date,
-                "effective_until": None,
-            },
-        )
-        # Patched on the DEFINING module, which is where the resolver reaches
-        # it. The ``cadrumo.domain.iva`` package re-exported its surface once
-        # and that map is retired -- patching the package now sets an attribute
-        # nothing reads, and setting one that does not exist raises instead.
+        real_lookup_rate = _iva_lookup_module.lookup_rate
+
+        def _planted_lookup_rate(member_state: EUMemberState, kind: IvaRateKind, on_date):
+            resolved = real_lookup_rate(member_state, kind, on_date)
+            if member_state is EUMemberState.ES and kind is IvaRateKind.GENERAL:
+                return resolved.model_copy(update={"pct": _FABRICATED_PCT})
+            return resolved
+
+        # Patch the typed facade at its defining module. The application reader
+        # must observe the provider through that facade rather than reading the
+        # legacy rate table itself.
         with scoped_attribute(
-            _iva_rates_module,
-            "load_iva_rate_table",
-            lambda: dict(real_table) | {EUMemberState.ES: (*spain, planted)},
+            _iva_lookup_module,
+            "lookup_rate",
+            _planted_lookup_rate,
         ):
             after = resolve_invoice_extraction_authority_values(period=_ANNUAL_2026)
 

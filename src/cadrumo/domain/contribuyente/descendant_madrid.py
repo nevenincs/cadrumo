@@ -5,11 +5,9 @@ from __future__ import annotations
 from decimal import Decimal
 
 from ...core.descendant_relacion import ART_58_2_ENTITLING_RELACIONES
-from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
 from .descendant_record import DescendantRecordBase
+from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
-    MAX_AGE_MENOR_TRES,
-    NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
     within_multi_year_applicability_window,
 )
 
@@ -31,6 +29,7 @@ class DescendantMadridMixin(DescendantRecordBase):
         self,
         filing_year: int,
         *,
+        context: FamilyFactResolutionContext,
         dependencia_assimilation_available: bool = False,
     ) -> bool:
         """True when an entitling relación has no entry date, so the limb cannot fire.
@@ -74,10 +73,11 @@ class DescendantMadridMixin(DescendantRecordBase):
             return False
         if not self.meets_non_income_conditions(
             filing_year,
+            context=context,
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
             return False
-        if self.age_at_year_end(filing_year) < MAX_AGE_MENOR_TRES:
+        if self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-under-three-maximum-age"):
             return False
         return self.art_58_2_entry_date() is None
 
@@ -85,7 +85,7 @@ class DescendantMadridMixin(DescendantRecordBase):
         self,
         filing_year: int,
         *,
-        following_periods: int = NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
+        context: FamilyFactResolutionContext,
     ) -> bool:
         """True when this descendant is inside the nacimiento/adopción window and cohabits.
 
@@ -100,17 +100,19 @@ class DescendantMadridMixin(DescendantRecordBase):
         return within_multi_year_applicability_window(
             self.entry_year(),
             filing_year,
-            following_periods=following_periods,
+            following_periods=context.integer("madrid-birth-adoption-following-periods"),
         )
 
-    def nacimiento_adopcion_prorrateo_share(self) -> Decimal:
+    def nacimiento_adopcion_prorrateo_share(self, *, context: FamilyFactResolutionContext) -> Decimal:
         """Return this descendant's share of the deducción after prorrateo.
 
         When the child cohabits with both parents and they file individually the
         Madrid manual splits the amount equally between the two declarations
-        (":data:`CUSTODIA_COMPARTIDA_PRORRATA_FACTOR`" / ``Decimal("0.5")``);
+        (the ``lirpf-art-61-shared-custody-proration-factor`` governed fact);
         otherwise the full amount accrues to this filer (``Decimal("1")``).
         ``custodia_compartida`` is the profile signal for the shared-cohabitation
         case that triggers the ÷2 prorrateo.
         """
-        return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR if self.custodia_compartida else Decimal("1")
+        if self.custodia_compartida:
+            return context.decimal("lirpf-art-61-shared-custody-proration-factor")
+        return Decimal("1")

@@ -56,7 +56,7 @@ def _professional_services_invoice(
     number: str = "F-PROV-900",
 ) -> Invoice:
     subtotal = Decimal("1000.00")
-    rate = iva_rate_percentage(IvaRate.RATE_21)
+    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",

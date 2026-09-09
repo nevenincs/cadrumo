@@ -43,15 +43,38 @@ from datetime import date, timedelta
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, StringConstraints, ValidationError
 
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import bundled_path
+from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
+from ..calculations.registry.facts.schema import (
+    EventFactPayload,
+    FactOwnership,
+    FactSelector,
+    GovernedFact,
+    GovernedFactFamily,
+    GovernedFactVariant,
+    NamedFactValue,
+)
+from ..calculations.registry.facts.resolution import EventFactQuery, ResolvedEventFact
+from ..calculations.registry.loader_cache import toml_file_fingerprint
+from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from ..calculations.registry.schema_base import DateAxis, SourceCitation
 from .errors import DeadlineValidationError
+
+HOLIDAY_CALENDAR_PROVIDER_ID = "legal-holiday-calendars"
+HOLIDAY_CALENDAR_PROVIDER_DIRECTORY = "calendars"
+HOLIDAY_EVENT_FACT_ID = "deadlines.public-holiday"
+HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID = "deadlines.holiday-calendar-publication"
+_HOLIDAY_SHIFT_LEGAL_REF = "ley-39-2015:art-30.5"
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
 
 # ---------------------------------------------------------------------------
 # CCAA enumeration (ISO 3166-2:ES codes).
@@ -270,7 +293,12 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
     missing or malformed (caller-recoverable; the surrounding deadline
     engine can degrade to weekend-only shifts).
     """
-    path = _calendar_path(year)
+    return _load_holiday_calendar_path(year, _calendar_path(year).resolve())
+
+
+@lru_cache(maxsize=64)
+def _load_holiday_calendar_path(year: int, path: Path) -> HolidayCalendar:
+    """Load one exact calendar path for legacy and provider callers."""
     if not path.exists():
         raise DeadlineValidationError(f"holiday calendar for year {year} not registered (expected file: {path.name})")
     raw = read_toml(path, error_factory=DeadlineValidationError)
@@ -310,6 +338,174 @@ def load_holiday_calendar(year: int) -> HolidayCalendar:
         )
     except (KeyError, TypeError, ValueError, ValidationError) as exc:
         raise DeadlineValidationError(f"{path}: invalid holiday calendar row: {exc}") from exc
+
+
+def compile_holiday_calendar_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
+    """Project BOE-identified calendars while excluding ungrounded bootstrap years."""
+    calendar_root = registry_root.resolve() / HOLIDAY_CALENDAR_PROVIDER_DIRECTORY
+    holiday_variants: list[GovernedFactVariant] = []
+    publication_variants: list[GovernedFactVariant] = []
+    for path in sorted(calendar_root.glob("festivos-*.toml"), key=lambda candidate: candidate.name):
+        year_token = path.stem.removeprefix("festivos-")
+        if not year_token.isdigit():
+            continue
+        calendar = _load_holiday_calendar_path(int(year_token), path.resolve())
+        if calendar.boe_url is None:
+            continue
+        publication_variants.append(_holiday_calendar_publication_variant(calendar))
+        holiday_variants.extend(_holiday_fact_variant(calendar, holiday) for holiday in (*calendar.national, *calendar.ccaa))
+    if not publication_variants:
+        return ()
+    facts = [
+        GovernedFact(
+            fact_id=HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
+            family=GovernedFactFamily.EVENT,
+            variants=tuple(publication_variants),
+        ),
+    ]
+    if holiday_variants:
+        facts.append(
+            GovernedFact(
+                fact_id=HOLIDAY_EVENT_FACT_ID,
+                family=GovernedFactFamily.EVENT,
+                variants=tuple(holiday_variants),
+            )
+        )
+    return tuple(facts)
+
+
+def _holiday_calendar_publication_variant(calendar: HolidayCalendar) -> GovernedFactVariant:
+    """State that an entire calendar year, including clear dates, is published."""
+    source_ref = f"aeat-calendario-contribuyente-{calendar.year}"
+    return GovernedFactVariant(
+        variant_id=f"holiday-calendar-publication:{calendar.year}",
+        date_axis=DateAxis.SUBMISSION_DATE,
+        valid_from=date(calendar.year, 1, 1),
+        valid_to=date(calendar.year, 12, 31),
+        payload=EventFactPayload(
+            event_date=date(calendar.year, 1, 1),
+            event_code="holiday_calendar_published",
+            outputs=(
+                NamedFactValue(name="boe_ref", value=calendar.boe_ref),
+                NamedFactValue(name="boe_url", value=calendar.boe_url or ""),
+            ),
+        ),
+        legal_refs=(_HOLIDAY_SHIFT_LEGAL_REF,),
+        source_refs=(source_ref,),
+        source_citations=(SourceCitation(source_ref=source_ref, required_text=("Calendario del contribuyente",)),),
+        review_status=RevisionReviewStatus.PENDING_REVIEW,
+        ownership=FactOwnership.GENERATED,
+    )
+
+
+def holiday_calendar_from_authority(
+    year: int,
+    *,
+    authority: ValidatedRegistryAuthority,
+) -> HolidayCalendar:
+    """Resolve one complete published calendar from the governed-fact authority.
+
+    The publication event is resolved first.  It is the positive proof that an
+    absent per-date holiday event means an ordinary business day rather than an
+    unpublished calendar year.  All individual holiday values are then read
+    through exact event queries, retaining the authority's provenance.
+    """
+    coordinate = date(year, 7, 1)
+    publication = authority.resolve_governed_fact(
+        EventFactQuery(
+            fact_id=HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID,
+            date_axis=DateAxis.SUBMISSION_DATE,
+            effective_date=coordinate,
+        )
+    )
+    if not isinstance(publication, ResolvedEventFact):
+        raise DeadlineValidationError("holiday calendar publication must resolve to an event fact")
+    publication_outputs = {output.name: output.value for output in publication.payload.outputs}
+    boe_ref = publication_outputs.get("boe_ref")
+    boe_url = publication_outputs.get("boe_url")
+    if not isinstance(boe_ref, str) or not boe_ref:
+        raise DeadlineValidationError(f"holiday calendar publication for {year} has no BOE reference")
+    if not isinstance(boe_url, str) or not boe_url:
+        raise DeadlineValidationError(f"holiday calendar publication for {year} has no BOE URL")
+
+    fact = authority.catalogues.facts.facts.get(HOLIDAY_EVENT_FACT_ID)
+    if fact is None:
+        raise DeadlineValidationError(f"published holiday calendar for {year} has no holiday event fact")
+    national: list[Holiday] = []
+    ccaa: list[Holiday] = []
+    for variant in fact.variants:
+        if variant.valid_from.year != year:
+            continue
+        resolved = authority.resolve_governed_fact(
+            EventFactQuery(
+                fact_id=HOLIDAY_EVENT_FACT_ID,
+                date_axis=DateAxis.SUBMISSION_DATE,
+                effective_date=variant.valid_from,
+                selectors=variant.selectors,
+            )
+        )
+        if not isinstance(resolved, ResolvedEventFact):
+            raise DeadlineValidationError("holiday event must resolve to an event fact")
+        outputs = {output.name: output.value for output in resolved.payload.outputs}
+        name = outputs.get("name")
+        selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
+        jurisdiction_value = selectors.get("jurisdiction")
+        if not isinstance(name, str) or not isinstance(jurisdiction_value, str):
+            raise DeadlineValidationError(f"holiday event for {year} is incomplete")
+        jurisdiction = HolidayJurisdiction(jurisdiction_value)
+        ccaa_value = selectors.get("ccaa_code")
+        holiday = Holiday(
+            holiday_date=resolved.payload.event_date,
+            jurisdiction=jurisdiction,
+            ccaa_code=CalendarCCAA(ccaa_value) if isinstance(ccaa_value, str) else None,
+            name=name,
+        )
+        if jurisdiction is HolidayJurisdiction.NATIONAL:
+            national.append(holiday)
+        else:
+            ccaa.append(holiday)
+    return HolidayCalendar(year=year, boe_ref=boe_ref, boe_url=boe_url, national=tuple(national), ccaa=tuple(ccaa))
+def collect_holiday_calendar_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+    """Fingerprint every calendar, including excluded bootstrap declarations."""
+    calendar_root = registry_root.resolve() / HOLIDAY_CALENDAR_PROVIDER_DIRECTORY
+    return tuple(toml_file_fingerprint(path.resolve()) for path in sorted(calendar_root.glob("*.toml")))
+
+
+def reset_holiday_calendar_fact_provider() -> None:
+    """Clear both public and provider calendar caches on authority reset."""
+    load_holiday_calendar.cache_clear()
+    _load_holiday_calendar_path.cache_clear()
+
+
+def _holiday_fact_variant(calendar: HolidayCalendar, holiday: Holiday) -> GovernedFactVariant:
+    selectors = [FactSelector(name="jurisdiction", value=holiday.jurisdiction.value)]
+    if holiday.ccaa_code is not None:
+        selectors.append(FactSelector(name="ccaa_code", value=holiday.ccaa_code.value))
+    source_ref = f"aeat-calendario-contribuyente-{calendar.year}"
+    return GovernedFactVariant(
+        variant_id=(
+            f"{holiday.holiday_date.isoformat()}:{holiday.jurisdiction.value}:"
+            f"{holiday.ccaa_code.value.lower() if holiday.ccaa_code is not None else 'es'}"
+        ),
+        selectors=tuple(selectors),
+        date_axis=DateAxis.SUBMISSION_DATE,
+        valid_from=holiday.holiday_date,
+        valid_to=holiday.holiday_date,
+        payload=EventFactPayload(
+            event_date=holiday.holiday_date,
+            event_code="public_holiday",
+            outputs=(
+                NamedFactValue(name="name", value=holiday.name),
+                NamedFactValue(name="boe_ref", value=calendar.boe_ref),
+                NamedFactValue(name="boe_url", value=calendar.boe_url or ""),
+            ),
+        ),
+        legal_refs=(_HOLIDAY_SHIFT_LEGAL_REF,),
+        source_refs=(source_ref,),
+        source_citations=(SourceCitation(source_ref=source_ref, required_text=("Calendario del contribuyente",)),),
+        review_status=RevisionReviewStatus.PENDING_REVIEW,
+        ownership=FactOwnership.GENERATED,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -428,6 +624,7 @@ def shift_deadline(
     modelo: str,
     ccaa_code: CalendarCCAA | None,
     calendar: HolidayCalendar | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> DeadlineShift:
     """Apply the AEAT deadline-shift rule and return a :class:`DeadlineShift` result.
 
@@ -439,10 +636,11 @@ def shift_deadline(
     the shift and return an unshifted :class:`DeadlineShift` with reason
     ``modelo_exception``.
 
-    When ``calendar`` is omitted the function loads it via
-    :func:`load_holiday_calendar` keyed by the original close date's
-    year. Callers that already hold the calendar may pass it directly
-    to avoid a second lookup.
+    When ``calendar`` is omitted, ``authority`` is required and resolves a
+    BOE-published calendar through the governed publication and holiday event
+    facts.  A missing publication fact fails closed; it is never treated as a
+    holiday-free calendar.  Callers that already hold a calendar may pass it
+    directly.
     """
     if not modelo:
         raise DeadlineValidationError("modelo must be a non-empty string")
@@ -458,7 +656,12 @@ def shift_deadline(
             holiday_refs=(),
         )
 
-    target_calendar = calendar if calendar is not None else load_holiday_calendar(original_close_date.year)
+    if calendar is not None:
+        target_calendar = calendar
+    elif authority is not None:
+        target_calendar = holiday_calendar_from_authority(original_close_date.year, authority=authority)
+    else:
+        raise DeadlineValidationError("holiday authority is required when no calendar is supplied")
 
     # Determine whether the original date is a business day.
     holidays_on_close = _holidays_on(
@@ -504,14 +707,22 @@ def shift_deadline(
 
 
 __all__ = (
+    "HOLIDAY_CALENDAR_PROVIDER_DIRECTORY",
+    "HOLIDAY_CALENDAR_PROVIDER_ID",
+    "HOLIDAY_EVENT_FACT_ID",
+    "HOLIDAY_CALENDAR_PUBLICATION_EVENT_FACT_ID",
     "MODELOS_WITHOUT_SHIFT",
     "CalendarCCAA",
     "DeadlineShift",
     "Holiday",
     "HolidayCalendar",
     "HolidayJurisdiction",
+    "collect_holiday_calendar_fact_fingerprints",
+    "compile_holiday_calendar_facts",
+    "holiday_calendar_from_authority",
     "is_business_day",
     "load_holiday_calendar",
     "next_business_day",
+    "reset_holiday_calendar_fact_provider",
     "shift_deadline",
 )

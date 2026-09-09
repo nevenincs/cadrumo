@@ -21,13 +21,17 @@ function under test.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core.aggregation import BindingSourceKind
-from ....core.external_constants import M347_THRESHOLD_EUR
 from ....core.period import Period
+from ....domain.calculations.registry._m347_threshold import (
+    m347_threshold_decimal,
+    resolve_m347_counterparty_annual_threshold,
+)
 from .._counterpart import (
     CounterpartObservation,
     OperationKind347,
@@ -39,6 +43,9 @@ from .._counterpart import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+_M347_THRESHOLD = m347_threshold_decimal(
+    resolve_m347_counterparty_annual_threshold(effective_date=date(2025, 12, 31)),
+)
 
 # Same counterparty NIF, two operation-kind cohorts, each BELOW the floor.
 _MERGED_NIF = "X1111111X"
@@ -78,9 +85,9 @@ def test_same_nif_two_cohorts_each_below_floor_merge_above_is_declarable() -> No
     threshold test - the pre-fix behaviour - would wrongly exclude it.
     """
     # Oracle premises (independent of the function under test).
-    assert _DELIVERY_TOTAL < M347_THRESHOLD_EUR
-    assert _ACQUISITION_TOTAL < M347_THRESHOLD_EUR
-    assert _DELIVERY_TOTAL + _ACQUISITION_TOTAL > M347_THRESHOLD_EUR
+    assert _DELIVERY_TOTAL < _M347_THRESHOLD
+    assert _ACQUISITION_TOTAL < _M347_THRESHOLD
+    assert _DELIVERY_TOTAL + _ACQUISITION_TOTAL > _M347_THRESHOLD
 
     observations = (
         _obs(nif=_MERGED_NIF, op_kind=OperationKind347.DELIVERY.value, invoice_total=_DELIVERY_TOTAL, source_id="tx-a"),
@@ -104,19 +111,19 @@ def test_same_nif_two_cohorts_each_below_floor_merge_above_is_declarable() -> No
     # the MERGE, not a single cohort, that crosses).
     merged_rollups = [r for r in aggregation.rollups if r.counterparty_nif == _MERGED_NIF]
     assert len(merged_rollups) == 2, f"expected two cohorts for {_MERGED_NIF}; got {merged_rollups!r}"
-    assert all(r.total_invoice_total < M347_THRESHOLD_EUR for r in merged_rollups), (
+    assert all(r.total_invoice_total < _M347_THRESHOLD for r in merged_rollups), (
         "test premise: each cohort alone must be below the 347 floor so only the merge crosses"
     )
 
     # The fix: the per-NIF merged total crosses the floor -> declarable.
     assert declarable_for_347(aggregation, counterparty_nif=_MERGED_NIF), (
-        f"{_MERGED_NIF} cohorts merge to {_DELIVERY_TOTAL + _ACQUISITION_TOTAL} > {M347_THRESHOLD_EUR}; "
+        f"{_MERGED_NIF} cohorts merge to {_DELIVERY_TOTAL + _ACQUISITION_TOTAL} > {_M347_THRESHOLD}; "
         "must be declarable (per-cohort gating would wrongly exclude it)"
     )
 
     # Control: the single sub-floor cohort is NOT declarable.
     assert not declarable_for_347(aggregation, counterparty_nif=_SINGLE_COHORT_NIF), (
-        f"{_SINGLE_COHORT_NIF} single cohort {_SINGLE_COHORT_TOTAL} < {M347_THRESHOLD_EUR}; must not be declarable"
+        f"{_SINGLE_COHORT_NIF} single cohort {_SINGLE_COHORT_TOTAL} < {_M347_THRESHOLD}; must not be declarable"
     )
 
     # The declarable set is exactly the merged NIF.

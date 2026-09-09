@@ -11,7 +11,7 @@ import argparse
 import re
 import sys
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, is_dataclass
 from enum import StrEnum
 from pathlib import Path
 
@@ -21,6 +21,7 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
@@ -245,7 +246,7 @@ def classify_m200_target_identities(
     target_map: SemanticMap,
     target_design: RecordDesignIntermediate,
     *,
-    target_declarations: Mapping[CasillaId, object],
+    target_declarations: Mapping[CasillaId, CasillaDefinition],
     target_candidate_ids: frozenset[CasillaId],
 ) -> M200TargetIdentityWorklist:
     """Classify target map-owner identity drift without changing ownership.
@@ -302,6 +303,9 @@ def classify_m200_target_identities(
             raise ValueError(
                 f"target anchor {entry.export_field_id!r} does not prove its proposed map-owner identity",
             )
+        # MATCHES_IDENTITY_PROPOSAL is only reachable when `printed` is not None:
+        # `_printed_identity_state` returns MISSING_OFFICIAL_PRINTED_IDENTITY otherwise.
+        assert printed is not None
         mismatches.append(
             M200MapOwnerIdentity(
                 export_field_id=str(entry.export_field_id),
@@ -528,14 +532,14 @@ def _printed_identity_state(
 
 def _printed_target_number(field: RecordDesignIntermediateField) -> str | None:
     """Return only the complete five-digit printed identity used by the 2024 census."""
-    matches = re.findall(r"\[([0-9]{5})\]", field.normalized_description)
+    matches = [str(match) for match in re.findall(r"\[([0-9]{5})\]", field.normalized_description)]
     return matches[0] if len(matches) == 1 else None
 
 
 def _serialise(value: object) -> object:
     if isinstance(value, StrEnum):
         return value.value
-    if hasattr(value, "__dataclass_fields__"):
+    if is_dataclass(value) and not isinstance(value, type):
         return {key: _serialise(item) for key, item in asdict(value).items()}
     if isinstance(value, tuple):
         return [_serialise(item) for item in value]
@@ -605,7 +609,7 @@ def _unique_left_pad(token: CasillaId, casilla_ids: frozenset[CasillaId]) -> Cas
 
 
 def _printed_number(field: RecordDesignIntermediateField) -> str | None:
-    matches = re.findall(r"\[([0-9]{1,5})\]", field.normalized_description)
+    matches = [str(match) for match in re.findall(r"\[([0-9]{1,5})\]", field.normalized_description)]
     return matches[0] if len(matches) == 1 and field.aeat_type == "Num" else None
 
 

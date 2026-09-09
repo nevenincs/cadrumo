@@ -1,8 +1,8 @@
 """Lookup helpers for IVA registry data.
 
 :func:`lookup_rate` resolves :class:`EUMemberState` and :class:`IvaRateKind`
-queries into :class:`IvaRateRecord` records loaded by
-:func:`cadrumo.domain.iva.load_iva_rate_table`; :func:`rate_table_covers`
+queries into :class:`IvaRateRecord` records projected from governed-fact
+authority results; :func:`rate_table_covers`
 answers whether the table reaches a date at all; :func:`cite` renders
 :class:`IvaCategory` catalogue citations from an :class:`IvaCatalogue`.
 """
@@ -11,10 +11,127 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING, cast
 
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.schema import FactSelector
+from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaRateNotFoundError
-from .rates import load_iva_rate_table
+from .rates import IVA_RATE_FACT_ID, iva_rate_record_from_fact
 from .schema import EUMemberState, IvaRateKind, IvaRateRecord
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
+
+
+def _authority(authority: ValidatedRegistryAuthority | None) -> ValidatedRegistryAuthority:
+    """Return the bundled validated authority without importing it through the module graph."""
+    if authority is None:
+        from ..calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    return authority
+
+
+def resolve_iva_rate(
+    member_state: EUMemberState,
+    kind: IvaRateKind,
+    on_date: date,
+    *,
+    rate_role: str = "ordinary",
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ResolvedMappingFact:
+    """Resolve one dated IVA rate fact and retain the complete authority provenance."""
+    resolved = _authority(authority).resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=IVA_RATE_FACT_ID,
+            date_axis=DateAxis.DEVENGO_DATE,
+            effective_date=on_date,
+            selectors=(
+                FactSelector(name="member_state", value=member_state.value),
+                FactSelector(name="kind", value=kind.value),
+                FactSelector(name="rate_role", value=rate_role),
+            ),
+        ),
+    )
+    return cast("ResolvedMappingFact", resolved)
+
+
+def _member_state_is_registered(
+    member_state: EUMemberState,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> bool:
+    """Return whether the rate fact declares any variant for ``member_state``."""
+    resolved_authority = _authority(authority)
+    resolved_authority.validate_registry()
+    fact = resolved_authority.catalogues.facts.facts.get(IVA_RATE_FACT_ID)
+    if fact is None:
+        return False
+    return any(
+        {selector.name: selector.value for selector in variant.selectors}.get("member_state") == member_state.value
+        for variant in fact.variants
+    )
+
+
+def _iva_rate_candidate_exists(
+    member_state: EUMemberState,
+    kind: IvaRateKind,
+    on_date: date,
+    *,
+    rate_role: str = "ordinary",
+    authority: ValidatedRegistryAuthority | None = None,
+) -> bool:
+    """Separate a genuine absence from an ambiguous authority resolution."""
+    resolved_authority = _authority(authority)
+    resolved_authority.validate_registry()
+    fact = resolved_authority.catalogues.facts.facts.get(IVA_RATE_FACT_ID)
+    if fact is None:
+        return False
+    expected = {
+        "member_state": member_state.value,
+        "kind": kind.value,
+        "rate_role": rate_role,
+    }
+    return any(
+        variant.date_axis is DateAxis.DEVENGO_DATE
+        and variant.valid_from <= on_date
+        and (variant.valid_to is None or on_date <= variant.valid_to)
+        and {selector.name: selector.value for selector in variant.selectors} == expected
+        for variant in fact.variants
+    )
+
+
+def _in_force_rate_facts(
+    member_state: EUMemberState,
+    on_date: date,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> tuple[ResolvedMappingFact, ...]:
+    """Resolve every IVA fact variant in force for a member state at one devengo date."""
+    resolved_authority = _authority(authority)
+    resolved_authority.validate_registry()
+    fact = resolved_authority.catalogues.facts.facts.get(IVA_RATE_FACT_ID)
+    if fact is None:
+        return ()
+    candidates = tuple(
+        variant
+        for variant in fact.variants
+        if variant.date_axis is DateAxis.DEVENGO_DATE
+        and variant.valid_from <= on_date
+        and (variant.valid_to is None or on_date <= variant.valid_to)
+        and {selector.name: selector.value for selector in variant.selectors}.get("member_state") == member_state.value
+    )
+    return tuple(
+        resolve_iva_rate(
+            member_state,
+            IvaRateKind(str({selector.name: selector.value for selector in variant.selectors}["kind"])),
+            on_date,
+            rate_role=str({selector.name: selector.value for selector in variant.selectors}["rate_role"]),
+            authority=resolved_authority,
+        )
+        for variant in candidates
+    )
 
 
 def lookup_rate(
@@ -24,10 +141,9 @@ def lookup_rate(
 ) -> IvaRateRecord:
     """Return the :class:`cadrumo.domain.iva.IvaRateRecord` matching the supplied query.
 
-    Iterates the rates registered for ``member_state`` in
-    :func:`cadrumo.domain.iva.load_iva_rate_table` and returns the first record whose
-    :attr:`cadrumo.domain.iva.IvaRateRecord.kind` matches ``kind`` and whose
-    effective window covers ``on_date``.
+    Resolves the ordinary governed-fact variant for the exact member-state,
+    tier, and devengo-date coordinates, then projects it onto the established
+    public record.
 
     Args:
         member_state: The EU member state whose rate is requested.
@@ -40,8 +156,7 @@ def lookup_rate(
     Raises:
         IvaRateNotFoundError: If no registered rate satisfies the query.
     """
-    rates = load_iva_rate_table().get(member_state)
-    if not rates:
+    if not _member_state_is_registered(member_state):
         raise IvaRateNotFoundError(
             translated_message="errors.iva.rate_member_state_unregistered",
             context={
@@ -51,30 +166,17 @@ def lookup_rate(
                 "on_date": on_date.isoformat(),
             },
         )
-    for rate in rates:
-        if rate.kind is not kind:
-            continue
-        # A coexisting rate cannot answer "what is this tier's rate" -- it
-        # applied to part of the tier's supplies while the rest stayed on the
-        # ordinary one, and no bundled AEAT surface carries the goods axis that
-        # would separate them. Returning it here would answer a question it
-        # cannot, for the far larger set of supplies that never moved.
-        if rate.supersedes_tier_default:
-            continue
-        if rate.effective_from > on_date:
-            continue
-        if rate.effective_until is not None and on_date > rate.effective_until:
-            continue
-        return rate
-    raise IvaRateNotFoundError(
-        translated_message="errors.error.error_financial_iva_rate_not_found",
-        context={
-            "member_state": member_state.value,
-            "member_state_registered": True,
-            "rate_kind": kind.value,
-            "on_date": on_date.isoformat(),
-        },
-    )
+    if not _iva_rate_candidate_exists(member_state, kind, on_date):
+        raise IvaRateNotFoundError(
+            translated_message="errors.error.error_financial_iva_rate_not_found",
+            context={
+                "member_state": member_state.value,
+                "member_state_registered": True,
+                "rate_kind": kind.value,
+                "on_date": on_date.isoformat(),
+            },
+        )
+    return iva_rate_record_from_fact(resolve_iva_rate(member_state, kind, on_date))
 
 
 def rate_table_covers(
@@ -125,9 +227,7 @@ def rate_table_covers(
         ``True`` when a tier-defining rate for ``kind`` (or for any tier when
         ``kind`` is ``None``) covers ``on_date``.
     """
-    rates = load_iva_rate_table().get(member_state)
-    if not rates:
-        return False
+    rates = tuple(iva_rate_record_from_fact(item) for item in _in_force_rate_facts(member_state, on_date))
     return any(
         not rate.supersedes_tier_default
         and (kind is None or rate.kind is kind)
@@ -195,17 +295,8 @@ def coexisting_tier_rates(
         The in-force coexisting records, in registry declaration order. Empty
         when the tier carries only its ordinary rate on that date.
     """
-    rates = load_iva_rate_table().get(member_state)
-    if not rates:
-        return ()
-    return tuple(
-        rate
-        for rate in rates
-        if rate.kind is kind
-        and rate.supersedes_tier_default
-        and rate.effective_from <= on_date
-        and (rate.effective_until is None or on_date <= rate.effective_until)
-    )
+    records = tuple(iva_rate_record_from_fact(rate) for rate in _in_force_rate_facts(member_state, on_date))
+    return tuple(rate for rate in records if rate.kind is kind and rate.supersedes_tier_default)
 
 
 def rate_kinds_for_declared_rate(
@@ -241,8 +332,7 @@ def rate_kinds_for_declared_rate(
         the rate was not a registered Spanish rate on that date -- which is a
         real refusal, not a lookup failure.
     """
-    rates = load_iva_rate_table().get(member_state)
-    if not rates:
+    if not _member_state_is_registered(member_state):
         return ()
     matched: list[IvaRateKind] = []
     if declared_rate == Decimal("0"):
@@ -266,11 +356,7 @@ def rate_kinds_for_declared_rate(
         # ``DOMESTIC_ZERO`` from ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` and the
         # rest; the rate axis structurally cannot express it.
         matched.append(IvaRateKind.ZERO)
-    for rate in rates:
-        if rate.effective_from > on_date:
-            continue
-        if rate.effective_until is not None and on_date > rate.effective_until:
-            continue
+    for rate in (iva_rate_record_from_fact(item) for item in _in_force_rate_facts(member_state, on_date)):
         if rate.pct / Decimal("100") != declared_rate:
             continue
         if rate.kind not in matched:
@@ -278,4 +364,4 @@ def rate_kinds_for_declared_rate(
     return tuple(matched)
 
 
-__all__ = ["coexisting_tier_rates", "lookup_rate", "rate_kinds_for_declared_rate"]
+__all__ = ["coexisting_tier_rates", "lookup_rate", "rate_kinds_for_declared_rate", "resolve_iva_rate"]

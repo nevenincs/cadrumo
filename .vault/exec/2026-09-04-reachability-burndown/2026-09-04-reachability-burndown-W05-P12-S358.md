@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:b28b0ab0a56b759fc0d5bd68ae0ddc450fec5cd7d1a6b17834b1807ec4efbdd3'
+body_hash: 'sha256:1e29b84a074a85ec123303e14064fd2ac2d29128664b09cd1573f9a21f653f05'
 step_id: 'S358'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only flow back-page navigation verb left after removal of its sole frontend.
 

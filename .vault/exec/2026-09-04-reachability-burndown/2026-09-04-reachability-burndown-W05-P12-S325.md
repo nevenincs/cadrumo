@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:9b76498251377209c6540ff26bda20c8bd9688719d826a67dde6b665c1b629dd'
+body_hash: 'sha256:493e9e3b9a1398d6dc3afa84b896fddf35dfe429a2bca7adfae94571c9005fe1'
 step_id: 'S325'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Reduce override-seam enforcement to actual process-global dependency slots
 

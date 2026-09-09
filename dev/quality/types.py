@@ -38,9 +38,18 @@ _CWD = os.getcwd().replace("\\", "/")
 #: so what is left out is the tooling deciding whether every other gate passes.
 #:
 #: STILL OUT, with the diagnostic count each would bring in today:
-#:   registry 200, docs 76, audit 36, tests 30, ci 27, locales 22,
-#:   packaging 22, tui 12, deploy 10, agent_eval 7  (442 total)
+#:   docs 76, audit 36, tests 30, ci 27, locales 22, packaging 22, tui 12,
+#:   deploy 10, agent_eval 7  (242 total)
 #: Admit each by burning it to zero and moving it into the list below.
+#:
+#: `dev/registry` was admitted on 2026-09-09, burned from 220 to zero. Nothing
+#: was suppressed to get there: twenty-three `# type: ignore` comments were
+#: REMOVED, several of them in mypy syntax this checker never honoured, so they
+#: had silenced nothing since the day they were written. Three of the fixes were
+#: real defects the checker found - a function annotated as returning a
+#: three-tuple whose body returns two, a ledger section read without validating
+#: it is a list of tables, and a parameter typed `str` that its caller feeds
+#: `str | None`.
 TY_TARGETS = (
     "src",
     "dev/__init__.py",
@@ -58,6 +67,7 @@ TY_TARGETS = (
     "dev/init",
     "dev/quality",
     "dev/readme",
+    "dev/registry",
     "dev/release",
     "dev/sanitizer",
     "dev/smoke",

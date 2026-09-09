@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:249f4fe44aecd303d7210d5a806997cc5d2ec3345fd3a834ebea75f7412d9d3d'
+body_hash: 'sha256:8ab97fd70fc67d4597f6ccdcffdb6f433e886762bfad4c38f697c9468081c1e4'
 step_id: 'S346'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the residual canonical-helper singularity and enrollment source detectors while retaining owner behavior suites.
 

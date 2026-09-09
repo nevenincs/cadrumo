@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:a92f4474bff4a81dcfd0343a6029549f9193b0a13b6156f55542672c115f24ee'
+body_hash: 'sha256:956a7ade1f9ac0c7d2c969e69e4d900aa94b08a45befeac36e996241a4a9fd0d'
 step_id: 'S370'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unconsumed filing-draft repository Protocol and adapter documentation that falsely described it as a live port.
 

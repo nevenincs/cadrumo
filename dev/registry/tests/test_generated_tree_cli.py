@@ -34,8 +34,10 @@ from ..pipeline.cli import (
     _require_republication_eligibility,
     app,
 )
-from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
+from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
 from ..pipeline.render_check import (
+    record_drift_dispositions,
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
@@ -96,7 +98,14 @@ def test_republish_requires_the_exact_reviewed_target_manifest_digest() -> None:
 
 
 def test_republish_admits_only_provenance_only_drift() -> None:
-    """An explicit digest never turns record drift into a publishable target."""
+    """An explicit digest never turns UNEXPLAINED record drift into a publishable target.
+
+    The digest proves someone looked at the artefact. It does not say why the
+    records differ, so on its own it still admits nothing beyond attestation
+    drift; a record change additionally needs a disposition row stating the
+    reason. This modelo carries none, which is why both record-drift cases below
+    are refused.
+    """
     digest = "a" * 64
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
@@ -119,7 +128,7 @@ def test_republish_admits_only_provenance_only_drift() -> None:
             serialization_only=("0002-record-m296-declarado.toml",),
         ),
     )
-    with pytest.raises(ValueError, match="restricted to semantically reproduced attestation drift"):
+    with pytest.raises(ValueError, match="refuses an unexplained record change"):
         _require_republication_eligibility(
             _republish_invocation(digest),
             state,
@@ -127,7 +136,7 @@ def test_republish_admits_only_provenance_only_drift() -> None:
                 differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0002-record-m296-declarado.toml"),
             ),
         )
-    with pytest.raises(ValueError, match="restricted to semantically reproduced attestation drift"):
+    with pytest.raises(ValueError, match="refuses an unexplained record change"):
         _require_republication_eligibility(
             _republish_invocation(digest),
             state,
@@ -294,7 +303,15 @@ def _publication_context_for_target(
 ) -> GeneratedExportTreePublicationContext:
     """Build a context only for the lock-state detector's private guard."""
     return GeneratedExportTreePublicationContext(
-        validation=None,  # type: ignore[arg-type]
+        # The lock-state guard under test never reads `.validation`; a real,
+        # minimally-populated context stands in rather than a suppressed None.
+        validation=GeneratedExportTreeValidationContext(
+            registry_root=target.parent / "unused-registry-root",
+            source_root=target.parent / "unused-source-root",
+            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+            filing_year=2025,
+            period="anual",
+        ),
         temporary_root=target.parent / "temporary",
         target_root=target.parent,
         target_export_root=target,
@@ -499,3 +516,42 @@ def test_modelo_390_cli_assembly_uses_the_pipeline_source_defect_catalogue(tmp_p
 
     assert result == "matched"
     assert close.literal == "</T39007000>"
+
+
+def test_republish_admits_record_drift_a_disposition_explains() -> None:
+    """A corrected tree is publishable where a source-pinned row says why.
+
+    Without this the generator could be made right and the corpus could never be
+    made to match it: the check compares the shipped manifest against a fresh
+    render and refuses the difference, which IS the correction being landed.
+
+    The bar is higher here than for attestation drift, not lower. That path needs
+    one proof, the reviewed digest. This needs two - the digest AND a row
+    carrying a reason, a source pin and a retirement condition, which the
+    ledger's own gate fails once its cause is gone.
+    """
+    digest = "a" * 64
+    explained = next(iter(record_drift_dispositions()))
+    state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
+
+    _require_republication_eligibility(
+        _Invocation(
+            explained.modelo,
+            explained.revision,
+            explained.source_ref,
+            2024,
+            "0A",
+            digest,
+        ),
+        state,
+        RenderComparison(
+            modelo=explained.modelo,
+            revision=explained.revision,
+            layout_id=f"generated-modelo-{explained.modelo}-{explained.revision}-fichero",
+            files_compared=3,
+            differing=(EXPORT_FRAGMENT_PROVENANCE_FILENAME, "0001-record.toml"),
+            only_committed=(),
+            only_rendered=(),
+            serialization_only=(),
+        ),
+    )

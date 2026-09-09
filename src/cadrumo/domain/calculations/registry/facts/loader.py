@@ -13,10 +13,15 @@ from .....core.toml import freeze_toml, read_toml
 from ..errors import RegistryLoadError
 from .schema import GovernedFact
 
-__all__ = ["load_governed_fact_file", "load_governed_facts"]
+__all__ = ["is_governed_fact_filename", "load_governed_fact_file", "load_governed_facts"]
 
 
 _FACT_FILENAME = re.compile(r"^[0-9]{4}-[a-z0-9]+(?:-[a-z0-9]+)*\.toml$")
+
+
+def is_governed_fact_filename(filename: str) -> bool:
+    """Return whether ``filename`` carries the governed-fact fragment grammar."""
+    return _FACT_FILENAME.fullmatch(filename) is not None
 
 
 def load_governed_fact_file(path: Path) -> GovernedFact:
@@ -30,7 +35,7 @@ def load_governed_fact_file(path: Path) -> GovernedFact:
             schema is invalid.
     """
     source_path = path.resolve()
-    if _FACT_FILENAME.fullmatch(source_path.name) is None:
+    if not is_governed_fact_filename(source_path.name):
         raise RegistryLoadError(
             f"{source_path}: governed fact filename must match NNNN-<stable-slug>.toml",
         )

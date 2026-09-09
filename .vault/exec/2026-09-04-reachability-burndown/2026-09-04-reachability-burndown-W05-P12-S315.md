@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c157c3bfd1162bfa4eb62f84af29b8cdb660fd00702b312422f13f041bfe1d8'
+body_hash: 'sha256:494aa541c97312525c18fae939b3ffcfcc160e2e249dbfdf47abdf549981dec7'
 step_id: 'S315'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the live-filename magic-banner lint and embedded test modules
 

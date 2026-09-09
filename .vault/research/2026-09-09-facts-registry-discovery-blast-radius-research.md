@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:181be2359bb4f455250edc317e921e7c186cc48a57ebee6a30c818ec6fd1c562'
+body_hash: 'sha256:642ee51e2a5d995eb4ac7fabf1ce3716245bbea87390512048550536d084aaab'
 related: []
 ---
 
@@ -167,9 +167,17 @@ The raw parser/cache portions of `src/cadrumo/domain/categories/registry.py:53`,
 `src/cadrumo/domain/iva/catalogue.py:38`, and
 `src/cadrumo/domain/iva/place_of_supply.py:187` are conditional targets when
 their structured families are enrolled. Their public domain resolution
-facades remain. `src/cadrumo/domain/auth/apoderamientos/catalogue.py:76` enters
-this campaign only if its externally controlled taxonomy classification is
-confirmed.
+facades remain. `src/cadrumo/domain/auth/apoderamientos/catalogue.py:76` does
+not enter the governed-fact catalogue in this campaign. The shipped declaration
+identifies itself as an intentionally bootstrap-scoped vocabulary awaiting
+future AEAT publications, and supplies no AEAT or BOE publication identity,
+legal refs, effective dates, or source citations from which an externally
+controlled legal taxonomy could be confirmed. It therefore remains retained
+product vocabulary, including its loader, repository cache, parser, and public
+domain facade. Provider enrollment can be reconsidered only after an
+authoritative external taxonomy and its temporal provenance are acquired; Wave
+3 has no facts-backed apoderamientos consumer migration or retirement condition
+to close.
 
 ### Explicit non-removals constrain the campaign
 

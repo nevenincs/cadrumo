@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import typing
 from datetime import date
-from typing import Literal
+from typing import Literal, TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -66,9 +66,20 @@ class _HostileFilingExportAuthority:
         raise AssertionError("hostile closure context invoked assess_for")
 
 
+class _TemporalCoverageBase(TypedDict):
+    """The exact-coordinate fields shared by every `TemporalRevisionCoverage` fixture."""
+
+    modelo: str
+    revision: str
+    filing_year: int
+    period: str
+    selected_revision: str
+    declared_authority_grade: RegistryAuthorityGrade
+
+
 def _temporal(*, modelo: str = "303", revision: str = "2026", refused: bool = False) -> TemporalRevisionCoverage:
     """Build one exact temporal limb fixture without weakening its model contract."""
-    base = {
+    base: _TemporalCoverageBase = {
         "modelo": modelo,
         "revision": revision,
         "filing_year": 2026,

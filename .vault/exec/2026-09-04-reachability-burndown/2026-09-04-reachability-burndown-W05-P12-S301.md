@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:3bdb51ccb0a5bf06002377b750ec2c374433898b1000d1d254ef981a8a13a8b2'
+body_hash: 'sha256:83191b9dddb67bd910034e92a84e6c8a9c3bccb441fa6de9981a7e53306d1936'
 step_id: 'S301'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the decimal parsing and coercion AST enrollment census, its private call-shape engine, production path/function adjudication ledger, copied source fixtures, and residual-backlog prose; retain direct decimal behavior at canonical grammar and live input boundaries.
 

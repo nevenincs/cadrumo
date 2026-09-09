@@ -76,14 +76,14 @@ def _semantic_for(
         sheet=envelope.sheet,
         source_row=envelope.body_source_row,
         source_cell=envelope.body_source_cell,
-        ordinal=envelope.body_ordinal,
+        ordinal=str(envelope.body_ordinal),
         record_identity=envelope.record_identity,
     )
     closer = SemanticMapAnchor(
         sheet=envelope.sheet,
         source_row=closing.source_row,
         source_cell=closing.source_cell,
-        ordinal=closing.ordinal,
+        ordinal=str(closing.ordinal),
         record_identity=envelope.record_identity,
     )
     return VariableEnvelopeSemantic(
@@ -282,7 +282,7 @@ def _semantic_for_roles(
             sheet=envelope.sheet,
             source_row=envelope.body_source_row,
             source_cell=envelope.body_source_cell,
-            ordinal=envelope.body_ordinal,
+            ordinal=str(envelope.body_ordinal),
             record_identity=envelope.record_identity,
         ),
         body_record_ids=_BODY_RECORD_IDS,
@@ -290,7 +290,7 @@ def _semantic_for_roles(
             sheet=envelope.sheet,
             source_row=closing.source_row,
             source_cell=closing.source_cell,
-            ordinal=closing.ordinal,
+            ordinal=str(closing.ordinal),
             record_identity=envelope.record_identity,
         ),
         total_anchor=EnvelopeTotalAnchor(

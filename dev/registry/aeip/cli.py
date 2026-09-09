@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Protocol
 
 import typer
 
@@ -53,8 +53,35 @@ _ADJUDICATIONS_OPTION = typer.Option(
 )
 
 
+class _CasillaOccurrence(Protocol):
+    """The minimal per-occurrence shape `casilla_claims` reads."""
+
+    @property
+    def revision_id(self) -> str: ...
+
+    @property
+    def casilla_id(self) -> str: ...
+
+
+class _CasillaEvent(Protocol):
+    """The minimal per-programme shape `casilla_claims` reads."""
+
+    @property
+    def slug(self) -> str: ...
+
+    @property
+    def occurrences(self) -> tuple[_CasillaOccurrence, ...]: ...
+
+
+class _CasillaInventory(Protocol):
+    """The minimal inventory shape `casilla_claims` reads."""
+
+    @property
+    def events(self) -> tuple[_CasillaEvent, ...]: ...
+
+
 def casilla_claims(
-    inventory: AeipInventory,
+    inventory: _CasillaInventory,
 ) -> tuple[dict[tuple[str, str], set[str]], dict[str, set[str]]]:
     """Return which programmes claim each casilla, per revision and pooled.
 

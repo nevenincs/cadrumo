@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _line(unit_price: str) -> InvoiceLine:
     """Return one general-rate line worth ``unit_price``."""
     subtotal = Decimal(unit_price)
-    rate = iva_rate_percentage(IvaRate.RATE_21)
+    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
     assert rate is not None
     return InvoiceLine(
         description="Servicios profesionales",

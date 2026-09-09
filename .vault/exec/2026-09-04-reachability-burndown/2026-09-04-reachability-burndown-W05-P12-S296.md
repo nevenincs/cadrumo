@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:5ea777edc36dfaaccda736aadae666657b689ccf0add7b2a307d99971fdcecae'
+body_hash: 'sha256:3150658391b0b098b13abe8299187858acebb27606104f5dd0297808fe122a9b'
 step_id: 'S296'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the source-wide text-writer newline AST gate, its hard-coded corpus floors, production-path exemptions, self-mutating allowlist tests, and stale lint override; retain newline correctness at owning writers and formatters.
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:5f2bc2d9804960bb9b6bc81ce4029ca03c7dcbdc6f011442c460866ff7d3fc81'
+body_hash: 'sha256:fcdb8fddc46bbd2bba533373a9db51492054ab704a97f7002b4d026cc651498a'
 step_id: 'S354'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unreachable profile sync-review seam and its test-only censal and filed-history projections while retaining those behaviors at their application owners.
 

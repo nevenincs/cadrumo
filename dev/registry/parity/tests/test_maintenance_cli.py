@@ -36,14 +36,14 @@ from decimal import Decimal
 
 import pytest
 from openpyxl import Workbook
-from typer.testing import CliRunner
+from typer.testing import CliRunner, Result
 
 from ..maintenance_cli import app
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-def _invoke(*arguments: str) -> object:
+def _invoke(*arguments: str) -> Result:
     return CliRunner().invoke(app, list(arguments))
 
 

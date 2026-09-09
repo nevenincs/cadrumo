@@ -42,7 +42,6 @@ def test_scaffold_writes_full_skeleton_and_is_idempotent(tmp_path: Path) -> None
         "bindings",
         "completeness_manifest",
         "verification_expectations",
-        "export_layouts",
         "extraction_profiles",
         "application_links",
     ):
@@ -285,3 +284,22 @@ def test_render_checklist_renders_every_item() -> None:
     for index, item in enumerate(CHECKLIST, start=1):
         assert item.title in rendered
         assert f"{index:>2}." in rendered
+
+
+def test_the_scaffold_does_not_create_the_hand_authored_export_directory(tmp_path: Path) -> None:
+    """Generation is the supported path, so transcription is not the default.
+
+    A scaffolded `export_layouts/` directory made hand-transcribing the official
+    record design the path of least resistance, and the authored export surface
+    grew back one new revision at a time. The directory is not forbidden -- a
+    revision may still declare it as an exception -- but the scaffold no longer
+    proposes it, so choosing it is a decision someone records rather than the
+    default nobody notices.
+    """
+    manager = NewModeloScaffoldManager(registry_modelos_root=tmp_path)
+    manager.scaffold(_THROWAWAY_MODELO_ID, _THROWAWAY_REVISION_ID, title="Throwaway test modelo")
+
+    revision_root = tmp_path / _THROWAWAY_MODELO_ID / "revisions" / _THROWAWAY_REVISION_ID
+
+    assert not (revision_root / "export_layouts").exists()
+    assert (revision_root / "casillas").is_dir(), "the scaffold still writes the sections it owns"

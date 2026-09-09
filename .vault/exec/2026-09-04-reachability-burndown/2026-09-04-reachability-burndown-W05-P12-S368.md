@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbe1553eae17cef177b3f3b94ce837a3173d4c1ef171227e0df82692d5ffc89b'
+body_hash: 'sha256:c4771b7f3daba08be8613456a4f00b39d74b7b66c7f4b80bda2e78b5087b1fab'
 step_id: 'S368'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the unwired Modelo 193 expense-binding export resolver and its private accumulator while retaining live observation and selector validation.
 

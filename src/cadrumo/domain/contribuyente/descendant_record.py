@@ -13,9 +13,8 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.text_bounds import CalendarMonth, is_calendar_month, is_canonical_month_set
 from ...core.time.clock import today_madrid
 from .errors import ProfileValidationError
+from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
-    MAX_AGE_MENOR_TRES,
-    MAX_AGE_ORDINARY,
     GuarderiaMonthSpend,
     MinimoDescendientesThresholds,
     coerce_iso_date_field,
@@ -162,8 +161,8 @@ class DescendantRecordBase(DescendantRecordFields):
 
         The route itself is filing-year gated: LIRPF art. 81.1 reached only a
         mother already registered "en el momento del nacimiento" before filing
-        year 2023 (see
-        :data:`~cadrumo.core.external_constants.DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR`),
+        year 2023 (the ``lirpf-art-81-maternity-post-birth-enrollment-effective-year``
+        governed fact),
         so a declared month for an earlier filing year contributes no
         increment — see :meth:`maternidad_alta_posterior_increment_applies`.
     gastos_guarderia_euros
@@ -614,6 +613,7 @@ class DescendantRecordBase(DescendantRecordFields):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
         dependencia_assimilation_available: bool = False,
     ) -> bool:
         """True when the descendant qualifies for the Art. 58.1 ordinary mínimo.
@@ -639,6 +639,7 @@ class DescendantRecordBase(DescendantRecordFields):
             return False
         return self.meets_non_income_conditions(
             filing_year,
+            context=context,
             dependencia_assimilation_available=dependencia_assimilation_available,
         )
 
@@ -646,6 +647,7 @@ class DescendantRecordBase(DescendantRecordFields):
         self,
         filing_year: int,
         *,
+        context: FamilyFactResolutionContext,
         dependencia_assimilation_available: bool = False,
     ) -> bool:
         """The half of Art. 58.1 that needs no ceiling: the household limb and age/discapacidad.
@@ -701,7 +703,7 @@ class DescendantRecordBase(DescendantRecordFields):
             return False
         if self.discapacidad_grado and self.discapacidad_grado > 0:
             return True
-        return self.age_at_year_end(filing_year) < MAX_AGE_ORDINARY
+        return self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-descendant-ordinary-maximum-age")
 
     def qualifies_on_household_limb(self, *, dependencia_assimilation_available: bool = False) -> bool:
         """True when cohabitation holds, or economic dependency is assimilated in its place.
@@ -725,7 +727,7 @@ class DescendantRecordBase(DescendantRecordFields):
             return False
         return self.dependencia_economica is True and dependencia_assimilation_available
 
-    def is_eligible_menor_tres(self, filing_year: int) -> bool:
+    def is_eligible_menor_tres(self, filing_year: int, *, context: FamilyFactResolutionContext) -> bool:
         """True when the descendant is under three at the devengo date and cohabits.
 
         Scoped to the Art. 81 deductions — the deducción por maternidad
@@ -748,4 +750,4 @@ class DescendantRecordBase(DescendantRecordFields):
         """
         if not self.convive_con_contribuyente:
             return False
-        return self.age_at_year_end(filing_year) < MAX_AGE_MENOR_TRES
+        return self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-under-three-maximum-age")

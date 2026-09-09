@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:956b6225d90243b9654bf1352196ff6aa120b7d584533b00dfcbc02bd3d2da31'
+body_hash: 'sha256:fc4c6a6fceac548b68f96809809ff47d617188d8255c8660e2df5c568290ae90'
 step_id: 'S318'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove embedded implementations and hardcoded owner strings from the CSV singularity gate
 

@@ -94,7 +94,7 @@ def _invoice(
     number: str = "F-2024-001",
     iva_category: IvaCategory | None = IvaCategory.DOMESTIC_GENERAL,
 ) -> Invoice:
-    rate = iva_rate_percentage(IvaRate.RATE_21)
+    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",

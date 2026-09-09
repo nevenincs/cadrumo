@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:47b02857f696e1c3e3e82c5487e09062e9930f8c93e8abf045e650fdca03d58a'
+body_hash: 'sha256:320b450e5e108bfe43a7a80383195b0d18fdb094777439b3341b8a6c6c95859a'
 step_id: 'S336'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the embedded Python child implementation from recovery-enrollment tests
 

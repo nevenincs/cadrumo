@@ -53,12 +53,13 @@ from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import normalise_iso_4217_currency
 from ...core.parsing.dates import parse_iso8601_date
-from ...domain.invoices.enums import numeric_iva_rate_slots
+from ...domain.invoices.enums import resolve_iva_rate_slot
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.invoices.validators import validate_country_code, validate_iva_number
 from ...domain.iva.classification import InvoiceKind, domestic_categories_by_rate_kind
+from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.lookup import rate_kinds_for_declared_rate
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
@@ -232,7 +233,7 @@ def _validate_taxable_base(raw: str) -> Decimal:
     return value
 
 
-def _validate_iva_rate(raw: str | None) -> Decimal | None:
+def _validate_iva_rate(raw: str | None, *, on_date: date | None) -> Decimal | None:
     """Validate the operator-typed IVA percentage against the canonical grammar.
 
     Uncapped fractional digits: this is a percentage, not a euro amount, and the
@@ -250,13 +251,16 @@ def _validate_iva_rate(raw: str | None) -> Decimal | None:
     value = try_parse_canonical_decimal(raw)
     if value is None:
         raise _WizardFieldError(field="iva_rate", reason=f"invalid decimal percentage: {raw!r}")
-    accepted_slots = numeric_iva_rate_slots()
-    if value not in accepted_slots:
-        accepted = ", ".join(format(rate, "f") for rate in sorted(accepted_slots))
+    if on_date is None:
+        raise _WizardFieldError(field="iva_rate", reason="requires a valid invoice or operation date")
+    try:
+        resolve_iva_rate_slot(value, on_date)
+    except IvaRateNotFoundError as exc:
+        accepted = (exc.context or {}).get("accepted", "")
         raise _WizardFieldError(
             field="iva_rate",
             reason=f"{format(value, 'f')} is not a recognised IVA percentage; use one of: {accepted}",
-        )
+        ) from exc
     return value
 
 
@@ -418,7 +422,7 @@ def _validate_wizard_fields(
     )
     resolved_rate = _collect_wizard_field(
         field_errors,
-        lambda: _validate_iva_rate(iva_rate),
+        lambda: _validate_iva_rate(iva_rate, on_date=resolved_operation_date or resolved_date),
         fallback=None,
     )
     resolved_currency = _collect_wizard_field(

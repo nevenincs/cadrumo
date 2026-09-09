@@ -243,6 +243,13 @@ _DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
     ExportValuePolicy.YYYYMMDD: "aaaammdd",
     ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
 }
+#: The derivation code for each date policy, spelled out in full rather than
+#: built with an f-string from ``_DATE_FORMAT_BY_POLICY`` so the value stays a
+#: literal member of ``ExportFieldDerivationCode`` rather than an unbounded str.
+_DATE_DERIVATION_CODE_BY_POLICY: Final[Mapping[ExportValuePolicy, ExportFieldDerivationCode]] = {
+    ExportValuePolicy.YYYYMMDD: "numeric-date-aaaammdd-v1",
+    ExportValuePolicy.DDMMYYYY: "numeric-date-ddmmaaaa-v1",
+}
 #: AEAT also states a date slot as a QUOTED separator-bearing pattern in the
 #: programmer's vocabulary rather than the Spanish token: Modelo 151 writes
 #: `Formato: "dd/MM/yyyy"` for its fecha de nacimiento. The separators are
@@ -982,6 +989,37 @@ def _labelled_enumeration_values_are_delimited(content: str) -> bool:
     return all(_LABELLED_ENUMERATION_VALUE_DELIMITER_RE.search(gap) is not None for gap in gaps)
 
 
+#: The official type token for a signed amount, as the design's own type note
+#: defines it: "N: numerico con signo", against "Num: numerico sin signo".
+_SIGNED_AEAT_TYPE: Final[str] = "N"
+
+#: The scale the `money` shape carries in its own type. A signed amount has no
+#: other representable shape, so this is also the only scale a signed amount can
+#: be emitted at.
+_MONEY_SCALE: Final[int] = 2
+
+
+def _derive_sign_from_official_type(joined_field: JoinedRecordDesignField) -> bool:
+    """Return whether the official type column declares this amount signed.
+
+    This derivation used to write ``False`` for every amount without reading the
+    column at all, which is how a fifth of the generated surface came to declare
+    unsigned the slots the design types as signed.
+
+    The representation is grounded, so the sign can now be emitted rather than
+    refused. AEAT's "Disenos de registro" manual states the convention for every
+    design: numeric fields are right-aligned and zero-filled SIN SIGNOS, and only
+    NEGATIVE amounts are preceded by the character ``N``. So a signed slot reserves
+    no byte -- the marker displaces the leading digit when the value is negative,
+    which is what the codec now renders and parses.
+
+    Only ``N`` is read as signed. A token outside the design's own vocabulary is
+    left unsigned here rather than guessed at, and is answered by the separate
+    treatment of the uncontrolled type spellings.
+    """
+    return joined_field.parser_field.aeat_type == _SIGNED_AEAT_TYPE
+
+
 def _numeric_derivation(
     joined_field: JoinedRecordDesignField,
     *,
@@ -1089,7 +1127,7 @@ def _numeric_derivation(
             signed=False,
             export_record_id=export_record_id,
             date_format=date_format,
-            derivation_code=f"numeric-date-{date_format}-v1",
+            derivation_code=_DATE_DERIVATION_CODE_BY_POLICY[policy],
         )
     # A bare `AAAA` is the ejercicio, not a date. It is a closed four-character
     # wire fact the design states outright, so it is derived here rather than
@@ -1120,15 +1158,29 @@ def _numeric_derivation(
         whole = whole_value
         decimals = decimals_value
         _require_numeric_extent(joined_field, expected_length=whole + decimals)
+        signed = _derive_sign_from_official_type(joined_field)
+        if signed and decimals != _MONEY_SCALE:
+            # `money` is the only shape the schema lets a signed amount take, and
+            # it carries a two-decimal scale in the type itself. A signed slot at
+            # any other scale has no representable shape, so it is refused rather
+            # than emitted at a scale the registry did not determine.
+            raise RegistryValidationError(
+                f"export field {joined_field.semantic_entry.export_field_id!r} is typed "
+                f"'{_SIGNED_AEAT_TYPE}' (numerico con signo) at {decimals} decimals, and a signed "
+                f"amount is representable only at the {_MONEY_SCALE}-decimal money scale",
+            )
         return _schema_field(
             joined_field,
-            data_type="decimal",
+            # A signed amount is `money`, whose scale lives in the type; only the
+            # unsigned `decimal` shape declares a count, and the schema refuses a
+            # field that declares decimals beside any other data type.
+            data_type="money" if signed else "decimal",
             required=_is_required(parser_field.validation),
             padding=ExportPadding.LEFT_ZERO,
             justification=ExportJustification.RIGHT,
-            signed=False,
+            signed=signed,
             export_record_id=export_record_id,
-            decimals=decimals,
+            decimals=None if signed else decimals,
             derivation_code="numeric-decimal-v1",
         )
     integer_match = _INTEGER_CONTENT_RE.fullmatch(normalised_content)
@@ -1500,7 +1552,7 @@ def _render_record_parts(
     rendered_parts: list[bytes] = []
     current_fields: list[Mapping[str, object]] = []
     for field in fields:
-        candidate_fields = [*current_fields, field]
+        candidate_fields: list[Mapping[str, object]] = [*current_fields, field]
         candidate = _render_record_fragment(
             revision_id=revision_id,
             layout_id=layout_id,

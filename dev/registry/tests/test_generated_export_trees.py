@@ -56,7 +56,7 @@ from ..pipeline.export_fragment_provenance import (
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
 )
-from ..pipeline.joined_record_design import join_record_design_semantics
+from ..pipeline.joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
 from ..pipeline.render_check import (
     compare_revision_against_committed,
@@ -65,11 +65,12 @@ from ..pipeline.render_check import (
     render_refusal_dispositions,
 )
 from ..pipeline.render_profile import (
+    RenderProfile,
     RenderProfileSourceEvidence,
     load_render_profile,
     load_render_profile_source_evidence,
 )
-from ..pipeline.semantic_map import load_semantic_map
+from ..pipeline.semantic_map import SemanticMap, load_semantic_map
 from ..pipeline.source_defects import source_defects_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -316,22 +317,35 @@ _SOURCE_MODELO_RE: Final[re.Pattern[str]] = re.compile(r'^\s*source_modelo\s*=\s
 
 
 def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
-    """The modelos staged beside the target because the target folds them in."""
+    """The modelos staged beside the target because the target depends on them.
+
+    A revision folds a value in from another modelo, and the source declaration
+    names it. Governed-fact projections are deliberately NOT included: their two
+    target modelos pull a transitive closure of nineteen, which is very nearly
+    the whole registry, so staging them would leave a candidate containing every
+    modelo and the isolation this set exists to create would mean nothing. That
+    dependency is answered where it arises, in fact compilation.
+    """
     referenced = _referenced_modelos(bundled_path("registry", "aeat", "modelos", tree.modelo))
+    depended_on = referenced - {tree.modelo}
     return frozenset(
-        modelo for modelo in referenced - {tree.modelo} if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
+        modelo for modelo in depended_on if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
     )
 
 
 def _referenced_modelos(modelo_root: Path) -> frozenset[str]:
-    return frozenset(
-        match.group("modelo")
-        for path in modelo_root.rglob("*.toml")
-        for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8"))
-    )
+    found: set[str] = set()
+    for path in modelo_root.rglob("*.toml"):
+        for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8")):
+            modelo = match.group("modelo")
+            assert isinstance(modelo, str), "the named group always participates in this pattern"
+            found.add(modelo)
+    return frozenset(found)
 
 
-def _authorities(tree: _GeneratedTree):
+def _authorities(
+    tree: _GeneratedTree,
+) -> tuple[SemanticMap, RenderProfile, JoinedRecordDesign, RenderProfileSourceEvidence, ExportTreeTransportProfile]:
     semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_{tree.modelo}") / tree.epoch)
     render_profile = load_render_profile(Path(f"dev/registry/render_profiles/modelo_{tree.modelo}") / tree.epoch)
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
@@ -421,11 +435,30 @@ def test_every_reproduction_pending_pin_is_live_and_source_bound() -> None:
         assert source is not None
         assert source.sha256 == pin.source_sha256, f"{subject}: source was reissued; reconsider the pin"
         assert pin.reason.strip() and pin.reconsideration_condition.strip()
+        # A pin states that a tree differs from a fresh render only in its
+        # attestation. Once the tree also differs in its RECORDS it has a
+        # disposition row saying so, and that row is the stronger statement:
+        # source-pinned, self-retiring, and consulted by the reproduction gate
+        # before the pin ever is. The pin is not deleted, because it still
+        # carries the check-mode refusal this suite expects, but its class
+        # assertion defers to the disposition and resumes the day the row
+        # retires. The row is asserted source-bound in its place, so the pin is
+        # superseded by a declaration rather than left merely unchecked.
         comparison = compare_revision_against_committed(
             authority,
             modelo=tree.modelo,
             revision=tree.revision,
         )
+        # The pin table is keyed by the tree's own name; the ledger is keyed by
+        # modelo/revision. Look the row up the way the ledger spells it.
+        disposition = _RECORD_DRIFT_DISPOSITIONS.get(f"{tree.modelo}/{tree.revision}")
+        if disposition is not None:
+            assert disposition.source_ref == pin.source_ref
+            assert disposition.source_sha256 == pin.source_sha256
+            assert comparison.disposition_class == "record_drift", (
+                f"{subject}: a disposition row stands but the tree no longer drifts in its records"
+            )
+            continue
         assert comparison.disposition_class == "provenance_only", (
             f"{subject}: reproduction pin is dormant or its failure class changed"
         )

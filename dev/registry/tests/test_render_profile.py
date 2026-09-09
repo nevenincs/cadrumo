@@ -206,7 +206,7 @@ def _singleton(anchor: RenderProfileAnchor) -> SingletonNumericRule:
         anchor=anchor,
         aeat_type="Num",
         semantic_kind="digit_string",
-        value_policy="digit-string",
+        value_policy=ExportValuePolicy.DIGIT_STRING,
         integer_digits=2,
         decimal_digits=0,
         sign_policy="unsigned",
@@ -1327,7 +1327,7 @@ def test_real_modelo_303_reserved_numeric_slots_are_excluded_from_eligibility() 
 _MINIMUM_ELIGIBLE_347_FIELDS = 15
 
 
-def _eligibility_for(source_ref: str, epoch: str, catalogue: str) -> tuple[object, ...]:
+def _eligibility_for(source_ref: str, epoch: str, catalogue: str) -> tuple[RecordDesignIntermediateField, ...]:
     """Return the eligible fields of one hash-verified design."""
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", catalogue))
     intermediate = load_record_design_intermediate(

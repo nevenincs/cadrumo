@@ -30,10 +30,10 @@ from datetime import UTC, date, datetime
 
 import pytest
 
-from ....core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
+from ....domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ..profile_binding import resolve_maternidad_meses
 
@@ -66,6 +66,15 @@ def _record_declaring_months(filing_year: int) -> UserProfileRecord:
 def _resolution(filing_year: int):
     snapshot = bundled_authority().snapshot("100", filing_year=filing_year, period="0A")
     return resolve_maternidad_meses(_record_declaring_months(filing_year), snapshot)
+
+
+def _retired_ceiling_year() -> int:
+    coordinate = date(_FIRST_UNCEILINGED_YEAR, 12, 31)
+    return FamilyFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=coordinate,
+        devengo_date=coordinate,
+    ).integer("lirpf-art-81-contribution-ceiling-retired-effective-year")
 
 
 class TestCotizacionesCeilingYears:
@@ -110,5 +119,5 @@ class TestCotizacionesCeilingYears:
         Anti-tautology over the gate: the constant and the affected set are
         asserted against each other, so moving one without the other fails.
         """
-        assert DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR == _FIRST_UNCEILINGED_YEAR
+        assert _retired_ceiling_year() == _FIRST_UNCEILINGED_YEAR
         assert max(_CEILINGED_YEARS) == _FIRST_UNCEILINGED_YEAR - 1

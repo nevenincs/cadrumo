@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:cc514cb529834c1f179f4afbb46ab6a0e5b3bdf0ab21054db8274d34480b0e4f'
+body_hash: 'sha256:c78296d79545417fbeb701ebf19c3f756cd04d48dc6653fe46c313ffb7798b07'
 step_id: 'S366'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove the unwired donativo export resolver and private builder together with their builder-only test and the hand-maintained row-field completeness detector.
 

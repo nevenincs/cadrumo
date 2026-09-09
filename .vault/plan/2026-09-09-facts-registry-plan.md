@@ -12,96 +12,8 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:e70174017afc56f2b5a304dd5075d744333ca2fd6982f61213d46d4d94854072'
+body_hash: 'sha256:5e4a93920af88611111e78d9fc1ee6f6e0cf97741efe0bdf8fd3691a5b99ae78'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #plan) and one feature tag.
-     Replace facts-registry with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     tier is mandatory for new plans. Allowed: L1, L2, L3, L4.
-     L1 = Steps only. L2 = Phases above Steps. L3 = Waves above
-     Phases above Steps. L4 = Epic above Waves above Phases above
-     Steps; PM association required. Pre-existing plans without this
-     field default to L2.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'. The related field
-     carries the AUTHORIZING documents (ADR, research, reference, prior
-     plan) for every Step in this plan; Steps inherit this chain;
-     per-row reference footers do not exist.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-
-<!-- HIERARCHY AND TIERS:
-     Epic > Wave > Phase > Step. Step is the canonical leaf-row
-     noun. Execution Record artifact: <Step Record>.
-     Tier is declared in frontmatter as tier: L1/L2/L3/L4
-     (mandatory for new plans; pre-existing plans without the
-     field default to L2 and the writer adds the field on first
-     edit). The tier selects containers:
-       L1 = Steps only.
-       L2 = Phases above Steps.
-       L3 = Waves above Phases above Steps.
-       L4 = Epic above Waves above Phases above Steps; MUST declare
-            a project-management association in the Epic intent
-            block prose.
-     Selection is by complexity criteria, not container counting.
-     Writer never invents containers to qualify a tier. -->
-
-<!-- IDENTIFIERS AND ROW CONTRACT:
-     S##, P##, W## are flat, per-document, append-only, immutable.
-     Promotion adds containers without renumbering. Gaps are not
-     reused.
-     Display paths are computed from current grouping:
-       Step path:    L1 S##   L2 P##.S##   L3/L4 W##.P##.S##
-       Phase heading:        L2 P##       L3/L4 W##.P##
-       Wave heading:                      L3/L4 W##
-     Row format:
-       - [ ] `<display-path>` - imperative-verb action; `path/to/file`.
-     Two-state checkboxes only ([ ] open, [x] closed). No per-row
-     reference footers; wiki-links and markdown links are forbidden
-     in plan body. Authorizing documents go in the plan's `related:`
-     frontmatter once.
-     ASCII spaced hyphens everywhere; em-dash (U+2014) and en-dash
-     (U+2013) are forbidden. Step rows within a Phase are
-     contiguous. -->
-
-<!-- NO COMPRESSION:
-     N self-similar actions = N rows. Never collapse into "for each
-     X, do Y" / "across all callers, do Z" / "in every module,
-     replace W". The rule applies at every tier including L1. -->
-
-<!-- VAULTSPEC-CORE VAULT PLAN CLI:
-     The `vaultspec-core vault plan` CLI is the canonical surface for
-     structural manipulation of this plan document. Writers and
-     executors MUST use `vaultspec-core vault plan step add/insert/move/
-     remove/check/uncheck/toggle/edit`,
-     `vaultspec-core vault plan phase add/move/remove/edit`,
-     `vaultspec-core vault plan wave add/move/remove/edit`,
-     `vaultspec-core vault plan epic intent`, and
-     `vaultspec-core vault plan tier promote/demote` for every
-     identifier-affecting change rather than hand-editing the row
-     grammar. Hand edits are tolerated by the parser but flagged by
-     `vaultspec-core vault plan check`; canonical-identifier preservation is
-     guaranteed only when the CLI performs the mutation. Run
-     `vaultspec-core vault plan --help` for the full subcommand
-     surface. -->
 
 # `facts-registry` plan
 
@@ -123,58 +35,6 @@ individual coding Steps do not each carry a redundant test or review Step.
 ## Wave `W01` - Build the authority core and close the target ledger
 
 Build the new facts architecture without modifying legacy consumers while a parallel lane produces the exact migration and deletion ledger. Wave W02 depends on both outputs.
-
-<!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
-`L4`) determines the structure under this section:
-
-- `L1`: a flat list of Step rows (no Phase, Wave, or Epic).
-- `L2`: one or more `### Phase` blocks each containing Step rows.
-- `L3`: one or more `## Wave` blocks each containing Phase blocks.
-- `L4`: a `## Epic intent` block, followed by Wave blocks. -->
-
-<!-- Replace this scaffold with the tier-appropriate structure for your plan.
-Format examples for each block type are embedded below as commented
-templates. -->
-
-<!-- IMPORTANT: This document must be updated between execution runs to
-     track progress. -->
-
-<!-- PHASE BLOCK FORMAT (L2, L3, L4):
-     ### Phase `P02` - rewrite the writer-agent contract
-
-     One sentence stating what this Phase delivers.
-
-     - [ ] `P02.S01` - imperative-verb action; `path/to/file`.
-     - [ ] `P02.S02` - imperative-verb action; `path/to/file`.
-
-     At L3/L4 the Phase heading uses the ancestor-aware path
-     (### Phase `W01.P02` - ...). The intent sentence is mandatory. -->
-
-<!-- WAVE BLOCK FORMAT (L3, L4):
-     ## Wave `W01` - language-only convention rollout
-
-     One paragraph stating what this Wave delivers, which downstream
-     Wave depends on it, and which authorizing documents back it.
-
-     ### Phase `W01.P01` - ...
-     ### Phase `W01.P02` - ...
-
-     The Wave intent paragraph is mandatory. -->
-
-<!-- EPIC INTENT BLOCK FORMAT (L4 only):
-     ## Epic intent
-
-     One paragraph stating the strategic goal, the external project-
-     management association (milestone name, project board identifier,
-     roadmap entry), the timeline horizon, and the teams or agents
-     involved.
-
-     ## Wave `W01` - ...
-     ## Wave `W02` - ...
-
-     The ## Epic intent block is mandatory at L4 and absent at L1, L2,
-     L3. The plan title (the level-one # heading at the top of the
-     document) is the Epic title; no separate Epic heading is emitted. -->
 
 ### Phase `W01.P01` - Implement greenfield facts contracts
 
@@ -225,39 +85,39 @@ Register existing data-backed domains behind the new authority in parallel, pres
 
 Adapt IVA schedules, recargo schedules, typed lookup behavior, evidence, and precedence into authority-managed providers.
 
-- [ ] `W02.P05.S13` - Register IVA rate schedules as typed dated provider adapters; `src/cadrumo/domain/iva/rates.py`.
-- [ ] `W02.P05.S14` - Register recargo by applied rate and operation date; `src/cadrumo/domain/iva/recargo_equivalencia.py`.
-- [ ] `W02.P05.S15` - Move IVA evidence enforcement into provider validation; `src/cadrumo/domain/iva/_grounding.py`.
+- [x] `W02.P05.S13` - Register IVA rate schedules as typed dated provider adapters; `src/cadrumo/domain/iva/rates.py`.
+- [x] `W02.P05.S14` - Register recargo by applied rate and operation date; `src/cadrumo/domain/iva/recargo_equivalencia.py`.
+- [x] `W02.P05.S15` - Move IVA evidence enforcement into provider validation; `src/cadrumo/domain/iva/_grounding.py`.
 
 ### Phase `W02.P06` - Enroll categories and calendar providers
 
 Adapt category profiles and legally governed calendar or deadline data into authority-managed providers.
 
-- [ ] `W02.P06.S16` - Register statutory category profiles and dated caps; `src/cadrumo/domain/categories/registry.py`.
-- [ ] `W02.P06.S17` - Register classified legal calendar and deadline facts; `src/cadrumo/domain/deadlines`.
+- [x] `W02.P06.S16` - Register statutory category profiles and dated caps; `src/cadrumo/domain/categories/registry.py`.
+- [x] `W02.P06.S17` - Register classified legal calendar and deadline facts; `src/cadrumo/domain/deadlines`.
 
 ### Phase `W02.P07` - Enroll treaty and authorisation providers
 
 Adapt convenio overrides and apoderamientos catalogues into authority-managed providers.
 
-- [ ] `W02.P07.S18` - Register convenio overrides as a typed provider adapter; `src/cadrumo/domain/calculations/registry/convenio.py`.
-- [ ] `W02.P07.S19` - Register confirmed apoderamientos legal-taxonomy facts; `src/cadrumo/domain/auth/apoderamientos/catalogue.py`.
+- [x] `W02.P07.S18` - Register convenio overrides as a typed provider adapter; `src/cadrumo/domain/calculations/registry/convenio.py`.
+- [x] `W02.P07.S19` - Register confirmed apoderamientos legal-taxonomy facts; `src/cadrumo/domain/auth/apoderamientos/catalogue.py`.
 
 ### Phase `W02.P08` - Enroll scalar and revision-backed facts
 
 Enroll external-constant candidates and already revision-backed duplicate values through typed scalar, bracket, set, and date-window providers.
 
-- [ ] `W02.P08.S20` - Register statutory scalars schedules and classifications; `src/cadrumo/core/external_constants.py`.
-- [ ] `W02.P08.S21` - Adapt global legal parameters without duplicating authority; `src/cadrumo/_data/registry/aeat/legal`.
-- [ ] `W02.P08.S22` - Project modelo-owned facts without moving parameter files; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W02.P08.S20` - Register statutory scalars schedules and classifications; `src/cadrumo/core/external_constants.py`.
+- [x] `W02.P08.S21` - Adapt global legal parameters without duplicating authority; `src/cadrumo/_data/registry/aeat/legal`.
+- [x] `W02.P08.S22` - Project modelo-owned facts without moving parameter files; `src/cadrumo/_data/registry/aeat/modelos`.
 
 ### Phase `W02.P09` - Verify provider boundary
 
 Exercise provider compilation, identity, cache invalidation, exact resolution, and provenance once all provider phases converge.
 
-- [ ] `W02.P09.S23` - Verify provider compilation exact resolution and provenance at the Wave 2 handoff; `src/cadrumo/domain/calculations/registry/tests`.
-- [ ] `W02.P09.S46` - Run canonical strict production type checking at the Wave 2 handoff; `justfile check-types and dev/quality/types.py`.
-- [ ] `W02.P09.S47` - Run both dead-code audits at the Wave 2 handoff; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
+- [x] `W02.P09.S23` - Verify provider compilation exact resolution and provenance at the Wave 2 handoff; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W02.P09.S46` - Run canonical strict production type checking at the Wave 2 handoff; `justfile check-types and dev/quality/types.py`.
+- [x] `W02.P09.S47` - Run both dead-code audits at the Wave 2 handoff; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
 
 ## Wave `W03` - Migrate consumers by legal domain
 
@@ -267,31 +127,31 @@ Move every classified consumer to typed provenance-bearing fact resolution in pa
 
 Rewire M347, M202, declaration thresholds, modelo group classifications, and aggregation consumers.
 
-- [ ] `W03.P10.S48` - Rewire every M347 comparator validator and diagnostic to one fact; `src/cadrumo/domain/calculations/registry/_m347_threshold.py and dependent production callers`.
-- [ ] `W03.P10.S49` - Rewire Modelo 202 and modelo classification consumers; `src/cadrumo/domain/calculations/registry/applicability_modelo202.py and src/cadrumo/application/aggregation/_service.py`.
+- [x] `W03.P10.S48` - Rewire every M347 comparator validator and diagnostic to one fact; `src/cadrumo/domain/calculations/registry/_m347_threshold.py and dependent production callers`.
+- [x] `W03.P10.S49` - Rewire Modelo 202 and modelo classification consumers; `src/cadrumo/domain/calculations/registry/applicability_modelo202.py and src/cadrumo/application/aggregation/_service.py`.
 
 ### Phase `W03.P11` - Migrate renta and family consumers
 
 Rewire maritime, maternity, descendant, Madrid, Art 20, Art 52, DT12, and SAL consumers.
 
-- [ ] `W03.P11.S24` - Rewire maritime Art 7p and REBECA inputs; `src/cadrumo/domain/renta/maritime_exemption.py`.
-- [ ] `W03.P11.S25` - Rewire descendant maternity custody and Madrid windows; `src/cadrumo/domain/contribuyente`.
-- [ ] `W03.P11.S50` - Rewire Art 20 Art 52 DT12 and SAL calculations; `src/cadrumo/application/modelo and src/cadrumo/domain/modelos`.
+- [x] `W03.P11.S24` - Rewire maritime Art 7p and REBECA inputs; `src/cadrumo/domain/renta/maritime_exemption.py`.
+- [x] `W03.P11.S25` - Rewire descendant maternity custody and Madrid windows; `src/cadrumo/domain/contribuyente`.
+- [x] `W03.P11.S50` - Rewire Art 20 Art 52 DT12 and SAL calculations; `src/cadrumo/application/modelo and src/cadrumo/domain/modelos`.
 
 ### Phase `W03.P12` - Migrate IVA and invoice consumers
 
 Rewire invoice rate interpretation, IVA calculations, recargo lookup, inventory defaults, and extraction authority consumers.
 
-- [ ] `W03.P12.S26` - Rewire IVA lookups while preserving domain facades; `src/cadrumo/domain/iva`.
-- [ ] `W03.P12.S27` - Rewire invoice slot percentage interpretation; `src/cadrumo/domain/invoices/enums.py`.
-- [ ] `W03.P12.S51` - Rewire extraction recargo aggregation and inventory defaults; `src/cadrumo/application/ledger and src/cadrumo/application/aggregation and src/cadrumo/domain/contribuyente/inventory`.
+- [x] `W03.P12.S26` - Rewire IVA lookups while preserving domain facades; `src/cadrumo/domain/iva`.
+- [x] `W03.P12.S27` - Rewire invoice slot percentage interpretation; `src/cadrumo/domain/invoices/enums.py`.
+- [x] `W03.P12.S51` - Rewire extraction recargo aggregation and inventory defaults; `src/cadrumo/application/ledger and src/cadrumo/application/aggregation and src/cadrumo/domain/contribuyente/inventory`.
 
 ### Phase `W03.P13` - Migrate treaty authorization and deadline consumers
 
 Rewire convenio, apoderamientos, notification deadlines, amendment regimes, foreign-asset rules, and related mappings.
 
-- [ ] `W03.P13.S52` - Rewire treaty and authorization consumers; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
-- [ ] `W03.P13.S53` - Rewire deadline notification amendment and foreign-asset facts; `src/cadrumo/domain/deadlines and src/cadrumo/core`.
+- [x] `W03.P13.S52` - Rewire treaty and authorization consumers; `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py and src/cadrumo/entrypoints/cli/config_payloads.py`.
+- [x] `W03.P13.S53` - Rewire deadline notification amendment and foreign-asset facts; `src/cadrumo/domain/deadlines and src/cadrumo/core`.
 
 ### Phase `W03.P14` - Verify consumer boundary
 

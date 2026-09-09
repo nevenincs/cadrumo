@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:e1a70bee8035804a252cb47109c0c458f232f510423cf61a534726351a9812fd'
+body_hash: 'sha256:659456d8dd4ba8c6c1c22a5f79ad2a779067bf9a2fedfbb0a37e51be2c95a724'
 step_id: 'S332'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Remove hardcoded harness-source parsing and self-source import checks from TUI theme coverage
 

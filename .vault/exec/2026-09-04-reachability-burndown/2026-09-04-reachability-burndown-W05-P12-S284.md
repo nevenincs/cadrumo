@@ -3,18 +3,13 @@ tags:
   - '#exec'
   - '#reachability-burndown'
 date: '2026-09-08'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:7170bf51dbddfebc979b2fcdf50c8ee98e331009398a1304eb967edc8a5a8c8d'
+body_hash: 'sha256:46071d99bf0b3fbb7f826b2f712dc3f8a49ba93ad7e517efe2a8a0f519faf1d4'
 step_id: 'S284'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the zero-caller wizard persist-answers facade and its unreachable error/locale vocabulary while retaining the live command writer, shared mode type, projections, and patch owner; rename misleading serialization coverage, run focused gates, update cadence, and remeasure exact reachability.
 
@@ -25,23 +20,6 @@ related:
 - `and application locales`
 
 ## Changes
-
-<!-- MECHANICAL LOG. One line per path touched, nothing else:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     Paths are repo-relative, in backticks. No prose, no sentences, no
-     narration of intent, outcome, or difficulty - the diff and the plan Step
-     already carry those. Example:
-
-       - `M` `src/vaultspec_core/cli/exec_cmd.py`
-       - `A` `src/vaultspec_core/cli/tests/test_exec_cmd.py`
-       - `D` `src/legacy/shim.py`
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception: data loss, skipped work,
-     a scaffold left in code, or a persistent failure. Omit it otherwise -
-     an absent section is correct; an empty one is a check finding. -->
 
 - `M` `src/cadrumo/application/wizard/persistence.py`
 - `M` `src/cadrumo/application/wizard/tests/test_setup_runtime.py`

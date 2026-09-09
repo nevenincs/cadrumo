@@ -33,7 +33,11 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....contribuyente.entity_type import EntityType, LegalEntityForm
 from ....deadlines.models import IVARegime, TaxpayerProfile
-from ..applicability_modelo202 import Modelo202Modality, derive_modelo_202_modality
+from ..applicability_modelo202 import (
+    Modelo202Modality,
+    derive_modelo_202_modality,
+    resolve_modelo_202_art_40_3_incn_threshold,
+)
 from ..formula_runtime import calculate_registry_snapshot
 from ._registry_schema_support import _committed_snapshot
 
@@ -409,6 +413,20 @@ def test_modelo_202_modality_is_art_40_3_mandatory_above_threshold() -> None:
     verdict = derive_modelo_202_modality(_legal_entity_profile(Decimal("7000000")))
     assert verdict.modality is Modelo202Modality.ART_40_3_MANDATORY
     assert "ley-27-2014:art-40-3" in verdict.legal_refs
+    assert verdict.threshold_fact is not None
+    assert verdict.threshold_fact.fact_id == "lis-art-40-3-incn-threshold"
+    assert verdict.threshold_fact.payload.value == Decimal("6000000")
+    assert verdict.threshold_fact.authority_digest
+
+
+def test_modelo_202_threshold_resolver_retains_statutory_provenance() -> None:
+    """The applicability comparison uses the temporal scalar fact, not a static default."""
+    threshold = resolve_modelo_202_art_40_3_incn_threshold(effective_date=date(2025, 12, 31))
+
+    assert threshold.fact_id == "lis-art-40-3-incn-threshold"
+    assert threshold.effective_date == date(2025, 12, 31)
+    assert threshold.payload.value == Decimal("6000000")
+    assert "ley-27-2014:art-40-3" in threshold.legal_refs
 
 
 def test_modelo_202_modality_is_art_40_2_optional_at_or_below_threshold() -> None:

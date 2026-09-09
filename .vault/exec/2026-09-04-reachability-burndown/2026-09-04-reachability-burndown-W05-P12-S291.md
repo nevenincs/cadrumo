@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:ccc7e0b1d97c414c4fb96a61b12b945e890719cce449006185dff7dac7f0c415'
+body_hash: 'sha256:a0fe3a1cfefb5a093c14a758528ce212314fdbea4fb78cafa9184acf47368244'
 step_id: 'S291'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unconsumed output-classification policy vocabulary and its test-only table census; retain live CLI redaction behavior and persisted-policy resolution gates.
 

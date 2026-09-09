@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:8091d4a0099152a9028d9c0f628d8b6a2078f0fe5c68f2b71d0c635727a44441'
+body_hash: 'sha256:807b0e056a2688b38dc010237c1816004793c92027f8759b1cd2d7824363d91c'
 step_id: 'S362'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete five unapplied or superseded legal constants and correct maternity documentation to name the dated registry as its sole authority.
 

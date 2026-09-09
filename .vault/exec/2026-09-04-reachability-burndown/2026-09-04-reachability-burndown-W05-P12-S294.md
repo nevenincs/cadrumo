@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f46628c40126686943f491ee8b7b7da807513e06764ccb304339bb45629c5311'
+body_hash: 'sha256:e4bef8a1bc862caf6bc0f247b0f2209b2d8df87c01d7f4a7ee0e480a9f81785c'
 step_id: 'S294'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only detailed storage-inventory projection, public DTOs, and taxonomy census tests; retain the live four-area inventory through a minimal private aggregation row and preserve tree/reclaim behavior.
 

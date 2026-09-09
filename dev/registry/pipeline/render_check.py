@@ -106,13 +106,37 @@ class _StrictModel(BaseModel):
 
 
 class GeneratedTreeRecordDriftDisposition(_StrictModel):
-    """One source-bound declaration for a tree that must not be republished."""
+    """One source-bound declaration that a tree's records differ from its inputs.
+
+    A row says the shipped records and the current inputs disagree. It does NOT
+    say which side is right, and the two directions demand opposite actions, so
+    ``remedy`` states it and nothing infers it.
+    """
 
     kind: Literal["record_drift"]
     modelo: str = Field(pattern=r"^[0-9]{3}$")
     revision: str = Field(min_length=1)
     source_ref: str = Field(min_length=1)
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    remedy: Literal["republish", "repair_inputs"]
+    """Which side is wrong, and therefore what fixes the difference.
+
+    ``republish`` - the INPUTS are right and the shipped bytes are stale, so
+    regenerating is the fix. The sign corrections are this: the generator now
+    reads the official type column and the committed trees predate it.
+
+    ``repair_inputs`` - the SHIPPED bytes are right and the inputs are wrong, so
+    regenerating would ship the defect. Modelo 347 is the live case: its Tipo-2
+    record must repeat per declarado, a fresh render does not reproduce that, and
+    republishing would emit ONE record and drop every counterparty after the
+    first - turning a complete informative return into one naming a single third
+    party.
+
+    Declared rather than derived, because both directions produce identical
+    record drift and a reader cannot tell them apart from the comparison. A
+    republication path that treated every row as permission would have shipped
+    that truncation.
+    """
     reason: str = Field(min_length=1)
     reconsideration_condition: str = Field(min_length=1)
 

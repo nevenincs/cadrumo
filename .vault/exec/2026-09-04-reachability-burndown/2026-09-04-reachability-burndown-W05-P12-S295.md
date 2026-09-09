@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e5ec66c0b406ab8c45215c3da085f36366ab5dcd2eff51bb30472e8ff6a539b'
+body_hash: 'sha256:b72203cfce7eca92e42badf859ff96ef00cd239bac9f43cd72c7b989f713bb0a'
 step_id: 'S295'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the hand-maintained identifier-namespace adjudication gate and the two unreachable profile snapshot DTOs it classified; retain the canonical UserProfileSnapshot domain owner and real profile service behavior.
 

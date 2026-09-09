@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:7daef7a0c057973d8a7bd41e1abaaa61ef3a2e93022d9ba82986f2662af56371'
+body_hash: 'sha256:d50aed2b5b8f1af8ff14df1b74af5d0a869d98090a85cc2df298defa5f10e317'
 step_id: 'S299'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the static test-rooted symbol-use graph, its dynamic-dispatch exemption ledger, copied reachability engine, and self-tests; retain executed coverage and the canonical production reachability audit as the owning signals.
 

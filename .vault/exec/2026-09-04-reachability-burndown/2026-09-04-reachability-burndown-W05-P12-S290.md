@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:b76cf2d3b4f11a6df399dfd6786febe26b09318c7188ee4d1c8143e84363e0f1'
+body_hash: 'sha256:73120e4ad6495deda67031f719809116467d350d117a68b6b2eb83fa6429ce8a'
 step_id: 'S290'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the test-only direct calculation-revision verification shortcut and its private bypass guards; retain the live verification pipeline and make tests target their owning behavior.
 

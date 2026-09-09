@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:ebf632f8300e0bf89d4aca0a32d1a870e68b936e13562391f909407fa6dc4b32'
+body_hash: 'sha256:b0bb463e03b70bb84c3a3ac54fe72bffc46d0c8c2998a3d4c42e9447bc005e9b'
 step_id: 'S350'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unwired wizard registered-values and legal-zone projections and their module-status inventory tests.
 

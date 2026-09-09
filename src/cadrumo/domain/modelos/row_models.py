@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Sequence
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal, get_args
@@ -43,12 +44,13 @@ from typing import Annotated, Literal, get_args
 from pydantic import BaseModel, BeforeValidator, Field, StringConstraints, field_validator, model_validator
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.identity import nif_iva_format_for_country
 from ...core.irnr import M210_TIPO_RENTA_CODE_PROJECTION, M210PayerMode
 from ...core.modelo_232_codigos import MetodoValoracion, TipoOperacionVinculada, TipoVinculacion
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.unit_proportion import UnitProportion
+from ..calculations.registry._m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
+from ..calculations.registry.facts.resolution import ResolvedScalarFact
 
 # ---------------------------------------------------------------------------
 # Shared type aliases
@@ -1067,13 +1069,14 @@ DETAIL_ROW_BEARING_MODELOS: frozenset[str] = frozenset({"184", "232", "347", "34
 class Modelo347ThresholdError(CadrumoError, ValueError):
     """A Modelo 347 contraparte row falls at or below the declarability threshold."""
 
-    def __init__(self, *, nif: str, total: Decimal) -> None:
+    def __init__(self, *, nif: str, total: Decimal, threshold: ResolvedScalarFact) -> None:
         """Record the counterparty and the total that fell short of the threshold."""
         self.nif = nif
         self.total = total
+        self.threshold = threshold
         super().__init__(
             f"M347 contraparte (nif={nif!r}): importe total {total} does not exceed the "
-            f"{M347_THRESHOLD_EUR} threshold required by RD 1065/2007 art. 33.1",
+            f"{m347_threshold_decimal(threshold)} threshold required by RD 1065/2007 art. 33.1",
         )
 
 
@@ -1089,7 +1092,11 @@ class Modelo184ShareSumError(CadrumoError, ValueError):
         )
 
 
-def validate_m347_threshold(rows: Sequence[Modelo347ContraparteRow]) -> None:
+def validate_m347_threshold(
+    rows: Sequence[Modelo347ContraparteRow],
+    *,
+    effective_date: date,
+) -> None:
     """Enforce the Modelo 347 per-counterparty declarability threshold.
 
     RD 1065/2007 art. 33.1: only counterparties whose annual operations exceed
@@ -1105,12 +1112,15 @@ def validate_m347_threshold(rows: Sequence[Modelo347ContraparteRow]) -> None:
         Modelo347ThresholdError: for the first counterparty (in NIF first-appearance
             order) whose AGGREGATED annual total is at or below the threshold.
     """
+    if not rows:
+        return
+    threshold = resolve_m347_counterparty_annual_threshold(effective_date=effective_date)
     totals_by_nif: dict[str, Decimal] = {}
     for row in rows:
         totals_by_nif[row.nif] = totals_by_nif.get(row.nif, Decimal("0")) + row.importe_total
     for nif, total in totals_by_nif.items():
-        if total <= M347_THRESHOLD_EUR:
-            raise Modelo347ThresholdError(nif=nif, total=total)
+        if total <= m347_threshold_decimal(threshold):
+            raise Modelo347ThresholdError(nif=nif, total=total, threshold=threshold)
 
 
 def validate_m184_member_share_sum(rows: Sequence[Modelo184MemberRow]) -> None:

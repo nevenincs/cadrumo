@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b4b85a974feaa5312d34a7b5fbe45ea6d469e60d45a8ecf7040786699112a7c'
+body_hash: 'sha256:a021b4306c57227b326821fdec07edb9495f46653c8357fc1d4582317becd1f3'
 step_id: 'S316'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the acceptance-wall node-id catalogue, nested CI runner, and source-mutating proof
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:aec57cb12d5ea4b11d5ea386ac88c34b1a646621bd00b8aa2865dec6919efb97'
+body_hash: 'sha256:a8f3edd29e7c30bf5fa796bfd922193cabde91a1b23d476eca52815983845fcf'
 step_id: 'S353'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the unrouted five-stage profile journey and its closed dev fixture registry/test loop while retaining the live profile overview and application presentation owners.
 

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:41d98b3084581503a7400a7f75813bc7ee74522e58a9a49303eda6c758b08758'
+body_hash: 'sha256:b27476bf520a14027417c9843cfd93e70f80c63157ec8746e5550a7538dd34fb'
 step_id: 'S297'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the dev-wide governance-corpus isolation census and its eleven path-keyed exemptions; retain the strict no-allowlist src isolation gate and shared detector.
 

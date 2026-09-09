@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:f63e9a27ac57f64072d785174dc0f5d22f6457441a3ca8181ffcffb57b2ff2de'
+body_hash: 'sha256:afb6d1971284b66e1ef6069b0728015451f6070031f71a6955d47f8daaa9172c'
 step_id: 'S300'
 related:
   - "[[2026-09-04-reachability-burndown-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Delete the classification-comparison AST enrollment census, its production function/path exemptions, copied source fixtures, and exported detector vocabulary; retain the canonical runtime predicate and storage-boundary behavior.
 

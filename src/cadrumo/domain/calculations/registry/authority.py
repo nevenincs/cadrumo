@@ -1013,7 +1013,7 @@ def construct_authority(
 
     modelos, catalogues = load_registry_tree(root, identity=identity)
     validate_fact_provider_directory_ownership(root)
-    facts = compile_registered_fact_providers(root)
+    facts = compile_registered_fact_providers(root, modelos=modelos)
     # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
     # onto the shared catalogues so every snapshot projects the same authority.
     # Grounding gate: every treaty override must cite a treaty article defined in

@@ -15,6 +15,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -74,7 +75,7 @@ def test_iva_rate_refuses_non_canonical_text_as_a_decimal_failure(raw: str) -> N
     assert isinstance(Decimal(raw), Decimal), raw
 
     with pytest.raises(_WizardFieldError) as excinfo:
-        _validate_iva_rate(raw)
+        _validate_iva_rate(raw, on_date=date(2026, 1, 1))
 
     assert excinfo.value.field == "iva_rate"
     assert "invalid decimal percentage" in excinfo.value.reason
@@ -83,15 +84,15 @@ def test_iva_rate_refuses_non_canonical_text_as_a_decimal_failure(raw: str) -> N
 def test_iva_rate_still_reports_an_unrecognised_but_well_formed_rate() -> None:
     """A conforming number outside the registry slots keeps the slot-table refusal."""
     with pytest.raises(_WizardFieldError) as excinfo:
-        _validate_iva_rate("17")
+        _validate_iva_rate("17", on_date=date(2026, 1, 1))
 
     assert "not a recognised IVA percentage" in excinfo.value.reason
 
 
 @pytest.mark.parametrize("raw", [None, "", "   "])
 def test_iva_rate_treats_absent_input_as_absent(raw: str | None) -> None:
-    assert _validate_iva_rate(raw) is None
+    assert _validate_iva_rate(raw, on_date=date(2026, 1, 1)) is None
 
 
 def test_iva_rate_accepts_a_declared_slot() -> None:
-    assert _validate_iva_rate("21") == Decimal("21")
+    assert _validate_iva_rate("21", on_date=date(2026, 1, 1)) == Decimal("21")
