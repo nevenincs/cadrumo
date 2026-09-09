@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:84107c16a2fe44176f1f16ccf57e4714c5bd572aa38b30f47ed5cf260da04cce'
+body_hash: 'sha256:63f0bcee23b59f70c1b4ae90d2761a9c7d59fa75e34b4b71b4a5488042414f84'
 ---
 
 # `facts-registry` plan
@@ -109,7 +109,7 @@ Enroll external-constant candidates and already revision-backed duplicate values
 
 - [x] `W02.P08.S20` - Register statutory scalars schedules and classifications; `src/cadrumo/core/external_constants.py`.
 - [x] `W02.P08.S21` - Adapt global legal parameters without duplicating authority; `src/cadrumo/_data/registry/aeat/legal`.
-- [ ] `W02.P08.S22` - Project modelo-owned facts without moving parameter files; `src/cadrumo/_data/registry/aeat/modelos`.
+- [x] `W02.P08.S22` - Project modelo-owned facts without moving parameter files; `src/cadrumo/_data/registry/aeat/modelos`.
 
 ### Phase `W02.P09` - Verify provider boundary
 
