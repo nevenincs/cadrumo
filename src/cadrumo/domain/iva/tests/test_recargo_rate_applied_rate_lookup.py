@@ -24,6 +24,7 @@ from ..recargo_equivalencia import (
     RecargoRateRecord,
     load_recargo_rate_table,
     recargo_rate_for_applied_rate,
+    resolve_recargo_rate_for_applied_rate,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -46,6 +47,20 @@ def test_the_two_reduced_rates_resolve_distinctly_on_one_date() -> None:
     assert ordinary == Decimal("0.014")
     assert transitional == Decimal("0.0062")
     assert ordinary != transitional
+
+
+def test_recargo_lookup_retains_the_matched_authority_provenance() -> None:
+    """The public rate projection has the exact applied-rate fact evidence."""
+    resolved = resolve_recargo_rate_for_applied_rate(Decimal("0.05"), _COLLISION_DATE)
+
+    assert resolved.fact_id == "iva-recargo-by-applied-rate"
+    assert resolved.date_axis.value == "devengo_date"
+    assert resolved.effective_date == _COLLISION_DATE
+    assert {selector.name: selector.value for selector in resolved.matched_selectors} == {
+        "applied_rate": Decimal("0.05"),
+    }
+    assert resolved.legal_refs
+    assert len(resolved.authority_digest) == 64
 
 
 def test_the_quarter_four_step_moves_both_transitional_pairings() -> None:
