@@ -40,6 +40,7 @@ from .candidate_staging import (
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .render_check import (
+    record_drift_dispositions,
     GeneratedExportBootstrapTransport,
     RenderComparison,
     RevisionRenderInputs,
@@ -306,12 +307,33 @@ def _require_republication_eligibility(
         )
     if comparison.modelo != invocation.modelo or comparison.revision != invocation.revision:
         raise ValueError("republish comparison identity differs from the explicitly selected target")
-    if comparison.disposition_class != "provenance_only":
+    if comparison.disposition_class == "provenance_only":
+        return
+    if comparison.disposition_class != "record_drift":
         raise ValueError(
-            "republish is restricted to semantically reproduced attestation drift; "
+            "republish admits attestation drift, or record drift a disposition explains; "
             f"differing={list(comparison.differing)!r} "
             f"only_committed={list(comparison.only_committed)!r} "
             f"only_rendered={list(comparison.only_rendered)!r}",
+        )
+    # A tree whose RECORDS changed can be replaced only where a disposition row
+    # states why. Without this, a correction could never be published at all: the
+    # check compares the shipped manifest against a fresh render and refuses the
+    # difference, which is precisely the difference being landed. The generator
+    # could be made right and the corpus could not be made to match it.
+    #
+    # The bar is HIGHER here than for attestation drift, not lower. That path
+    # needs one proof - the reviewed digest. This needs two: the digest, and a
+    # source-pinned row carrying a reason and a retirement condition, which the
+    # ledger's own gate fails when its cause is gone. An unexplained record
+    # change is refused exactly as before.
+    subject = f"{invocation.modelo}/{invocation.revision}"
+    explained = {row.subject for row in record_drift_dispositions()}
+    if subject not in explained:
+        raise ValueError(
+            f"republish refuses an unexplained record change for {subject}: "
+            "declare a disposition row stating why the shipped records differ from what the "
+            "current inputs produce, with its source pin and reconsideration condition",
         )
 
 
