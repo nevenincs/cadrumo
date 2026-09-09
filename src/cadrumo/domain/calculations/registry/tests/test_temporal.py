@@ -27,6 +27,7 @@ from ..errors import (
 )
 from ..relations import relation_source_requirements
 from ..schema import ModeloDefinition
+from ..schema_deadlines import DeadlineWindowDefinition
 from ..temporal import select_revision, select_revision_for_year
 from ._registry_schema_support import _committed_modelo, _committed_registry_tree, _committed_snapshot
 
@@ -273,8 +274,7 @@ def test_revision_validation_accepts_disjoint_windows_with_shared_period_selecto
     assert validate_revision_windows(mutated) == []
 
 
-
-def _declared_filing_windows() -> list[tuple[str, str, object]]:
+def _declared_filing_windows() -> list[tuple[str, str, DeadlineWindowDefinition]]:
     """``(modelo id, revision id, window)`` for every filing window the corpus declares."""
     modelos, _catalogues = _committed_registry_tree()
     return [
