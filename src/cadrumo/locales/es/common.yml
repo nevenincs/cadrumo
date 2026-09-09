@@ -1542,7 +1542,6 @@ tui:
     title: 'Cadrumo: sesión de terminal'
   search:
     action:
-      available: Acción disponible del área de trabajo
       classify_ledger: Clasificar libro mayor
       edit_profile: Editar perfil
       explain_overview: Explicar el resumen
@@ -1552,6 +1551,7 @@ tui:
       list_work_revisions: Ver revisiones del trabajo
       review_ledger: Revisar libro mayor
       review_ledger_evidence: Revisar evidencia del libro mayor
+      unknown: Acción del área de trabajo no reconocida
       validate_ledger: Validar libro mayor
     destination:
       aeat_sync: Abrir sincronización AEAT

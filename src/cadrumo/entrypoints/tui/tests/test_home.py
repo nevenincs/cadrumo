@@ -72,7 +72,7 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
         assert tuple(
             cast("DataTable[str]", action_table).get_row_at(index)[0] for index in range(action_table.row_count)
         ) == (
-            "Open declaration",
+            "View work revisions",
             "Classify ledger",
             "Review ledger evidence",
         )
