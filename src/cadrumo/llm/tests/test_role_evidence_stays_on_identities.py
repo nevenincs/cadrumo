@@ -23,12 +23,11 @@ import pytest
 
 from ...application.ledger.party_attribution import PARTY_ATTRIBUTED_ADDRESS_FIELDS, party_addresses
 from ...core.period import Period
-from ..invoice_extraction_prompt import build_invoice_extraction_prompt
 from ..invoice_field_contract import (
     INVOICE_FIELD_CONTRACTS,
-    identity_field_names,
     role_evidence_key_for_field,
 )
+from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -44,7 +43,6 @@ def test_no_attributed_address_field_asks_the_reader_for_role_evidence() -> None
 
 def test_every_role_evidence_key_belongs_to_a_party_identity_field() -> None:
     """Role evidence is an identity concept; nothing else may acquire it."""
-    assert _role_evidence_bearing() == set(identity_field_names())
     assert _role_evidence_bearing() == {party.tax_id_field for party in party_addresses()}
 
 

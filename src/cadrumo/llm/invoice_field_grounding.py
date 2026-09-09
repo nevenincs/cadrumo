@@ -148,9 +148,8 @@ class ExtractedRoleEvidence(BaseModel):
     evidence at all about whose it is -- which is exactly the question the
     counterparty role turns on.
 
-    Only the identity fields appear here, and their set is
-    :func:`~llm.invoice_field_contract.identity_field_names`, asserted by the
-    parity gate rather than maintained twice. Every attribute is an optional
+    Only the identity fields appear here, matching the role-bearing entries in
+    ``INVOICE_FIELD_CONTRACTS``. Every attribute is an optional
     string on the same terms as the other two halves: nothing is rejected or
     rewritten here, because the check that matters needs the document and this
     schema does not have it. A value that does not occur in the transcription is

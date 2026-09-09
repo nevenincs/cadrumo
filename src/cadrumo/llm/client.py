@@ -224,26 +224,6 @@ class _ProviderPacing:
 _PROVIDER_PACING = _ProviderPacing()
 
 
-def provider_pacing_remaining_s(provider: LLMProvider) -> float:
-    """Return how long ``provider`` is still paced for, in seconds.
-
-    Exposed so a batch surface can REPORT that it is waiting on a shared rate
-    limit rather than appearing to hang, and so a gate can observe the window
-    was armed rather than inferring it from elapsed time alone.
-    """
-    return _PROVIDER_PACING.remaining_s(provider)
-
-
-def reset_provider_pacing() -> None:
-    """Forget every armed rate-limit pause.
-
-    The pacing outlives a single client by design, so a test (or a genuinely
-    new run after an operator resolved a quota) would otherwise inherit a
-    window armed elsewhere.
-    """
-    _PROVIDER_PACING.clear()
-
-
 class _OnHostInferenceArena:
     """The process-wide occupancy bound on concurrent on-host inference.
 
@@ -332,27 +312,6 @@ def _on_host_inference_arena(settings: Settings) -> _OnHostInferenceArena:
         if _on_host_arena is None:
             _on_host_arena = _OnHostInferenceArena(settings.cadrumo_llm_local_inference_concurrency)
         return _on_host_arena
-
-
-def reset_on_host_inference_arena() -> None:
-    """Drop the process-wide arena so the next dispatch rebuilds it from settings.
-
-    Exists because the arena is sized once per process while settings are
-    per-configuration: a test (or a genuine settings reload) that changes the
-    concurrency bound would otherwise keep the first size forever.
-
-    Raises:
-        RuntimeError: When a slot is currently held. Rebuilding under an
-            in-flight request would hand the next arrival an empty arena while
-            a real inference is still resident, which is precisely the double
-            load the bound prevents -- so this refuses rather than resetting.
-    """
-    global _on_host_arena
-    with _ON_HOST_ARENA_LOCK:
-        if _on_host_arena is not None and _on_host_arena.held:
-            msg = "cannot reset the on-host inference arena while a slot is held"
-            raise RuntimeError(msg)
-        _on_host_arena = None
 
 
 class LLMClient:

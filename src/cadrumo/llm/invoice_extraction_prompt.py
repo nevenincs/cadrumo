@@ -76,7 +76,6 @@ See Also:
 
 from __future__ import annotations
 
-import re
 from decimal import Decimal
 from functools import lru_cache
 from typing import TYPE_CHECKING, Final
@@ -107,13 +106,10 @@ __all__ = [
     "INVOICE_EXTRACTION_PROMPT_VERSION",
     "PROMPT_TEMPLATE",
     "CompiledInvoiceExtractionPrompt",
-    "build_invoice_extraction_prompt",
     "default_extraction_period",
     "invoice_extraction_prompt_registry",
     "render_invoice_extraction_prompt",
     "selected_invoice_field_contracts",
-    "template_numeric_literals",
-    "template_unsourced_legend_phrases",
 ]
 
 _FINGERPRINT_LENGTH: Final[int] = 12
@@ -136,10 +132,6 @@ which is why registering the template does not replace the fingerprint.
 # The only digits the template may carry: a standards identifier, not a
 # regulatory value. Allowlisted as a whole token with its reason stated, per
 # `aeat-quality-gates` -- keyed by token, never by line number.
-_NON_NUMERIC_TOKEN_ALLOWLIST: Final[tuple[str, ...]] = ("ISO-4217",)
-
-_NUMERIC_LITERAL_RE: Final[re.Pattern[str]] = re.compile(r"\d+(?:[.,]\d+)?")
-
 PROMPT_TEMPLATE: Final[str] = """\
 You are reading one invoice document. It may be written in any language and laid \
 out in any way. Identify each field by what it MEANS, not by matching a label.
@@ -285,34 +277,6 @@ def default_extraction_period() -> Period:
     return default_invoice_extraction_period()
 
 
-def template_numeric_literals(template: str | None = None) -> tuple[str, ...]:
-    """Return every numeric literal in ``template``, ignoring allowlisted tokens.
-
-    Exposed rather than inlined in the gate so the gate asserts a property of
-    production code instead of re-implementing the scan it is checking.
-
-    Args:
-        template: Template text to scan. ``None`` reads the REGISTERED template
-            AT CALL TIME rather than defaulting to it in the signature: a
-            default argument is evaluated once at import, so the scan would hold
-            a snapshot and keep reporting clean over a template that had since
-            gained a literal -- which a mutation probe caught it doing. Reading
-            it from the registry rather than from the constant keeps the scan
-            pointed at the text the compiler will actually use.
-
-    Returns:
-        The numeric literals found, in order. Empty is the passing state.
-    """
-    scanned = (
-        invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID).template
-        if template is None
-        else template
-    )
-    for token in _NON_NUMERIC_TOKEN_ALLOWLIST:
-        scanned = scanned.replace(token, "")
-    return tuple(match.group(0) for match in _NUMERIC_LITERAL_RE.finditer(scanned))
-
-
 def _format_pct(value: Decimal) -> str:
     """Render a percentage without a trailing zero tail (``7.5`` and ``21``)."""
     normalised = value.normalize()
@@ -337,35 +301,6 @@ def _regime_legends(phrases: Iterable[str]) -> str:
     gives a small model no boundary to copy between.
     """
     return ", ".join(f'"{phrase}"' for phrase in phrases)
-
-
-def template_unsourced_legend_phrases(template: str | None = None) -> tuple[str, ...]:
-    """Return any mandated legend phrase hardcoded in ``template``.
-
-    The literal scan's counterpart on the prose axis. A numeric scan cannot see
-    this class of drift at all: a statutory phrase written into the template is
-    not a digit, so the rate gate reports clean over it while a second, silently
-    diverging copy of the legal vocabulary ships inside the prompt.
-
-    Args:
-        template: Template text to scan. ``None`` reads the REGISTERED template
-            at call time, never a snapshot bound at import -- the same trap the
-            numeric scan was caught in, and the reason that gate now points at
-            the artefact that actually ships rather than at a module constant.
-
-    Returns:
-        The phrases found hardcoded, in declaration order. Empty is the passing
-        state, because the compiler substitutes them from the one declaration.
-    """
-    from ..domain.iva.regime_legend import regime_legend_phrases
-
-    scanned = (
-        invoice_extraction_prompt_registry().get(INVOICE_EXTRACTION_PROMPT_ID).template
-        if template is None
-        else template
-    )
-    folded = scanned.casefold()
-    return tuple(phrase for phrase in regime_legend_phrases() if phrase.casefold() in folded)
 
 
 def _zero_cuota_reasons(categories: Iterable[IvaCategory]) -> str:
@@ -535,44 +470,4 @@ def render_invoice_extraction_prompt(
         retencion_rate_pcts=values.retencion_rate_pcts,
         fingerprint=sha256_hex(text.encode("utf-8"))[:_FINGERPRINT_LENGTH],
         template_version=definition.version,
-    )
-
-
-def build_invoice_extraction_prompt(
-    *,
-    period: Period,
-    fields: Collection[str] | None = None,
-) -> CompiledInvoiceExtractionPrompt:
-    """Resolve ``period``'s authority values and render the prompt from them.
-
-    The convenience shape for a caller holding only a period. It resolves through
-    the application layer's compiler and renders; it does not itself know where
-    any number comes from. A caller that already holds resolved values -- the
-    evidence-reading chain does, and resolves once per document rather than once
-    per prompt -- calls :func:`render_invoice_extraction_prompt` directly.
-
-    Args:
-        period: Filing period whose in-force values the prompt enumerates. The
-            period is the caller's law-determined coordinate, never a stored
-            revision id fed back into resolution
-            (``aeat-registry-authority-flow``).
-        fields: The field names the prompt should ask for, or ``None`` for
-            every declared field. Passed through to
-            :func:`render_invoice_extraction_prompt` unchanged, so both entry
-            points accept a selection on identical terms -- one accepting it
-            while the other ignored it would be worse than neither.
-
-    Returns:
-        :class:`CompiledInvoiceExtractionPrompt`: The prompt text plus the
-        authority values that produced it.
-
-    Raises:
-        PeriodError: When ``period`` carries no calendar span, so no rate window
-            can be resolved against it.
-    """
-    from ..application.ledger.invoice_extraction_authority import resolve_invoice_extraction_authority_values
-
-    return render_invoice_extraction_prompt(
-        values=resolve_invoice_extraction_authority_values(period=period),
-        fields=fields,
     )

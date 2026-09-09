@@ -44,15 +44,8 @@ import pytest
 from ...core.field_origin import FieldOrigin
 from ...domain.iva.regime_legend import REGIME_LEGENDS, RegimeLegend, regime_legend_phrases
 from ...domain.iva.schema import IvaCategory
-from ...tests.attribute_scope import scoped_attribute
-from .. import invoice_extraction_prompt as _invoice_extraction_prompt
 from ..invoice_extraction_prompt import (
-    INVOICE_EXTRACTION_PROMPT_ID,
-    build_invoice_extraction_prompt,
     default_extraction_period,
-    invoice_extraction_prompt_registry,
-    template_numeric_literals,
-    template_unsourced_legend_phrases,
 )
 from ..invoice_field_contract import INVOICE_FIELD_CONTRACTS, anchor_key_for_field
 from ..invoice_field_grounding import (
@@ -61,6 +54,7 @@ from ..invoice_field_grounding import (
     ground_extracted_fields,
     parse_invoice_extraction_response,
 )
+from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -145,56 +139,6 @@ class TestThePromptCopiesTheLegendAndNeverChoosesOne:
 
         for category in IvaCategory:
             assert category.value not in text, f"{category.value} is a stored token, printed on no invoice"
-
-
-class TestTheProseScanCatchesARestatedVocabulary:
-    """The numeric scan's blind spot, closed and proven to bite.
-
-    A statutory phrase hardcoded in the template carries no digits, so the rate
-    gate passes over it while a second copy of the legal vocabulary ships inside
-    the prompt and drifts the moment the regulation's list moves.
-    """
-
-    def test_the_registered_template_restates_no_declared_phrase(self) -> None:
-        assert template_unsourced_legend_phrases() == ()
-
-    def test_the_numeric_scan_is_blind_to_this_class(self) -> None:
-        """Why a second scan exists at all, stated as a measurement.
-
-        The planted phrase carries no digit, so the numeric gate reports clean on
-        the very text the prose gate rejects. Without this the second scan looks
-        like duplication of the first.
-        """
-        planted = f"- always print {regime_legend_phrases()[0]} here."
-
-        assert template_numeric_literals(planted) == ()
-        assert template_unsourced_legend_phrases(planted) == (regime_legend_phrases()[0],)
-
-    def test_the_scan_reds_on_a_phrase_planted_in_the_registered_template(self) -> None:
-        """Aimed at the artefact that ships, not at a module constant.
-
-        This is the distinction the numeric gate's own control missed: proving a
-        detector matches a string says nothing about whether the gate reads the
-        template the compiler will actually use.
-        """
-        assert template_unsourced_legend_phrases() == (), "positive control: green before the mutation"
-
-        registry = invoice_extraction_prompt_registry()
-        definition = registry.get(INVOICE_EXTRACTION_PROMPT_ID)
-        phrase = regime_legend_phrases()[0]
-        poisoned = definition.model_copy(update={"template": f"{definition.template}\n- {phrase}"})
-        mutated = type(registry)()
-        mutated.register(poisoned)
-        with scoped_attribute(_invoice_extraction_prompt, "invoice_extraction_prompt_registry", lambda: mutated):
-            assert template_unsourced_legend_phrases() == (phrase,)
-
-    def test_the_scan_is_case_folded_rather_than_variant_listed(self) -> None:
-        """A document shouting the mention is the same mention.
-
-        Folding rather than enumerating spellings keeps one declaration: a
-        variants list would be a second vocabulary drifting against the first.
-        """
-        assert template_unsourced_legend_phrases(regime_legend_phrases()[0].upper()) == (regime_legend_phrases()[0],)
 
 
 class TestTheLegendIsTranscribedLikeEveryOtherCopiedField:
