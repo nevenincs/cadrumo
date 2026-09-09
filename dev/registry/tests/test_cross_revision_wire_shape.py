@@ -7,10 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..analysis.cross_revision_wire_shape import (
-    cross_revision_wire_shape_transitions,
-    identity_is_comparable_across_revisions,
-)
+from ..analysis.cross_revision_wire_shape import cross_revision_wire_shape_transitions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -18,9 +15,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def _write_revision(root: Path, modelo: str, revision: str, fields: tuple[dict[str, object], ...]) -> None:
     export = root / modelo / "revisions" / revision / "export"
     export.mkdir(parents=True)
-    derivations = [
-        {"field": field, "parser_field": {"aeat_type": field.pop("aeat_type", "Num")}} for field in map(dict, fields)
-    ]
+    derivations = []
+    for original in fields:
+        field = dict(original)
+        casilla = field.pop("casilla_id", "17")
+        derivations.append(
+            {
+                "field": field,
+                "parser_field": {
+                    "aeat_type": field.pop("aeat_type", "Num"),
+                    "content": field.pop("content", "3 enteros y 2 decimales"),
+                },
+                "semantic_entry": {"casilla_id": casilla},
+            },
+        )
     (export / "_generation.provenance.json").write_text(
         json.dumps({"field_derivations": derivations}),
         encoding="utf-8",
@@ -37,7 +45,7 @@ def test_a_planted_wire_shape_change_is_reported(tmp_path: Path) -> None:
     transitions = tuple(cross_revision_wire_shape_transitions(tmp_path))
 
     assert len(transitions) == 1
-    assert transitions[0].export_field_id == "modelo-999-page-01-cuota"
+    assert transitions[0].casilla_id == "17"
     assert transitions[0].earlier_revision == "2025"
     assert transitions[0].later_revision == "2026"
 
@@ -51,8 +59,15 @@ def test_an_unchanged_field_is_not_reported(tmp_path: Path) -> None:
     assert not tuple(cross_revision_wire_shape_transitions(tmp_path))
 
 
-def test_a_change_the_official_column_accounts_for_is_marked_as_such(tmp_path: Path) -> None:
-    """A design that moved is a different thing from a design that stayed silent."""
+def test_a_change_the_design_accounts_for_is_marked_as_such(tmp_path: Path) -> None:
+    """A design that moved is a different thing from a design that stayed silent.
+
+    The design states shape TWICE - the type column and the content cell - and
+    comparing only the type column called one real transition unexplained that
+    the design accounts for plainly: a rate whose content moved from a scaled
+    decimal to an enumeration of permitted digit strings, while its type column
+    said Num throughout.
+    """
     earlier = {
         "id": "modelo-999-page-01-cuota",
         "data_type": "decimal",
@@ -67,17 +82,18 @@ def test_a_change_the_official_column_accounts_for_is_marked_as_such(tmp_path: P
 
     transition = next(iter(cross_revision_wire_shape_transitions(tmp_path)))
 
-    assert transition.official_type_changed
+    assert transition.official_statement_changed
 
 
-def test_a_positionally_numbered_identity_is_not_compared() -> None:
-    """An ordinal assigned per render does not name the same slot twice.
+def test_a_field_carrying_no_casilla_is_not_compared(tmp_path: Path) -> None:
+    """The casilla number is the identity; a slot that carries none has none.
 
-    Joining on it lifted the compared population from 1,628 to 5,223 and
-    manufactured 745 transitions that are overwhelmingly renumbering. That is a
-    coordinate join, and this corpus has already produced one confident number
-    that way which proved to be noise.
+    Fillers, headers and literals occupy the record without standing for a
+    casilla, so there is nothing to follow across revisions and comparing them
+    positionally would be a coordinate join.
     """
-    assert identity_is_comparable_across_revisions("modelo-390-page-01-declared-representante")
-    assert not identity_is_comparable_across_revisions("m151-2015.did.f006")
-    assert not identity_is_comparable_across_revisions("m303-2024.pagina02.f011")
+    field = {"id": "modelo-999-page-01-filler", "data_type": "text", "length": 3, "signed": False, "decimals": None}
+    _write_revision(tmp_path, "999", "2025", ({**field, "casilla_id": None},))
+    _write_revision(tmp_path, "999", "2026", ({**field, "casilla_id": None, "length": 9},))
+
+    assert not tuple(cross_revision_wire_shape_transitions(tmp_path))

@@ -58,6 +58,15 @@ def identity_is_comparable_across_revisions(identity: str) -> bool:
     return not _POSITIONAL_IDENTITY.match(identity)
 
 
+#: What the design states about a field's shape: its type column and its content
+#: cell. Both are compared, because a design that moves either has accounted for
+#: the change, and reading only the type column called an accounted-for
+#: transition unexplained.
+type OfficialStatement = tuple[str | None, str | None]
+
+#: A field's emitted wire shape, as the tuple of facts below.
+type WireShape = tuple[object, ...]
+
 #: The emitted facts that together are a field's wire shape. A change in any of
 #: them changes how a value reaches a filing, which is why they travel as one
 #: tuple rather than being compared field by field.
@@ -69,40 +78,58 @@ class WireShapeTransition:
     """One field identity whose wire shape differs between two revisions."""
 
     modelo: str
-    export_field_id: str
+    casilla_id: str
     earlier_revision: str
     later_revision: str
-    earlier_shape: tuple[object, ...]
-    later_shape: tuple[object, ...]
-    earlier_aeat_type: str | None
-    later_aeat_type: str | None
+    earlier_shape: WireShape
+    later_shape: WireShape
+    earlier_official: OfficialStatement
+    later_official: OfficialStatement
 
     @property
-    def official_type_changed(self) -> bool:
-        """Whether the official type column also moved.
+    def official_statement_changed(self) -> bool:
+        """Whether the design itself moved, on either statement it makes.
 
-        A shape change the DESIGN accounts for is a different thing from one it
+        A design states a field's shape twice: the type column and the content
+        cell. Comparing only the type column called one transition unexplained
+        that the design accounts for plainly - a rate whose content moved from
+        "3 enteros y 2 decimales" to an enumeration of permitted digit strings,
+        which is why its emitted shape moved from a scaled decimal to an
+        enumerated integer while the type column said Num throughout.
+
+        A shape change the design accounts for is a different thing from one it
         does not. Both are reported; only the second is unexplained by its own
         source.
         """
-        return self.earlier_aeat_type != self.later_aeat_type
+        return self.earlier_official != self.later_official
 
 
-def _revision_shapes(modelo_root: Path) -> dict[str, dict[str, tuple[tuple[object, ...], str | None]]]:
-    shapes: dict[str, dict[str, tuple[tuple[object, ...], str | None]]] = {}
+def _revision_shapes(modelo_root: Path) -> dict[str, dict[str, tuple[WireShape, OfficialStatement]]]:
+    shapes: dict[str, dict[str, tuple[WireShape, OfficialStatement]]] = {}
     for manifest_path in sorted(modelo_root.glob("revisions/*/export/_generation.provenance.json")):
         revision = manifest_path.parts[-3]
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        by_identity: dict[str, tuple[tuple[object, ...], str | None]] = {}
+        by_identity: dict[str, tuple[WireShape, OfficialStatement]] = {}
         for entry in manifest.get("field_derivations") or ():
             field = entry.get("field") or {}
-            identity = field.get("id")
-            if not isinstance(identity, str):
+            parser_field = entry.get("parser_field") or {}
+            # The casilla number is the canonical AEAT identity. An export field exists
+            # to carry a casilla, so the association is known by construction, and a
+            # casilla means the same thing in every revision that declares it. The
+            # generated field NAME does not: most modelos number it per render, so
+            # joining on it compared one modelo of fourteen and called the rest
+            # incomparable. That was wrong, and it understated this screen's reach by
+            # more than it overstated anything.
+            casilla_id = (entry.get("semantic_entry") or {}).get("casilla_id")
+            if casilla_id is None:
                 continue
             shape = tuple(field.get(name) for name in _WIRE_FACTS)
-            if not identity_is_comparable_across_revisions(identity):
-                continue
-            by_identity[identity] = (shape, (entry.get("parser_field") or {}).get("aeat_type"))
+            aeat_type = parser_field.get("aeat_type")
+            content = parser_field.get("content")
+            by_identity[str(casilla_id)] = (
+                shape,
+                (aeat_type if isinstance(aeat_type, str) else None, content if isinstance(content, str) else None),
+            )
         shapes[revision] = by_identity
     return shapes
 
@@ -129,13 +156,13 @@ def cross_revision_wire_shape_transitions(modelos_root: Path | None = None) -> I
                     continue
                 yield WireShapeTransition(
                     modelo=modelo_root.name,
-                    export_field_id=identity,
+                    casilla_id=identity,
                     earlier_revision=earlier,
                     later_revision=later,
                     earlier_shape=earlier_shape,
                     later_shape=later_shape,
-                    earlier_aeat_type=earlier_type,
-                    later_aeat_type=later_type,
+                    earlier_official=earlier_type,
+                    later_official=later_type,
                 )
 
 
@@ -147,12 +174,12 @@ def screen_authority(_authority: object = None, _modelo_ids: Sequence[str] = ())
 def main() -> int:
     """Report every wire-shape transition, and say what the report does not mean."""
     transitions = tuple(cross_revision_wire_shape_transitions())
-    unexplained = [item for item in transitions if not item.official_type_changed]
+    unexplained = [item for item in transitions if not item.official_statement_changed]
     for item in transitions:
-        marker = "design moved" if item.official_type_changed else "DESIGN SILENT"
+        marker = "design moved" if item.official_statement_changed else "DESIGN SILENT"
         print(
             f"{item.modelo} {item.earlier_revision} -> {item.later_revision} "
-            f"{item.export_field_id}: {item.earlier_shape} -> {item.later_shape} [{marker}]",
+            f"casilla {item.casilla_id}: {item.earlier_shape} -> {item.later_shape} [{marker}]",
         )
     print(
         f"\n{len(transitions)} wire-shape transition(s), of which {len(unexplained)} carry no change "
