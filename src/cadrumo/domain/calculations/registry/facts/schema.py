@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -33,6 +34,7 @@ __all__ = [
     "FactSelector",
     "FactVariantId",
     "GovernedFact",
+    "GovernedFactCatalogue",
     "GovernedFactFamily",
     "GovernedFactVariant",
     "MappingFactEntry",
@@ -293,5 +295,20 @@ class GovernedFact(RegistryModel):
             if unknown:
                 raise RegistryValidationError(
                     f"governed fact {self.fact_id!r} precedence names unknown variants {sorted(unknown)!r}"
+                )
+        return self
+
+
+class GovernedFactCatalogue(RegistryModel):
+    """Governed facts keyed by their stable semantic identity."""
+
+    facts: Mapping[FactId, GovernedFact] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _validate_fact_keys(self) -> GovernedFactCatalogue:
+        for fact_id, fact in self.facts.items():
+            if fact_id != fact.fact_id:
+                raise RegistryValidationError(
+                    f"governed fact catalogue key {fact_id!r} does not match fact_id {fact.fact_id!r}",
                 )
         return self

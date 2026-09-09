@@ -13,12 +13,13 @@ from ..errors import RegistryValidationError
 from ..loader_cache import toml_file_fingerprint
 from ..loader_fingerprints import RegistryPathFingerprints
 from .loader import load_governed_facts
-from .schema import GovernedFact
+from .schema import GovernedFact, GovernedFactCatalogue
 
 __all__ = [
     "FACT_PROVIDER_REGISTRATIONS",
     "FactProviderCompiler",
     "FactProviderRegistration",
+    "compile_registered_fact_providers",
     "fact_provider_for_directory",
     "registered_fact_provider_directories",
     "validate_fact_provider_registrations",
@@ -89,6 +90,23 @@ def registered_fact_provider_directories() -> dict[str, FactProviderRegistration
         for registration in FACT_PROVIDER_REGISTRATIONS
         for directory in registration.owned_directories
     }
+
+
+def compile_registered_fact_providers(registry_root: Path) -> GovernedFactCatalogue:
+    """Compile every registered provider into one identity-keyed catalogue."""
+    facts: dict[str, GovernedFact] = {}
+    owner_by_fact_id: dict[str, str] = {}
+    for registration in FACT_PROVIDER_REGISTRATIONS:
+        for fact in registration.compile(registry_root):
+            previous_owner = owner_by_fact_id.get(fact.fact_id)
+            if previous_owner is not None:
+                raise RegistryValidationError(
+                    f"governed fact {fact.fact_id!r} from provider {registration.provider_id!r} "
+                    f"is already owned by provider {previous_owner!r}",
+                )
+            owner_by_fact_id[fact.fact_id] = registration.provider_id
+            facts[fact.fact_id] = fact
+    return GovernedFactCatalogue(facts=facts)
 
 
 def fact_provider_for_directory(directory: str) -> FactProviderRegistration:

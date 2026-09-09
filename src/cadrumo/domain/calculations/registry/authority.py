@@ -43,6 +43,7 @@ from ._verdict_cache import (
 )
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .errors import RegistrySnapshotError, RegistryValidationError
+from .facts.providers import compile_registered_fact_providers
 from .identity import (
     FingerprintTuples,
     RegistryIdentity,
@@ -1101,6 +1102,7 @@ def construct_authority(
     from .loader import load_registry_tree
 
     modelos, catalogues = load_registry_tree(root, identity=identity)
+    facts = compile_registered_fact_providers(root)
     # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
     # onto the shared catalogues so every snapshot projects the same authority.
     # Grounding gate: every treaty override must cite a treaty article defined in
@@ -1125,6 +1127,7 @@ def construct_authority(
     catalogues = catalogues.model_copy(
         update={
             "legal": {**catalogues.legal, **supplementary_ordenes.legal},
+            "facts": facts,
             "convenio": convenio,
             "supplementary_ordenes": supplementary_ordenes.authorities,
         },
