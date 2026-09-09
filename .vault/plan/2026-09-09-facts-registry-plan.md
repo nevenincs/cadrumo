@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:63f0bcee23b59f70c1b4ae90d2761a9c7d59fa75e34b4b71b4a5488042414f84'
+body_hash: 'sha256:3ee87fd6a3a0537abd8da3e4c8d6caf8320ee846a1c8faf42dacb1437f2170e2'
 ---
 
 # `facts-registry` plan
@@ -115,7 +115,7 @@ Enroll external-constant candidates and already revision-backed duplicate values
 
 Exercise provider compilation, identity, cache invalidation, exact resolution, and provenance once all provider phases converge.
 
-- [ ] `W02.P09.S23` - Verify provider compilation exact resolution and provenance at the Wave 2 handoff; `src/cadrumo/domain/calculations/registry/tests`.
+- [x] `W02.P09.S23` - Verify provider compilation exact resolution and provenance at the Wave 2 handoff; `src/cadrumo/domain/calculations/registry/tests`.
 - [ ] `W02.P09.S46` - Run canonical strict production type checking at the Wave 2 handoff; `justfile check-types and dev/quality/types.py`.
 - [ ] `W02.P09.S47` - Run both dead-code audits at the Wave 2 handoff; `dev/audit/dead_code.py and dev/audit/unreachable_code.py`.
 

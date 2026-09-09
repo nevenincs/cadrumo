@@ -51,7 +51,11 @@ unit = "EUR"
     )
 
 
-def test_fact_content_participates_in_authority_identity(tmp_path: Path) -> None:
+def test_fact_content_participates_in_authority_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", FACT_PROVIDER_REGISTRATIONS[:1])
     facts_dir = tmp_path / "facts"
     facts_dir.mkdir()
     path = facts_dir / "0001-test-limit.toml"
@@ -67,7 +71,11 @@ def test_fact_content_participates_in_authority_identity(tmp_path: Path) -> None
     assert before != after
 
 
-def test_fact_catalogue_identity_prevents_reusing_a_green_validation_memo(tmp_path: Path) -> None:
+def test_fact_catalogue_identity_prevents_reusing_a_green_validation_memo(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", FACT_PROVIDER_REGISTRATIONS[:1])
     shared_legal: dict[str, LegalReference] = {}
     shared_sources: dict[str, SourceReference] = {}
     RegistryValidator(RegistryCatalogues(legal=shared_legal, sources=shared_sources)).validate_registry(())
