@@ -8,7 +8,7 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.classification.policies import SensitivityClass
-from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from .....core.errors.error_codes import build_error_envelope
 from .....core.storage_taxonomy import StorageCategory, StorageCustodyProfile
 from .....core.storage_taxonomy_locations import storage_location
 from ..errors import NamespaceRegistryError
@@ -627,10 +627,6 @@ def test_the_retired_plaintext_manifest_has_no_path_definition() -> None:
 # ---------------------------------------------------------------------------
 # contract: NamespaceRegistryError error-registry and real-behavior invariant tests
 # ---------------------------------------------------------------------------
-
-
-def test_namespace_registry_error_is_in_error_registry() -> None:
-    assert "INTEGRITY_STORAGE_NAMESPACE_REGISTRY" in ERROR_REGISTRY
 
 
 def test_namespace_registry_error_round_trips_through_build_error_envelope() -> None:

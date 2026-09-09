@@ -22,7 +22,6 @@ from ....domain.attachments.service import (
     AttachmentBytesContent,
     AttachmentIngestionRequest,
     add_attachment,
-    load_attachment,
 )
 from ._action_test_support import (
     _BUCKET_ID,
@@ -138,7 +137,7 @@ def test_detach_leaves_the_attachment_bytes_in_the_store(secure_objects: SecureO
 
     _detach(secure_objects, transaction_id=transaction_id, attachment_ids=(attachment_id,))
 
-    assert load_attachment(_store(secure_objects), attachment_id=attachment_id) is not None
+    assert _store(secure_objects).load_manifest(attachment_id) is not None
 
 
 def test_detach_can_clear_the_last_attachment(secure_objects: SecureObjectRepository) -> None:

@@ -10,16 +10,8 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.user_profile.errors import UserProfileValidationError
 from ...domain.user_profile.portable_export import UserProfilePortableExport
-from .bundle import (
-    SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
-    UnsupportedBundleSchemaVersionError,
-    validate_bundle_payload,
-)
 from .custody_ports import (
-    ProfilePassphraseKdfParameters,
-    ProfileRecordEncryptedBlob,
     default_profile_record_crypto_port,
 )
 
@@ -129,104 +121,7 @@ def encrypt_profile_bundle_for_passphrase(
     )
 
 
-def decrypt_profile_bundle_with_passphrase(
-    envelope: EncryptedProfileBundleExport,
-    *,
-    passphrase: str,
-) -> UserProfilePortableExport:
-    """Decrypt ``envelope`` and validate the wrapped ``UserProfilePortableExport``.
-
-    Payload validation routes through
-    :func:`~cadrumo.application.user_profile.validate_bundle_payload`, so an
-    non-current ``bundle_schema_version`` propagates as
-    :class:`UnsupportedBundleSchemaVersionError` (naming the version) rather
-    than being flattened into the generic envelope error.
-
-    The two version gates below are deliberately different shapes, and the
-    difference is the presence of a migration mechanism. The PAYLOAD version is
-    checked against a floor-to-current range carrying a per-hop upgrader chain,
-    so an older payload has a defined route forward and the range is designed to
-    widen once the floor freezes; it is single-valued today only because the
-    floor still equals the current version. The TRANSPORT envelope has no floor,
-    no upgrader chain and no lineage enrolment, so nothing could ever carry an
-    older layout forward -- accepting one would mean reading bytes under a
-    structure this build does not implement. A ceiling there refused a newer
-    envelope while admitting every older one, which is the direction with no
-    recovery behind it, so the transport gate is exact.
-    """
-    if envelope.encrypted_bundle_schema_version != _ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION:
-        raise UserProfileValidationError(
-            translated_message="errors.refused.refused_user_profile_validation",
-            context={
-                "envelope_schema_version": str(envelope.encrypted_bundle_schema_version),
-                "supported_schema_version": str(_ENCRYPTED_BUNDLE_ENVELOPE_SCHEMA_VERSION),
-            },
-        )
-    if envelope.payload_model != _ENCRYPTED_BUNDLE_PAYLOAD_MODEL:
-        raise UserProfileValidationError(
-            translated_message="errors.refused.refused_user_profile_validation",
-            context={"payload_model_expected": False},
-        )
-    if envelope.payload_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
-        raise UserProfileValidationError(
-            translated_message="errors.refused.refused_user_profile_validation",
-            context={"payload_schema_supported": False},
-        )
-    if envelope.kdf != _ENCRYPTED_BUNDLE_KDF:
-        raise UserProfileValidationError(
-            translated_message="errors.refused.refused_user_profile_validation",
-            context={"kdf_supported": False},
-        )
-    # Gated against the Argon2 ALGORITHM version the writer stamps, which is a
-    # different concept from any on-disk record SHAPE version: the two carry
-    # unequal values, so gating on the wrong one would refuse every bundle this
-    # build writes.
-    crypto = default_profile_record_crypto_port()
-    kdf_policy = crypto.passphrase_kdf_policy()
-    if envelope.kdf_version != kdf_policy.version:
-        raise UserProfileValidationError(
-            translated_message="errors.refused.refused_user_profile_validation",
-            context={
-                "envelope_kdf_version": str(envelope.kdf_version),
-                "supported_kdf_version": str(kdf_policy.version),
-            },
-        )
-    try:
-        salt = base64.b64decode(envelope.salt_b64.encode("ascii"), validate=True)
-        ciphertext = base64.b64decode(envelope.ciphertext_b64.encode("ascii"), validate=True)
-        plaintext = crypto.open_with_passphrase(
-            ProfileRecordEncryptedBlob.from_wire(ciphertext),
-            passphrase=passphrase.encode(UTF_8_ENCODING),
-            parameters=ProfilePassphraseKdfParameters(
-                version=envelope.kdf_version,
-                memory_cost=envelope.memory_cost,
-                time_cost=envelope.time_cost,
-                parallelism=envelope.parallelism,
-                salt=salt,
-            ),
-            associated_data=_ENCRYPTED_BUNDLE_AAD,
-        )
-    except Exception as exc:
-        raise UserProfileValidationError(
-            translated_message="errors.refused.refused_user_profile_validation",
-            context={"payload_decrypted": False},
-        ) from exc
-    try:
-        return validate_bundle_payload(
-            plaintext,
-            expected_written_version=envelope.payload_schema_version,
-        )
-    except UnsupportedBundleSchemaVersionError:
-        raise
-    except Exception as exc:
-        raise UserProfileValidationError(
-            translated_message="errors.refused.refused_user_profile_validation",
-            context={"payload_valid": False},
-        ) from exc
-
-
 __all__ = [
     "EncryptedProfileBundleExport",
-    "decrypt_profile_bundle_with_passphrase",
     "encrypt_profile_bundle_for_passphrase",
 ]

@@ -10,7 +10,7 @@ the common fail-closed contract that they must satisfy.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Final, Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, StringConstraints, model_validator
 
@@ -60,19 +60,6 @@ RegistryClosureLimbOutcome = Literal[
     RegistryClosureLimbOutcomeKind.UNMEASURED,
 ]
 """Every outcome, for the strict limb field."""
-
-CLOSURE_SATISFYING_OUTCOMES: Final[frozenset[RegistryClosureLimbOutcomeKind]] = frozenset(
-    {
-        RegistryClosureLimbOutcomeKind.SATISFIED,
-        RegistryClosureLimbOutcomeKind.NOT_APPLICABLE,
-    },
-)
-"""The outcomes that do not withhold closure.
-
-``NOT_APPLICABLE`` is included deliberately: a capability declared out of scope is not a
-gap, and treating it as one would refuse a filing over evidence nothing required. The
-pair was tested twice in `filing_export_coverage`, once directly and once as its own
-negation, so the two could disagree about what counts as satisfied."""
 
 type RegistryClosureRefusalReason = Literal[
     "conflicting_evidence",

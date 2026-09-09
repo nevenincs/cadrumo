@@ -764,7 +764,7 @@ class GoogleDriveProvider:
                     field="content_hash",
                     provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
                 ),
-        )
+            )
         label_clean = sanitize_provider_object_label(label)
         content_hash_clean = content_hash
         service = self._get_service()

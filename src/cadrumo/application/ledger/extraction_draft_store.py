@@ -194,5 +194,3 @@ def write_extraction_draft(
     )
     _repository(bucket_id, settings).save(updated)
     return updated
-
-

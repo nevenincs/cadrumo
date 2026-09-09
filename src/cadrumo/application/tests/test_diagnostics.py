@@ -957,17 +957,6 @@ def test_config_repair_report_marks_registry_integrity_internal() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_diagnostic_model_error_is_registered_in_error_registry() -> None:
-    """DiagnosticModelError must be reachable via the ERROR_REGISTRY by its code string."""
-
-    from ...core.errors.error_codes import ERROR_REGISTRY, get_registered_error_code
-    from ..errors import DiagnosticModelError
-
-    code = get_registered_error_code(DiagnosticModelError)
-    assert code.code in ERROR_REGISTRY
-    assert ERROR_REGISTRY[code.code] == code
-
-
 def test_diagnostic_model_error_round_trips_through_build_error_envelope() -> None:
     """build_error_envelope must produce a well-formed envelope for DiagnosticModelError."""
 

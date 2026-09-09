@@ -24,6 +24,7 @@ from .filesystem_primitives import (
     windows_file_information_type,
 )
 
+
 def compare_and_replace_profile_custody_local_record(
     path: Path,
     *,

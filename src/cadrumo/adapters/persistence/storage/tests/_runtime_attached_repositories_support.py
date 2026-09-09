@@ -103,7 +103,6 @@ from .....domain.submission.models import (
     ModeloPresentado,
     SubmissionAttempt,
     SubmissionStatus,
-    make_submission_id,
 )
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.models import Transaction, TransactionCatalogue
@@ -429,7 +428,7 @@ def _modelo_draft(label: str) -> ModeloDraft:
 def _submission(label: str) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
     draft_id = f"draft-{label}"
-    submission_id = make_submission_id(draft_id, 1)
+    submission_id = "0123456789abcdef"
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft_id,

@@ -389,8 +389,6 @@ fails that gate, which is the whole reason the tuple exists.
 """
 
 
-
-
 def contract_for_field(field_name: str) -> InvoiceFieldContract:
     """Return the declared contract for ``field_name``.
 

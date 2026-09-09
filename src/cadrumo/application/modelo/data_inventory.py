@@ -33,10 +33,8 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.i18n import output_language
-from ...core.logging import get_logger
 from ...core.period import Period
 from ...core.resources.bundled_data import bundled_path
-from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -45,17 +43,12 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.loader import load_registry_tree
-from ...domain.calculations.registry.profile_grounding import (
-    binding_profile_keys,
-    build_profile_grounding_index,
-)
+from ...domain.calculations.registry.profile_grounding import binding_profile_keys
 from ...domain.calculations.registry.schema import DataBindingDefinition
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.calculations.registry.temporal import select_revision
 from .binding_readiness import profile_resolvable_binding_ids
-
-_log = get_logger(__name__)
 
 # Sources whose calculate resolvers read bucket-local observation, register, or
 # invoice evidence rather than the general ledger, taxpayer profile, or a
@@ -347,54 +340,8 @@ def _append_binding_inventory_entry(
         buckets.unbucketed_sources.append(entry)
 
 
-def profile_requirements_for_binding(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: Period,
-    binding_id: str,
-) -> str:
-    """Name the profile facts one binding consumes, as grounded requirement text.
-
-    A binding id names the registry's internal consumer of a profile fact and
-    appears nowhere in the profile editor, so an operator told to set one has
-    nothing to act on. This resolves the binding to the facts behind it.
-
-    Lives here rather than at the CLI boundary because the binding definitions
-    it reads are registry state: resolving them at the entrypoint would put a
-    registry-authority read in a transport layer that is budgeted to hold none.
-
-    Best-effort by contract. An unresolvable snapshot, a binding id matching no
-    row, or a binding naming no profile key all return the empty string, and
-    the caller keeps whatever guidance it already had. A degraded message is
-    worse than a resolved one and better than none.
-    """
-    from ...domain.user_profile.loader import load_user_profile_schema
-    from ..user_profile.preflight import format_profile_path_requirements
-
-    try:
-        authority = bundled_authority()
-        revision = select_revision(authority.modelo(modelo), filing_year=filing_year, period=period.registry_token)
-        keys = next(
-            (binding_profile_keys(b) for b in revision.bindings if str(b.id) == binding_id),
-            (),
-        )
-        if not keys:
-            return ""
-        rendered = format_profile_path_requirements(
-            keys,
-            schema=load_user_profile_schema(),
-            grounding_index=build_profile_grounding_index(authority),
-        )
-    except Exception:
-        _log.debug("profile-fact lookup for binding failed", exc_info=True)
-        return ""
-    return ", ".join(rendered)
-
-
 __all__ = [
     "DataInventoryCasilla",
     "DataInventoryChecklist",
     "data_inventory_checklist",
-    "profile_requirements_for_binding",
 ]

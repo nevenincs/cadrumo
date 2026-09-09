@@ -159,9 +159,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
         """Tell the operator when all three reconciliation projections are empty."""
         projection = self.controller.projection
         if not (
-            projection.invoice_reconciliations
-            or projection.link_inconsistencies
-            or projection.affected_declarations
+            projection.invoice_reconciliations or projection.link_inconsistencies or projection.affected_declarations
         ):
             self.query_one("#ledger-flow-status", Static).update(ledger_copy("tui.ledger.reconciliation.empty"))
 

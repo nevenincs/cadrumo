@@ -29,9 +29,9 @@ import json
 import sys
 from typer.testing import CliRunner
 from cadrumo.entrypoints.cli import app
-from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
-nodes = command_spec_nodes()
+nodes = COMMAND_GRAPH.nodes()
 families = {{node.path[2] for node in nodes if len(node.path) == 3 and node.path[:2] == ("aeat", "app")}}
 family = {family!r}
 family_path = ("aeat", "app", family)
@@ -101,9 +101,9 @@ import json
 import sys
 from typer.testing import CliRunner
 from cadrumo.entrypoints.cli import app
-from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
-nodes = command_spec_nodes()
+nodes = COMMAND_GRAPH.nodes()
 selected = next(node for node in nodes if node.path == ("aeat", "app", "live", "portals", "list"))
 assert selected.spec.handler is not None and selected.spec.handler.target is not None
 selected_handler = selected.spec.handler.target.module

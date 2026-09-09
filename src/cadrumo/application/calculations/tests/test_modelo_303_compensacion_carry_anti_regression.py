@@ -245,5 +245,3 @@ def test_carry_in_tracks_prior_period_saldo_magnitude(
 
     assert carried_saldo > Decimal("0")
     assert casilla_110 == carried_saldo
-
-

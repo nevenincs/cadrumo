@@ -103,4 +103,3 @@ def test_a_reference_truncated_to_another_width_is_refused(width: int) -> None:
     """A second producer disagreeing about the width is what this guards."""
     with pytest.raises(ValidationError):
         LiveIvaAuthOutcome(**_outcome_fields(), diagnostic_ref=f"sha256:{'a' * width}")
-

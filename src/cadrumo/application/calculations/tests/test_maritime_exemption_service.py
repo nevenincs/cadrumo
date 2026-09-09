@@ -224,5 +224,3 @@ class TestResolveMaritimeExemptionRetmarGate:
         result = resolve_maritime_exemption(facts=MaritimeWorkerFacts())
         assert result.observations == ()
         assert result.casilla_values == {}
-
-

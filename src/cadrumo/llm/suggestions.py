@@ -242,5 +242,3 @@ __all__ = [
     "LLMSuggestionRejectionResult",
     "OperatorIvaDerivationResult",
 ]
-
-

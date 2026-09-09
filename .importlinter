@@ -178,7 +178,6 @@ ignore_imports =
     cadrumo.core.tests.** -> cadrumo.application.**
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
-    cadrumo.core.tests.** -> cadrumo.entrypoints.**
     cadrumo.core.tests.** -> cadrumo.llm.**
     # The shared fixture package reaches storage itself, so a core test that
     # imports a helper from it inherits the edge. Both the bare package and its
@@ -481,7 +480,6 @@ ignore_imports =
     cadrumo.core.tests.** -> cadrumo.application.**
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
-    cadrumo.core.tests.** -> cadrumo.entrypoints.**
     # cadrumo.llm is a declared sibling layer of adapters, and the family above
     # enumerates one pattern per layer PAIR -- so a new pair needs a line even
     # though the prose says a new test does not. The same pattern is already

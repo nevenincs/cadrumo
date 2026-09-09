@@ -97,6 +97,10 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
+from dev.registry.maintenance_support import UnattributedOraclePayload as _UnattributedOraclePayload
+from dev.registry.maintenance_support import (
+    load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
+)
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from ..application.registry.errors import RegistryPreconditionCondition, registry_terminal_refusal
@@ -116,19 +120,6 @@ from ..domain.calculations.registry.export import (
     derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings,
 )
 from ..domain.calculations.registry.export_parse import xml_dictionary_entries as _xml_dictionary_entries
-from ..domain.calculations.registry.external_grounding import (
-    RegistryExternalGroundingAudit as _RegistryExternalGroundingAudit,
-)
-from ..domain.calculations.registry.external_grounding import (
-    RevisionExternalGroundingRow as _RevisionExternalGroundingRow,
-)
-from ..domain.calculations.registry.external_grounding import UnattributedOraclePayload as _UnattributedOraclePayload
-from ..domain.calculations.registry.external_grounding import (
-    build_external_grounding_audit as _build_external_grounding_audit,
-)
-from ..domain.calculations.registry.external_grounding import (
-    load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
-)
 from ..domain.calculations.registry.ids import BindingId as _BindingId
 from ..domain.calculations.registry.ids import FormulaId as _FormulaId
 from ..domain.calculations.registry.ids import LegalRefId as _LegalRefId
@@ -150,6 +141,15 @@ from ..domain.calculations.registry.support_matrix import ModeloEntry as _Modelo
 from ..domain.calculations.registry.support_matrix import build_support_matrix as _build_support_matrix
 from ..domain.calculations.registry.support_matrix import revision_capability_probe as _revision_capability_probe
 from ..domain.calculations.registry.validate_registry_scope import validate_registry_scope as _validate_registry_scope
+from .external_grounding import (
+    RegistryExternalGroundingAudit as _RegistryExternalGroundingAudit,
+)
+from .external_grounding import (
+    RevisionExternalGroundingRow as _RevisionExternalGroundingRow,
+)
+from .external_grounding import (
+    build_external_grounding_audit as _build_external_grounding_audit,
+)
 from .registry_classification_coherence import DeclaredAxisUsage as _DeclaredAxisUsage
 from .registry_classification_coherence import ModeloClassificationRow as _ModeloClassificationRow
 from .registry_classification_coherence import (
@@ -1364,4 +1364,3 @@ def _diagnostics_for(diagnostics: Sequence[str], *, modelo: str, revision: str) 
     """
     prefix = f"modelo {modelo} revision {revision}: "
     return tuple(diagnostic for diagnostic in diagnostics if diagnostic.startswith(prefix))
-

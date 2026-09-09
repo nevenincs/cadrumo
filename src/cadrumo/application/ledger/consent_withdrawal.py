@@ -203,5 +203,3 @@ def survey_cloud_consent(
         consented_dispatches=tuple(entry for entry in consent_entries if entry.profile_bucket_id == bucket_id),
         cloud_derived_artefacts=artefacts,
     )
-
-

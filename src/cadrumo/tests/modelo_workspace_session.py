@@ -31,7 +31,10 @@ from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueR
 from ..application.modelo.work_addressing import ModeloVisibleFilingTarget
 from ..application.modelo.work_lifecycle import create_work_unit
 from ..application.modelo.workspace import resolve_static_inspection_result
-from ..application.modelo.workspace_models import ModeloWorkspaceResultV1, ModeloWorkspaceVisibleFilingTargetV1
+from ..application.modelo.workspace_models import (
+    ModeloWorkspaceStaticInspectionResultV1,
+    ModeloWorkspaceVisibleFilingTargetV1,
+)
 from ..core.external_constants import OutputLanguage
 from ..core.period import Period
 from ..domain.calculations.registry.authority import bundled_authority
@@ -80,8 +83,8 @@ class _SeededWorkspace:
     found could not be attributed to language.
     """
 
-    resolve: Callable[[OutputLanguage], ModeloWorkspaceResultV1]
-    result: ModeloWorkspaceResultV1
+    resolve: Callable[[OutputLanguage], ModeloWorkspaceStaticInspectionResultV1]
+    result: ModeloWorkspaceStaticInspectionResultV1
 
 
 @contextmanager
@@ -143,9 +146,9 @@ def real_workspace_inspection_result(
             clock=_T0,
         )
 
-        def resolve(at_language: OutputLanguage) -> ModeloWorkspaceResultV1:
+        def resolve(at_language: OutputLanguage) -> ModeloWorkspaceStaticInspectionResultV1:
             """Resolve the seeded address again at one language."""
-            return resolve_static_inspection_result(
+            result = resolve_static_inspection_result(
                 ModeloWorkspaceVisibleFilingTargetV1(
                     target=ModeloVisibleFilingTarget(
                         modelo=modelo,
@@ -158,5 +161,7 @@ def real_workspace_inspection_result(
                 authority=authority,
                 output_language=at_language,
             )
+            assert isinstance(result, ModeloWorkspaceStaticInspectionResultV1)
+            return result
 
         yield _SeededWorkspace(resolve=resolve, result=resolve(language))

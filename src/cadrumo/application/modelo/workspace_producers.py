@@ -10,23 +10,16 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.hashing import content_hash_hex
-from ...core.identity import BucketId, CalculationRevisionId, ContentDigest
+from ...core.identity import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.period import Period
 from ...core.revision_review import RevisionReviewStatus
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from ...domain.modelos.calculation_revision import CalculationRevision
-from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepositoryProtocol,
-)
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ..filing.export_proof import FilingExportProofAuthority
 from ..registry.closure import RegistryClosureLimb
-from ..state_projection import ModeloReadinessRequest, ProjectionModeloReadiness
+from ..state_projection import ProjectionModeloReadiness
 from .work_addressing import ModeloWorkResolution, ModeloWorkSelectionMode, ModeloWorkSelectorRequest
 from .work_review import ModeloWorkReview
 from .workspace_manifest import ModeloWorkspaceFieldManifestV1
@@ -222,24 +215,6 @@ class ModeloWorkspaceContributingProjectionV1[ProjectionT: BaseModel](_Workspace
         ):
             raise ValueError("workspace captured projection schema does not match its declared contract")
         return self
-
-
-@runtime_checkable
-class ModeloWorkspaceAtomicProjectionPortV1[ProjectionT: BaseModel](Protocol):
-    """One owner-bound port whose capture keeps a projection and epoch inseparable."""
-
-    @property
-    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
-        """Return the current frozen contract for this owner contribution."""
-        ...
-
-    def capture_projection_with_epoch(self) -> ModeloWorkspaceContributingProjectionV1[ProjectionT]:
-        """Atomically return one projection with the stamp and epoch that produced it."""
-        ...
-
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current consistency coordinates for the second validation pass."""
-        ...
 
 
 def _producer_contract_digest(contract: ModeloWorkspaceProducerContractV1) -> ContentDigest:
@@ -527,201 +502,6 @@ class ModeloWorkspaceWorkPortV1:
         return _current_stamp_and_epoch(self.producer_contract, coordinate)
 
 
-class ModeloWorkspaceBoundedReviewPortV1:
-    """Application-owned port realization delegating to the sole BOUNDED_REVIEW capture."""
-
-    def __init__(
-        self,
-        *,
-        bucket_id: BucketId,
-        modelo: ModeloCode,
-        filing_year: int,
-        period: Period,
-        authority: ValidatedRegistryAuthority | None = None,
-        work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
-        calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-        verification_repository: VerificationReportCatalogueRepositoryProtocol,
-    ) -> None:
-        """Bind the resolved target and repositories this port assembles a review from."""
-        self._bucket_id = bucket_id
-        self._modelo = modelo
-        self._filing_year = filing_year
-        self._period = period
-        self._authority = authority
-        self._work_unit_repository = work_unit_repository
-        self._calculation_repository = calculation_repository
-        self._verification_repository = verification_repository
-
-    @property
-    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
-        """Return the frozen BOUNDED_REVIEW contributor contract."""
-        return MODELO_WORKSPACE_BOUNDED_REVIEW_PRODUCER_CONTRACT_V1
-
-    def capture_projection_with_epoch(self) -> ModeloWorkspaceContributingProjectionV1[ModeloWorkReview]:
-        """Atomically capture one work review and stamp it with its epoch."""
-        from .work_review import capture_modelo_work_review
-
-        capture = capture_modelo_work_review(
-            self._bucket_id,
-            self._modelo,
-            self._filing_year,
-            self._period,
-            authority=self._authority,
-            work_unit_repository=self._work_unit_repository,
-            calculation_repository=self._calculation_repository,
-            verification_repository=self._verification_repository,
-        )
-        return _contributing_projection(
-            self.producer_contract,
-            projection=capture.review,
-            comparison_domain=capture.comparison_domain,
-            generation=capture.generation,
-        )
-
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current BOUNDED_REVIEW stamp and epoch for same-domain validation."""
-        from .work_review import read_modelo_work_review_current_coordinate
-
-        coordinate = read_modelo_work_review_current_coordinate(
-            self._bucket_id,
-            self._modelo,
-            self._filing_year,
-            self._period,
-            work_unit_repository=self._work_unit_repository,
-            calculation_repository=self._calculation_repository,
-            verification_repository=self._verification_repository,
-        )
-        return _current_stamp_and_epoch(self.producer_contract, coordinate)
-
-
-class ModeloWorkspaceCalculationPortV1:
-    """Application-owned port realization delegating to the sole CALCULATION capture."""
-
-    def __init__(
-        self,
-        *,
-        calculation_revision_id: CalculationRevisionId,
-        calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    ) -> None:
-        """Bind the calculation revision id this port materializes."""
-        self._calculation_revision_id = calculation_revision_id
-        self._calculation_repository = calculation_repository
-
-    @property
-    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
-        """Return the frozen CALCULATION contributor contract."""
-        return MODELO_WORKSPACE_CALCULATION_PRODUCER_CONTRACT_V1
-
-    def capture_projection_with_epoch(self) -> ModeloWorkspaceContributingProjectionV1[CalculationRevision]:
-        """Atomically capture one calculation revision and stamp it with its epoch."""
-        from .calculation import capture_modelo_calculation
-
-        capture = capture_modelo_calculation(
-            self._calculation_revision_id,
-            calculation_repository=self._calculation_repository,
-        )
-        return _contributing_projection(
-            self.producer_contract,
-            projection=capture.revision,
-            comparison_domain=capture.comparison_domain,
-            generation=capture.generation,
-        )
-
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current CALCULATION stamp and epoch for same-domain validation."""
-        from .calculation import read_modelo_calculation_current_coordinate
-
-        coordinate = read_modelo_calculation_current_coordinate(
-            self._calculation_revision_id,
-            calculation_repository=self._calculation_repository,
-        )
-        return _current_stamp_and_epoch(self.producer_contract, coordinate)
-
-
-class ModeloWorkspaceReadinessPortV1:
-    """Application-owned port realization delegating to the sole READINESS capture."""
-
-    def __init__(self, *, requests: tuple[ModeloReadinessRequest, ...], active_profile_id: str) -> None:
-        """Bind the readiness requests and active profile this port resolves against."""
-        self._requests = requests
-        self._active_profile_id = active_profile_id
-
-    @property
-    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
-        """Return the frozen READINESS contributor contract."""
-        return MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1
-
-    def capture_projection_with_epoch(
-        self,
-    ) -> ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceReadinessProjectionV1]:
-        """Atomically capture the readiness report set and stamp it with its epoch."""
-        from ..state_projection import capture_modelo_readiness
-
-        capture = capture_modelo_readiness(self._requests, active_profile_id=self._active_profile_id)
-        return _contributing_projection(
-            self.producer_contract,
-            projection=ModeloWorkspaceReadinessProjectionV1(reports=capture.reports),
-            comparison_domain=capture.comparison_domain,
-            generation=capture.generation,
-        )
-
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current READINESS stamp and epoch for same-domain validation."""
-        from ..state_projection import read_modelo_readiness_current_coordinate
-
-        coordinate = read_modelo_readiness_current_coordinate(
-            self._requests,
-            active_profile_id=self._active_profile_id,
-        )
-        return _current_stamp_and_epoch(self.producer_contract, coordinate)
-
-
-class ModeloWorkspaceClosurePortV1:
-    """Application-owned port realization delegating to the sole CLOSURE capture."""
-
-    def __init__(
-        self,
-        *,
-        authority: ValidatedRegistryAuthority,
-        filing_proof_authority: FilingExportProofAuthority | None = None,
-    ) -> None:
-        """Bind the authority and filing proof this port composes closure from."""
-        self._authority = authority
-        self._filing_proof_authority = filing_proof_authority
-
-    @property
-    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
-        """Return the frozen CLOSURE contributor contract."""
-        return MODELO_WORKSPACE_CLOSURE_PRODUCER_CONTRACT_V1
-
-    def capture_projection_with_epoch(
-        self,
-    ) -> ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceClosureProjectionV1]:
-        """Atomically capture the closure limbs and stamp them with their epoch."""
-        from ..registry.closure_capture import capture_registry_closure
-
-        capture = capture_registry_closure(
-            authority=self._authority,
-            filing_proof_authority=self._filing_proof_authority,
-        )
-        return _contributing_projection(
-            self.producer_contract,
-            projection=ModeloWorkspaceClosureProjectionV1(limbs=capture.limbs),
-            comparison_domain=capture.comparison_domain,
-            generation=capture.generation,
-        )
-
-    def read_current_stamp_and_epoch(self) -> tuple[ModeloWorkspaceProducerStampV1, ModeloWorkspaceEpochV1]:
-        """Return the current CLOSURE stamp and epoch for same-domain validation."""
-        from ..registry.closure_capture import read_registry_closure_current_coordinate
-
-        coordinate = read_registry_closure_current_coordinate(
-            authority=self._authority,
-            filing_proof_authority=self._filing_proof_authority,
-        )
-        return _current_stamp_and_epoch(self.producer_contract, coordinate)
-
-
 class ModeloWorkspaceLocaleCataloguePortV1:
     """Application-owned port realization delegating to the sole LOCALE_CATALOGUE capture."""
 
@@ -865,10 +645,6 @@ __all__ = [
     "MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1",
     "MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1",
-    "ModeloWorkspaceAtomicProjectionPortV1",
-    "ModeloWorkspaceBoundedReviewPortV1",
-    "ModeloWorkspaceCalculationPortV1",
-    "ModeloWorkspaceClosurePortV1",
     "ModeloWorkspaceClosureProjectionV1",
     "ModeloWorkspaceContributingProjectionV1",
     "ModeloWorkspaceContributorKindV1",
@@ -879,7 +655,6 @@ __all__ = [
     "ModeloWorkspaceLocaleCatalogueProjectionV1",
     "ModeloWorkspaceProducerContractV1",
     "ModeloWorkspaceProducerStampV1",
-    "ModeloWorkspaceReadinessPortV1",
     "ModeloWorkspaceReadinessProjectionV1",
     "ModeloWorkspaceRegistryPortV1",
     "ModeloWorkspaceRegistryProjectionV1",

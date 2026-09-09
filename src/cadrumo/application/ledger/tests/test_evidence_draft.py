@@ -40,7 +40,6 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
 from ....core.directory_scan import scan_directory
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
-from ....domain.attachments.service import load_attachment
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
@@ -753,7 +752,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         )
 
         store = AttachmentStore(objects=secure_objects)
-        reloaded_attachment = load_attachment(store, record.attachment_id)
+        reloaded_attachment = store.load_manifest(record.attachment_id)
         assert reloaded_attachment.linked_invoice_ids == (confirmation.invoice.invoice_id,)
 
     def test_confirm_by_attachment_id_auto_links_the_attachment_to_the_invoice(
@@ -784,7 +783,7 @@ class TestConfirmInvoiceDraftFromEvidence:
         )
 
         store = AttachmentStore(objects=secure_objects)
-        reloaded_attachment = load_attachment(store, record.attachment_id)
+        reloaded_attachment = store.load_manifest(record.attachment_id)
         assert reloaded_attachment.linked_invoice_ids == (confirmation.invoice.invoice_id,)
 
     def test_re_confirm_does_not_duplicate_the_evidence_link(
@@ -825,6 +824,6 @@ class TestConfirmInvoiceDraftFromEvidence:
         assert second.invoice.invoice_id == first.invoice.invoice_id
 
         store = AttachmentStore(objects=secure_objects)
-        reloaded_attachment = load_attachment(store, record.attachment_id)
+        reloaded_attachment = store.load_manifest(record.attachment_id)
         # Exactly one entry -- not duplicated by the second confirm call.
         assert reloaded_attachment.linked_invoice_ids == (first.invoice.invoice_id,)

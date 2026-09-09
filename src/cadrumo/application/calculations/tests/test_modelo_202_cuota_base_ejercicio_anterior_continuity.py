@@ -380,10 +380,3 @@ def test_modelo_202_2p_enrolls_two_renta_years(tmp_path: Path) -> None:
     # M200 cuota líquida, year-isolated.
     assert result_n.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2025]
     assert result_n1.values[_M202_BASE_CASILLA] == _M200_CUOTA_BY_SOURCE_YEAR[2026]
-
-
-
-
-
-
-

@@ -11,7 +11,7 @@ from typing import cast
 import pytest
 from openpyxl import load_workbook
 
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, declared_error_codes
+from ....core.errors.error_codes import build_error_envelope
 from ....core.external_constants import CSV_MIME_TYPE, JSONL_MIME_TYPE, UTF_8_ENCODING, XLSX_MIME_TYPE
 from ....tests.locale_catalogue import CATALOGUE_LANGUAGES, catalogue_shard_path, shard_payload
 from ..errors import ExportFieldError, ExportFormatError
@@ -93,38 +93,6 @@ def test_serialize_tabular_rows_rejects_unknown_fields() -> None:
 # ---------------------------------------------------------------------------
 # Registry membership — contract
 # ---------------------------------------------------------------------------
-
-
-def test_only_the_application_layer_owns_an_export_format_error() -> None:
-    """One export-format refusal identity, owned by the application layer.
-
-    The outbound adapter once carried a second class of its own; nothing
-    raised it and it is retired. A new adapter-side twin reappearing here is
-    the duplication this guards against.
-    """
-    export_format_rows = [
-        (qualname, code.code)
-        for qualname, code in declared_error_codes()
-        if qualname.split(".")[-1].endswith("ExportFormatError")
-    ]
-    assert export_format_rows == [
-        ("cadrumo.application.export.errors.ExportFormatError", "REFUSED_EXPORT_FORMAT"),
-    ]
-
-
-@pytest.mark.parametrize(
-    ("code_key", "message_key"),
-    (
-        ("REFUSED_EXPORT_FORMAT", "errors.refused.refused_export_format"),
-        ("REFUSED_EXPORT_FIELD", "errors.refused.refused_export_field"),
-    ),
-)
-def test_export_errors_are_registered_with_expected_attributes(code_key: str, message_key: str) -> None:
-    """Export errors must be registered so the CLI can handle them."""
-    code = ERROR_REGISTRY[code_key]
-    assert code.code == code_key
-    assert code.message_key == message_key
-    assert code.retryable is False
 
 
 # ---------------------------------------------------------------------------

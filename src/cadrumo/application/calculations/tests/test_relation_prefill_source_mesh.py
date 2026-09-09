@@ -603,5 +603,3 @@ def test_genuinely_missing_in_scope_quarter_still_unresolves(tmp_path: Path) -> 
         )
         m130 = next(v for v in prefill.values if v.relation == "renta-2024-rel-130-pagos-fraccionados")
         assert m130.value is None
-
-

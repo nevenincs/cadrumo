@@ -42,11 +42,9 @@ from ..work_addressing import (
     ModeloWorkSelectorRequest,
     ModeloWorkSelectorState,
     capture_modelo_work_resolution,
-    project_modelo_work_target,
     read_modelo_work_current_coordinate,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_revision_pick,
-    resolve_modelo_work_unit_id,
     select_modelo_work_resolution,
 )
 from ..work_lifecycle import (
@@ -259,16 +257,6 @@ def test_visible_and_exact_work_targets_round_trip_to_same_work_unit(
     exact = ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=bucket_id)
 
     catalogue = work_repository.load()
-    assert resolve_modelo_work_unit_id(visible, catalogue=catalogue, bucket_id=bucket_id) == work_unit.work_unit_id
-    assert resolve_modelo_work_unit_id(exact, catalogue=catalogue, bucket_id=bucket_id) == work_unit.work_unit_id
-
-    projected = project_modelo_work_target(visible, catalogue=catalogue, bucket_id=bucket_id)
-    assert projected.work_unit_id == work_unit.work_unit_id
-    assert projected.short_work_unit_id == work_unit.work_unit_id[-12:]
-    assert projected.modelo == "130"
-    assert projected.filing_year == 2026
-    assert projected.period == Period.from_year_and_code(2026, "1T")
-
     current_pick = resolve_modelo_revision_pick(
         target=visible,
         pick=ModeloRevisionPick(default_for="verify"),

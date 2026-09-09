@@ -20,8 +20,8 @@ from ....adapters.persistence.storage.master_key.active_session import (
 from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings, override_settings
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, resolve_error_message
-from ....domain.contribuyente.keys import required_profile_keys
+from ....core.errors.error_codes import build_error_envelope, resolve_error_message
+from ....domain.contribuyente.keys import profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
@@ -46,7 +46,7 @@ _PROFILE_B = "22222222-2222-4222-8222-222222222222"
 
 def _create_profile(profile_id: str, *, provider: str | None = None) -> None:
     assert WIZARD_FLOWS
-    assert required_profile_keys()
+    assert profile_keys()
     with open_test_profile_session(profile_id):
         register_minimal_profile(profile_id=profile_id)
         if provider is not None:
@@ -154,31 +154,6 @@ def test_logout_and_reset_require_unambiguous_scope(tmp_path: Path) -> None:
             _logout(provider="certificate", all_providers=True)
         with pytest.raises(AuthOperationScopeConflictError):
             _reset(provider="certificate", all_providers=True)
-
-
-@pytest.mark.parametrize(
-    ("error", "code"),
-    [
-        (
-            AuthOperationScopeConflictError(
-                translated_message="application.auth.operator.errors.scope_conflict",
-            ),
-            "REFUSED_AUTH_OPERATION_SCOPE_CONFLICT",
-        ),
-        (
-            AuthProviderNotConfiguredError(
-                translated_message="application.auth.operator.errors.provider_not_configured",
-            ),
-            "REFUSED_AUTH_PROVIDER_NOT_CONFIGURED",
-        ),
-    ],
-)
-def test_auth_scope_errors_have_canonical_registry_envelopes(error: Exception, code: str) -> None:
-    """Auth scope refusals are first-class central registry entries."""
-    assert code in ERROR_REGISTRY
-    envelope = build_error_envelope(error)
-    assert envelope.code == code
-    assert envelope.message == resolve_error_message(error)
 
 
 def test_auth_scope_conflict_has_explicit_no_recovery() -> None:
@@ -423,7 +398,6 @@ def test_revoking_a_locked_profile_refuses_and_says_the_session_is_still_live(tm
     the fact the operator cannot otherwise discover -- that the session is still
     usable -- rather than that the profile is locked, which they already know.
     """
-    from ....core.errors.error_codes import resolve_error_message
     from ..operator_results import AuthOperationRequiresCustodySessionError
 
     with isolated_profile_storage_root(tmp_path=tmp_path):

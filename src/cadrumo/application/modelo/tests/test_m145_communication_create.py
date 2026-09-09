@@ -117,7 +117,9 @@ def test_create_m145_communication_record_distinguishes_variation_period(tmp_pat
             _command(period_token=M145CommunicationPeriod.VARIATION),
             bucket_id=runtime.bucket_id,
         )
-        communication_read = read_m145_communication_record(communication.communication_record_id, bucket_id=runtime.bucket_id)
+        communication_read = read_m145_communication_record(
+            communication.communication_record_id, bucket_id=runtime.bucket_id
+        )
         variation_read = read_m145_communication_record(variation.communication_record_id, bucket_id=runtime.bucket_id)
 
     assert variation.period_token is M145CommunicationPeriod.VARIATION

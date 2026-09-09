@@ -12,7 +12,7 @@ from ......adapters.persistence.profile.submission import SubmissionRepository
 from ......core.config import Settings
 from ......domain.submission.engine import SubmissionEngine
 from ......domain.submission.errors import SubmissionError
-from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from ......tests.secure_sql import isolated_runtime_profile
 from ._preflight_support import clave_movil_provider, deadline_checker, modelo_draft
 
@@ -41,7 +41,7 @@ def _build_engine(tmp_path: Path) -> SubmissionEngine:
 
 def _historical_filing(draft_label: str = "draft-1", modelo: str = "130") -> ModeloPresentado:
     """Build a production historical filing record for encrypted persistence."""
-    submission_id = make_submission_id(draft_label, 1)
+    submission_id = "0123456789abcdef"
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id="draft-1",

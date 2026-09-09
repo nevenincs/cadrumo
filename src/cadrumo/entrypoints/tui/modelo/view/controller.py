@@ -32,23 +32,17 @@ fallback stays visible.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Final, assert_never
+from typing import Final
 
 from .....application.modelo.workspace_models import (
     ModeloWorkspaceCursorV1,
     ModeloWorkspaceFacetName,
-    ModeloWorkspaceGradedSnapshotResultV1,
     ModeloWorkspaceProjectionV1,
-    ModeloWorkspaceRefusedResultV1,
-    ModeloWorkspaceResultV1,
-    ModeloWorkspaceStaticInspectionResultV1,
 )
 from .models import (
     ModeloWorkspaceBoundedPageV1,
     ModeloWorkspaceCompletePageV1,
     ModeloWorkspacePageCompletenessV1,
-    ModeloWorkspaceRefusalViewV1,
-    refusal_view,
 )
 
 SUPPORTED_WORKSPACE_CONTRACT_VERSION: Final[int] = 1
@@ -196,30 +190,6 @@ class ModeloWorkspaceReadSession:
         return projection.locale != self.projection.locale
 
 
-def admit_workspace_session(
-    result: ModeloWorkspaceResultV1,
-) -> tuple[ModeloWorkspaceReadSession | None, ModeloWorkspaceRefusalViewV1 | None]:
-    """Open a session from a result, or surface the refusal that prevented one.
-
-    Returns exactly one populated half. A refusal is a first-class outcome
-    here, not an exception: the projection's own contract makes every
-    refusal typed and carrying its owner and reconsideration condition, and
-    raising would discard facts a destination is required to display.
-    """
-    # Dispatch over a closed union rather than re-testing a type the first arm
-    # already excluded. The catch-all is `assert_never`, not a runtime refusal:
-    # the union is exhausted here, so a new member should break the BUILD rather
-    # than reach an admission error nobody sees until production.
-    match result:
-        case ModeloWorkspaceRefusedResultV1():
-            return None, refusal_view(result.refusal)
-        case ModeloWorkspaceStaticInspectionResultV1() | ModeloWorkspaceGradedSnapshotResultV1():
-            projection = result.projection
-        case _:
-            assert_never(result)
-    return open_workspace_read_session(projection), None
-
-
 def open_workspace_read_session(projection: ModeloWorkspaceProjectionV1) -> ModeloWorkspaceReadSession:
     """Open the canonical immutable session from an already-admitted projection.
 
@@ -242,7 +212,6 @@ __all__ = [
     "ModeloWorkspaceReadSession",
     "ModeloWorkspaceSemanticIdentityV1",
     "ModeloWorkspaceSessionAdmissionError",
-    "admit_workspace_session",
     "open_workspace_read_session",
     "semantic_identity",
 ]

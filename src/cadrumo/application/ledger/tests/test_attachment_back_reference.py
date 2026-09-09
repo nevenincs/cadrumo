@@ -26,10 +26,7 @@ from ....domain.attachments.service import (
     AttachmentIngestionRequest,
     add_attachment,
     link_attachment_transaction,
-    list_attachments,
-    load_attachment,
 )
-from ....domain.transactions.service import find_transaction
 from ._action_test_support import (
     _BUCKET_ID,
     UTC,
@@ -115,11 +112,11 @@ def test_attaching_records_the_link_on_both_sides(secure_objects: SecureObjectRe
     resulting_id = _attach(secure_objects, transaction_id=transaction_id, attachment_id=attachment_id)
 
     transaction_repository, _ = _repositories(secure_objects)
-    reloaded = find_transaction(transaction_repository.load(), resulting_id)
+    reloaded = transaction_repository.load().get(resulting_id)
     assert reloaded is not None
     assert attachment_id in reloaded.attachment_ids
 
-    manifest = load_attachment(_store(secure_objects), attachment_id)
+    manifest = _store(secure_objects).load_manifest(attachment_id)
     assert resulting_id in manifest.linked_transaction_ids
 
 
@@ -132,7 +129,11 @@ def test_the_filtered_list_discovers_an_attachment_the_transaction_cites(
 
     resulting_id = _attach(secure_objects, transaction_id=transaction_id, attachment_id=attachment_id)
 
-    found = list_attachments(_store(secure_objects), linked_to=resulting_id)
+    found = tuple(
+        item
+        for item in _store(secure_objects).iter_manifests()
+        if resulting_id in item.linked_transaction_ids + item.linked_invoice_ids
+    )
     assert tuple(item.attachment_id for item in found) == (attachment_id,)
 
 
@@ -144,10 +145,14 @@ def test_an_unlinked_attachment_is_not_discovered(secure_objects: SecureObjectRe
 
     resulting_id = _attach(secure_objects, transaction_id=transaction_id, attachment_id=linked_id)
 
-    found = {item.attachment_id for item in list_attachments(_store(secure_objects), linked_to=resulting_id)}
+    found = {
+        item.attachment_id
+        for item in _store(secure_objects).iter_manifests()
+        if resulting_id in item.linked_transaction_ids + item.linked_invoice_ids
+    }
     assert linked_id in found
     assert unlinked_id not in found
-    assert load_attachment(_store(secure_objects), unlinked_id).linked_transaction_ids == ()
+    assert _store(secure_objects).load_manifest(unlinked_id).linked_transaction_ids == ()
 
 
 def test_repeated_linking_does_not_grow_the_reverse_link(secure_objects: SecureObjectRepository) -> None:
@@ -167,7 +172,7 @@ def test_repeated_linking_does_not_grow_the_reverse_link(secure_objects: SecureO
         transaction_id=resulting_id,
     )
 
-    manifest = load_attachment(_store(secure_objects), attachment_id)
+    manifest = _store(secure_objects).load_manifest(attachment_id)
     assert manifest.linked_transaction_ids.count(resulting_id) == 1
     assert len(manifest.linked_transaction_ids) == len(set(manifest.linked_transaction_ids))
 
@@ -179,4 +184,4 @@ def test_a_transaction_with_no_attachments_writes_no_manifest_link(
     attachment_id = _seed_attachment(secure_objects, marker=b"f")
     _seed_transaction(secure_objects, idempotency_key="back-ref-5")
 
-    assert load_attachment(_store(secure_objects), attachment_id).linked_transaction_ids == ()
+    assert _store(secure_objects).load_manifest(attachment_id).linked_transaction_ids == ()

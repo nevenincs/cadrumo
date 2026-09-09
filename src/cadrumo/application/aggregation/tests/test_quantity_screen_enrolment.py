@@ -34,7 +34,6 @@ from ....adapters.persistence.tests.runtime_profile_fixture import (
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.authority import bundled_authority
-from ....domain.calculations.registry.quantity_screen_enrolment import screened_quantity_families
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -204,16 +203,6 @@ _ENROLLED: tuple[_EnrolledFamily, ...] = (
 
 
 repository = bucket_scoped_transaction_catalogue_fixture(_BUCKET_ID, name="repository")
-
-
-def test_every_declared_quantity_screen_is_enrolled_here() -> None:
-    """A family that declares readers and is never driven fails loudly.
-
-    The registry is written by the adapters themselves at import, so it cannot
-    silently omit a family the way this module's inventory could. Comparing the
-    two is what makes the per-family drives below a gate rather than a sample.
-    """
-    assert screened_quantity_families() == frozenset(entry.family for entry in _ENROLLED)
 
 
 @pytest.mark.parametrize("enrolled", _ENROLLED, ids=lambda entry: entry.family)

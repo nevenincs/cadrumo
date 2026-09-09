@@ -67,13 +67,6 @@ _DESTINATION_KEYS: Final = {
     "declarations.calendar": "tui.declarations.destination.calendar",
     "declarations.modelo_workspace": "tui.declarations.destination.modelo_workspace",
 }
-_AVAILABILITY_KEYS: Final = {
-    DeclarationsWorkspaceAvailability.AVAILABLE: "tui.declarations.availability.available",
-    DeclarationsWorkspaceAvailability.LOCKED: "tui.declarations.availability.locked",
-    DeclarationsWorkspaceAvailability.STALE: "tui.declarations.availability.stale",
-    DeclarationsWorkspaceAvailability.NEVER_CAPTURED: "tui.declarations.availability.never_captured",
-    DeclarationsWorkspaceAvailability.UNAVAILABLE: "tui.declarations.availability.unavailable",
-}
 _WORK_STATE_KEYS: Final = {state: f"tui.declarations.work_state.{state.value}" for state in WorkUnitState}
 _REVISION_STATE_KEYS: Final = {
     state: f"tui.declarations.revision_state.{state.value}" for state in CalculationRevisionState
@@ -107,11 +100,6 @@ def timestamp_label(value: datetime) -> str:
 def calendar_date_label(value: date | None) -> str:
     """Render one non-ambiguous legal date."""
     return declarations_copy("tui.declarations.calendar.none") if value is None else value.strftime("%d/%m/%Y")
-
-
-def availability_label(value: DeclarationsWorkspaceAvailability) -> str:
-    """Render one explicit source availability."""
-    return declarations_copy(_AVAILABILITY_KEYS[value])
 
 
 def work_state_label(value: WorkUnitState) -> str:
@@ -449,7 +437,6 @@ __all__ = [
     "DeclarationsRouteRequested",
     "DeclarationsWorkspaceController",
     "DeclarationsWorkspaceScreen",
-    "availability_label",
     "calendar_aeat_label",
     "calendar_date_label",
     "calendar_focus_key",

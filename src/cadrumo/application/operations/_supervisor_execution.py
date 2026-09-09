@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Coroutine
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
@@ -41,7 +41,7 @@ from .registry import OperationDefinition, OperationReconciliationPolicy
 from .secret_submission import BoundEphemeralSecretAccess, OperationSecretRequirement, zeroize_secret_buffer
 
 
-class SupervisorHost(Protocol):
+class SupervisorHost:
     if TYPE_CHECKING:
 
         def __getattr__(self, name: str) -> Any: ...

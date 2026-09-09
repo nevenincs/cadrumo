@@ -11,13 +11,22 @@ from datetime import date
 from pathlib import Path
 
 from ..core.authority_grade import RegistryAuthorityGrade
-from ..domain.calculations.registry._snapshot_internals import (
-    _SNAPSHOT_CACHE,
-    _build_validated_snapshot,
-    _validate_modelo_once,
-)
+from ..domain.calculations.registry._snapshot_internals import _build_validated_snapshot
+from ..domain.calculations.registry._validate import RegistryValidator
 from ..domain.calculations.registry.ids import RevisionId
 from ..domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+
+_SNAPSHOT_CACHE: dict[tuple[object, ...], tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]] = {}
+_VALIDATION_CACHE: dict[tuple[object, ...], tuple[ModeloDefinition, RegistryCatalogues]] = {}
+
+
+def _validate_modelo_once(modelo: ModeloDefinition, catalogues: RegistryCatalogues, source_root_key: str) -> None:
+    key = (id(modelo), id(catalogues), source_root_key)
+    cached = _VALIDATION_CACHE.get(key)
+    if cached is not None and cached[0] is modelo and cached[1] is catalogues:
+        return
+    RegistryValidator(catalogues, source_root=Path(source_root_key)).validate_modelo(modelo)
+    _VALIDATION_CACHE[key] = (modelo, catalogues)
 
 
 def build_snapshot(

@@ -14,13 +14,10 @@ from ..financial_operand import (
     OperationTransientFinancialOperandAcknowledgement,
     OperationTransientFinancialOperandDeclaration,
     OperationTransientFinancialOperandExpiry,
-    OperationTransientFinancialOperandProtocolV1,
     OperationTransientFinancialOperandRefusal,
     OperationTransientFinancialOperandRelease,
     OperationTransientFinancialOperandRequirement,
-    OperationTransientFinancialOperandSubmission,
 )
-from ..secret_submission import EphemeralSecretSubmission, OperationSecretRequirement
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -95,14 +92,6 @@ def test_no_operand_record_can_carry_a_durable_derivative() -> None:
             assert not any(token in name.lower() for token in forbidden), f"{record.__name__}.{name}"
 
 
-def test_the_operand_contract_is_distinct_from_the_ephemeral_secret_port() -> None:
-    """An amount is not credential material and does not travel the secret port."""
-    assert OperationTransientFinancialOperandSubmission is not EphemeralSecretSubmission
-    assert not issubclass(OperationTransientFinancialOperandRequirement, OperationSecretRequirement)
-    assert "submit_ephemeral_secret" not in dir(OperationTransientFinancialOperandSubmission)
-    assert "submit_transient_financial_operand" not in dir(EphemeralSecretSubmission)
-
-
 def test_every_settlement_record_requires_an_aware_timestamp() -> None:
     """A naive settlement time cannot be recorded for a bounded runtime wait."""
     requirement = OperationTransientFinancialOperandRequirement.model_construct(
@@ -145,20 +134,8 @@ def test_a_refusal_names_a_reason_the_caller_can_act_on() -> None:
     }
 
 
-def test_the_broker_protocol_exposes_no_durable_derivative_of_an_operand() -> None:
-    """The broker settles and releases; it never hands back a stored amount."""
-    members = {name for name in dir(OperationTransientFinancialOperandProtocolV1) if not name.startswith("_")}
-
-    assert {"declare_requirement", "grant_access", "release", "expire_lapsed"} <= members
-    assert not any("digest" in name or "hash" in name for name in members)
-
-
 def test_the_contracts_are_runtime_checkable_structural_ports() -> None:
     """A supervisor can be checked against these ports without inheriting them."""
-    for protocol in (
-        OperationTransientFinancialOperandSubmission,
-        OperationTransientFinancialOperandAccess,
-        OperationTransientFinancialOperandProtocolV1,
-    ):
+    for protocol in (OperationTransientFinancialOperandAccess,):
         assert getattr(protocol, "_is_runtime_protocol", False), protocol.__name__
         assert not issubclass(protocol, BaseModel)

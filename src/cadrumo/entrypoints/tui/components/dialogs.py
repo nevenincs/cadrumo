@@ -1,36 +1,14 @@
-"""Reusable, state-local dialogs for immutable form fields."""
+"""Reusable confirmation dialog for irreversible TUI actions."""
 
-from __future__ import annotations
-
-from typing import ClassVar, cast, override
+from typing import ClassVar, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Button, Input, Label, OptionList, SelectionList, Static
+from textual.widgets import Button, Label, Static
 
-from ....core.presentation import FormField
 from ..components.theme import tokenised
-
-_MULTI_CHOICE_SEPARATOR = ","
-
-_EDIT_DIALOG_CSS = tokenised("""
-#edit-dialog {
-    border: $cadrumo-radius-overlay $accent;
-    background: $surface;
-    padding: $cadrumo-space-0 $cadrumo-space-1;
-    width: 100%;
-    height: auto;
-}
-#edit-label { text-style: bold; }
-#edit-path { color: $text-muted; margin: $cadrumo-space-0; }
-#edit-refusal { color: $error; }
-#edit-dialog Input { margin: $cadrumo-space-0; }
-#edit-actions { height: auto; align-horizontal: right; margin: $cadrumo-space-0; }
-#edit-actions Button { margin: $cadrumo-space-0 $cadrumo-space-0 $cadrumo-space-0 $cadrumo-control-gap; }
-""")
-"""Styling carried by each dialog so every host renders it consistently."""
 
 _CONFIRM_DIALOG_CSS = tokenised("""
 #confirm-dialog {
@@ -51,13 +29,10 @@ class ConfirmScreen(ModalScreen[bool]):
     """Ask before an irreversible action and default to declining it."""
 
     DEFAULT_CSS = _CONFIRM_DIALOG_CSS
-    BINDINGS: ClassVar = [
-        Binding("escape", "decline", "", show=False),
-        Binding("y", "confirm", "", show=False),
-    ]
+    BINDINGS: ClassVar = [Binding("escape", "decline", "", show=False), Binding("y", "confirm", "", show=False)]
 
     def __init__(self, *, title: str, message: str, confirm_label: str, cancel_label: str) -> None:
-        """Store already-localized copy for one irreversible-action prompt."""
+        """Store the localized confirmation copy."""
         super().__init__()
         self._title = title
         self._message = message
@@ -74,15 +49,15 @@ class ConfirmScreen(ModalScreen[bool]):
                 yield Button(self._confirm_label, id="btn-confirm-accept", classes="-primary", variant="error")
 
     def on_mount(self) -> None:
-        """Focus the declining action as the safe default."""
+        """Focus the safe declining action first."""
         self.query_one("#btn-confirm-cancel", Button).focus()
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Dismiss with the boolean represented by the pressed button."""
+        """Dismiss with the selected confirmation state."""
         self.dismiss(event.button.id == "btn-confirm-accept")
 
     def action_decline(self) -> None:
-        """Dismiss without approving the guarded intent."""
+        """Dismiss without approving the action."""
         self.dismiss(False)
 
     def action_confirm(self) -> None:
@@ -90,141 +65,4 @@ class ConfirmScreen(ModalScreen[bool]):
         self.dismiss(True)
 
 
-class _FieldEditScreen(ModalScreen[str | None]):
-    """Shared modal mechanics for editors of one immutable form field."""
-
-    DEFAULT_CSS = _EDIT_DIALOG_CSS
-    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
-
-    def __init__(self, field: FormField, *, cancel_label: str, save_label: str) -> None:
-        """Store the immutable field descriptor that supplies this dialog."""
-        super().__init__()
-        self._field = field
-        self._cancel_label = cancel_label
-        self._save_label = save_label
-
-    def action_cancel(self) -> None:
-        """Dismiss without changing the field value."""
-        self.dismiss(None)
-
-
-class TextEditScreen(_FieldEditScreen):
-    """Type one text value. Dismisses with the new value, or ``None``."""
-
-    @override
-    def compose(self) -> ComposeResult:
-        with Vertical(id="edit-dialog"):
-            yield Label(self._field.label, id="edit-label")
-            if self._field.hint:
-                yield Static(self._field.hint, id="edit-path")
-            yield Input(value=self._field.value, password=self._field.secret, id="edit-input")
-            yield Static(id="edit-refusal")
-            with Horizontal(id="edit-actions"):
-                yield Button(self._cancel_label, id="btn-edit-cancel")
-                yield Button(self._save_label, id="btn-edit-save", classes="-primary")
-
-    def on_mount(self) -> None:
-        """Focus the text input as soon as the dialog opens."""
-        self.query_one("#edit-input", Input).focus()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Save through the local validator or cancel the edit."""
-        if event.button.id == "btn-edit-save":
-            self._submit()
-        else:
-            self.dismiss(None)
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        """Treat the text input's submit gesture as a save."""
-        self._submit()
-
-    def _submit(self) -> None:
-        """Accept the typed value, or hold the dialog open showing why not."""
-        candidate = self.query_one("#edit-input", Input).value
-        refusal = self._field.validate(candidate) if self._field.validate is not None else None
-        if refusal is not None:
-            self.query_one("#edit-refusal", Static).update(refusal)
-            return
-        self.dismiss(candidate)
-
-
-class ChoiceEditScreen(_FieldEditScreen):
-    """Pick any number of options. Dismisses with a comma-joined token list."""
-
-    @override
-    def compose(self) -> ComposeResult:
-        selected = {token for token in self._field.value.split(_MULTI_CHOICE_SEPARATOR) if token}
-        with Vertical(id="edit-dialog"):
-            yield Label(self._field.label, id="edit-label")
-            if self._field.hint:
-                yield Static(self._field.hint, id="edit-path")
-            yield SelectionList[str](
-                *[(choice.label, choice.value, choice.value in selected) for choice in self._field.choices],
-                id="edit-choices",
-            )
-            with Horizontal(id="edit-actions"):
-                yield Button(self._cancel_label, id="btn-edit-cancel")
-                yield Button(self._save_label, id="btn-edit-save", classes="-primary")
-
-    def on_mount(self) -> None:
-        """Focus the selectable choices as soon as the dialog opens."""
-        self.query_one("#edit-choices", SelectionList).focus()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Save the selected values or cancel the edit."""
-        if event.button.id != "btn-edit-save":
-            self.dismiss(None)
-            return
-        # CAST-RATIONALE-thirdparty: Textual's ``query_one`` isinstance-checks the
-        # type it is handed, so a subscripted generic cannot be passed; the widget's
-        # cell/option type is fixed where it is constructed and asserted here.
-        choices = cast("SelectionList[str]", self.query_one("#edit-choices", SelectionList))
-        picked = choices.selected
-        self.dismiss(_MULTI_CHOICE_SEPARATOR.join(str(token) for token in picked))
-
-
-class OneChoiceEditScreen(_FieldEditScreen):
-    """Pick exactly one option. Dismisses with its token."""
-
-    @override
-    def compose(self) -> ComposeResult:
-        with Vertical(id="edit-dialog"):
-            yield Label(self._field.label, id="edit-label")
-            if self._field.hint:
-                yield Static(self._field.hint, id="edit-path")
-            yield OptionList(*[choice.label for choice in self._field.choices], id="edit-options")
-            with Horizontal(id="edit-actions"):
-                yield Button(self._cancel_label, id="btn-edit-cancel")
-                yield Button(self._save_label, id="btn-edit-save", classes="-primary")
-
-    def on_mount(self) -> None:
-        """Focus the options and restore the declared current value."""
-        options = self.query_one("#edit-options", OptionList)
-        current = next(
-            (index for index, choice in enumerate(self._field.choices) if choice.value == self._field.value),
-            None,
-        )
-        if current is not None:
-            options.highlighted = current
-        options.focus()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        """Save the highlighted option or cancel the edit."""
-        if event.button.id != "btn-edit-save":
-            self.dismiss(None)
-            return
-        self._dismiss_highlighted()
-
-    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
-        """Dismiss with the option selected directly from the list."""
-        self._dismiss_highlighted()
-
-    def _dismiss_highlighted(self) -> None:
-        highlighted = self.query_one("#edit-options", OptionList).highlighted
-        if highlighted is None:
-            self.dismiss(None)
-            return
-        self.dismiss(self._field.choices[highlighted].value)
-
-
-__all__ = ["ChoiceEditScreen", "ConfirmScreen", "OneChoiceEditScreen", "TextEditScreen"]
+__all__ = ["ConfirmScreen"]

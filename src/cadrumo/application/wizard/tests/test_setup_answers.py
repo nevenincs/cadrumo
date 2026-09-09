@@ -17,7 +17,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import build_error_envelope
 from ....core.setup_answers import SetupAnswers
 from ..errors import WizardAnswerTypeError
 
@@ -25,10 +25,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 # ── Registry / envelope contract ─────────────────────────────────────────────
-
-
-def test_wizard_answer_type_error_is_registered_in_error_registry() -> None:
-    assert "REFUSED_WIZARD_ANSWER_TYPE" in ERROR_REGISTRY
 
 
 def test_wizard_answer_type_error_round_trips_through_build_error_envelope() -> None:

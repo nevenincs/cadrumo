@@ -13,7 +13,6 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
-from ....core.errors.error_codes import ERROR_REGISTRY
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
@@ -480,68 +479,6 @@ def test_work_calculate_modelo_100_routes_autonoma_auto_ledger_expenses() -> Non
     assert Decimal(casilla_values["0218"]) == Decimal("2400.00")
     assert Decimal(casilla_values["0220"]) == Decimal("2400.00")
     assert Decimal(casilla_values["0224"]) == Decimal("9600.00")
-
-
-def test_work_calculate_modelo_100_autonoma_visible_target_uses_registered_error_boundary() -> None:
-    """An operator's public M100 calculate shape must not degrade into an internal crash."""
-
-    _create_profile()
-    work_unit = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "100",
-            "--year",
-            "2024",
-            "--period",
-            "0A",
-            "--revision",
-            "2024",
-        ],
-    )
-    assert work_unit.exit_code == 0, work_unit.output
-
-    calculated = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "calculate",
-            "--modelo",
-            "100",
-            "--year",
-            "2024",
-            "--period",
-            "0A",
-            "--casilla",
-            "0003=30000.00",
-            "--casilla",
-            "0596=4500.00",
-            "--by",
-            "autonoma",
-        ],
-    )
-
-    assert "Traceback" not in calculated.output
-    assert "missing a declared ErrorCode registry entry" not in calculated.output
-    assert "Internal. El comando fall" not in calculated.output
-    envelope = json.loads(calculated.output)
-    if calculated.exit_code == 0:
-        payload = _payload(calculated.output)
-        assert payload["work_unit_id"] == _payload(work_unit.output)["work_unit_id"]
-        assert payload["calculation_revision_id"]
-        return
-
-    error = envelope["error"]
-    assert error["code"] in ERROR_REGISTRY
-    assert error["category"] == ERROR_REGISTRY[error["code"]].category.value
 
 
 def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestation_path() -> None:

@@ -53,6 +53,7 @@ class TestInventoryCoversTheDeclaration:
         assert logs.footprint_bytes == 5
         assert logs.reclaimable
 
+
 class TestTreeCheckReportsWithoutRepairing:
     def test_an_unmaterialised_tree_reports_the_root_and_stays_unrepaired(self, tmp_path) -> None:
         absent_root = tmp_path / "never-created"

@@ -301,5 +301,3 @@ def test_the_no_history_notice_is_absent_once_there_is_history(profile: TestRunt
     assert exit_code == 0
     codes = {notice["code"] for notice in envelope["notices"]}
     assert "evidence_consent_no_history" not in codes
-
-

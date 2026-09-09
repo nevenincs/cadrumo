@@ -253,15 +253,6 @@ class ModeloWorkspaceRefreshTargetV1(_WorkspaceModel):
     work_unit_id: WorkUnitId
 
 
-class ModeloWorkspaceRequestV1(_WorkspaceModel):
-    """One V1 read request over a canonical visible or advanced exact target."""
-
-    contract_version: Literal[1] = 1
-    target: ModeloWorkspaceTargetV1
-    admission: ModeloWorkspaceAdmissionV1
-    output_language: OutputLanguage
-
-
 class ModeloWorkspaceRevisionAssertionV1(_WorkspaceModel):
     """One source-fixed optional assertion and its independently supplied outcome."""
 
@@ -1198,7 +1189,6 @@ __all__ = [
     "ModeloWorkspaceRelationTargetEndpointReferenceV1",
     "ModeloWorkspaceRepeatedRowMaterializationRecordV1",
     "ModeloWorkspaceRepeatedRowMaterializationV1",
-    "ModeloWorkspaceRequestV1",
     "ModeloWorkspaceResolvedTargetV1",
     "ModeloWorkspaceResultV1",
     "ModeloWorkspaceRevisionAssertionDisposition",

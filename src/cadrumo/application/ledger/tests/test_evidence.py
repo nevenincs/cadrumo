@@ -9,7 +9,6 @@ import pytest
 from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.config import Settings
-from ....domain.attachments.service import load_attachment
 from ....domain.buckets.event import BucketEventType
 from ..evidence import (
     PurchaseInvoiceEvidencePatch,
@@ -120,7 +119,7 @@ class TestEvidenceEventEmission:
         result = svc.add(bucket_id=_BUCKET_ID, source_path=pdf_file, actor="operator-A")
 
         store = AttachmentStore(objects=secure_objects)
-        manifest = load_attachment(store, result.record.attachment_id)
+        manifest = store.load_manifest(result.record.attachment_id)
         assert store.read_bytes(manifest.sha256) == pdf_file.read_bytes()
         assert manifest.attachment_id == result.record.source_sha256
         assert manifest.bucket_id == _BUCKET_ID

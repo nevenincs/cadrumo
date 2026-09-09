@@ -15,13 +15,13 @@ import pytest
 from pydantic import ValidationError
 
 from ......core.period import Period
-from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 # The attempt coordinate is `<submission_id>.<ordinal>`, so the fixture derives
 # both from one content-addressed id rather than naming them independently.
-_SUBMISSION_ID = make_submission_id("draft-1", 1)
+_SUBMISSION_ID = "0123456789abcdef"
 _ATTEMPT_ID = f"{_SUBMISSION_ID}.1"
 
 
@@ -164,25 +164,3 @@ class TestModeloPresentado:
         )
         restored = ModeloPresentado.model_validate_json(filing.model_dump_json())
         assert restored == filing
-
-
-class TestMakeSubmissionId:
-    """Invariants for :func:`make_submission_id`."""
-
-    def test_ordinal_changes_hash(self) -> None:
-        """Assert a different ``ordinal`` produces a different id."""
-        assert make_submission_id("draft-1", 1) != make_submission_id("draft-1", 2)
-
-    def test_draft_changes_hash(self) -> None:
-        """Assert a different ``draft_id`` produces a different id."""
-        assert make_submission_id("draft-1", 1) != make_submission_id("draft-2", 1)
-
-    def test_empty_draft_id_rejected(self) -> None:
-        """Assert an empty ``draft_id`` raises :exc:`ValueError`."""
-        with pytest.raises(ValueError, match=r"draft_id"):
-            make_submission_id("", 1)
-
-    def test_non_positive_ordinal_rejected(self) -> None:
-        """Assert a non-positive ``ordinal`` raises :exc:`ValueError`."""
-        with pytest.raises(ValueError, match=r"attempt_ordinal"):
-            make_submission_id("draft-1", 0)

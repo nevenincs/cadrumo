@@ -35,7 +35,7 @@ from datetime import date, timedelta
 import pytest
 
 from ....core.period import Period, StandardPeriodCode
-from ....entrypoints.cli.period_parsing import _canonical_period, _filter_canonical_period
+from ....entrypoints.cli.period_parsing import _canonical_period
 from .. import aggregation_period_for_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -62,11 +62,6 @@ def _cli_period_via_command_transport(token: str, *, year: int) -> Period:
     return _canonical_period(token, year=year)
 
 
-def _cli_period_via_filter_transport(token: str, *, year: int) -> Period:
-    """Resolve a ``--filter period=TOKEN --filter year=YEAR`` clause to a Period the CLI way."""
-    return _filter_canonical_period(token, year=year)
-
-
 def _calc_engine_period(token: str, *, year: int) -> Period:
     """Resolve the same (year, token) to a Period the calc-engine way."""
     return aggregation_period_for_modelo(filing_year=year, code=token)
@@ -83,11 +78,9 @@ def test_cli_and_calc_engine_produce_an_identical_period() -> None:
         for year in _YEARS:
             case_id = (token, year)
             command_period = _cli_period_via_command_transport(token, year=year)
-            filter_period = _cli_period_via_filter_transport(token, year=year)
             engine_period = _calc_engine_period(token, year=year)
 
-            # All three spellings collapse to one boundary object.
-            assert command_period == filter_period == engine_period, case_id
+            assert command_period == engine_period, case_id
 
             # And to the same fully-closed [start, end] span (the boundary authority).
             assert command_period.start_date == engine_period.start_date, case_id

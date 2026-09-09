@@ -693,33 +693,24 @@ def _assemble_withholding_row(
             gastos_deducibles=coerce_decimal(fields.get("gastos_deducibles"), default=Decimal("0")),
             pension_compensatoria=coerce_decimal(fields.get("pension_compensatoria"), default=Decimal("0")),
             anualidades_alimentos=coerce_decimal(fields.get("anualidades_alimentos"), default=Decimal("0")),
-            incapacity_cash_perception=coerce_decimal(
-                fields.get("incapacity_cash_perception"), default=Decimal("0")
-            ),
-            incapacity_cash_withholding=coerce_decimal(
-                fields.get("incapacity_cash_withholding"), default=Decimal("0")
-            ),
+            incapacity_cash_perception=coerce_decimal(fields.get("incapacity_cash_perception"), default=Decimal("0")),
+            incapacity_cash_withholding=coerce_decimal(fields.get("incapacity_cash_withholding"), default=Decimal("0")),
             incapacity_kind_value=coerce_decimal(fields.get("incapacity_kind_value"), default=Decimal("0")),
             incapacity_kind_ingreso_a_cuenta=coerce_decimal(
                 fields.get("incapacity_kind_ingreso_a_cuenta"), default=Decimal("0")
             ),
-            incapacity_kind_repercutido=coerce_decimal(
-                fields.get("incapacity_kind_repercutido"), default=Decimal("0")
-            ),
+            incapacity_kind_repercutido=coerce_decimal(fields.get("incapacity_kind_repercutido"), default=Decimal("0")),
             foral_retention_estatal=coerce_decimal(fields.get("foral_retention_estatal"), default=Decimal("0")),
             foral_retention_navarra=coerce_decimal(fields.get("foral_retention_navarra"), default=Decimal("0")),
             foral_retention_araba=coerce_decimal(fields.get("foral_retention_araba"), default=Decimal("0")),
-            foral_retention_gipuzkoa=coerce_decimal(
-                fields.get("foral_retention_gipuzkoa"), default=Decimal("0")
-            ),
+            foral_retention_gipuzkoa=coerce_decimal(fields.get("foral_retention_gipuzkoa"), default=Decimal("0")),
             foral_retention_bizkaia=coerce_decimal(fields.get("foral_retention_bizkaia"), default=Decimal("0")),
             # The design's optional identity facts: forwarded verbatim
             # when the row carries them, left to the observation model's
             # None defaults otherwise -- the resolver applies the design's
             # per-clave completion rules at resolve time.
             representative_tax_id=_coerce_text(fields.get("representative_tax_id")).strip() or None,
-            spouse_or_unit_titular_tax_id=_coerce_text(fields.get("spouse_or_unit_titular_tax_id")).strip()
-            or None,
+            spouse_or_unit_titular_tax_id=_coerce_text(fields.get("spouse_or_unit_titular_tax_id")).strip() or None,
             disability_clave=_row_optional_int(fields, "disability_clave"),
             contract_relation_clave=_row_optional_int(fields, "contract_relation_clave"),
             unit_convivencia_titular_clave=_row_optional_int(fields, "unit_convivencia_titular_clave"),
@@ -731,12 +722,8 @@ def _assemble_withholding_row(
             descendants_rest_whole=_row_optional_int(fields, "descendants_rest_whole"),
             descendants_disabled_33_65_total=_row_optional_int(fields, "descendants_disabled_33_65_total"),
             descendants_disabled_33_65_whole=_row_optional_int(fields, "descendants_disabled_33_65_whole"),
-            descendants_disabled_mobility_total=_row_optional_int(
-                fields, "descendants_disabled_mobility_total"
-            ),
-            descendants_disabled_mobility_whole=_row_optional_int(
-                fields, "descendants_disabled_mobility_whole"
-            ),
+            descendants_disabled_mobility_total=_row_optional_int(fields, "descendants_disabled_mobility_total"),
+            descendants_disabled_mobility_whole=_row_optional_int(fields, "descendants_disabled_mobility_whole"),
             descendants_disabled_65_plus_total=_row_optional_int(fields, "descendants_disabled_65_plus_total"),
             descendants_disabled_65_plus_whole=_row_optional_int(fields, "descendants_disabled_65_plus_whole"),
             ascendants_under_75_total=_row_optional_int(fields, "ascendants_under_75_total"),
@@ -801,8 +788,7 @@ def assemble_withholding_observations(
     default_date = date(filing_year, 12, 31)
 
     return tuple(
-        _assemble_withholding_row(row_index, row, row_field, default_date)
-        for row_index, row in sorted(by_row.items())
+        _assemble_withholding_row(row_index, row, row_field, default_date) for row_index, row in sorted(by_row.items())
     )
 
 

@@ -53,8 +53,6 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
 
-from pydantic import BaseModel
-
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -67,7 +65,6 @@ from ...core.casilla_id import CasillaId
 from ...core.config import Settings
 from ...core.identity import CalculationRevisionId
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
@@ -88,14 +85,12 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.schema import CUOTA_LESS_M303_IVA_CATEGORIES
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
-    SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
     CalculationSourceIssue,
 )
 from ...domain.modelos.errors import ModeloValidationError
-from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow, LedgerFilingSnapshot
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -115,7 +110,6 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.verification_repository import upsert_verification_report
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ...domain.transactions.models import TransactionCatalogue
 from ..aggregation import (
     MISSING_DEDUCTIBLE_IVA_EVIDENCE_SOURCE_KIND,
     CalculationSourceDiagnostic,
@@ -182,7 +176,6 @@ from .action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
-    LedgerEvidenceRecaptureRefusedError,
     WorkUnitNotFoundError,
 )
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
@@ -1221,295 +1214,6 @@ def _persist_verified_revision_evidence(
         updated_catalogue,
         participation_writes,
         expected_revision_id=revisions_revision_id,
-    )
-
-
-class LedgerEvidenceRecaptureResult(BaseModel):
-    """What one evidence recapture changed on a sealed revision.
-
-    Attributes:
-        calculation_revision_id: The sealed revision whose bundle was replaced.
-        row_count: Contributing evidence rows in the new bundle.
-        newly_evidenced_transaction_ids: Contributors that carried no linked
-            evidence before and carry some now. This is the operator-meaningful
-            outcome: it names exactly the rows a filing gate was refusing.
-        recaptured_at: When the replacement bundle was captured.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    calculation_revision_id: CalculationRevisionId
-    row_count: int
-    newly_evidenced_transaction_ids: tuple[str, ...] = ()
-    recaptured_at: datetime
-
-
-@dataclass(frozen=True, slots=True)
-class _LedgerEvidenceRecaptureContext:
-    revisions: CalculationRevisionCatalogue
-    revisions_revision_id: str
-    target: CalculationRevision
-    work_unit: WorkUnit
-    stored_snapshot: LedgerFilingSnapshot
-
-
-def _row_carries_linked_evidence(row: LedgerEvidenceRow) -> bool:
-    """Whether a bundled row points at any evidence at all."""
-    return bool(row.purchase_invoice_evidence_id) or bool(row.invoice_id) or bool(row.attachment_ids)
-
-
-def _resolve_recapture_context(
-    calculation_revision_id: CalculationRevisionId,
-    *,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-) -> _LedgerEvidenceRecaptureContext:
-    revisions, revisions_revision_id = calculation_repository.load_revisioned()
-    target = revisions.get(calculation_revision_id)
-    if target is None:
-        raise CalculationRevisionNotFoundError(
-            translated_message="application.modelo.errors.calculation_revision_not_found",
-            context={"calculation_revision_id": calculation_revision_id},
-        )
-    if target.state not in SEALED_REVISION_STATES:
-        raise CalculationRevisionStateError(
-            translated_message="errors.error.error_modelo_calculation_revision_state",
-            context={"calculation_revision_id": calculation_revision_id, "state": target.state.value},
-        )
-    stored_snapshot = target.ledger_filing_snapshot
-    if stored_snapshot is None:
-        raise CalculationRevisionStateError(
-            translated_message="errors.error.error_modelo_calculation_revision_state",
-            context={"calculation_revision_id": calculation_revision_id, "state": target.state.value},
-        )
-    work_unit = work_unit_repository.load().get(target.work_unit_id)
-    if work_unit is None:
-        raise WorkUnitNotFoundError(
-            f"calculation revision {calculation_revision_id!r} references missing work_unit_id={target.work_unit_id!r}",
-        )
-    return _LedgerEvidenceRecaptureContext(
-        revisions=revisions,
-        revisions_revision_id=revisions_revision_id,
-        target=target,
-        work_unit=work_unit,
-        stored_snapshot=stored_snapshot,
-    )
-
-
-def _assert_live_snapshot_matches_sealed_revision(
-    *,
-    target: CalculationRevision,
-    stored_snapshot: LedgerFilingSnapshot,
-    catalogue: TransactionCatalogue,
-    captured_at: datetime,
-    calculation_revision_id: CalculationRevisionId,
-) -> None:
-    """Refuse recapture when any sealed contributor fingerprint moved.
-
-    The aggregate address covers every contributor fingerprint, so one
-    comparison answers the whole question; the per-row detail below is only
-    for the refusal message, not the decision.
-    """
-    live_snapshot = compute_ledger_filing_snapshot(
-        source_transaction_ids=target.source_transaction_ids,
-        catalogue=catalogue,
-        captured_at=captured_at,
-    )
-    if live_snapshot.snapshot_fingerprint == stored_snapshot.snapshot_fingerprint:
-        return
-    stored_by_id = {row.transaction_id: row.fingerprint for row in stored_snapshot.rows}
-    moved = tuple(
-        sorted(
-            row.transaction_id for row in live_snapshot.rows if stored_by_id.get(row.transaction_id) != row.fingerprint
-        ),
-    )
-    raise LedgerEvidenceRecaptureRefusedError(
-        translated_message="errors.refused.refused_modelo_ledger_evidence_recapture",
-        context={
-            "calculation_revision_id": calculation_revision_id,
-            "transaction_ids": list(moved),
-            "reason": "ledger_facts_moved_since_seal",
-        },
-    )
-
-
-def _previously_evidenced_transaction_ids(target: CalculationRevision) -> set[str]:
-    evidence = target.ledger_filing_evidence
-    return {
-        row.transaction_id
-        for row in (evidence.rows if evidence is not None else ())
-        if _row_carries_linked_evidence(row)
-    }
-
-
-def _save_recaptured_evidence(
-    *,
-    context: _LedgerEvidenceRecaptureContext,
-    catalogue: TransactionCatalogue,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    captured_at: datetime,
-) -> tuple[LedgerEvidenceRow, ...]:
-    """Capture and co-commit the replacement evidence bundle."""
-    recaptured = capture_revision_ledger_evidence(
-        revision=context.target,
-        catalogue=catalogue,
-        snapshot_fingerprint=context.stored_snapshot.snapshot_fingerprint,
-        captured_at=captured_at,
-    )
-    assert_evidence_covers_snapshot(context.stored_snapshot, recaptured)
-    updated = context.target.model_copy(
-        update={
-            "ledger_filing_evidence": recaptured,
-            "updated_at": captured_at,
-        },
-    )
-    calculation_repository.save_with_secure_object_writes(
-        upsert_calculation_revision(context.revisions, updated),
-        (),
-        expected_revision_id=context.revisions_revision_id,
-    )
-    return recaptured.rows
-
-
-def _newly_evidenced_transaction_ids(
-    rows: Iterable[LedgerEvidenceRow],
-    *,
-    previously_evidenced: set[str],
-) -> tuple[str, ...]:
-    return tuple(
-        sorted(
-            row.transaction_id
-            for row in rows
-            if _row_carries_linked_evidence(row) and row.transaction_id not in previously_evidenced
-        ),
-    )
-
-
-def _emit_ledger_evidence_recapture_event(
-    *,
-    repository: BucketEventHistoryRepositoryProtocol,
-    context: _LedgerEvidenceRecaptureContext,
-    calculation_revision_id: CalculationRevisionId,
-    captured_at: datetime,
-    actor: str,
-    row_count: int,
-    newly_evidenced_count: int,
-) -> None:
-    """Record the replacement after the sealed bundle has been persisted.
-
-    The replaced bundle is not retained, so without this event the fact that a
-    sealed revision's evidence changed would leave no trace.
-    """
-    _emit_bucket_event(
-        repository=repository,
-        bucket_id=context.work_unit.bucket_id,
-        event_type=BucketEventType.MODELO_LEDGER_EVIDENCE_RECAPTURED,
-        occurred_at=captured_at,
-        actor=actor,
-        object_type=BucketEventObjectType.CALCULATION_REVISION,
-        object_id=calculation_revision_id,
-        payload={
-            "work_unit_id": context.target.work_unit_id,
-            "snapshot_fingerprint": context.stored_snapshot.snapshot_fingerprint,
-            "row_count": str(row_count),
-            "newly_evidenced_count": str(newly_evidenced_count),
-        },
-    )
-
-
-def recapture_ledger_filing_evidence(
-    calculation_revision_id: CalculationRevisionId,
-    *,
-    actor: str,
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
-    transaction_repository: TransactionCatalogueRepository | None = None,
-    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
-    clock: datetime | None = None,
-) -> LedgerEvidenceRecaptureResult:
-    """Re-bundle a sealed revision's evidence from the live ledger, facts unchanged.
-
-    A revision's evidence bundle is frozen when it is sealed, and the filing
-    gates read that frozen bundle rather than the ledger. So an operator who
-    answers a missing-evidence refusal by attaching the invoice has, until now,
-    no way to make the filing see it: the bundle is never recomputed, the
-    revision cannot be re-verified, and recalculating returns the same
-    content-addressed revision because attaching an invoice changes no tax
-    fact. That is a permanent dead end, and it is the reason the sibling
-    filing gate was left deliberately fail-open on several axes.
-
-    This is the way out, and it is deliberately narrow. Only the two evidence
-    fields and ``updated_at`` are replaced. The contributor set is the
-    revision's own ``source_transaction_ids``, unchanged. Neither evidence
-    field feeds ``derive_calculation_revision_id``, so the revision keeps its
-    content address and every reference to it stays valid.
-
-    The refusal is what keeps that sound: if any contributing row's fingerprint
-    has moved, the tax facts changed and this is staleness, not a missing
-    attachment. Re-bundling there would swap the fact basis underneath a sealed
-    filing whose casilla values still assert the old one, so it raises instead.
-
-    Args:
-        calculation_revision_id: The sealed revision to re-bundle.
-        actor: Operator label recorded on the bucket-history event.
-        work_unit_repository: Optional work-unit repository port.
-        calculation_repository: Optional calculation-revision repository port.
-        transaction_repository: Optional live transaction catalogue port.
-        bucket_event_repository: Optional bucket-event history repository port.
-        clock: Optional timestamp override for deterministic runs.
-
-    Returns:
-        The :class:`LedgerEvidenceRecaptureResult` describing what changed.
-
-    Raises:
-        CalculationRevisionNotFoundError: No such revision.
-        WorkUnitNotFoundError: The revision references a missing work unit.
-        CalculationRevisionStateError: The revision is not sealed, or carries no
-            ledger snapshot to re-bundle against.
-        LedgerEvidenceRecaptureRefusedError: A contributing row's tax facts moved.
-    """
-    now = clock or _utc_now()
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    context = _resolve_recapture_context(
-        calculation_revision_id,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-    )
-    tx_repo = transaction_repository or TransactionCatalogueRepository(bucket_id=context.work_unit.bucket_id)
-    catalogue = tx_repo.load()
-    _assert_live_snapshot_matches_sealed_revision(
-        target=context.target,
-        stored_snapshot=context.stored_snapshot,
-        catalogue=catalogue,
-        captured_at=now,
-        calculation_revision_id=calculation_revision_id,
-    )
-    previously_evidenced = _previously_evidenced_transaction_ids(context.target)
-    recaptured_rows = _save_recaptured_evidence(
-        context=context,
-        catalogue=catalogue,
-        calculation_repository=cr_repo,
-        captured_at=now,
-    )
-    newly_evidenced = _newly_evidenced_transaction_ids(
-        recaptured_rows,
-        previously_evidenced=previously_evidenced,
-    )
-    _emit_ledger_evidence_recapture_event(
-        repository=bucket_event_repository or BucketEventHistoryRepository(),
-        context=context,
-        calculation_revision_id=calculation_revision_id,
-        captured_at=now,
-        actor=actor,
-        row_count=len(recaptured_rows),
-        newly_evidenced_count=len(newly_evidenced),
-    )
-    return LedgerEvidenceRecaptureResult(
-        calculation_revision_id=calculation_revision_id,
-        row_count=len(recaptured_rows),
-        newly_evidenced_transaction_ids=newly_evidenced,
-        recaptured_at=now,
     )
 
 

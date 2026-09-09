@@ -49,6 +49,7 @@ from datetime import date
 from enum import StrEnum
 from typing import Annotated, Literal
 
+from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 from pydantic import BeforeValidator, Field, PrivateAttr, computed_field, model_validator
 
 from ..core.authority_grade import RegistryAuthorityGrade
@@ -75,7 +76,6 @@ from ..domain.calculations.registry.schema_references import SourceReference
 from ..domain.calculations.registry.schema_surfaces import RelationDefinition
 from ..domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
 from ..domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from ..domain.calculations.registry.temporal import coverage_assessment_horizon, revision_selection_coordinates
 
 CoverageGateStatus = Literal["satisfied", "gap"]
 

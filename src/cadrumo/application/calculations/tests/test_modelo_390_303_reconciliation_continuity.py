@@ -412,9 +412,3 @@ def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> No
                 quarter_devengada.values(),
                 Decimal("0"),
             )
-
-
-
-
-
-

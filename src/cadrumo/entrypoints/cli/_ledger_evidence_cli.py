@@ -537,61 +537,6 @@ def evidence_confirm(
     )
 
 
-def _confirm_evidence_result(
-    *,
-    bucket_id: str,
-    kind: InvoiceKind,
-    evidence_id: str | None,
-    attachment_id: str | None,
-    counterparty_nif: str | None,
-    counterparty_name: str | None,
-    invoice_number: str | None,
-    invoice_date: str | None,
-    taxable_base: str | None,
-    iva_rate: str | None,
-    country_code: str,
-    currency: str | None,
-    operation_type: IntracomOperationType | None,
-    supply_nature: SupplyNature | None,
-    invoice_class: InvoiceClass | None,
-    rectifies: str | None,
-    series: str | None,
-    notes: str,
-    resolve: list[str],
-) -> InvoiceConfirmationResult:
-    """Run the application confirmation service with CLI-normalized values."""
-    resolutions: list[FindingResolution] = [parse_finding_resolution(raw) for raw in resolve]
-    try:
-        return confirm_invoice_draft_from_evidence(
-            bucket_id=bucket_id,
-            kind=kind,
-            counterparty_country=country_code,
-            evidence_id=evidence_id,
-            attachment_id=attachment_id,
-            counterparty_tax_id=counterparty_nif,
-            counterparty_name=counterparty_name,
-            invoice_number=invoice_number,
-            invoice_date=_parse_iso_date(invoice_date, label="invoice-date") if invoice_date else None,
-            taxable_base=parse_decimal_amount(taxable_base, label="taxable-base") if taxable_base else None,
-            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
-            currency=currency,
-            operation_type=operation_type,
-            supply_nature=supply_nature,
-            # Omitted rather than defaulted when the operator says nothing, so the
-            # DOCUMENT's own statement stands. Passing ORDINARIA here would
-            # override a rectificativa the reader correctly recovered.
-            **_invoice_class_kwarg(invoice_class),
-            rectifies_invoice_number=rectifies,
-            series=series,
-            notes=notes,
-            resolutions=resolutions,
-        )
-    except (InvoiceValidationError, ValidationError) as exc:
-        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
-            raise refusal from None
-        raise
-
-
 def _evidence_confirm_payload(
     *,
     bucket_id: str,
@@ -732,27 +677,34 @@ def _run_evidence_confirm(
     _require_exact_evidence_reference(evidence_id, attachment_id)
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
     bucket_id = transaction_repository.bucket_id
-    result = _confirm_evidence_result(
-        bucket_id=bucket_id,
-        kind=kind,
-        evidence_id=evidence_id,
-        attachment_id=attachment_id,
-        counterparty_nif=counterparty_nif,
-        counterparty_name=counterparty_name,
-        invoice_number=invoice_number,
-        invoice_date=invoice_date,
-        taxable_base=taxable_base,
-        iva_rate=iva_rate,
-        country_code=country_code,
-        currency=currency,
-        operation_type=operation_type,
-        supply_nature=supply_nature,
-        invoice_class=invoice_class,
-        rectifies=rectifies,
-        series=series,
-        notes=notes,
-        resolve=resolve,
-    )
+    resolutions: list[FindingResolution] = [parse_finding_resolution(raw) for raw in resolve]
+    try:
+        result = confirm_invoice_draft_from_evidence(
+            bucket_id=bucket_id,
+            kind=kind,
+            counterparty_country=country_code,
+            evidence_id=evidence_id,
+            attachment_id=attachment_id,
+            counterparty_tax_id=counterparty_nif,
+            counterparty_name=counterparty_name,
+            invoice_number=invoice_number,
+            invoice_date=_parse_iso_date(invoice_date, label="invoice-date") if invoice_date else None,
+            taxable_base=parse_decimal_amount(taxable_base, label="taxable-base") if taxable_base else None,
+            iva_rate=parse_optional_decimal_amount(iva_rate, label="iva-rate"),
+            currency=currency,
+            operation_type=operation_type,
+            supply_nature=supply_nature,
+            # Leave an omitted class omitted so document-derived defaults survive.
+            **_invoice_class_kwarg(invoice_class),
+            rectifies_invoice_number=rectifies,
+            series=series,
+            notes=notes,
+            resolutions=resolutions,
+        )
+    except (InvoiceValidationError, ValidationError) as exc:
+        if (refusal := ledger_invoice_validation_no_recovery(exc)) is not None:
+            raise refusal from None
+        raise
     emit_envelope(
         ctx,
         command="ledger.evidence.confirm",

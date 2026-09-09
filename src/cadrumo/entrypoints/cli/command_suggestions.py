@@ -41,7 +41,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from importlib import import_module
 from importlib.util import resolve_name
-from typing import Any, Literal, Never, cast, override
+from typing import Any, Never, cast, override
 
 import typer
 import typer.core as typer_core
@@ -135,6 +135,15 @@ class LazyImportTarget:
         except AttributeError as error:
             raise RuntimeError(f"lazy CLI target {self.owner!r} does not exist") from error
         return _require_typer_target(target, owner=self.owner)
+
+
+def _callable_owner(callback: object | None) -> str:
+    """Project a callable to a stable owner string, or ``<none>``."""
+    if callback is None:
+        return "<none>"
+    module = getattr(callback, "__module__", type(callback).__module__)
+    qualname = getattr(callback, "__qualname__", type(callback).__qualname__)
+    return f"{module}:{qualname}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -304,175 +313,6 @@ class LazySubcommand:
         else:
             text = ""
         return text.strip()
-
-
-CommandNodeKind = Literal["root", "group", "leaf"]
-
-
-@dataclass(frozen=True, slots=True)
-class LiveCommandNode:
-    """One runtime CLI node with its loading and handling ownership.
-
-    ``path`` includes the executable token so independently collected censuses
-    share one canonical namespace. Owners use ``module:qualname`` strings: they
-    identify the registration callable that materialises a lazy node and the
-    callback that handles the node, while remaining serialisable and stable
-    across fresh processes. ``loader_owner`` is ``None`` for an eagerly
-    registered node because no runtime loader exists; it never aliases handler
-    ownership to conceal that distinction.
-
-    Policy is intentionally absent from this Click census. Executable policy
-    authority is read from the immutable CommandSpec graph by its consumers.
-    """
-
-    path: tuple[str, ...]
-    kind: CommandNodeKind
-    loader_owner: str | None
-    handler_owner: str
-
-
-def _callable_owner(callback: object | None) -> str:
-    """Project a callable to a stable owner string, or ``<none>``."""
-    if callback is None:
-        return "<none>"
-    module = getattr(callback, "__module__", type(callback).__module__)
-    qualname = getattr(callback, "__qualname__", type(callback).__qualname__)
-    return f"{module}:{qualname}"
-
-
-def _is_command_group(command: object) -> bool:
-    """Recognise a group across Typer's vendored Click type boundary."""
-    return callable(getattr(command, "list_commands", None)) and callable(getattr(command, "get_command", None))
-
-
-def walk_live_command_tree(app: typer.Typer) -> tuple[LiveCommandNode, ...]:
-    """Return a stable census of every command reachable from ``app``.
-
-    The walk resolves children through the same ``list_commands`` /
-    ``get_command`` protocol used by Click dispatch. Lazy ownership is captured
-    before resolution triggers the loader. The returned tuple is sorted by
-    operator-facing path, independent of registration or dictionary order.
-
-    Args:
-        app: Runtime Typer application to census.
-
-    Returns:
-        Immutable command-node records including the root, all groups, and all
-        leaves reachable from the runtime tree.
-    """
-    root = _typer_get_command(app)
-    root.name = app.info.name or root.name
-    root_token = root.name or "<root>"
-    nodes: list[LiveCommandNode] = []
-
-    def visit(
-        command: TyCommand,
-        path: tuple[str, ...],
-        *,
-        loader_owner: str | None,
-        ancestors: frozenset[int],
-    ) -> None:
-        if id(command) in ancestors:
-            return
-        child_ancestors = ancestors | {id(command)}
-        is_group = _is_command_group(command)
-        nodes.append(
-            LiveCommandNode(
-                path=path,
-                kind="root" if len(path) == 1 else "group" if is_group else "leaf",
-                loader_owner=loader_owner,
-                handler_owner=_callable_owner(getattr(command, "callback", None)),
-            )
-        )
-        if not is_group:
-            return
-
-        context = TyContext(command, info_name=path[-1])
-        try:
-            child_lazy_table = command.lazy_table() if isinstance(command, CadrumoTyperGroup) else {}
-            group = cast(Any, command)
-            for child_name in group.list_commands(context):
-                lazy = child_lazy_table.get(child_name)
-                child = group.get_command(context, child_name)
-                if child is None:
-                    continue
-                owner = lazy.loader_owner if lazy is not None else None
-                visit(child, (*path, child_name), loader_owner=owner, ancestors=child_ancestors)
-        finally:
-            context.close()
-
-    visit(root, (root_token,), loader_owner=None, ancestors=frozenset())
-    return tuple(sorted(nodes, key=lambda node: node.path))
-
-
-def resolve_command_path(
-    app: typer.Typer,
-    cli_path: tuple[str, ...],
-) -> TyCommand:
-    """Materialize only the nodes selected by ``cli_path``, token by token.
-
-    Resolution follows Click's real ``get_command`` protocol one token at a
-    time without calling ``list_commands``. Registered lazy loaders still own
-    their module import boundaries; nested eager registrars remain visible as
-    import cost until the command-loading campaign converts them.
-
-    ``cli_path`` excludes the executable token (for example
-    ``("config", "profile", "list")``). Missing paths and traversal through a
-    leaf fail closed. No sibling loader is inspected or materialized.
-    """
-    command = _typer_get_command(app)
-    resolved: list[str] = []
-    for token in cli_path:
-        if not _is_command_group(command):
-            raise LookupError(f"CLI path traverses through a leaf at {' '.join(resolved)!r}")
-        context = TyContext(command, info_name=resolved[-1] if resolved else command.name)
-        try:
-            child = cast(Any, command).get_command(context, token)
-        finally:
-            context.close()
-        if child is None:
-            raise LookupError(f"unknown CLI path: {' '.join(cli_path)!r}")
-        command = child
-        resolved.append(token)
-    return cast(TyCommand, command)
-
-
-def materialise_lazy_subcommands(app: typer.Typer) -> None:
-    """Load every lazily-registered subcommand reachable from ``app``.
-
-    Walks the vendored Click ``list_commands`` / ``get_command`` protocol, the
-    same graph dispatch uses. This is deliberately not a walk over Typer's
-    ``registered_groups``: a materialized lazy node is a Click child and is not
-    inserted back into that Typer-only list. Idempotent, and terminates on a
-    cyclic command graph via the identity-seen set.
-
-    A consumer that walks the FULL command tree — a conformance gate, the
-    capability projection, a reference generator — must drain the table first,
-    or it silently walks a tree missing whole command families and reports
-    success while blind to them.
-
-    Args:
-        app: Root Typer application whose subtree is materialised in place.
-    """
-    root = _typer_get_command(app)
-    seen: set[int] = set()
-    pending: list[TyCommand] = [root]
-    while pending:
-        command = pending.pop()
-        if id(command) in seen:
-            continue
-        seen.add(id(command))
-        if not _is_command_group(command):
-            continue
-        context = TyContext(command, info_name=command.name)
-        try:
-            group = cast(Any, command)
-            for child_name in group.list_commands(context):
-                child = group.get_command(context, child_name)
-                if child is not None:
-                    pending.append(cast(TyCommand, child))
-        finally:
-            context.close()
 
 
 #: ``Context.meta`` key carrying the unparsed invocation remainder
@@ -698,8 +538,4 @@ __all__ = [
     "LazyNodeTarget",
     "LazyOptionalDependencyProvider",
     "LazySubcommand",
-    "LiveCommandNode",
-    "materialise_lazy_subcommands",
-    "resolve_command_path",
-    "walk_live_command_tree",
 ]

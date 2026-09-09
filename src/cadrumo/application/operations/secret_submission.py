@@ -56,19 +56,6 @@ class OperationSecretRequirement(BaseModel):
 
 
 @runtime_checkable
-class EphemeralSecretSubmission(Protocol):
-    """Public one-shot submission port implemented by the owning supervisor."""
-
-    async def submit_ephemeral_secret(
-        self,
-        requirement: OperationSecretRequirement,
-        secret: bytearray,
-    ) -> None:
-        """Transfer one mutable secret buffer into exact-bound runtime custody."""
-        ...
-
-
-@runtime_checkable
 class OperationEphemeralSecretAccess(Protocol):
     """Executor-only scoped access to the submitted secret for its definition."""
 
@@ -218,7 +205,6 @@ def zeroize_secret_buffer(buffer: bytearray) -> None:
 
 
 __all__ = [
-    "EphemeralSecretSubmission",
     "OperationEphemeralSecretAccess",
     "OperationEphemeralSecretDeclaration",
     "OperationSecretKind",

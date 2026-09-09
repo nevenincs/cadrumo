@@ -260,10 +260,3 @@ def test_modelo_714_joint_limit_calculation_enrolls_two_renta_years(tmp_path: Pa
             )
             result = _calculate_714_from_local_m100(scenario=scenario, repository=repo)
             _assert_joint_limit_outputs(result, scenario)
-
-
-
-
-
-
-

@@ -17,7 +17,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import build_error_envelope
 from ....core.period import Period
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -37,17 +37,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 # Registry membership
 # ---------------------------------------------------------------------------
-
-
-def test_observation_key_error_is_in_error_registry() -> None:
-    """ObservationKeyError must be registered so the CLI can handle it."""
-    assert "ERROR_OBSERVATION_KEY" in ERROR_REGISTRY
-
-
-def test_observation_key_error_code_matches_registry() -> None:
-    code = ERROR_REGISTRY["ERROR_OBSERVATION_KEY"]
-    assert code.code == "ERROR_OBSERVATION_KEY"
-    assert code.message_key == "errors.error.error_observation_key"
 
 
 def test_observation_key_error_build_error_envelope() -> None:

@@ -13,22 +13,19 @@ import inspect
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Protocol, get_type_hints
+from typing import Protocol
 
 import pytest
 from pydantic import BaseModel
 
-from ....core.operations import OperationEffect
 from ..financial_operand import (
     OperationTransientFinancialOperandAccess,
     OperationTransientFinancialOperandAcknowledgement,
     OperationTransientFinancialOperandDeclaration,
     OperationTransientFinancialOperandExpiry,
-    OperationTransientFinancialOperandProtocolV1,
     OperationTransientFinancialOperandRefusal,
     OperationTransientFinancialOperandRelease,
     OperationTransientFinancialOperandRequirement,
-    OperationTransientFinancialOperandSubmission,
 )
 from ..financial_operand_custody import (
     OperationFinancialOperandCrashClassification,
@@ -40,8 +37,6 @@ from ..financial_operand_custody import (
     reconcile_on_restart,
 )
 from ..persistence.financial_operand_custody import OperationFinancialOperandCustodyRepository
-from ..registry import resolve_effect_receipt
-from .test_financial_operand_registration import _operand_definition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -75,9 +70,7 @@ def _module_source(dotted: str) -> str:
 def test_protocol_schema_is_structural_and_closed() -> None:
     """Every port is a runtime-checkable Protocol; every record is strict and frozen."""
     for protocol in (
-        OperationTransientFinancialOperandSubmission,
         OperationTransientFinancialOperandAccess,
-        OperationTransientFinancialOperandProtocolV1,
         OperationFinancialOperandCustodyRepository,
     ):
         assert issubclass(protocol, Protocol)  # type: ignore[arg-type]
@@ -146,21 +139,6 @@ def test_crash_evidence_never_resolves_an_uncertain_delivery() -> None:
             assert reconciled.state is not _STATE.DELIVERY_ACKNOWLEDGED
 
 
-def test_effect_evidence_narrows_and_never_widens() -> None:
-    """No input to the resolver can turn a weaker claim into a stronger one."""
-    definition = _operand_definition()
-    strength = {OperationEffect.NONE: 0, OperationEffect.UNKNOWN: 1, OperationEffect.UPDATED: 2}
-
-    for claimed in (OperationEffect.NONE, OperationEffect.UNKNOWN, OperationEffect.UPDATED):
-        for evidence in (True, False):
-            receipt = resolve_effect_receipt(
-                definition,
-                claimed_effect=claimed,
-                committed_evidence=evidence,
-            )
-            assert strength[receipt.effect] <= strength[claimed], (claimed, evidence)
-
-
 def test_production_composition_binds_the_real_repository_to_its_protocol() -> None:
     """The shipped filesystem store satisfies the contract callers depend on."""
     from ....adapters.persistence.operations.financial_operand_custody import (
@@ -182,9 +160,6 @@ def test_non_retention_holds_across_every_record_and_signature() -> None:
             assert not any(token in name.lower() for token in forbidden), f"{record.__name__}.{name}"
             annotation = str(record.model_fields[name].annotation)
             assert "Decimal" not in annotation, f"{record.__name__}.{name}"
-
-    hints = get_type_hints(OperationTransientFinancialOperandProtocolV1.declare_requirement)
-    assert "Decimal" not in str(hints.get("return")), "the broker must not return an amount"
 
 
 def test_current_only_evidence_carries_no_legacy_branch() -> None:

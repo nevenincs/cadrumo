@@ -59,10 +59,6 @@ from .capabilities import (
 )
 from .events import OperationEventCode
 from .financial_operand import OperationTransientFinancialOperandDeclaration
-from .financial_operand_custody import (
-    OperationFinancialOperandCrashClassification,
-    OperationFinancialOperandCustodyCheckpoint,
-)
 from .interactions import OperationInteractionRequest
 from .models import (
     CredentialFreeOperationRequest,
@@ -380,46 +376,6 @@ class OperationEffectReceipt(BaseModel):
         if self.narrowed_from is not None and self.narrowed_from is self.effect:
             raise ValueError("an effect receipt records a narrowing only when the claim actually changed")
         return self
-
-
-def resolve_effect_receipt(
-    definition: OperationDefinition,
-    *,
-    claimed_effect: OperationEffect,
-    committed_evidence: bool,
-    custody: OperationFinancialOperandCustodyCheckpoint | None = None,
-) -> OperationEffectReceipt:
-    """Narrow one recorded effect claim against committed application evidence.
-
-    ``committed_evidence`` is whether the application durably recorded the
-    mutation this operation claims. Without it an ``UPDATED`` or ``PARTIAL``
-    claim narrows to ``UNKNOWN``: the operation may well have succeeded, and
-    saying so without evidence is exactly the over-claim that makes a later
-    reconciliation trust a write that never landed.
-
-    ``custody`` carries the operand wait, if the operation had one. Only its
-    crash classification is read - never any operand material, which the
-    checkpoint does not hold in the first place. A wait whose delivery is
-    uncertain cannot support a definite effect claim.
-    """
-    if claimed_effect not in definition.capabilities.permitted_effects:
-        raise ValueError(f"operation {definition.definition_id!r} may not claim effect {claimed_effect.value!r}")
-    interrupted = custody is not None and (
-        custody.crash_classification is OperationFinancialOperandCrashClassification.DELIVERY_UNCERTAIN
-    )
-    definite = claimed_effect in {OperationEffect.UPDATED, OperationEffect.PARTIAL}
-    if definite and (not committed_evidence or interrupted):
-        return OperationEffectReceipt(
-            definition_id=definition.definition_id,
-            effect=OperationEffect.UNKNOWN,
-            interrupted=interrupted,
-            narrowed_from=claimed_effect,
-        )
-    return OperationEffectReceipt(
-        definition_id=definition.definition_id,
-        effect=claimed_effect,
-        interrupted=interrupted,
-    )
 
 
 class OperationSchemaBindingV1(BaseModel):
@@ -776,5 +732,4 @@ __all__ = [
     "OperationSchemaIdentityV1",
     "OperationWorkspaceRefreshAdapter",
     "operation_public_schema_reference",
-    "resolve_effect_receipt",
 ]

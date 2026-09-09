@@ -283,9 +283,3 @@ def test_modelo_131_modules_continuity_enrolls_two_renta_years(tmp_path: Path) -
     assert result_n1.values[_M131_SALDO_NEGATIVO_CASILLA] == Decimal("0.00")
 
     # Authorization-gate enrollment.
-
-
-
-
-
-

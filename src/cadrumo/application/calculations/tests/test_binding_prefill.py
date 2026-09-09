@@ -11,7 +11,7 @@ import pytest
 
 from ....adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from ....core.casilla_id import CasillaId, validated_casilla_id
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import build_error_envelope
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
@@ -460,10 +460,6 @@ def test_iva_history_observation_rejects_mismatched_formula_operand_projection()
     assert str(excinfo.value) == (
         "application.calculations.iva_compensation.errors.history_operand_refs_diverge_from_formula"
     )
-
-
-def test_binding_prefill_type_error_is_registered_in_error_registry() -> None:
-    assert "REFUSED_BINDING_PREFILL_TYPE" in ERROR_REGISTRY
 
 
 def test_binding_prefill_type_error_round_trips_through_build_error_envelope() -> None:

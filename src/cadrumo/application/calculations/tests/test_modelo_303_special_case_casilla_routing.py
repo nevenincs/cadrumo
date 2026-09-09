@@ -235,5 +235,3 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted(tmp_path: Path) 
     assert any(issue.reason is IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_CATEGORY for issue in report.issues), (
         "recargo-equivalencia exclusion must be surfaced as an UNSUPPORTED_IVA_CATEGORY issue, not silent"
     )
-
-

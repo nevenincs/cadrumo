@@ -282,11 +282,3 @@ def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: P
     # year's end-of-year generated saldo, year-isolated.
     assert Decimal(revision_n.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[2023]
     assert Decimal(revision_n1.casilla_values[_PENDIENTE_INICIO]) == _SALDO_BY_SOURCE_YEAR[2024]
-
-
-
-
-
-
-
-

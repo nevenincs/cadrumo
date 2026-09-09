@@ -9,12 +9,13 @@ from __future__ import annotations
 
 from typing import override
 
+from dev.registry.maintenance_support import LiveParityCatalogue, OracleEnvironment
 from pydantic import AnyUrl
 
 from ..core.config import Settings
-from ..domain.calculations.registry.checker_oracle_flow import CheckerDriver, CheckerOperationPlan, CheckerOracle
 from ..domain.calculations.registry.ids import OracleId
-from ..domain.calculations.registry.live_parity import LiveParityCatalogue, OracleEnvironment, OracleSurfaceKind
+from ..domain.calculations.registry.live_parity import OracleSurfaceKind
+from .checker_oracle import CheckerDriver, CheckerOperationPlan, CheckerOracle
 
 GROI_ORACLE_ID: OracleId = "aeat-groi-spanish-roi-checker"
 

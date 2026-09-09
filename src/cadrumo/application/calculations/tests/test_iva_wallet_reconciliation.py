@@ -13,7 +13,7 @@ from pydantic import AnyHttpUrl, ValidationError
 from ....adapters.outbound.aeat.sede._iva_compensation_wallet_parsing import WALLET_URL
 from ....adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from ....core.aggregation import BindingSourceKind
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import build_error_envelope
 from ....core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
@@ -610,10 +610,6 @@ def test_public_wallet_reconciliation_refuses_mismatched_wallet_taxpayer() -> No
 # ---------------------------------------------------------------------------
 # contract — IvaWalletReconciliationError registry and raise-site coverage
 # ---------------------------------------------------------------------------
-
-
-def test_iva_wallet_reconciliation_error_is_registered_in_error_registry() -> None:
-    assert "REFUSED_IVA_WALLET_RECONCILIATION_INVARIANT" in ERROR_REGISTRY
 
 
 def test_iva_wallet_reconciliation_error_round_trips_through_build_error_envelope() -> None:

@@ -13,7 +13,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.aggregation import BindingSourceKind
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, get_registered_error_code
+from ....core.errors.error_codes import build_error_envelope, get_registered_error_code
 from ....core.period import Period
 from .._service import (
     ACCEPTED_SOURCE_KINDS,
@@ -35,15 +35,6 @@ _P_2024_ANNUAL = Period.from_year_and_code(2024, "0A")
 # ---------------------------------------------------------------------------
 # Registry and envelope round-trip (contract primary gate)
 # ---------------------------------------------------------------------------
-
-
-def test_aggregation_config_error_is_in_error_registry() -> None:
-    # ERROR_REGISTRY is keyed by error code string (e.g. "ERROR_AGGREGATION_CONFIG")
-    assert "ERROR_AGGREGATION_CONFIG" in ERROR_REGISTRY, (
-        "AggregationConfigError must be bound in ERROR_REGISTRY under code 'ERROR_AGGREGATION_CONFIG'"
-    )
-    code = ERROR_REGISTRY["ERROR_AGGREGATION_CONFIG"]
-    assert code.message_key == "errors.error.error_aggregation_config"
 
 
 def test_aggregation_config_error_registered_code_accessible_from_instance() -> None:

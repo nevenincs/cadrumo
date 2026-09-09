@@ -405,9 +405,3 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     # Authorization-gate enrollment for the 193 resumen.
 
     # Authorization-gate enrollment for the 123 feeder (standalone fleet modelo).
-
-
-
-
-
-

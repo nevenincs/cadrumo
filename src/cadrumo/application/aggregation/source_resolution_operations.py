@@ -138,26 +138,7 @@ class _SourceResolutionMergeState:
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
 
     def absorb(self, resolution: CalculationSourceResolution) -> None:
-        self.owned_sources.update(resolution.owned_sources)
-        self.diagnostics.extend(resolution.diagnostics)
-        self.provenance.extend(resolution.provenance)
-        self.detail_rows.extend(resolution.detail_rows)
-        self.source_transaction_ids.update(resolution.source_transaction_ids)
-        self.unresolved_relation_ids.update(resolution.unresolved_relation_ids)
-        self.unresolved_binding_ids.update(resolution.unresolved_binding_ids)
-        if resolution.borrador_provenance is not None:
-            self.borrador_provenance = resolution.borrador_provenance
-        handoff = resolution.m303_regimen_simplificado_annual_summary_handoff
-        if handoff is not None:
-            if self.m303_regimen_simplificado_annual_summary_handoff is not None:
-                raise AggregationValidationError(
-                    t("aggregation.source_mesh.errors.annual_summary_handoff_duplicate"),
-                    context={
-                        "first_resolver": self.m303_regimen_simplificado_annual_summary_handoff.source_work_unit_id,
-                        "second_resolver": resolution.resolver_id,
-                    },
-                )
-            self.m303_regimen_simplificado_annual_summary_handoff = handoff
+        self._absorb_metadata(resolution)
         self._absorb_binding_values(resolution)
         self._absorb_row_binding_values(resolution)
         self._absorb_row_casilla_values(resolution)
@@ -166,14 +147,15 @@ class _SourceResolutionMergeState:
 
     def absorb_by_precedence(self, resolution: CalculationSourceResolution) -> None:
         """Overlay one tier, retaining the later tier's value for each key."""
-        self._absorb_precedence_metadata(resolution)
+        self._absorb_metadata(resolution)
         self._absorb_precedence_values(resolution)
         self._absorb_precedence_row_bindings(resolution)
         self._absorb_precedence_row_casillas(resolution)
         self._absorb_precedence_relations(resolution)
         self.bound_inputs_by_casilla_id.update(resolution.bound_inputs_by_casilla_id)
 
-    def _absorb_precedence_metadata(self, resolution: CalculationSourceResolution) -> None:
+    def _absorb_metadata(self, resolution: CalculationSourceResolution) -> None:
+        """Accumulate source facts whose merge rule is independent of value precedence."""
         self.owned_sources.update(resolution.owned_sources)
         self.diagnostics.extend(resolution.diagnostics)
         self.provenance.extend(resolution.provenance)

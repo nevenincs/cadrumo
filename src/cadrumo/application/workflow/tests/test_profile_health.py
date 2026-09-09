@@ -28,7 +28,7 @@ from ....core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from ....core.config import override_settings
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.profile_capsule import mint_test_profile_recovery_envelope
-from ...user_profile.login_session_port import profile_bind_bucket_session
+from ...user_profile.login_session_port import profile_login_session_port
 from ..profile_health import assess_active_profile_health, repair_active_profile_pointer
 from ..state_models import WorkflowState
 
@@ -257,7 +257,7 @@ def test_health_observes_current_or_degraded_state_without_provider_or_recovery_
         storage_root=ready_root,
     )
     try:
-        profile_bind_bucket_session(ready_custody_session)
+        profile_login_session_port().bind_session(ready_custody_session)
         with override_settings(
             cadrumo_local_storage_root=ready_root,
             cadrumo_secret_store_dir=ready_root / "secrets",

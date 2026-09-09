@@ -40,9 +40,7 @@ from ..components.theme import (
     CADRUMO_LIGHT,
     CADRUMO_LIGHT_THEME_NAME,
     CADRUMO_THEMES,
-    CONTENT_WIDTH_PERCENT,
     NOTICE_BAND_CSS,
-    SCROLLBAR_CELLS,
     UnknownDesignTokenError,
     resolve_theme_name,
     tokenised,
@@ -183,11 +181,6 @@ def test_light_is_actually_lighter_than_dark() -> None:
     assert _relative_luminance(str(CADRUMO_LIGHT.background)) > _relative_luminance(str(CADRUMO_DARK.background))
 
 
-def test_the_content_column_uses_all_available_width() -> None:
-    """The shared column must not impose an artificial width ceiling."""
-    assert CONTENT_WIDTH_PERCENT == "100%"
-
-
 # ── rendered geometry ───────────────────────────────────────────────────────
 
 _GEOMETRY_SIZES = [(80, 30), (120, 40), (200, 50)]
@@ -205,7 +198,6 @@ def _registration_screen() -> RegistrationScreen:
     Geometry never calls them, but the screen takes them because it does
     not reach up into the application layer for itself.
     """
-    from dev.tui.harness.fixture import registration_attempt
 
     from ....core.credentials import assess_profile_password
 
@@ -243,7 +235,7 @@ async def test_the_content_column_consumes_the_available_terminal(
         await pilot.pause()
         left, right = _gutters(pilot.app.screen)
         assert left == 0, f"left gutter at {width}x{height}: {left}"
-        assert 0 <= right <= SCROLLBAR_CELLS, f"unused width at {width}x{height}: left={left} right={right}"
+        assert 0 <= right <= 1, f"unused width at {width}x{height}: left={left} right={right}"
         pilot.app.exit(None)
 
 
@@ -261,7 +253,7 @@ async def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> 
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         scroll = pilot.app.screen.query_one(".cadrumo-scroll")
-        assert scroll.styles.scrollbar_size_vertical == SCROLLBAR_CELLS
+        assert scroll.styles.scrollbar_size_vertical == 1
         assert scroll.styles.scrollbar_gutter != "stable", "a stable gutter reserves the cell even with no overflow"
         pilot.app.exit(None)
 

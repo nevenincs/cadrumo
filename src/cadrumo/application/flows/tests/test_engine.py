@@ -171,6 +171,7 @@ def test_next_and_boundary_stop_track_the_cursor() -> None:
     assert walked.cursor == "p_num"
     assert next_page(definition, walked).cursor == "p_num"
 
+
 def test_jump_to_visible_page_and_refusal_on_hidden_target() -> None:
     definition = _nav_definition()
     state = start_flow(definition, mode=FlowMode.CREATE)

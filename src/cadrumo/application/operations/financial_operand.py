@@ -26,7 +26,7 @@ disguise. No record here carries a digest, fingerprint, or any other durable
 derivative of an operand.
 
 See Also:
-    :class:`~cadrumo.application.operations.secret_submission.EphemeralSecretSubmission`
+    the ephemeral-secret broker path
         The distinct one-shot port for credential material, not for amounts.
 """
 
@@ -192,23 +192,6 @@ type OperationTransientFinancialOperandDelivery = (
 
 
 @runtime_checkable
-class OperationTransientFinancialOperandSubmission(Protocol):
-    """One-shot submission port for a transient financial operand.
-
-    The amount is a parameter and never a field, so nothing in this contract
-    can carry it out of the call it was supplied to.
-    """
-
-    async def submit_transient_financial_operand(
-        self,
-        requirement: OperationTransientFinancialOperandRequirement,
-        amount: Decimal,
-    ) -> OperationTransientFinancialOperandDelivery:
-        """Transfer one declared amount into exact-bound runtime custody."""
-        ...
-
-
-@runtime_checkable
 class OperationTransientFinancialOperandAccess(Protocol):
     """Executor-only scoped read of the operand its own definition declared."""
 
@@ -220,49 +203,6 @@ class OperationTransientFinancialOperandAccess(Protocol):
         ...
 
 
-@runtime_checkable
-class OperationTransientFinancialOperandProtocolV1(Protocol):
-    """The sole broker contract binding an operand wait to its settlement.
-
-    A broker opens exactly one wait per requirement, settles it once, and
-    releases custody. It never stores an amount beyond the release, and it
-    exposes no method that would return a durable derivative of one.
-    """
-
-    def declare_requirement(
-        self,
-        declaration: OperationTransientFinancialOperandDeclaration,
-        *,
-        identity: OperationIdentity,
-        interaction_id: OperationInteractionId,
-        revision: OperationRevision,
-    ) -> OperationTransientFinancialOperandRequirement:
-        """Open one bounded wait for the operand this declaration describes."""
-        ...
-
-    def grant_access(
-        self,
-        requirement: OperationTransientFinancialOperandRequirement,
-    ) -> OperationTransientFinancialOperandAccess:
-        """Return executor-scoped access to one accepted operand."""
-        ...
-
-    def release(
-        self,
-        requirement: OperationTransientFinancialOperandRequirement,
-    ) -> OperationTransientFinancialOperandRelease:
-        """End custody of one operand and clear the buffer holding it."""
-        ...
-
-    def expire_lapsed(
-        self,
-        *,
-        now: datetime,
-    ) -> tuple[OperationTransientFinancialOperandExpiry, ...]:
-        """Settle every wait whose declared lifetime has elapsed."""
-        ...
-
-
 __all__ = [
     "OperationFinancialOperandKind",
     "OperationFinancialOperandRefusalReason",
@@ -271,9 +211,7 @@ __all__ = [
     "OperationTransientFinancialOperandDeclaration",
     "OperationTransientFinancialOperandDelivery",
     "OperationTransientFinancialOperandExpiry",
-    "OperationTransientFinancialOperandProtocolV1",
     "OperationTransientFinancialOperandRefusal",
     "OperationTransientFinancialOperandRelease",
     "OperationTransientFinancialOperandRequirement",
-    "OperationTransientFinancialOperandSubmission",
 ]

@@ -100,9 +100,7 @@ _OVERVIEW_OPERATIONS: Final[dict[AeatSyncOverviewArea, tuple[str, ...]]] = {
     AeatSyncOverviewArea.RECONCILIATION: (),
 }
 
-_PULL_ACTION_IDS: Final[frozenset[str]] = frozenset(
-    {"operator.live.filed.pull", "operator.live.filed.pull_all"}
-)
+_PULL_ACTION_IDS: Final[frozenset[str]] = frozenset({"operator.live.filed.pull", "operator.live.filed.pull_all"})
 
 
 _LOCAL_REFUSALS: Final[dict[AeatSyncWorkspaceSource, str]] = {
@@ -197,9 +195,7 @@ def _joined_action_references(
 ) -> tuple[ActionReference, ...]:
     """Collect action references attached to the area's admitted operations."""
     return tuple(
-        reference
-        for definition_id in operations
-        if (reference := admitted[definition_id].action_reference) is not None
+        reference for definition_id in operations if (reference := admitted[definition_id].action_reference) is not None
     )
 
 

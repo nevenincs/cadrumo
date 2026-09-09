@@ -497,9 +497,3 @@ def test_modelo_303_compensacion_carry_enrolls_two_renta_years(tmp_path: Path) -
     # Authorization-gate enrollment: the recorded two-year set is cross-checked
     # against the manifest's renta_years claim. A single-year or stub run would
     # raise here, turning the gate RED.
-
-
-
-
-
-

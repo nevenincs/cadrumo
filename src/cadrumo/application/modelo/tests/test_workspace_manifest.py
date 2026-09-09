@@ -28,8 +28,6 @@ from ..workspace_manifest import (
     generate_modelo_workspace_field_manifest_for_inspection,
     read_modelo_workspace_manifest_current_coordinate,
     read_modelo_workspace_manifest_current_coordinate_for_inspection,
-    validate_modelo_workspace_field_manifest,
-    validate_modelo_workspace_field_manifest_for_inspection,
 )
 from ..workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorkspaceSchemaReferenceV1
 from ..workspace_producers import (
@@ -104,7 +102,7 @@ def test_workspace_manifest_is_a_real_authority_fixed_point_with_safe_classifica
     snapshot = _snapshot()
     manifest = _manifest()
 
-    assert validate_modelo_workspace_field_manifest(manifest, snapshot) is manifest
+    assert generate_modelo_workspace_field_manifest(snapshot) == manifest
     assert manifest.entries == tuple(sorted(manifest.entries, key=lambda entry: entry.path))
     assert len({entry.path for entry in manifest.entries}) == len(manifest.entries)
     assert {entry.classification for entry in manifest.entries} == {
@@ -143,8 +141,7 @@ def test_workspace_manifest_includes_every_public_selector_root_and_its_extra_un
         traversal_roots=tuple(root for root in manifest.traversal_roots if not root.startswith("selector.")),
         entries=tuple(entry for entry in manifest.entries if not entry.path.startswith("selector.")),
     )
-    with pytest.raises(ValueError, match="fixed point"):
-        validate_modelo_workspace_field_manifest(without_selectors, _snapshot())
+    assert without_selectors != generate_modelo_workspace_field_manifest(_snapshot())
 
 
 def test_workspace_manifest_walks_existing_tagged_union_and_collection_coordinates() -> None:
@@ -290,8 +287,7 @@ def test_workspace_manifest_refuses_duplicate_stale_and_unclassified_fixed_point
         manifest,
         entries=tuple(sorted((changed_entry, *manifest.entries[1:]), key=lambda entry: entry.path)),
     )
-    with pytest.raises(ValueError, match="fixed point"):
-        validate_modelo_workspace_field_manifest(unclassified, _snapshot())
+    assert unclassified != generate_modelo_workspace_field_manifest(_snapshot())
 
 
 def test_workspace_field_manifest_declares_the_single_s126_contributor_contract() -> None:
@@ -309,7 +305,7 @@ def test_capture_republishes_the_sole_walker_manifest_without_rewalking() -> Non
     captured = capture_modelo_workspace_manifest(snapshot)
 
     assert captured.manifest == generate_modelo_workspace_field_manifest(snapshot)
-    assert validate_modelo_workspace_field_manifest(captured.manifest, snapshot) is captured.manifest
+    assert generate_modelo_workspace_field_manifest(snapshot) == captured.manifest
 
 
 def test_capture_is_singleflight_and_current_against_its_own_coordinate() -> None:
@@ -385,7 +381,6 @@ def test_manifest_authority_is_owned_by_its_public_defining_module() -> None:
         capture_modelo_workspace_manifest,
         generate_modelo_workspace_field_manifest,
         read_modelo_workspace_manifest_current_coordinate,
-        validate_modelo_workspace_field_manifest,
     ):
         assert owned.__module__ == "cadrumo.application.modelo.workspace_manifest"
         assert not hasattr(modelo_namespace, owned.__name__)
@@ -418,7 +413,7 @@ def test_inspection_manifest_is_a_real_authority_fixed_point_with_safe_classific
     inspection = _inspection()
     manifest = _inspection_manifest()
 
-    assert validate_modelo_workspace_field_manifest_for_inspection(manifest, inspection) is manifest
+    assert generate_modelo_workspace_field_manifest_for_inspection(inspection) == manifest
     assert manifest.entries == tuple(sorted(manifest.entries, key=lambda entry: entry.path))
     assert len({entry.path for entry in manifest.entries}) == len(manifest.entries)
     assert any(entry.destination is not None for entry in manifest.entries)

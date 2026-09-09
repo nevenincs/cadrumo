@@ -21,7 +21,7 @@ returns a durable derivative of one. The value leaves only through
 executor that declared it.
 
 See Also:
-    :class:`~cadrumo.application.operations.financial_operand.OperationTransientFinancialOperandProtocolV1`
+    the transient financial operand broker
         The broker contract this class implements.
     :class:`~cadrumo.application.operations.secret_submission.EphemeralSecretBroker`
         The sibling broker for credential material, deliberately separate.

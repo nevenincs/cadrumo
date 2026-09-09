@@ -36,7 +36,6 @@ from ..operation_definitions import (
     ModeloWorkAmendBaseline,
     ModeloWorkAmendOverride,
     ModeloWorkAmendRequest,
-    wire_detail_row,
 )
 from .test_edit_detail_row_wire_mirror import _PAIRS
 
@@ -115,7 +114,7 @@ def test_rows_reach_the_authority_as_the_exact_domain_rows_submitted() -> None:
         pais_codigo="ES",
     )
 
-    request = _request(detail_rows=(wire_detail_row(row).model_dump(),))
+    request = _request(detail_rows=(row.model_dump(mode="json"),))
 
     carried = request.detail_rows
     assert carried is not None
@@ -149,15 +148,13 @@ def test_all_three_states_survive_the_journal_round_trip() -> None:
     refusal this change removes -- or worse, turn a silent caller into one
     that declared nil.
     """
-    row_payload = wire_detail_row(
-        Modelo347ContraparteRow(
-            nif="B12345674",
-            nombre="Acme SL",
-            importe_Q1=Decimal("1000.00"),
-            clave_operacion="B",
-            pais_codigo="ES",
-        )
-    ).model_dump()
+    row_payload = Modelo347ContraparteRow(
+        nif="B12345674",
+        nombre="Acme SL",
+        importe_Q1=Decimal("1000.00"),
+        clave_operacion="B",
+        pais_codigo="ES",
+    ).model_dump(mode="json")
     for label, request in (
         ("said nothing", _request()),
         ("declared none", _request(detail_rows=())),

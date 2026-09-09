@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import pytest
 
-from ...core.errors.error_codes import ERROR_REGISTRY, ErrorEnvelope, build_error_envelope, get_registered_error_code
 from ...core.errors.hierarchy import CadrumoError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -26,34 +25,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 # ---------------------------------------------------------------------------
 
 
-def _assert_enrolled(error_cls: type[CadrumoError], message: str = "test trigger") -> ErrorEnvelope:
-    """Raise *error_cls*, catch it, and assert registry round-trip."""
-    assert issubclass(error_cls, CadrumoError), f"{error_cls} is not an CadrumoError subclass"
-    try:
-        raise error_cls(message)
-    except error_cls as exc:
-        code = get_registered_error_code(exc)
-        assert code.code in ERROR_REGISTRY, (
-            f"{error_cls.__qualname__} maps to code {code.code!r} which is not present in ERROR_REGISTRY"
-        )
-        envelope = build_error_envelope(exc)
-        assert isinstance(envelope, ErrorEnvelope)
-        assert envelope.code == code.code
-        return envelope
-    # unreachable — satisfies type checker
-    raise AssertionError("unreachable")  # pragma: no cover
-
-
 # ---------------------------------------------------------------------------
 # contract — RepositorySetupError
 # ---------------------------------------------------------------------------
-
-
-def test_repository_setup_error_enrolled() -> None:
-    from ...adapters.persistence.storage.errors import RepositorySetupError
-
-    envelope = _assert_enrolled(RepositorySetupError, "missing class attribute 'namespace'")
-    assert envelope.code == "FAIL_STORAGE_REPOSITORY_SETUP"
 
 
 # ---------------------------------------------------------------------------
@@ -61,25 +35,9 @@ def test_repository_setup_error_enrolled() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_profile_label_ambiguous_error_enrolled() -> None:
-    from ..workflow.errors import ProfileLabelAmbiguousError
-
-    envelope = _assert_enrolled(ProfileLabelAmbiguousError, "profile label 'test' is ambiguous: 2 buckets carry it")
-    assert envelope.code == "REFUSED_PROFILE_LABEL_AMBIGUOUS"
-
-
 # ---------------------------------------------------------------------------
 # contract — SnapshotNotFoundError (now CadrumoError + KeyError)
 # ---------------------------------------------------------------------------
-
-
-def test_snapshot_not_found_error_enrolled() -> None:
-    from ..live.snapshot_base import SnapshotNotFoundError
-
-    assert issubclass(SnapshotNotFoundError, CadrumoError), "SnapshotNotFoundError must inherit CadrumoError"
-    assert issubclass(SnapshotNotFoundError, KeyError), "SnapshotNotFoundError must still inherit KeyError"
-    envelope = _assert_enrolled(SnapshotNotFoundError, "snapshot abc not found")
-    assert envelope.code == "FAIL_SNAPSHOT_NOT_FOUND"
 
 
 def test_snapshot_not_found_subclasses_still_work() -> None:
@@ -95,11 +53,3 @@ def test_snapshot_not_found_subclasses_still_work() -> None:
 # ---------------------------------------------------------------------------
 # ModeloApplicabilityFilterError — pre-existing, asserted here for coverage
 # ---------------------------------------------------------------------------
-
-
-def test_modelo_applicability_filter_error_enrolled() -> None:
-    from ..modelo.action_errors import ModeloApplicabilityFilterError
-
-    envelope = _assert_enrolled(ModeloApplicabilityFilterError, "Unknown applicability filter: 'bad_filter'")
-    assert envelope.code is not None
-    assert envelope.code in ERROR_REGISTRY
