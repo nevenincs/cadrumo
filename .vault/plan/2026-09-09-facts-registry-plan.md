@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:6403cbfa90748a2f4d8cd81d600e4797d4fb079106cb20bd083585745b0df97b'
+body_hash: 'sha256:b6224aa487833ab0a482c3ea723827b1ab0dd75c9dce27d7532783f1e3aa7a88'
 ---
 
 <!-- LINK RULES:
@@ -198,7 +198,7 @@ Classify every discovered candidate and record exact source symbols, consumers, 
 
 - [x] `W01.P03.S07` - Classify every statutory declaration and production consumer; `src/cadrumo/core/external_constants.py`.
 - [ ] `W01.P03.S08` - Record exact IVA recargo grounding and repository retirement conditions; `src/cadrumo/domain/iva`.
-- [ ] `W01.P03.S09` - Record exact global legal-parameter adapter callers and closure conditions; `src/cadrumo/domain/calculations/registry/loader.py`.
+- [x] `W01.P03.S09` - Record exact global legal-parameter adapter callers and closure conditions; `src/cadrumo/domain/calculations/registry/loader.py`.
 - [ ] `W01.P03.S42` - Record retained domain facades and excluded technical configuration readers; `src/cadrumo/domain and src/cadrumo/core/external_constants.py`.
 
 ### Phase `W01.P04` - Build facts quality tooling
