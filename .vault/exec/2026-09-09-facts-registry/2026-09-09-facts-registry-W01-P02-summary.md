@@ -5,16 +5,10 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ccaa4ff3000e9b7ba7bd264218676fd440786bdb1e16be907b329b3305bab87'
+body_hash: 'sha256:9c5ccc52e749e17b52cfe390143e2d43ff35e2a47520f03ce2585fd97521ce3c'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: filename and frontmatter, scaffolded by
-     `vaultspec-core vault add exec`; never hand-edit. Add no frontmatter
-     fields. Wiki-links belong in `related:` only, never in the body.
-
-     Rolls up every Step Record (S##) of one Phase. -->
 
 # `facts-registry` `W01.P02` summary
 
@@ -31,15 +25,3 @@ related:
 - `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_authority_catalogue.py`
 - `A` `src/cadrumo/domain/calculations/registry/facts/tests/test_authority_enrollment.py`
 - `M` `.vault/plan/2026-09-09-facts-registry-plan.md`
-
-<!-- MECHANICAL LOG. The union of paths touched across the Phase, deduplicated,
-     one line per path, same grammar as a Step Record:
-       `A path` added   `M path` modified   `D path` deleted   `R old -> new` renamed
-     No prose. Do not restate the Step Records; this is their union, not a
-     narrative of them.
-
-     Optional final line, only when a check was run:
-       - `verify:` `<command>` -> `pass` | `fail`
-
-     Optional `## Notes` section, ONLY on exception (see the Step Record
-     template). Omit it otherwise. -->
