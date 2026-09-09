@@ -8,6 +8,59 @@ deletion_step = "W04.P16.S31"
 declaration_disposition = "delete_after_provider_enrollment_and_consumer_migration"
 consumer_disposition = "retain_domain_behavior_and_rewire_fact_resolution"
 
+[preservation_boundary]
+technical_configuration_source = "src/cadrumo/core/external_constants.py"
+technical_configuration_data = "src/cadrumo/core/external_constants.toml"
+technical_configuration_disposition = "exclude_from_facts_and_retain"
+technical_configuration_rationale = "protocol tokens, encodings, MIME types, output language, provenance tokens, endpoints, paths, OAuth scopes, and strict configuration models are operational configuration rather than legally governed calculation facts"
+technical_configuration_condition = "every production reader continues to resolve these symbols or ExternalConstants fields through core.external_constants or Settings.external_constants; facts providers must not own or duplicate them"
+technical_constants = ["DEFAULT_CURRENCY", "BINARY_MIME_TYPE", "JSON_MIME_TYPE", "CSV_MIME_TYPE", "JSONL_MIME_TYPE", "XLSX_MIME_TYPE", "CLASSIFIED_BY_MANUAL", "CLASSIFIED_BY_AUTO", "PDF_MIME_TYPE", "PDF_EXTENSION", "XML_MIME_TYPE", "XLS_EXTENSION", "XLSX_EXTENSION", "XLSM_EXTENSION", "LATIN_1_ENCODING", "UTF_8_ENCODING", "BOE_ENCODING_CHOICES", "CSV_ENCODING_FALLBACK_CHAIN", "PROVENANCE_SOURCE_MANUAL_CLI", "PROVENANCE_SOURCE_CENSO_ARTEFACT", "SANDBOX_LABEL_PREFIX", "OUTPUT_LANGUAGE_ENV_VAR", "DEFAULT_OUTPUT_LANGUAGE", "SUPPORTED_OUTPUT_LANGUAGES"]
+technical_types = ["_Frozen", "AeatDomainSection", "AeatSedePathSection", "AeatClaveMovilSurface", "AeatClavePermanenteSurface", "AeatPre303Surface", "AeatHelpPageSection", "AeatNotificationsQuery", "AeatOracleSection", "AeatLiveSafety", "AeatPortalPathSection", "AeatSection", "GoogleOAuthScopeSection", "GoogleServiceSection", "OnlineServicesSection", "ExternalConstants", "OutputLanguage"]
+technical_functions = ["load_external_constants"]
+reader_kinds = ["direct_symbol_import", "Settings.external_constants", "load_external_constants"]
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/iva/lookup.py"
+symbols = ["lookup_rate", "cite", "coexisting_tier_rates", "rate_kinds_for_declared_rate"]
+rationale = "typed IVA resolution and citation behavior remains the domain projection"
+condition = "rewire its table input to authority results and provenance; do not preserve direct TOML reads or provider-local caches"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/iva/recargo_equivalencia.py"
+symbols = ["LivaArt161RecargoRates", "RecargoRateRecord", "load_recargo_rates", "recargo_rate_for_applied_rate"]
+rationale = "typed recargo records and rate lookup remain domain contracts"
+condition = "authority owns values, dated selection, provenance and cache; raw legal-parameter and recargo-table loaders retire after callers migrate"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/iva/catalogue.py"
+symbols = ["bundled_iva_catalogue", "iva_catalogue_years", "resolve_catalogue"]
+rationale = "IVA catalogue resolution remains a domain-facing contract"
+condition = "provider owns parsing, validation, evidence and cache; load_iva_catalogue and its cached parser are not retained facades"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/iva/place_of_supply.py"
+symbols = ["IvaPlaceOfSupplyRule", "place_of_supply_rule", "place_of_supply_years"]
+rationale = "typed place-of-supply resolution remains domain behavior"
+condition = "provider owns table parsing, evidence, exact date selection and cache; load_place_of_supply_table is not retained"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/categories/registry.py"
+symbols = ["category_profile_years", "resolve_category_profiles"]
+rationale = "typed category-profile resolution remains the category domain projection"
+condition = "provider owns raw parsing, statutory caps, grounding, temporal resolution and cache; load_category_profiles is not retained"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/transactions/retencion_parameters.py"
+symbols = ["RirpfArt95RetencionRates", "AdministradorRetencionRates", "load_retencion_actividades_rates", "load_administrador_retencion_rates", "rirpf_art95_retencion_legal_refs", "administrador_retencion_legal_refs", "statutory_activity_retencion_rates"]
+rationale = "typed transaction-rate projections and legal-reference disclosures remain domain contracts"
+condition = "facts authority supplies typed values and provenance; LegalParameter.value parsing and load_legal_parameters_only calls retire"
+
+[[preservation_boundary.domain_facades]]
+path = "src/cadrumo/domain/transactions/tipo_actividad_partitions.py"
+symbols = ["irpf_activity_kind_for", "load_tipo_actividad_selectors", "tipo_actividad_code_set"]
+rationale = "typed Modelo 036 activity classification remains transaction-domain behavior"
+condition = "facts authority supplies entity sets and provenance; local string splitting and load_legal_parameters_only calls retire"
+
 # One classification row exists for every declaration row below. Empty
 # counterparts mean the Python declaration is the only current value authority.
 # `closure` is evaluated together with the declaration row's complete consumer

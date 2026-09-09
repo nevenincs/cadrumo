@@ -146,3 +146,46 @@ def test_legal_parameter_adapter_callers_and_destinations_match_live_source() ->
         authority_text = (_ROOT / caller["authority_path"]).read_text(encoding="utf-8")
         for fact_id in caller["destination_fact_ids"]:
             assert f'[parameters."{fact_id}"]' in authority_text
+
+
+def test_retained_facades_and_technical_configuration_boundary_match_source() -> None:
+    ledger = tomllib.loads(_LEDGER.read_text(encoding="utf-8"))
+    boundary = ledger["preservation_boundary"]
+    source = _ROOT / boundary["technical_configuration_source"]
+    tree = ast.parse(source.read_text(encoding="utf-8"))
+
+    top_level_constants = [
+        node.target.id
+        for node in tree.body
+        if isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name)
+    ]
+    constants = top_level_constants[: top_level_constants.index("M347_THRESHOLD_EUR")]
+    types = [node.name for node in tree.body if isinstance(node, ast.ClassDef)]
+    assert constants == boundary["technical_constants"]
+    assert types == boundary["technical_types"]
+    assert boundary["technical_functions"] == ["load_external_constants"]
+    assert (_ROOT / boundary["technical_configuration_data"]).is_file()
+
+    statutory = {item["symbol"] for item in ledger["declarations"]}
+    admitted_imports = statutory | set(boundary["technical_constants"]) | set(boundary["technical_types"]) | {
+        "load_external_constants",
+    }
+    for path in _production_python_files():
+        text = path.read_text(encoding="utf-8")
+        if "external_constants import" not in text:
+            continue
+        for node in ast.walk(ast.parse(text)):
+            if isinstance(node, ast.ImportFrom) and node.module and node.module.endswith("external_constants"):
+                assert {item.name for item in node.names} <= admitted_imports
+
+    for facade in boundary["domain_facades"]:
+        facade_tree = ast.parse((_ROOT / facade["path"]).read_text(encoding="utf-8"))
+        definitions = {
+            node.name
+            for node in facade_tree.body
+            if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
+        }
+        assert set(facade["symbols"]) <= definitions
+        assert facade["rationale"]
+        assert facade["condition"]
