@@ -97,12 +97,18 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         ),
     ),
     ChecklistItem(
-        title="Register the export layout(s)",
+        title="Generate the export tree from the official design",
         detail=(
-            "revisions/<revision-id>/export_layouts/*.toml: the fixed-width fichero-BOE "
-            "and/or xml_dictionary layout(s) that mirror the official AEAT structure "
-            "(modelo-export-mirrors-official-structure); every required, representable "
-            "casilla must be exportable, not silently blank."
+            "Author the generator inputs -- the semantic map under the pipeline's mappings "
+            "directory and the render profile beside it -- and generate "
+            "revisions/<revision-id>/export/, which mirrors the official AEAT structure "
+            "(modelo-export-mirrors-official-structure); every required, representable casilla "
+            "must be exportable, not silently blank. Generation is the supported path because a "
+            "generated field carries the design row it came from, so a shipped value can be "
+            "shown to derive from the document it cites. Hand-authoring an export_layouts "
+            "fragment instead is the DECLARED EXCEPTION: state on the revision why the design "
+            "could not drive a generation, because a transcription and a derivation are "
+            "otherwise indistinguishable once shipped."
         ),
     ),
     ChecklistItem(
