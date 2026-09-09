@@ -32,7 +32,6 @@ from ._verdict_cache import (
     certify_registry_validation,
     compute_verdict_key,
     registry_validation_is_certified,
-    shipped_verdict_location,
 )
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .errors import RegistrySnapshotError, RegistryValidationError
@@ -46,7 +45,6 @@ from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_g
 from .identity import (
     FingerprintTuples,
     RegistryIdentity,
-    registry_identity_stamp_location,
     resolve_registry_identity,
 )
 from .ids import LegalRefId, ModeloId, RevisionId, SourceRefId
@@ -1138,5 +1136,4 @@ class StampedRegistryRelease:
 
     identity_path: Path
     verdict_path: Path
-
 
