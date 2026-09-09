@@ -1095,7 +1095,7 @@ class Modelo184ShareSumError(CadrumoError, ValueError):
 def validate_m347_threshold(
     rows: Sequence[Modelo347ContraparteRow],
     *,
-    effective_date: date | None = None,
+    effective_date: date,
 ) -> None:
     """Enforce the Modelo 347 per-counterparty declarability threshold.
 
@@ -1114,7 +1114,7 @@ def validate_m347_threshold(
     """
     if not rows:
         return
-    threshold = resolve_m347_counterparty_annual_threshold(effective_date=effective_date or date.today())
+    threshold = resolve_m347_counterparty_annual_threshold(effective_date=effective_date)
     totals_by_nif: dict[str, Decimal] = {}
     for row in rows:
         totals_by_nif[row.nif] = totals_by_nif.get(row.nif, Decimal("0")) + row.importe_total

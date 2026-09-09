@@ -17,10 +17,10 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, cast
 
+from .errors import RegistryValidationError
 from .facts.modelo_projections import ModeloParameterFact
 from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from .facts.schema import FactSelector
-from .errors import RegistryValidationError
 from .schema_base import DateAxis
 
 if TYPE_CHECKING:
@@ -42,7 +42,7 @@ _M347_CLAVE_C_THRESHOLD_FACT_ID = "m347-clave-c-beneficiary-declaration-threshol
 def resolve_m347_counterparty_annual_threshold(
     *,
     effective_date: date,
-    authority: "ValidatedRegistryAuthority | None" = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the Modelo-projected annual counterparty threshold with provenance."""
     if authority is None:
@@ -66,7 +66,7 @@ def resolve_m347_counterparty_annual_threshold(
 def resolve_m347_clave_c_declaration_threshold(
     *,
     effective_date: date,
-    authority: "ValidatedRegistryAuthority | None" = None,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> ResolvedScalarFact:
     """Resolve the distinct clave-C threshold with its statutory provenance."""
     if authority is None:
@@ -114,8 +114,8 @@ def m347_threshold_decimal(threshold: ResolvedScalarFact) -> Decimal:
 def m347_declarable_party_ids(
     totals: Mapping[str, Decimal],
     *,
-    effective_date: date | None = None,
-    authority: "ValidatedRegistryAuthority | None" = None,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> frozenset[str]:
     """Return the party ids whose summed Modelo 347 total passes the GENERAL declaration floor.
 
@@ -123,12 +123,14 @@ def m347_declarable_party_ids(
         totals: Summed Modelo 347 amount per party tax id, across every
             clave (RD 1065/2007 art. 33.1 aggregates the party's TOTAL
             operations, not a single clave's).
+        effective_date: Explicit filing-period date selecting the governed fact.
+        authority: Optional validated authority whose resolution retains provenance.
 
     Returns:
         The party tax ids that must be declared.
     """
     resolved = resolve_m347_counterparty_annual_threshold(
-        effective_date=effective_date or date.today(),
+        effective_date=effective_date,
         authority=authority,
     )
     return _declarable_party_ids(totals, floor=m347_threshold_decimal(resolved))
@@ -137,8 +139,8 @@ def m347_declarable_party_ids(
 def m347_clave_c_declarable_party_ids(
     totals: Mapping[str, Decimal],
     *,
-    effective_date: date | None = None,
-    authority: "ValidatedRegistryAuthority | None" = None,
+    effective_date: date,
+    authority: ValidatedRegistryAuthority | None = None,
 ) -> frozenset[str]:
     """Return the beneficiary ids whose summed clave-C total passes ITS OWN, lower floor.
 
@@ -151,12 +153,14 @@ def m347_clave_c_declarable_party_ids(
 
     Args:
         totals: Summed clave-C ``invoice_total_amount`` per beneficiary tax id.
+        effective_date: Explicit filing-period date selecting the governed fact.
+        authority: Optional validated authority whose resolution retains provenance.
 
     Returns:
         The beneficiary tax ids whose clave-C total must be declared.
     """
     resolved = resolve_m347_clave_c_declaration_threshold(
-        effective_date=effective_date or date.today(),
+        effective_date=effective_date,
         authority=authority,
     )
     return _declarable_party_ids(totals, floor=m347_threshold_decimal(resolved))
