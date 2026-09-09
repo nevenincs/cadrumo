@@ -9,6 +9,13 @@ from pathlib import Path, PurePosixPath
 from typing import Protocol
 
 from .....core.directory_scan import DirectoryEntryKind, scan_directory
+from ....categories.registry import (
+    CATEGORY_FACT_PROVIDER_DIRECTORY,
+    CATEGORY_FACT_PROVIDER_ID,
+    collect_category_profile_fact_fingerprints,
+    compile_category_profile_facts,
+    reset_category_profile_fact_provider,
+)
 from ..errors import RegistryValidationError
 from ..loader_cache import toml_file_fingerprint
 from ..loader_fingerprints import RegistryPathFingerprints
@@ -205,6 +212,13 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
             compile=_compile_authored_facts,
             collect_fingerprints=_collect_authored_fact_fingerprints,
             reset=_reset_authored_fact_provider,
+        ),
+        FactProviderRegistration(
+            provider_id=CATEGORY_FACT_PROVIDER_ID,
+            owned_directories=(CATEGORY_FACT_PROVIDER_DIRECTORY,),
+            compile=compile_category_profile_facts,
+            collect_fingerprints=collect_category_profile_fact_fingerprints,
+            reset=reset_category_profile_fact_provider,
         ),
         FactProviderRegistration(
             provider_id="convenio-overrides",

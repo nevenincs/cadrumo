@@ -1,0 +1,11 @@
+[sources."boe-rirpf-category-profile-authority"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rd-439-2007.html"
+sha256 = "77202496e59f975928e84c8e40029ba530c61b619ac3755c8e14ac4ecac96ee7"
+bytes = 971212
+retrieved_at = 2026-09-09
+applies_from = 2007-04-01
+source_url = "https://www.boe.es/eli/es/rd/2007/03/30/439/con"
+review_status = "agent_reviewed"

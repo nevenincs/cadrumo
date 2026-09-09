@@ -32,9 +32,24 @@ from ...core.decimal.coercion import coerce_decimal
 from ...core.i18n import Translatable as tr
 from ...core.paths import path_stat_fingerprint
 from ...core.resources.bundled_data import bundled_path
+from ...core.revision_review import RevisionReviewStatus
 from ...core.toml import read_toml
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ...core.validity_window import ValidityWindow, years_covered_by_any, years_covered_by_every_group
+from ..calculations.registry.facts.resolution import MappingFactQuery, ScalarFactQuery
+from ..calculations.registry.facts.schema import (
+    FactOwnership,
+    FactSelector,
+    GovernedFact,
+    GovernedFactFamily,
+    GovernedFactVariant,
+    MappingFactEntry,
+    MappingFactPayload,
+    ScalarFactPayload,
+)
+from ..calculations.registry.loader_cache import toml_file_fingerprint
+from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from ..calculations.registry.schema_base import DateAxis, SourceCitation
 from .errors import CategoryValidationError
 from .profile import CategoryProfile, IvaDeductibilityHint
 from .proportionality import (
@@ -48,6 +63,15 @@ from .proportionality import (
     parse_http_url,
 )
 from .spending_category import SpendingCategory
+
+CATEGORY_PROFILE_FACT_ID = "categories.profile"
+CATEGORY_STATUTORY_CAP_FACT_ID = "categories.statutory-cap"
+CATEGORY_FACT_PROVIDER_ID = "category-profiles"
+CATEGORY_FACT_PROVIDER_DIRECTORY = "categories"
+_CATEGORY_CITATION_SOURCE_REFS = {
+    CategoryCitationSource.LEY_IRPF: "lirpf-cuota-chain-authority",
+    CategoryCitationSource.REGLAMENTO_IRPF: "boe-rirpf-category-profile-authority",
+}
 
 
 def load_category_profiles(path: Path | None = None) -> Mapping[SpendingCategory, CategoryProfile]:
@@ -156,6 +180,186 @@ def resolve_category_profiles(year: int) -> Mapping[SpendingCategory, CategoryPr
             no fallback to an adjacent year.
     """
     return _resolve_category_profiles_cached(year, tuple(sorted(category_profile_years())))
+
+
+def category_profile_fact_query(category: SpendingCategory, year: int) -> MappingFactQuery:
+    """Build the exact governed query for one statutory category profile."""
+    return MappingFactQuery(
+        fact_id=CATEGORY_PROFILE_FACT_ID,
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=date(year, 12, 31),
+        selectors=(FactSelector(name="category", value=category.value),),
+    )
+
+
+def category_statutory_cap_fact_query(category: SpendingCategory, on: date) -> ScalarFactQuery:
+    """Build the exact governed query for one year-referenced statutory cap."""
+    return ScalarFactQuery(
+        fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=on,
+        selectors=(FactSelector(name="category", value=category.value),),
+    )
+
+
+def compile_category_profile_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
+    """Project the retained category corpus into typed governed facts."""
+    target = registry_root.resolve() / CATEGORY_FACT_PROVIDER_DIRECTORY / "profiles.toml"
+    profiles = load_category_profiles(target)
+    years = sorted(category_profile_years(target))
+    profile_variants = tuple(
+        _category_profile_fact_variant(profile, year)
+        for profile in profiles.values()
+        for year in years
+    )
+    cap_variants = tuple(
+        _category_cap_fact_variant(profile, amount)
+        for profile in profiles.values()
+        for amount in profile.proportionality.statutory_cap_schedule
+    )
+    facts = [
+        GovernedFact(
+            fact_id=CATEGORY_PROFILE_FACT_ID,
+            family=GovernedFactFamily.MAPPING,
+            variants=profile_variants,
+        ),
+    ]
+    if cap_variants:
+        facts.append(
+            GovernedFact(
+                fact_id=CATEGORY_STATUTORY_CAP_FACT_ID,
+                family=GovernedFactFamily.SCALAR,
+                variants=cap_variants,
+            ),
+        )
+    return tuple(facts)
+
+
+def collect_category_profile_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+    """Fingerprint the retained category corpus for authority identity."""
+    target = registry_root.resolve() / CATEGORY_FACT_PROVIDER_DIRECTORY / "profiles.toml"
+    return (toml_file_fingerprint(target),)
+
+
+def reset_category_profile_fact_provider() -> None:
+    """Clear every category-provider cache as one authority reset hook."""
+    _load_category_profiles_cached.cache_clear()
+    _resolve_category_profiles_cached.cache_clear()
+
+
+def _category_profile_fact_variant(profile: CategoryProfile, year: int) -> GovernedFactVariant:
+    citations = tuple(citation for citation in profile.proportionality.citations if citation.window.covers_year(year))
+    authority_citations = tuple(
+        citation for citation in citations if citation.source in _CATEGORY_CITATION_SOURCE_REFS and citation.quote
+    )
+    return GovernedFactVariant(
+        variant_id=f"{profile.category.value}:{year}",
+        selectors=(FactSelector(name="category", value=profile.category.value),),
+        date_axis=DateAxis.FILING_PERIOD,
+        valid_from=date(year, 1, 1),
+        valid_to=date(year, 12, 31),
+        payload=MappingFactPayload(entries=_profile_fact_entries(profile, citations)),
+        legal_refs=_citation_legal_refs(authority_citations),
+        source_refs=tuple(dict.fromkeys(_citation_source_ref(citation) for citation in authority_citations)),
+        source_citations=_source_citations(authority_citations),
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,
+        ownership=FactOwnership.GENERATED,
+    )
+
+
+def _category_cap_fact_variant(profile: CategoryProfile, amount: StatutoryCapAmount) -> GovernedFactVariant:
+    citations = tuple(
+        citation
+        for citation in profile.proportionality.citations
+        if citation.window.valid_from <= amount.window.valid_from
+        and citation.window.valid_to >= amount.window.valid_to
+    )
+    authority_citations = tuple(
+        citation for citation in citations if citation.source in _CATEGORY_CITATION_SOURCE_REFS and citation.quote
+    )
+    return GovernedFactVariant(
+        variant_id=f"{profile.category.value}:{amount.window.valid_from.year}",
+        selectors=(FactSelector(name="category", value=profile.category.value),),
+        date_axis=DateAxis.FILING_PERIOD,
+        valid_from=amount.window.valid_from,
+        valid_to=amount.window.valid_to,
+        payload=ScalarFactPayload(value=amount.value, unit="eur"),
+        legal_refs=_citation_legal_refs(authority_citations),
+        source_refs=tuple(dict.fromkeys(_citation_source_ref(citation) for citation in authority_citations)),
+        source_citations=_source_citations(authority_citations),
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,
+        ownership=FactOwnership.GENERATED,
+    )
+
+
+def _profile_fact_entries(
+    profile: CategoryProfile,
+    citations: tuple[CategoryCitation, ...],
+) -> tuple[MappingFactEntry, ...]:
+    rule = profile.proportionality
+    values: list[tuple[str, str | Decimal | date]] = [
+        ("display_label", str(profile.display_label)),
+        ("proportionality_kind", rule.kind.value),
+        ("notes", str(rule.notes)),
+    ]
+    if profile.iva_hint is not None:
+        values.append(("iva_hint", profile.iva_hint.value))
+    for name in (
+        "fixed_pct",
+        "default_ratio",
+        "statutory_multiplier",
+        "statutory_cap_eur_per_day",
+        "statutory_cap_eur",
+    ):
+        value = getattr(rule, name)
+        if value is not None:
+            values.append((name, value))
+    if rule.statutory_cap_period is not None:
+        values.append(("statutory_cap_period", rule.statutory_cap_period.value))
+    for variant in rule.statutory_cap_variants:
+        values.append((f"statutory_cap_variant.{variant.id}.label", str(variant.label)))
+        if variant.statutory_cap_eur_per_day is not None:
+            values.append((f"statutory_cap_variant.{variant.id}.eur_per_day", variant.statutory_cap_eur_per_day))
+        if variant.statutory_cap_eur is not None:
+            values.append((f"statutory_cap_variant.{variant.id}.eur", variant.statutory_cap_eur))
+    for index, citation in enumerate(citations):
+        prefix = f"citation.{index}"
+        values.extend(
+            (
+                (f"{prefix}.source", citation.source.value),
+                (f"{prefix}.reference", citation.reference),
+                (f"{prefix}.locator", citation.locator),
+                (f"{prefix}.url", str(citation.url)),
+                (f"{prefix}.grounding", citation.grounding.value),
+                (f"{prefix}.valid_from", citation.valid_from),
+                (f"{prefix}.valid_to", citation.valid_to),
+            ),
+        )
+        if citation.quote:
+            values.append((f"{prefix}.quote", citation.quote))
+        if citation.grounding_reason:
+            values.append((f"{prefix}.grounding_reason", citation.grounding_reason))
+        if citation.legal_ref is not None:
+            values.append((f"{prefix}.legal_ref", citation.legal_ref))
+    return tuple(MappingFactEntry(key=key, value=value) for key, value in values)
+
+
+def _citation_source_ref(citation: CategoryCitation) -> str:
+    return _CATEGORY_CITATION_SOURCE_REFS[citation.source]
+
+
+def _source_citations(citations: tuple[CategoryCitation, ...]) -> tuple[SourceCitation, ...]:
+    required_by_source: dict[str, list[str]] = {}
+    for citation in citations:
+        required_by_source.setdefault(_citation_source_ref(citation), []).append(citation.quote)
+    return tuple(
+        SourceCitation(source_ref=source_ref, required_text=tuple(dict.fromkeys(required_text)))
+        for source_ref, required_text in required_by_source.items()
+    )
+
+
+def _citation_legal_refs(citations: tuple[CategoryCitation, ...]) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(citation.legal_ref for citation in citations if citation.legal_ref is not None))
 
 
 @lru_cache(maxsize=16)
@@ -322,7 +526,16 @@ def _cap_period_or_none(value: object) -> StatutoryCapPeriod | None:
 
 
 __all__ = [
+    "CATEGORY_FACT_PROVIDER_DIRECTORY",
+    "CATEGORY_FACT_PROVIDER_ID",
+    "CATEGORY_PROFILE_FACT_ID",
+    "CATEGORY_STATUTORY_CAP_FACT_ID",
+    "category_profile_fact_query",
     "category_profile_years",
+    "category_statutory_cap_fact_query",
+    "collect_category_profile_fact_fingerprints",
+    "compile_category_profile_facts",
     "load_category_profiles",
+    "reset_category_profile_fact_provider",
     "resolve_category_profiles",
 ]
