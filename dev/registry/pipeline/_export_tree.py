@@ -243,6 +243,13 @@ _DATE_FORMAT_BY_POLICY: Final[Mapping[ExportValuePolicy, str]] = {
     ExportValuePolicy.YYYYMMDD: "aaaammdd",
     ExportValuePolicy.DDMMYYYY: "ddmmaaaa",
 }
+#: The derivation code for each date policy, spelled out in full rather than
+#: built with an f-string from ``_DATE_FORMAT_BY_POLICY`` so the value stays a
+#: literal member of ``ExportFieldDerivationCode`` rather than an unbounded str.
+_DATE_DERIVATION_CODE_BY_POLICY: Final[Mapping[ExportValuePolicy, ExportFieldDerivationCode]] = {
+    ExportValuePolicy.YYYYMMDD: "numeric-date-aaaammdd-v1",
+    ExportValuePolicy.DDMMYYYY: "numeric-date-ddmmaaaa-v1",
+}
 #: AEAT also states a date slot as a QUOTED separator-bearing pattern in the
 #: programmer's vocabulary rather than the Spanish token: Modelo 151 writes
 #: `Formato: "dd/MM/yyyy"` for its fecha de nacimiento. The separators are
@@ -982,37 +989,30 @@ def _labelled_enumeration_values_are_delimited(content: str) -> bool:
     return all(_LABELLED_ENUMERATION_VALUE_DELIMITER_RE.search(gap) is not None for gap in gaps)
 
 
-#: The refusal marker for an amount the official type column declares signed while
-#: no grounded rule states how it reaches the wire. A stable substring, so a
-#: disposition row can pin THIS cause and no other.
-_UNGROUNDED_SIGNED_AMOUNT_MARKER: Final[str] = "declares a signed amount with no grounded representation"
+#: The official type token for a signed amount, as the design's own type note
+#: defines it: "N: numerico con signo", against "Num: numerico sin signo".
+_SIGNED_AEAT_TYPE: Final[str] = "N"
 
 
-def _require_grounded_sign(joined_field: JoinedRecordDesignField) -> bool:
-    """Return the derived sign, or refuse when the design declares one we cannot render.
+def _derive_sign_from_official_type(joined_field: JoinedRecordDesignField) -> bool:
+    """Return whether the official type column declares this amount signed.
 
-    The official type column separates ``Num`` (numerico SIN signo) from ``N``
-    (numerico CON signo), and this derivation wrote ``False`` for both without ever
-    reading it. That is how a fifth of the generated surface came to declare
+    This derivation used to write ``False`` for every amount without reading the
+    column at all, which is how a fifth of the generated surface came to declare
     unsigned the slots the design types as signed.
 
-    Reading the column is not by itself enough to emit one. A signed slot spends
-    its leading position on the sign marker, and what a NON-NEGATIVE value puts in
-    that position is stated by no official source in this corpus: the design's own
-    note says negatives carry an ``N`` there and says nothing about the rest.
-    Emitting on either reading would guess a filing byte. So the column is read and
-    a slot it declares signed is REFUSED until a rule grounds the representation.
-    That fails closed, and it leaves the shipped tree untouched, because a refusal
-    stops a REGENERATION rather than altering anything already published.
+    The representation is grounded, so the sign can now be emitted rather than
+    refused. AEAT's "Disenos de registro" manual states the convention for every
+    design: numeric fields are right-aligned and zero-filled SIN SIGNOS, and only
+    NEGATIVE amounts are preceded by the character ``N``. So a signed slot reserves
+    no byte -- the marker displaces the leading digit when the value is negative,
+    which is what the codec now renders and parses.
+
+    Only ``N`` is read as signed. A token outside the design's own vocabulary is
+    left unsigned here rather than guessed at, and is answered by the separate
+    treatment of the uncontrolled type spellings.
     """
-    if joined_field.parser_field.aeat_type != "N":
-        return False
-    raise RegistryValidationError(
-        f"export field {joined_field.semantic_entry.export_field_id!r} "
-        f"{_UNGROUNDED_SIGNED_AMOUNT_MARKER}: the official type column states 'N' "
-        f"(numerico con signo) and no render rule states how a non-negative value "
-        f"occupies the sign position",
-    )
+    return joined_field.parser_field.aeat_type == _SIGNED_AEAT_TYPE
 
 
 def _numeric_derivation(
@@ -1122,7 +1122,7 @@ def _numeric_derivation(
             signed=False,
             export_record_id=export_record_id,
             date_format=date_format,
-            derivation_code=f"numeric-date-{date_format}-v1",
+            derivation_code=_DATE_DERIVATION_CODE_BY_POLICY[policy],
         )
     # A bare `AAAA` is the ejercicio, not a date. It is a closed four-character
     # wire fact the design states outright, so it is derived here rather than
@@ -1159,7 +1159,7 @@ def _numeric_derivation(
             required=_is_required(parser_field.validation),
             padding=ExportPadding.LEFT_ZERO,
             justification=ExportJustification.RIGHT,
-            signed=_require_grounded_sign(joined_field),
+            signed=_derive_sign_from_official_type(joined_field),
             export_record_id=export_record_id,
             decimals=decimals,
             derivation_code="numeric-decimal-v1",
@@ -1533,7 +1533,7 @@ def _render_record_parts(
     rendered_parts: list[bytes] = []
     current_fields: list[Mapping[str, object]] = []
     for field in fields:
-        candidate_fields = [*current_fields, field]
+        candidate_fields: list[Mapping[str, object]] = [*current_fields, field]
         candidate = _render_record_fragment(
             revision_id=revision_id,
             layout_id=layout_id,

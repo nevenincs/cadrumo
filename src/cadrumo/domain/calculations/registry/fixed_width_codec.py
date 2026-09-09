@@ -607,10 +607,25 @@ def _render_numeric_digits(field: _ExportField, digits: str, *, negative: bool) 
     if negative and not field.signed:
         raise RegistryValidationError(f"unsigned export field {field.id!r} cannot render a negative value")
     if field.signed:
-        magnitude_width = length - 1
+        # AEAT states one convention for every diseno de registro, in "Disenos de
+        # registro - breve manual de uso" v.2 (12/12/2022), CAT - Informatica
+        # Tributaria:
+        #
+        #   "Todos los campos numericos se presentaran alineados a la derecha y
+        #    rellenos a ceros por la izquierda, SIN SIGNOS y sin empaquetar."
+        #   "Los campos numericos negativos se presentaran alineados a la derecha
+        #    y rellenos a ceros por la izquierda, PRECEDIDOS DEL CARACTER 'N'."
+        #
+        # So the sign position is NOT reserved. A non-negative value fills the
+        # whole slot with digits, and the 'N' DISPLACES the leading digit when the
+        # value is negative -- which is why the corporate-tax design spells its
+        # amounts "15 enteros (o N + 14) y 2 decimales" on a seventeen-byte slot.
+        # "Sin signos" excludes a blank as much as a '+': a blank belongs to
+        # alphanumeric and alphabetic fields, which pad with blancos, not to these.
+        magnitude_width = length - 1 if negative else length
         if len(digits) > magnitude_width:
             raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
-        return ("N" if negative else " ") + digits.rjust(magnitude_width, "0")
+        return ("N" if negative else "") + digits.rjust(magnitude_width, "0")
     return _pad(field, digits)
 
 
@@ -628,12 +643,13 @@ def _parse_scaled_numeric(field: _ExportField, raw: str, *, scale: int) -> Decim
 
 def _split_numeric_wire(field: _ExportField, raw: str) -> tuple[bool, str]:
     if field.signed:
-        marker, digits = raw[:1], raw[1:]
-        if marker not in {"N", " "}:
-            raise RegistryValidationError(
-                f"signed export field {field.id!r} must use ASCII space or N as its sign marker",
-            )
-        negative = marker == "N"
+        # The mirror of the render rule above: a negative slot is 'N' followed by
+        # its digits, and a non-negative slot is digits all the way. Refusing a
+        # digit in the leading position would refuse a correctly formed AEAT
+        # record, because that is exactly what AEAT specifies a non-negative
+        # amount looks like.
+        negative = raw[:1] == "N"
+        digits = raw[1:] if negative else raw
     else:
         negative = False
         digits = _unpad(field, raw)
