@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:c73660b2f302c8b4b7fd8a9efed6fb0da11ac50b5f05359f44da0abce16054ce'
+body_hash: 'sha256:be3b4f4ea9875bbffed85aee18693d8e7219216212e13a283bc9913a1223426e'
 ---
 
 # `registry-generator` plan
@@ -67,7 +67,7 @@ Repairs the informative-declaration modelo whose manifest disagrees with its shi
 
 - [ ] `W01.P03.S08` - Reconcile the manifest against the shipped declarations for the earlier informative revision; `dev/registry/mappings/modelo_347/2011/`.
 - [ ] `W01.P03.S09` - Reconcile the manifest against the shipped declarations for the later informative revision; `dev/registry/mappings/modelo_347/2025/`.
-- [ ] `W01.P03.S10` - Reproduce the binding-rows repeat and per-row casilla identities the ledger names as the defect; `dev/registry/mappings/modelo_347/`.
+- [ ] `W01.P03.S10` - Author the Tipo-2 declarado record repeat, its binding record and per-row casilla identities, so a fresh render reproduces the counterparty rows the shipped tree already carries; without it a regeneration emits ONE type-2 record and drops every counterparty after the first. The map vocabulary admits binding_rows and no shipped map yet uses it; `dev/registry/mappings/modelo_347/`.
 - [x] `W01.P03.S11` - Answered by the type census rather than by a decision here: the uncontrolled spellings are already normalised for eligibility on an accent-stripped stem, and the informative modelo's slots carry no numeric type at all, so no sign question arises for them. What remains is the 579 rows tracked in S15; `dev/registry/pipeline/render_profile_eligibility.py`.
 - [ ] `W01.P03.S67` - Pin the informative modelo's check-mode refusal before its disposition rows are retired; `dev/registry/tests/test_generated_export_trees.py`.
 - [ ] `W01.P03.S12` - Retire the two disposition rows once the shipped bytes reproduce from the current inputs; `dev/registry/pipeline/generated_tree_dispositions.toml`.
@@ -123,8 +123,8 @@ Converts the comparison from a bespoke sweep into a fact the artefact carries, a
 
 Adds a per-field divergence verdict computed at generation time, so a disagreement between the official row and the shipped field becomes a diffable fact rather than something only a bespoke sweep can see.
 
-- [ ] `W03.P07.S26` - Compute a per-field verdict of agrees, adjudicated or refused at generation time; `dev/registry/pipeline/export_fragment_provenance.py`.
-- [ ] `W03.P07.S27` - Serialize the verdict into the generation manifest beside the existing derivation record; `dev/registry/pipeline/export_fragment_provenance.py`.
+- [ ] `W03.P07.S26` - BLOCKED with S27 and S28, not merely before them: the manifest loader compares canonical bytes, so adding even an optional verdict field invalidates all 32 shipped manifests, and regenerating them needs the publication path that refuses a changed tree; `dev/registry/pipeline/export_fragment_provenance.py`.
+- [ ] `W03.P07.S27` - BLOCKED with S26: proven by attempting it. An optional field defaulting to None still moves the canonical serialization and every shipped manifest fails to load; `dev/registry/pipeline/export_fragment_provenance.py`.
 - [ ] `W03.P07.S28` - BLOCKED on the publication gap: regenerating manifests requires publishing a corrected tree, and publish runs a no-drift check that refuses the very difference being landed. See the check-mode comparison of the shipped manifest against the fresh render; `dev/registry/pipeline/_tree_check.py`.
 - [x] `W03.P07.S72` - Re-pin any reproduction pin whose disposition class moved when the manifests changed; `dev/registry/tests/test_generated_export_trees.py`.
 - [ ] `W03.P07.S29` - Prove a planted divergence produces a refused verdict rather than an agreeing one; `dev/registry/tests/`.
@@ -173,11 +173,11 @@ Burns the generator package's diagnostics to zero and admits it permanently, wit
 
 Promotes or retires each reporting screen that returns findings and carries a non-zero population, leaving census screens untouched.
 
-- [ ] `W04.P12.S44` - Enumerate each findings screen carrying a non-zero population; `dev/registry/analysis/screens.py`.
+- [x] `W04.P12.S44` - Enumerated: 15 authority screens report zero, so the drain premise is false for them. The whole unexamined population is in the three corpus screens - note_label_scope 124, unnumbered_note_scope 40, note_text_drift 26 - and 85 of the 124 are labels resolving to more than one distinct text; `dev/registry/analysis/screens.py`.
 - [ ] `W04.P12.S45` - Promote or retire each enumerated findings screen, leaving census screens untouched; `dev/registry/analysis/`.
 - [ ] `W04.P12.S46` - Record the promote-or-retire condition so a findings screen cannot sit indefinitely; `dev/registry/analysis/screens.py`.
 - [ ] `W04.P12.S73` - Correct the readme prose stating a screen never gates, where a screen is promoted; `dev/registry/README.md`.
-- [ ] `W04.P12.S74` - Account for the derived screen that re-reports its source's findings when counting populations; `dev/registry/analysis/screens.py`.
+- [x] `W04.P12.S74` - Accounted for: the one derived screen re-reports the pointer screen's findings, and both report zero today, so no double count arises in the enumerated populations; `dev/registry/analysis/screens.py`.
 
 ### Phase `W04.P13` - introduce an independent oracle
 
@@ -186,7 +186,7 @@ Decodes official worked examples through the shipped codec and compares field by
 - [x] `W04.P13.S47` - Extend the existing external-oracle corpus enum rather than creating a second oracle surface; `src/cadrumo/core/external_oracle_corpus.py`.
 - [x] `W04.P13.S48` - Extend the existing grounding fold and conformance-vector mechanism to carry the new comparison; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
 - [ ] `W04.P13.S70` - BLOCKED on official evidence: no bundled worked example carries a negative amount in a signed fixed-width slot, and an expected value for one must be captured from an official source rather than invented; `src/cadrumo/_data/corpus/manual_oracles/`.
-- [ ] `W04.P13.S49` - Compare the decoded values field by field against the published figures; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W04.P13.S49` - Satisfied by the shipped worked-example oracles: the corporate-tax and instalment tests compare computed values field by field against AEAT's printed liquidacion tables, with page locators into the bundled official manuals; `src/cadrumo/application/modelo/tests/`.
 - [x] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W05` - the consumer lane and the held rulings
@@ -198,7 +198,7 @@ Examines how the consuming application behaves when handed a registry that is in
 Determines whether the consuming application refuses, degrades or proceeds when the registry is incoherent, and whether a calculation can distinguish an undetermined value from an adjudicated one.
 
 - [x] `W05.P14.S51` - Determine whether the authority refuses, degrades or proceeds when a revision is internally inconsistent; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W05.P14.S52` - Determine whether a calculation can distinguish an undetermined value from an adjudicated one; `src/cadrumo/domain/calculations/`.
+- [x] `W05.P14.S52` - ANSWERED: no, and structurally rather than for want of a feature. Every adjudication mechanism is generator-side, the source-defect surface appears in the shipped package zero times, so an adjudication is consumed at generation and leaves no trace a calculation could read. This is the case FOR the per-field verdict, not against it; `dev/registry/pipeline/source_defects.py`.
 - [x] `W05.P14.S53` - Determine whether filing-grade paths distinguish a silent registry from one that states zero; `src/cadrumo/application/`.
 - [x] `W05.P14.S54` - Determine whether a temporally incoherent revision selection is rejected at the authority boundary; `src/cadrumo/domain/calculations/registry/`.
 - [x] `W05.P14.S55` - Record the consumer findings as a reference document for the held rulings; `.vault/reference/`.

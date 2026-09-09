@@ -77,6 +77,7 @@ says which. What each one owns:
 | `casilla_id_grammar` | which identifier grammar each modelo uses, and which mix several |
 | `cross_revision_wire_shape` | fields whose emitted wire shape moves between revisions of one modelo, and whether the official type column moved with it |
 | `export_derivation_attestation` | every shipped export revision, and whether it records the design rows its fields derive from or merely cites a design |
+| `unresolvable_note_pointers` | shipped fields whose Contenido cites a note label the design defines several times with different text, so the field's governing mandate has more than one plausible reading |
 | `fabricated_required_ness` | every generated field with what its official validation cell said, so a required flag derived from silence is separable from one derived from a statement |
 | `continuity_integrity` | modelos with no continuity, and chains crossing a grammar or standing alone |
 | `revision_name_window` | revision names that misstate the window they declare, or claim none |
