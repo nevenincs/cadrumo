@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-39-2015.html",
   "source_sha256": "2f44e20bf9d98e5b4a51268def2b72bb33806f88771c723bbf35e0c13bf3f6ec",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.3",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565",
   "units": [
     {

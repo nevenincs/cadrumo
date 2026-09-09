@@ -1564,6 +1564,26 @@ def test_project_test_control_modules_cover_tests_support_and_exclude_production
     assert all("src" not in path.relative_to(REPO_ROOT).parts[:1] for path in modules)
 
 
+def _is_type_checking_block(node: ast.stmt) -> bool:
+    """Return whether *node* is an ``if TYPE_CHECKING:`` guard.
+
+    The guard runs nothing at import: ``TYPE_CHECKING`` is False at runtime, so
+    the body is never executed and only a type checker reads it. That is
+    strictly less import-time work than the ``Assign`` this gate already
+    permits, for the same reason ``TypeAlias`` was admitted above -- the
+    construct is a declaration, not control flow that does something.
+
+    Deliberately narrow: only a bare ``TYPE_CHECKING`` test, with no ``else``
+    branch that would run instead.
+    """
+    if not isinstance(node, ast.If) or node.orelse:
+        return False
+    test = node.test
+    if isinstance(test, ast.Name):
+        return test.id == "TYPE_CHECKING"
+    return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+
+
 def test_project_test_control_modules_do_not_execute_control_flow_at_import_time() -> None:
     """Project-level test controls must keep collection import side-effect free."""
     allowed_top_level = (
@@ -1595,6 +1615,8 @@ def test_project_test_control_modules_do_not_execute_control_flow_at_import_time
             ):
                 continue
             if isinstance(node, allowed_top_level):
+                continue
+            if _is_type_checking_block(node):
                 continue
             violations.append(f"{repo_relative(path)}:{node.lineno}: {type(node).__name__}")
 

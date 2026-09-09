@@ -5,7 +5,7 @@
   "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-439-2007.html",
   "source_sha256": "77202496e59f975928e84c8e40029ba530c61b619ac3755c8e14ac4ecac96ee7",
   "preprocessor_id": "normatives-html",
-  "preprocessor_version": "1.1",
+  "preprocessor_version": "1.3",
   "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820",
   "units": [
     {

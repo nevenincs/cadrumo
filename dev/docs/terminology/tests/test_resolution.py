@@ -275,16 +275,34 @@ def _cli_reference_source(relpath: str) -> Path:
 def test_cli_navigation_page_is_dropped_without_an_emitted_record(
     resolver: TargetResolver,
 ) -> None:
-    """A navigation-only CLI family page is dropped without an emitted record.
+    """A navigation-only span of a CLI family page is dropped without a record.
 
-    ``docs/cli/app.rst`` is a navigation page, not an individual Pagefind CLI
-    record target. The resolver therefore fails closed instead of fabricating
-    ``cli/app.html``; valid CLI grounding comes from emitted command/option
-    records with exact page-and-anchor targets.
+    ``docs/cli/app.rst`` opens with pure navigation prose (an intro paragraph
+    and a "Direct commands" heading) before its first individual command
+    section -- the family page also renders any command mounted directly on
+    the family root, so it is not purely navigation end to end. A hit confined
+    to the navigation span above the first command heading is still not a
+    Pagefind CLI record target, so the resolver fails closed instead of
+    fabricating ``cli/app.html``; valid CLI grounding comes only from emitted
+    command/option records with exact page-and-anchor targets.
     """
     from .._resolution import DroppedHit, DropReason
 
-    out = resolver.resolve(_hit("docs/cli/app.rst"))
+    source_path = _cli_reference_source("docs/cli/app.rst")
+    source_lines = source_path.read_text(encoding="utf-8").splitlines()
+    first_command_line = next(
+        (
+            line_number
+            for line_number, line in enumerate(source_lines, start=1)
+            if line.startswith("aeat ")
+            and line_number < len(source_lines)
+            and source_lines[line_number] == "-" * len(line)
+        ),
+        len(source_lines) + 1,
+    )
+    assert first_command_line > 1, "expected the family page to open with navigation prose before any command"
+
+    out = resolver.resolve(_hit("docs/cli/app.rst", line_end=first_command_line - 1))
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.NO_TARGET_ENTITY
     assert "no authoritative CLI search record was emitted" in out.detail
@@ -331,13 +349,18 @@ def test_emitted_cli_option_resolves_to_its_exact_page_anchor(
     command_locator_line = next(
         line_number
         for line_number, line in enumerate(source_lines, start=1)
-        if line == f"**Command path:** ``{emitted.metadata.command_path}``"
+        if line == emitted.metadata.command_path
+        and line_number < len(source_lines)
+        and source_lines[line_number] == "-" * len(line)
     )
     next_command_locator_line = next(
         (
             line_number
             for line_number, line in enumerate(source_lines, start=1)
-            if line_number > command_locator_line and line.startswith("**Command path:** ``")
+            if line_number > command_locator_line
+            and line.startswith("aeat ")
+            and line_number < len(source_lines)
+            and source_lines[line_number] == "-" * len(line)
         ),
         len(source_lines) + 1,
     )
@@ -345,7 +368,7 @@ def test_emitted_cli_option_resolves_to_its_exact_page_anchor(
         line_number
         for line_number, line in enumerate(source_lines, start=1)
         if command_locator_line < line_number < next_command_locator_line
-        and line.strip() == ", ".join(f"``{name}``" for name in emitted.metadata.option_names)
+        and line == " / ".join(emitted.metadata.option_names)
     )
     out = resolver.resolve(
         _hit(source_path.as_posix(), line_start=option_line, line_end=option_line + 1),
@@ -390,7 +413,9 @@ def test_emitted_nested_cli_command_resolves_to_its_exact_page_anchor(
     command_locator_line = next(
         line_number
         for line_number, line in enumerate(source_lines, start=1)
-        if line == f"**Command path:** ``{emitted.metadata.command_path}``"
+        if line == emitted.metadata.command_path
+        and line_number < len(source_lines)
+        and source_lines[line_number] == "-" * len(line)
     )
 
     out = resolver.resolve(
@@ -407,22 +432,37 @@ def test_emitted_nested_cli_command_resolves_to_its_exact_page_anchor(
 def test_cli_output_schema_prose_is_dropped_without_a_parameter_locator(
     resolver: TargetResolver,
 ) -> None:
-    """Output-schema prose is not a parameter source locator."""
+    """A command's help prose is not a command or parameter source locator.
+
+    Per-command output-schema prose was retired from the generated reference
+    (the schema registry now lives only on the standalone ``schemas.rst``
+    page); the surviving prose between a command's heading and its
+    ``Parameters`` block is the command's own help text. It is real content on
+    the page but carries no exact command-or-option locator of its own, so a
+    hit confined to it must still drop.
+    """
     from .._resolution import DroppedHit, DropReason
 
     source_path = _cli_reference_source("docs/cli/app/diagnostics.rst")
     source_lines = source_path.read_text(encoding="utf-8").splitlines()
-    output_schema_line = next(
+    command_locator_line = next(
         line_number
         for line_number, line in enumerate(source_lines, start=1)
-        if line.startswith("This command emits a ``SchemaEnvelope``")
+        if line == "aeat app diagnostics errors"
+        and line_number < len(source_lines)
+        and source_lines[line_number] == "-" * len(line)
+    )
+    help_prose_line = next(
+        line_number
+        for line_number, line in enumerate(source_lines, start=1)
+        if line_number > command_locator_line + 1 and line.strip() and line != "Parameters"
     )
 
     out = resolver.resolve(
         _hit(
             source_path.as_posix(),
-            line_start=output_schema_line,
-            line_end=output_schema_line,
+            line_start=help_prose_line,
+            line_end=help_prose_line,
         ),
     )
     assert isinstance(out, DroppedHit)
@@ -431,15 +471,28 @@ def test_cli_output_schema_prose_is_dropped_without_a_parameter_locator(
 
 
 def test_cli_source_range_past_file_end_is_dropped(resolver: TargetResolver) -> None:
-    """A CLI locator range beyond the real source file cannot resolve."""
-    from .._resolution import DroppedHit, DropReason
+    """A CLI locator range beyond the real source file cannot resolve.
 
-    source_path = _cli_reference_source("docs/cli/config.rst")
-    source_line_count = len(source_path.read_text(encoding="utf-8").splitlines())
-    assert source_line_count >= 172
+    The reference is split per family/verb-group, so no single page is a
+    fixed size; the longest generated page is derived from the live tree
+    (rather than a hardcoded page name) so this probe survives a future
+    re-split.
+    """
+    from .._resolution import DroppedHit, DropReason, _require_built_cli_reference
 
+    _require_built_cli_reference(REPO_ROOT)
+    pages = tuple((REPO_ROOT / "docs" / "cli").rglob("*.rst"))
+    assert pages, "the generated CLI reference tree must hold at least one page"
+    longest_page = max(pages, key=lambda page: len(page.read_text(encoding="utf-8").splitlines()))
+    source_line_count = len(longest_page.read_text(encoding="utf-8").splitlines())
+    assert source_line_count >= 500, (
+        f"expected the longest generated CLI page to carry substantial real content; "
+        f"{longest_page.relative_to(REPO_ROOT).as_posix()!r} is only {source_line_count} lines"
+    )
+
+    source_relpath = longest_page.relative_to(REPO_ROOT).as_posix()
     out = resolver.resolve(
-        _hit(source_path.as_posix(), line_start=172, line_end=9999),
+        _hit(source_relpath, line_start=source_line_count, line_end=9999),
     )
     assert isinstance(out, DroppedHit)
     assert out.reason is DropReason.NO_TARGET_ENTITY
@@ -455,22 +508,33 @@ def test_ambiguous_cli_source_range_is_dropped(resolver: TargetResolver) -> None
     command_locator_line = next(
         line_number
         for line_number, line in enumerate(source_lines, start=1)
-        if line == "**Command path:** ``aeat app diagnostics errors``"
+        if line == "aeat app diagnostics errors"
+        and line_number < len(source_lines)
+        and source_lines[line_number] == "-" * len(line)
     )
     next_command_locator_line = next(
         (
             line_number
             for line_number, line in enumerate(source_lines, start=1)
-            if line_number > command_locator_line and line.startswith("**Command path:** ``")
+            if line_number > command_locator_line
+            and line.startswith("aeat ")
+            and line_number < len(source_lines)
+            and source_lines[line_number] == "-" * len(line)
         ),
         len(source_lines) + 1,
     )
+    # A declaration line is unindented and its second following line is one of
+    # the generator's four fixed classification strings -- the generator
+    # always renders a parameter as declaration / description / classification.
+    classifications = {"Argument, required.", "Argument, optional.", "Option, required.", "Option, optional."}
     parameter_lines = [
         line_number
         for line_number, line in enumerate(source_lines, start=1)
         if command_locator_line < line_number < next_command_locator_line
-        and line.strip().startswith("``")
-        and line.strip().endswith("``")
+        and line
+        and not line.startswith(" ")
+        and line_number + 1 < len(source_lines)
+        and source_lines[line_number + 1].strip() in classifications
     ]
     assert len(parameter_lines) >= 2
 

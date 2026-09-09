@@ -35,9 +35,14 @@ from .._common import emit_envelope, resolve_cli_precondition_action
 from ..errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 if TYPE_CHECKING:
-    from ....application.diagnostic_models import ConfigRepairReport
+    from ....application.diagnostic_models import ConfigRepairReport, DiagnosticCheck, RegistryIntegrityReport
     from ....application.workflow.events import WorkflowStateResetFingerprint
-    from ..config_payloads import ConfigRepairResult, WorkflowFingerprintPayload
+    from ..config_payloads import (
+        ConfigRepairCheckPayload,
+        ConfigRepairResult,
+        RepairIntegrityRegistryResult,
+        WorkflowFingerprintPayload,
+    )
 
 
 def _workflow_fingerprint_payload(fingerprint: WorkflowStateResetFingerprint) -> WorkflowFingerprintPayload:
@@ -53,6 +58,37 @@ def _workflow_fingerprint_payload(fingerprint: WorkflowStateResetFingerprint) ->
     )
 
 
+def _repair_check_payload(check: DiagnosticCheck) -> ConfigRepairCheckPayload:
+    """Project one application diagnostic check into its typed CLI payload.
+
+    The CLI boundary is where an application-owned precondition verdict
+    becomes a schema-resolved wire action; every repair surface that emits a
+    check row shares this one projection.
+    """
+    from ..config_payloads import ConfigRepairCheckPayload, ConfigRepairFindingPayload
+
+    return ConfigRepairCheckPayload(
+        name=check.name,
+        status=check.status,
+        summary=check.summary,
+        detail=check.detail,
+        precondition_action=(
+            resolve_cli_precondition_action(check.precondition_verdict)
+            if check.precondition_verdict is not None
+            else None
+        ),
+        audience=check.audience,
+        findings=[
+            ConfigRepairFindingPayload(
+                summary=finding.summary,
+                detail=finding.detail,
+                requirement=finding.requirement,
+            )
+            for finding in check.findings
+        ],
+    )
+
+
 def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
     """Project diagnostics through the one CLI action resolver before emitting.
 
@@ -61,8 +97,6 @@ def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
     application renderer never reconstructs command prose from them.
     """
     from ..config_payloads import (
-        ConfigRepairCheckPayload,
-        ConfigRepairFindingPayload,
         ConfigRepairNamespacePayload,
         ConfigRepairRegistryPayload,
         ConfigRepairResult,
@@ -70,29 +104,7 @@ def _config_repair_result(report: ConfigRepairReport) -> ConfigRepairResult:
         ConfigRepairSetupPayload,
     )
 
-    checks = [
-        ConfigRepairCheckPayload(
-            name=check.name,
-            status=check.status,
-            summary=check.summary,
-            detail=check.detail,
-            precondition_action=(
-                resolve_cli_precondition_action(check.precondition_verdict)
-                if check.precondition_verdict is not None
-                else None
-            ),
-            audience=check.audience,
-            findings=[
-                ConfigRepairFindingPayload(
-                    summary=finding.summary,
-                    detail=finding.detail,
-                    requirement=finding.requirement,
-                )
-                for finding in check.findings
-            ],
-        )
-        for check in report.checks
-    ]
+    checks = [_repair_check_payload(check) for check in report.checks]
     return ConfigRepairResult(
         overall=report.overall,
         package_name=report.package_name,
@@ -342,12 +354,22 @@ def repair_integrity_objects(
     )
 
 
+def _registry_integrity_result(report: RegistryIntegrityReport) -> RepairIntegrityRegistryResult:
+    """Project the registry-integrity probe into its typed CLI payload."""
+    from ..config_payloads import ConfigRepairRegistryPayload, RepairIntegrityRegistryResult
+
+    return RepairIntegrityRegistryResult(
+        registry=strict_round_trip(ConfigRepairRegistryPayload, report.registry),
+        check=_repair_check_payload(report.check),
+    )
+
+
 def repair_integrity_registry(ctx: typer.Context) -> None:
     """Report calculation registry authority and bundled snapshot integrity."""
     from ..config_payloads import RepairIntegrityRegistryResult
 
     report = _build_registry_integrity_report()
-    result = strict_round_trip(RepairIntegrityRegistryResult, report)
+    result = strict_round_trip(RepairIntegrityRegistryResult, _registry_integrity_result(report))
     issue_lines = tuple(f"issue\t{finding.summary}" for finding in report.check.findings)
     emit_envelope(
         ctx,

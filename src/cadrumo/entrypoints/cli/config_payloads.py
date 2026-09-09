@@ -43,7 +43,6 @@ from ...core.errors.severity import BaseSeverity
 from ...core.hex import Hex64Str
 from ...core.identity import BucketId, ProfileId, ProfileLabel
 from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.requirement import RequirementValue
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.utc import validate_utc_aware
@@ -1027,14 +1026,17 @@ class RepairIntegrityObjectsResult(OutputSchema):
 class RepairIntegrityRegistryResult(OutputSchema):
     """JSON envelope for ``aeat config repair integrity registry``.
 
-    Mirrors
-    :class:`RegistryIntegrityReport`
-    ``model_dump(mode='json')``.
-    ``extra="allow"`` forwards the typed sub-models without re-declaring
-    the registry / diagnostic-check shapes locally.
+    Projects
+    :class:`~cadrumo.application.diagnostics.RegistryIntegrityReport` through
+    the same CLI-local payload rows the composite ``config repair`` report
+    uses: :class:`ConfigRepairRegistryPayload` for the registry summary and
+    :class:`ConfigRepairCheckPayload` for the validation verdict, whose
+    application-owned ``precondition_verdict`` is resolved to a wire
+    ``precondition_action`` at the CLI boundary.
     """
 
-    model_config = STRICT_FROZEN_CONFIG
+    registry: ConfigRepairRegistryPayload
+    check: ConfigRepairCheckPayload
 
 
 # Apoderado verb result schemas

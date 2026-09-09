@@ -33,7 +33,6 @@ from __future__ import annotations
 
 import shutil
 import struct
-import sys
 from pathlib import Path
 
 import pytest
@@ -58,12 +57,17 @@ def _launcher(name: str) -> Path:
 
 @pytest.fixture(scope="module")
 def launchers() -> tuple[bytes, bytes]:
-    """The two console launchers this project installs, as raw bytes."""
-    if sys.platform != "win32":
-        pytest.skip("console launcher stubs exist only on Windows")
+    """The two console launchers this project installs, as raw bytes.
+
+    No platform guard here: the tests that request this fixture carry
+    ``windows_only``, which every lane excludes, so on a POSIX checkout they are
+    never selected rather than selected-and-skipped. If one is reached anyway,
+    `_launcher` fails loudly rather than reporting green for a stub it never saw.
+    """
     return _launcher("aeat.exe").read_bytes(), _launcher("cadrumo-mcp.exe").read_bytes()
 
 
+@pytest.mark.windows_only
 def test_two_genuine_launchers_differ_raw(launchers: tuple[bytes, bytes]) -> None:
     """The premise of the fix, asserted rather than assumed.
 
@@ -75,6 +79,7 @@ def test_two_genuine_launchers_differ_raw(launchers: tuple[bytes, bytes]) -> Non
     assert first != second, "the two launchers are byte-identical, so this gate proves nothing about the elision"
 
 
+@pytest.mark.windows_only
 def test_two_genuine_launchers_project_equal(launchers: tuple[bytes, bytes]) -> None:
     """The failure this fixes: a correct install reported as stub drift."""
     first, second = launchers
