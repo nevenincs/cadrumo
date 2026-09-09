@@ -23,7 +23,7 @@ from ._common import bad
 if TYPE_CHECKING:
     from ...core.period import Period
 
-__all__ = ["_canonical_period", "_filter_canonical_period", "_optional_canonical_period"]
+__all__ = ["_canonical_period", "_optional_canonical_period"]
 
 
 # The ledger ``--period`` surface speaks ONE strict operator grammar — the
@@ -163,19 +163,6 @@ def _canonical_period(period: str, *, year: int) -> Period:
         context={"raw": period},
         accepted_period_tokens=_ledger_period_accepted_tokens(),
     )
-
-
-def _filter_canonical_period(token: str, *, year: int) -> Period:
-    """Resolve a ``--filter period=`` bare token plus ``--filter year=`` to :class:`Period`.
-
-    The ledger ``--filter`` grammar carries the filing year as a separate
-    ``year=`` clause, so ``period=`` is the same bare AEAT token the
-    ``--period`` option accepts (``1T`` / ``0A`` / ``03``). A calendar shape or
-    a year-qualified hybrid (``2026Q1`` / ``2026-1T``) is refused with a message
-    naming the AEAT tokens. Reuses the same ``(year, token)→Period`` mapping the
-    ``--period`` / ``--year`` commands use.
-    """
-    return _canonical_period(token, year=year)
 
 
 def _optional_canonical_period(period: str | None, *, year: int | None) -> Period | None:

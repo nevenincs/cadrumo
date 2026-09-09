@@ -16,8 +16,6 @@ from ...application.workbench_generation import (
     WorkbenchGenerationProjectionResultV1,
     WorkbenchGenerationV1,
 )
-from ...domain.modelos.errors import ModeloError
-from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .account import (
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
@@ -30,7 +28,6 @@ if TYPE_CHECKING:
     from textual.screen import Screen
 
     from ...application.ledger.models import ManualLedgerTransactionResult
-    from ...application.modelo.work_review import ModeloWorkReview
     from ...application.modelo.workspace_models import (
         ModeloWorkspaceProjectionV1,
         ModeloWorkspaceStaticInspectionResultV1,
@@ -612,78 +609,6 @@ def _aeat_sync_generation_factory(
     return create
 
 
-def load_modelo_work_unit_catalogue(bucket_id: str) -> WorkUnitCatalogue:
-    """Load one profile's work-unit catalogue at the TUI composition boundary."""
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-
-    return WorkUnitCatalogueRepository(bucket_id=bucket_id).load()
-
-
-def _require_active_bucket_id(bucket_id: str | None) -> str:
-    """Resolve the bucket a session reads, refusing a cold start outright.
-
-    A session that reached a work destination without a profile has nothing to
-    render, and the honest report is a refusal rather than an empty surface
-    that looks like a profile holding no work.
-    """
-    from ...core.bucket_pointer import resolve_active_bucket_id
-
-    resolved = bucket_id or resolve_active_bucket_id()
-    if resolved is None:
-        raise ModeloError("no active profile: a work destination needs one profile's bucket to read")
-    return resolved
-
-
-def resolve_modelo_work_unit(*, work_unit_id: str, bucket_id: str | None) -> WorkUnit:
-    """Resolve one work unit by exact id at the TUI composition boundary.
-
-    The identifier is all that crosses into this process, so the record it
-    names is read here rather than received. That is what makes the surface a
-    read of current persistence instead of a projection of whatever a sibling
-    entrypoint held when it asked for the destination.
-    """
-    from ...application.modelo.work_addressing import resolve_modelo_work_unit_for_operator_target
-
-    resolved_bucket_id = _require_active_bucket_id(bucket_id)
-    return resolve_modelo_work_unit_for_operator_target(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        catalogue=load_modelo_work_unit_catalogue(resolved_bucket_id),
-        resolved_bucket_id=resolved_bucket_id,
-    )
-
-
-def load_modelo_work_units(*, bucket_id: str | None, include_discarded: bool) -> tuple[WorkUnit, ...]:
-    """Read the work units a picker offers at the TUI composition boundary."""
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.modelo.work_lifecycle import list_work_units
-
-    resolved_bucket_id = _require_active_bucket_id(bucket_id)
-    return list_work_units(
-        bucket_id=bucket_id,
-        include_discarded=include_discarded,
-        repository=WorkUnitCatalogueRepository(bucket_id=resolved_bucket_id),
-    )
-
-
-def build_modelo_work_review_for_unit(unit: WorkUnit) -> ModeloWorkReview:
-    """Build the canonical review record for one resolved unit."""
-    from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-    from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-    from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ...application.modelo.work_review import build_modelo_work_review
-
-    return build_modelo_work_review(
-        unit.bucket_id,
-        unit.modelo,
-        unit.filing_year,
-        unit.period,
-        work_unit_repository=WorkUnitCatalogueRepository(),
-        calculation_repository=CalculationRevisionCatalogueRepository(),
-        verification_repository=VerificationReportCatalogueRepository(),
-    )
-
-
 def resolve_modelo_workspace_static_inspection(
     unit: WorkUnit, *, output_language: OutputLanguage
 ) -> ModeloWorkspaceStaticInspectionResultV1:
@@ -1005,17 +930,13 @@ __all__ = [
     "InstalledWorkbenchRootInputsV1",
     "InstalledWorkbenchSearchInputsProviderV1",
     "TuiOperationCompositionV1",
-    "build_modelo_work_review_for_unit",
     "compose_installed_workbench_generation_provider",
     "compose_installed_workbench_root",
     "compose_installed_workbench_search",
     "compose_secure_profile_workbench_generation_provider",
-    "load_modelo_work_unit_catalogue",
-    "load_modelo_work_units",
     "main",
     "operation_services_scope",
     "profile_storage_scope",
-    "resolve_modelo_work_unit",
     "resolve_modelo_workspace_static_inspection",
     "run_authenticated_workbench_sessions",
 ]

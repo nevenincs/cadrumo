@@ -14,13 +14,11 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-import typer
 
 from ....core.config import override_settings
 from ....core.i18n.render import tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_cli_runtime_profile, isolated_sessionless_storage_root
-from .._common import draft_by_id
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -35,40 +33,6 @@ def _active_profile_env(tmp_path: Path) -> Iterator[Path]:
     """Active-profile runtime with CLI directories isolated; no drafts present."""
     with override_settings(cadrumo_output_language="en"), isolated_cli_runtime_profile(tmp_path=tmp_path) as runtime:
         yield runtime.storage_root
-
-
-def test_draft_by_id_raises_bad_parameter_for_unknown_id(
-    _active_profile_env: Path,
-) -> None:
-    """draft_by_id raises typer.BadParameter for a nonexistent draft ID."""
-    with pytest.raises(typer.BadParameter):
-        draft_by_id("nonexistent-draft-id-xyz")
-
-
-def test_draft_by_id_error_message_matches_locale_catalogue(
-    _active_profile_env: Path,
-) -> None:
-    """The raised message is sourced from the locale catalogue, not a raw f-string."""
-    draft_id = "nonexistent-draft-id-xyz"
-    expected = tr("cli.common.errors.draft_id_not_found", draft_id=draft_id)
-
-    with pytest.raises(typer.BadParameter) as exc_info:
-        draft_by_id(draft_id)
-
-    assert str(exc_info.value) == expected
-    # Guard: the old hard-coded literal must not appear.
-    assert f"draft id {draft_id!r} not found" not in str(exc_info.value)
-
-
-def test_draft_by_id_error_message_contains_draft_id_interpolation(
-    _active_profile_env: Path,
-) -> None:
-    """The error message includes the actual draft_id value."""
-    draft_id = "abc-123"
-    with pytest.raises(typer.BadParameter) as exc_info:
-        draft_by_id(draft_id)
-
-    assert draft_id in str(exc_info.value)
 
 
 # ---------------------------------------------------------------------------

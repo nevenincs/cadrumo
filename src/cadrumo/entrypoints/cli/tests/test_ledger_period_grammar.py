@@ -30,7 +30,7 @@ import typer
 from ....core.period import Period, StandardPeriodCode
 from ....tests.active_profile_isolated_backend_fixture import active_profile_isolated_backend_fixture
 from ....tests.cli_runner import invoke_cached_cli
-from ..period_parsing import _canonical_period, _filter_canonical_period, _LedgerPeriodRefusal
+from ..period_parsing import _canonical_period, _LedgerPeriodRefusal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -205,29 +205,6 @@ def test_empty_period_refuses() -> None:
 
     with pytest.raises(typer.BadParameter):
         _canonical_period("   ", year=2024)
-
-
-# --- Filter clause: bare AEAT token plus a separate year= clause --------------
-
-
-def test_filter_clause_accepts_bare_token_with_year() -> None:
-    """``--filter period=1T --filter year=2024`` resolves to a typed :class:`Period`.
-
-    The filter grammar carries the year on a separate ``year=`` clause, so
-    ``period=`` is the same bare AEAT token the ``--period`` option accepts —
-    there is no year-qualified combined token.
-    """
-
-    tokens = ("1T", "0A", "03")
-    assert tuple(_filter_canonical_period(token, year=2024).registry_token for token in tokens) == tokens
-
-
-def test_filter_clause_refuses_calendar_and_year_qualified() -> None:
-    """The filter clause refuses a calendar shape or a year-qualified hybrid token."""
-
-    for rejected in _FILTER_REJECTED_PERIODS:
-        with pytest.raises(typer.BadParameter):
-            _filter_canonical_period(rejected, year=2024)
 
 
 # --- End-to-end: real ledger command takes --period AEAT token + --year -------
