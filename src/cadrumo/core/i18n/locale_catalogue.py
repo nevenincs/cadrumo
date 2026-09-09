@@ -1,12 +1,9 @@
 """Public locale-catalogue capture over one stable catalogue window.
 
 This module owns the capture contract for the shipped translation catalogues.
-It resolves nothing of its own: catalogue loading, the scaffold-null
-suppression convention and key membership all come from
-:mod:`cadrumo.core.i18n.render`, and the catalogue fingerprint comes from
-:func:`~cadrumo.core.i18n._catalogue_cache.compute_directory_source_digest`.
-There is no second catalogue reader, digest, cache or routing rule here, and
-none may be added.
+Catalogue loading, the scaffold-null suppression convention and key membership
+come from :mod:`cadrumo.core.i18n.render`. This owner fingerprints the exact
+shard bytes it observes; there is no second reader, cache, or routing rule.
 
 The per-locale Spanish fallback and the modelo key-identity chain are owned by
 ``resolve_modelo_localization`` one layer above this one. This module
@@ -22,13 +19,13 @@ See Also:
 
 from __future__ import annotations
 
+import hashlib
 import os
 from dataclasses import dataclass
 from secrets import token_bytes
 from threading import RLock
 
 from ..errors.hierarchy import CoreError
-from ._catalogue_cache import compute_directory_source_digest
 from .render import locale_map, lookup_translation_entry, normalise_supported_language
 
 _LOCALE_CATALOGUE_CAPTURE_MAX_ATTEMPTS = 8
@@ -42,6 +39,17 @@ _locale_catalogue_generation = 0
 
 class LocaleCatalogueCaptureError(CoreError):
     """Raised when a locale catalogue cannot be captured over one stable window."""
+
+
+def _directory_source_digest(shards: list[tuple[str, bytes]]) -> str:
+    """Digest shard paths and bytes in stable order."""
+    hasher = hashlib.sha256()
+    for relative_path, raw_bytes in sorted(shards, key=lambda item: item[0]):
+        hasher.update(relative_path.encode("utf-8"))
+        hasher.update(b"\x00")
+        hasher.update(raw_bytes)
+        hasher.update(b"\x00")
+    return hasher.hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
@@ -136,7 +144,7 @@ def _locale_catalogue_observation(locale: str) -> tuple[str, ...]:
         for shard in shard_dir.rglob("*.yml")
         if shard.is_file()
     ]
-    return (locale, compute_directory_source_digest(shards))
+    return (locale, _directory_source_digest(shards))
 
 
 def _locale_catalogue_comparison_domain(locale: str) -> str:

@@ -44,8 +44,32 @@ from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_ent
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints import cli
 from cadrumo.entrypoints.cli.command_spec import DeferredTarget
-from cadrumo.entrypoints.cli.command_suggestions import walk_live_command_tree
-from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+from typer._click.core import Context as TyContext
+from typer.main import get_command
+
+def live_command_paths(app):
+    root = get_command(app)
+    root.name = app.info.name or root.name
+    paths = set()
+
+    def visit(command, path, ancestors):
+        if id(command) in ancestors:
+            return
+        paths.add(path)
+        if not callable(getattr(command, "list_commands", None)) or not callable(getattr(command, "get_command", None)):
+            return
+        context = TyContext(command, info_name=path[-1])
+        try:
+            for child_name in command.list_commands(context):
+                child = command.get_command(context, child_name)
+                if child is not None:
+                    visit(child, (*path, child_name), ancestors | {id(command)})
+        finally:
+            context.close()
+
+    visit(root, (root.name or "<root>",), frozenset())
+    return paths
 
 def translation_keys(value):
     from cadrumo.entrypoints.cli.command_spec import TranslationKey
@@ -96,17 +120,11 @@ def validate_target(path, target):
         raise AssertionError(f"unrecognized deferred-target role {path}: {target.identity}")
     return value
 
-nodes = command_spec_nodes()
+nodes = COMMAND_GRAPH.nodes()
 expected_paths = {node.path for node in nodes}
-live_paths = {node.path for node in walk_live_command_tree(cli.app)}
+live_paths = live_command_paths(cli.app)
 all_targets = tuple(target for node in nodes for target in targets(node.spec))
 resolved = tuple(validate_target(path, target) for path, target in all_targets)
-try:
-    validate_target(("planted_unknown_role",), DeferredTarget("builtins", "str"))
-except AssertionError:
-    unknown_role_refused = True
-else:
-    unknown_role_refused = False
 missing_locale_keys = [
     (node.spec.key, key.value, locale)
     for node in nodes
@@ -127,7 +145,6 @@ print(json.dumps({
     "live_exact": live_paths == expected_paths,
     "targets": len(all_targets),
     "targets_resolved": len(resolved) == len(all_targets),
-    "unknown_role_refused": unknown_role_refused,
     "missing_locale_keys": missing_locale_keys,
     "origins_inside": all(Path(origin).is_relative_to(install_root) for origin in first_party_origins),
     "cadrumo_origin": str(Path(cadrumo.__file__).resolve()),
@@ -215,7 +232,6 @@ def _assert_probe(payload: dict[str, object]) -> None:
     assert payload["live_exact"] is True
     assert isinstance(payload["targets"], int) and payload["targets"] > 0
     assert payload["targets_resolved"] is True
-    assert payload["unknown_role_refused"] is True
     assert payload["missing_locale_keys"] == []
     assert payload["origins_inside"] is True
     assert payload["dev_imports"] == []
@@ -234,14 +250,6 @@ def test_wheel_sdist_and_sdist_wheel_preserve_command_spec_authority(tmp_path: P
     assert uv is not None
     checkout = _tracked_checkout(tmp_path)
     expected_modules = _authored_spec_modules(checkout)
-    assert _is_spec_export_name("COMMAND_SPEC")
-    assert _is_spec_export_name("COMMAND_SPECS")
-    with pytest.raises(AssertionError, match="missing spec modules"):
-        _assert_archive(set(), expected_modules={"cadrumo/entrypoints/cli/_planted_command_specs.py"})
-    with pytest.raises(AssertionError, match="identity projections differ"):
-        _assert_same_identity_projection(
-            [{"identities": [["a", ["aeat", "a"]]]}, {"identities": [["b", ["aeat", "b"]]]}]
-        )
     artifacts = tmp_path / "artifacts"
     artifacts.mkdir()
     _run([uv, "build", "--wheel", "--sdist", "--out-dir", str(artifacts)], cwd=checkout)

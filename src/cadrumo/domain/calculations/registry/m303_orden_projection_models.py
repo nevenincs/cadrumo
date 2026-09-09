@@ -51,6 +51,19 @@ def _require_invariant(condition: bool, message: str) -> None:
         raise RegistryValidationError(message)
 
 
+def _has_m303_2022_record_design_source(
+    source_ref: str,
+    source_content_digest: str,
+    *,
+    record_design_epoch: str | None = None,
+) -> bool:
+    """Return whether one source axis retains the pinned 2022 design identity."""
+    return (source_ref, source_content_digest) == (
+        _M303_2022_RECORD_DESIGN_SOURCE_REF,
+        _M303_2022_RECORD_DESIGN_SOURCE_DIGEST,
+    ) and record_design_epoch in (None, "2022")
+
+
 class ActividadOrdenAnualRef(RegistryModel):
     """Immutable reference to one source-pinned annual-Orden activity row."""
 
@@ -132,10 +145,8 @@ class M303AnnualOrdenProjection(RegistryModel):
     @model_validator(mode="after")
     def _rows_are_complete_and_year_scoped(self) -> M303AnnualOrdenProjection:
         _validate_projection_activity_rows(self)
-        _validate_projection_activity_ids(self)
         _validate_projection_iae_identity(self)
         _validate_projection_axis_shape(self)
-        _validate_projection_lorca_2022_reduction(self)
         return self
 
 
@@ -148,9 +159,6 @@ def _validate_projection_activity_rows(projection: M303AnnualOrdenProjection) ->
         not any(activity.ejercicio != projection.ejercicio for activity in projection.activities),
         "annual Orden activities must match their projection ejercicio",
     )
-
-
-def _validate_projection_activity_ids(projection: M303AnnualOrdenProjection) -> None:
     ids = tuple(activity.orden_id for activity in projection.activities)
     _require_invariant(
         len(set(ids)) == len(ids),
@@ -184,15 +192,14 @@ def _validate_projection_axis_shape(projection: M303AnnualOrdenProjection) -> No
         projection.agricultural_authority.annual_orden_source_ref == projection.source_ref,
         "annual Orden agricultural refusal must retain its exact annual source reference",
     )
-    if projection.ejercicio == 2022 and (
-        projection.agricultural_authority.record_design_source_ref != _M303_2022_RECORD_DESIGN_SOURCE_REF
-        or projection.agricultural_authority.record_design_source_content_digest
-        != _M303_2022_RECORD_DESIGN_SOURCE_DIGEST
-    ):
-        raise RegistryValidationError("annual Orden 2022 agricultural refusal must retain its exact AEAT design source")
-
-
-def _validate_projection_lorca_2022_reduction(projection: M303AnnualOrdenProjection) -> None:
+    _require_invariant(
+        projection.ejercicio != 2022
+        or _has_m303_2022_record_design_source(
+            projection.agricultural_authority.record_design_source_ref,
+            projection.agricultural_authority.record_design_source_content_digest,
+        ),
+        "annual Orden 2022 agricultural refusal must retain its exact AEAT design source",
+    )
     reduction = projection.lorca_2022_reduction
     if projection.ejercicio == 2022:
         _validate_2022_annual_orden_coordinate(
@@ -264,20 +271,16 @@ class M303AnnualOrdenSnapshot(RegistryModel):
 
     @model_validator(mode="after")
     def _references_match_the_activity_rows(self) -> M303AnnualOrdenSnapshot:
-        _validate_snapshot_activity_refs(self)
         _validate_snapshot_activity_coordinates(self)
         _validate_snapshot_source_authority(self)
         return self
 
 
-def _validate_snapshot_activity_refs(snapshot: M303AnnualOrdenSnapshot) -> None:
+def _validate_snapshot_activity_coordinates(snapshot: M303AnnualOrdenSnapshot) -> None:
     _require_invariant(
         tuple(item.orden_id for item in snapshot.activities) == tuple(item.orden_id for item in snapshot.activity_refs),
         "annual Orden snapshot refs must exactly match its activity rows",
     )
-
-
-def _validate_snapshot_activity_coordinates(snapshot: M303AnnualOrdenSnapshot) -> None:
     expected_coordinate = (
         snapshot.ejercicio,
         snapshot.registry_revision_id,
@@ -307,32 +310,6 @@ def _validate_snapshot_activity_coordinates(snapshot: M303AnnualOrdenSnapshot) -
 
 
 def _validate_snapshot_source_authority(snapshot: M303AnnualOrdenSnapshot) -> None:
-    _validate_snapshot_lorca_2022_reduction(snapshot)
-    _require_invariant(
-        snapshot.agricultural_authority.annual_orden_source_ref == snapshot.source_ref,
-        "annual Orden snapshot agricultural refusal must retain its exact source reference",
-    )
-    if snapshot.ejercicio == 2022:
-        _validate_snapshot_2022_authority(snapshot)
-
-
-def _validate_snapshot_2022_authority(snapshot: M303AnnualOrdenSnapshot) -> None:
-    _validate_2022_annual_orden_coordinate(
-        ejercicio=snapshot.ejercicio,
-        registry_revision_id=snapshot.registry_revision_id,
-        source_ref=snapshot.source_ref,
-        source_content_digest=snapshot.source_content_digest,
-        scope="snapshot",
-    )
-    _require_invariant(
-        snapshot.agricultural_authority.record_design_source_ref == _M303_2022_RECORD_DESIGN_SOURCE_REF
-        and snapshot.agricultural_authority.record_design_source_content_digest
-        == _M303_2022_RECORD_DESIGN_SOURCE_DIGEST,
-        "annual Orden 2022 snapshot agricultural refusal must retain its exact AEAT design source",
-    )
-
-
-def _validate_snapshot_lorca_2022_reduction(snapshot: M303AnnualOrdenSnapshot) -> None:
     reduction = snapshot.lorca_2022_reduction
     if snapshot.ejercicio == 2022:
         _require_invariant(
@@ -346,6 +323,25 @@ def _validate_snapshot_lorca_2022_reduction(snapshot: M303AnnualOrdenSnapshot) -
             )
     elif reduction is not None:
         raise RegistryValidationError("only the 2022 annual Orden snapshot may carry the Lorca reduction")
+    _require_invariant(
+        snapshot.agricultural_authority.annual_orden_source_ref == snapshot.source_ref,
+        "annual Orden snapshot agricultural refusal must retain its exact source reference",
+    )
+    if snapshot.ejercicio == 2022:
+        _validate_2022_annual_orden_coordinate(
+            ejercicio=snapshot.ejercicio,
+            registry_revision_id=snapshot.registry_revision_id,
+            source_ref=snapshot.source_ref,
+            source_content_digest=snapshot.source_content_digest,
+            scope="snapshot",
+        )
+        _require_invariant(
+            _has_m303_2022_record_design_source(
+                snapshot.agricultural_authority.record_design_source_ref,
+                snapshot.agricultural_authority.record_design_source_content_digest,
+            ),
+            "annual Orden 2022 snapshot agricultural refusal must retain its exact AEAT design source",
+        )
 
 
 class M303RegimenSimplificadoSnapshot(RegistryModel):
@@ -359,50 +355,40 @@ class M303RegimenSimplificadoSnapshot(RegistryModel):
 
     @model_validator(mode="after")
     def _coordinates_are_complete_and_source_pinned(self) -> M303RegimenSimplificadoSnapshot:
-        _validate_regimen_simplificado_record_design(self)
         _validate_regimen_simplificado_coordinate(self)
-        _validate_regimen_simplificado_agricultural_authority(self)
-        if self.filing_year == 2022:
-            _validate_regimen_simplificado_2022_coordinate(self)
         return self
 
 
-def _validate_regimen_simplificado_record_design(snapshot: M303RegimenSimplificadoSnapshot) -> None:
+def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     _require_invariant(
         snapshot.record_design.kind is RegistrySourceKind.RECORD_DESIGN
         and snapshot.record_design.record_design_epoch is not None,
         "M303 regimen simplificado snapshot requires an epoch-pinned record design",
     )
-
-
-def _validate_regimen_simplificado_coordinate(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     _require_invariant(
         snapshot.filing_year == snapshot.orden.ejercicio
         and snapshot.registry_revision_id == snapshot.orden.registry_revision_id,
         "M303 regimen simplificado snapshot must retain its filing year and revision coordinate",
     )
-
-
-def _validate_regimen_simplificado_agricultural_authority(snapshot: M303RegimenSimplificadoSnapshot) -> None:
     agricultural = snapshot.orden.agricultural_authority
     _require_invariant(
         agricultural.record_design_source_ref == snapshot.record_design.id
         and agricultural.record_design_source_content_digest == snapshot.record_design.sha256,
         "M303 regimen simplificado snapshot agricultural refusal must retain its resolved record-design source",
     )
-
-
-def _validate_regimen_simplificado_2022_coordinate(snapshot: M303RegimenSimplificadoSnapshot) -> None:
-    _validate_2022_annual_orden_coordinate(
-        ejercicio=snapshot.orden.ejercicio,
-        registry_revision_id=snapshot.orden.registry_revision_id,
-        source_ref=snapshot.orden.source_ref,
-        source_content_digest=snapshot.orden.source_content_digest,
-        scope="resolved snapshot",
-    )
-    _require_invariant(
-        snapshot.record_design.id == _M303_2022_RECORD_DESIGN_SOURCE_REF
-        and snapshot.record_design.sha256 == _M303_2022_RECORD_DESIGN_SOURCE_DIGEST
-        and snapshot.record_design.record_design_epoch == "2022",
-        "M303 regimen simplificado 2022 snapshot must retain its exact AEAT design source",
-    )
+    if snapshot.filing_year == 2022:
+        _validate_2022_annual_orden_coordinate(
+            ejercicio=snapshot.orden.ejercicio,
+            registry_revision_id=snapshot.orden.registry_revision_id,
+            source_ref=snapshot.orden.source_ref,
+            source_content_digest=snapshot.orden.source_content_digest,
+            scope="resolved snapshot",
+        )
+        _require_invariant(
+            _has_m303_2022_record_design_source(
+                snapshot.record_design.id,
+                snapshot.record_design.sha256,
+                record_design_epoch=snapshot.record_design.record_design_epoch,
+            ),
+            "M303 regimen simplificado 2022 snapshot must retain its exact AEAT design source",
+        )

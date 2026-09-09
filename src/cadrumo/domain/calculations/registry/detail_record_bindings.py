@@ -37,8 +37,6 @@ __all__ = [
     "foreign_asset_binding_row_field",
     "resolve_atribucion_binding_row_values",
     "resolve_foreign_asset_binding_row_values",
-    "resolve_refund_binding_row_values",
-    "resolve_related_party_binding_row_values",
     "validate_atribucion_binding",
     "validate_foreign_asset_binding",
     "validate_refund_binding",
@@ -82,7 +80,7 @@ def _validate_detail_record_row_field(
 # Related-party operation source bindings (modelo 232).
 #
 # Legal authority: LIS art. 18 (operaciones vinculadas), RD 634/2015
-# art. 13 (informe-país-por-país y declaración modelo 232), Orden
+# art. 13 (informe-pa�s-por-pa�s y declaraci�n modelo 232), Orden
 # HFP/816/2017 Anexo (diseno de registro modelo 232).
 # ---------------------------------------------------------------------------
 
@@ -134,7 +132,7 @@ class RelatedPartyOperationObservation(BaseModel):
     counterparty_tax_id: TaxIdIdentityToken
     counterparty_legal_name: str = Field(default="", max_length=200)
     # Required, and deliberately not defaulted to Spain. Modelo 232 declares
-    # operations with países o territorios calificados como paraísos fiscales
+    # operations with pa�ses o territorios calificados como para�sos fiscales
     # alongside operaciones vinculadas, so the country is the axis the
     # declaration exists to surface -- a default marks a tax-haven counterparty
     # as domestic on exactly that axis. The operator-supplied row carrying the
@@ -199,67 +197,6 @@ def validate_related_party_binding(binding: DataBindingDefinition) -> list[str]:
     if failures:
         return failures
     return invariant_diagnostics(binding, "related-party", lambda b: _validated_related_party_selector(b))
-
-
-def resolve_related_party_binding_row_values(
-    revision: ModeloRevision,
-    observations: Iterable[RelatedPartyOperationObservation],
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Resolve row-producer related-party bindings into per-row indexed values.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose related-party bindings to resolve.
-        observations: Typed :class:`RelatedPartyOperationObservation` rows the
-            row-producer bindings group into per-row indexed values.
-    """
-    available = tuple(observations)
-    members: list[tuple[DataBindingDefinition, _RelatedPartySelector]] = []
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.RELATED_PARTY_OPERATION:
-            continue
-        selector = _validated_related_party_selector(binding)
-        members.append((binding, selector))
-    if not members:
-        return {}
-    rows = _build_related_party_rows(available)
-    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
-    for binding, selector in members:
-        row_field = _required_detail_record_row_field(binding, selector.row_field)
-        for row_index, row in enumerate(rows, start=1):
-            value = row.get(row_field)
-            if value is None:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced for related-party rows",
-                )
-            resolved[(binding.id, row_index)] = value
-    return resolved
-
-
-def _build_related_party_rows(
-    observations: tuple[RelatedPartyOperationObservation, ...],
-) -> tuple[Mapping[str, Decimal | str], ...]:
-    """Group related-party observations by (party, country, kind, method) summing amounts."""
-    accum: dict[tuple[str, str, str, str], dict[str, Decimal | str]] = {}
-    for obs in observations:
-        key = (obs.country_code, obs.counterparty_tax_id, obs.operation_kind_code, obs.transfer_pricing_method_code)
-        bucket = accum.setdefault(
-            key,
-            {
-                "country_code": obs.country_code,
-                "counterparty_tax_id": obs.counterparty_tax_id,
-                "counterparty_legal_name": obs.counterparty_legal_name,
-                "operation_kind_code": obs.operation_kind_code,
-                "transfer_pricing_method_code": obs.transfer_pricing_method_code,
-                "amount": Decimal("0"),
-            },
-        )
-        previous = bucket["amount"]
-        if not isinstance(previous, Decimal):
-            raise RegistryValidationError(
-                f"related-party row accumulator for {key!r} holds a non-numeric running amount",
-            )
-        bucket["amount"] = previous + obs.amount
-    return tuple(accum[key] for key in sorted(accum.keys()))
 
 
 # ---------------------------------------------------------------------------
@@ -366,17 +303,10 @@ def validate_foreign_asset_binding(binding: DataBindingDefinition) -> list[str]:
     return invariant_diagnostics(binding, "foreign-asset", lambda b: _validated_foreign_asset_selector(b))
 
 
-def resolve_foreign_asset_binding_row_values(
+def _foreign_asset_binding_members(
     revision: ModeloRevision,
-    observations: Iterable[Modelo720RowObservation],
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Resolve row-producer foreign-asset bindings into per-row indexed values.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose foreign-asset bindings are resolved.
-        observations: Modelo 720 row observations to group into rows.
-    """
-    available = tuple(observations)
+) -> tuple[list[tuple[DataBindingDefinition, _ForeignAssetSelector]], set[tuple[str, ...]]]:
+    """Collect foreign-asset row bindings and their declared class cohorts."""
     members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]] = []
     cohort_classes: set[tuple[str, ...]] = set()
     for binding in revision.bindings:
@@ -385,13 +315,14 @@ def resolve_foreign_asset_binding_row_values(
         selector = _validated_foreign_asset_selector(binding)
         members.append((binding, selector))
         cohort_classes.add(tuple(sorted(selector.asset_classes)))
-    if not members:
-        return {}
-    # All bindings in a cohort share the same asset_classes filter.
-    sample_classes = next(iter(cohort_classes)) if cohort_classes else ()
-    class_filter = set(sample_classes)
-    filtered = tuple(obs for obs in available if not class_filter or obs.asset_class_code in class_filter)
-    rows = _build_foreign_asset_rows(filtered)
+    return members, cohort_classes
+
+
+def _resolve_foreign_asset_rows(
+    members: list[tuple[DataBindingDefinition, _ForeignAssetSelector]],
+    rows: tuple[Mapping[str, Decimal | str], ...],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Project each foreign-asset row field into its binding/index coordinates."""
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
         row_field = _required_detail_record_row_field(binding, selector.row_field)
@@ -403,6 +334,28 @@ def resolve_foreign_asset_binding_row_values(
                 )
             resolved[(binding.id, row_index)] = value
     return resolved
+
+
+def resolve_foreign_asset_binding_row_values(
+    revision: ModeloRevision,
+    observations: Iterable[Modelo720RowObservation],
+) -> dict[tuple[BindingId, int], Decimal | str]:
+    """Resolve row-producer foreign-asset bindings into per-row indexed values.
+
+    Args:
+        revision: The :class:`ModeloRevision` whose foreign-asset bindings are resolved.
+        observations: Modelo 720 row observations to group into rows.
+    """
+    available = tuple(observations)
+    members, cohort_classes = _foreign_asset_binding_members(revision)
+    if not members:
+        return {}
+    # All bindings in a cohort share the same asset_classes filter.
+    sample_classes = next(iter(cohort_classes)) if cohort_classes else ()
+    class_filter = set(sample_classes)
+    filtered = tuple(obs for obs in available if not class_filter or obs.asset_class_code in class_filter)
+    rows = _build_foreign_asset_rows(filtered)
+    return _resolve_foreign_asset_rows(members, rows)
 
 
 def _build_foreign_asset_rows(
@@ -427,9 +380,9 @@ def _build_foreign_asset_rows(
 
 
 # ---------------------------------------------------------------------------
-# Atribución member source bindings (modelo 184).
+# Atribuci�n member source bindings (modelo 184).
 #
-# Legal authority: Ley 35/2006 LIRPF arts. 87-90 (régimen de atribución de
+# Legal authority: Ley 35/2006 LIRPF arts. 87-90 (r�gimen de atribuci�n de
 # rentas), Orden HFP/227/2017 Anexo (modelo 184 diseno de registro).
 # ---------------------------------------------------------------------------
 
@@ -459,7 +412,7 @@ _AtributionRowField = Literal[
 
 
 class AtributionMemberObservation(BaseModel):
-    """One (member, clave, subclave) atribución row for modelo 184.
+    """One (member, clave, subclave) atribuci�n row for modelo 184.
 
     Every field below ``base_imponible_assigned`` is the (member, clave,
     subclave) row-shape ADR's clave/subclave-conditional fact set, and is
@@ -496,7 +449,7 @@ class AtributionMemberObservation(BaseModel):
     miembro_a_31_diciembre: str | None = Field(default=None, min_length=1, max_length=1)
     """``"X"`` when the member remained one at 31 December, else ``None``.
 
-    A string flag rather than a bool: the diseño's own field (position 82)
+    A string flag rather than a bool: the dise�o's own field (position 82)
     is text, marked ``"X"`` or left blank -- never a boolean literal -- and
     this is the shape the fixed-width renderer's ``data_type = "text"``
     field expects.
@@ -555,7 +508,7 @@ def _validated_atribucion_selector(binding: DataBindingDefinition) -> _Atributio
 
 
 def validate_atribucion_binding(binding: DataBindingDefinition) -> list[str]:
-    """Validate an atribución-member binding at registry-build time.
+    """Validate an atribuci�n-member binding at registry-build time.
 
     Accumulating ``list[str]`` validator: validates the selector against
     :class:`_AtributionSelector` and lifts the resolve-time op/fact invariant to
@@ -712,48 +665,3 @@ def validate_refund_binding(binding: DataBindingDefinition) -> list[str]:
     if failures:
         return failures
     return invariant_diagnostics(binding, "refund", lambda b: _validated_refund_selector(b))
-
-
-def resolve_refund_binding_row_values(
-    revision: ModeloRevision,
-    observations: Iterable[RefundOperationObservation],
-) -> dict[tuple[BindingId, int], Decimal | str]:
-    """Resolve row-producer refund-operation bindings into per-row indexed values.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose refund bindings are resolved.
-        observations: Refund operation observations to group into rows.
-    """
-    available = tuple(observations)
-    members: list[tuple[DataBindingDefinition, _RefundSelector]] = []
-    for binding in revision.bindings:
-        if binding.source != BindingSourceKind.REFUND_OPERATION:
-            continue
-        selector = _validated_refund_selector(binding)
-        members.append((binding, selector))
-    if not members:
-        return {}
-    rows = tuple(
-        {
-            "member_state_code": obs.member_state_code,
-            "operation_kind_code": obs.operation_kind_code,
-            "operation_date": obs.operation_date.isoformat(),
-            "supplier_tax_id": obs.supplier_tax_id,
-            "refund_amount": obs.refund_amount,
-        }
-        for obs in sorted(
-            available,
-            key=lambda o: (o.member_state_code, o.operation_date.isoformat(), o.supplier_tax_id),
-        )
-    )
-    resolved: dict[tuple[BindingId, int], Decimal | str] = {}
-    for binding, selector in members:
-        row_field = _required_detail_record_row_field(binding, selector.row_field)
-        for row_index, row in enumerate(rows, start=1):
-            value = row.get(row_field)
-            if value is None:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced for refund rows",
-                )
-            resolved[(binding.id, row_index)] = value
-    return resolved

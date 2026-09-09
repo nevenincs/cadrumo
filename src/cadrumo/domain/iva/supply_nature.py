@@ -74,7 +74,6 @@ __all__ = [
     "derive_supply_nature_from_citation",
     "match_statutory_citations",
     "supply_nature_implied_by_category",
-    "supply_nature_is_required",
 ]
 
 
@@ -517,36 +516,3 @@ def _category_supply_nature_derivation(
 #: distinction here would block an invoice on a fact its own treatment ignores.
 #: The reverse-charge member is deliberately NOT in this set: art. 84's sub-rules
 #: reach specific supplies, and it is the one domestic member where the law looks.
-_NATURE_INDIFFERENT_CATEGORIES: Final[frozenset[IvaCategory]] = frozenset(
-    {
-        IvaCategory.DOMESTIC_GENERAL,
-        IvaCategory.DOMESTIC_REDUCED,
-        IvaCategory.DOMESTIC_SUPER_REDUCED,
-        IvaCategory.DOMESTIC_ZERO,
-        IvaCategory.DOMESTIC_EXEMPT,
-        IvaCategory.DOMESTIC_NOT_SUBJECT,
-    },
-)
-
-
-def supply_nature_is_required(category: IvaCategory | None) -> bool:
-    """Whether resolving this operation needs the nature of the supply.
-
-    The laziness rule, in one place so it cannot be answered differently at two
-    call sites. The distinction is demanded on the branches where the law forks on
-    it -- the cross-border members, and the domestic reverse charge -- and not on
-    the domestic members that are settled by their rate tier.
-
-    Args:
-        category: The category under consideration, or ``None`` when none has been
-            established yet.
-
-    Returns:
-        ``True`` when the nature must be known before the operation can be
-        resolved. ``None`` returns ``True``: an operation whose category is still
-        open may yet land on a forking branch, and answering ``False`` there would
-        skip the question for exactly the invoices that have not been placed.
-    """
-    if category is None:
-        return True
-    return category not in _NATURE_INDIFFERENT_CATEGORIES

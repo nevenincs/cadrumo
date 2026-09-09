@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field, model_validator
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.models import STRICT_FROZEN_CONFIG
-from .....core.period import Period, hydrate_scenario_filing_period
+from .....core.period import Period
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistrySnapshotError, RegistryValidationError
 from ..formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
@@ -56,6 +56,56 @@ class RegistryScenarioExpectedOutput(RegistryScenarioModel):
                 f"that are absent from operand_refs: {missing!r}",
             )
         return self
+
+
+def _validate_scenario_identity(scenario: RegistryCalculationScenario) -> None:
+    """Validate the scenario's identifiers and optional filing-period identity."""
+    if scenario.id.strip() != scenario.id:
+        raise RegistryValidationError("scenario id must not include leading or trailing whitespace")
+    if scenario.period.strip() != scenario.period:
+        raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
+    if scenario.filing_period is not None and (
+        scenario.filing_period.filing_year != scenario.filing_year
+        or not selector_period_matches_request(scenario.period, scenario.filing_period.registry_token)
+    ):
+        raise RegistryValidationError("scenario filing_period must match filing_year and period")
+
+
+def _validate_expected_output_targets(expected_outputs: tuple[RegistryScenarioExpectedOutput, ...]) -> None:
+    """Require every expected output to name a distinct target casilla."""
+    expected_targets = [expected.target_casilla_id for expected in expected_outputs]
+    if len(set(expected_targets)) != len(expected_targets):
+        raise RegistryValidationError("scenario expected outputs must target unique casillas")
+
+
+def _validate_bound_casilla_declarations(scenario: RegistryCalculationScenario) -> None:
+    """Require every bound-input provenance declaration to be reasoned and supplied."""
+    for field_name, declared in (
+        ("hand_typed_bound_casillas", scenario.hand_typed_bound_casillas),
+        ("chain_resolved_bound_casillas", scenario.chain_resolved_bound_casillas),
+    ):
+        blank = sorted(casilla_id for casilla_id, reason in declared.items() if not reason.strip())
+        if blank:
+            raise RegistryValidationError(
+                f"scenario {scenario.id!r} declares {field_name} with no stated reason: {blank!r}; the declaration "
+                "exists to record what happened to the value, so an empty reason is the silence it was added "
+                "to prevent",
+            )
+        missing = sorted(set(declared) - set(scenario.inputs))
+        if missing:
+            raise RegistryValidationError(
+                f"scenario {scenario.id!r} declares {field_name} the scenario does not supply as inputs: {missing!r}",
+            )
+
+
+def _validate_bound_casilla_declaration_exclusivity(scenario: RegistryCalculationScenario) -> None:
+    """Reject one bound casilla claimed as both hand-typed and chain-resolved."""
+    both = sorted(set(scenario.hand_typed_bound_casillas) & set(scenario.chain_resolved_bound_casillas))
+    if both:
+        raise RegistryValidationError(
+            f"scenario {scenario.id!r} declares casillas as BOTH hand-typed and chain-resolved: {both!r}. The two "
+            "are opposite claims about where the value came from, and a casilla cannot satisfy both.",
+        )
 
 
 class RegistryCalculationScenario(RegistryScenarioModel):
@@ -123,44 +173,24 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     @model_validator(mode="before")
     @classmethod
     def _hydrate_filing_period(cls, data: object) -> object:
-        return hydrate_scenario_filing_period(data)
+        if not isinstance(data, dict) or "filing_period" in data:
+            return data
+        filing_year = data.get("filing_year")
+        period = data.get("period")
+        if not isinstance(filing_year, int) or not isinstance(period, str):
+            return data
+        try:
+            filing_period = Period.from_year_and_code(filing_year, period)
+        except ValueError:
+            return data
+        return {**data, "filing_period": filing_period}
 
     @model_validator(mode="after")
     def _validate_scenario(self) -> RegistryCalculationScenario:
-        if self.id.strip() != self.id:
-            raise RegistryValidationError("scenario id must not include leading or trailing whitespace")
-        if self.period.strip() != self.period:
-            raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
-        if self.filing_period is not None and (
-            self.filing_period.filing_year != self.filing_year
-            or not selector_period_matches_request(self.period, self.filing_period.registry_token)
-        ):
-            raise RegistryValidationError("scenario filing_period must match filing_year and period")
-        expected_targets = [expected.target_casilla_id for expected in self.expected_outputs]
-        if len(set(expected_targets)) != len(expected_targets):
-            raise RegistryValidationError("scenario expected outputs must target unique casillas")
-        for field_name, declared in (
-            ("hand_typed_bound_casillas", self.hand_typed_bound_casillas),
-            ("chain_resolved_bound_casillas", self.chain_resolved_bound_casillas),
-        ):
-            blank = sorted(casilla_id for casilla_id, reason in declared.items() if not reason.strip())
-            if blank:
-                raise RegistryValidationError(
-                    f"scenario {self.id!r} declares {field_name} with no stated reason: {blank!r}; the declaration "
-                    "exists to record what happened to the value, so an empty reason is the silence it was added "
-                    "to prevent",
-                )
-            missing = sorted(set(declared) - set(self.inputs))
-            if missing:
-                raise RegistryValidationError(
-                    f"scenario {self.id!r} declares {field_name} the scenario does not supply as inputs: {missing!r}",
-                )
-        both = sorted(set(self.hand_typed_bound_casillas) & set(self.chain_resolved_bound_casillas))
-        if both:
-            raise RegistryValidationError(
-                f"scenario {self.id!r} declares casillas as BOTH hand-typed and chain-resolved: {both!r}. The two "
-                "are opposite claims about where the value came from, and a casilla cannot satisfy both.",
-            )
+        _validate_scenario_identity(self)
+        _validate_expected_output_targets(self.expected_outputs)
+        _validate_bound_casilla_declarations(self)
+        _validate_bound_casilla_declaration_exclusivity(self)
         return self
 
 
@@ -338,6 +368,53 @@ def assert_registry_scenario_matches(report: RegistryScenarioRunReport) -> None:
     raise RegistryValidationError(f"registry scenario {report.scenario_id!r} mismatched:\n{details}")
 
 
+def _expected_value_mismatches(
+    expected: RegistryScenarioExpectedOutput,
+    actual: Decimal | None,
+) -> list[str]:
+    """Compare the expected and calculated value while preserving its first diagnostic."""
+    if actual is None:
+        return ["target was not calculated"]
+    if actual != expected.value:
+        return [f"expected value {expected.value} but got {actual}"]
+    return []
+
+
+def _expected_operand_mismatches(
+    expected: RegistryScenarioExpectedOutput,
+    actual_operand_refs: tuple[str, ...],
+    actual_operand_casilla_refs: tuple[CasillaId, ...],
+) -> list[str]:
+    """Compare formula and casilla operand traces in their established order."""
+    mismatches: list[str] = []
+    if expected.operand_refs and actual_operand_refs != expected.operand_refs:
+        mismatches.append(f"expected operands {expected.operand_refs!r} but got {actual_operand_refs!r}")
+    if expected.operand_refs and actual_operand_casilla_refs and not expected.operand_casilla_refs:
+        mismatches.append(
+            "expected operand casillas were not declared; "
+            f"actual casilla operands were {actual_operand_casilla_refs!r}",
+        )
+    if expected.operand_casilla_refs and actual_operand_casilla_refs != expected.operand_casilla_refs:
+        mismatches.append(
+            f"expected operand casillas {expected.operand_casilla_refs!r} but got {actual_operand_casilla_refs!r}",
+        )
+    return mismatches
+
+
+def _expected_provenance_mismatches(
+    expected: RegistryScenarioExpectedOutput,
+    actual_legal_refs: tuple[LegalRefId, ...],
+    actual_source_refs: tuple[SourceRefId, ...],
+) -> list[str]:
+    """Compare legal and source trace channels after value and operand diagnostics."""
+    mismatches: list[str] = []
+    if expected.legal_refs and actual_legal_refs != expected.legal_refs:
+        mismatches.append(f"expected legal refs {expected.legal_refs!r} but got {actual_legal_refs!r}")
+    if expected.source_refs and actual_source_refs != expected.source_refs:
+        mismatches.append(f"expected source refs {expected.source_refs!r} but got {actual_source_refs!r}")
+    return mismatches
+
+
 def _compare_expected_output(
     expected: RegistryScenarioExpectedOutput,
     *,
@@ -350,26 +427,9 @@ def _compare_expected_output(
     actual_operand_casilla_refs = entry.operand_casilla_refs if entry is not None else ()
     actual_legal_refs = entry.legal_refs if entry is not None else ()
     actual_source_refs = entry.source_refs if entry is not None else ()
-    mismatches: list[str] = []
-    if actual is None:
-        mismatches.append("target was not calculated")
-    elif actual != expected.value:
-        mismatches.append(f"expected value {expected.value} but got {actual}")
-    if expected.operand_refs and actual_operand_refs != expected.operand_refs:
-        mismatches.append(f"expected operands {expected.operand_refs!r} but got {actual_operand_refs!r}")
-    if expected.operand_refs and actual_operand_casilla_refs and not expected.operand_casilla_refs:
-        mismatches.append(
-            "expected operand casillas were not declared; "
-            f"actual casilla operands were {actual_operand_casilla_refs!r}",
-        )
-    if expected.operand_casilla_refs and actual_operand_casilla_refs != expected.operand_casilla_refs:
-        mismatches.append(
-            f"expected operand casillas {expected.operand_casilla_refs!r} but got {actual_operand_casilla_refs!r}",
-        )
-    if expected.legal_refs and actual_legal_refs != expected.legal_refs:
-        mismatches.append(f"expected legal refs {expected.legal_refs!r} but got {actual_legal_refs!r}")
-    if expected.source_refs and actual_source_refs != expected.source_refs:
-        mismatches.append(f"expected source refs {expected.source_refs!r} but got {actual_source_refs!r}")
+    mismatches = _expected_value_mismatches(expected, actual)
+    mismatches.extend(_expected_operand_mismatches(expected, actual_operand_refs, actual_operand_casilla_refs))
+    mismatches.extend(_expected_provenance_mismatches(expected, actual_legal_refs, actual_source_refs))
     status: ScenarioStatus = "match" if not mismatches else "mismatch"
     return RegistryScenarioComparison(
         target_casilla_id=expected.target_casilla_id,

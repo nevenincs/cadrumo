@@ -261,6 +261,58 @@ def rate_tier_the_document_charged(
     return domestic_rate_tier_from_the_document(draft, invoice_date=invoice_date)
 
 
+def _document_breakdown_lines(
+    *,
+    draft: InvoiceDraft,
+    invoice_number: str,
+    taxable_base: Decimal,
+) -> tuple[InvoiceLine, ...] | None:
+    """Build lines only when every document breakdown entry is fully priced."""
+    priced = [
+        (entry, entry.taxable_base, entry.iva_amount)
+        for entry in draft.iva_breakdown
+        if entry.taxable_base is not None and entry.iva_amount is not None
+    ]
+    if len(priced) != len(draft.iva_breakdown):
+        return None
+    return tuple(
+        InvoiceLine(
+            description=f"{invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
+            quantity=Decimal("1"),
+            unit_price=taxable_base,
+            subtotal=taxable_base,
+            iva_rate=resolve_iva_rate_slot(entry.iva_rate),
+            iva_amount=iva_amount,
+        )
+        for entry, taxable_base, iva_amount in priced
+    )
+
+
+def _flat_confirmed_line(
+    *,
+    invoice_number: str,
+    taxable_base: Decimal,
+    iva_rate: Decimal | None,
+    iva_amount: Decimal | None,
+) -> tuple[InvoiceLine, ...] | None:
+    """Build the single fallback line when a printed cuota is available."""
+    if iva_amount is None:
+        return None
+    return (
+        InvoiceLine(
+            description=invoice_number or "Invoice",
+            quantity=Decimal("1"),
+            unit_price=taxable_base,
+            subtotal=taxable_base,
+            # The SAME resolver the writer applies to the same value, so an
+            # unrepresentable percentage refuses identically whether or not
+            # the document printed a cuota.
+            iva_rate=resolve_iva_rate_slot(iva_rate),
+            iva_amount=iva_amount,
+        ),
+    )
+
+
 def confirmed_lines_from_the_document(
     *,
     draft: InvoiceDraft,
@@ -299,45 +351,16 @@ def confirmed_lines_from_the_document(
         The lines to hand the writer, or ``None`` to let it derive one line.
     """
     if draft.iva_breakdown and not operator_overrode_the_amounts:
-        # Every entry must state both halves of its subtotal. A partial
-        # breakdown is not silently completed here: deriving the missing cuota
-        # would put this function's arithmetic in place of the document's own
-        # figure, which is the opposite of reading the record exactly. The
-        # fall-through keeps the pre-existing behaviour, and the printed-total
-        # cross-check still reports the shortfall.
-        # Pair each entry with its narrowed amounts in one pass, so the guard and
-        # the use are the same expression. An `all(...)` check ahead of a
-        # comprehension proves the same thing to a reader but not to a checker,
-        # which then cannot tell this from a genuine optional dereference.
-        priced = [
-            (entry, entry.taxable_base, entry.iva_amount)
-            for entry in draft.iva_breakdown
-            if entry.taxable_base is not None and entry.iva_amount is not None
-        ]
-        if len(priced) == len(draft.iva_breakdown):
-            return tuple(
-                InvoiceLine(
-                    description=f"{invoice_number or 'Invoice'} - IVA {entry.iva_rate}%",
-                    quantity=Decimal("1"),
-                    unit_price=taxable_base,
-                    subtotal=taxable_base,
-                    iva_rate=resolve_iva_rate_slot(entry.iva_rate),
-                    iva_amount=iva_amount,
-                )
-                for entry, taxable_base, iva_amount in priced
-            )
-    if iva_amount is not None:
-        return (
-            InvoiceLine(
-                description=invoice_number or "Invoice",
-                quantity=Decimal("1"),
-                unit_price=taxable_base,
-                subtotal=taxable_base,
-                # The SAME resolver the writer applies to the same value, so an
-                # unrepresentable percentage refuses identically whether or not
-                # the document printed a cuota.
-                iva_rate=resolve_iva_rate_slot(iva_rate),
-                iva_amount=iva_amount,
-            ),
+        lines = _document_breakdown_lines(
+            draft=draft,
+            invoice_number=invoice_number,
+            taxable_base=taxable_base,
         )
-    return None
+        if lines is not None:
+            return lines
+    return _flat_confirmed_line(
+        invoice_number=invoice_number,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        iva_amount=iva_amount,
+    )

@@ -1,8 +1,8 @@
-"""TTY, colour, and progress helpers for the root CLI contract.
+"""TTY and colour helpers for the root CLI contract.
 
 Centralises the rules every CLI command uses to decide whether to
-emit ANSI colour, render a rich progress widget, or refuse a request
-that requires interactive stdin. Resolution merges three signals — the
+emit ANSI colour or refuse a request that requires interactive stdin.
+Resolution merges three signals — the
 active CLI flag context (via :func:`current_cli_flag`),
 explicit per-call overrides, and the operator's environment
 (``NO_COLOR``, ``CADRUMO_FORCE_COLOR``, surfaced through
@@ -24,7 +24,7 @@ from collections.abc import Callable
 from ...core.click_context import current_cli_flag
 from ...core.config import Settings
 from ...core.errors.hierarchy import CadrumoError
-from ...core.tty import stderr_is_tty, stdout_is_tty
+from ...core.tty import stdout_is_tty
 
 
 class NonTtyRefusedError(CadrumoError):
@@ -65,38 +65,7 @@ def should_use_color(*, no_color: bool | None = None, stream_is_tty: Callable[[]
     return (stream_is_tty or stdout_is_tty)()
 
 
-def should_show_rich_progress(
-    *,
-    quiet: bool | None = None,
-    json_mode: bool | None = None,
-    no_progress: bool | None = None,
-) -> bool:
-    """Return whether an interactive rich progress widget can render safely.
-
-    When this returns ``False`` and the caller is neither ``quiet``
-    nor in ``json_mode``, the caller should fall back to line-based
-    stderr progress instead of a live spinner or progress bar.
-
-    Args:
-        quiet: Optional per-call override mirroring ``--quiet``.
-        json_mode: Optional per-call override mirroring ``--json``.
-        no_progress: Optional per-call override mirroring
-            ``--no-progress``.
-
-    Returns:
-        ``True`` when both stdout and stderr are interactive and no
-        suppressing flag is active.
-    """
-    resolved_quiet = current_cli_flag("quiet") or bool(quiet)
-    resolved_json_mode = current_cli_flag("json") or bool(json_mode)
-    resolved_no_progress = current_cli_flag("no_progress") or bool(no_progress)
-    if resolved_quiet or resolved_json_mode or resolved_no_progress:
-        return False
-    return stdout_is_tty() and stderr_is_tty()
-
-
 __all__ = [
     "NonTtyRefusedError",
-    "should_show_rich_progress",
     "should_use_color",
 ]

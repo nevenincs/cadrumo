@@ -57,7 +57,6 @@ if TYPE_CHECKING:
     from collections.abc import Mapping
 
 __all__ = [
-    "irpf_activity_kind_for",
     "load_tipo_actividad_selectors",
     "tipo_actividad_code_set",
 ]
@@ -190,38 +189,3 @@ def load_tipo_actividad_selectors() -> Mapping[str, frozenset[TipoActividad]]:
                 )
             seen[code] = parameter_id
     return selectors
-
-
-def irpf_activity_kind_for(tipo: TipoActividad) -> IrpfActivityKind | None:
-    """Return the art. 95 retención arm a Modelo 036 activity code falls in.
-
-    This is the derivation :class:`IrpfActivityKind` was declared operator-only
-    for. The authority was never the obstacle -- the registry has carried the
-    code-to-arm correspondence with its own ``legal_refs`` since the art. 95
-    selectors landed -- the missing piece was an input, and a declared
-    ``tipo_actividad`` on a ledger row is one.
-
-    Args:
-        tipo: The declared Modelo 036 activity code.
-
-    Returns:
-        :attr:`IrpfActivityKind.PROFESIONAL` for the codes art. 95.1 covers,
-        :attr:`IrpfActivityKind.SECTORIAL` for the agrarian and forestal ones, and
-        ``None`` for ``A01``, ``A03``, ``B04`` and ``B05``, which art. 95 fixes no
-        rate for at all -- arrendamiento retains under art. 100, and the other
-        three reach art. 95 only through apartado 6.1.º by estimación objetiva,
-        which is a method axis rather than an activity one.
-
-        A livestock code returns ``SECTORIAL``, and that answer carries a caveat no
-        return value can express: art. 95.4.1.º carves *engorde de porcino y
-        avicultura* out at 1 % while the general agrarian rate is 2 %, and no
-        Modelo 036 code distinguishes them. ``SECTORIAL`` is right for both; which
-        of the two sectoral figures applies is not settled here.
-
-    Raises:
-        TransactionValidationError: If the registry selectors cannot be loaded.
-    """
-    for parameter_id, codes in load_tipo_actividad_selectors().items():
-        if tipo in codes:
-            return _ART_95_SELECTORS[parameter_id]
-    return None

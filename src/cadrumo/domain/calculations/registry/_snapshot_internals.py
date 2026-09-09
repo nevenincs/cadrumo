@@ -10,12 +10,10 @@ from __future__ import annotations
 import importlib
 from collections.abc import Iterable, Mapping
 from datetime import date
-from pathlib import Path
 from typing import Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
-from ._validate import RegistryValidator
 from ._validate_orden_aplicabilidad import RevisionLegalApplicabilityWindow, validate_orden_aplicabilidad
 from ._validate_revision_context import records_by_id
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryValidationError
@@ -31,13 +29,6 @@ from .temporal import select_revision
 from .validate_cross_domain_snapshot import REQUIRED_CROSS_DOMAIN_CHECK_IDENTITIES
 from .validate_references import check_all_id_references
 from .validate_revision_identity import revision_reference_identity_failures
-
-_SnapshotCacheKey = tuple[int, int, str, int, str, date | None, str | None, RegistryAuthorityGrade]
-_SnapshotCacheValue = tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]
-_ValidationCacheKey = tuple[int, int, str]
-_ValidationCacheValue = tuple[ModeloDefinition, RegistryCatalogues]
-_SNAPSHOT_CACHE: dict[_SnapshotCacheKey, _SnapshotCacheValue] = {}
-_VALIDATION_CACHE: dict[_ValidationCacheKey, _ValidationCacheValue] = {}
 
 
 class _GroundedRecord(Protocol):
@@ -163,16 +154,6 @@ def _install_cross_domain_snapshot_checks() -> None:
         # Module names are controlled by the hard-coded tuple above.
         importlib.import_module(module_name)  # nosemgrep
     _cross_domain_checks_installed = True
-
-
-def _validate_modelo_once(modelo: ModeloDefinition, catalogues: RegistryCatalogues, source_root_key: str) -> None:
-    """Validate one immutable modelo/catalogue pair once per process."""
-    key = (id(modelo), id(catalogues), source_root_key)
-    cached = _VALIDATION_CACHE.get(key)
-    if cached is not None and cached[0] is modelo and cached[1] is catalogues:
-        return
-    RegistryValidator(catalogues, source_root=Path(source_root_key)).validate_modelo(modelo)
-    _VALIDATION_CACHE[key] = (modelo, catalogues)
 
 
 def _validate_materialized_export_record_families(revision: ModeloRevision) -> None:
@@ -891,13 +872,11 @@ def collect_snapshot_ref_ids(
 #: suite) actually reach across the module boundary -- never a wildcard, and
 #: never widened to symbols nothing outside this file uses.
 __all__ = [
-    "_SNAPSHOT_CACHE",
     "_SUBSTANTIVE_LAW_KINDS",
     "_build_validated_snapshot",
     "_check_revision_scoped_legal_windows",
     "_check_snapshot_filing_capability",
     "_validate_materialized_export_record_families",
-    "_validate_modelo_once",
     "check_snapshot_filing_review_tier",
     "collect_snapshot_ref_ids",
 ]

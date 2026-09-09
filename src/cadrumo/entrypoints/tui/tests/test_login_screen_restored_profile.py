@@ -15,7 +15,10 @@ from pathlib import Path
 import pytest
 from textual.widgets import Input
 
-from ....application.user_profile.capsule_restore import restore_profile_from_source_with_password
+from ....application.user_profile.capsule_restore import (
+    read_profile_capsule_source,
+    restore_profile_capsule_with_password,
+)
 from ....application.user_profile.login_interaction import (
     ProfileLoginChoice,
     attempt_profile_login,
@@ -60,9 +63,9 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
             passphrase=_PASSWORD,
         )
         capsule = source_root / "buckets" / outcome.profile_id
-        restored = restore_profile_from_source_with_password(
+        restored = restore_profile_capsule_with_password(
             label="Restore-born",
-            source=capsule,
+            capsule=read_profile_capsule_source(capsule),
             password=_PASSWORD,
             root=tmp_path / "tui-root",
         )

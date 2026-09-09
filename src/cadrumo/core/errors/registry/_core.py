@@ -278,31 +278,11 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.core.corpus_manifest.errors.CorpusManifestDriftError",
-        ErrorCode(
-            code="INTEGRITY_STORAGE_CORPUS_MANIFEST_DRIFT",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_storage_corpus_manifest_drift",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
         "cadrumo.core.corpus_manifest.errors.CorpusBundleError",
         ErrorCode(
             code="INTEGRITY_STORAGE_CORPUS_BUNDLE",
             category=ErrorCategory.INTEGRITY,
             message_key="errors.integrity.integrity_storage_corpus_bundle",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.corpus_manifest.errors.CorpusBundleVerificationError",
-        ErrorCode(
-            code="INTEGRITY_STORAGE_CORPUS_BUNDLE_VERIFICATION",
-            category=ErrorCategory.INTEGRITY,
-            message_key="errors.integrity.integrity_storage_corpus_bundle_verification",
             retryable=False,
             runbook_id=None,
         ),
@@ -343,16 +323,6 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="REFUSED_ACCESS_GATE_LIVE_READ_NOT_ENABLED",
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.refused_access_gate_live_read_not_enabled",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.core.access_gate.errors.AuthorizationManifestError",
-        ErrorCode(
-            code="FAIL_ACCESS_GATE_AUTHORIZATION_MANIFEST",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.fail_access_gate_authorization_manifest",
             retryable=False,
             runbook_id=None,
         ),

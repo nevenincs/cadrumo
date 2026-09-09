@@ -434,6 +434,180 @@ def _external_evidence_blockers(
     )
 
 
+def _is_justificante_evidence(evidence_kind: ExternalEvidenceKind) -> bool:
+    return evidence_kind in {
+        ExternalEvidenceKind.AEAT_CSV_REGISTER,
+        ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
+        ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
+    }
+
+
+def _source_casilla_ids_by_period() -> dict[str, set[CasillaId]]:
+    source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
+    for requirement in cross_period_dependency_requirements(_snapshot_390()):
+        source_casilla_ids_by_period.setdefault(
+            requirement.period.registry_token,
+            set(),
+        ).update(requirement.source_casilla_ids)
+    return source_casilla_ids_by_period
+
+
+def _create_source_303_work_unit(period: str) -> WorkUnit:
+    registry_snapshot = bundled_authority().snapshot(
+        "303",
+        filing_year=_M390_YEAR,
+        period=period,
+    )
+    return create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=_M390_YEAR,
+        period=Period.from_year_and_code(_M390_YEAR, period),
+        revision_id=registry_snapshot.revision.id,
+        clock=_CLOCK,
+    )
+
+
+def _persist_source_justificante_if_needed(
+    *,
+    period: str,
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    omitted: bool,
+) -> None:
+    if _is_justificante_evidence(evidence_kind) and not omitted:
+        _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR)
+
+
+def _seed_source_period_filing(
+    *,
+    work_unit: WorkUnit,
+    values: dict[CasillaId, Decimal],
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    omitted: bool,
+) -> None:
+    if _is_justificante_evidence(evidence_kind) and omitted:
+        _seed_source_filing_record_without_import_flow(
+            work_unit=work_unit,
+            casilla_values=values,
+            evidence_kind=evidence_kind,
+            evidence_reference_id=evidence_reference_id,
+        )
+        return
+    import_external_filing_evidence(
+        work_unit_id=work_unit.work_unit_id,
+        casilla_values=values,
+        evidence_kind=evidence_kind,
+        evidence_reference_id=evidence_reference_id,
+        actor="aeat-import-test",
+        expected_tax_id="X1234567L",
+        # The M303 source quarters carry operator-selected filing facts
+        # the import path cannot infer from casilla values, so they are
+        # supplied explicitly rather than defaulted.
+        filing_instance_evidence=general_m303_filing_evidence(
+            work_unit.period,
+            reference=evidence_reference_id,
+        ),
+        clock=_CLOCK,
+    )
+
+
+def _source_observation_metadata(
+    *,
+    period: str,
+    evidence_kind: ExternalEvidenceKind,
+    evidence_reference_id: str,
+    omitted: bool,
+    source_kind_by_period: dict[str, str],
+    source_metadata_by_period: dict[str, dict[str, str] | None],
+    work_unit: WorkUnit,
+) -> tuple[str, dict[str, str] | None]:
+    default_source_metadata = {
+        "aeat_register_status": "ALTA",
+        "aeat_expediente_id": f"EXP-303-{_M390_YEAR}-{period}",
+        "authenticated_identity": "X1234567L",
+    }
+    if _is_justificante_evidence(evidence_kind) and not omitted:
+        default_source_metadata["aeat_justificante_csv"] = evidence_reference_id
+
+    # A csv-register import persists its OWN observation carrying the
+    # register identity: source kind, the evidence reference, and the id of
+    # the filing record it just created. The save below replaces that
+    # observation on the same key, so unless it reproduces that identity
+    # the clean-state check compares the filing against an observation
+    # claiming to be a justificante and reports a mismatch against the very
+    # import that _produced it. Only the DEFAULTS are filled here; an
+    # explicit per-period source kind or metadata still wins.
+    default_source_kind = source_kind_by_period.get(period, "aeat_sede_justificante")
+    if evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER and not omitted and period not in source_kind_by_period:
+        default_source_kind = ObservationSourceKind.AEAT_CSV_REGISTER.value
+        default_source_metadata["external_evidence_reference_id"] = evidence_reference_id
+        # VIGENTE only: a work unit can own several records because an
+        # amended filing supersedes rather than replaces, and superseded
+        # records are retained for audit. The checker compares against the
+        # record it resolved as current, so an unfiltered first-match would
+        # disagree with it intermittently, by dictionary order -- the worst
+        # shape, because it reads as flake and invites a retry.
+        imported_record = next(
+            (
+                record
+                for record in ModeloRecordCatalogueRepository().load().records.values()
+                if record.work_unit_id == work_unit.work_unit_id and record.status is ModeloRecordStatus.VIGENTE
+            ),
+            None,
+        )
+        if imported_record is not None:
+            default_source_metadata["filing_record_id"] = imported_record.filing_record_id
+    return default_source_kind, source_metadata_by_period.get(period, default_source_metadata)
+
+
+def _seed_official_303_source_period(
+    observation_repository: CalculationObservationRepository,
+    *,
+    period: str,
+    source_casilla_ids: tuple[CasillaId, ...],
+    evidence_kind_by_period: dict[str, ExternalEvidenceKind],
+    omit_justificante_metadata_periods: set[str],
+    source_kind_by_period: dict[str, str],
+    source_metadata_by_period: dict[str, dict[str, str] | None],
+) -> None:
+    evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
+    evidence_reference_id = f"JUST0000{period}"
+    omitted = period in omit_justificante_metadata_periods
+    _persist_source_justificante_if_needed(
+        period=period,
+        evidence_kind=evidence_kind,
+        evidence_reference_id=evidence_reference_id,
+        omitted=omitted,
+    )
+    work_unit = _create_source_303_work_unit(period)
+    values = _source_values(period, source_casilla_ids)
+    _seed_source_period_filing(
+        work_unit=work_unit,
+        values=values,
+        evidence_kind=evidence_kind,
+        evidence_reference_id=evidence_reference_id,
+        omitted=omitted,
+    )
+    default_source_kind, source_metadata = _source_observation_metadata(
+        period=period,
+        evidence_kind=evidence_kind,
+        evidence_reference_id=evidence_reference_id,
+        omitted=omitted,
+        source_kind_by_period=source_kind_by_period,
+        source_metadata_by_period=source_metadata_by_period,
+        work_unit=work_unit,
+    )
+    _save_source_observation(
+        observation_repository,
+        period=period,
+        source_values=values,
+        source_kind=default_source_kind,
+        source_metadata=source_metadata,
+    )
+
+
 def _seed_official_303_source_filings(
     *,
     observation_repository: CalculationObservationRepository,
@@ -447,126 +621,15 @@ def _seed_official_303_source_filings(
     omit_justificante_metadata_periods = omit_justificante_metadata_periods or set()
     source_kind_by_period = source_kind_by_period or {}
     source_metadata_by_period = source_metadata_by_period or {}
-    source_casilla_ids_by_period: dict[str, set[CasillaId]] = {}
-    for requirement in cross_period_dependency_requirements(_snapshot_390()):
-        source_casilla_ids_by_period.setdefault(
-            requirement.period.registry_token,
-            set(),
-        ).update(requirement.source_casilla_ids)
-
-    for period, source_casilla_ids in sorted(source_casilla_ids_by_period.items()):
-        evidence_kind = evidence_kind_by_period.get(period, ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF)
-        evidence_reference_id = f"JUST0000{period}"
-        if (
-            evidence_kind
-            in {
-                ExternalEvidenceKind.AEAT_CSV_REGISTER,
-                ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-            }
-            and period not in omit_justificante_metadata_periods
-        ):
-            _persist_justificante_metadata(evidence_reference_id, modelo="303", period=period, filing_year=_M390_YEAR)
-        work_unit = create_work_unit(
-            bucket_id=_BUCKET_ID,
-            modelo="303",
-            filing_year=_M390_YEAR,
-            period=Period.from_year_and_code(_M390_YEAR, period),
-            revision_id=bundled_authority()
-            .snapshot(
-                "303",
-                filing_year=_M390_YEAR,
-                period=period,
-            )
-            .revision.id,
-            clock=_CLOCK,
-        )
-        values = _source_values(period, tuple(sorted(source_casilla_ids)))
-        if (
-            evidence_kind
-            in {
-                ExternalEvidenceKind.AEAT_CSV_REGISTER,
-                ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-            }
-            and period in omit_justificante_metadata_periods
-        ):
-            _seed_source_filing_record_without_import_flow(
-                work_unit=work_unit,
-                casilla_values=values,
-                evidence_kind=evidence_kind,
-                evidence_reference_id=evidence_reference_id,
-            )
-        else:
-            import_external_filing_evidence(
-                work_unit_id=work_unit.work_unit_id,
-                casilla_values=values,
-                evidence_kind=evidence_kind,
-                evidence_reference_id=evidence_reference_id,
-                actor="aeat-import-test",
-                expected_tax_id="X1234567L",
-                # The M303 source quarters carry operator-selected filing facts
-                # the import path cannot infer from casilla values, so they are
-                # supplied explicitly rather than defaulted.
-                filing_instance_evidence=general_m303_filing_evidence(
-                    work_unit.period,
-                    reference=evidence_reference_id,
-                ),
-                clock=_CLOCK,
-            )
-        default_source_metadata = {
-            "aeat_register_status": "ALTA",
-            "aeat_expediente_id": f"EXP-303-{_M390_YEAR}-{period}",
-            "authenticated_identity": "X1234567L",
-        }
-        if (
-            evidence_kind
-            in {
-                ExternalEvidenceKind.AEAT_CSV_REGISTER,
-                ExternalEvidenceKind.AEAT_JUSTIFICANTE_PDF,
-                ExternalEvidenceKind.AEAT_LIVE_CAPTURE,
-            }
-            and period not in omit_justificante_metadata_periods
-        ):
-            default_source_metadata["aeat_justificante_csv"] = evidence_reference_id
-        # A csv-register import persists its OWN observation carrying the
-        # register identity: source kind, the evidence reference, and the id of
-        # the filing record it just created. The save below replaces that
-        # observation on the same key, so unless it reproduces that identity
-        # the clean-state check compares the filing against an observation
-        # claiming to be a justificante and reports a mismatch against the very
-        # import that produced it. Only the DEFAULTS are filled here; an
-        # explicit per-period source kind or metadata still wins.
-        default_source_kind = source_kind_by_period.get(period, "aeat_sede_justificante")
-        if (
-            evidence_kind is ExternalEvidenceKind.AEAT_CSV_REGISTER
-            and period not in omit_justificante_metadata_periods
-            and period not in source_kind_by_period
-        ):
-            default_source_kind = ObservationSourceKind.AEAT_CSV_REGISTER.value
-            default_source_metadata["external_evidence_reference_id"] = evidence_reference_id
-            # VIGENTE only: a work unit can own several records because an
-            # amended filing supersedes rather than replaces, and superseded
-            # records are retained for audit. The checker compares against the
-            # record it resolved as current, so an unfiltered first-match would
-            # disagree with it intermittently, by dictionary order -- the worst
-            # shape, because it reads as flake and invites a retry.
-            imported_record = next(
-                (
-                    record
-                    for record in ModeloRecordCatalogueRepository().load().records.values()
-                    if record.work_unit_id == work_unit.work_unit_id and record.status is ModeloRecordStatus.VIGENTE
-                ),
-                None,
-            )
-            if imported_record is not None:
-                default_source_metadata["filing_record_id"] = imported_record.filing_record_id
-        _save_source_observation(
+    for period, source_casilla_ids in sorted(_source_casilla_ids_by_period().items()):
+        _seed_official_303_source_period(
             observation_repository,
             period=period,
-            source_values=values,
-            source_kind=default_source_kind,
-            source_metadata=source_metadata_by_period.get(period, default_source_metadata),
+            source_casilla_ids=tuple(sorted(source_casilla_ids)),
+            evidence_kind_by_period=evidence_kind_by_period,
+            omit_justificante_metadata_periods=omit_justificante_metadata_periods,
+            source_kind_by_period=source_kind_by_period,
+            source_metadata_by_period=source_metadata_by_period,
         )
 
 

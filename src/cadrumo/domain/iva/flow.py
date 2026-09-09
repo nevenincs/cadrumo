@@ -335,19 +335,7 @@ def is_deducible_flow(flow: IvaFlowDirection) -> bool:
     return flow in _DEDUCIBLE_FLOWS
 
 
-DEVENGADA_FLOW_DIRECTIONS: frozenset[IvaFlowDirection] = _DEVENGADA_FLOWS
-"""Public frozen set of flow directions contributing to cuota devengada.
-
-Re-exported for binding selectors and ledger filters that operate at the
-flow-set level rather than the per-flow predicate level."""
-
-DEDUCIBLE_FLOW_DIRECTIONS: frozenset[IvaFlowDirection] = _DEDUCIBLE_FLOWS
-"""Public frozen set of flow directions contributing to cuota deducible."""
-
-
 __all__ = [
-    "DEDUCIBLE_FLOW_DIRECTIONS",
-    "DEVENGADA_FLOW_DIRECTIONS",
     "IvaFlowDirection",
     "IvaSettlementSide",
     "derive_flow_for_classification",

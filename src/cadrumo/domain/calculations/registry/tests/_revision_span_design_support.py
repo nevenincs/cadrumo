@@ -18,12 +18,13 @@ from ..record_design import (
     extract_record_design_workbook,
     extract_record_design_xls_workbook,
 )
-from ..record_design_coverage import _CASILLA_TAG_RE
 from ..record_design_pdf_rows import clean_pdf_line
 from ..record_design_pdf_visual import extract_pdf_text_lines
 from ..record_design_schema import RecordDesignSheet
 from ..schema import ModeloDefinition, ModeloRevision
 from ..schema_references import SourceReference
+
+_CASILLA_TAG_RE = re.compile(r"\[(\d{1,5})\]")
 
 _DESIGN_ROOT_PARTS = ("corpus", "aeat_official", "disenos_registro")
 
@@ -213,24 +214,26 @@ def _pdf_title_lines(path: Path) -> list[str]:
     return [cleaned for line in lines[:60] if (cleaned := clean_pdf_line(line))]
 
 
-def _workbook_title_lines(path: Path) -> list[str]:
-    if path.suffix.lower() == _XLS_EXTENSION:
-        import xlrd
+def _xls_title_lines(path: Path) -> list[str]:
+    import xlrd
 
-        book = xlrd.open_workbook(str(path), on_demand=True)
-        try:
-            return [
-                text
-                for name in book.sheet_names()[:4]
-                for row in range(min(6, book.sheet_by_name(name).nrows))
-                if (
-                    text := " ".join(
-                        str(cell).strip() for cell in book.sheet_by_name(name).row_values(row) if str(cell).strip()
-                    )
+    book = xlrd.open_workbook(str(path), on_demand=True)
+    try:
+        return [
+            text
+            for name in book.sheet_names()[:4]
+            for row in range(min(6, book.sheet_by_name(name).nrows))
+            if (
+                text := " ".join(
+                    str(cell).strip() for cell in book.sheet_by_name(name).row_values(row) if str(cell).strip()
                 )
-            ]
-        finally:
-            book.release_resources()
+            )
+        ]
+    finally:
+        book.release_resources()
+
+
+def _openpyxl_title_lines(path: Path) -> list[str]:
     from openpyxl import load_workbook
 
     book = load_workbook(path, read_only=True, data_only=True)
@@ -243,6 +246,10 @@ def _workbook_title_lines(path: Path) -> list[str]:
         ]
     finally:
         book.close()
+
+
+def _workbook_title_lines(path: Path) -> list[str]:
+    return _xls_title_lines(path) if path.suffix.lower() == _XLS_EXTENSION else _openpyxl_title_lines(path)
 
 
 @lru_cache(maxsize=512)
@@ -432,17 +439,8 @@ def _design_fingerprint(path: Path) -> tuple[object, ...]:
     )
 
 
-def _designs_in_publication_order(modelo_id: str) -> tuple[tuple[Path, ...], tuple[int, ...]]:
-    """``(designs oldest-first, years whose designs could not be ordered)``.
-
-    Deduplicated by CONTENT, because the corpus bundles several designs twice under
-    names differing only by a truncated extension, and a path-keyed pass reports the
-    duplicate as a second design.
-
-    A year holding two designs where at least one declares no coverage bound is
-    reported in the second element and its members are left in a stable but
-    UNASSERTED order, so a consumer can refuse rather than trust it.
-    """
+def _readable_designs_by_year(modelo_id: str) -> dict[int, list[Path]]:
+    """Group distinct readable designs by their first covered ejercicio."""
     by_year: dict[int, list[Path]] = {}
     seen: set[object] = set()
     for path in _design_sources(modelo_id):
@@ -456,17 +454,37 @@ def _designs_in_publication_order(modelo_id: str) -> tuple[tuple[Path, ...], tup
             continue
         seen.add(marker)
         by_year.setdefault(min(years), []).append(path)
+    return by_year
+
+
+def _ordered_design_year(members: list[Path]) -> tuple[tuple[Path, ...], bool]:
+    """Order one ejercicio, marking it when AEAT left the order ambiguous."""
+    starts = [_coverage_start_period(path.name) for path in members]
+    if len(members) > 1 and any(start is None for start in starts):
+        return tuple(sorted(members, key=lambda path: path.name)), True
+    return tuple(sorted(members, key=lambda path: (_coverage_start_period(path.name) or 1, path.name))), False
+
+
+def _designs_in_publication_order(modelo_id: str) -> tuple[tuple[Path, ...], tuple[int, ...]]:
+    """``(designs oldest-first, years whose designs could not be ordered)``.
+
+    Deduplicated by CONTENT, because the corpus bundles several designs twice under
+    names differing only by a truncated extension, and a path-keyed pass reports the
+    duplicate as a second design.
+
+    A year holding two designs where at least one declares no coverage bound is
+    reported in the second element and its members are left in a stable but
+    UNASSERTED order, so a consumer can refuse rather than trust it.
+    """
+    by_year = _readable_designs_by_year(modelo_id)
 
     ordered: list[Path] = []
     unorderable: list[int] = []
-    for year in sorted(by_year):
-        members = by_year[year]
-        starts = [_coverage_start_period(path.name) for path in members]
-        if len(members) > 1 and any(start is None for start in starts):
+    for year, members in sorted(by_year.items()):
+        year_designs, ambiguous = _ordered_design_year(members)
+        ordered.extend(year_designs)
+        if ambiguous:
             unorderable.append(year)
-            ordered.extend(sorted(members, key=lambda path: path.name))
-            continue
-        ordered.extend(sorted(members, key=lambda path: (_coverage_start_period(path.name) or 1, path.name)))
     return tuple(ordered), tuple(unorderable)
 
 
@@ -840,6 +858,42 @@ def _receipt_covers_year(source: SourceReference, year: int) -> bool:
     return source.applies_to is None or source.applies_to.year >= year
 
 
+def _closed_revision_years(revision: ModeloRevision) -> set[int] | None:
+    """Return the finite filing years declared by a revision, if it has them."""
+    selector = revision.period_selector
+    if selector.years:
+        return set(selector.years)
+    if selector.year_from is None or selector.year_to is None:
+        return None
+    return set(range(selector.year_from, selector.year_to + 1))
+
+
+def _open_receipt_covers_start(source: SourceReference, year_from: int) -> bool:
+    """Tell whether one cited receipt remains open from a revision's first year."""
+    if source.applies_to is not None:
+        return False
+    selector = source.period_selector
+    if selector is not None:
+        return selector.year_from is not None and selector.year_from <= year_from and selector.year_to is None
+    return source.applies_from is not None and source.applies_from.year <= year_from
+
+
+def _open_revision_receipt_proof(
+    receipts: tuple[SourceReference, ...],
+    year_from: int,
+) -> tuple[bool, str]:
+    """Prove an open revision has a cited receipt with an equally open horizon."""
+    open_receipts = tuple(source for source in receipts if _open_receipt_covers_start(source, year_from))
+    if open_receipts:
+        return True, f"open source epoch(s) {[source.id for source in open_receipts]!r}"
+    return False, "open revision has no cited open-ended layout-authority receipt"
+
+
+def _missing_receipt_years(receipts: tuple[SourceReference, ...], years: set[int]) -> list[int]:
+    """List bounded filing years not covered by any cited layout receipt."""
+    return sorted(year for year in years if not any(_receipt_covers_year(source, year) for source in receipts))
+
+
 def _source_epoch_proves_revision_span(modelo_id: str, revision: ModeloRevision) -> tuple[bool, str]:
     """Whether cited record-design receipts cover the revision's declared year span.
 
@@ -852,35 +906,12 @@ def _source_epoch_proves_revision_span(modelo_id: str, revision: ModeloRevision)
     if not receipts:
         return False, "revision cites no layout-authority source receipt"
     selector = revision.period_selector
-    if selector.years:
-        years = set(selector.years)
-    elif selector.year_from is not None and selector.year_to is not None:
-        years = set(range(selector.year_from, selector.year_to + 1))
-    elif selector.year_from is not None:
-        open_receipts = tuple(
-            source
-            for source in receipts
-            if source.applies_to is None
-            and (
-                (
-                    source.period_selector is not None
-                    and source.period_selector.year_from is not None
-                    and source.period_selector.year_from <= selector.year_from
-                    and source.period_selector.year_to is None
-                )
-                or (
-                    source.period_selector is None
-                    and source.applies_from is not None
-                    and source.applies_from.year <= selector.year_from
-                )
-            )
-        )
-        if open_receipts:
-            return True, f"open source epoch(s) {[source.id for source in open_receipts]!r}"
-        return False, "open revision has no cited open-ended layout-authority receipt"
-    else:
+    years = _closed_revision_years(revision)
+    if years is None:
+        if selector.year_from is not None:
+            return _open_revision_receipt_proof(receipts, selector.year_from)
         return False, "revision declares no filing-year span"
-    missing = sorted(year for year in years if not any(_receipt_covers_year(source, year) for source in receipts))
+    missing = _missing_receipt_years(receipts, years)
     if missing:
         return False, f"cited layout-authority receipts do not cover filing year(s) {missing!r}"
     return True, f"bounded source epoch receipt(s) {[source.id for source in receipts]!r}"

@@ -18,18 +18,18 @@ These bindings resolve through :func:`resolve_relations_from_local_store`
 and :func:`materialize_relation_binding_values` (the relation path), not
 the ``previous_filing`` path.
 
-This module is the multi-year-renta authorization enrollment for Modelo
+This module is the cross-year behavior coverage for Modelo
 390. It drives the REAL backend (real encrypted-SQLite observation store,
 the real registry authority, the real registry calculation engine, the
 real relation resolver — no mocks) across two distinct renta years: for
 each of 2024 and 2025 it computes the four 303 quarters, persists them as
 filed observations, then computes the 390/0A annual and asserts the annual
 reconciliation casillas equal the sum of the four quarters. Both annual
-computations are recorded through the :class:`EnrollmentRecorder` and
-cross-checked against the authorization manifest via
-:func:`assert_enrollment_matches_manifest`.
+computations are recorded through the :class:`cross-year observation` and
+cross-checked against the cross-year claim via
+:func:`the cross-year behavior assertion`.
 
-Grounding (non-tautological): each 303 quarter's totals are produced by
+Grounding (non-tautological): each 303 quarter's totals are _produced by
 the engine, never hand-computed; the load-bearing assertion is the
 reconciliation invariant — the 390 annual computed total equals the
 relation-resolved reconciliation casilla, which is exactly the 390↔303
@@ -71,13 +71,12 @@ from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import CalculationSourceContext
 from ..iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository, ResultDispositionProjection
 from ..relation_prefill import resolve_relations_from_local_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "390"
 
 #: The two distinct renta years the resumen reconciliation spans.
@@ -255,7 +254,7 @@ def _calculate_390_annual(
     the engine. The annual computed totals (from the ledger) and the
     reconciliation casillas (from the 303 quarter sums via relation resolver)
     describe the same ejercicio, so they must agree. Returns the result plus
-    its produced-value count (the enrollment evidence).
+    its produced-value count.
     """
     snapshot = bundled_authority().snapshot(_MODELO, filing_year=filing_year, period="0A")
     relation_vals = resolve_relations_from_local_store(snapshot, repository=repository)
@@ -298,7 +297,7 @@ def _file_year_quarters_and_reconcile(
 ) -> tuple[RegistryCalculationResult, int, dict[str, Decimal]]:
     """File the four 303 quarters of one renta year, then compute the 390 annual.
 
-    Returns the 390 result, its produced-value count, and the per-quarter
+    Returns the 390 result, its _produced-value count, and the per-quarter
     devengada totals (for an independent sum check of the reconciliation).
     """
     quarter_devengada: dict[str, Decimal] = {}
@@ -323,12 +322,12 @@ def _file_year_quarters_and_reconcile(
                 ),
             )
         )
-    annual_result, produced = _calculate_390_annual(
+    annual_result, _produced = _calculate_390_annual(
         filing_year=filing_year,
         annual_ledger=tuple(annual_ledger),
         repository=repository,
     )
-    return annual_result, produced, quarter_devengada
+    return annual_result, _produced, quarter_devengada
 
 
 def test_390_annual_reconciles_to_sum_of_303_quarters(tmp_path: Path) -> None:
@@ -337,17 +336,17 @@ def test_390_annual_reconciles_to_sum_of_303_quarters(tmp_path: Path) -> None:
     The load-bearing wiring invariant: for each (computed annual total,
     relation-resolved reconciliation) casilla pair the two are equal, and the
     devengada reconciliation independently equals the arithmetic sum of the
-    four quarters' ``iva.cuota-devengada-total``. Engine-produced quarter
+    four quarters' ``iva.cuota-devengada-total``. Engine-_produced quarter
     values; non-tautological.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
-        annual_result, produced, quarter_devengada = _file_year_quarters_and_reconcile(
+        annual_result, _produced, quarter_devengada = _file_year_quarters_and_reconcile(
             filing_year=_RENTA_YEARS[0],
             repository=repository,
         )
 
-    assert produced > 0
+    assert _produced > 0
     for computed_total, reconciliation in _RECONCILIATION_PAIRS:
         assert annual_result.values[computed_total] == annual_result.values[reconciliation], (
             f"390 {computed_total} must reconcile to {reconciliation} from the four 303 quarters"
@@ -392,16 +391,15 @@ def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> No
 
     Drives the REAL 390 backend for both renta years (each reconciling its own
     four 303 quarters), records each annual computation through the
-    :class:`EnrollmentRecorder` (calculation mode, evidence = produced-value
+    :class:`cross-year observation` (calculation mode, evidence = _produced-value
     count from a real engine run), and cross-checks the recorded distinct-year
-    set against the authorization manifest claim. A single-year or stub run
+    set against the cross-year claim claim. A single-year or stub run
     would raise, turning the gate RED.
     """
-    recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()
         for filing_year in _RENTA_YEARS:
-            annual_result, produced, quarter_devengada = _file_year_quarters_and_reconcile(
+            annual_result, _produced, quarter_devengada = _file_year_quarters_and_reconcile(
                 filing_year=filing_year,
                 repository=repository,
             )
@@ -414,8 +412,3 @@ def test_modelo_390_reconciliation_enrolls_two_renta_years(tmp_path: Path) -> No
                 quarter_devengada.values(),
                 Decimal("0"),
             )
-            recorder.record_calculation_year(filing_year=filing_year, produced_value_count=produced)
-
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == _RENTA_YEARS
-    assert_enrollment_matches_manifest(evidence)

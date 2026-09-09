@@ -19,17 +19,12 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, Field, computed_field, model_validator
 
-from cadrumo.application.filing.export_proof import FilingExportProofAuthority
 from cadrumo.application.registry.closure import (
     RegistryClosureFilingChannelRefusal,
     RegistryClosureLimb,
     RegistryClosureLimbName,
     RegistryClosureOwnerDisposition,
     RegistryClosureRefusalReason,
-)
-from cadrumo.application.registry.filing_export_coverage import (
-    FilingExportCoverageReport,
-    compose_filing_export_coverage,
 )
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
@@ -38,10 +33,15 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_authority,
 )
 
+from ..export_proof import FilingExportProofAuthority
 from ..temporal_coverage import (
     TemporalCoverageReport,
     TemporalRevisionCoverageSummary,
     compose_temporal_coverage,
+)
+from .filing_export_coverage import (
+    FilingExportCoverageReport,
+    compose_filing_export_coverage,
 )
 
 __all__ = [
@@ -299,7 +299,7 @@ def build_registry_closure_report(
         for coordinate in filing_by_coordinate
         if coordinate not in temporal_coordinates
     ]
-    disagreements = tuple(
+    joined_disagreements = tuple(
         sorted(
             (*row_disagreements, *extra_disagreements),
             key=lambda item: (item.modelo, item.revision, item.limb, item.kind),
@@ -313,14 +313,14 @@ def build_registry_closure_report(
             update={
                 "join_disagreements": tuple(
                     item
-                    for item in disagreements
+                    for item in joined_disagreements
                     if item.kind == "missing_from_limb" and (item.modelo, item.revision) == (row.modelo, row.revision)
                 ),
             },
         )
         for row in rows
     ]
-    return RegistryClosureReport(as_of=as_of, rows=tuple(rows), join_disagreements=disagreements)
+    return RegistryClosureReport(as_of=as_of, rows=tuple(rows), join_disagreements=joined_disagreements)
 
 
 def load_registry_closure_report(

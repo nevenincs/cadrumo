@@ -16,7 +16,6 @@ from ..irnr import (
     OFFICIAL_M210_TIPO_RENTA_CODES,
     TipoRentaGroundingTier,
     TipoRentaIrnr,
-    project_m210_tipo_renta_code,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -82,19 +81,6 @@ def test_declared_code_set_is_exactly_the_grounded_set() -> None:
     assert declared == set(_EXPECTED_CONCEPT)
     # No fetch-gated code leaks into the declared set (no fabricated rate).
     assert declared.isdisjoint(_FETCH_GATED_CODES)
-
-
-def test_projection_function_resolves_declared_codes() -> None:
-    for code, concept in _EXPECTED_CONCEPT.items():
-        assert project_m210_tipo_renta_code(code) is concept
-
-
-@pytest.mark.parametrize("code", sorted(_FETCH_GATED_CODES))
-def test_fetch_gated_code_raises_rather_than_fabricating_a_rate(code: str) -> None:
-    # A code whose rate is not bundle-verifiable must refuse loudly, never
-    # resolve to a fabricated concept/rate.
-    with pytest.raises(KeyError):
-        project_m210_tipo_renta_code(code)
 
 
 def test_grounding_tier_matches_the_rate_letter() -> None:

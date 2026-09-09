@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Annotated, Literal, Protocol, cast, runtime_checkable
+from typing import Literal, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -25,24 +25,6 @@ from cadrumo.application.calculations.revision_carry_gate import revision_carry_
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.draft_review import approve_draft
 from cadrumo.application.filing.export import export_draft
-from cadrumo.application.filing.export_proof import (
-    FilingExportConformanceReceipt,
-    FilingExportConformanceRenderInputs,
-    FilingExportConformanceVectorEvidence,
-    FilingExportDictionaryValue,
-    FilingExportGeneratedOutput,
-    FilingExportOfficialProbe,
-    FilingExportProofAssessment,
-    FilingExportProofChannel,
-    FilingExportProofCoordinate,
-    FilingExportProofRefusal,
-    FilingExportProofRefusalReason,
-    FilingExportPublicProvenance,
-    FilingExportSecureCustodyRecord,
-    FilingExportSecureReplayEvidence,
-    FilingExportSecureReplayReceipt,
-)
-from cadrumo.application.filing.export_proof import FilingExportProof as TwoChannelFilingExportProof
 from cadrumo.application.filing.export_verification import (
     DeclaracionExportResult,
     FilingExportConsumedResult,
@@ -79,20 +61,39 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.static_inspection import (
-    GeneratedArtifactInspection,
-    RegistryRevisionInspection,
-)
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.domain.filing.errors import FilingExportError
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.transactions.models import TransactionCatalogue
+from dev.registry.maintenance_support import GeneratedArtifactInspection
 
 from .diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
     UnvalidatedRegistryClassification,
     derive_filing_revision_classifications,
+)
+from .export_proof import (
+    FilingExportProofAssessment,
+    FilingExportProofChannel,
+    FilingExportProofRefusal,
+    FilingExportProofRefusalReason,
+)
+from .filing_export_proof_contracts import (
+    FilingExportConformanceReceipt,
+    FilingExportConformanceRenderInputs,
+    FilingExportConformanceVectorEvidence,
+    FilingExportDictionaryValue,
+    FilingExportGeneratedOutput,
+    FilingExportOfficialProbe,
+    FilingExportProof,
+    FilingExportProofCoordinate,
+    FilingExportProofToken,
+    FilingExportPublicProvenance,
+    FilingExportSecureCustodyRecord,
+    FilingExportSecureReplayEvidence,
+    FilingExportSecureReplayReceipt,
 )
 from .pipeline.export_fragment_provenance import (
     ExportFragmentProvenanceManifest,
@@ -110,8 +111,6 @@ from .pipeline.render_profile import (
 )
 from .pipeline.semantic_map import load_semantic_map
 
-_AuthorityToken = Annotated[str, Field(min_length=1, max_length=200, pattern=r"^[a-z0-9][a-z0-9._:/-]*$")]
-
 
 class FilingExportConformanceRequest(BaseModel):
     """Public development request carrying no filing values or producer identity."""
@@ -127,8 +126,8 @@ class FilingExportSecureReplayRequest(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     coordinate: FilingExportProofCoordinate
-    source_authority_id: _AuthorityToken
-    custody_authority_id: _AuthorityToken
+    source_authority_id: FilingExportProofToken
+    custody_authority_id: FilingExportProofToken
 
 
 @runtime_checkable
@@ -1475,7 +1474,7 @@ class CanonicalTwoChannelFilingExportProofAuthority:
             raise AssertionError("two-channel export proof reached an impossible incomplete state")
         return FilingExportProofAssessment(
             coordinate=coordinate,
-            proof=TwoChannelFilingExportProof(
+            proof=FilingExportProof(
                 coordinate=coordinate,
                 conformance=conformance,
                 secure_replay=replay,

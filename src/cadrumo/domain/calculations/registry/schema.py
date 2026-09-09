@@ -155,7 +155,6 @@ from .schema_base import (
     SourceCitation,
     SourceRefs,
     coerce_enum_member,
-    collection_shaped_fields,
     governance_stamp_fields,
     manifest_only_fields,
     schema_family_fields,
@@ -983,17 +982,7 @@ The revision's declared content collections, read back off the
 of the per-revision coverage manifest: one disposition row per member, always,
 so a family nobody has built is a row saying so rather than an absence.
 
-Meant to equal :data:`REVISION_COLLECTION_SHAPED_FIELDS`, and gated against it.
-Neither set alone is sufficient - see :class:`SchemaFamilyMarker`.
-"""
-
-REVISION_COLLECTION_SHAPED_FIELDS: frozenset[str] = collection_shaped_fields(ModeloRevision)
-"""Every :class:`ModeloRevision` field annotated as a tuple of a schema model.
-
-Computed from the annotations alone, which is precisely what makes it the right
-check on :data:`REVISION_SCHEMA_FAMILY_FIELDS`: a contributor adding a
-collection cannot forget to appear here, because appearing here is a
-consequence of the type they wrote rather than a step they took.
+Gated against the collection-shaped fields derived from the model annotations.
 """
 
 REVISION_MANIFEST_ONLY_FIELDS: frozenset[str] = manifest_only_fields(ModeloRevision)

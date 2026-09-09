@@ -24,13 +24,12 @@ from datetime import date
 
 import pytest
 
-from ....core.access_gate.authorization import AuthorizationState
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.modelo import NON_REGISTRY_MODELOS, Modelo
 from ....core.revision_review import RevisionReviewStatus
 from ....domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ....domain.calculations.registry.export_parse import xml_dictionary_entries
-from ....domain.calculations.registry.external_grounding import (
+from ....tests.external_grounding import (
     RegistryExternalGroundingAudit,
     build_external_grounding_audit,
     load_bundled_external_oracle_inventory,
@@ -340,22 +339,6 @@ def test_degraded_mode_stamps_every_row_and_withholds_the_authority_axes(
         assert row.model_law_coverage is None
         assert row.latest_revision_support is None
         assert row.has_required_coverage_gap is None
-        # Absent, NOT the default-deny verdict: reporting UNAUTHORIZED here
-        # would assert an authorization state nobody checked.
-        assert row.modelo_authorization is None
-
-
-def test_degraded_authorization_absence_is_not_the_unauthorized_verdict(
-    degraded_profile: RegistryConformanceProfile,
-    validated_profile: RegistryConformanceProfile,
-) -> None:
-    """The validated read produces real verdicts where the degraded read produces none."""
-    assert all(row.modelo_authorization is None for row in degraded_profile.rows)
-
-    states = {row.modelo_authorization.state for row in validated_profile.rows if row.modelo_authorization}
-    assert states, "the validated read produced no authorization verdict at all"
-    assert AuthorizationState.AUTHORIZED in states
-    assert AuthorizationState.UNAUTHORIZED in states
 
 
 def test_validated_mode_carries_every_authority_dependent_axis(
@@ -369,7 +352,6 @@ def test_validated_mode_carries_every_authority_dependent_axis(
         assert row.registry_validated is True
         assert row.model_law_coverage is not None
         assert row.latest_revision_support is not None
-        assert row.modelo_authorization is not None
         assert row.has_required_coverage_gap is not None
         coverage = row.model_law_coverage
         assert set(coverage.required_tier_gaps) <= set(coverage.gap_tiers)

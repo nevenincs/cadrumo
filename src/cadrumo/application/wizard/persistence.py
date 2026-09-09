@@ -33,9 +33,8 @@ from ...core.parsing import parse_bool
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.setup_answers import register_project_answers as _register_project_answers
 from ...core.time.clock import today_madrid
-from ...domain.user_profile.values import UserProfileFact, UserProfileRecord
+from ...domain.user_profile.values import UserProfileRecord
 from ..workflow.errors import WorkflowInputMismatchError
-from ..workflow.state_models import WorkflowState
 from .descendant_group import (
     DESCENDANT_PAGE_IDS,
     DESCENDANTS_COUNT_PAGE_ID,
@@ -126,40 +125,6 @@ def profile_values_from_patch(flow: WizardFlow, supplied: Mapping[str, str]) -> 
             continue
         values[question.profile_key] = validated
     return values
-
-
-def persist_patch(
-    flow: WizardFlow,
-    supplied: Mapping[str, str],
-    *,
-    state: WorkflowState,
-) -> WorkflowState:
-    """Patch the active profile with only the explicitly supplied flags and return the updated :class:`WorkflowState`.
-
-    ``supplied`` is the canonical-token dict keyed by *question id*,
-    carrying exactly the flags the operator named on a non-interactive
-    ``edit`` (``--quiet`` / ``--accept-defaults``). This is the true
-    patch path: it never constructs the full :class:`SetupAnswers`
-    model — which would demand every required field — and never seeds a
-    descriptor default for an unsupplied question. Each supplied value
-    is re-validated through its widget validator, mapped to its
-    ``profile_key``, and CAS-published as one authenticated command. A
-    question with no ``profile_key`` is not a profile fact and is
-    skipped.
-    """
-    from ..user_profile.fact_write import ProfileFactWriteDoor, apply_profile_fact_changes
-
-    facts = tuple(
-        UserProfileFact(path=path, value=value) for path, value in profile_values_from_patch(flow, supplied).items()
-    )
-    from ...core.bucket_pointer import require_active_bucket_id
-
-    apply_profile_fact_changes(
-        profile_id=require_active_bucket_id(),
-        changes=facts,
-        door=ProfileFactWriteDoor.PATCH,
-    )
-    return state
 
 
 def project_answers(flow: WizardFlow, values: Mapping[str, str]) -> BaseModel:
@@ -647,7 +612,6 @@ __all__ = [
     "descendant_answers_from_record",
     "descendant_facts_from_answers",
     "parse_canonical",
-    "persist_patch",
     "profile_values_from_patch",
     "project_answers",
     "serialise_answers",

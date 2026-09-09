@@ -227,7 +227,7 @@ def test_recargo_equivalencia_is_surfaced_not_silently_deducted(tmp_path: Path) 
             investment_asset_profile_id="m303-special-test",
         )
 
-    # No declarable deducible observation was produced for the recargo purchase...
+    # No declarable deducible observation was _produced for the recargo purchase...
     assert all(obs.category is not IvaCategory.RECARGO_EQUIVALENCIA for obs in report.observations), (
         "recargo-equivalencia must not yield a declarable IVA observation (non-deductible cost)"
     )

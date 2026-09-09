@@ -1225,11 +1225,6 @@ cli:
         calculate_source_advisory: 'ADVISORY: %{message} The calculation completed,
           but this declarable amount is not routed to any casilla and is not declared
           on this filing; review it before filing.'
-        calculate_unauthorized_advisory: 'ADVISORY: modelo %{modelo} calculation backend
-          is UNAUTHORIZED - it has not yet been proven by an end-to-end test across
-          at least two renta years (multi-year-renta authorization gate). The result
-          was computed and saved, but treat it as provisional until the modelo is
-          authorized.'
         calculation_revision_id_help: Stable 64-character SHA-256 id of a calculation
           revision
         casilla_help: Casilla value with CASILLA_ID=DECIMAL syntax (repeatable). CASILLA_ID

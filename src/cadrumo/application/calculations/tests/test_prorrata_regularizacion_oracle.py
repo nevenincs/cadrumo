@@ -4,7 +4,7 @@ Ground truth: bundled AEAT Manual practico IVA 2025, Capitulo 5, prorrata
 general worked example, `corpus/manuals/iva/2025/source.pdf#Pag.137-138`,
 declared in `corpus/manual_oracles/modelo-303-2025-prorrata-general-regularizacion.json`.
 
-The test seeds the manual's raw inputs, not values produced by the formula under
+The test seeds the manual's raw inputs, not values _produced by the formula under
 test: prior-year operations 32.000/12.000 produce the manual's provisional 73%;
 current-year operations 25.000/20.000 produce the manual's definitive 56%; first
 three quarters carry 1.280 EUR supported IVA and the fourth quarter carries
@@ -15,7 +15,7 @@ Only the definitive percentage is read from the payload's
 `expected_by_casilla_id`, because that map is reserved for casillas the registry
 engine computes and a verification expectation reconciles. The annual volumes
 are the scenario's GIVENS (input_kind=manual) and the casilla-44 regularizacion
-is produced by the prorrata_regularizacion source resolver rather than by a
+is _produced by the prorrata_regularizacion source resolver rather than by a
 registry formula, so all three ride here as named constants quoting the manual
 directly - the same shape the other seven manual figures in this module already
 use.

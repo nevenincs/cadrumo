@@ -418,7 +418,7 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
 
     The narrow silent gap: a declared relation referenced by no formula whose
     ``target_binding`` is NOT a declared binding on the revision materialises no
-    slot and previously produced neither a value nor a diagnostic — its absence
+    slot and previously _produced neither a value nor a diagnostic — its absence
     reached nothing observable. The resolver MUST now emit a non-blocking advisory
     for exactly that orphaned case.
 
@@ -463,7 +463,7 @@ def test_orphaned_non_formula_relation_surfaces_advisory_diagnostic(tmp_path: Pa
         )
 
     assert orphan_relation.id in _diagnosed_relation_ids(source_resolution), (
-        "an unresolved non-formula relation that materialises no binding slot produced no "
+        "an unresolved non-formula relation that materialises no binding slot _produced no "
         "diagnostic — the narrow silent gap this guard closes"
     )
 

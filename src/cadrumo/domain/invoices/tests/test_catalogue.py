@@ -27,7 +27,6 @@ from ..errors import (
 )
 from ..models import Invoice, InvoiceCatalogue, InvoiceLine
 from ..service import (
-    find_unmatched,
     link_transaction,
 )
 
@@ -225,19 +224,6 @@ def test_catalogue_get_returns_none_for_missing_id() -> None:
     """Missing IDs return None rather than raising."""
     catalogue = InvoiceCatalogue.from_invoices([_valid_invoice()])
     assert catalogue.get("missing") is None
-
-
-def test_find_unmatched_filters_by_kind() -> None:
-    """find_unmatched returns empty-link invoices, filtered by kind when requested."""
-    hex_a = "a" * 64
-    issued_unlinked = _valid_invoice(invoice_number="INV-001")
-    issued_linked = _valid_invoice(invoice_number="INV-002", linked_transaction_ids=(hex_a,))
-    received_unlinked = _valid_invoice(invoice_number="INV-003", kind=InvoiceKind.RECEIVED)
-    catalogue = InvoiceCatalogue.from_invoices([issued_unlinked, issued_linked, received_unlinked])
-
-    assert set(find_unmatched(catalogue)) == {issued_unlinked, received_unlinked}
-    assert find_unmatched(catalogue, kind=InvoiceKind.ISSUED) == (issued_unlinked,)
-    assert find_unmatched(catalogue, kind=InvoiceKind.RECEIVED) == (received_unlinked,)
 
 
 def test_link_transaction_appends_id_and_returns_new_catalogue() -> None:

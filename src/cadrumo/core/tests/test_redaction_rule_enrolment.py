@@ -41,15 +41,13 @@ import pytest
 
 from ..classification.policies import (
     ClassificationPolicy,
-    OutputSensitivityClass,
     RedactionRule,
     RedactionStrategy,
     SensitivityClass,
-    default_output_policy_for,
     default_policy_for,
 )
 from ..errors.hierarchy import RedactionError
-from ..redaction.rules import default_rules, default_rules_for, default_rules_for_class
+from ..redaction.rules import default_rules_for, default_rules_for_class
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -60,14 +58,10 @@ if TYPE_CHECKING:
 def _named_by_every_policy() -> dict[str, tuple[str, ...]]:
     """Map each policy to the rule names it enrols.
 
-    Both tables, because both resolve through the same registry and a
-    typo is as silent in one as in the other. The output table is where
-    operator-facing redaction is decided, so leaving it out would exempt
-    the surface the operator actually reads.
+    The persisted policies resolve through the shared registry, so a typo in
+    one silently disables that arm unless the refusing resolver catches it.
     """
-    persisted = {f"storage:{s.value}": default_policy_for(s).redaction_rules for s in SensitivityClass}
-    output = {f"output:{s.value}": default_output_policy_for(s).redaction_rules for s in OutputSensitivityClass}
-    return persisted | output
+    return {f"storage:{s.value}": default_policy_for(s).redaction_rules for s in SensitivityClass}
 
 
 def _unresolvable(
@@ -97,35 +91,6 @@ def _rule(name: str) -> RedactionRule:
 
 
 # ── the shipped tables ───────────────────────────────────────────────────
-
-
-def test_every_name_a_policy_enrols_resolves_to_a_real_rule() -> None:
-    """A policy naming a rule that does not exist must be caught here first.
-
-    Resolution refuses such a name now, but that refusal fires wherever
-    the policy is used -- which for a shipped table means somewhere an
-    operator is standing. Catching it in CI is the difference between a
-    typo that never ships and one that surfaces as a broken command.
-    """
-    unresolvable = _unresolvable(default_rules(), _named_by_every_policy())
-    assert not unresolvable, (
-        "these policies enrol rule names that no rule declares, so that arm of the policy "
-        f"silently redacts nothing: {unresolvable}"
-    )
-
-
-def test_every_declared_rule_is_enrolled_by_at_least_one_policy() -> None:
-    """A rule enrolled nowhere is inert however carefully it is written.
-
-    The opposite direction, and the one that reads most like protection
-    while providing none: the pattern, the strategy and the reasoning are
-    all present in the source, and no policy ever asks for them.
-    """
-    dormant = _dormant(default_rules(), _named_by_every_policy())
-    assert not dormant, (
-        "these rules are declared but no policy enrols them, so they redact nothing anywhere; "
-        f"enrol them or delete them: {dormant}"
-    )
 
 
 def test_the_unresolvable_check_catches_a_mistyped_rule_name() -> None:

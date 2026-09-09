@@ -20,7 +20,6 @@ from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period, StandardPeriodCode
 from cadrumo.core.product_identity import AeatProductSoftwareIdentity
-from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.record_design_schema import (
     AUXILIARY_ENVELOPE_HEADER_ORDINALS,
@@ -29,6 +28,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
 )
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.filing.errors import FilingExportValidationError
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 from ._variable_envelope import AUXILIARY_TO_PREFIX_ROLE
 from .export_fragment_provenance import ExportFragmentTarget

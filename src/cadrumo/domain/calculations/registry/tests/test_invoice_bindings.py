@@ -20,8 +20,6 @@ from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..invoice_bindings import (
     InvoiceObservation,
-    RectificationScope,
-    invoice_binding_requirements,
     resolve_invoice_binding_row_values,
     resolve_invoice_binding_values,
 )
@@ -287,40 +285,6 @@ def test_resolve_invoice_binding_values_rejects_op_mismatch_for_fact() -> None:
         match=r"fact 'operator_count' requires aggregation op 'count_distinct'",
     ):
         resolve_invoice_binding_values(revision, ())
-
-
-def test_invoice_binding_requirements_groups_bindings_by_clave_and_scope() -> None:
-    revision = _revision(
-        _with_selector(
-            _binding("iva-349-declarante-numero-operadores"),
-            claves=("E", "M"),
-            rectification_scope="exclude_rectifications",
-        ),
-        _with_selector(
-            _binding("iva-349-declarante-importe-operaciones"),
-            claves=("E", "M"),
-            rectification_scope="exclude_rectifications",
-        ),
-        _with_selector(
-            _binding("iva-349-declarante-importe-rectificaciones"),
-            claves=("E",),
-            rectification_scope="only_rectifications",
-        ),
-    )
-
-    requirements = invoice_binding_requirements(revision)
-
-    assert len(requirements) == 2
-    by_scope = {req.rectification_scope: req for req in requirements}
-    assert by_scope[RectificationScope.EXCLUDE_RECTIFICATIONS].binding_ids == (
-        "iva-349-declarante-importe-operaciones",
-        "iva-349-declarante-numero-operadores",
-    )
-    assert by_scope[RectificationScope.EXCLUDE_RECTIFICATIONS].claves == ("E", "M")
-    assert by_scope[RectificationScope.ONLY_RECTIFICATIONS].binding_ids == (
-        "iva-349-declarante-importe-rectificaciones",
-    )
-    assert by_scope[RectificationScope.ONLY_RECTIFICATIONS].claves == ("E",)
 
 
 def test_resolve_invoice_binding_values_ignores_non_invoice_bindings() -> None:

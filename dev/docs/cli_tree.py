@@ -243,8 +243,8 @@ def _build_cli_tree_loaded() -> CliTree:
         ArgumentSpec,
         DefaultKind,
         command_registration_projection,
-        command_spec_nodes,
     )
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     clear_output_language_cache()
 
@@ -253,7 +253,7 @@ def _build_cli_tree_loaded() -> CliTree:
         ("aeat", *(row.cli_path or ())): row for row in registration.commands if row.cli_path is not None
     }
     projection: dict[str, CliCommandNode] = {}
-    for node in command_spec_nodes():
+    for node in COMMAND_GRAPH.nodes():
         params = tuple(
             CliParam(
                 names=(parameter.name,) if isinstance(parameter, ArgumentSpec) else parameter.declarations,

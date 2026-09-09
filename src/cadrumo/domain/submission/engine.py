@@ -15,7 +15,7 @@ See Also:
     :class:`~cadrumo.domain.submission.DeadlineWindowChecker`
         Injected protocol that answers the filing-window question without
         coupling this domain package to the deadline engine implementation.
-    :class:`~cadrumo.application.workflow.SubmissionEngineAdapter`
+    the application workflow submission protocol
         Application workflow wrapper that invokes this read-only preflight
         surface from the ``RUNNING_PREFLIGHT`` stage.
     :mod:`cadrumo.application.modelo.workflow_gate`

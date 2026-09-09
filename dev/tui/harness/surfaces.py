@@ -24,7 +24,6 @@ from typing import Any
 from textual.app import App
 
 from .fixture import registration_attempt
-from .modelo_work_wizard import build_modelo_work_wizard, provision_modelo_work_wizard
 
 
 @dataclass(frozen=True)
@@ -117,51 +116,6 @@ def _manager() -> App[Any]:
     )
 
 
-def _status() -> App[Any]:
-    from cadrumo.application.user_profile.status_projection import build_status_page_data
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-    from cadrumo.entrypoints.tui.profile.status import StatusScreen
-
-    return ScreenHostApp(StatusScreen(build_status_page_data()))
-
-
-def _modelo_work_wizard() -> App[Any]:
-    """Render the canonical Modelo wizard definition over its live work unit."""
-    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-
-    return ScreenHostApp(build_modelo_work_wizard())
-
-
-def _form() -> App[Any]:
-    # UNLIKE every other builder here, this one is LEGITIMATELY SYNTHETIC and
-    # not a stand-in for a missed real door. ``FormApp``/``FormPage`` are a
-    # generic substrate a dozen unrelated callers each configure for
-    # themselves -- the export destination/passphrase pair, the add-row
-    # section chooser, the descendant door, the apoderado scope picker, the
-    # certificate/auth form -- with no single production view-model this
-    # surface could compose instead. The two fields below ("First",
-    # "Second") are made up for this harness and correspond to no real
-    # operator-facing copy; a finding read off THIS surface's field labels,
-    # layout of two plain text fields, or wording is a finding about the
-    # harness, never about the application. Drive one of the real callers
-    # above instead when the thing under evaluation is an actual form.
-    from cadrumo.core.i18n.render import tr
-    from cadrumo.core.presentation import FormField, FormPage
-    from cadrumo.entrypoints.tui.components.form_screen import FormApp
-
-    return FormApp(
-        FormPage(
-            title="Harness form (synthetic — no real caller uses this exact shape)",
-            section="Section",
-            fields=(
-                FormField(key="a", label="First"),
-                FormField(key="b", label="Second"),
-            ),
-        ),
-        translate=tr,
-    )
-
-
 def _workbench_surfaces() -> tuple[Surface, ...]:
     """Expose every declared workbench fixture as a drivable review surface.
 
@@ -189,61 +143,10 @@ def _workbench_surfaces() -> tuple[Surface, ...]:
     )
 
 
-def _modelo_surfaces() -> tuple[Surface, ...]:
-    """Expose every declared Modelo fixture as a drivable review surface.
-
-    The same contract as :func:`_workbench_surfaces`, over the fixture registry
-    that owns the Modelo workspace, review and edit states. Both spec types
-    carry the identity, scenario, interface list and builder this needs, so
-    neither registry has to know the other exists.
-
-    ``needs_profile`` is ``False`` for the same reason it is there: a Modelo
-    fixture builds its repositories in memory and touches no encrypted store,
-    which is what lets the whole matrix render without provisioning one.
-    """
-    from .modelo_fixtures import MODELO_FIXTURES
-
-    return tuple(
-        Surface(
-            spec.fixture_id,
-            f"{spec.surface_id} in its {spec.scenario.value} state",
-            spec.build,
-            needs_profile=False,
-            interfaces=spec.interfaces,
-        )
-        for spec in MODELO_FIXTURES
-    )
-
-
-def _profile_surfaces() -> tuple[Surface, ...]:
-    """Expose every declared profile-journey fixture as a drivable surface.
-
-    The third registry on the same contract as :func:`_workbench_surfaces`.
-    ``needs_profile`` is ``False`` because the journey screen renders an
-    injected presentation projection and reads no profile of its own -- the
-    property that lets a blocked or unassessed state be shown without
-    manufacturing a real profile in that condition.
-    """
-    from .profile_fixtures import PROFILE_FIXTURES
-
-    return tuple(
-        Surface(
-            spec.fixture_id,
-            f"{spec.surface_id} in its {spec.scenario.value} state",
-            spec.build,
-            needs_profile=False,
-            interfaces=spec.interfaces,
-        )
-        for spec in PROFILE_FIXTURES
-    )
-
-
 SURFACES: dict[str, Surface] = {
     s.name: s
     for s in (
         *_workbench_surfaces(),
-        *_modelo_surfaces(),
-        *_profile_surfaces(),
         Surface(
             "registration",
             "THE REAL setup wizard, step 1: credential-first profile creation",
@@ -271,37 +174,6 @@ SURFACES: dict[str, Surface] = {
             needs_profile=True,
             needs_session=True,
             interfaces=("cadrumo.entrypoints.tui.profile.overview.ProfileManagerScreen",),
-        ),
-        Surface(
-            "status",
-            "Read-only status page",
-            _status,
-            needs_profile=True,
-            # A session, not merely a profile. The notices band and the
-            # session-deadline rows both read through the ACTIVE bucket, and
-            # both render empty without one -- so a locked-profile reading
-            # showed a status page with no advisories and no deadlines and
-            # looked correct, which is the stand-in shape this harness has
-            # already been caught by twice.
-            needs_session=True,
-            interfaces=("cadrumo.entrypoints.tui.profile.status.StatusScreen",),
-        ),
-        Surface(
-            "modelo-work-wizard",
-            "Live Modelo 130 work wizard over the canonical application factory",
-            _modelo_work_wizard,
-            provision=provision_modelo_work_wizard,
-            interfaces=("cadrumo.entrypoints.tui.flows.app.FlowScreen",),
-        ),
-        Surface(
-            "form",
-            "SYNTHETIC — no single production caller; do not read findings off its field content",
-            _form,
-            needs_profile=False,
-            interfaces=(
-                "cadrumo.entrypoints.tui.components.form_screen.FormApp",
-                "cadrumo.entrypoints.tui.components.form_screen.FormScreen",
-            ),
         ),
     )
 }

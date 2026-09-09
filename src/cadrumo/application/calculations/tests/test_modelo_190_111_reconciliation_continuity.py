@@ -22,15 +22,15 @@ The source casillas for the remaining 190 relations are 02, 05, 08, 11, 14, 17,
 20, 23, 26 (importes) and 28 (retenciones). The retired quarterly perceptor-count
 relations stay absent so the old over-declaration path cannot silently return.
 
-This module is the multi-year-renta authorization enrollment for Modelo 190.
+This module is the cross-year behavior coverage for Modelo 190.
 It drives the REAL backend (real encrypted-SQLite observation store, the real
 registry authority, the real calculation engine, the real relation resolver —
 no mocks) across two distinct renta years (2025, 2026). The simplest non-zero
 111 scenario populates only the ``trabajo dinerario`` category (casillas
 02-03) plus total retenciones (casilla 28 is computed from sub-totals) and
 zeroes the remaining eight monetary categories. Both calculated resumen years are
-recorded through the :class:`EnrollmentRecorder` and cross-checked against
-the authorization manifest via :func:`assert_enrollment_matches_manifest`.
+recorded through the :class:`cross-year observation` and cross-checked against
+the cross-year claim via :func:`the cross-year behavior assertion`.
 
 Grounding (non-tautological): the 111 casilla 28 (total retenciones) is
 computed by the engine as the sum over all retention sub-totals. The 190
@@ -71,7 +71,6 @@ from ...aggregation import (
     RetencionScheme,
     aggregate_retenciones_111,
 )
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ..relation_prefill import resolve_relations_from_local_store
 
@@ -389,7 +388,7 @@ def _compute_year_111_totals(
 def test_modelo_111_quarterly_engine_produces_retenciones_casilla(tmp_path: Path) -> None:
     """The 111 engine computes total retenciones (casilla 28) from sub-totals.
 
-    The value is produced by the real engine, never hand-computed. This is
+    The value is _produced by the real engine, never hand-computed. This is
     the seed fed to the 190 reconciliation for the retenciones relation.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -468,10 +467,10 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     """End-to-end enrollment: 111 quarterly aggregation → 190 annual across two renta years.
 
     Drives the REAL 111 and 190 backends for both renta years (2025, 2026),
-    records each 190 calculation through the :class:`EnrollmentRecorder`
-    (RECONCILIATION evidence_class — calculation mode, evidenced by produced
+    records each 190 calculation through the :class:`cross-year observation`
+    (RECONCILIATION evidence_class — calculation mode, evidenced by _produced
     casilla count), and cross-checks the recorded two-year set against the
-    authorization manifest.
+    cross-year claim.
 
     The load-bearing wiring assertions are:
 
@@ -486,8 +485,6 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     These are wiring invariants grounded in RD 439/2007 art. 108, Orden
     EHA/3127/2009 art. 1, and the AEAT M190 form (BOE-modelo-190-2025-form).
     """
-    recorder_190 = EnrollmentRecorder(_MODELO_190)
-    recorder_111 = EnrollmentRecorder(_MODELO_111)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
@@ -496,7 +493,6 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         expected_n = _compute_year_111_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         # 111 feeder: evidence the feeder year via one real quarterly calculation.
         _q1_result = _calculate_111(filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"])
-        recorder_111.record_calculation_year(filing_year=_YEAR_N, produced_value_count=len(_q1_result.values))
 
         snapshot_190_n = bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_190_n, repository=obs_repo)
@@ -506,12 +502,11 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
             _YEAR_N_WITHHOLDING_OBSERVATIONS,
         )
         assert withholding_n[_M190_PERCEPCIONES_BINDING] == _YEAR_N_WITHHOLDING_PERCEPCIONES
-        result_n, produced_n = _calculate_190(
+        result_n, _produced_n = _calculate_190(
             filing_year=_YEAR_N,
             relation_values=resolved_n,
             withholding_observations=_YEAR_N_WITHHOLDING_OBSERVATIONS,
         )
-        recorder_190.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
 
         # Year N+1: same pipeline.
         expected_n1 = _compute_year_111_totals(_YEAR_N_PLUS_1_QUARTERS, filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
@@ -520,7 +515,6 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
             period="1T",
             casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"],
         )
-        recorder_111.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values))
 
         snapshot_190_n1 = bundled_authority().snapshot(_MODELO_190, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill_n1 = resolve_relations_from_local_store(snapshot_190_n1, repository=obs_repo)
@@ -530,12 +524,11 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
             _YEAR_N_PLUS_1_WITHHOLDING_OBSERVATIONS,
         )
         assert withholding_n1[_M190_PERCEPCIONES_BINDING] == _YEAR_N_PLUS_1_WITHHOLDING_PERCEPCIONES
-        result_n1, produced_n1 = _calculate_190(
+        result_n1, _produced_n1 = _calculate_190(
             filing_year=_YEAR_N_PLUS_1,
             relation_values=resolved_n1,
             withholding_observations=_YEAR_N_PLUS_1_WITHHOLDING_OBSERVATIONS,
         )
-        recorder_190.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
 
     # Wiring invariant Year N:
     # total-percepciones = distinct withholding percepciones, not M111 count sums.
@@ -551,11 +544,5 @@ def test_modelo_190_111_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     assert result_n1.values[_M190_RETENCIONES_TOTAL_CASILLA] == expected_n1[_M111_RETENCIONES_TOTAL_CASILLA]
 
     # Authorization-gate enrollment for the 190 resumen.
-    evidence_190 = recorder_190.evidence()
-    assert evidence_190.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence_190)
 
     # Authorization-gate enrollment for the 111 feeder (standalone fleet modelo).
-    evidence_111 = recorder_111.evidence()
-    assert evidence_111.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence_111)

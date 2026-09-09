@@ -325,9 +325,7 @@ def _xml_exported_casilla_ids(
     )
     draft_casillas = {value.casilla_id for value in draft.values}
     return (
-        entry.casilla_id
-        for entry in entries
-        if entry.casilla_id is not None and entry.casilla_id in draft_casillas
+        entry.casilla_id for entry in entries if entry.casilla_id is not None and entry.casilla_id in draft_casillas
     )
 
 

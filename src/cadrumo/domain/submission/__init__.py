@@ -8,8 +8,7 @@ submission records, or transition a draft or revision into ``presentado``.
 
 :class:`Preflight` checks approved draft status, absence of error findings, the
 deadline window unless skipped, and auth-provider readiness. The engine depends
-on deadline and auth-provider probes; :class:`ModeloDraftLoader` remains an
-exported adapter contract, not a dependency consumed by :class:`SubmissionEngine`.
+on deadline and auth-provider probes.
 
 :class:`ModeloPresentado` is a strict local-only historical/imported audit
 record persisted through the :class:`SubmissionRepositoryProtocol` port —
@@ -37,8 +36,8 @@ Major declarations:
   :func:`make_submission_id`.
 * :class:`SubmissionRepositoryProtocol` — the read-side persistence port
   (the concrete repository lives in the persistence adapter).
-* The :class:`ModeloDraftLoader`, :class:`ModeloDraftLike`,
-  :class:`DeadlineWindowChecker`, and :class:`AuthProviderProbe` protocols —
+* The :class:`ModeloDraftLike`, :class:`DeadlineWindowChecker`, and
+  :class:`AuthProviderProbe` protocols —
   exported narrow contracts that keep the domain free of live adapters.
 
 See Also:

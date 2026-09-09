@@ -39,7 +39,7 @@ from ..routes import (
     declared_destination_ids,
     resolve_destination,
 )
-from ..view.controller import ModeloWorkspaceReadSession, admit_workspace_session
+from ..view.controller import ModeloWorkspaceReadSession, open_workspace_read_session
 from ..view.models import ModeloWorkspaceDestinationIdV1
 
 # The real-projection fixture lives beside the view tests. Sibling test
@@ -80,10 +80,7 @@ def _host_for(destination: ModeloWorkspaceDestinationIdV1, session: ModeloWorksp
 
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
-    session, refusal = admit_workspace_session(resolve_real_result(bucket_id, repository, OutputLanguage.ES))
-    assert refusal is None, f"expected an admitted projection, got: {refusal}"
-    assert session is not None
-    return session
+    return open_workspace_read_session(resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection)
 
 
 def test_the_destination_census_is_closed_and_one_to_one() -> None:

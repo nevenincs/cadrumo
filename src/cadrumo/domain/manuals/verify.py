@@ -16,7 +16,7 @@ from ...core.errors.severity import BaseSeverity
 from ...core.i18n import tr
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
-from .errors import ManifestError, ManualNotFoundError, ManualParseError, ManualReviewRequiredError
+from .errors import ManifestError, ManualNotFoundError, ManualParseError
 from .loader import iter_sections, load_manual, resolve_part_root
 from .schema import ManualId, ManualPart, Section
 
@@ -243,29 +243,3 @@ def verify_manual_dir(
         part=part,
         issues=tuple(issues),
     )
-
-
-def raise_on_errors(report: ManualVerificationReport) -> None:
-    """Raise :exc:`ManualReviewRequiredError` if the report has errors.
-
-    Thin helper so the CLI can collapse a report into a non-zero exit
-    without re-implementing the error-check logic.
-
-    Args:
-        report: Report produced by :func:`verify_manual_dir`.
-
-    Raises:
-        ManualReviewRequiredError: When the report contains any
-            ``error``-level issues.
-    """
-    if not report.ok:
-        messages = "; ".join(issue.message for issue in report.errors)
-        raise ManualReviewRequiredError(
-            translated_message="cli.registry.manuals.verify_failed",
-            context={
-                "manual_id": report.manual_id.value,
-                "year": report.year,
-                "part": report.part.value,
-                "messages": messages,
-            },
-        )

@@ -49,10 +49,12 @@ from .persistence.journal import (
     OperationObservationMaterialization,
     OperationObservationReader,
     OperationObservationUnknownOperationError,
+    OperationPersistedSnapshot,
     OperationProgressFoldInput,
 )
 from .persistence.replay import PublicReplayStatus
 from .registry import (
+    OperationPublicContractSetV1,
     OperationPublicDefinitionContractV1,
     OperationRegistry,
     operation_public_schema_reference,
@@ -120,62 +122,21 @@ class OperationObservationService:
 
     def _project(self, materialization: OperationObservationMaterialization) -> OperationObservationSuccessV1:
         snapshot = materialization.snapshot
-        contract = self.registry.lookup_public_contract(snapshot.identity.definition_id)
-        if snapshot.definition_contract_digest != contract.definition_contract_digest:
-            raise _DefinitionContractMismatchError
-        contract_set = self.registry.public_contract_set
-        if contract not in contract_set.definitions:
-            raise _DefinitionContractMismatchError
-
+        contract, contract_set = _validated_public_contract(self.registry, snapshot)
         progress, folded_phase = _fold_progress(materialization.progress_fold)
         if folded_phase != snapshot.phase_code:
             raise ValueError("progress fold phase disagrees with the anchored snapshot")
-        receipt = snapshot.terminal_receipt
-        projection = OperationPublicProjectionV1(
-            operation_id=snapshot.operation_id,
-            definition_id=snapshot.identity.definition_id,
-            subject_ref=snapshot.identity.subject_ref,
-            revision=snapshot.revision,
-            anchor_cursor=materialization.anchor_cursor,
-            definition_contract=contract,
-            contract_set_digest=contract_set.contract_set_digest,
-            lifecycle=snapshot.lifecycle,
-            terminal_condition=snapshot.terminal_condition,
-            effect=snapshot.effect,
-            phase_code=snapshot.phase_code,
-            started_at=snapshot.started_at,
-            updated_at=snapshot.updated_at,
+        projection = _project_operation_projection(
+            snapshot,
+            materialization=materialization,
+            contract=contract,
+            contract_set=contract_set,
             progress=progress,
-            close_policy=contract.close_policy,
-            cancellation=contract.cancellation,
-            cancellable_now=(
-                contract.cancellation is not OperationCancellation.UNSUPPORTED
-                and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
-                and snapshot.cancellation_requested_at is None
-                and not snapshot.cancellation_deferred
-            ),
-            cancellation_requested=snapshot.cancellation_requested_at is not None,
-            cancellation_acknowledged=snapshot.cancellation_acknowledged_at is not None,
-            execution_deadline_at=snapshot.execution_deadline,
-            cleanup_deadline_at=snapshot.cleanup_deadline,
-            pending_interaction=_project_pending_interaction(snapshot.pending_interaction, contract),
-            result_ref=None if receipt is None else receipt.result_ref,
-            refusal_ref=None if receipt is None else receipt.refusal_ref,
-            failure_error_code=None if receipt is None else receipt.failure_error_code,
-            diagnostic_ref=None if receipt is None else receipt.diagnostic_ref,
         )
-        replay = materialization.replay
-        replay_status = cast(PublicReplayStatus, replay.status)
-        event_page = OperationPublicEventPageV1(
-            operation_id=snapshot.operation_id,
-            anchor_cursor=materialization.anchor_cursor,
-            requested_cursor=replay.requested_cursor,
-            status=replay_status,
-            events=tuple(_project_event(event) for event in replay.events),
-            next_cursor=replay.next_cursor,
-            restart_cursor=replay.restart_cursor,
+        return OperationObservationSuccessV1(
+            projection=projection,
+            event_page=_project_event_page(materialization),
         )
-        return OperationObservationSuccessV1(projection=projection, event_page=event_page)
 
 
 class _DefinitionContractMismatchError(RuntimeError):
@@ -195,6 +156,81 @@ def _refusal(
         code=code,
         requested_version=requested_version,
         diagnostic_ref=None,
+    )
+
+
+def _validated_public_contract(
+    registry: OperationRegistry,
+    snapshot: OperationPersistedSnapshot,
+) -> tuple[OperationPublicDefinitionContractV1, OperationPublicContractSetV1]:
+    """Return the registry contract anchored by ``snapshot`` or refuse its drift."""
+    contract = registry.lookup_public_contract(snapshot.identity.definition_id)
+    if snapshot.definition_contract_digest != contract.definition_contract_digest:
+        raise _DefinitionContractMismatchError
+    contract_set = registry.public_contract_set
+    if contract not in contract_set.definitions:
+        raise _DefinitionContractMismatchError
+    return contract, contract_set
+
+
+def _project_operation_projection(
+    snapshot: OperationPersistedSnapshot,
+    *,
+    materialization: OperationObservationMaterialization,
+    contract: OperationPublicDefinitionContractV1,
+    contract_set: OperationPublicContractSetV1,
+    progress: OperationPublicProgressV1 | None,
+) -> OperationPublicProjectionV1:
+    """Project the anchored snapshot into its renderer-neutral public state."""
+    receipt = snapshot.terminal_receipt
+    return OperationPublicProjectionV1(
+        operation_id=snapshot.operation_id,
+        definition_id=snapshot.identity.definition_id,
+        subject_ref=snapshot.identity.subject_ref,
+        revision=snapshot.revision,
+        anchor_cursor=materialization.anchor_cursor,
+        definition_contract=contract,
+        contract_set_digest=contract_set.contract_set_digest,
+        lifecycle=snapshot.lifecycle,
+        terminal_condition=snapshot.terminal_condition,
+        effect=snapshot.effect,
+        phase_code=snapshot.phase_code,
+        started_at=snapshot.started_at,
+        updated_at=snapshot.updated_at,
+        progress=progress,
+        close_policy=contract.close_policy,
+        cancellation=contract.cancellation,
+        cancellable_now=(
+            contract.cancellation is not OperationCancellation.UNSUPPORTED
+            and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
+            and snapshot.cancellation_requested_at is None
+            and not snapshot.cancellation_deferred
+        ),
+        cancellation_requested=snapshot.cancellation_requested_at is not None,
+        cancellation_acknowledged=snapshot.cancellation_acknowledged_at is not None,
+        execution_deadline_at=snapshot.execution_deadline,
+        cleanup_deadline_at=snapshot.cleanup_deadline,
+        pending_interaction=_project_pending_interaction(snapshot.pending_interaction, contract),
+        result_ref=None if receipt is None else receipt.result_ref,
+        refusal_ref=None if receipt is None else receipt.refusal_ref,
+        failure_error_code=None if receipt is None else receipt.failure_error_code,
+        diagnostic_ref=None if receipt is None else receipt.diagnostic_ref,
+    )
+
+
+def _project_event_page(materialization: OperationObservationMaterialization) -> OperationPublicEventPageV1:
+    """Project the replay page while retaining its anchored cursor semantics."""
+    snapshot = materialization.snapshot
+    replay = materialization.replay
+    replay_status = cast(PublicReplayStatus, replay.status)
+    return OperationPublicEventPageV1(
+        operation_id=snapshot.operation_id,
+        anchor_cursor=materialization.anchor_cursor,
+        requested_cursor=replay.requested_cursor,
+        status=replay_status,
+        events=tuple(_project_event(event) for event in replay.events),
+        next_cursor=replay.next_cursor,
+        restart_cursor=replay.restart_cursor,
     )
 
 

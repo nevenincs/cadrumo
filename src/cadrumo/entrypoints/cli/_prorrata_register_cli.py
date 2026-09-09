@@ -23,6 +23,7 @@ is authoritative profile-scoped taxpayer state, not an AEAT filing surface.
 from __future__ import annotations
 
 import json
+from typing import NoReturn
 
 import typer
 from pydantic import ValidationError
@@ -435,6 +436,56 @@ def _seed_notices(
     return (origin, *advisory_notices)
 
 
+def _refuse_missing_seed_source(ejercicio: int) -> NoReturn:
+    """Refuse a carry when no prior definitive observation can author it."""
+    raise bad(
+        tr(
+            "cli.app.ledger.prorrata.seed_source_absent",
+            default=(
+                "No stamped Modelo 303 settlement observation for {prior_ejercicio} carries a "
+                "definitive prorrata percentage, so ejercicio {ejercicio} cannot be seeded. "
+                "The prior definitive is missing, not zero: capture the prior settlement first."
+            ),
+            prior_ejercicio=ejercicio - 1,
+            ejercicio=ejercicio,
+        ),
+    )
+
+
+def _seed_findings_with_existing_entry(
+    service: ProrrataRegisterService,
+    *,
+    ejercicio: int,
+    sector: str | None,
+    findings: tuple[ProrrataSeedFinding, ...],
+) -> tuple[ProrrataSeedFinding, ...]:
+    """Cross-check an existing entry before allowing a carried seed to replace it."""
+    existing = service.get(ejercicio, sector_id=sector)
+    if existing is None:
+        return findings
+
+    cross_findings = cross_check_prorrata_entry_against_prior_observation(existing)
+    _refuse_blocking_findings(cross_findings)
+    standing_provenance = existing.provisional_provenance
+    if (
+        standing_provenance is not None
+        and standing_provenance is not ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
+    ):
+        raise bad(
+            tr(
+                "cli.app.ledger.prorrata.seed_regulated_override_standing",
+                default=(
+                    "Ejercicio {ejercicio} already carries a {provenance} provisional prorrata, "
+                    "which outranks the art. 105.Uno carry. Nothing was written; replace that "
+                    "declaration explicitly before seeding."
+                ),
+                ejercicio=ejercicio,
+                provenance=standing_provenance.value,
+            ),
+        )
+    return (*findings, *cross_findings)
+
+
 def prorrata_seed(
     ctx: typer.Context,
     ejercicio: int,
@@ -454,43 +505,15 @@ def prorrata_seed(
     _refuse_blocking_findings(evaluation.findings)
     seed = evaluation.seed
     if seed is None:
-        raise bad(
-            tr(
-                "cli.app.ledger.prorrata.seed_source_absent",
-                default=(
-                    "No stamped Modelo 303 settlement observation for {prior_ejercicio} carries a "
-                    "definitive prorrata percentage, so ejercicio {ejercicio} cannot be seeded. "
-                    "The prior definitive is missing, not zero: capture the prior settlement first."
-                ),
-                prior_ejercicio=ejercicio - 1,
-                ejercicio=ejercicio,
-            ),
-        )
+        _refuse_missing_seed_source(ejercicio)
 
     service = ProrrataRegisterService()
-    findings = evaluation.findings
-    existing = service.get(ejercicio, sector_id=sector)
-    if existing is not None:
-        cross_findings = cross_check_prorrata_entry_against_prior_observation(existing)
-        _refuse_blocking_findings(cross_findings)
-        standing_provenance = existing.provisional_provenance
-        if (
-            standing_provenance is not None
-            and standing_provenance is not ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA
-        ):
-            raise bad(
-                tr(
-                    "cli.app.ledger.prorrata.seed_regulated_override_standing",
-                    default=(
-                        "Ejercicio {ejercicio} already carries a {provenance} provisional prorrata, "
-                        "which outranks the art. 105.Uno carry. Nothing was written; replace that "
-                        "declaration explicitly before seeding."
-                    ),
-                    ejercicio=ejercicio,
-                    provenance=standing_provenance.value,
-                ),
-            )
-        findings = (*findings, *cross_findings)
+    findings = _seed_findings_with_existing_entry(
+        service,
+        ejercicio=ejercicio,
+        sector=sector,
+        findings=evaluation.findings,
+    )
 
     try:
         register = service.declare(seed.entry)

@@ -52,7 +52,7 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
-from cadrumo.entrypoints.cli.command_api import command_spec_for_path, command_spec_nodes
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
 from ._locale_chrome import docs_chrome
 
@@ -65,7 +65,7 @@ if TYPE_CHECKING:
 #: are listed on the output-schema registry page (``schemas.rst``).
 _GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
     node.spec.result_schema.identity
-    for node in command_spec_nodes()
+    for node in COMMAND_GRAPH.nodes()
     if node.spec.kind == "group" and node.spec.result_schema.identity is not None
 )
 
@@ -185,7 +185,7 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
 def _normalise_command_path(path: tuple[str, ...]) -> str:
     """Return the result identity authored for an exact command-graph path."""
     rooted = path if path[:1] == ("aeat",) else ("aeat", *path)
-    identity = command_spec_for_path(rooted).result_schema.identity
+    identity = COMMAND_GRAPH.resolve_path(rooted).result_schema.identity
     if identity is None:
         raise LookupError(f"command path has no result identity: {path!r}")
     return identity
@@ -484,7 +484,7 @@ def _generate_cli_reference_loaded(docs_root: Path) -> dict[str, str]:
     clear_output_language_cache()
     output_dir = docs_root / "cli"
     output_dir.mkdir(parents=True, exist_ok=True)
-    leaves = tuple(node for node in command_spec_nodes() if node.spec.kind == "leaf")
+    leaves = tuple(node for node in COMMAND_GRAPH.nodes() if node.spec.kind == "leaf")
     families = sorted({node.path[1] for node in leaves})
     rendered: dict[str, str] = {}
     for family in families:
@@ -622,9 +622,9 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
     """
     code = textwrap.dedent(
         """
-        from cadrumo.entrypoints.cli.command_api import command_spec_nodes
+        from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
-        for node in command_spec_nodes():
+        for node in COMMAND_GRAPH.nodes():
             if node.spec.kind == "leaf":
                 path = node.path[1:] if node.path[:1] == ("aeat",) else node.path
                 print(".".join(path))

@@ -20,7 +20,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....core.aggregation import IntracomOperationType, InvoiceDevengoRank
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.loader import load_modelo_path
+from dev.registry.maintenance_support import load_modelo_path
 from ....domain.invoices.decomposition import decompose_invoice
 from ....domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ....domain.invoices.errors import InvoiceValidationError

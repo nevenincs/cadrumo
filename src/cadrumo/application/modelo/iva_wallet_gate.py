@@ -792,9 +792,7 @@ def _source_proves_concrete_zero_authority(source: object) -> bool:
     source_kind = str(getattr(source, "source_kind", ""))
     if source_kind == "aeat_wallet":
         return getattr(source, "captured_at", None) is not None
-    return source_kind in _LOCAL_EVIDENCE_SOURCE_KINDS and bool(
-        tuple(getattr(source, "source_periods", ()) or ())
-    )
+    return source_kind in _LOCAL_EVIDENCE_SOURCE_KINDS and bool(tuple(getattr(source, "source_periods", ()) or ()))
 
 
 def _decision_has_concrete_zero_authority(decision: object) -> bool:
@@ -802,8 +800,7 @@ def _decision_has_concrete_zero_authority(decision: object) -> bool:
     if selected_amount is None or Decimal(selected_amount) != Decimal("0"):
         return False
     return any(
-        _source_proves_concrete_zero_authority(source)
-        for source in getattr(decision, "authority_sources", ()) or ()
+        _source_proves_concrete_zero_authority(source) for source in getattr(decision, "authority_sources", ()) or ()
     )
 
 

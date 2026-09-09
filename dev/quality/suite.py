@@ -39,7 +39,6 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-format", ("ruff", "format", "--check", ".")),
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
     ("check-imports", ("lint-imports",)),
-    ("check-relative-imports", (sys.executable, "-m", "dev.quality.relative_imports")),
     ("check-identity", (sys.executable, "-m", "dev.identity")),
     ("check-locales", (sys.executable, "-m", "dev.locales", "audit")),
     (
@@ -91,18 +90,6 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
             ".*_test_.*[.]py",
             "--extend-exclude",
             r".*[\\/]tests[\\/].*",
-        ),
-    ),
-    (
-        "check-architecture",
-        (
-            sys.executable,
-            "-m",
-            "pytest",
-            "-v",
-            "-n0",
-            "dev/tests/test_cross_package_private_imports.py",
-            "dev/tests/test_import_edge_integrity_gate.py",
         ),
     ),
     (

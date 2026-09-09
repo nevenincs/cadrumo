@@ -22,9 +22,6 @@ See Also:
     :class:`AeatAccessGate`
         Inline gate object used by read-only live surfaces and permanent
         write-refusal checks.
-    :class:`AuthorizationManifest`
-        Directory-mode modelo authorization manifest re-exported by this
-        package for registry capability derivation.
     :mod:`application.live`
         Read-only application-live facade that calls the read gate before
         opening AEAT remote surfaces.

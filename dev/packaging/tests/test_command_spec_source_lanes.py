@@ -40,12 +40,12 @@ from cadrumo.entrypoints.cli.command_api import (
     build_verb_input_schemas,
     command_schema_refs,
     command_schema_types,
-    command_spec_nodes,
 )
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.core.json_contract import ENVELOPE_SCHEMA_VERSION
 from cadrumo.entrypoints.cli.command_spec import SchemaState
 
-nodes = command_spec_nodes()
+nodes = COMMAND_GRAPH.nodes()
 specs = {node.spec.key: node.spec for node in nodes}
 expected_results = {
     node.spec.result_schema.identity

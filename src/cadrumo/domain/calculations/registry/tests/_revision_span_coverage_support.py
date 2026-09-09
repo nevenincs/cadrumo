@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 from .....core.period import PeriodKind, registry_period_kind
 from ..schema import ModeloDefinition, ModeloRevision
@@ -138,6 +139,65 @@ def _signal_label(evidence_item: str) -> str:
     )
 
 
+def _revision_index(ordered: list[tuple[str, ModeloRevision]], revision_id: str) -> int:
+    return next(index for index, (candidate_id, _revision) in enumerate(ordered) if candidate_id == revision_id)
+
+
+def _own_design_gap_detail(modelo_id: str, revision: ModeloRevision) -> str:
+    own_year = min(_span_years(revision)) if _span_years(revision) else None
+    matching_unparseable = [
+        path
+        for path in _unparseable_design_sources(modelo_id)
+        if own_year is not None and own_year in _design_years(path.name)
+    ]
+    if matching_unparseable:
+        names = ", ".join(path.name for path in matching_unparseable)
+        return (
+            f"a design for {own_year} IS bundled ({names}) but its sheets fail to parse -- "
+            "UNPARSEABLE, not absent: this is an extraction-layer defect, not a corpus gap, "
+            "and acquiring another copy from AEAT would not help"
+        )
+    return "no design is bundled for its own filing year at all -- ABSENT, so no comparison is possible"
+
+
+def _neighbour_checks(
+    modelo_id: str,
+    index: int,
+    ordered: list[tuple[str, ModeloRevision]],
+    own_designs: tuple[Path, ...],
+) -> list[tuple[str, str, list[str]]]:
+    checks: list[tuple[str, str, list[str]]] = []
+    if index > 0:
+        neighbour_id, neighbour_revision = ordered[index - 1]
+        neighbour_designs = _designs_claimed_by(modelo_id, neighbour_revision)
+        if neighbour_designs:
+            checks.append(("predecessor", neighbour_id, _compare_design_pair(neighbour_designs[-1], own_designs[0])))
+    if index < len(ordered) - 1:
+        neighbour_id, neighbour_revision = ordered[index + 1]
+        neighbour_designs = _designs_claimed_by(modelo_id, neighbour_revision)
+        if neighbour_designs:
+            checks.append(("successor", neighbour_id, _compare_design_pair(own_designs[-1], neighbour_designs[0])))
+    return checks
+
+
+def _neighbour_comparison_result(checks: list[tuple[str, str, list[str]]]) -> tuple[bool, str]:
+    if not checks:
+        return False, "no adjacent revision in this modelo has a readable design to compare against"
+
+    diverging = [(direction, neighbour_id, evidence) for direction, neighbour_id, evidence in checks if evidence]
+    if diverging:
+        direction, neighbour_id, evidence = diverging[0]
+        labels = sorted({_signal_label(item) for item in evidence})
+        corroboration = "SINGLE SIGNAL, uncorroborated" if len(labels) == 1 else f"{len(labels)} signals agree"
+        return True, (
+            f"differs from its {direction} {neighbour_id!r} via {corroboration} [{', '.join(labels)}]: "
+            f"{' + '.join(evidence)}"
+        )
+
+    names = ", ".join(f"{direction} {neighbour_id!r}" for direction, neighbour_id, _evidence in checks)
+    return False, f"identical to its {names} -- the split introduces no design change"
+
+
 def _neighbour_divergence(
     modelo_id: str,
     revision_id: str,
@@ -176,52 +236,134 @@ def _neighbour_divergence(
       :func:`_unparseable_design_sources`. Conflating the two sends a
       fix-owner to acquire a design that is already sitting in the corpus.
     """
-    index = next(i for i, (rid, _revision) in enumerate(ordered) if rid == revision_id)
+    index = _revision_index(ordered, revision_id)
     _own_id, own_revision = ordered[index]
     own_designs = _designs_claimed_by(modelo_id, own_revision)
     if not own_designs:
-        own_year = min(_span_years(own_revision)) if _span_years(own_revision) else None
-        matching_unparseable = [
-            path
-            for path in _unparseable_design_sources(modelo_id)
-            if own_year is not None and own_year in _design_years(path.name)
-        ]
-        if matching_unparseable:
-            names = ", ".join(path.name for path in matching_unparseable)
-            return False, (
-                f"a design for {own_year} IS bundled ({names}) but its sheets fail to parse -- "
-                "UNPARSEABLE, not absent: this is an extraction-layer defect, not a corpus gap, "
-                "and acquiring another copy from AEAT would not help"
-            )
-        return False, "no design is bundled for its own filing year at all -- ABSENT, so no comparison is possible"
+        return False, _own_design_gap_detail(modelo_id, own_revision)
+    checks = _neighbour_checks(modelo_id, index, ordered, own_designs)
+    return _neighbour_comparison_result(checks)
 
-    checks: list[tuple[str, str, list[str]]] = []
-    if index > 0:
-        neighbour_id, neighbour_revision = ordered[index - 1]
-        neighbour_designs = _designs_claimed_by(modelo_id, neighbour_revision)
-        if neighbour_designs:
-            checks.append(("predecessor", neighbour_id, _compare_design_pair(neighbour_designs[-1], own_designs[0])))
-    if index < len(ordered) - 1:
-        neighbour_id, neighbour_revision = ordered[index + 1]
-        neighbour_designs = _designs_claimed_by(modelo_id, neighbour_revision)
-        if neighbour_designs:
-            checks.append(("successor", neighbour_id, _compare_design_pair(own_designs[-1], neighbour_designs[0])))
 
-    if not checks:
-        return False, "no adjacent revision in this modelo has a readable design to compare against"
-
-    diverging = [(direction, neighbour_id, evidence) for direction, neighbour_id, evidence in checks if evidence]
-    if diverging:
-        direction, neighbour_id, evidence = diverging[0]
-        labels = sorted({_signal_label(item) for item in evidence})
-        corroboration = "SINGLE SIGNAL, uncorroborated" if len(labels) == 1 else f"{len(labels)} signals agree"
-        return True, (
-            f"differs from its {direction} {neighbour_id!r} via {corroboration} [{', '.join(labels)}]: "
-            f"{' + '.join(evidence)}"
+def _boundary_failure_messages(modelo: ModeloDefinition, revision_id: str, revision: ModeloRevision) -> list[str]:
+    boundaries = _boundaries_for(modelo.id, revision)
+    if not boundaries:
+        return []
+    detail = "; ".join(
+        f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'} ({' + '.join(evidence)})"
+        for (earlier, later), evidence in sorted(boundaries.items())
+    )
+    failures = [
+        f"modelo {modelo.id} revision {revision_id!r}: spans {len(boundaries)} corpus-evidenced "
+        f"re-layout(s), needs {len(boundaries) + 1} revisions -- {detail} -- FIX: split the "
+        "revision at the named boundary year(s)",
+    ]
+    orden_documents = _distinct_orden_documents(modelo)
+    if len(orden_documents) <= 1:
+        # A DISTINCT failure reason from the one above, never a substitute for
+        # it and never a path to a pass. The design-evidence failure says WHERE
+        # a split is needed; this one says the legal record offers no citation
+        # to justify or date it -- the founding orden is the only orden this
+        # modelo's entire revision history ever cites, despite corpus evidence
+        # a relayout happened somewhere in this revision's span. Absence of a
+        # second orden citation is not positive evidence of non-revision, it is
+        # evidence the legal catalogue is incomplete -- so this reason can NEVER
+        # be cleared by design evidence, and NEVER becomes a pass condition;
+        # only a positively-cited amending or superseding orden clears it.
+        failures.append(
+            f"modelo {modelo.id} revision {revision_id!r}: NO LEGAL EVIDENCE OF REVISION "
+            f"RECORDED -- the design-evidence failure above proves a relayout crosses this "
+            f"revision's span, but this modelo's entire revision history cites only the "
+            f"founding orden ({sorted(orden_documents)!r}); no amending or superseding orden "
+            "is recorded anywhere in the bundled legal catalogue -- FIX: acquire and cite the "
+            "BOE orden that authorises the later layout; do not attempt to satisfy this with "
+            "design evidence alone, and do not treat the gap as anything other than a failure",
         )
+    return failures
 
-    names = ", ".join(f"{direction} {neighbour_id!r}" for direction, neighbour_id, _evidence in checks)
-    return False, f"identical to its {names} -- the split introduces no design change"
+
+def _single_year_findings(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    revision: ModeloRevision,
+    ordered: list[tuple[str, ModeloRevision]],
+) -> tuple[str | None, str | None]:
+    proven, detail = _neighbour_divergence(modelo.id, revision_id, ordered)
+    if not proven:
+        if "UNPARSEABLE, not absent" in detail:
+            fix = "the design IS bundled but unreadable -- fix the extractor for the named file(s); acquiring another copy from AEAT would not help"
+        elif "ABSENT" in detail:
+            fix = "no design is bundled for this year at all -- bundle AEAT's published record design for an adjacent ejercicio so the split can be proven"
+        else:
+            fix = "identical to a neighbour -- merge this revision into it, the split introduced no design change and was unwarranted"
+        return f"modelo {modelo.id} revision {revision_id!r}: single-year span, {detail} -- FIX: {fix}", None
+    if "SINGLE SIGNAL, uncorroborated" in detail:
+        # A real, legitimate PASS -- no corroboration threshold is imposed here, one
+        # signal finding a genuine difference is proof enough. But a reader of the
+        # verdict alone cannot tell this pass rests on one instrument while its
+        # neighbours rest on several, and the always-visible failure text below is
+        # this gate's only durable output, so recording it there is what makes
+        # thinness a property of the gate rather than a fact only a chat message
+        # carries. Not a failure; do not add to `failures`.
+        return None, f"modelo {modelo.id} revision {revision_id!r}: PASSES, {detail}"
+    return None, None
+
+
+def _multi_year_failure(modelo: ModeloDefinition, revision_id: str, revision: ModeloRevision) -> str | None:
+    design_years, _unreadable = _designs_for(modelo.id)
+    claimed = _claimed_years(revision, set(design_years))
+    if len(claimed) >= 2:
+        return None
+
+    # Distinguish ABSENT (no file at all for a needed year -- acquire from AEAT)
+    # from UNPARSEABLE (a file is already bundled for that year but the parser
+    # returns nothing usable -- an extraction-layer defect, never an acquisition
+    # gap) before naming the fix. Conflating the two sends a fix-owner to acquire
+    # a design that is already sitting in the corpus.
+    unparseable = _unparseable_design_sources(modelo.id)
+    unparseable_years = set()
+    unparseable_names: list[str] = []
+    for path in unparseable:
+        matched = _claimed_years(revision, set(_design_years(path.name)))
+        if matched:
+            unparseable_years |= matched
+            unparseable_names.append(path.name)
+    note = ""
+    if unparseable_years:
+        note = (
+            f" -- NOTE: {len(unparseable_years)} of the missing year(s) "
+            f"({sorted(unparseable_years)}) already have a BUNDLED design file that fails to "
+            f"parse entirely ({', '.join(unparseable_names)}) -- UNPARSEABLE, not absent: fix "
+            "the extractor for those files before acquiring anything new for those specific years"
+        )
+    return (
+        f"modelo {modelo.id} revision {revision_id!r}: only {len(claimed)} comparable bundled "
+        "design year(s) fall inside its claimed span -- FIX: bundle AEAT's published record "
+        "design for the missing year(s); do not split this revision on today's evidence, and "
+        "do not treat the gap as anything other than a failure" + note
+    )
+
+
+def _revision_span_findings(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    revision: ModeloRevision,
+    ordered: list[tuple[str, ModeloRevision]],
+) -> tuple[list[str], list[str]]:
+    boundary_failures = _boundary_failure_messages(modelo, revision_id, revision)
+    if boundary_failures:
+        return boundary_failures, []
+
+    receipt_proven, _receipt_detail = _source_epoch_proves_revision_span(modelo.id, revision)
+    if receipt_proven:
+        return [], []
+
+    if _declared_span_is_single_year(revision):
+        failure, single_signal_pass = _single_year_findings(modelo, revision_id, revision, ordered)
+        return ([failure] if failure else []), ([single_signal_pass] if single_signal_pass else [])
+
+    failure = _multi_year_failure(modelo, revision_id, revision)
+    return ([failure] if failure else []), []
 
 
 def test_every_modelo_revision_span_is_corpus_proven() -> None:
@@ -329,103 +471,14 @@ def test_every_modelo_revision_span_is_corpus_proven() -> None:
     failures: list[str] = []
     single_signal_passes: list[str] = []
     for modelo, revision_id, revision in _filing_supported_revisions():
-        boundaries = _boundaries_for(modelo.id, revision)
-        if boundaries:
-            detail = "; ".join(
-                f"{f'{earlier} mid-year' if earlier == later else f'{earlier}/{later}'} ({' + '.join(evidence)})"
-                for (earlier, later), evidence in sorted(boundaries.items())
-            )
-            failures.append(
-                f"modelo {modelo.id} revision {revision_id!r}: spans {len(boundaries)} corpus-evidenced "
-                f"re-layout(s), needs {len(boundaries) + 1} revisions -- {detail} -- FIX: split the "
-                "revision at the named boundary year(s)",
-            )
-            orden_documents = _distinct_orden_documents(modelo)
-            if len(orden_documents) <= 1:
-                # A DISTINCT failure reason from the one above, never a substitute for
-                # it and never a path to a pass. The design-evidence failure says WHERE
-                # a split is needed; this one says the legal record offers no citation
-                # to justify or date it -- the founding orden is the only orden this
-                # modelo's entire revision history ever cites, despite corpus evidence
-                # a relayout happened somewhere in this revision's span. Absence of a
-                # second orden citation is not positive evidence of non-revision, it is
-                # evidence the legal catalogue is incomplete -- so this reason can NEVER
-                # be cleared by design evidence, and NEVER becomes a pass condition;
-                # only a positively-cited amending or superseding orden clears it.
-                failures.append(
-                    f"modelo {modelo.id} revision {revision_id!r}: NO LEGAL EVIDENCE OF REVISION "
-                    f"RECORDED -- the design-evidence failure above proves a relayout crosses this "
-                    f"revision's span, but this modelo's entire revision history cites only the "
-                    f"founding orden ({sorted(orden_documents)!r}); no amending or superseding orden "
-                    "is recorded anywhere in the bundled legal catalogue -- FIX: acquire and cite the "
-                    "BOE orden that authorises the later layout; do not attempt to satisfy this with "
-                    "design evidence alone, and do not treat the gap as anything other than a failure",
-                )
-            continue
-
-        receipt_proven, _receipt_detail = _source_epoch_proves_revision_span(modelo.id, revision)
-        if receipt_proven:
-            # The revision cites an authoritative record-design dependency whose
-            # declared epoch covers its entire span. Requiring duplicate annual
-            # copies after this point would replace authority with a file count.
-            continue
-
-        if _declared_span_is_single_year(revision):
-            proven, detail = _neighbour_divergence(modelo.id, revision_id, ordered_by_modelo[modelo.id])
-            if not proven:
-                # Three distinct remedies for three distinct causes -- naming the wrong one
-                # sends a fix-owner to acquire a design that is already bundled, or to
-                # wait on AEAT for evidence that is actually an in-tree extraction defect.
-                if "UNPARSEABLE, not absent" in detail:
-                    fix = "the design IS bundled but unreadable -- fix the extractor for the named file(s); acquiring another copy from AEAT would not help"
-                elif "ABSENT" in detail:
-                    fix = "no design is bundled for this year at all -- bundle AEAT's published record design for an adjacent ejercicio so the split can be proven"
-                else:
-                    fix = "identical to a neighbour -- merge this revision into it, the split introduced no design change and was unwarranted"
-                failures.append(
-                    f"modelo {modelo.id} revision {revision_id!r}: single-year span, {detail} -- FIX: {fix}",
-                )
-            elif "SINGLE SIGNAL, uncorroborated" in detail:
-                # A real, legitimate PASS -- no corroboration threshold is imposed here, one
-                # signal finding a genuine difference is proof enough. But a reader of the
-                # verdict alone cannot tell this pass rests on one instrument while its
-                # neighbours rest on several, and the always-visible failure text below is
-                # this gate's only durable output, so recording it there is what makes
-                # thinness a property of the gate rather than a fact only a chat message
-                # carries. Not a failure; do not add to `failures`.
-                single_signal_passes.append(f"modelo {modelo.id} revision {revision_id!r}: PASSES, {detail}")
-            continue
-
-        design_years, _unreadable = _designs_for(modelo.id)
-        claimed = _claimed_years(revision, set(design_years))
-        if len(claimed) < 2:
-            # Distinguish ABSENT (no file at all for a needed year -- acquire from AEAT)
-            # from UNPARSEABLE (a file is already bundled for that year but the parser
-            # returns nothing usable -- an extraction-layer defect, never an acquisition
-            # gap) before naming the fix. Conflating the two sends a fix-owner to acquire
-            # a design that is already sitting in the corpus.
-            unparseable = _unparseable_design_sources(modelo.id)
-            unparseable_years = set()
-            unparseable_names: list[str] = []
-            for path in unparseable:
-                matched = _claimed_years(revision, set(_design_years(path.name)))
-                if matched:
-                    unparseable_years |= matched
-                    unparseable_names.append(path.name)
-            note = ""
-            if unparseable_years:
-                note = (
-                    f" -- NOTE: {len(unparseable_years)} of the missing year(s) "
-                    f"({sorted(unparseable_years)}) already have a BUNDLED design file that fails to "
-                    f"parse entirely ({', '.join(unparseable_names)}) -- UNPARSEABLE, not absent: fix "
-                    "the extractor for those files before acquiring anything new for those specific years"
-                )
-            failures.append(
-                f"modelo {modelo.id} revision {revision_id!r}: only {len(claimed)} comparable bundled "
-                "design year(s) fall inside its claimed span -- FIX: bundle AEAT's published record "
-                "design for the missing year(s); do not split this revision on today's evidence, and "
-                "do not treat the gap as anything other than a failure" + note,
-            )
+        revision_failures, revision_passes = _revision_span_findings(
+            modelo,
+            revision_id,
+            revision,
+            ordered_by_modelo[modelo.id],
+        )
+        failures.extend(revision_failures)
+        single_signal_passes.extend(revision_passes)
 
     single_signal_note = (
         "\n\nSINGLE-SIGNAL PASSES (informational only, NOT failures -- one signal finding a genuine "

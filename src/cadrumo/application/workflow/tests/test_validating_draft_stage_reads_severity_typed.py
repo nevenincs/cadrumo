@@ -23,12 +23,12 @@ standing up a whole :class:`WorkflowEngine` with its full Protocol handle set.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import Any, cast
 
 import pytest
 
 from ....core.errors.severity import BaseSeverity
-from ....domain.submission.models import ModeloFinding
 from ..engine import WorkflowEngine
 from ..errors import WorkflowAbortSignalError
 from ..run_models import WorkflowAbortReason, WorkflowStage, WorkflowStep
@@ -39,7 +39,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 class _Draft:
     """Minimal structural stand-in carrying only what stage 6 reads."""
 
-    def __init__(self, *, findings: tuple[ModeloFinding, ...]) -> None:
+    def __init__(self, *, findings: tuple[SimpleNamespace, ...]) -> None:
         self.findings = findings
 
 
@@ -56,7 +56,7 @@ def _run(draft: _Draft) -> list[WorkflowStep]:
 def test_an_error_finding_aborts_the_workflow() -> None:
     """The gate fires, and it fires with its own abort reason."""
     draft = _Draft(
-        findings=(ModeloFinding(severity=BaseSeverity.ERROR, message="casilla 03 is required"),),
+        findings=(SimpleNamespace(severity=BaseSeverity.ERROR, message="casilla 03 is required"),),
     )
 
     with pytest.raises(WorkflowAbortSignalError) as excinfo:
@@ -73,8 +73,8 @@ def test_non_error_findings_do_not_block() -> None:
     """
     draft = _Draft(
         findings=(
-            ModeloFinding(severity=BaseSeverity.WARNING, message="rounding differs by 0.01"),
-            ModeloFinding(severity=BaseSeverity.INFO, message="draft built from cached snapshot"),
+            SimpleNamespace(severity=BaseSeverity.WARNING, message="rounding differs by 0.01"),
+            SimpleNamespace(severity=BaseSeverity.INFO, message="draft built from cached snapshot"),
         ),
     )
 
@@ -98,7 +98,7 @@ def test_a_renamed_severity_field_fails_loud_instead_of_reporting_success() -> N
     types are the only thing separating "the read broke" from "the gate
     correctly fired".
     """
-    finding = ModeloFinding(severity=BaseSeverity.ERROR, message="casilla 03 is required")
+    finding = SimpleNamespace(severity=BaseSeverity.ERROR, message="casilla 03 is required")
     object.__getattribute__(finding, "__dict__").pop("severity")
 
     with pytest.raises(AttributeError, match="severity"):

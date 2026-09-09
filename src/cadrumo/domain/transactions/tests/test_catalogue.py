@@ -13,7 +13,7 @@ from ..enums import BusinessClassification, TransactionDirection
 from ..errors import TransactionCatalogueError
 from ..models import Transaction, TransactionCatalogue
 from ..raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..service import find_transaction, link_invoice, set_classification
+from ..service import link_invoice, set_classification
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -83,12 +83,12 @@ def test_link_invoice_returns_new_catalogue_without_mutating_original() -> None:
     original = TransactionCatalogue.from_transactions([transaction])
 
     updated = link_invoice(original, transaction.transaction_id, "INV-001")
-    original_transaction = find_transaction(original, transaction.transaction_id)
+    original_transaction = original.get(transaction.transaction_id)
     assert original_transaction is not None
 
     assert updated is not original
     assert original_transaction.invoice_id is None
-    linked = find_transaction(updated, transaction.transaction_id)
+    linked = updated.get(transaction.transaction_id)
     assert linked is not None
     assert linked.invoice_id == "INV-001"
     assert linked.raw == transaction.raw
@@ -116,8 +116,8 @@ def test_set_classification_returns_new_catalogue_without_mutating_original() ->
         classified_by="manual",
     )
 
-    before = find_transaction(original, transaction.transaction_id)
-    after = find_transaction(updated, transaction.transaction_id)
+    before = original.get(transaction.transaction_id)
+    after = updated.get(transaction.transaction_id)
 
     assert before is not None and before.business_classification is BusinessClassification.NOT_YET_PROCESSED
     assert after is not None
@@ -167,7 +167,7 @@ def test_find_transaction_returns_none_for_missing_transaction() -> None:
     """Missing transactions should yield None rather than raising."""
     catalogue = TransactionCatalogue.from_transactions([_sample_transaction()])
 
-    assert find_transaction(catalogue, "missing-id") is None
+    assert catalogue.get("missing-id") is None
 
 
 def test_set_classification_appends_one_history_entry_on_first_transition() -> None:
@@ -181,7 +181,7 @@ def test_set_classification_appends_one_history_entry_on_first_transition() -> N
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
     )
-    result = find_transaction(updated, transaction.transaction_id)
+    result = updated.get(transaction.transaction_id)
     assert result is not None
     assert len(result.classification_history) == 1
     head = result.classification_history[0]
@@ -209,8 +209,8 @@ def test_set_classification_does_not_append_when_signature_is_byte_identical() -
         classified_by="manual",
         reason="client invoice",
     )
-    first_result = find_transaction(once, transaction.transaction_id)
-    second_result = find_transaction(twice, transaction.transaction_id)
+    first_result = once.get(transaction.transaction_id)
+    second_result = twice.get(transaction.transaction_id)
     assert first_result is not None
     assert second_result is not None
     assert len(first_result.classification_history) == len(second_result.classification_history)
@@ -235,7 +235,7 @@ def test_set_classification_appends_when_only_reason_changes() -> None:
         classified_by="manual",
         reason="revised after review",
     )
-    result = find_transaction(twice, transaction.transaction_id)
+    result = twice.get(transaction.transaction_id)
     assert result is not None
     assert len(result.classification_history) == 2
     assert result.classification_history[-1].reason == "initial"
@@ -258,8 +258,8 @@ def test_set_classification_skips_append_on_pure_timestamp_drift() -> None:
         classification=BusinessClassification.BUSINESS,
         classified_by="manual",
     )
-    first_result = find_transaction(once, transaction.transaction_id)
-    second_result = find_transaction(twice, transaction.transaction_id)
+    first_result = once.get(transaction.transaction_id)
+    second_result = twice.get(transaction.transaction_id)
     assert first_result is not None
     assert second_result is not None
     assert first_result.classified_at is not None
@@ -310,7 +310,7 @@ def test_set_classification_manual_path_defaults_confidence_to_one() -> None:
         reason="obvious client payment",
     )
 
-    after = find_transaction(updated, transaction.transaction_id)
+    after = updated.get(transaction.transaction_id)
     assert after is not None
     assert after.classification_confidence == Decimal("1.0")
 
@@ -329,7 +329,7 @@ def test_set_classification_rule_path_preserves_explicit_confidence() -> None:
         confidence=Decimal("0.42"),
     )
 
-    after = find_transaction(updated, transaction.transaction_id)
+    after = updated.get(transaction.transaction_id)
     assert after is not None
     assert after.classification_confidence == Decimal("0.42")
 
@@ -347,7 +347,7 @@ def test_set_classification_rule_path_without_confidence_leaves_none() -> None:
         reason="matched vendor",
     )
 
-    after = find_transaction(updated, transaction.transaction_id)
+    after = updated.get(transaction.transaction_id)
     assert after is not None
     assert after.classification_confidence is None
 
@@ -389,7 +389,7 @@ def test_set_classification_propagates_confidence_into_history_on_reclassificati
         reason="human overrode the rule",
     )
 
-    final = find_transaction(second, transaction.transaction_id)
+    final = second.get(transaction.transaction_id)
     assert final is not None
     assert final.classification_confidence == Decimal("1.0")
     assert len(final.classification_history) == 2
@@ -420,7 +420,7 @@ def test_set_classification_accepts_llm_classifier_identity_shape() -> None:
         confidence=Decimal("0.45"),
     )
 
-    classified = find_transaction(updated, transaction.transaction_id)
+    classified = updated.get(transaction.transaction_id)
     assert classified is not None
     assert classified.classified_by == "llm:gpt-4"
     assert classified.classification_confidence == Decimal("0.45")
@@ -453,8 +453,8 @@ def test_set_classification_normalises_classified_by_whitespace_for_idempotence(
         reason="first",
     )
 
-    first_head = find_transaction(first, transaction.transaction_id)
-    second_head = find_transaction(second, transaction.transaction_id)
+    first_head = first.get(transaction.transaction_id)
+    second_head = second.get(transaction.transaction_id)
     assert first_head is not None and second_head is not None
     assert len(first_head.classification_history) == len(second_head.classification_history)
 
@@ -475,6 +475,6 @@ def test_confidence_survives_json_round_trip(tmp_path: Path) -> None:
     del tmp_path
     restored = TransactionCatalogue.model_validate_json(updated.model_dump_json())
 
-    loaded = find_transaction(restored, transaction.transaction_id)
+    loaded = restored.get(transaction.transaction_id)
     assert loaded is not None
     assert loaded.classification_confidence == Decimal("0.73")

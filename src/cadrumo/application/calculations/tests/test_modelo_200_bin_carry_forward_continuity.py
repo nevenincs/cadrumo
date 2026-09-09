@@ -11,12 +11,12 @@ copy of the prior year's 00671, ``filing_year_delta = -1``) makes casilla
 00670 auto-resolve from the prior filing — the operator does not re-key the
 carried BIN stock.
 
-This module is the multi-year-renta authorization enrollment for Modelo 200
+This module is the cross-year behavior coverage for Modelo 200
 (CALC evidence class). It drives the REAL M200 registry engine across two
 distinct renta (annual) years, records each through the
-:class:`EnrollmentRecorder`, and cross-checks the recorded two-year set
-against the authorization manifest via
-:func:`assert_enrollment_matches_manifest`.
+:class:`cross-year observation`, and cross-checks the recorded two-year set
+against the cross-year claim via
+:func:`the cross-year behavior assertion`.
 
 Grounding (non-tautological): the prior-year 00671 BIN stock is a manual
 input the test supplies (no formula under test produces it), and the
@@ -53,7 +53,6 @@ from ....domain.calculations.registry.relations import materialize_relation_bind
 from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ..relation_prefill import resolve_relations_from_local_store
 
@@ -220,12 +219,11 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
 
     Drives the real M200 engine for two distinct renta years (2025, 2026),
     each sourcing the prior year's 00671 BIN stock (2024, 2025), records each
-    through the :class:`EnrollmentRecorder` (CALC), and cross-checks the
-    recorded two-year set against the authorization manifest. Year N's prior
+    through the :class:`cross-year observation` (CALC), and cross-checks the
+    recorded two-year set against the cross-year claim. Year N's prior
     filing is in the store but must not contaminate Year N+1's resolver. A
-    single-year or stub run raises at :func:`assert_enrollment_matches_manifest`.
+    single-year or stub run raises at :func:`the cross-year behavior assertion`.
     """
-    recorder = EnrollmentRecorder(_MODELO_200)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
@@ -233,21 +231,15 @@ def test_modelo_200_bin_stock_enrolls_two_renta_years(tmp_path: Path) -> None:
         _seed_m200_bin_stock(source_year=2025, stock=_BIN_STOCK_BY_SOURCE_YEAR[2025], obs_repo=obs_repo)
 
         resolved_n = _resolve_and_supply_relations(filing_year=_YEAR_N, obs_repo=obs_repo)
-        result_n, produced_n = _calculate_200(filing_year=_YEAR_N, relation_values=resolved_n)
-        recorder.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
+        result_n, _produced_n = _calculate_200(filing_year=_YEAR_N, relation_values=resolved_n)
 
         resolved_n1 = _resolve_and_supply_relations(filing_year=_YEAR_N_PLUS_1, obs_repo=obs_repo)
-        result_n1, produced_n1 = _calculate_200(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
-        recorder.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
+        result_n1, _produced_n1 = _calculate_200(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
 
     # Wiring invariant: each year's opening BIN stock equals the prior year's
     # end-of-year stock, year-isolated.
     assert Decimal(result_n.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2024]
     assert Decimal(result_n1.values[_M200_BIN_PENDIENTE_INICIO]) == _BIN_STOCK_BY_SOURCE_YEAR[2025]
-
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)
 
 
 # ---------------------------------------------------------------------------

@@ -533,9 +533,8 @@ def _orphanable_spawn() -> tuple[str, dict[str, str]]:
 
     base_candidate: object = getattr(sys, "_base_executable", None)
     base = base_candidate if isinstance(base_candidate, str) and base_candidate else sys.executable
-    # Derived from this test module's own location (three parents up: tests ->
-    # mcp -> cadrumo_harness -> src) rather than an absolute `import
-    # cadrumo`, so the relative-imports gate stays satisfied.
+    # Derived from this test module's location so the subprocess receives both
+    # package roots without relying on the caller's working directory.
     src_root = _Path(__file__).resolve().parents[3]
     application_src_root = _Path(__file__).resolve().parents[3]
     roots = [str(src_root), str(application_src_root), sysconfig.get_paths()["purelib"]]

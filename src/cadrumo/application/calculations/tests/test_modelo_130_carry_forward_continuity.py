@@ -21,7 +21,7 @@ encrypted SQLite repos, the real registry authority, the real
 records it as a prior-period observation, and asserts that Q2's
 casilla 15 auto-resolves to Q1's carried saldo with no manual re-entry.
 
-Grounding (non-tautological): the Q1 saldo is produced by the engine
+Grounding (non-tautological): the Q1 saldo is _produced by the engine
 from the loss scenario, not hand-computed; the assertion is the
 *wiring* invariant — Q2's casilla 15 equals Q1's persisted
 ``saldo-negativo-fin-periodo`` — which the AEAT instruction defines as
@@ -334,7 +334,7 @@ def test_q1_loss_produces_carry_forward_saldo(repos: _Repos) -> None:
     """A loss-making Q1 produces a positive ``saldo-negativo-fin-periodo``.
 
     This is the seed the next quarter carries forward. The value is
-    produced by the engine from the loss scenario (retenciones exceed the
+    _produced by the engine from the loss scenario (retenciones exceed the
     20% pago fraccionado, with a minoración that cannot be absorbed),
     never hand-computed against the formula under test.
     """

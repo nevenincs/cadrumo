@@ -286,6 +286,83 @@ def _iva_wallet_staging_defaults(
     }
 
 
+def _effective_staged_binding_inputs(
+    *,
+    staging_binding_defaults: Mapping[BindingId, Decimal] | None,
+    binding_values: Mapping[BindingId, Decimal],
+    unresolved_binding_ids: tuple[BindingId, ...],
+) -> tuple[dict[BindingId, Decimal], tuple[BindingId, ...]]:
+    """Overlay caller values and keep only unresolved bindings still absent."""
+    effective_binding_values = {**dict(staging_binding_defaults or {}), **dict(binding_values)}
+    effective_unresolved_binding_ids = tuple(
+        binding_id for binding_id in unresolved_binding_ids if binding_id not in effective_binding_values
+    )
+    return effective_binding_values, effective_unresolved_binding_ids
+
+
+def _resolved_staging_backend_inputs(
+    *,
+    work_unit: WorkUnit,
+    revision: ModeloRevision,
+    effective_binding_values: Mapping[BindingId, Decimal],
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
+) -> dict[CasillaId, Decimal]:
+    """Combine canonical backend-derived inputs with supplied casilla values."""
+    return {
+        **m131_objective_estimation_data_base_inputs(
+            work_unit=work_unit,
+            revision=revision,
+            binding_values=effective_binding_values,
+        ),
+        **dict(backend_casilla_inputs or {}),
+    }
+
+
+def _calculate_staged_registry_values(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    revision: ModeloRevision,
+    work_unit: WorkUnit,
+    resolved_backend_inputs: Mapping[CasillaId, Decimal],
+    effective_binding_values: Mapping[BindingId, Decimal],
+    enum_binding_values: Mapping[BindingId, str] | None,
+    date_binding_values: Mapping[BindingId, date] | None,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    unresolved_relation_ids: tuple[RelationId, ...],
+    effective_unresolved_binding_ids: tuple[BindingId, ...],
+    filing_period_date: date | None,
+) -> SourceResolutionRegistryValues:
+    """Run the registry engine and retain its staged values and diagnostics."""
+    channel_inputs = _resolve_calculation_inputs(
+        revision=revision,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        backend_casilla_inputs=resolved_backend_inputs,
+        resolved_bindings=effective_binding_values,
+        casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
+    )
+    engine_result = calculate_registry_snapshot(
+        registry_snapshot,
+        inputs=channel_inputs.casilla_inputs,
+        text_inputs=channel_inputs.text_casilla_inputs or None,
+        date_context={"filing_period": filing_period_date} if filing_period_date is not None else {},
+        binding_values=effective_binding_values,
+        enum_binding_values=enum_binding_values or {},
+        relation_values=relation_values or {},
+        unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=effective_unresolved_binding_ids,
+        date_binding_values=date_binding_values or None,
+    )
+    return SourceResolutionRegistryValues(
+        values=MappingProxyType(dict(engine_result.values)),
+        initial_casilla_ids=initial_value_casilla_ids(revision),
+        unresolved_casilla_ids=tuple(sorted(outcome.casilla_id for outcome in engine_result.unresolved_outcomes)),
+    )
+
+
 def materialise_registry_values_for_source_resolution(
     *,
     registry_snapshot: RegistrySnapshot,
@@ -308,45 +385,31 @@ def materialise_registry_values_for_source_resolution(
     evaluates the staged current-year values against.
     """
     revision = registry_snapshot.revision
-    effective_binding_values = {**dict(staging_binding_defaults or {}), **dict(binding_values)}
-    effective_unresolved_binding_ids = tuple(
-        binding_id for binding_id in unresolved_binding_ids if binding_id not in effective_binding_values
+    effective_binding_values, effective_unresolved_binding_ids = _effective_staged_binding_inputs(
+        staging_binding_defaults=staging_binding_defaults,
+        binding_values=binding_values,
+        unresolved_binding_ids=unresolved_binding_ids,
     )
-    resolved_backend_inputs = {
-        **m131_objective_estimation_data_base_inputs(
-            work_unit=work_unit,
-            revision=revision,
-            binding_values=effective_binding_values,
-        ),
-        **dict(backend_casilla_inputs or {}),
-    }
-    channel_inputs = _resolve_calculation_inputs(
+    resolved_backend_inputs = _resolved_staging_backend_inputs(
+        work_unit=work_unit,
         revision=revision,
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        backend_casilla_inputs=resolved_backend_inputs,
-        resolved_bindings=effective_binding_values,
+        effective_binding_values=effective_binding_values,
+        backend_casilla_inputs=backend_casilla_inputs,
+    )
+    return _calculate_staged_registry_values(
+        registry_snapshot=registry_snapshot,
+        revision=revision,
+        work_unit=work_unit,
+        resolved_backend_inputs=resolved_backend_inputs,
+        effective_binding_values=effective_binding_values,
+        enum_binding_values=enum_binding_values,
+        date_binding_values=date_binding_values,
         casilla_inputs=casilla_inputs,
         text_casilla_inputs=text_casilla_inputs,
-    )
-    resolved_inputs = channel_inputs.casilla_inputs
-    resolved_text_inputs = channel_inputs.text_casilla_inputs
-    engine_result = calculate_registry_snapshot(
-        registry_snapshot,
-        inputs=resolved_inputs,
-        text_inputs=resolved_text_inputs or None,
-        date_context={"filing_period": filing_period_date} if filing_period_date is not None else {},
-        binding_values=effective_binding_values,
-        enum_binding_values=enum_binding_values or {},
-        relation_values=relation_values or {},
+        relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_binding_ids=effective_unresolved_binding_ids,
-        date_binding_values=date_binding_values or None,
-    )
-    return SourceResolutionRegistryValues(
-        values=MappingProxyType(dict(engine_result.values)),
-        initial_casilla_ids=initial_value_casilla_ids(revision),
-        unresolved_casilla_ids=tuple(sorted(outcome.casilla_id for outcome in engine_result.unresolved_outcomes)),
+        effective_unresolved_binding_ids=effective_unresolved_binding_ids,
+        filing_period_date=filing_period_date,
     )
 
 

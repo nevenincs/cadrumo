@@ -867,24 +867,36 @@ def _decorate_typer_node(
 ) -> None:
     """Recursively decorate every command/group callback under ``app``."""
     registered_callback = app.registered_callback
-    if (
-        registered_callback is not None
-        and _is_wrap_candidate(registered_callback.callback)
-        and prefix not in skip_paths
-    ):
-        registered_callback.callback = command_error_boundary(registered_callback.callback)
+    if registered_callback is not None:
+        registered_callback.callback = _decorated_typer_callback(
+            registered_callback.callback,
+            path=prefix,
+            skip_paths=skip_paths,
+        )
     for command in app.registered_commands:
         name = command.name or _callback_name(command.callback)
         path = (*prefix, name)
-        if _is_wrap_candidate(command.callback) and path not in skip_paths:
-            command.callback = command_error_boundary(command.callback)
+        command.callback = _decorated_typer_callback(command.callback, path=path, skip_paths=skip_paths)
     for group in app.registered_groups:
         name = group.name or _callback_name(group.callback)
         path = (*prefix, name)
-        if _is_wrap_candidate(group.callback) and path not in skip_paths:
-            group.callback = command_error_boundary(group.callback)
+        group.callback = _decorated_typer_callback(group.callback, path=path, skip_paths=skip_paths)
         if group.typer_instance is not None:
             _decorate_typer_node(group.typer_instance, prefix=path, skip_paths=skip_paths)
+
+
+def _decorated_typer_callback(
+    callback: Callable[..., object] | None,
+    *,
+    path: tuple[str, ...],
+    skip_paths: set[tuple[str, ...]],
+) -> Callable[..., object] | None:
+    """Return one callback wrapped unless its fully-qualified path is skipped."""
+    if path in skip_paths:
+        return callback
+    if not _is_wrap_candidate(callback):
+        return callback
+    return command_error_boundary(callback)
 
 
 def _callback_name(callback: Callable[..., object] | None) -> str:

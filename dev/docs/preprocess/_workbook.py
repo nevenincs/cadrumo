@@ -11,7 +11,7 @@ and constant content.
 The workbooks ship in two formats. The modern ``.xlsx`` is read with
 ``openpyxl``; the 28 legacy binary ``.xls`` are read with ``xlrd`` (which
 opens the old BIFF format ``openpyxl`` cannot). Both are locked project
-dependencies (the offline xls export surface already uses ``openpyxl``).
+dependencies used by workbook ingestion and registry tooling.
 
 Each worksheet becomes one :class:`PreprocessUnit`: a readable rendering of
 the field table headed by the sheet name. The unit text is plain rows so the

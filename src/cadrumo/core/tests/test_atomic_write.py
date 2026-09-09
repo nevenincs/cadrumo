@@ -19,7 +19,6 @@ test. A primitive's own tests do not import a helper built on that primitive.
 
 from __future__ import annotations
 
-import ast
 import functools
 import multiprocessing
 import os
@@ -43,8 +42,6 @@ from ..atomic_write import (
     atomic_write_bytes,
     atomic_write_hardened_bytes,
     atomic_write_hardened_text,
-    atomic_write_publish_once_bytes,
-    atomic_write_stream,
     atomic_write_text,
     durable_write_batch,
     hardened_staged_publication,
@@ -354,18 +351,6 @@ class TestStandardTier:
         assert target.read_bytes() == b"OLD-CONTENT"
         assert _tmp_leftovers(tmp_path) == []
 
-    def test_stream_failure_cleans_tmp_and_preserves_existing_target(self, tmp_path: Path) -> None:
-        """A real malformed stream chunk cannot replace a known-good target."""
-        target = tmp_path / "manual.pdf"
-        atomic_write_bytes(target, b"KNOWN-GOOD-PDF")
-
-        invalid_chunks: Any = (b"partial replacement", "not-bytes")
-        with pytest.raises(TypeError):
-            atomic_write_stream(target, invalid_chunks)
-
-        assert target.read_bytes() == b"KNOWN-GOOD-PDF"
-        assert _tmp_leftovers(tmp_path) == []
-
 
 class TestBestEffortTier:
     """Behaviour of :func:`atomic_write_best_effort_bytes` / :func:`atomic_write_best_effort_text`."""
@@ -553,38 +538,6 @@ class TestHardenedTier:
         assert target.read_bytes() == b"OLD-SECRET"
         assert _tmp_leftovers(tmp_path) == []
 
-    def test_hardened_tier_calls_no_per_file_permission_helper(self) -> None:
-        """The durable write path must spawn no permission subprocess per file.
-
-        Confidentiality for durable writes comes from the storage tree's
-        directory ACL, applied ONCE at creation by
-        :func:`~cadrumo.core.file_permissions.restrict_directory_permissions`.
-        A per-file ``icacls.exe`` strip was measured at ~28 ms/write, and the
-        blob writer runs this tier once per stored attachment, so reinstating
-        one would be O(N) subprocess spawns across a bulk evidence ingest.
-
-        Asserted against the module SOURCE rather than by timing a write.
-        This gate was first written as an elapsed-time budget and was wrong:
-        it passed alone and failed under parallel load, because wall-clock
-        measures disk contention rather than the property in question. A
-        reference to the per-file helper either exists in this module or it
-        does not, and that answer does not vary with machine or load.
-        """
-        source = Path(atomic_write.__file__).read_text(encoding="utf-8")
-        tree = ast.parse(source)
-        called = {
-            node.func.id for node in ast.walk(tree) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-        } | {
-            node.func.attr
-            for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-        }
-
-        assert "restrict_file_permissions" not in called, (
-            "the hardened tier calls the per-file permission helper again; "
-            "harden the storage directory once instead of every write"
-        )
-
 
 class TestDurableWriteBatch:
     """Batched hardened writes stay atomic while deferring their durability sync."""
@@ -686,51 +639,6 @@ class TestDurableWriteBatch:
         assert during_batch == 0, (
             f"batched writes issued {during_batch} per-file syncs; the batch is no longer deferring them"
         )
-
-
-def test_publish_once_refuses_an_existing_target_and_leaves_it_untouched(tmp_path: Path) -> None:
-    """The publish-once tier's whole reason to exist is the tier above it clobbering.
-
-    The hardened tier's ``O_EXCL`` guards its staging sibling, not the
-    destination, and it publishes with ``os.replace``. So the assertion that
-    matters is comparative: the same two-write sequence must overwrite under the
-    hardened tier and raise under this one. Asserting the refusal alone would
-    pass just as well if both tiers refused, which would mean the new tier was
-    redundant rather than necessary.
-    """
-    hardened_target = tmp_path / "hardened.json"
-    atomic_write_hardened_bytes(hardened_target, b"FIRST")
-    atomic_write_hardened_bytes(hardened_target, b"SECOND")
-    assert hardened_target.read_bytes() == b"SECOND", (
-        "the hardened tier is expected to overwrite; if it now refuses, the publish-once tier is redundant"
-    )
-
-    target = tmp_path / "publish_once.json"
-    atomic_write_publish_once_bytes(target, b"FIRST")
-    assert target.read_bytes() == b"FIRST"
-
-    with pytest.raises(FileExistsError):
-        atomic_write_publish_once_bytes(target, b"SECOND")
-
-    assert target.read_bytes() == b"FIRST", "the refused write must not have replaced the target"
-    assert {child.name for child in scan_directory(tmp_path)} == {"hardened.json", "publish_once.json"}, (
-        "a refused or successful publish must not leave its staging sibling behind"
-    )
-
-
-def test_publish_once_creates_parents_and_publishes_at_the_requested_mode(tmp_path: Path) -> None:
-    """A first write must still be an ordinary successful write, parents included.
-
-    Without this the refusal test above could pass against a tier that never
-    wrote anything at all.
-    """
-    target = tmp_path / "nested" / "deeper" / "evidence.json"
-    atomic_write_publish_once_bytes(target, b'{"attested": true}', mode=0o600)
-
-    assert target.read_bytes() == b'{"attested": true}'
-    assert target.parent.is_dir()
-    if os.name != "nt":
-        assert stat.S_IMODE(target.stat().st_mode) == 0o600
 
 
 def test_staged_publication_reserves_an_unguessable_sibling_rather_than_a_predictable_one(

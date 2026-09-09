@@ -604,6 +604,22 @@ def test_filtering_to_one_tier_keeps_the_counts_and_drops_the_rest(result: Unrea
     assert narrowed.reachable_modules == result.reachable_modules
 
 
+def test_filtering_away_every_finding_returns_a_clean_result(result: UnreachableCodeResult) -> None:
+    """A confidence-specific CLI run exits clean when that tier has no findings."""
+    name_match_only = UnreachableCodeResult.from_findings(
+        roots=result.roots,
+        shipped_modules=result.shipped_modules,
+        reachable_modules=result.reachable_modules,
+        modules=(),
+        symbols=tuple(finding for finding in result.symbols if finding.confidence is Confidence.NAME_MATCH),
+    )
+
+    narrowed = filter_by_confidence(name_match_only, Confidence.EXACT)
+
+    assert narrowed.outcome is UnreachableCodeOutcome.CLEAN
+    assert narrowed.modules == narrowed.symbols == narrowed.tests == ()
+
+
 def test_iterated_enum_members_are_not_individually_reported(result: UnreachableCodeResult) -> None:
     """``for modelo in Modelo`` reaches every member, so neither M100 nor M303 is a finding."""
     assert not any(finding.qualname.startswith("Modelo.") for finding in result.symbols)

@@ -16,7 +16,7 @@ See Also:
         Registry validator that checks the authored legal/source references.
     :func:`~domain.calculations.registry.authority.bundled_authority`
         Authority facade used to resolve annual and monthly deadline windows.
-    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+    :data:`~core.access_gate.validated registry modelo set`
         Canonical fleet membership these six informativas extend.
     :mod:`~domain.calculations.registry.tests.test_modelo_informativas_batch3_registry`
         Follow-on informativa promotion with annual and windowless deadline shapes.
@@ -121,7 +121,6 @@ def test_monthly_windows_resolve_following_month() -> None:
 
 
 def test_all_six_are_registry_backed() -> None:
-    from .....core.access_gate.authorization import CANONICAL_MODELO_FLEET
-
+    authority = bundled_authority()
     for mid in ("165", "156", "038", "185"):
-        assert mid in CANONICAL_MODELO_FLEET
+        assert authority.modelo(mid).id == mid

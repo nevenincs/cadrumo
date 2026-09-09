@@ -18,7 +18,7 @@ See Also:
         Test loader for committed registry definitions and legal catalogues.
     :class:`~domain.calculations.registry._validate.RegistryValidator`
         Registry validator that checks the plazo and legal catalogue references.
-    :data:`~core.access_gate.CANONICAL_MODELO_FLEET`
+    :data:`~core.access_gate.validated registry modelo set`
         Canonical fleet membership these new-tax registrations extend.
     :data:`~core.UNMODELED_OBLIGATIONS`
         Former recognized-unmodeled set reduced by these promotions.

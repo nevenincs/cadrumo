@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import ast
 import inspect
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -22,24 +21,15 @@ from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.schema_input_kind import InputKind
-from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
-from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from .. import _edit_execution, revision_persistence
 from .. import edit_models as _edit_models
 from .. import edit_services as _edit_services
 from ..edit_contract import ModeloEditCompatibilityTupleV1
 from ..edit_models import (
-    ModeloEditAdmissionRequestV1,
-    ModeloEditAdmittedV1,
     ModeloEditBaselineV1,
-    ModeloEditMutationFamily,
     ModeloEditMutationResultReceiptV1,
     ModeloEditStaleBaselineRefusalV1,
 )
-from ..edit_services import admit_modelo_edit, modelo_edit_request_schema_identity, modelo_edit_result_schema_identity
-from ..work_addressing import ModeloExactWorkUnitTarget
-from ..workspace_models import ModeloWorkspaceExactWorkUnitTargetV1, ModeloWorkspaceTargetV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -48,62 +38,10 @@ _EDIT_CONTRACT_MODULES = (_edit_models, _edit_services, _edit_execution, revisio
 _MODELO = "131"
 _FILING_YEAR = 2025
 _DIGEST = "a" * 64
-_BUCKET_ID = "0f629c46-1dc8-4cb1-8d02-aa0ee4f45a45"
-_CLOCK = datetime(2026, 1, 10, tzinfo=UTC)
 
 
 def _period() -> Period:
     return Period.from_year_and_code(_FILING_YEAR, "1T")
-
-
-def _work_unit() -> WorkUnit:
-    period = _period()
-    revision_id = (
-        bundled_authority().snapshot(_MODELO, filing_year=_FILING_YEAR, period=period.registry_token).revision.id
-    )
-    return WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=_BUCKET_ID, modelo=_MODELO, filing_year=_FILING_YEAR, period=period, revision_id=revision_id
-        ),
-        bucket_id=_BUCKET_ID,
-        modelo=ModeloCode(_MODELO),
-        filing_year=_FILING_YEAR,
-        period=period,
-        revision_id=revision_id,
-        name=f"{_MODELO}-{_FILING_YEAR}-{period.registry_token}",
-        created_at=_CLOCK,
-        updated_at=_CLOCK,
-    )
-
-
-def _target_for(work_unit: WorkUnit) -> ModeloWorkspaceTargetV1:
-    return ModeloWorkspaceExactWorkUnitTargetV1(
-        target=ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=work_unit.bucket_id)
-    )
-
-
-def _admitted_baseline() -> ModeloEditAdmittedV1:
-    work_unit = _work_unit()
-    compatibility = ModeloEditCompatibilityTupleV1(
-        contract_set_digest=_DIGEST,
-        operation_definition_id="modelo.calculate",
-        definition_contract_digest=_DIGEST,
-        request_schema=modelo_edit_request_schema_identity(),
-        result_schema=modelo_edit_result_schema_identity(),
-        review_projection_contract_version=None,
-        review_schema=None,
-        workspace_refresh_target_schema=modelo_edit_request_schema_identity(),
-        financial_operand_schema=modelo_edit_result_schema_identity(),
-    )
-    result = admit_modelo_edit(
-        ModeloEditAdmissionRequestV1(target=_target_for(work_unit), mutation_family=ModeloEditMutationFamily.CALCULATE),
-        bucket_id=_BUCKET_ID,
-        work_catalogue=WorkUnitCatalogue.from_work_units((work_unit,)),
-        calculation_catalogue=CalculationRevisionCatalogue(),
-        compatibility=compatibility,
-    )
-    assert isinstance(result, ModeloEditAdmittedV1)
-    return result
 
 
 def test_contract_schema_proof_covers_the_named_edit_contract_models() -> None:
@@ -113,14 +51,6 @@ def test_contract_schema_proof_covers_the_named_edit_contract_models() -> None:
         assert config.get("strict") is True, model.__name__
         assert config.get("frozen") is True, model.__name__
         assert config.get("extra") == "forbid", model.__name__
-
-
-def test_baseline_proof_admits_the_writable_scalar_surface_and_no_fabricated_row_group() -> None:
-    """The real modelo 131 fixture exercises the scalar shape; no row group is fabricated."""
-    admitted = _admitted_baseline()
-    kinds = {type(entry).__name__ for entry in admitted.baseline.permitted_surface}
-    assert "ModeloEditWritableScalarSurfaceEntryV1" in kinds
-    assert "ModeloEditWritableRowGroupSurfaceEntryV1" not in kinds
 
 
 def test_stale_baseline_refusal_is_typed_and_never_a_domain_refusal_code() -> None:

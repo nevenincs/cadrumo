@@ -1105,16 +1105,11 @@ def test_direct_manifest_emission_and_real_loader_verification(m130_inspection_s
 
 
 def test_manifest_writer_refuses_a_target_that_already_exists(tmp_path) -> None:
-    """Pin the refusal this writer delegates to the core publish-once tier.
+    """Pin the refusal this writer delegates to its publish-once primitive.
 
-    ``atomic_write_publish_once_bytes`` publishes with :func:`os.link`, which
-    fails with :exc:`FileExistsError` in one uninterruptible step rather than
-    overwriting. This test pins the refusal at THIS boundary anyway, because the
-    writer translates that failure into a registry error and a delegation that
-    dropped the translation would still be a defect here. Nothing else asserted
-    it: the emit-level test must ``unlink()`` the manifest before it can call
-    emit at all, so the behaviour was exercised by necessity and would have
-    survived its own deletion in green.
+    The development-owned primitive publishes with :func:`os.link`, which fails
+    with :exc:`FileExistsError` in one uninterruptible step rather than
+    overwriting. This test pins this boundary's registry-error translation.
 
     The first write is the positive control -- without it a refusal that fired
     unconditionally, or a writer that never wrote at all, would pass too.

@@ -13,7 +13,7 @@ from cadrumo.core.filing_projection_ref import (
     M303ProrrataActivityProjectionField,
     M303ProrrataActivityProjectionRef,
 )
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
@@ -34,7 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 @pytest.fixture
 def _m303_snapshot():
-    return bundled_revision_inspection("303", filing_year=2025, period="4T")
+    return bundled_authority().inspect_revision("303", filing_year=2025, period="4T")
 
 
 def _intermediate_payload(

@@ -159,7 +159,6 @@ def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(t
     shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
     for catalogue_dir in (
         "apoderamientos",
-        "authorization.d",
         "calendars",
         "categories",
         "iva",
@@ -233,7 +232,6 @@ def test_mutation_reverting_box_10_to_manual_reds_the_gate(tmp_path: Path) -> No
     shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
     for catalogue_dir in (
         "apoderamientos",
-        "authorization.d",
         "calendars",
         "categories",
         "iva",

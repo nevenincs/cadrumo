@@ -21,11 +21,11 @@ from ...config import override_settings
 from ...directory_scan import scan_directory
 from ...storage_taxonomy import StorageCategory
 from ...storage_taxonomy_locations import storage_path
-from ..context import current_run_context, run_context
+from ..context import run_context
 from ..errors import RunTracePersistenceError
 from ..models import GenericPayload, RunEventKind, RunEventPayload, RunOutcome
 from ..recorder import record_event
-from ..store import EVENTS_FILENAME, TRACE_FILENAME, load_events, load_trace
+from ..store import EVENTS_FILENAME, TRACE_FILENAME, iter_events, load_trace
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -125,7 +125,6 @@ class TestRunContextOutcome:
 
             assert excinfo.value.operation == "save_trace"
             assert excinfo.value.path == trace_path
-            assert current_run_context() is None
 
     def test_trace_persistence_failure_does_not_mask_body_error(
         self,
@@ -139,8 +138,6 @@ class TestRunContextOutcome:
         ):
             (storage_path(StorageCategory.RUNS) / run_id / TRACE_FILENAME).mkdir(parents=True)
             raise RuntimeError("primary failure")
-
-        assert current_run_context() is None
 
 
 class TestRunContextRunIdValidation:
@@ -197,7 +194,7 @@ class TestRunIdPropagation:
                 chain("beta")
                 run_id = info.run_id
 
-            events = load_events(run_id)
+            events = tuple(iter_events(run_id))
             assert events, "expected at least one event after running the chain"
             run_ids = {evt.run_id for evt in events}
             assert run_ids == {run_id}

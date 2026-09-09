@@ -6,11 +6,12 @@ import ast
 import inspect
 
 import pytest
+from dev.registry import maintenance_support as _maintenance_support
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 from .....core.hashing import hash_file
 from .....core.resources.bundled_data import bundled_path
 from .. import corpus_catalogue as _corpus_catalogue
-from ..corpus_catalogue import resolve_record_design_binary
 from ..errors import RegistryValidationError
 from ..schema_references import SourceReference
 from ._catalogue_verification_support import _catalogues
@@ -190,7 +191,7 @@ def test_record_design_selection_cannot_consult_registry_export_layouts() -> Non
     top_level_direct_imports = {
         alias.name for node in catalogue_tree.body if isinstance(node, ast.Import) for alias in node.names
     }
-    resolver_tree = ast.parse(inspect.getsource(_corpus_catalogue.resolve_record_design_binary))
+    resolver_tree = ast.parse(inspect.getsource(_maintenance_support.resolve_record_design_binary))
     resolver = resolver_tree.body[0]
     assert isinstance(resolver, ast.FunctionDef)
     resolver_imports = {

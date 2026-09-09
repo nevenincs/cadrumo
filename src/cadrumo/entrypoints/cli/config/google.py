@@ -51,7 +51,7 @@ from ....adapters.outbound.google.errors import (
     GoogleAuthValidationError,
 )
 from ....adapters.outbound.google.oauth_flow import run_login_flow
-from ....adapters.outbound.google.records import REQUIRED_SCOPES, OAuthClient
+from ....adapters.outbound.google.records import REQUIRED_SCOPES, OAuthClient, OAuthMetadata
 from ....adapters.outbound.google.session_store import (
     delete_session,
     load_client,
@@ -109,19 +109,6 @@ from .google_errors import google_refusal
 
 if TYPE_CHECKING:
     import typer
-
-
-class OAuthClientPayload(TypedDict):
-    """Typed shape for a Cloud Console Desktop OAuth client JSON file.
-
-    Cloud Console emits ``{"installed": {<client fields>}}`` for Desktop
-    application types. Only the ``installed`` key is accepted here; the
-    ``web`` variant is rejected by :func:`_coerce_client_json`.
-    """
-
-    # ANY-RETURN-RATIONALE-GOOGLE-OAUTH-STAGING: irreducible Google Cloud
-    # Console JSON envelope; narrowed to OAuthClient before production use.
-    installed: dict[str, Any]
 
 
 class _OAuthClientWrapper(BaseModel):
@@ -279,18 +266,13 @@ def google_login(
     )
 
 
-def google_status(
-    ctx: typer.Context,
-) -> None:
-    """Report the current Google OAuth session state for the active profile."""
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise google_refusal(exc) from exc
-
-    client = load_client(active)
-    metadata = load_metadata(active)
-    typed_status = GoogleStatusResult(
+def _google_status_result(
+    *,
+    active: str,
+    client: OAuthClient | None,
+    metadata: OAuthMetadata | None,
+) -> GoogleStatusResult:
+    return GoogleStatusResult(
         profile=active,
         client_registered=client is not None,
         client_id=client.client_id if client is not None else None,
@@ -301,6 +283,14 @@ def google_status(
         last_refresh_at=metadata.last_refresh_at.isoformat() if metadata is not None else None,
         reauth_required=metadata.reauth_required if metadata is not None else None,
     )
+
+
+def _google_status_lines(
+    *,
+    active: str,
+    client: OAuthClient | None,
+    metadata: OAuthMetadata | None,
+) -> tuple[str, ...]:
     lines = [
         "operation\tconfig.google.status",
         f"profile\t{active}",
@@ -319,7 +309,26 @@ def google_status(
                 *tuple(f"scope\t{scope}" for scope in metadata.granted_scopes),
             ),
         )
-    emit_envelope(ctx, command="config.google.status", result=typed_status, lines=tuple(lines))
+    return tuple(lines)
+
+
+def google_status(
+    ctx: typer.Context,
+) -> None:
+    """Report the current Google OAuth session state for the active profile."""
+    try:
+        active = resolve_active_profile()
+    except GoogleAuthError as exc:
+        raise google_refusal(exc) from exc
+
+    client = load_client(active)
+    metadata = load_metadata(active)
+    emit_envelope(
+        ctx,
+        command="config.google.status",
+        result=_google_status_result(active=active, client=client, metadata=metadata),
+        lines=_google_status_lines(active=active, client=client, metadata=metadata),
+    )
 
 
 def google_logout(

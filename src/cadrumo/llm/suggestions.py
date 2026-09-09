@@ -66,11 +66,10 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Self
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ..application.ledger.models import ManualLedgerTransactionResult
-from ..core.field_origin import FieldOrigin
-from ..core.identity import BucketId, TaxIdIdentityToken, TransactionId
+from ..core.identity import BucketId, TransactionId
 from ..core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..domain.categories.spending_category import SpendingCategory
 from ..domain.iva.schema import IvaCategory
@@ -243,94 +242,3 @@ __all__ = [
     "LLMSuggestionRejectionResult",
     "OperatorIvaDerivationResult",
 ]
-
-
-# ---------------------------------------------------------------------------
-# The core-to-extension interchange contract
-# ---------------------------------------------------------------------------
-
-_INTERCHANGE_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid")
-
-
-class ExtractionProducer(BaseModel):
-    """Identity of whatever produced an extraction payload.
-
-    Carried so a persisted record can always answer HOW each field was
-    recovered. For a model that means the exact model identity and revision;
-    for the deterministic readers it means which parser and which syntax. A
-    payload constructed without a producer does not validate, because a value
-    whose origin cannot be named is not reviewable.
-    """
-
-    model_config = _INTERCHANGE_CONFIG
-
-    source_kind: FieldOrigin
-    identity: str = Field(min_length=1)
-    """Model identity (``qwen2.5vl:3b``) or parser identity (``en16931-cii``)."""
-    revision: str = Field(min_length=1)
-    """Model revision/digest, or the parser's syntax revision."""
-
-
-class ExtractionPayload(BaseModel):
-    """The ONLY shape the core accepts from an extension reading path.
-
-    Strict, frozen and ``extra="forbid"`` over a fixed key set: an unexpected
-    key does not survive validation, it raises. That is the point of the
-    boundary. Free text is never the interchange value -- handing the core raw
-    model output would make the boundary a laundering channel rather than a
-    validation point, and extraction fields have no allow-list the way
-    classification categories do, so hostile document text promoted across the
-    boundary is exactly where prompt injection gets worse.
-
-    Markdown or raw model text may exist INSIDE the extension as an
-    intermediate. It may not cross.
-
-    Every field is optional in VALUE and mandatory in PROVENANCE: a reader that
-    could not ground a field leaves it ``None`` rather than guessing, but the
-    payload as a whole cannot omit its ``legal_refs``, ``source_refs`` or
-    ``producer``.
-    """
-
-    model_config = _INTERCHANGE_CONFIG
-
-    supplier_tax_id: TaxIdIdentityToken | None = None
-    customer_tax_id: TaxIdIdentityToken | None = None
-    invoice_number: str | None = None
-    invoice_date: str | None = None
-    currency: str | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-    grand_total: Decimal | None = None
-    recargo_amount: Decimal | None = None
-    iva_category: IvaCategory | None = None
-
-    producer: ExtractionProducer
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
-
-    @field_validator("taxable_base", "iva_amount", "grand_total", "recargo_amount")
-    @classmethod
-    def _finite_amount(cls, value: Decimal | None) -> Decimal | None:
-        """Refuse a non-finite amount rather than carrying it into a filing.
-
-        A NaN or infinity reaching the core would propagate silently through
-        every arithmetic consumer downstream and surface as a nonsense total
-        far from its origin.
-        """
-        if value is not None and not value.is_finite():
-            raise ValueError("amount must be a finite decimal")
-        return value
-
-    @field_validator("legal_refs", "source_refs")
-    @classmethod
-    def _non_empty_refs(cls, value: tuple[str, ...]) -> tuple[str, ...]:
-        """Require at least one grounding reference, each non-blank.
-
-        An empty tuple would satisfy the type while carrying no grounding at
-        all, which is the shape this field exists to prevent.
-        """
-        if not value:
-            raise ValueError("at least one reference is required")
-        if any(not ref.strip() for ref in value):
-            raise ValueError("references must be non-blank")
-        return value

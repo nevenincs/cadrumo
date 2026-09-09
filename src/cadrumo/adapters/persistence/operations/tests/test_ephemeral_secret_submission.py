@@ -36,7 +36,6 @@ from .....application.operations.registry import (
     OperationSchemaBindingV1,
 )
 from .....application.operations.secret_submission import (
-    EphemeralSecretSubmission,
     OperationEphemeralSecretDeclaration,
     OperationSecretRequirement,
 )
@@ -301,7 +300,6 @@ def test_exact_one_shot_submission_executes_once_and_never_reaches_filesystem(tm
     registry = _registry(executor)
     clock = [_NOW]
     supervisor = _supervisor(root=tmp_path, registry=registry, owner="1" * 64, token="2" * 64, clock=clock)
-    assert isinstance(supervisor, EphemeralSecretSubmission)
     operation_id = asyncio.run(supervisor.submit(_request(), operation_id="3" * 64))
     created = asyncio.run(supervisor.inspect(operation_id))
     requirement = created.secret_requirement

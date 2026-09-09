@@ -119,6 +119,7 @@ class TranscriberIdentity(BaseModel):
             )
         return self
 
+
 class DocumentTranscription(BaseModel):
     """A document's faithful reading-order text plus the provenance to cite it.
 

@@ -10,7 +10,6 @@ import pytest
 from openpyxl import load_workbook
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.corpus_catalogue import resolve_record_design_binary
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
 from cadrumo.domain.calculations.registry.record_design import extract_record_design
@@ -18,6 +17,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
     RecordDesignCompositeRelativeClosing,
     RecordDesignRelativeSuffixMarker,
 )
+from dev.registry.maintenance_support import resolve_record_design_binary
 
 from ..pipeline import record_design_intermediate
 from ..pipeline.record_design_intermediate import (

@@ -189,10 +189,11 @@ _WALK_PROGRAM = textwrap.dedent(
     """
     import json
     from cadrumo.core.i18n import tr
-    from cadrumo.entrypoints.cli.command_api import ArgumentSpec, DefaultKind, command_spec_nodes
+    from cadrumo.entrypoints.cli.command_api import ArgumentSpec, DefaultKind
+    from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
     commands = []
-    for node in command_spec_nodes():
+    for node in COMMAND_GRAPH.nodes():
         if node.spec.kind != "leaf":
             continue
         params = []

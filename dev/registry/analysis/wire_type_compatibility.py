@@ -36,8 +36,8 @@ from dataclasses import dataclass
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.maintenance_support import resolved_export_endpoints
 
 from .corpus import bundled_modelo_ids
 

@@ -910,9 +910,8 @@ def _modelo_applicability_rule(
 ) -> ModeloApplicabilityRule | None:
     """Return ``modelo``'s applicability rule, resolved from the registry or the literal table.
 
-    The single seam every consumer (:func:`derive_modelo_applicability`,
-    :func:`has_applicability_rule`, :func:`iter_modelo_applicability_rules`)
-    reads through, so the mixed-surface split (registry-resolved vs.
+    The single seam every consumer (:func:`derive_modelo_applicability` and
+    :func:`iter_modelo_applicability_rules`) reads through, so the mixed-surface split (registry-resolved vs.
     still-literal) is decided in exactly one place. An unrecognised
     ``modelo`` string -- not a member of either surface -- returns ``None``,
     matching the pre-cutover dict-lookup behaviour exactly; it is never an
@@ -921,11 +920,6 @@ def _modelo_applicability_rule(
     if modelo in REGISTRY_RESOLVED_APPLICABILITY_MODELOS:
         return _resolve_registry_applicability_rule(Modelo(modelo), authority=authority)
     return _MODELO_APPLICABILITY_RULES.get(modelo)
-
-
-def has_applicability_rule(modelo: str) -> bool:
-    """Return whether an applicability rule exists for ``modelo``."""
-    return _modelo_applicability_rule(modelo) is not None
 
 
 def iter_modelo_applicability_rules() -> tuple[ModeloApplicabilityRule, ...]:
@@ -1123,7 +1117,6 @@ __all__ = [
     "derive_not_applicable_source_modelos",
     "derive_tax_route",
     "derive_taxpayer_files_economic_activity",
-    "has_applicability_rule",
     "iter_modelo_applicability_rules",
     "taxpayer_model_is_declared",
 ]

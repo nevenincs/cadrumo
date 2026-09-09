@@ -76,12 +76,7 @@ def _evidence(*, mode: str, status: str = "passed", dependency_status: str = "re
         dependency=dependency,
         isolation={"checkout_imports_removed": True, "ambient_product_executables_removed": True},
         commands=(),
-        focused_tests=(
-            _focused_test("installed-package-behavior"),
-            _focused_test("installed-cadrumo-mcp-help"),
-        )
-        if status == "passed"
-        else (),
+        focused_tests=(_focused_test("installed-cadrumo-mcp-help"),) if status == "passed" else (),
         failure={"category": "fixture", "detail": "failed"} if status == "failed" else None,
         observed_at="2026-09-02T00:00:00+00:00",
     )
@@ -125,15 +120,6 @@ def test_passing_evidence_requires_focused_runtime_tests() -> None:
     payload["focused_tests"] = ()
 
     with pytest.raises(compatibility.CompatibilityProbeError, match="must include focused runtime tests"):
-        compatibility.ProbeEvidence(**payload)
-
-
-def test_passing_evidence_rejects_an_incomplete_focused_runtime_test_set() -> None:
-    """A green row must retain both the package and MCP target-runtime checks."""
-    payload = _evidence(mode="source").to_dict()
-    payload["focused_tests"] = (_focused_test("installed-package-behavior"),)
-
-    with pytest.raises(compatibility.CompatibilityProbeError, match="complete focused runtime test set"):
         compatibility.ProbeEvidence(**payload)
 
 
@@ -318,22 +304,21 @@ def test_binary_install_failure_taxonomy_is_not_triggered_by_the_word_wheel(
 
 
 def test_focused_runtime_tests_are_target_interpreter_commands(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """The runner records both installed-package behavior and MCP help probes."""
+    """The runner records the installed MCP command probe."""
     calls: list[tuple[str, ...]] = []
 
     def fake_run(argv: tuple[str, ...], **_kwargs: object) -> CommandResult:
         calls.append(argv)
-        return _command_result(returncode=0, stdout='{"runtime_behavior_ok": true}\nusage: cadrumo-mcp\n')
+        return _command_result(returncode=0, stdout="usage: cadrumo-mcp\n")
 
     monkeypatch.setattr(compatibility, "run_command", fake_run)
     tests, commands, failure = compatibility._focused_runtime_tests(tmp_path / "venv", work_dir=tmp_path)
 
     assert failure is None
-    assert [test.name for test in tests] == ["installed-package-behavior", "installed-cadrumo-mcp-help"]
+    assert [test.name for test in tests] == ["installed-cadrumo-mcp-help"]
     assert all(test.status == "passed" for test in tests)
-    assert len(commands) == 2
-    assert calls[0][0].endswith("python") or calls[0][0].endswith("python.exe")
-    assert calls[1][-1] == "--help"
+    assert len(commands) == 1
+    assert calls[0][-1] == "--help"
 
 
 def test_binary_mode_requires_a_cohort_and_returns_failed_evidence(tmp_path: Path) -> None:

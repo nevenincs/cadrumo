@@ -53,7 +53,7 @@ from .workspace import (
 if TYPE_CHECKING:
     from ...core.time.utc import UtcInstant
     from ...domain.modelos.filing_record import ModeloRecord
-    from ..operations.registry import OperationPublicContractSetV1
+    from ..operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
 
 _AEAT_SOURCES: Final[frozenset[AeatSyncWorkspaceSource]] = frozenset(
     {
@@ -99,6 +99,8 @@ _OVERVIEW_OPERATIONS: Final[dict[AeatSyncOverviewArea, tuple[str, ...]]] = {
     AeatSyncOverviewArea.EVIDENCE_COMPARISON: ("live.filed-history.pull",),
     AeatSyncOverviewArea.RECONCILIATION: (),
 }
+
+_PULL_ACTION_IDS: Final[frozenset[str]] = frozenset({"operator.live.filed.pull", "operator.live.filed.pull_all"})
 
 
 _LOCAL_REFUSALS: Final[dict[AeatSyncWorkspaceSource, str]] = {
@@ -161,24 +163,57 @@ def _admitted_capabilities(
     contracts: OperationPublicContractSetV1,
 ) -> tuple[tuple[ActionReference, ...], tuple[OperationDefinitionId, ...]]:
     """Offer only the actions whose operations this session actually composed."""
-    admitted = {
+    admitted = _tui_contracts(contracts)
+    operations = _area_operations(area, admitted)
+    joined_actions = _joined_action_references(operations, admitted)
+    return _area_actions(area, joined_actions), operations
+
+
+def _tui_contracts(
+    contracts: OperationPublicContractSetV1,
+) -> dict[OperationDefinitionId, OperationPublicDefinitionContractV1]:
+    """Index the operation contracts this session can render in the TUI."""
+    return {
         contract.definition_id: contract
         for contract in contracts.definitions
         if OperationFrontendProjection.TUI in contract.permitted_frontends
     }
-    operations = tuple(
-        definition_id for definition_id in admitted if str(definition_id) in set(_OVERVIEW_OPERATIONS[area])
-    )
-    joined_actions = tuple(
+
+
+def _area_operations(
+    area: AeatSyncOverviewArea,
+    admitted: Mapping[OperationDefinitionId, OperationPublicDefinitionContractV1],
+) -> tuple[OperationDefinitionId, ...]:
+    """Keep admitted operation IDs in registry order for one overview area."""
+    area_operation_ids = set(_OVERVIEW_OPERATIONS[area])
+    return tuple(definition_id for definition_id in admitted if str(definition_id) in area_operation_ids)
+
+
+def _joined_action_references(
+    operations: tuple[OperationDefinitionId, ...],
+    admitted: Mapping[OperationDefinitionId, OperationPublicDefinitionContractV1],
+) -> tuple[ActionReference, ...]:
+    """Collect action references attached to the area's admitted operations."""
+    return tuple(
         reference for definition_id in operations if (reference := admitted[definition_id].action_reference) is not None
     )
-    actions = tuple(
+
+
+def _area_actions(
+    area: AeatSyncOverviewArea,
+    joined_actions: tuple[ActionReference, ...],
+) -> tuple[ActionReference, ...]:
+    """Project catalogue actions, gating pull actions on composed operations."""
+    return tuple(
         ActionReference(action_id=OPERATOR_ACTION_CATALOGUE.lookup(action_id).action_id)
         for action_id in _OVERVIEW_ACTIONS[area]
-        if action_id not in {"operator.live.filed.pull", "operator.live.filed.pull_all"}
-        or any(str(joined.action_id) == action_id for joined in joined_actions)
+        if _action_is_admitted(action_id, joined_actions)
     )
-    return actions, operations
+
+
+def _action_is_admitted(action_id: str, joined_actions: tuple[ActionReference, ...]) -> bool:
+    """Return whether an overview action has its corresponding operation."""
+    return action_id not in _PULL_ACTION_IDS or any(str(joined.action_id) == action_id for joined in joined_actions)
 
 
 _LOCALLY_READ_AREAS: Final[frozenset[AeatSyncOverviewArea]] = frozenset(

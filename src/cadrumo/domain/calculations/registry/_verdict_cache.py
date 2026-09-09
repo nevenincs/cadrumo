@@ -137,35 +137,6 @@ def compute_shipped_verdict_key(
     return hasher.hexdigest()
 
 
-def stamp_bundled_verdict(
-    *,
-    identity_digest: str,
-    output_path: Path,
-    package_version: str = __version__,
-) -> RegistryValidationVerdict:
-    """Write the install-stable bundled-tree verdict at ``output_path``.
-
-    Called by the release build against the tree it is packaging, immediately
-    after that tree's identity stamp is written, so the first end-user touch of
-    this release skips validation. The caller supplies the identity digest so
-    this module adds no loader import edge and derives no identity of its own.
-
-    Returns:
-        The written :class:`RegistryValidationVerdict`.
-    """
-    key = compute_shipped_verdict_key(
-        identity_digest=identity_digest,
-        package_version=package_version,
-    )
-    verdict = RegistryValidationVerdict(
-        verdict_key=key,
-        package_version=package_version,
-        outcome=VERDICT_OUTCOME_GREEN,
-    )
-    write_verdict(output_path, verdict)
-    return verdict
-
-
 def verdict_cache_path(root: Path) -> Path:
     """Return the writable per-storage-root verdict file for ``root``.
 

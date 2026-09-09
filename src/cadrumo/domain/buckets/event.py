@@ -91,11 +91,9 @@ A producer holding a collection has exactly three sanctioned options:
 - give the detail a **durable home of its own** when the event log is its
   only copy, and leave the event carrying verdict plus count.
 
-:func:`~cadrumo.domain.buckets.payload_value_fits` answers the bound without
-constructing an event. The static gate
-``domain/buckets/tests/test_payload_value_bounding.py`` refuses a new join
-into a payload value at authoring time, which is where every one of the six
-occurrences should have been caught.
+The static gate ``domain/buckets/tests/test_payload_value_bounding.py`` refuses
+a new join into a payload value at authoring time, which is where every one of
+the six occurrences should have been caught.
 """
 
 _PayloadValue = Annotated[
@@ -106,24 +104,6 @@ _PayloadValue = Annotated[
         max_length=BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH,
     ),
 ]
-
-
-def payload_value_fits(value: str) -> bool:
-    """Return whether ``value`` fits a bucket-event payload slot.
-
-    Lets a producer check the bound before it builds an event, rather than
-    discovering it as a :class:`pydantic.ValidationError` raised after the
-    surrounding work has already been done. Whitespace is stripped first, to
-    match how :class:`BucketEvent` validates.
-
-    Args:
-        value: Candidate payload value.
-
-    Returns:
-        ``True`` when the stripped value is within
-        :data:`BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH`.
-    """
-    return len(value.strip()) <= BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 
 
 class BucketEventType(StrEnum):

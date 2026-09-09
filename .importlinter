@@ -1,5 +1,7 @@
 [importlinter]
-root_package = cadrumo
+root_packages =
+    cadrumo
+    dev
 include_external_packages = False
 # Exclude TYPE_CHECKING-guarded imports from the import graph so that
 # type-annotation-only imports do not trigger layer-direction contracts.
@@ -16,6 +18,30 @@ exclude_type_checking_imports = True
 # cadrumo.domain.renta._first_slice_routing_integrity and registers itself at
 # renta package import time. The registry never names renta. The test edge
 # below remains a legitimate cross-domain reference for integration tests.
+
+# ── Shipped artefact carries no development tree ─────────────────────────────
+# A product install carries src/cadrumo and nothing else: the dev/ tree is in
+# neither the wheel nor the sdist. A shipped module that imports it is broken
+# for every real user at import time. This replaces a bespoke AST re-reading of
+# the same import statements; the rule is now evaluated against the live graph.
+#
+# Test modules under src/ are excused as a CLASS, not as a list: the wheel build
+# excludes every tests/ directory (asserted in
+# dev/packaging/tests/test_shipped_code_carries_no_dev_dependency.py), so a test
+# importing a dev harness never reaches an operator. The two wildcard lines
+# carry no file or module names and cannot go stale on a rename.
+
+[importlinter:contract:no-dev-in-shipped]
+name = Shipped cadrumo modules must not import the dev tree
+type = forbidden
+unmatched_ignore_imports_alerting = none
+source_modules =
+    cadrumo
+forbidden_modules =
+    dev
+ignore_imports =
+    cadrumo.tests.** -> dev.**
+    cadrumo.**.tests.** -> dev.**
 
 [importlinter:contract:no-renta-in-registry]
 name = Calculations registry must not import directly from domain.renta
@@ -178,7 +204,6 @@ ignore_imports =
     cadrumo.core.tests.** -> cadrumo.application.**
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
-    cadrumo.core.tests.** -> cadrumo.entrypoints.**
     cadrumo.core.tests.** -> cadrumo.llm.**
     # The shared fixture package reaches storage itself, so a core test that
     # imports a helper from it inherits the edge. Both the bare package and its
@@ -404,7 +429,6 @@ type = independence
 modules =
     cadrumo.entrypoints.tui.profile
     cadrumo.entrypoints.tui.secret
-    cadrumo.entrypoints.tui.flows
 
 [importlinter:contract:layered]
 name = AEAT layered architecture
@@ -481,7 +505,6 @@ ignore_imports =
     cadrumo.core.tests.** -> cadrumo.application.**
     cadrumo.core.**.tests.** -> cadrumo.application.**
     cadrumo.core.tests.** -> cadrumo.adapters.**
-    cadrumo.core.tests.** -> cadrumo.entrypoints.**
     # cadrumo.llm is a declared sibling layer of adapters, and the family above
     # enumerates one pattern per layer PAIR -- so a new pair needs a line even
     # though the prose says a new test does not. The same pattern is already

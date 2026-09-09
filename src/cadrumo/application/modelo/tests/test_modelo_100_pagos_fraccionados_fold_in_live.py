@@ -181,7 +181,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     casillas that consume them before it ever reaches casilla 0604. The profile
     is the substrate of record, so the live source mesh's profile resolver
     auto-fills these — no profile fact is hand-fed through the caller channel.
-    Mirrors ``test_modelo_100_multiyear_renta_enrollment._seed_taxpayer_unit_profile``.
+    Mirrors ``test_modelo_100_cross_year_carry_continuity._seed_taxpayer_unit_profile``.
     """
     record = UserProfileRecord(
         setup_state=ProfileSetupState.COMPLETE,
@@ -231,7 +231,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     prior activity), leaving the two ``relation_prefill`` pagos bindings UNSET so
     the enrolled relation resolver folds them from the seeded M130 store on the
     live path. Mirrors the non-profile zero-default in
-    ``test_modelo_100_multiyear_renta_enrollment._calculate_100``.
+    ``test_modelo_100_cross_year_carry_continuity._calculate_100``.
     """
     snapshot = bundled_authority().snapshot("100", filing_year=_YEAR, period=_M100_ANNUAL_PERIOD)
     return {

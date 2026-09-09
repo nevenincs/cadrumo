@@ -270,7 +270,7 @@ def test_every_screen_searches_a_population_that_is_not_empty(
     lose: it is a filesystem walk, and a corpus moved or renamed would return an
     empty tuple, which reads exactly like a corpus with nothing to report.
     """
-    from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
+    from dev.registry.maintenance_support import resolved_export_endpoints
 
     from ..analysis.casilla_id_grammar import screen_authority as grammar
     from ..analysis.continuity_integrity import continuity_census

@@ -208,7 +208,7 @@ def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_pa
     backed by ``cross_model_output`` relations. The compensación bindings
     (ultimo-periodo + generada-ejercicio-no-97) read current M303 compensation
     state casillas through ``iva_compensation_annual_partition`` so boxes 97/662
-    are produced together from the FIFO partition.
+    are _produced together from the FIFO partition.
     """
     quarter_data = [
         ("1T", Decimal("100.00"), Decimal("40.00"), Decimal("60.00"), Decimal("20.00")),

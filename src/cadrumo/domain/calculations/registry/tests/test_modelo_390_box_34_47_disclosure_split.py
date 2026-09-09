@@ -195,7 +195,6 @@ def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the
     shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
     for catalogue_dir in (
         "apoderamientos",
-        "authorization.d",
         "calendars",
         "categories",
         "iva",

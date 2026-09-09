@@ -152,6 +152,11 @@ class _PdfSheetDraft:
         self.fields.append(self.current.finish())
         self.current = None
 
+    def _merge_admitted_fields(self, admitted: list[RecordDesignField]) -> None:
+        """Merge recovered rows while keeping the canonical position order."""
+        if admitted:
+            self.fields = sorted([*self.fields, *admitted], key=lambda read: read.offset)
+
     def fill_unread_gaps(self) -> None:
         """Admit staged candidates that fall wholly inside a span no row claims.
 
@@ -172,29 +177,16 @@ class _PdfSheetDraft:
         neighbour ``433-452 Alfanumerico NIF EN EL PAIS...`` carries one.
         """
         staged = [*self.unnamed_candidates, *self.headless_candidates]
-        if not staged or not self.fields:
+        if not self.fields:
             return
-        claimed: set[int] = set()
-        for read in self.fields:
-            claimed.update(range(read.offset, read.offset + read.length))
+        claimed = _covered_positions(self.fields)
         admitted: list[RecordDesignField] = []
         for candidate in staged:
             span = range(candidate.offset, candidate.offset + candidate.length)
             if claimed.isdisjoint(span):
-                admitted.append(
-                    RecordDesignField(
-                        sheet=self.name,
-                        row=candidate.source_row,
-                        ordinal=None,
-                        offset=candidate.offset,
-                        length=candidate.length,
-                        type_code=candidate.type_code,
-                        description=candidate.description,
-                    ),
-                )
+                admitted.append(_field_from_pdf_row(self.name, candidate))
                 claimed.update(span)
-        if admitted:
-            self.fields = sorted([*self.fields, *admitted], key=lambda read: read.offset)
+        self._merge_admitted_fields(admitted)
 
     def fill_declared_desglose_gaps(self) -> None:
         """Admit a dropped sub-field whose absence AEAT's own declared COUNT proves.
@@ -232,8 +224,6 @@ class _PdfSheetDraft:
         AEAT says two, so the count clause refuses them and their genuine
         one-byte defect is left visible rather than papered over.
         """
-        if not self.unnamed_candidates or not self.fields:
-            return
         # Grouped, never a single candidate per offset: AEAT nests these. Modelo
         # 184 stages BOTH "151-155 PORCENTAJE..." and the "151- 153 ENTERO" it
         # subdivides into, so keying one candidate per offset silently picks
@@ -244,8 +234,7 @@ class _PdfSheetDraft:
         while index < len(self.fields):
             parent, run, index = _nested_desglose_run(self.fields, index)
             admitted.extend(_desglose_fillers(self.name, parent, run, by_offset))
-        if admitted:
-            self.fields = sorted([*self.fields, *admitted], key=lambda read: read.offset)
+        self._merge_admitted_fields(admitted)
 
     def finish(self, *, source_label: str) -> RecordDesignSheet:
         self.finish_current()
@@ -335,18 +324,20 @@ def _covered_positions(fields: Iterable[RecordDesignField]) -> set[int]:
 
 def _fields_from_unnamed_rows(sheet_name: str, rows: list[PdfRow]) -> list[RecordDesignField]:
     """Convert admitted range rows into unnumbered design fields."""
-    return [
-        RecordDesignField(
-            sheet=sheet_name,
-            row=row.source_row,
-            ordinal=None,
-            offset=row.offset,
-            length=row.length,
-            type_code=row.type_code,
-            description=row.description,
-        )
-        for row in rows
-    ]
+    return [_field_from_pdf_row(sheet_name, row) for row in rows]
+
+
+def _field_from_pdf_row(sheet_name: str, row: PdfRow) -> RecordDesignField:
+    """Materialise one recovered PDF row as an unnumbered design field."""
+    return RecordDesignField(
+        sheet=sheet_name,
+        row=row.source_row,
+        ordinal=None,
+        offset=row.offset,
+        length=row.length,
+        type_code=row.type_code,
+        description=row.description,
+    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -513,16 +504,19 @@ def _declared_page_token(sheet: RecordDesignSheet) -> str | None:
     return None
 
 
+def _nonempty_field_texts(field: RecordDesignField) -> Iterable[str]:
+    """Yield the available textual projections of one parsed field."""
+    return filter(None, (field.content, field.description, field.validation))
+
+
 def _numeric_closing_page_token(sheet: RecordDesignSheet) -> str | None:
     """Read the first numeric closing identifier while ignoring prose tokens."""
     for design_field in reversed(sheet.fields):
-        for text in (design_field.content, design_field.description, design_field.validation):
-            if not text:
-                continue
+        for text in _nonempty_field_texts(design_field):
             match = _PDF_RECORD_END_IDENTIFIER_RE.search(str(text))
             if match is None:
                 continue
-            closing = match.group("page")
+            closing = str(match.group("page"))
             # The closing identifier is matched anywhere in a field's text, so a
             # token bled in from a neighbouring record can be picked up. That is
             # tolerable for a numeric page, which the width check still guards,
@@ -539,9 +533,7 @@ def _numeric_closing_page_token(sheet: RecordDesignSheet) -> str | None:
 
 def _pdf_declared_constant(field: RecordDesignField) -> str | None:
     """The three-digit constant a field declares as its required content."""
-    for text in (field.content, field.description, field.validation):
-        if not text:
-            continue
+    for text in _nonempty_field_texts(field):
         match = _PDF_PAGE_CONSTANT_RE.search(str(text))
         if match is not None:
             return required_pdf_group(match, "page")
@@ -721,10 +713,12 @@ class PdfParseState:
         fragment that would overlap anything already read is discarded, so a
         wrapped description restating a field's width can never be admitted.
         """
-        if self.current is None or not self.repair_glued_rows:
-            return
-        match = REVERSED_ROW_TAIL_RE.match(line)
-        if match is None or parse_pdf_row(line, row_number) is not None:
+        if (
+            self.current is None
+            or not self.repair_glued_rows
+            or (match := REVERSED_ROW_TAIL_RE.match(line)) is None
+            or parse_pdf_row(line, row_number) is not None
+        ):
             return
         previous = self._last_seen_field()
         if previous is None:
@@ -958,9 +952,7 @@ def _bracketed_payload_positions(sheet: RecordDesignSheet) -> set[int]:
     openings: dict[str, RecordDesignField] = {}
     covered: set[int] = set()
     for design_field in sorted(sheet.fields, key=lambda item: item.offset):
-        for text in (design_field.content, design_field.description, design_field.validation):
-            if not text:
-                continue
+        for text in _nonempty_field_texts(design_field):
             match = _PDF_BRACKET_CONSTANT_RE.search(str(text))
             if match is None:
                 continue
@@ -1146,9 +1138,7 @@ def contiguity_failure(sheet: RecordDesignSheet) -> str | None:
     """
     if sheet.total_positions is None:
         return None
-    covered: set[int] = set()
-    for parsed_field in sheet.fields:
-        covered.update(range(parsed_field.offset, parsed_field.offset + parsed_field.length))
+    covered = _covered_positions(sheet.fields)
     covered |= _bracketed_payload_positions(sheet)
     declared = set(range(1, sheet.total_positions + 1))
     if holes := sorted(declared - covered):

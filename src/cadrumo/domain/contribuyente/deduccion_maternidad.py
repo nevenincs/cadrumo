@@ -1,13 +1,9 @@
 """Art. 81 LIRPF deducción maternidad computation helpers.
 
 Pure-domain arithmetic; no entrypoint or CLI dependencies.
-:func:`compute_deduccion_maternidad_0611` applies the central
-:data:`core.external_constants.DEDUCCION_MATERNIDAD_MENSUAL_EUR` and
-:data:`core.external_constants.DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR`
-limits used by :class:`RentaFamilyProfile`, plus the Art. 81.1 post-birth
-alta increment (:data:`core.external_constants.DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR`,
-:data:`core.external_constants.DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR`) for
-filing years from :data:`core.external_constants.DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR`.
+:func:`compute_deduccion_maternidad_0611` reads the dated Art. 81 figures
+from the Modelo 100 parameter registry and derives the raised post-birth
+alta cap from the ordinary cap plus the applicable increment.
 """
 
 from __future__ import annotations
@@ -19,9 +15,8 @@ def _resolve_maternidad_figure(filing_year: int, slug: str) -> int:
     """Read one Art. 81.1 maternidad figure from its dated Modelo 100 parameter.
 
     The registry is the causal authority: a missing revision or parameter is a
-    grounding defect and raises :class:`RegistryValidationError` rather than
-    falling back to the module constant, which is a documented default the
-    arithmetic must not silently prefer.
+    grounding defect and raises :class:`RegistryValidationError`; the
+    arithmetic has no undated fallback authority.
 
     Returns:
         The integer euro figure the registry declares for ``filing_year``.
@@ -68,17 +63,16 @@ def compute_deduccion_maternidad_0611(
 ) -> int:
     """Compute Art. 81 LIRPF deducción maternidad from per-hijo meses pairs.
 
-    Ordinary formula: ``sum(min(meses × DEDUCCION_MATERNIDAD_MENSUAL_EUR,
-    DEDUCCION_MATERNIDAD_ANUAL_CAP_EUR))`` for each ``(hijo_id, meses)`` pair.
+    The ordinary formula multiplies each child's eligible months by the dated
+    monthly parameter and caps it at the dated annual parameter.
 
     A ``hijo_id`` named in *alta_posterior_hijos* additionally receives the Art.
     81.1 post-birth alta increment for the one calendar month completing the
     30-day minimum contribution period, ONLY for *filing_year* from
-    DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR: its total adds
-    DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_INCREMENTO_EUR on top of the ordinary
+    a revision that declares the increment: its total adds that increment on top of the ordinary
     monthly accrual (the completion month is counted once at the ordinary rate,
     already inside ``meses``, and once again here), and its cap is raised to
-    DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_ANUAL_CAP_EUR. Every other pair, and
+    derived annual cap. Every other pair, and
     every pair for an earlier filing year, keeps the ordinary rate and cap
     untouched — the increment can only ever ADD to a hijo's total, never
     substitute for it.

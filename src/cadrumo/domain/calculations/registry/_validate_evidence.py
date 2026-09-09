@@ -160,8 +160,6 @@ def _read_source_text(source: SourceReference, source_path: Path) -> str:
 
 _disk_cache: dict[str, str] | None = None
 _disk_cache_dirty: bool = False
-# Disk-cache writes since reset; observability for the validation-verdict pin.
-_disk_cache_write_count: int = 0
 _DISK_CACHE_ADAPTER: TypeAdapter[dict[str, str]] = TypeAdapter(dict[str, str], config=ConfigDict(strict=True))
 
 
@@ -177,15 +175,6 @@ def _corpus_text_cache_path() -> Path:
     any two users or CI containers on one host could clobber.
     """
     return storage_path(StorageCategory.CORPUS_TEXT_CACHE) / _CORPUS_TEXT_CACHE_FILENAME
-
-
-def reset_corpus_text_cache() -> None:
-    """Drop the in-process corpus-text cache memos (test isolation only)."""
-    global _disk_cache, _disk_cache_dirty, _disk_cache_write_count
-    _disk_cache = None
-    _disk_cache_dirty = False
-    _disk_cache_write_count = 0
-    _NORMALISED_SOURCE_TEXT_CACHE.clear()
 
 
 def flush_corpus_text_cache() -> None:
@@ -226,8 +215,6 @@ def _load_disk_cache() -> dict[str, str]:
 
 
 def _write_disk_cache(data: dict[str, str]) -> None:
-    global _disk_cache_write_count
-    _disk_cache_write_count += 1
     cache_path = _corpus_text_cache_path()
     try:
         # Read-merge-before-write narrows the multi-process last-writer-wins

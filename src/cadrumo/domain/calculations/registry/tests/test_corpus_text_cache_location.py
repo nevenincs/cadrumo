@@ -15,15 +15,21 @@ from pathlib import Path
 import pytest
 
 from .....core.config import override_settings
+from .. import _validate_evidence as evidence_cache
 from .._validate_evidence import (
     _CORPUS_TEXT_CACHE_FILENAME,
     _corpus_text_cache_path,
     _load_disk_cache,
     _write_disk_cache,
-    reset_corpus_text_cache,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _reset_corpus_text_cache() -> None:
+    evidence_cache._disk_cache = None
+    evidence_cache._disk_cache_dirty = False
+    evidence_cache._NORMALISED_SOURCE_TEXT_CACHE.clear()
 
 
 def test_cache_path_derives_under_cache_namespace(tmp_path: Path) -> None:
@@ -36,13 +42,13 @@ def test_cache_path_derives_under_cache_namespace(tmp_path: Path) -> None:
 def test_write_creates_the_derived_file_and_roundtrips(tmp_path: Path) -> None:
     cache_dir = tmp_path / "corpus-text"
     with override_settings(cadrumo_corpus_text_cache_dir=cache_dir):
-        reset_corpus_text_cache()
+        _reset_corpus_text_cache()
         _write_disk_cache({"source:one": "normalised text one"})
         cache_file = cache_dir / "cadrumo_corpus_text_cache.json"
         assert cache_file.is_file(), "write must create the cache file under the derived directory"
         # No former OS-temp-named artifact is produced.
         assert not (cache_dir / "aeat_corpus_text_cache.json").exists()
-        reset_corpus_text_cache()
+        _reset_corpus_text_cache()
         loaded = _load_disk_cache()
     assert loaded["source:one"] == "normalised text one"
 
@@ -57,7 +63,7 @@ def test_write_merges_concurrent_on_disk_entries(tmp_path: Path) -> None:
     cache_file.write_text(json.dumps({"sibling:key": "sibling value"}), encoding="utf-8")
 
     with override_settings(cadrumo_corpus_text_cache_dir=cache_dir):
-        reset_corpus_text_cache()
+        _reset_corpus_text_cache()
         _write_disk_cache({"mine:key": "my value"})
         merged = json.loads(cache_file.read_text(encoding="utf-8"))
 

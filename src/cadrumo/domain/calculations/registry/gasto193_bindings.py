@@ -2,21 +2,21 @@
 
 Modelo 193's hoja anexo (registro tipo 2, relación de gastos) carries one row
 per contribuyente for whom the declarante perceived the art. 26.1.a) LIRPF
-gastos de administracion y deposito de valores. This family resolves those
-rows from per-contribuyente gasto observations. The required declarante total
-is a separate explicit input until a secure observation owner exists.
+gastos de administracion y deposito de valores. This family validates the
+observation and binding-selector shapes consumed by row-set ingestion. The
+required declarante total is a separate explicit input until a secure
+observation owner exists.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
 from datetime import date
 from decimal import Decimal
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from ....core.aggregation import BindingAggregationOp, BindingSourceKind
+from ....core.aggregation import BindingAggregationOp
 from ....core.identity import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_aggregation import binding_aggregation_op
@@ -27,12 +27,11 @@ from .binding_selector_utils import (
     selector_as_dict as _selector_as_dict,
 )
 from .errors import RegistryValidationError
-from .schema import DataBindingDefinition, ModeloRevision
+from .schema import DataBindingDefinition
 
 __all__ = [
     "Gasto193Observation",
     "_Gasto193Selector",
-    "resolve_gasto193_binding_row_values",
     "validate_gasto193_binding_selector_shape",
 ]
 
@@ -104,61 +103,3 @@ def validate_gasto193_binding_selector_shape(binding: DataBindingDefinition) -> 
     except RegistryValidationError as exc:
         return [f"binding {binding.id!r} (source={binding.source!r}) gasto193 invariants violated: {exc}"]
     return []
-
-
-def _build_gasto193_rows(
-    observations: tuple[Gasto193Observation, ...],
-) -> tuple[Mapping[str, Decimal | str], ...]:
-    accum: dict[str, dict[str, Decimal | str]] = {}
-    for observation in observations:
-        identity: dict[str, Decimal | str] = {
-            "contributor_tax_id": observation.contributor_tax_id,
-            "contributor_legal_name": observation.contributor_legal_name,
-            "importe_gastos": Decimal("0"),
-        }
-        if observation.representative_tax_id is not None:
-            identity["representative_tax_id"] = observation.representative_tax_id
-        bucket = accum.setdefault(observation.contributor_tax_id, identity)
-        previous = bucket["importe_gastos"]
-        if not isinstance(previous, Decimal):
-            raise RegistryValidationError(
-                f"gasto193 row accumulator for {observation.contributor_tax_id!r} holds a "
-                "non-numeric running importe_gastos",
-            )
-        bucket["importe_gastos"] = previous + observation.importe_gastos
-    return tuple(accum[key] for key in sorted(accum.keys()))
-
-
-def resolve_gasto193_binding_row_values(
-    revision: ModeloRevision,
-    observations: Iterable[Gasto193Observation],
-) -> dict[tuple[str, int], Decimal | str]:
-    """Resolve row-producer gasto193 bindings into per-row indexed values.
-
-    ``representative_tax_id`` is emitted as the design's own spaces when no
-    observation carries it (the field is declared only for minor contribuyentes).
-    """
-    available = tuple(observations)
-    rows = _build_gasto193_rows(available)
-    resolved: dict[tuple[str, int], Decimal | str] = {}
-    for binding in revision.bindings:
-        if binding.source is not BindingSourceKind.GASTO193_CONTRIBUTOR:
-            continue
-        selector = _gasto193_selector(binding)
-        if selector.fact != "row_field":
-            continue
-        row_field = selector.row_field
-        if row_field is None:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key",
-            )
-        for row_index, row in enumerate(rows, start=1):
-            value = row.get(row_field)
-            if value is None and row_field == "representative_tax_id":
-                value = " " * 9
-            if value is None:
-                raise RegistryValidationError(
-                    f"binding {binding.id!r} row_field {row_field!r} not produced for gasto193 row {row_index}",
-                )
-            resolved[(str(binding.id), row_index)] = value
-    return resolved

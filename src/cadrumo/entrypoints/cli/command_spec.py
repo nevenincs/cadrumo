@@ -11,9 +11,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum, StrEnum
 from types import MappingProxyType
-from typing import Final, Literal
+from typing import Final, Literal, cast
 
 from ...core.transport_locus import TransportLocus, TransportRole, TransportShape
+from . import _command_parameter_validation as _parameter_validation
+from . import _command_policy_validation as _policy_validation
+from . import _command_structure_validation as _structure_validation
 
 
 class CommandNodeKind(StrEnum):
@@ -107,134 +110,63 @@ CommandWriteRouteValue = Literal[
 ]
 """The same vocabulary for a strict spec or payload field."""
 
-_CAPABILITIES = frozenset(
-    {
-        "state-free",
-        "local-storage",
-        "registry",
-        "profile-custody",
-        "encrypted-facts",
-        "network",
-        "browser",
-        "google",
-        "calculation",
-        "filing",
-        "crypto",
-        "subprocess",
-    }
-)
-_SIDE_EFFECTS = frozenset({"none", "local-state", "network", "browser", "google"})
-_PERFORMANCE_CLASSES = frozenset({"metadata", "local-io", "compute", "external-io", "interactive"})
-_IMPLIED_CAPABILITIES: dict[Capability, frozenset[Capability]] = {
-    "encrypted-facts": frozenset({"profile-custody"}),
-    "browser": frozenset({"network"}),
-    "google": frozenset({"network"}),
-    "calculation": frozenset({"registry"}),
-    "filing": frozenset({"registry"}),
-}
 
+_require_coherent_transport = _parameter_validation.require_coherent_transport
+_require_identifier = _parameter_validation.require_identifier
+_require_token = _parameter_validation.require_token
+_validate_machine_secret_contract = _parameter_validation.validate_machine_secret_contract
+_validate_machine_secret_option_channel = _parameter_validation.validate_machine_secret_option_channel
+_validate_not_supported_schema = _parameter_validation.validate_not_supported_schema
+_validate_option_declarations = _parameter_validation.validate_option_declarations
+_validate_option_environment = _parameter_validation.validate_option_environment
+_validate_option_flags = _parameter_validation.validate_option_flags
+_validate_parameter_declarations = _parameter_validation.validate_parameter_declarations
+_validate_profile_secret_contract = _parameter_validation.validate_profile_secret_contract
+_validate_profile_secret_option_channel = _parameter_validation.validate_profile_secret_option_channel
+_validate_secret_channel_scope = _parameter_validation.validate_secret_channel_scope
+_validate_target_schema = _parameter_validation.validate_target_schema
+_validate_unavailable_schema = _parameter_validation.validate_unavailable_schema
 
-def _require_identifier(value: str, *, field: str) -> None:
-    if not value or value.strip() != value or not value.isidentifier():
-        raise ValueError(f"{field} must be a non-empty Python identifier")
+_validate_deferred_target = _policy_validation.validate_deferred_target
+_validate_translation_key = _policy_validation.validate_translation_key
+_validate_lazy_binding = _policy_validation.validate_lazy_binding
+_expanded_capabilities = _policy_validation.expanded_capabilities
+_validate_parameter_default = _policy_validation.validate_parameter_default
+_validate_value_contract = _policy_validation.validate_value_contract
+_validate_parameter_constraint = _policy_validation.validate_parameter_constraint
+_validate_machine_secret_field = _policy_validation.validate_machine_secret_field
+_validate_machine_secret_condition = _policy_validation.validate_machine_secret_condition
+_validate_machine_secret_variant = _policy_validation.validate_machine_secret_variant
+_validate_machine_secret = _policy_validation.validate_machine_secret
+_validate_profile_secret = _policy_validation.validate_profile_secret
+_validate_policy_destructive = _policy_validation.validate_policy_destructive
+_validate_policy_effect_capabilities = _policy_validation.validate_policy_effect_capabilities
+_validate_policy_exclusive_values = _policy_validation.validate_policy_exclusive_values
+_validate_policy_handoff = _policy_validation.validate_policy_handoff
+_validate_policy_live_write = _policy_validation.validate_policy_live_write
+_validate_policy_membership = _policy_validation.validate_policy_membership
+_validate_policy_types = _policy_validation.validate_policy_types
+_validate_policy_write_route = _policy_validation.validate_policy_write_route
 
-
-def _require_token(value: str, *, field: str) -> None:
-    if not value or value.strip() != value or any(character.isspace() for character in value):
-        raise ValueError(f"{field} must be a non-empty whitespace-free token")
-
-
-def _validate_policy_types(
-    capabilities: frozenset[Capability],
-    side_effects: frozenset[SideEffect],
-    destructive: bool,
-    handoff: bool,
-    live_write: bool,
-) -> None:
-    """Validate the policy container and risk-flag runtime types."""
-    if not isinstance(capabilities, frozenset):
-        raise TypeError("execution policy capabilities must be a frozenset")
-    if not isinstance(side_effects, frozenset):
-        raise TypeError("execution policy side effects must be a frozenset")
-    if any(not isinstance(value, bool) for value in (destructive, handoff, live_write)):
-        raise TypeError("execution policy risk flags must be bools")
-
-
-def _validate_policy_membership(
-    capabilities: frozenset[Capability],
-    side_effects: frozenset[SideEffect],
-    performance: PerformanceClass,
-    write_route: CommandWriteRouteValue,
-) -> None:
-    """Validate capability, effect, performance, and write-route vocabularies."""
-    if not capabilities or capabilities - _CAPABILITIES:
-        raise ValueError("execution policy has missing or unknown capabilities")
-    if not side_effects or side_effects - _SIDE_EFFECTS:
-        raise ValueError("execution policy has missing or unknown side effects")
-    if performance not in _PERFORMANCE_CLASSES:
-        raise ValueError("execution policy has an unknown performance class")
-    if write_route not in CommandWriteRoute:
-        raise ValueError("execution policy has an unknown write route")
-
-
-def _validate_policy_exclusive_values(
-    capabilities: frozenset[Capability],
-    side_effects: frozenset[SideEffect],
-) -> None:
-    """Enforce the mutually exclusive state-free and no-effect vocabularies."""
-    if "state-free" in capabilities and capabilities != frozenset({"state-free"}):
-        raise ValueError("state-free cannot be combined with authority capabilities")
-    if "none" in side_effects and side_effects != frozenset({"none"}):
-        raise ValueError("none cannot be combined with observable side effects")
-    if capabilities == frozenset({"state-free"}) and side_effects != frozenset({"none"}):
-        raise ValueError("state-free execution must be effect-free")
-
-
-def _validate_policy_effect_capabilities(
-    side_effects: frozenset[SideEffect],
-    expanded_capabilities: frozenset[Capability],
-) -> None:
-    """Require each observable effect to carry its owning capability."""
-    required_by_effect = {"network": "network", "browser": "browser", "google": "google"}
-    if any(
-        effect in side_effects and capability not in expanded_capabilities
-        for effect, capability in required_by_effect.items()
-    ):
-        raise ValueError("execution policy side effect lacks its owning capability")
-
-
-def _validate_policy_write_route(
-    write_route: CommandWriteRouteValue,
-    side_effects: frozenset[SideEffect],
-    expanded_capabilities: frozenset[Capability],
-) -> None:
-    """Require storage writes to carry local-state effects and profile custody."""
-    if write_route != CommandWriteRoute.NONE and (
-        "local-state" not in side_effects or "profile-custody" not in expanded_capabilities
-    ):
-        raise ValueError("storage write routes require profile custody and local-state effects")
-
-
-def _validate_policy_destructive(destructive: bool, side_effects: frozenset[SideEffect]) -> None:
-    """Require destructive operations to declare local-state effects."""
-    if destructive and "local-state" not in side_effects:
-        raise ValueError("destructive execution requires a local-state effect")
-
-
-def _validate_policy_handoff(
-    handoff: bool, expanded_capabilities: frozenset[Capability], side_effects: frozenset[SideEffect]
-) -> None:
-    """Require filing handoffs to carry filing authority and local-state effects."""
-    if handoff and ("filing" not in expanded_capabilities or "local-state" not in side_effects):
-        raise ValueError("filing handoff requires filing authority and a local-state effect")
-
-
-def _validate_policy_live_write(
-    live_write: bool, expanded_capabilities: frozenset[Capability], side_effects: frozenset[SideEffect]
-) -> None:
-    """Require live writes to carry network authority and a network/browser effect."""
-    if live_write and ("network" not in expanded_capabilities or not side_effects.intersection({"network", "browser"})):
-        raise ValueError("live writes require network authority and a network/browser effect")
+_graph_by_key = _structure_validation.graph_by_key
+_graph_by_path = _structure_validation.graph_by_path
+_graph_by_schema_identity = _structure_validation.graph_by_schema_identity
+_graph_nodes = _structure_validation.graph_nodes
+_resolve_graph_path = _structure_validation.resolve_graph_path
+_validate_callback_parameters = _structure_validation.validate_callback_parameters
+_validate_command_identity = _structure_validation.validate_command_identity
+_validate_graph = _structure_validation.validate_graph
+_validate_leaf_execution = _structure_validation.validate_leaf_execution
+_validate_result_schema = _structure_validation.validate_result_schema
+_validate_command_spec = _structure_validation.validate_command_spec
+_validate_terminal_execution = _structure_validation.validate_terminal_execution
+_validate_recovery_bootstrap = _structure_validation.validate_recovery_bootstrap
+_validate_recovery_directions = _structure_validation.validate_recovery_directions
+_validate_recovery_handoff_contract = _structure_validation.validate_recovery_handoff_contract
+_validate_recovery_json_fields = _structure_validation.validate_recovery_json_fields
+_validate_recovery_limits = _structure_validation.validate_recovery_limits
+_validate_recovery_parameters = _structure_validation.validate_recovery_parameters
+_validate_recovery_reserved_descriptors = _structure_validation.validate_recovery_reserved_descriptors
 
 
 @dataclass(frozen=True, slots=True)
@@ -270,15 +202,7 @@ class ExecutionPolicySpec:
     @property
     def expanded_capabilities(self) -> frozenset[Capability]:
         """Return the transitive capability closure used by import gates."""
-        expanded = set(self.capabilities)
-        pending = list(self.capabilities)
-        while pending:
-            capability = pending.pop()
-            for implied in _IMPLIED_CAPABILITIES.get(capability, ()):
-                if implied not in expanded:
-                    expanded.add(implied)
-                    pending.append(implied)
-        return frozenset(expanded)
+        return cast(frozenset[Capability], _expanded_capabilities(self.capabilities))
 
 
 @dataclass(frozen=True, slots=True)
@@ -290,10 +214,7 @@ class DeferredTarget:
 
     def __post_init__(self) -> None:
         """Validate that ``module`` and ``qualname`` are dotted Python identifiers, or raise."""
-        if not self.module or any(not part.isidentifier() for part in self.module.split(".")):
-            raise ValueError("deferred target module must be a dotted Python module name")
-        if not self.qualname or any(not part.isidentifier() for part in self.qualname.split(".")):
-            raise ValueError("deferred target qualname must be a dotted Python identifier")
+        _validate_deferred_target(self.module, self.qualname)
 
     @property
     def identity(self) -> str:
@@ -309,8 +230,7 @@ class TranslationKey:
 
     def __post_init__(self) -> None:
         """Validate that ``value`` is a non-empty, unpadded, dotted key, or raise."""
-        if not self.value or self.value.strip() != self.value or "." not in self.value:
-            raise ValueError("translation key must be a non-empty dotted key")
+        _validate_translation_key(self.value)
 
 
 def translation_key(value: str) -> TranslationKey:
@@ -340,18 +260,13 @@ class LazyBinding:
 
     def __post_init__(self) -> None:
         """Validate the binding's state-dependent shape and optional-dependency tokens, or raise."""
-        if len(set(self.optional_dependencies)) != len(self.optional_dependencies):
-            raise ValueError("optional dependency names must be unique")
-        for dependency in self.optional_dependencies:
-            _require_token(dependency, field="optional dependency")
-        if self.state is BindingState.TARGET:
-            if self.target is None or self.reason_key is not None:
-                raise ValueError("target binding requires only a deferred target")
-        elif self.state is BindingState.UNAVAILABLE:
-            if self.target is not None or self.reason_key is None:
-                raise ValueError("unavailable binding requires only a localized reason")
-        else:  # pragma: no cover - Enum construction prevents this in normal use.
-            raise ValueError(f"unknown binding state: {self.state!r}")
+        _validate_lazy_binding(
+            self.state,
+            self.target,
+            self.reason_key,
+            self.optional_dependencies,
+            require_token=_require_token,
+        )
 
     @classmethod
     def available(
@@ -437,14 +352,7 @@ class ParameterDefault:
 
     def __post_init__(self) -> None:
         """Validate that ``literal`` and ``factory`` agree with the declared ``kind``, or raise."""
-        if self.kind is DefaultKind.REQUIRED:
-            if self.literal is not None or self.factory is not None:
-                raise ValueError("required parameter default cannot carry a value")
-        elif self.kind is DefaultKind.LITERAL:
-            if self.factory is not None:
-                raise ValueError("literal parameter default cannot carry a factory")
-        elif self.kind is DefaultKind.FACTORY and (self.factory is None or self.literal is not None):
-            raise ValueError("factory parameter default requires only a deferred factory")
+        _validate_parameter_default(self.kind, self.literal, self.factory)
 
     @classmethod
     def required(cls) -> ParameterDefault:
@@ -475,12 +383,7 @@ class ValueContract:
 
     def __post_init__(self) -> None:
         """Validate that the click type, parser, and choices are mutually exclusive, or raise."""
-        if self.click_type is not None and self.parser is not None:
-            raise ValueError("value contract cannot declare both a Click type and parser")
-        if len(self.choices) != len(set(self.choices)) or any(not choice for choice in self.choices):
-            raise ValueError("value contract choices must be unique non-empty strings")
-        if self.choices and (self.click_type is not None or self.parser is not None):
-            raise ValueError("value contract choices cannot be combined with a Click type or parser")
+        _validate_value_contract(self.click_type, self.parser, self.choices)
 
 
 @dataclass(frozen=True, slots=True)
@@ -501,10 +404,7 @@ class ParameterConstraint:
 
     def __post_init__(self) -> None:
         """Validate the scalar bound and path-constraint invariants, or raise."""
-        if self.minimum is not None and self.maximum is not None and self.minimum > self.maximum:
-            raise ValueError("parameter minimum cannot exceed maximum")
-        if self.clamp and self.minimum is None and self.maximum is None:
-            raise ValueError("clamping requires a minimum or maximum")
+        _validate_parameter_constraint(self.minimum, self.maximum, self.clamp)
 
 
 @dataclass(frozen=True, slots=True)
@@ -515,7 +415,7 @@ class MachineSecretFieldSpec:
     json_type: Literal["string"] = "string"
 
     def __post_init__(self) -> None:
-        _require_identifier(self.name, field="machine-secret field name")
+        _validate_machine_secret_field(self.name, require_identifier=_require_identifier)
 
 
 @dataclass(frozen=True, slots=True)
@@ -526,7 +426,7 @@ class MachineSecretConditionSpec:
     presence: MachineSecretPresenceValue
 
     def __post_init__(self) -> None:
-        _require_identifier(self.option_name, field="machine-secret condition option")
+        _validate_machine_secret_condition(self.option_name, require_identifier=_require_identifier)
 
 
 @dataclass(frozen=True, slots=True)
@@ -539,12 +439,7 @@ class MachineSecretVariantSpec:
     condition: MachineSecretConditionSpec | None = None
 
     def __post_init__(self) -> None:
-        _require_identifier(self.key, field="machine-secret variant key")
-        if not self.fields:
-            raise ValueError("machine-secret variant must declare at least one field")
-        names = tuple(field.name for field in self.fields)
-        if len(names) != len(set(names)):
-            raise ValueError("machine-secret variant fields must be unique")
+        _validate_machine_secret_variant(self.key, self.fields, require_identifier=_require_identifier)
 
 
 @dataclass(frozen=True, slots=True)
@@ -554,14 +449,7 @@ class MachineSecretSpec:
     variants: tuple[MachineSecretVariantSpec, ...]
 
     def __post_init__(self) -> None:
-        if not self.variants:
-            raise ValueError("machine-secret spec must declare at least one variant")
-        keys = tuple(variant.key for variant in self.variants)
-        if len(keys) != len(set(keys)):
-            raise ValueError("machine-secret variant keys must be unique")
-        targets = tuple(variant.model.identity for variant in self.variants)
-        if len(targets) != len(set(targets)):
-            raise ValueError("machine-secret payload model targets must be unique")
+        _validate_machine_secret(self.variants)
 
 
 @dataclass(frozen=True, slots=True)
@@ -573,11 +461,7 @@ class ProfileSecretSpec:
 
     def __post_init__(self) -> None:
         """Validate that fields are declared and their names are unique, or raise."""
-        if not self.fields:
-            raise ValueError("profile-secret spec must declare at least one field")
-        names = tuple(field.name for field in self.fields)
-        if len(names) != len(set(names)):
-            raise ValueError("profile-secret fields must be unique")
+        _validate_profile_secret(self.fields)
 
 
 @dataclass(frozen=True, slots=True)
@@ -606,8 +490,9 @@ class RecoveryHandoffSpec:
             self.handoff_parameter,
             self.verification_parameter,
             self.collides_with_parameters,
+            require_identifier=_require_identifier,
         )
-        _validate_recovery_json_fields(self.json_fields)
+        _validate_recovery_json_fields(self.json_fields, require_identifier=_require_identifier)
         _validate_recovery_limits(
             self.maximum_bytes,
             self.required_together,
@@ -618,97 +503,6 @@ class RecoveryHandoffSpec:
         )
         _validate_recovery_reserved_descriptors(self.reserved_descriptors)
         _validate_recovery_bootstrap(self.windows_handle_bootstrap)
-
-
-def _validate_recovery_directions(handoff_direction: str, verification_direction: str) -> None:
-    """Require the recovery handoff to write first and verify second."""
-    if handoff_direction != "write" or verification_direction != "read":
-        raise ValueError("recovery handoff directions must be write then read")
-
-
-def _validate_recovery_parameters(
-    handoff_parameter: str,
-    verification_parameter: str,
-    collides_with_parameters: tuple[str, ...],
-) -> None:
-    """Require distinct identifier-shaped recovery parameter names."""
-    for value in (handoff_parameter, verification_parameter, *collides_with_parameters):
-        _require_identifier(value, field="recovery handoff parameter")
-    if handoff_parameter == verification_parameter:
-        raise ValueError("recovery handoff descriptors must be distinct parameters")
-
-
-def _validate_recovery_json_fields(json_fields: tuple[str, ...]) -> None:
-    """Require unique identifier-shaped fields in the recovery JSON object."""
-    if not json_fields or len(json_fields) != len(set(json_fields)):
-        raise ValueError("recovery handoff JSON fields must be non-empty and unique")
-    for field_name in json_fields:
-        _require_identifier(field_name, field="recovery handoff JSON field")
-
-
-def _validate_recovery_limits(
-    maximum_bytes: int,
-    required_together: bool,
-    strict_utf8_object: bool,
-    duplicate_extra_missing_fields_refused: bool,
-    descriptors_closed: bool,
-    descriptors_must_differ: bool,
-) -> None:
-    """Require a positive recovery payload limit and boolean protocol flags."""
-    if maximum_bytes <= 0:
-        raise ValueError("recovery handoff maximum bytes must be positive")
-    if not all(
-        isinstance(value, bool)
-        for value in (
-            required_together,
-            strict_utf8_object,
-            duplicate_extra_missing_fields_refused,
-            descriptors_closed,
-            descriptors_must_differ,
-        )
-    ):
-        raise TypeError("recovery handoff protocol flags must be bools")
-
-
-def _validate_recovery_reserved_descriptors(reserved_descriptors: tuple[int, ...]) -> None:
-    """Require non-negative unique reserved recovery descriptors."""
-    if not reserved_descriptors or any(value < 0 for value in reserved_descriptors):
-        raise ValueError("recovery handoff reserved descriptors must be non-negative")
-    if len(reserved_descriptors) != len(set(reserved_descriptors)):
-        raise ValueError("recovery handoff reserved descriptors must be unique")
-
-
-def _validate_recovery_bootstrap(windows_handle_bootstrap: str) -> None:
-    """Require a non-empty whitespace-free Windows descriptor bootstrap token."""
-    if not windows_handle_bootstrap or any(character.isspace() for character in windows_handle_bootstrap):
-        raise ValueError("recovery handoff Windows bootstrap must be a non-empty token")
-
-
-def _require_coherent_transport(
-    locus: TransportLocus,
-    shape: TransportShape,
-    role: TransportRole,
-    *,
-    field: str,
-) -> None:
-    """Refuse a transport declaration whose three axes disagree.
-
-    A locus that is not local has no filesystem shape and no role, and saying
-    otherwise asserts a fact that does not exist. A locus that IS local has
-    both, and leaving either at its not-applicable member is an author who
-    filled in one field and stopped.
-    """
-    local = locus in {TransportLocus.LOCAL_IN, TransportLocus.LOCAL_OUT}
-    if not local:
-        if shape is not TransportShape.NOT_APPLICABLE:
-            raise ValueError(f"{field} declares a shape without a local locus")
-        if role is not TransportRole.NOT_APPLICABLE:
-            raise ValueError(f"{field} declares a role without a local locus")
-        return
-    if shape is TransportShape.NOT_APPLICABLE:
-        raise ValueError(f"{field} declares a local locus without a shape")
-    if role is TransportRole.NOT_APPLICABLE:
-        raise ValueError(f"{field} declares a local locus without a role")
 
 
 @dataclass(frozen=True, slots=True)
@@ -740,67 +534,6 @@ class ArgumentSpec:
             self.transport_role,
             field="argument transport",
         )
-
-
-def _validate_option_declarations(declarations: tuple[str, ...], metavar: str | None) -> None:
-    """Validate option tokens and the optional display metavar."""
-    if not declarations:
-        raise ValueError("option must declare at least one CLI token")
-    if len(set(declarations)) != len(declarations):
-        raise ValueError("option declarations must be unique")
-    for declaration in declarations:
-        if not declaration.startswith("-"):
-            raise ValueError("option declarations must begin with '-'")
-        _require_token(declaration, field="option declaration")
-    if metavar is not None:
-        _require_token(metavar, field="option metavar")
-
-
-def _validate_option_flags(count: bool, is_flag: bool, multiple: bool, flag_value: LiteralValue) -> None:
-    """Validate count and explicit flag-value combinations."""
-    if count and (not is_flag or multiple):
-        raise ValueError("counting options must be singular flags")
-    if flag_value is not None and not is_flag:
-        raise ValueError("flag values require is_flag")
-
-
-def _validate_option_environment(envvar: tuple[str, ...]) -> None:
-    """Validate unique environment variable names and their token shape."""
-    if len(set(envvar)) != len(envvar):
-        raise ValueError("option environment variables must be unique")
-    for variable in envvar:
-        _require_token(variable, field="option environment variable")
-
-
-def _validate_machine_secret_option_channel(
-    channel: MachineSecretChannelKind | None,
-    annotation: DeferredTarget,
-) -> None:
-    """Validate the value type required by a machine-secret channel."""
-    if channel is MachineSecretChannelKind.STDIN and annotation != DeferredTarget("builtins", "bool"):
-        raise ValueError("stdin machine-secret channel must be boolean")
-    if channel is MachineSecretChannelKind.FILE_DESCRIPTOR and annotation != DeferredTarget("builtins", "int"):
-        raise ValueError("file-descriptor machine-secret channel must be integer")
-
-
-def _validate_secret_channel_scope(
-    machine_secret_channel: MachineSecretChannelKind | None,
-    profile_secret_channel: ProfileSecretChannelKind | None,
-) -> None:
-    """Refuse assigning one option to both machine and profile secret scopes."""
-    if machine_secret_channel is not None and profile_secret_channel is not None:
-        raise ValueError("one option cannot belong to both secret-channel scopes")
-
-
-def _validate_profile_secret_option_channel(
-    channel: ProfileSecretChannelKind | None,
-    annotation: DeferredTarget,
-) -> None:
-    """Validate the value type required by a profile-secret channel."""
-    if channel is ProfileSecretChannelKind.STDIN and annotation != DeferredTarget("builtins", "bool"):
-        raise ValueError("stdin profile-secret channel must be boolean")
-    if channel is ProfileSecretChannelKind.FILE_DESCRIPTOR and annotation != DeferredTarget("builtins", "int"):
-        raise ValueError("file-descriptor profile-secret channel must be integer")
 
 
 @dataclass(frozen=True, slots=True)
@@ -890,316 +623,15 @@ class ResultSchemaSpec:
 
     def __post_init__(self) -> None:
         """Validate the result-schema shape agrees with the declared ``state``, or raise."""
-        if self.state is SchemaState.TARGET:
-            _validate_target_schema(self.target, self.reason_key, self.identity)
-        elif self.state is SchemaState.NOT_SUPPORTED:
-            _validate_not_supported_schema(self.target, self.reason_key, self.identity)
-        elif self.state is SchemaState.UNAVAILABLE:
-            _validate_unavailable_schema(self.target, self.reason_key, self.identity)
-
-
-def _validate_target_schema(
-    target: DeferredTarget | None,
-    reason_key: TranslationKey | None,
-    identity: str | None,
-) -> None:
-    """Require a target schema's identity and target without an unavailable reason."""
-    if target is None or reason_key is not None or identity is None:
-        raise ValueError("schema target state requires an identity and target")
-    parts = identity.split(".")
-    if any(not part or any(character.isspace() for character in part) for part in parts):
-        raise ValueError("schema identity must be a non-empty dotted token sequence")
-
-
-def _validate_not_supported_schema(
-    target: DeferredTarget | None,
-    reason_key: TranslationKey | None,
-    identity: str | None,
-) -> None:
-    """Require a not-supported schema to carry no target, reason, or identity."""
-    if target is not None or reason_key is not None or identity is not None:
-        raise ValueError("unsupported schema state carries no identity, target, or reason")
-
-
-def _validate_unavailable_schema(
-    target: DeferredTarget | None,
-    reason_key: TranslationKey | None,
-    identity: str | None,
-) -> None:
-    """Require an unavailable schema to carry only its localized reason."""
-    if target is not None or reason_key is None or identity is not None:
-        raise ValueError("unavailable schema state requires only a localized reason")
-
-
-def _validate_command_identity(
-    key: str,
-    parent_key: str | None,
-    token: str,
-    kind: CommandNodeKind,
-) -> None:
-    """Validate the command key, token, and parent/kind relationship."""
-    _require_identifier(key, field="command key")
-    if parent_key is not None:
-        _require_identifier(parent_key, field="command parent key")
-    _require_token(token, field="command token")
-    if kind not in CommandNodeKind:
-        raise ValueError(f"unknown command node kind: {kind}")
-    if kind == CommandNodeKind.ROOT and parent_key is not None:
-        raise ValueError("root command cannot declare a parent")
-    if kind != "root" and parent_key is None:
-        raise ValueError("non-root command must declare a parent")
-
-
-def _validate_leaf_execution(
-    kind: CommandNodeKind,
-    handler: LazyBinding | None,
-    invocation: InvocationSpec,
-) -> None:
-    """Validate handler and chaining invariants owned by command leaves."""
-    if kind == "leaf" and handler is None:
-        raise ValueError("leaf command must declare a handler binding")
-    if kind == "leaf" and invocation.chain:
-        raise ValueError("leaf command cannot enable command chaining")
-
-
-def _validate_callback_parameters(
-    kind: CommandNodeKind,
-    parameters: tuple[ParameterSpec, ...],
-    invocation: InvocationSpec,
-) -> None:
-    """Reject callback parameters on non-executable groups."""
-    if kind != "leaf" and parameters and not invocation.invoke_without_command:
-        raise ValueError("non-executable groups cannot declare callback parameters")
-
-
-def _validate_terminal_execution(
-    kind: CommandNodeKind,
-    handler: LazyBinding | None,
-    invocation: InvocationSpec,
-) -> None:
-    """Validate terminal invocation, handler, and context relationships."""
-    _validate_terminal_handler(handler, invocation)
-    _validate_terminal_classification(invocation)
-    _validate_terminal_context(invocation)
-    _validate_metadata_group_handler(kind, handler, invocation)
-
-
-def _validate_terminal_handler(handler: LazyBinding | None, invocation: InvocationSpec) -> None:
-    """Require a handler whenever a node invokes without a child command."""
-    if invocation.invoke_without_command and handler is None:
-        raise ValueError("executable root/group must declare a handler binding")
-
-
-def _validate_terminal_classification(invocation: InvocationSpec) -> None:
-    """Require terminal behavior exactly when invocation skips child dispatch."""
-    if invocation.invoke_without_command and invocation.terminal_behavior is None:
-        raise ValueError("invoke-without-command nodes must classify terminal behavior")
-    if not invocation.invoke_without_command and invocation.terminal_behavior is not None:
-        raise ValueError("non-terminal nodes cannot classify terminal behavior")
-
-
-def _validate_terminal_context(invocation: InvocationSpec) -> None:
-    """Require context injection for executable terminal groups."""
-    if invocation.terminal_behavior == "executable" and invocation.context_parameter is None:
-        raise ValueError("terminal executable groups require an invocation context")
-
-
-def _validate_metadata_group_handler(
-    kind: CommandNodeKind,
-    handler: LazyBinding | None,
-    invocation: InvocationSpec,
-) -> None:
-    """Keep metadata-only root/group nodes free of handler bindings."""
-    if not invocation.invoke_without_command and kind != "leaf" and handler is not None:
-        raise ValueError("metadata-only root/group cannot declare a handler binding")
-
-
-def _validate_unique_parameter_names(parameters: tuple[ParameterSpec, ...]) -> tuple[str, ...]:
-    """Return parameter names after refusing duplicate command fields."""
-    parameter_names = tuple(parameter.name for parameter in parameters)
-    if len(parameter_names) != len(set(parameter_names)):
-        raise ValueError("command parameter names must be unique")
-    return parameter_names
-
-
-def _validate_profile_target_parameter(profile_target_parameter: str | None, parameter_names: tuple[str, ...]) -> None:
-    """Require a configured profile target to identify a declared parameter."""
-    if profile_target_parameter is not None:
-        _require_identifier(profile_target_parameter, field="profile target parameter")
-        if profile_target_parameter not in parameter_names:
-            raise ValueError("profile target parameter must reference a declared command parameter")
-
-
-def _validate_unique_option_tokens(parameters: tuple[ParameterSpec, ...]) -> None:
-    """Refuse aliases reused by more than one command option."""
-    option_tokens = [
-        declaration
-        for parameter in parameters
-        if isinstance(parameter, OptionSpec)
-        for declaration in parameter.declarations
-    ]
-    if len(option_tokens) != len(set(option_tokens)):
-        raise ValueError("command option tokens must be unique")
-
-
-def _validate_search_terms(search_terms: tuple[str, ...]) -> None:
-    """Require every semantic command-search term to contain non-whitespace text."""
-    if any(not term.strip() for term in search_terms):
-        raise ValueError("command search terms must be non-empty")
-
-
-def _validate_parameter_declarations(
-    parameters: tuple[ParameterSpec, ...],
-    profile_target_parameter: str | None,
-    search_terms: tuple[str, ...],
-) -> tuple[str, ...]:
-    """Validate parameter identity, option tokens, profile target, and search terms."""
-    parameter_names = _validate_unique_parameter_names(parameters)
-    _validate_profile_target_parameter(profile_target_parameter, parameter_names)
-    _validate_unique_option_tokens(parameters)
-    _validate_search_terms(search_terms)
-    return parameter_names
-
-
-def _validate_machine_secret_presence(
-    machine_secret: MachineSecretSpec | None,
-    secret_channels: tuple[MachineSecretChannelKind, ...],
-) -> None:
-    """Require a machine-secret contract when options expose its channels."""
-    if machine_secret is None and secret_channels:
-        raise ValueError("machine-secret channel parameters require a machine-secret spec")
-
-
-def _validate_machine_secret_shape(
-    kind: CommandNodeKind,
-    machine_secret: MachineSecretSpec | None,
-    secret_channels: tuple[MachineSecretChannelKind, ...],
-) -> None:
-    """Require machine-secret contracts to belong to leaves with both channels."""
-    if machine_secret is None:
-        return
-    if kind != "leaf":
-        raise ValueError("machine-secret specs belong only to command leaves")
-    if (
-        secret_channels.count(MachineSecretChannelKind.STDIN) != 1
-        or secret_channels.count(MachineSecretChannelKind.FILE_DESCRIPTOR) != 1
-    ):
-        raise ValueError("machine-secret spec requires exactly one stdin and file-descriptor channel")
-
-
-def _validate_machine_secret_conditions(
-    parameters: tuple[ParameterSpec, ...],
-    machine_secret: MachineSecretSpec | None,
-) -> None:
-    """Require every machine-secret variant condition to name a command option."""
-    if machine_secret is None:
-        return
-    declared_names = {parameter.name for parameter in parameters}
-    for variant in machine_secret.variants:
-        if variant.condition is not None and variant.condition.option_name not in declared_names:
-            raise ValueError("machine-secret condition must reference a command parameter")
-
-
-def _validate_machine_secret_contract(
-    kind: CommandNodeKind,
-    parameters: tuple[ParameterSpec, ...],
-    machine_secret: MachineSecretSpec | None,
-    secret_channels: tuple[MachineSecretChannelKind, ...],
-) -> None:
-    """Validate leaf machine-secret ownership and channel references."""
-    _validate_machine_secret_presence(machine_secret, secret_channels)
-    _validate_machine_secret_shape(kind, machine_secret, secret_channels)
-    _validate_machine_secret_conditions(parameters, machine_secret)
-
-
-def _validate_profile_secret_contract(
-    kind: CommandNodeKind,
-    machine_secret: MachineSecretSpec | None,
-    profile_secret: ProfileSecretSpec | None,
-    profile_secret_channels: tuple[ProfileSecretChannelKind, ...],
-) -> None:
-    """Validate root profile-secret ownership and channel cardinality."""
-    if profile_secret is None and profile_secret_channels:
-        raise ValueError("profile-secret channel parameters require a profile-secret spec")
-    if profile_secret is None:
-        return
-    if kind != "root":
-        raise ValueError("profile-secret specs belong only to the executable root")
-    if machine_secret is not None:
-        raise ValueError("root profile-secret channels cannot own a leaf machine-secret spec")
-    if (
-        profile_secret_channels.count(ProfileSecretChannelKind.STDIN) != 1
-        or profile_secret_channels.count(ProfileSecretChannelKind.FILE_DESCRIPTOR) != 1
-    ):
-        raise ValueError("root profile-secret contract requires exactly one stdin and file-descriptor channel")
-
-
-def _validate_recovery_presence(parameter_names: tuple[str, ...], recovery_handoff: RecoveryHandoffSpec | None) -> None:
-    """Require a recovery contract when descriptor options are declared."""
-    recovery_parameter_names = {"recovery_handoff_fd", "recovery_verification_fd"}
-    declared_recovery_parameters = recovery_parameter_names.intersection(parameter_names)
-    if declared_recovery_parameters and recovery_handoff is None:
-        raise ValueError("recovery descriptor parameters require a recovery handoff spec")
-
-
-def _validate_recovery_shape(kind: CommandNodeKind, recovery_handoff: RecoveryHandoffSpec | None) -> None:
-    """Keep recovery handoff contracts on command leaves."""
-    if recovery_handoff is not None and kind != "leaf":
-        raise ValueError("recovery handoff specs belong only to command leaves")
-
-
-def _recovery_references(
-    parameter_names: tuple[str, ...],
-    recovery_handoff: RecoveryHandoffSpec,
-) -> set[str]:
-    """Return and validate all command parameters named by a recovery contract."""
-    referenced = {
-        recovery_handoff.handoff_parameter,
-        recovery_handoff.verification_parameter,
-        *recovery_handoff.collides_with_parameters,
-    }
-    if not referenced.issubset(parameter_names):
-        raise ValueError("recovery handoff spec references a missing command parameter")
-    return referenced
-
-
-def _recovery_descriptor_parameters(
-    parameters: tuple[ParameterSpec, ...],
-    referenced: set[str],
-) -> dict[str, OptionSpec]:
-    """Resolve recovery references to command options, refusing other parameter kinds."""
-    descriptor_parameters = {
-        parameter.name: parameter
-        for parameter in parameters
-        if isinstance(parameter, OptionSpec) and parameter.name in referenced
-    }
-    if descriptor_parameters.keys() != referenced:
-        raise ValueError("recovery handoff parameters must be command options")
-    return descriptor_parameters
-
-
-def _validate_recovery_integer_options(descriptor_parameters: dict[str, OptionSpec]) -> None:
-    """Require every recovery descriptor option to carry an integer value contract."""
-    if any(
-        parameter.value.annotation != DeferredTarget("builtins", "int") for parameter in descriptor_parameters.values()
-    ):
-        raise ValueError("recovery handoff parameters must be integer options")
-
-
-def _validate_recovery_handoff_contract(
-    kind: CommandNodeKind,
-    parameters: tuple[ParameterSpec, ...],
-    parameter_names: tuple[str, ...],
-    recovery_handoff: RecoveryHandoffSpec | None,
-) -> None:
-    """Validate recovery descriptor ownership, references, and integer options."""
-    _validate_recovery_presence(parameter_names, recovery_handoff)
-    if recovery_handoff is None:
-        return
-    _validate_recovery_shape(kind, recovery_handoff)
-    referenced = _recovery_references(parameter_names, recovery_handoff)
-    descriptor_parameters = _recovery_descriptor_parameters(parameters, referenced)
-    _validate_recovery_integer_options(descriptor_parameters)
+        _validate_result_schema(
+            self.state,
+            self.target,
+            self.reason_key,
+            self.identity,
+            validate_target=_validate_target_schema,
+            validate_not_supported=_validate_not_supported_schema,
+            validate_unavailable=_validate_unavailable_schema,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -1227,42 +659,29 @@ class CommandSpec:
 
     def __post_init__(self) -> None:
         """Validate the command node's identity, hierarchy, and dispatch invariants, or raise."""
-        _validate_command_identity(self.key, self.parent_key, self.token, self.kind)
-        _validate_leaf_execution(self.kind, self.handler, self.invocation)
-        _validate_callback_parameters(self.kind, self.parameters, self.invocation)
-        _validate_terminal_execution(self.kind, self.handler, self.invocation)
-        parameter_names = _validate_parameter_declarations(
+        _validate_command_spec(
+            self.key,
+            self.parent_key,
+            self.token,
+            self.kind,
+            self.handler,
+            self.invocation,
             self.parameters,
             self.profile_target_parameter,
             self.search_terms,
-        )
-        secret_channels = tuple(
-            parameter.machine_secret_channel
-            for parameter in self.parameters
-            if isinstance(parameter, OptionSpec) and parameter.machine_secret_channel is not None
-        )
-        profile_secret_channels = tuple(
-            parameter.profile_secret_channel
-            for parameter in self.parameters
-            if isinstance(parameter, OptionSpec) and parameter.profile_secret_channel is not None
-        )
-        _validate_machine_secret_contract(
-            self.kind,
-            self.parameters,
-            self.machine_secret,
-            secret_channels,
-        )
-        _validate_profile_secret_contract(
-            self.kind,
             self.machine_secret,
             self.profile_secret,
-            profile_secret_channels,
-        )
-        _validate_recovery_handoff_contract(
-            self.kind,
-            self.parameters,
-            parameter_names,
             self.recovery_handoff,
+            require_identifier=_require_identifier,
+            require_token=_require_token,
+            validate_identity=_validate_command_identity,
+            validate_leaf=_validate_leaf_execution,
+            validate_callbacks=_validate_callback_parameters,
+            validate_terminal=_validate_terminal_execution,
+            validate_parameters=_validate_parameter_declarations,
+            validate_machine_secret=_validate_machine_secret_contract,
+            validate_profile_secret=_validate_profile_secret_contract,
+            validate_recovery=_validate_recovery_handoff_contract,
         )
 
 
@@ -1274,57 +693,6 @@ class CommandSpecNode:
     spec: CommandSpec
 
 
-def _validate_graph_shape(specs: tuple[CommandSpec, ...]) -> dict[str, CommandSpec]:
-    """Require a non-empty graph with one root and unique command keys."""
-    if not specs:
-        raise ValueError("command spec graph cannot be empty")
-    by_key = {spec.key: spec for spec in specs}
-    if len(by_key) != len(specs):
-        raise ValueError("command spec keys must be unique")
-    roots = tuple(spec for spec in specs if spec.parent_key is None)
-    if len(roots) != 1:
-        raise ValueError("command spec graph must declare exactly one root")
-    return by_key
-
-
-def _validate_graph_parent_edges(specs: tuple[CommandSpec, ...], by_key: dict[str, CommandSpec]) -> None:
-    """Require every parent edge to name a non-leaf command."""
-    for spec in specs:
-        if spec.parent_key is not None and spec.parent_key not in by_key:
-            raise ValueError(f"command spec {spec.key!r} has unknown parent {spec.parent_key!r}")
-        if spec.parent_key is not None and by_key[spec.parent_key].kind == "leaf":
-            raise ValueError(f"leaf command {spec.parent_key!r} cannot own children")
-
-
-def _derive_graph_paths(by_key: dict[str, CommandSpec]) -> dict[str, tuple[str, ...]]:
-    """Derive every operator path while refusing parent cycles."""
-    paths: dict[str, tuple[str, ...]] = {}
-    visiting: set[str] = set()
-
-    def derive_path(key: str) -> tuple[str, ...]:
-        if key in paths:
-            return paths[key]
-        if key in visiting:
-            raise ValueError("command spec parent edges contain a cycle")
-        visiting.add(key)
-        spec = by_key[key]
-        parent_path = () if spec.parent_key is None else derive_path(spec.parent_key)
-        path = (*parent_path, spec.token)
-        visiting.remove(key)
-        paths[key] = path
-        return path
-
-    for key in by_key:
-        derive_path(key)
-    return paths
-
-
-def _validate_graph_path_uniqueness(paths: dict[str, tuple[str, ...]]) -> None:
-    """Require every graph node to have a unique derived operator path."""
-    if len(set(paths.values())) != len(paths):
-        raise ValueError("command spec operator paths must be unique")
-
-
 @dataclass(frozen=True, slots=True)
 class CommandSpecGraph:
     """Validated immutable tree assembled from distributed specifications."""
@@ -1333,52 +701,27 @@ class CommandSpecGraph:
 
     def __post_init__(self) -> None:
         """Validate key uniqueness, single root, parent references, and path uniqueness, or raise."""
-        by_key = _validate_graph_shape(self.specs)
-        _validate_graph_parent_edges(self.specs, by_key)
-        paths = _derive_graph_paths(by_key)
-        _validate_graph_path_uniqueness(paths)
+        _validate_graph(self.specs)
 
     def by_key(self) -> MappingProxyType[str, CommandSpec]:
         """Return every command spec indexed by its key."""
-        return MappingProxyType({spec.key: spec for spec in self.specs})
+        return _graph_by_key(self.specs)
 
     def nodes(self) -> tuple[CommandSpecNode, ...]:
         """Return every command spec paired with its derived operator path."""
-        by_key = self.by_key()
-
-        def path_for(spec: CommandSpec) -> tuple[str, ...]:
-            tokens = [spec.token]
-            parent_key = spec.parent_key
-            while parent_key is not None:
-                parent = by_key[parent_key]
-                tokens.append(parent.token)
-                parent_key = parent.parent_key
-            return tuple(reversed(tokens))
-
-        return tuple(sorted((CommandSpecNode(path_for(spec), spec) for spec in self.specs), key=lambda node: node.path))
+        return _graph_nodes(self.specs, node_type=CommandSpecNode)
 
     def by_path(self) -> MappingProxyType[tuple[str, ...], CommandSpec]:
         """Return the exact derived operator-path index."""
-        return MappingProxyType({node.path: node.spec for node in self.nodes()})
+        return _graph_by_path(self.specs, node_type=CommandSpecNode)
 
     def resolve_path(self, path: tuple[str, ...]) -> CommandSpec:
         """Resolve one complete operator path, failing closed on absence."""
-        try:
-            return self.by_path()[path]
-        except KeyError as error:
-            raise LookupError(f"unknown command spec path: {' '.join(path)!r}") from error
+        return _resolve_graph_path(self.specs, path, node_type=CommandSpecNode)
 
     def by_schema_identity(self) -> MappingProxyType[str, CommandSpec]:
         """Return the unique executable result-schema identity index."""
-        rows = {
-            spec.result_schema.identity: spec
-            for spec in self.specs
-            if spec.result_schema.state is SchemaState.TARGET and spec.result_schema.identity is not None
-        }
-        expected = sum(spec.result_schema.state is SchemaState.TARGET for spec in self.specs)
-        if len(rows) != expected:
-            raise ValueError("command result-schema identities must be unique")
-        return MappingProxyType(rows)
+        return _graph_by_schema_identity(self.specs)
 
 
 #: The three builtin value contracts every command surface declares. They are
@@ -1389,7 +732,6 @@ TEXT_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "str
 WHOLE_NUMBER_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "int"))
 FLAG_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("builtins", "bool"))
 PATH_VALUE: Final[ValueContract] = ValueContract(DeferredTarget("pathlib", "Path"))
-
 
 __all__ = [
     "FLAG_VALUE",

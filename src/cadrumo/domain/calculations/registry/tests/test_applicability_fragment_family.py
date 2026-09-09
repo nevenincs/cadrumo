@@ -19,9 +19,10 @@ from ..applicability import ModeloApplicabilityRule, hydrate_applicability_rule
 from ..errors import RegistryLoadError, RegistryValidationError
 from ..loader import load_modelo_directory
 from ..schema import ModeloRevision
-from ..schema_base import schema_family_enrollment_failures, schema_family_fields
+from ..schema_base import schema_family_fields
 from ..schema_revision_members import ApplicabilityRuleDefinition
 from ._referential_integrity_support import REFERENCE_LEGAL_ID, minimal_legal_ref, minimal_revision
+from ._schema_family_support import schema_family_enrollment_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

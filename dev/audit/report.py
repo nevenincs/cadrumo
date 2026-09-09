@@ -1,15 +1,11 @@
 #!/usr/bin/env python
-"""Monthly code-health report: shadowing, duplication, layering, complexity.
+"""Monthly code-health report: duplication, layering, complexity.
 
-Composes the four EXISTING scanners already shipped under ``dev/`` into one
+Composes the EXISTING scanners already shipped under ``dev/`` into one
 red/amber/green dashboard, so a contributor gets a single command and a single
-verdict instead of four unrelated tool invocations with no shared severity
+verdict instead of unrelated tool invocations with no shared severity
 model:
 
-* **Shadowing** (D1) -- reuses ``dev.quality.import_hygiene_scan.find_multi_sourced_symbols``
-  over the live facade set. Any "high"-confidence symbol declared in more
-  than one owning package's ``__all__`` is RED, and zero such symbols is
-  GREEN.
 * **Duplication** (D2) -- delegates the entire measurement to
   ``dev.audit.duplication.run_duplication_scan``, the one runner
   ``just audit-duplication`` also calls. Any clone cluster is advisory debt
@@ -43,8 +39,6 @@ release blocker). Complexity and layering remain hard live signals;
 duplication remains advisory.
 
 See Also:
-    :func:`~dev.quality.import_hygiene_scan.find_multi_sourced_symbols`
-        Symbol-shadowing scanner reused for the D1 dimension.
     :func:`~dev.audit.duplication.run_duplication_scan`
         The single duplication runner consumed for the D2 dimension.
     :mod:`~dev.audit.complexity`
@@ -67,15 +61,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.directory_scan import scan_directory
-
 from .._paths import REPO_ROOT, UTF_8
-from ..quality.import_hygiene_scan import (
-    PKG_ROOT,
-    discover_facades,
-    find_multi_sourced_symbols,
-    walk_module_imports,
-)
 from ..test_runs.paths import allocate_run_directory
 from .complexity import scan_complexity
 from .duplication import DuplicationOutcome, run_duplication_scan
@@ -99,38 +85,6 @@ class DimensionReport:
     status: Status
     headline: str
     details: list[str] = field(default_factory=list)
-
-
-# ---------------------------------------------------------------------------
-# D1: shadowing (multi-sourced / duplicate-facade symbols)
-# ---------------------------------------------------------------------------
-
-
-def audit_shadowing() -> DimensionReport:
-    """Classify D1 (symbol shadowing / multi-facade duplicates).
-
-    RED: a "high"-confidence symbol declared in more than one owning
-    package's ``__all__``. GREEN: no multi-facade duplicates at all.
-    """
-    py_files = list(scan_directory(PKG_ROOT, pattern="*.py", recursive=True, prune_directories=("__pycache__",)))
-    facades = discover_facades()
-    all_sites = [site for path in py_files for site in walk_module_imports(path)]
-    multi_sourced = find_multi_sourced_symbols(facades, all_sites)
-
-    findings = sorted(
-        f"{item.symbol} (facades={item.facades})"
-        for item in multi_sourced
-        if item.confidence == "high" and len(item.facades) > 1
-    )
-
-    if findings:
-        return DimensionReport(
-            name="shadowing",
-            status=Status.RED,
-            headline=f"{len(findings)} multi-facade duplicate symbol(s)",
-            details=findings,
-        )
-    return DimensionReport(name="shadowing", status=Status.GREEN, headline="no multi-facade duplicate symbols")
 
 
 # ---------------------------------------------------------------------------
@@ -292,7 +246,6 @@ def build_report(repo_root: Path) -> HealthReport:
     """Run every dimension audit and assemble the composed report."""
     return HealthReport(
         dimensions=(
-            audit_shadowing(),
             audit_duplication(repo_root),
             audit_layering(repo_root),
             audit_complexity(),

@@ -51,8 +51,6 @@ from ..resume import (
     WorkflowResumeRunAmbiguousError,
     find_latest_run_for_period,
     find_unique_run_for_period,
-    resolve_modelo_exact_workflow_run_for_resume,
-    resolve_modelo_visible_workflow_run_for_resume,
     resolve_modelo_workflow_resume_target,
     resolve_modelo_workflow_run_for_resume,
     resume_modelo_workflow,
@@ -645,9 +643,9 @@ def test_visible_modelo_resume_target_resolves_single_workflow_run(tmp_path: Pat
     )
     save_run(run)
 
-    resolved = resolve_modelo_visible_workflow_run_for_resume(
+    resolved = resolve_modelo_workflow_resume_target(
         modelo="130",
-        filing_year=2026,
+        year=2026,
         period=Period.from_year_and_code(2026, "1T"),
         bucket_id=_BUCKET_ID,
     )
@@ -689,9 +687,9 @@ def test_visible_modelo_resume_target_refuses_ambiguous_workflow_runs(tmp_path: 
     save_run(later)
 
     with pytest.raises(WorkflowResumeRunAmbiguousError) as raised:
-        resolve_modelo_visible_workflow_run_for_resume(
+        resolve_modelo_workflow_resume_target(
             modelo="130",
-            filing_year=2026,
+            year=2026,
             period=Period.from_year_and_code(2026, "1T"),
             bucket_id=_BUCKET_ID,
         )
@@ -721,7 +719,7 @@ def test_exact_modelo_work_target_resolves_latest_run_for_period(tmp_path: Path)
     save_run(earlier)
     save_run(later)
 
-    resolved = resolve_modelo_exact_workflow_run_for_resume(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID)
+    resolved = resolve_modelo_workflow_resume_target(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID)
     via_target = resolve_modelo_workflow_run_for_resume(
         ModeloExactWorkUnitTarget(work_unit_id=work_unit.work_unit_id, bucket_id=_BUCKET_ID),
         catalogue=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).load(),

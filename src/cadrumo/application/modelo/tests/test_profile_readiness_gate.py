@@ -35,7 +35,6 @@ from ..action_errors import ModeloProfileReadinessError, WorkUnitMutationRefused
 from ..calculation_actions import (
     calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    mark_revision_verificado_completo,
 )
 from ..profile_readiness_gate import (
     _profile_activity_start_date,
@@ -411,31 +410,6 @@ def test_create_work_unit_service_refuses_nonresident_legal_entity_m200(tmp_path
         assert len(repository.load()) == 0
 
 
-def test_mark_verified_service_refuses_existing_work_unit_with_incomplete_profile(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
-        _store_incomplete_profile(_OPERATOR_PROFILE_ID)
-        work_repository = WorkUnitCatalogueRepository()
-        calculation_repository = CalculationRevisionCatalogueRepository()
-        work_unit = _store_work_unit(work_repository, bucket_id=_OPERATOR_PROFILE_ID)
-        revision_id = _store_draft_revision(
-            calculation_repository,
-            work_unit=work_unit,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period,
-                reference="test:profile-readiness:verification-refusal",
-            ),
-        )
-
-        with pytest.raises(ModeloProfileReadinessError):
-            mark_revision_verificado_completo(
-                revision_id,
-                actor="operator",
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                clock=_NOW,
-            )
-
-
 def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID):
         _store_incomplete_profile(_OPERATOR_PROFILE_ID)
@@ -741,7 +715,7 @@ def test_stale_pre_activity_m303_calculate_refuses_before_wallet_or_revision(tmp
         assert wallet_repository.list_decisions() == ()
 
 
-def test_stale_pre_activity_m130_calculate_and_verify_refuse_before_revision_mutation(tmp_path: Path) -> None:
+def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_OPERATOR_PROFILE_ID) as profile:
         _store_ready_profile(_OPERATOR_PROFILE_ID, activity_start_date=date(2026, 7, 15))
         work_repository = WorkUnitCatalogueRepository(objects=profile.repository)
@@ -754,7 +728,7 @@ def test_stale_pre_activity_m130_calculate_and_verify_refuse_before_revision_mut
             period_code="2T",
             revision_id=_M130_REVISION,
         )
-        revision_id = _store_draft_revision(calculation_repository, work_unit=work_unit)
+        _store_draft_revision(calculation_repository, work_unit=work_unit)
 
         with pytest.raises(ModeloProfileReadinessError) as calculate_exc:
             calculate_modelo_revision(
@@ -769,20 +743,6 @@ def test_stale_pre_activity_m130_calculate_and_verify_refuse_before_revision_mut
 
         assert "Modelo 130 2026 2T is before" in str(calculate_exc.value)
         assert len(calculation_repository.load()) == 1
-
-        with pytest.raises(ModeloProfileReadinessError) as verify_exc:
-            mark_revision_verificado_completo(
-                revision_id,
-                actor="operator",
-                work_unit_repository=work_repository,
-                calculation_repository=calculation_repository,
-                clock=_NOW,
-            )
-
-        assert "Modelo 130 2026 2T is before" in str(verify_exc.value)
-        persisted_revision = calculation_repository.load().get(revision_id)
-        assert persisted_revision is not None
-        assert persisted_revision.state is CalculationRevisionState.BORRADOR
 
 
 def test_first_active_m303_period_allows_create_and_calculate(tmp_path: Path) -> None:

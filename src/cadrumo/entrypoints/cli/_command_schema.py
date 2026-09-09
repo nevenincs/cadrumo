@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from ...application.operator_surface.manifest import CommandSchemaRef
     from ...core.json_contract import RegisteredSchema
     from ._command_policy import CommandExecutionPolicy
-    from .command_spec import CommandSpec, ParameterSpec
+    from .command_spec import CommandSpec, CommandSpecNode, ParameterSpec, ProfileSecretSpec
 
 CommandParameterDefault = bool | int | float | str | tuple[bool | int | float | str | None, ...] | None
 
@@ -238,13 +238,13 @@ def _choices(parameter: ParameterSpec) -> tuple[str, ...]:
 
 
 def _parameter(parameter: ParameterSpec) -> CommandParameterMetadata:
-    declarations = parameter.declarations if isinstance(parameter, OptionSpec) else ()
+    cli_flag, off_flag = _parameter_flags(parameter)
     json_type = _json_type(parameter)
     return CommandParameterMetadata(
         parameter.name,
         parameter.kind,
-        next((token for token in declarations if token.startswith("--") and not token.startswith("--no-")), ""),
-        next((token for token in declarations if token.startswith("--no-")), ""),
+        cli_flag,
+        off_flag,
         json_type,
         parameter.default.kind is DefaultKind.REQUIRED,
         isinstance(parameter, OptionSpec) and (parameter.is_flag or json_type == "boolean"),
@@ -258,6 +258,15 @@ def _parameter(parameter: ParameterSpec) -> CommandParameterMetadata:
     )
 
 
+def _parameter_flags(parameter: ParameterSpec) -> tuple[str, str]:
+    """Project the positive and negative long flags from an option declaration."""
+    declarations = parameter.declarations if isinstance(parameter, OptionSpec) else ()
+    return (
+        next((token for token in declarations if token.startswith("--") and not token.startswith("--no-")), ""),
+        next((token for token in declarations if token.startswith("--no-")), ""),
+    )
+
+
 def _operator_path(path: tuple[str, ...]) -> tuple[str, ...]:
     return path[1:] if path and path[0] == "aeat" else path
 
@@ -267,9 +276,76 @@ def command_registration_projection() -> CommandRegistrationProjection:
     return _command_registration_projection(output_language())
 
 
+def _handler_owner(spec: CommandSpec) -> str | None:
+    """Return the authored handler identity when a node has executable ownership."""
+    if spec.handler is None or spec.handler.target is None:
+        return None
+    return spec.handler.target.identity
+
+
+def _live_node_registration_metadata(
+    node: CommandSpecNode,
+    *,
+    path: tuple[str, ...],
+    policy: CommandPolicyMetadata,
+    owner: str | None,
+) -> LiveNodeRegistrationMetadata:
+    """Project one graph node into the live-node registration inventory."""
+    return LiveNodeRegistrationMetadata(path, node.spec.kind, None, owner or "<metadata>", None, policy)
+
+
+def _target_command_registration_metadata(
+    node: CommandSpecNode,
+    *,
+    language: str,
+    path: tuple[str, ...],
+    policy: CommandPolicyMetadata,
+    owner: str | None,
+) -> CommandRegistrationMetadata | None:
+    """Project a target result schema into one command registration, if exposed."""
+    from ._profile_authentication_contract import profile_authentication_posture
+
+    spec = node.spec
+    schema = spec.result_schema
+    if schema.state is not SchemaState.TARGET or schema.identity is None or schema.target is None:
+        return None
+    parameters = tuple(_parameter(parameter) for parameter in spec.parameters if not parameter.hidden)
+    return CommandRegistrationMetadata(
+        schema.identity,
+        schema.target.qualname,
+        schema.target.identity,
+        "",
+        path,
+        ((language, parameters),),
+        ((language, tr(spec.help_key.value)),),
+        spec.invocation.hidden,
+        policy,
+        owner,
+        None,
+        machine_secret_payload_metadata(spec),
+        profile_authentication_posture(node),
+    )
+
+
+def _profile_authentication_contract(
+    root_profile_secret: ProfileSecretSpec,
+    *,
+    maximum_bytes: int,
+) -> ProfileAuthenticationContractMetadata:
+    """Project the root profile-secret shape without exposing any secret value."""
+    return ProfileAuthenticationContractMetadata(
+        fields=tuple(MachineSecretFieldMetadata(field.name, field.json_type) for field in root_profile_secret.fields),
+        maximum_bytes=maximum_bytes,
+        same_scope_exclusive=True,
+        stdin_exclusive_across_scopes=True,
+        descriptors_must_differ_across_scopes=True,
+        duplicate_keys_forbidden=True,
+        extra_fields_forbidden=True,
+    )
+
+
 @cache
 def _command_registration_projection(language: str) -> CommandRegistrationProjection:
-    from ._profile_authentication_contract import profile_authentication_posture
     from .command_specs import COMMAND_GRAPH
     from .config.secure_input import MACHINE_SECRET_MAX_BYTES
 
@@ -282,43 +358,31 @@ def _command_registration_projection(language: str) -> CommandRegistrationProjec
     for node in COMMAND_GRAPH.nodes():
         spec = node.spec
         path = _operator_path(node.path)
-        owner = spec.handler.target.identity if spec.handler is not None and spec.handler.target is not None else None
+        owner = _handler_owner(spec)
         policy = _policy(spec)
-        nodes.append(LiveNodeRegistrationMetadata(path, spec.kind, None, owner or "<metadata>", None, policy))
-        schema = spec.result_schema
-        if schema.state is not SchemaState.TARGET or schema.identity is None or schema.target is None:
-            continue
-        parameters = tuple(_parameter(parameter) for parameter in spec.parameters if not parameter.hidden)
-        commands.append(
-            CommandRegistrationMetadata(
-                schema.identity,
-                schema.target.qualname,
-                schema.target.identity,
-                "",
-                path,
-                ((language, parameters),),
-                ((language, tr(spec.help_key.value)),),
-                spec.invocation.hidden,
-                policy,
-                owner,
-                None,
-                machine_secret_payload_metadata(spec),
-                profile_authentication_posture(node),
+        nodes.append(
+            _live_node_registration_metadata(
+                node,
+                path=path,
+                policy=policy,
+                owner=owner,
             )
         )
+        command = _target_command_registration_metadata(
+            node,
+            language=language,
+            path=path,
+            policy=policy,
+            owner=owner,
+        )
+        if command is not None:
+            commands.append(command)
     return CommandRegistrationProjection(
         tuple(sorted(commands, key=lambda row: row.command)),
         tuple(nodes),
-        ProfileAuthenticationContractMetadata(
-            fields=tuple(
-                MachineSecretFieldMetadata(field.name, field.json_type) for field in root_profile_secret.fields
-            ),
+        _profile_authentication_contract(
+            root_profile_secret,
             maximum_bytes=MACHINE_SECRET_MAX_BYTES,
-            same_scope_exclusive=True,
-            stdin_exclusive_across_scopes=True,
-            descriptors_must_differ_across_scopes=True,
-            duplicate_keys_forbidden=True,
-            extra_fields_forbidden=True,
         ),
     )
 

@@ -348,23 +348,6 @@ code the registry does not declare — fails the build.
 """
 
 
-def project_m210_tipo_renta_code(code: str) -> TipoRentaIrnr:
-    """Project an official Modelo 210 tipo-de-renta ``code`` to its rate concept.
-
-    Args:
-        code: A two-digit official code from the HOJA INFORMATIVA 210.
-
-    Returns:
-        The :class:`TipoRentaIrnr` rate concept the code folds into.
-
-    Raises:
-        KeyError: When ``code`` is not a declared, rate-grounded official code.
-            A fetch-gated code (whose rate is not yet bundle-verifiable) raises
-            here rather than resolving to a fabricated rate.
-    """
-    return M210_TIPO_RENTA_CODE_PROJECTION[code]
-
-
 # Official HOJA INFORMATIVA 210 codes that are REAL AEAT tipo-de-renta codes but
 # whose rate is NOT yet grounded against the bundled corpus (the bundled TRLIRNR
 # extract carries only Art. 25 letters a/b/f): asistencia técnica 13

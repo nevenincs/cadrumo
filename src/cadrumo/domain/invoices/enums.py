@@ -187,28 +187,6 @@ class InvoiceLegalMention(StrEnum):
     CASH_ACCOUNTING_REGIME = "CASH_ACCOUNTING_REGIME"
 
 
-_INVOICE_LEGAL_MENTION_TEXT: dict[InvoiceLegalMention, str] = {
-    InvoiceLegalMention.SELF_BILLED: "facturación por el destinatario",
-    InvoiceLegalMention.REVERSE_CHARGE: "inversión del sujeto pasivo",
-    InvoiceLegalMention.TRAVEL_AGENCY_REGIME: "régimen especial de las agencias de viajes",
-    InvoiceLegalMention.USED_GOODS_REGIME: "régimen especial de los bienes usados",
-    InvoiceLegalMention.ART_OBJECTS_REGIME: "régimen especial de los objetos de arte",
-    InvoiceLegalMention.ANTIQUES_COLLECTORS_REGIME: "régimen especial de las antigüedades y objetos de colección",
-    InvoiceLegalMention.CASH_ACCOUNTING_REGIME: "régimen especial del criterio de caja",
-}
-
-
-def invoice_legal_mention_text(mention: InvoiceLegalMention) -> str:
-    """Return the exact RD 1619/2012 art. 6.1 phrase ``mention`` represents.
-
-    The reglamento quotes each of these phrases verbatim between guillemets,
-    so this returns exactly that wording -- extracted from the bundled
-    corpus, not retyped -- for a caller comparing against, or rendering,
-    what the invoice document is required to state.
-    """
-    return _INVOICE_LEGAL_MENTION_TEXT[mention]
-
-
 _NUMERIC_RATE_PREFIX = "RATE_"
 
 
@@ -392,21 +370,6 @@ def numeric_iva_rate_slots() -> dict[Decimal, IvaRate]:
     return {percentage: member for member in IvaRate if (percentage := _slot_declared_percentage(member)) is not None}
 
 
-def numeric_iva_rate_percentages() -> frozenset[Decimal]:
-    """Return the integer-percentage values for the numeric :class:`IvaRate` slots.
-
-    The keys of :func:`numeric_iva_rate_slots`, and derived from it rather than
-    by a second walk of the enum, so the accepted percentages and the slots they
-    resolve to cannot drift apart.
-
-    Returns:
-        A :class:`frozenset` of :class:`Decimal` integer percentages; for
-        the current taxonomy ``frozenset({Decimal("0"), Decimal("4"),
-        Decimal("10"), Decimal("21")})``.
-    """
-    return frozenset(numeric_iva_rate_slots())
-
-
 __all__ = [
     "InvoiceClass",
     "InvoiceLegalMention",
@@ -414,10 +377,8 @@ __all__ = [
     "IvaRate",
     "IvaRateNotFoundError",
     "PaymentStatus",
-    "invoice_legal_mention_text",
     "iva_rate_kind",
     "iva_rate_percentage",
     "iva_rate_slot_percentage",
-    "numeric_iva_rate_percentages",
     "numeric_iva_rate_slots",
 ]

@@ -361,8 +361,6 @@ errors:
     exchange_rate_provider: Az árfolyam-szolgáltató nem válaszolt.
     fail_acceleration_receipt_revocation: A profil tárolt bejelentkezési gyorsítója
       nem távolítható el; továbbra is a lemezen van.
-    fail_access_gate_authorization_manifest: A modellengedélyezési jegyzéket nem sikerült
-      betölteni, vagy érvénytelen engedélyezési bejegyzést tartalmaz.
     fail_borrador_parse: A Modelo 100 tervezet PDF-et nem sikerült bevallássá elemezni.
     fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
     fail_browser_session_browser: A böngésző-munkamenet böngészőjét nem sikerült elindítani.
@@ -726,8 +724,6 @@ errors:
       hiányosak.
     modelo_calculate_text_input: A megadott --casilla felülírási érték nem érvényes
       egy szöveges casillához.
-    modelo_calculation_capture_not_current: A szamitasi revizio mar nem aktualis.
-      Olvassa be ujra a reviziot, es probalja meg ismet.
     modelo_calculation_revision_selector_ambiguous: A számítási revízió választó több
       revízióra illeszkedik; pontosítsa a választót.
     modelo_calculation_revision_selector_state: A kiválasztott számítási revízió nincs
@@ -741,8 +737,6 @@ errors:
       létre vagy válasszon ki egy profilt, és próbálja újra.
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
       decimális összeg.
-    modelo_readiness_capture_not_current: A keszultsegi jelentes mar nem aktualis.
-      Olvassa be ujra a modelo celt, es probalja meg ismet.
     modelo_revision_pick: A modellrevízió kiválasztása érvénytelen.
     modelo_work_capture_not_current: A munkakivalasztas mar nem aktualis. Olvassa
       be ujra a munkacelt, es probalja meg ismet.
@@ -751,8 +745,6 @@ errors:
     modelo_work_period_token: Érvénytelen modell időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.
-    modelo_work_review_capture_not_current: A munkaattekintes mar nem aktualis. Olvassa
-      be ujra a munkacelt, es probalja meg ismet.
     modelo_work_selector_ambiguous: Több modell munkaegység is illeszkedik a választóra.
     modelo_work_selector_contradiction: A modell munkaválasztó argumentumai ellentmondanak
       egymásnak.

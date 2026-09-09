@@ -22,7 +22,7 @@ magnitude across the 4T/N -> 1T/N+1 wrap, not just the per-period totals
 Grounding: LIVA art. 99 (compensación de cuotas), arts. 115-116 (saldo a
 compensar / devolución), RD 1624/1992 arts. 29-30 (procedure).
 Non-tautological: both the year-N saldo and the year-N+1 casilla 110 are
-engine-produced from the parametrised primitive credit; the assertion
+engine-_produced from the parametrised primitive credit; the assertion
 compares engine outputs across two engine runs, not against any
 hand-computed expectation derived from the formula under test.
 """
@@ -220,7 +220,7 @@ def test_carry_in_tracks_prior_period_saldo_magnitude(
     devengada_cuota: Decimal,
     deducible_cuota: Decimal,
 ) -> None:
-    """1T/N+1 casilla 110 equals the engine-produced 4T/N saldo at every credit magnitude.
+    """1T/N+1 casilla 110 equals the engine-_produced 4T/N saldo at every credit magnitude.
 
     The contract: vary the primitive credit input in 4T/N, run the full
     cross-renta wrap, and assert the carry-in lands on the prior-period

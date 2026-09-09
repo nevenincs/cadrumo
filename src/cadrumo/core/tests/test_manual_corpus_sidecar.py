@@ -16,7 +16,6 @@ from pydantic import TypeAdapter, ValidationError
 
 from ..directory_scan import scan_directory
 from ..manual_corpus_sidecar import (
-    MANUAL_CORPUS_TEXT_SCHEMA_VERSION,
     MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX,
     ManualCorpusTextSidecar,
 )
@@ -49,7 +48,6 @@ def test_every_committed_sidecar_satisfies_the_shared_contract() -> None:
 
     for sidecar_path in sidecars:
         model = ManualCorpusTextSidecar.model_validate_json(sidecar_path.read_text(encoding="utf-8"))
-        assert model.schema_version == MANUAL_CORPUS_TEXT_SCHEMA_VERSION
         # The sidecar must be filed under the corpus path it claims, or the
         # runtime addressing lookup and the payload disagree.
         expected_relative = model.corpus_path[len("corpus/") :] + MANUAL_CORPUS_TEXT_SIDECAR_SUFFIX
@@ -78,7 +76,7 @@ def test_every_writer_guaranteed_field_is_required(field: str) -> None:
     ("field", "value"),
     [
         ("schema_version", 1),
-        ("schema_version", MANUAL_CORPUS_TEXT_SCHEMA_VERSION + 1),
+        ("schema_version", 3),
         ("corpus_path", "manuals/renta/2020/part1/source.pdf"),
         ("source_sha256", "not-a-digest"),
         ("source_sha256", "AB" * 32),

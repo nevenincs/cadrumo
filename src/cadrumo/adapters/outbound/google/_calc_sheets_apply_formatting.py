@@ -61,11 +61,10 @@ def build_number_format_requests(
     *,
     sheet_id_by_tab: Mapping[str, int],
 ) -> list[Request]:
-    """Apply each numeric casilla's display format, mirroring the offline workbook.
+    """Apply each numeric casilla's display format.
 
     Money/integer cells render as NUMBER with the casilla's pattern; ratio cells
-    as PERCENT — so the online Sheet shows the same money/percentage presentation
-    as the offline xls and the official AEAT workbook.
+    as PERCENT, matching the official AEAT workbook presentation.
     """
     requests: list[Request] = []
     for number_format in plan.number_formats:
@@ -104,8 +103,7 @@ def build_emphasis_format_requests(
 ) -> list[Request]:
     """Bold the section-header cells and start/final anchor labels.
 
-    Mirrors the offline workbook's section-header + anchor styling so the two
-    transports present the same official-workbook orientation. The label text is
+    Applies the plan's section-header and anchor styling. The label text is
     written by the value batch; this only sets the bold weight.
     """
     requests: list[Request] = []
@@ -155,8 +153,7 @@ def build_base_font_requests(
 
     The role-specific styled-range requests (which carry bold / colour / fill)
     run after these and merge on top, so the workbook reads in the chosen
-    monospace family while the per-role emphasis still lands. Mirrors the
-    offline materialiser's base-font pass over every populated cell.
+    monospace family while the per-role emphasis still lands.
     """
     family = plan.font_family or WORKBOOK_FONT_FAMILY
     requests: list[Request] = []
@@ -184,10 +181,10 @@ def build_styled_range_requests(
     """Render each role-tagged styled range as a ``repeatCell`` format request.
 
     Resolves the range's :class:`StyleRole` through the shared ``ROLE_STYLES``
-    palette — the same source the offline materialiser reads — so the slate
+    palette, so the slate
     header band, blue-grey section banners, pale-yellow input boxes, grey
-    computed cells, green result, and wrapped body columns render identically
-    online and offline. Later ranges win on overlap (the API applies requests in
+    computed cells, green result, and wrapped body columns render consistently.
+    Later ranges win on overlap (the API applies requests in
     order), matching the engine's accent-last ordering.
     """
     family = plan.font_family or WORKBOOK_FONT_FAMILY

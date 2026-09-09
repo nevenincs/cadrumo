@@ -47,8 +47,8 @@ def _collect_all_path_keys_in_subprocess() -> set[str]:
     """Return every command path authored by the immutable graph."""
     code = textwrap.dedent(
         """
-        from cadrumo.entrypoints.cli.command_api import command_spec_nodes
-        for node in command_spec_nodes():
+        from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+        for node in COMMAND_GRAPH.nodes():
             print(' '.join(node.path))
         """,
     )

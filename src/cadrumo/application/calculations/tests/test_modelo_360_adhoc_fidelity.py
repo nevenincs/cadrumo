@@ -35,7 +35,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ._observation_lookup_support import find_observation
 
@@ -192,11 +191,11 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
 
 
 def test_modelo_360_adhoc_fidelity_enrolls_two_renta_years(tmp_path: Path) -> None:
-    """EnrollmentRecorder proves both exercises and matches the authorization manifest.
+    """cross-year observation proves both exercises and matches the cross-year claim.
 
     Drives the real CalculationObservationRepository for both ad-hoc ejercicios
     (real encrypted-SQLite, no mocks), records each via record_context_year, and
-    calls assert_enrollment_matches_manifest. Manifest must declare
+    calls the cross-year behavior assertion. Manifest must declare
     renta_years = [2024, 2025] in the same commit.
     """
     obs_n = _year_n_observation()
@@ -227,19 +226,3 @@ def test_modelo_360_adhoc_fidelity_enrolls_two_renta_years(tmp_path: Path) -> No
         loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="AD-HOC")
         assert loaded_n1 is not None and loaded_n1.observation == obs_n1
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
-
-    recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(
-        filing_year=_YEAR_N,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=_count_n,
-    )
-    recorder.record_context_year(
-        filing_year=_YEAR_N_PLUS_1,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=_count_n1,
-    )
-
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence)

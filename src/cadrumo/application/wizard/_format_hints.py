@@ -42,10 +42,6 @@ _FORMAT_POSTCODE_LOCALE_KEY = "wizard.setup.format.postcode"
 FORMAT_UNITS_LOCALE_KEY = "wizard.setup.format.units-count"
 NIF_INVALID_LOCALE_KEY = "wizard.errors.invalid_tax_id"
 
-#: Registered-value provenance suffix (consumed by the registered-values
-#: projection when a fact carries the censo-artefact provenance token).
-REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY = "wizard.setup.review.registered-non-official-suffix"
-
 PAGE_FORMAT_HINTS: Mapping[str, str] = {
     "tax-id": FORMAT_TAX_ID_LOCALE_KEY,
     "spouse-tax-id": FORMAT_TAX_ID_LOCALE_KEY,
@@ -147,6 +143,5 @@ __all__ = [
     "NIF_INVALID_LOCALE_KEY",
     "PAGE_FORMAT_HINTS",
     "PAGE_WIDGET_KINDS",
-    "REGISTERED_NON_OFFICIAL_SUFFIX_LOCALE_KEY",
     "attach_format_hints",
 ]

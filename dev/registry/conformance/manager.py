@@ -3,8 +3,8 @@
 This module RENDERS; it does not compute conformance. Every fact below is read
 off :class:`~application.registry.RegistryConformanceProfile`, the shipped
 composer that already joined the evidence-tier coverage audit, the support
-probe, the registry-scope validator, the authorization manifest, the
-external-oracle grounding relation, the classification-coherence check, and the
+probe, the registry-scope validator, the external-oracle grounding relation,
+the classification-coherence check, and the
 declared governance stamp. The one axis added here is locale coverage, read
 from the shared locale-key catalogue because it lives in a different shipped
 package and the composer does not reach for it.
@@ -26,7 +26,7 @@ Four reading rules are load-bearing, and every renderer below preserves them.
 * **Absence is not zero.** The composer deliberately returns :data:`None` where
   an axis was not measured or where a revision makes no claim at all: a revision
   reconciling nothing has no independent-check coverage, and a degraded read has
-  no evidence-tier coverage, no support probe, and no authorization verdict.
+  no evidence-tier coverage and no support probe.
   Both would read ``0`` if collapsed, so :data:`None` renders as
   :data:`NOT_MEASURED` (``n/a``) in text and stays ``null`` in JSON. ``n/a`` and
   ``0`` are different answers and must never be conflated.
@@ -100,11 +100,6 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from cadrumo.domain.calculations.registry.external_grounding import (
-    ExternalOracleInventory,
-    UnattributedOraclePayload,
-    load_bundled_external_oracle_inventory,
-)
 from cadrumo.tests.registry_conformance import (
     AnnualCasillaPopulationComparison,
     CoverageAuthorityScope,
@@ -114,6 +109,11 @@ from cadrumo.tests.registry_conformance import (
     RevisionConstructEvidence,
     audit_bundled_registry_conformance,
     compare_annual_casilla_population_for_revision,
+)
+from dev.registry.maintenance_support import (
+    ExternalOracleInventory,
+    UnattributedOraclePayload,
+    load_bundled_external_oracle_inventory,
 )
 
 
@@ -399,11 +399,6 @@ class RevisionConformancePayload(ConformanceModel):
             application row's ``gap_tiers`` but do not enter this field.
         model_law_authority_scope: Authority scope of the evidence-tier ledger,
             or :data:`None` when that axis was not measured.
-        modelo_authorization: Derived modelo-level authorization state, or
-            :data:`None` meaning UNCHECKED — deliberately NOT the
-            ``unauthorized`` default-deny verdict.
-        modelo_authorization_evidence_class: Enrollment-evidence shape behind an
-            authorization, or :data:`None`.
         modelo_calculation_class: The modelo's enforcement posture.
         modelo_tax_domain: The modelo's taxonomy label.
         modelo_scope_classification_findings: Classification-coherence findings
@@ -449,8 +444,6 @@ class RevisionConformancePayload(ConformanceModel):
     grounding_findings: int = Field(ge=0)
     required_coverage_gap_tiers: tuple[str, ...] | None
     model_law_authority_scope: CoverageAuthorityScope | None
-    modelo_authorization: str | None
-    modelo_authorization_evidence_class: str | None
     modelo_calculation_class: str
     modelo_tax_domain: str
     modelo_scope_classification_findings: int = Field(ge=0)
@@ -991,19 +984,6 @@ def build_coverage_report(report: ConformanceReport) -> CoverageReport:
     )
     axes.append(
         _axis(
-            "authorization.authorized",
-            "modelo",
-            _authorized_modelo_count(rows) if validated else None,
-            modelos,
-            caveat=(
-                None
-                if validated
-                else "not measured on a degraded read; absent is not the unauthorized default-deny verdict"
-            ),
-        ),
-    )
-    axes.append(
-        _axis(
             "model_law_coverage.rows_without_required_gap",
             "revision",
             (revisions - report.required_coverage_gap_row_count) if validated else None,
@@ -1113,8 +1093,6 @@ def render_report(report: ConformanceReport) -> str:
                 grounding_findings=row.grounding_findings,
                 required_coverage_gap_tiers=row.required_coverage_gap_tiers,
                 model_law_authority_scope=row.model_law_authority_scope,
-                modelo_authorization=row.modelo_authorization,
-                modelo_authorization_evidence_class=row.modelo_authorization_evidence_class,
                 modelo_calculation_class=row.modelo_calculation_class,
                 modelo_tax_domain=row.modelo_tax_domain,
                 modelo_scope_classification_findings=row.modelo_scope_classification_findings,
@@ -1293,11 +1271,6 @@ def reviewer_attribution(review_status: str, reviewed_by: str | None) -> str | N
     return f"{review_status}:{reviewed_by}"
 
 
-def _authorized_modelo_count(rows: Sequence[RevisionConformancePayload]) -> int:
-    """Count distinct modelos whose derived authorization is granted."""
-    return len({row.modelo for row in rows if row.modelo_authorization == "authorized"})
-
-
 def _axis(
     axis: str,
     scope: str,
@@ -1389,7 +1362,6 @@ def _payload_row(
     classification = row.modelo_classification
     coverage = row.model_law_coverage
     support = row.latest_revision_support
-    authorization = row.modelo_authorization
     return RevisionConformancePayload(
         modelo=row.modelo,
         revision=row.revision,
@@ -1415,10 +1387,6 @@ def _payload_row(
         grounding_findings=len(grounding.findings),
         required_coverage_gap_tiers=None if coverage is None else tuple(coverage.required_tier_gaps),
         model_law_authority_scope=None if coverage is None else coverage.authority_scope,
-        modelo_authorization=None if authorization is None else authorization.state.value,
-        modelo_authorization_evidence_class=(
-            None if authorization is None or authorization.entry is None else authorization.entry.evidence_class.value
-        ),
         modelo_calculation_class=classification.calculation_class,
         modelo_tax_domain=classification.tax_domain.value,
         modelo_scope_classification_findings=len(classification.findings),
@@ -1441,7 +1409,7 @@ def _reading_note(report: ConformanceReport) -> str:
         if report.registry_validated
         else (
             " DEGRADED READ: rows are stamped registry_validated=false and the evidence-tier coverage, "
-            "support-probe, and authorization axes were not consulted at all."
+            "and support-probe axes were not consulted at all."
         )
     )
     return (

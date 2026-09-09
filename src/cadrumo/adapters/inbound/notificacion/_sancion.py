@@ -44,7 +44,6 @@ rather than answering confidently.
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from decimal import Decimal
 from typing import Final, Literal
@@ -55,6 +54,7 @@ from ....core.decimal.printed_money import is_aeat_printed_money
 from ....core.i18n import tr
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import CENT, round_to_cents
+from ....core.text_fold import fold_diacritics
 from ....domain.notifications.sancion import SancionLiquidacion
 from ..pdf.label_regex import parse_spanish_decimal
 from .errors import SancionArithmeticError, SancionParseError
@@ -120,7 +120,7 @@ def _fold_char(char: str) -> str:
     whitespace collapsing does) would shift that offset and slice the value in
     the wrong place.
     """
-    base = "".join(c for c in unicodedata.normalize("NFKD", char) if not unicodedata.combining(c))
+    base = fold_diacritics(char)
     return (base[:1] or char).lower()
 
 

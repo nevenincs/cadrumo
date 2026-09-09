@@ -692,10 +692,7 @@ def _usage_provider_rows(
 ) -> tuple[LlmRunHealthProviderMetrics, ...]:
     """Return provider-sorted usage rows with each provider's model breakdown."""
     grouped = _group_usage_records(records)
-    return tuple(
-        _usage_provider_metrics(provider, grouped[provider])
-        for provider in sorted(grouped)
-    )
+    return tuple(_usage_provider_metrics(provider, grouped[provider]) for provider in sorted(grouped))
 
 
 def build_llm_usage_report(

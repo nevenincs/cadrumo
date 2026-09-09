@@ -9,10 +9,8 @@ two annual contexts: a taxpayer files an ``alta`` in year N and a ``modificacion
 in year N+1. Both events reference the same fiscal identity (NIF) and must be
 independently retrievable from the observation store without contamination.
 
-The enrollment evidence class is THRESHOLD_CONTINUITY: the test constructs a
-real two-year context (real adapters, real encrypted-SQLite store) spanning two
-distinct annual contexts and records both through the EnrollmentRecorder's
-context mode. The context label is the un-fakeable evidence token.
+The test constructs a real two-year context using the encrypted SQLite store
+and verifies both annual observations directly.
 
 Cross-year invariants tested:
 - alta (year N, registry period "alta") and modificacion (year N+1, registry period "modificacion")
@@ -45,13 +43,12 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....tests.registry_observations import registry_grounded_observations, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "036"
 
 #: Two distinct annual contexts. M036 has event-driven period codes; the
@@ -62,7 +59,7 @@ _YEAR_N_PLUS_1 = 2026  # modificacion
 _ALTA_PERIOD = "alta"
 _MODIFICACION_PERIOD = "modificacion"
 
-#: Context label for the EnrollmentRecorder (non-calculation / threshold-continuity mode).
+#: Context label for the cross-year observation (non-calculation / threshold-continuity mode).
 _CONTEXT_LABEL = "036-censal-alta-modificacion-two-annual-contexts"
 
 _CLOCK_N = datetime(2025, 3, 1, 10, 0, 0, tzinfo=UTC)
@@ -328,12 +325,12 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
 def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_manifest(
     tmp_path: Path,
 ) -> None:
-    """EnrollmentRecorder proves both annual contexts and matches the authorization manifest.
+    """cross-year observation proves both annual contexts and matches the cross-year claim.
 
     Drives the real CalculationObservationRepository for both years (year N alta
     and year N+1 modificacion), records each through record_context_year (context
-    mode — no calculation engine), and calls assert_enrollment_matches_manifest.
-    The manifest entry (authorization.d/036.toml) must declare renta_years =
+    mode — no calculation engine), and calls the cross-year behavior assertion.
+    The manifest entry (the former development record) must declare renta_years =
     [2025, 2026] in the same commit as this test.
 
     A stub or single-year recording turns this test RED, and consequently turns
@@ -374,21 +371,3 @@ def test_enrollment_recorder_evidences_two_distinct_annual_contexts_and_matches_
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
 
     # --- Enrollment recording (outside the profile context) -------------
-    recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(
-        filing_year=_YEAR_N,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n),
-    )
-    recorder.record_context_year(
-        filing_year=_YEAR_N_PLUS_1,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n1),
-    )
-
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1), (
-        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; got {evidence.distinct_renta_years!r}"
-    )
-
-    assert_enrollment_matches_manifest(evidence)

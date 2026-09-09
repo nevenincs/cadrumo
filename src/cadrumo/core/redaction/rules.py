@@ -430,16 +430,6 @@ _DEFAULT_RULES: Mapping[str, _RedactionRule] = MappingProxyType(
 )
 
 
-def default_rules() -> Mapping[str, _RedactionRule]:
-    """Return the immutable default-rule registry keyed by rule name.
-
-    Returns:
-        A read-only :class:`~collections.abc.Mapping` from rule name
-        to :class:`core.classification.RedactionRule`.
-    """
-    return _DEFAULT_RULES
-
-
 def default_rules_for(policy: _ClassificationPolicy) -> tuple[_RedactionRule, ...]:
     """Resolve the rule references on a policy to concrete rule instances.
 

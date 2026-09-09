@@ -1432,14 +1432,6 @@ application:
           SetupAnswers-re.
   workflow:
     errors:
-      adapter_missing_deadline_engine: A munkafolyamat-motorhoz deadline_engine adapter
-        szükséges.
-      adapter_missing_filing_draft_builder: A munkafolyamat-motorhoz filing_draft_builder
-        adapter szükséges.
-      adapter_missing_inputs_provider: A munkafolyamat-motorhoz tároló-alapú bejegyzési
-        bemenetek szolgáltató szükséges.
-      adapter_missing_submission_engine: A munkafolyamat-motorhoz submission_engine
-        adapter szükséges.
       no_active_profile_bucket: Nincs aktív profil bucket.
       no_run_for_period: Nem található munkafolyamat-futás a(z) {modelo} modellhez
         {period} időszakra. Futtassa a munkafolyamatot legalább egyszer a folytatás

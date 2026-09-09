@@ -120,10 +120,6 @@ def main(argv: list[str] | None = None) -> int:
     outcomes = (
         _run("format", [*_RUFF, "format", "--check", *names]),
         _run("style", [*_RUFF, "check", *names]),
-        _run(
-            "relative-imports",
-            [sys.executable, "-m", "dev.quality.relative_imports", *names],
-        ),
     )
     return 0 if all(outcomes) else 1
 

@@ -65,7 +65,6 @@ from ...calculations.observations_repository import (
 from ..action_errors import ModeloCrossPeriodCleanStateError
 from ..calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    mark_revision_verificado_completo,
 )
 from ..export import ModeloExportCommand, export_modelo_revision
 from ..external_import_actions import import_external_filing_evidence
@@ -404,30 +403,6 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(tmp_p
             )
 
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
-
-
-def test_direct_mark_verified_refuses_cross_period_revision_without_clean_sources(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_CROSS_PERIOD_MARK_PROFILE_ID) as profile:
-        revision_id = _seed_draft_revision(
-            bucket_id=profile.bucket_id,
-            modelo="390",
-            filing_year=2025,
-            period="0A",
-        )
-
-        with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
-            mark_revision_verificado_completo(
-                revision_id,
-                actor="operator-test",
-                clock=_CLOCK,
-            )
-
-        stored = CalculationRevisionCatalogueRepository().load().revisions[revision_id]
-
-    assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
-    assert stored.state is CalculationRevisionState.BORRADOR
-    assert stored.verified_at is None
-    assert stored.verified_by is None
 
 
 @pytest.mark.parametrize(

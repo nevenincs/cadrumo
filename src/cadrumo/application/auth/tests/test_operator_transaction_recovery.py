@@ -22,7 +22,7 @@ from ....application.wizard.catalogue import WIZARD_FLOWS
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import load_settings
 from ....domain.buckets.event import BucketEvent, BucketEventType
-from ....domain.contribuyente.keys import required_profile_keys
+from ....domain.contribuyente.keys import profile_keys
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
 from ....tests.user_profile import register_minimal_profile
@@ -55,7 +55,7 @@ _STARTED_AT = datetime(2026, 7, 16, 17, 0, tzinfo=UTC)
 
 def _create_profile(*, provider: str) -> None:
     assert WIZARD_FLOWS
-    assert required_profile_keys()
+    assert profile_keys()
     with open_test_profile_session(_BUCKET_ID):
         register_minimal_profile(profile_id=_BUCKET_ID)
         configure_operator_auth(provider)

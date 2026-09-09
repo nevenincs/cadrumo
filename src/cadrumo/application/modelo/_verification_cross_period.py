@@ -751,33 +751,38 @@ def _require_cross_period_clean_state(
     )
 
 
-def _iva_wallet_decision_covers_cross_period_dependency(
+_IVA_WALLET_CROSS_PERIOD_ORIGIN_IDS: frozenset[str] = frozenset(
+    {
+        "modelo-303-compensacion-pendiente-anteriores",
+        "modelo-303-rel-self-compensacion-anteriores",
+    },
+)
+
+
+def _is_iva_wallet_cross_period_dependency(
     verdict: CrossPeriodCleanStateVerdict,
     evidence: CrossPeriodDependencyEvidence,
-    decision: object | None,
 ) -> bool:
-    """Return whether a persisted Modelo 303 wallet decision covers the dependency."""
-    if decision is None:
-        return False
     requirement = evidence.requirement
-    if (
-        verdict.target_modelo != Modelo.M303
-        or requirement.source_modelo != Modelo.M303
-        or not (
-            set(requirement.origin_ids)
-            & {
-                "modelo-303-compensacion-pendiente-anteriores",
-                "modelo-303-rel-self-compensacion-anteriores",
-            }
-        )
-    ):
-        return False
+    return (
+        verdict.target_modelo == Modelo.M303
+        and requirement.source_modelo == Modelo.M303
+        and bool(set(requirement.origin_ids) & _IVA_WALLET_CROSS_PERIOD_ORIGIN_IDS)
+    )
+
+
+def _iva_wallet_decision_matches_cross_period_target(
+    verdict: CrossPeriodCleanStateVerdict,
+    decision: object,
+) -> bool:
     if getattr(decision, "blocked", True):
         return False
     if getattr(decision, "target_year", None) != verdict.target_filing_year:
         return False
-    if getattr(decision, "target_period", None) != verdict.target_period:
-        return False
+    return getattr(decision, "target_period", None) == verdict.target_period
+
+
+def _iva_wallet_decision_has_authoritative_selection(decision: object) -> bool:
     selected_amount = getattr(decision, "selected_amount", None)
     if selected_amount is None:
         return False
@@ -786,6 +791,21 @@ def _iva_wallet_decision_covers_cross_period_dependency(
     if selected_authority in {"aeat_wallet", "taxpayer_override"}:
         return bool(source_kinds & {"aeat_wallet", "taxpayer_override"})
     return False
+
+
+def _iva_wallet_decision_covers_cross_period_dependency(
+    verdict: CrossPeriodCleanStateVerdict,
+    evidence: CrossPeriodDependencyEvidence,
+    decision: object | None,
+) -> bool:
+    """Return whether a persisted Modelo 303 wallet decision covers the dependency."""
+    if decision is None:
+        return False
+    if not _is_iva_wallet_cross_period_dependency(verdict, evidence):
+        return False
+    return _iva_wallet_decision_matches_cross_period_target(verdict, decision) and (
+        _iva_wallet_decision_has_authoritative_selection(decision)
+    )
 
 
 IVA_COMPENSATION_CARRY_LEGAL_REF = _IVA_COMPENSATION_CARRY_LEGAL_REF

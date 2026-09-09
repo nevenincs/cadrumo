@@ -7,6 +7,7 @@ from bisect import bisect_right
 from functools import cache
 from itertools import pairwise
 from pathlib import Path
+from typing import Any
 
 from .....core.resources.bundled_data import bundled_path
 from .....tests.registry_tree import bundled_registry_tree
@@ -81,6 +82,26 @@ def _mid_year_span(revision: ModeloRevision) -> int | None:
     return None if covers_whole_year else valid_from.year
 
 
+def _designs_for_claimed_years(ordered: tuple[Path, ...], revision: ModeloRevision) -> tuple[Path, ...]:
+    """Keep publication-ordered designs whose coverage intersects the revision."""
+    every_year = {year for path in ordered for year in _design_coverage_years(path)}
+    claimed = _claimed_years(revision, every_year)
+    return tuple(path for path in ordered if set(_design_coverage_years(path)) & claimed)
+
+
+def _mid_year_claimed_designs(within: tuple[Path, ...], revision: ModeloRevision, mid_year: int) -> tuple[Path, ...]:
+    """Narrow a partial-year claim to the cited design while retaining other years."""
+    cited = _cited_design_fingerprints(revision)
+    if not cited:
+        return within
+    kept = tuple(
+        path
+        for path in within
+        if _design_fingerprint(path) in cited or mid_year not in set(_design_coverage_years(path))
+    )
+    return kept or within
+
+
 def _designs_claimed_by(modelo_id: str, revision: ModeloRevision) -> tuple[Path, ...]:
     """The designs a revision's span claims, in publication order.
 
@@ -98,9 +119,7 @@ def _designs_claimed_by(modelo_id: str, revision: ModeloRevision) -> tuple[Path,
     across keys that never met.
     """
     ordered, _unorderable = _designs_in_publication_order(modelo_id)
-    every_year = {year for path in ordered for year in _design_coverage_years(path)}
-    claimed = _claimed_years(revision, every_year)
-    within = tuple(path for path in ordered if set(_design_coverage_years(path)) & claimed)
+    within = _designs_for_claimed_years(ordered, revision)
 
     # A revision covering only PART of one year claims only the design it cites
     # for that year. AEAT splits an ejercicio mid-course by publishing two
@@ -119,15 +138,7 @@ def _designs_claimed_by(modelo_id: str, revision: ModeloRevision) -> tuple[Path,
     mid_year = _mid_year_span(revision)
     if mid_year is None:
         return within
-    cited = _cited_design_fingerprints(revision)
-    if not cited:
-        return within
-    kept = tuple(
-        path
-        for path in within
-        if _design_fingerprint(path) in cited or mid_year not in set(_design_coverage_years(path))
-    )
-    return kept or within
+    return _mid_year_claimed_designs(within, revision, mid_year)
 
 
 def _box_set_evidence(before_boxes: dict[str, int], after_boxes: dict[str, int]) -> str | None:
@@ -197,6 +208,29 @@ def _position_content(path: Path) -> dict[tuple[str, int, int], str]:
     return table
 
 
+def _position_change_keys(
+    before: dict[tuple[str, int, int], str], after: dict[tuple[str, int, int], str]
+) -> tuple[list[tuple[str, int, int]], list[tuple[str, int, int]]]:
+    """Return added and removed non-reserved positions in stable order."""
+    added = sorted(key for key in set(after) - set(before) if not _RESERVED_FIELD.search(after[key]))
+    removed = sorted(key for key in set(before) - set(after) if not _RESERVED_FIELD.search(before[key]))
+    return added, removed
+
+
+def _position_change_parts(added: list[tuple[str, int, int]], removed: list[tuple[str, int, int]]) -> list[str]:
+    """Render the bounded evidence samples for changed field positions."""
+    parts = []
+    if added:
+        parts.append(
+            f"{len(added)} added (e.g. {', '.join(f'{sheet} offset {offset}' for sheet, offset, _l in added[:3])})"
+        )
+    if removed:
+        parts.append(
+            f"{len(removed)} removed (e.g. {', '.join(f'{sheet} offset {offset}' for sheet, offset, _l in removed[:3])})"
+        )
+    return parts
+
+
 def _position_set_evidence(earlier: Path, later: Path) -> str | None:
     """SIXTH SIGNAL: a field added or removed at a position, independent of box number.
 
@@ -230,19 +264,10 @@ def _position_set_evidence(earlier: Path, later: Path) -> str | None:
     being double-reported here.
     """
     before, after = _position_content(earlier), _position_content(later)
-    added = sorted(key for key in set(after) - set(before) if not _RESERVED_FIELD.search(after[key]))
-    removed = sorted(key for key in set(before) - set(after) if not _RESERVED_FIELD.search(before[key]))
+    added, removed = _position_change_keys(before, after)
     if not added and not removed:
         return None
-    parts = []
-    if added:
-        parts.append(
-            f"{len(added)} added (e.g. {', '.join(f'{sheet} offset {offset}' for sheet, offset, _l in added[:3])})"
-        )
-    if removed:
-        parts.append(
-            f"{len(removed)} removed (e.g. {', '.join(f'{sheet} offset {offset}' for sheet, offset, _l in removed[:3])})"
-        )
+    parts = _position_change_parts(added, removed)
     return (
         f"field SET changed at these positions: {' and '.join(parts)} -- independent of box number, "
         "so this catches a field added or removed where no bracket exists to key membership on"
@@ -277,6 +302,59 @@ def _unnumbered_labels(path: Path) -> dict[tuple[str, int, int], str]:
                 continue
             table.setdefault((sheet.name, field.offset, field.length), " ".join(field.description.split()))
     return table
+
+
+def _description_changes(
+    before: dict[tuple[str, int, int], str], after: dict[tuple[str, int, int], str]
+) -> tuple[list[tuple[tuple[str, int, int], str, str]], int]:
+    """Find separable leaf changes and count changed slots without one."""
+    flipped: list[tuple[tuple[str, int, int], str, str]] = []
+    unseparable = 0
+    for slot in sorted(set(before) & set(after)):
+        was, now = before[slot], after[slot]
+        if _normalised(was) == _normalised(now):
+            continue
+        if _RESERVED_FIELD.search(was) or _RESERVED_FIELD.search(now):
+            continue
+        if _LABEL_SEPARATOR in was and _LABEL_SEPARATOR in now:
+            leaf_was = was.rsplit(_LABEL_SEPARATOR, 1)[1]
+            leaf_now = now.rsplit(_LABEL_SEPARATOR, 1)[1]
+            if _normalised(leaf_was) == _normalised(leaf_now):
+                continue
+            flipped.append((slot, leaf_was, leaf_now))
+        else:
+            unseparable += 1
+    return flipped, unseparable
+
+
+def _render_description_changes(flipped: list[tuple[tuple[str, int, int], str, str]], unseparable: int) -> str:
+    """Render evidence for changed unnumbered descriptions and instrument limits."""
+    shown = "; ".join(
+        f"{sheet} offset {offset} len {length}: {was!r} -> {now!r}" for (sheet, offset, length), was, now in flipped[:3]
+    )
+    note = (
+        f"{len(flipped)} unnumbered slot(s) re-described at an unchanged position and width "
+        f"(e.g. {shown}) -- the box-number key cannot see these, and no offset, length or "
+        "digest check detects a slot that keeps its place while declaring something else"
+    )
+    if unseparable:
+        note += (
+            f" [plus {unseparable} slot(s) whose text changed but carries no separable leaf, "
+            "NOT individually named -- see the instrument-limit note if this is the only signal]"
+        )
+    return note
+
+
+def _render_unseparable_description_changes(unseparable: int) -> str:
+    """Render the weaker evidence when no changed slot has a separable leaf."""
+    return (
+        f"{unseparable} unnumbered slot(s) re-described at an unchanged position and width, "
+        "with NO separable leaf to name what changed -- INSTRUMENT LIMIT: this is the "
+        "weakest signal in this module, reporting THAT content differs at a fixed position "
+        "without being able to say WHAT, most often because the design carries no "
+        "hierarchical Block-Field labels at all (an informative-return form); real "
+        "divergence still, never proof of identity"
+    )
 
 
 def _description_flip_evidence(earlier: Path, later: Path) -> str | None:
@@ -328,52 +406,16 @@ def _description_flip_evidence(earlier: Path, later: Path) -> str | None:
     them here would double-report one event under two headings.
     """
     before, after = _unnumbered_labels(earlier), _unnumbered_labels(later)
-    flipped: list[tuple[tuple[str, int, int], str, str]] = []
-    unseparable = 0
-    for slot in sorted(set(before) & set(after)):
-        was, now = before[slot], after[slot]
-        if _normalised(was) == _normalised(now):
-            continue
-        if _RESERVED_FIELD.search(was) or _RESERVED_FIELD.search(now):
-            continue
-        if _LABEL_SEPARATOR in was and _LABEL_SEPARATOR in now:
-            leaf_was = was.rsplit(_LABEL_SEPARATOR, 1)[1]
-            leaf_now = now.rsplit(_LABEL_SEPARATOR, 1)[1]
-            if _normalised(leaf_was) == _normalised(leaf_now):
-                continue
-            flipped.append((slot, leaf_was, leaf_now))
-        else:
-            unseparable += 1
+    flipped, unseparable = _description_changes(before, after)
     if flipped:
-        shown = "; ".join(
-            f"{sheet} offset {offset} len {length}: {was!r} -> {now!r}"
-            for (sheet, offset, length), was, now in flipped[:3]
-        )
-        note = (
-            f"{len(flipped)} unnumbered slot(s) re-described at an unchanged position and width "
-            f"(e.g. {shown}) -- the box-number key cannot see these, and no offset, length or "
-            "digest check detects a slot that keeps its place while declaring something else"
-        )
-        if unseparable:
-            note += (
-                f" [plus {unseparable} slot(s) whose text changed but carries no separable leaf, "
-                "NOT individually named -- see the instrument-limit note if this is the only signal]"
-            )
-        return note
+        return _render_description_changes(flipped, unseparable)
     if unseparable:
         # No separable leaf anywhere, so nothing can be individually named -- but the
         # position-content divergence is still real, measured, and must not silently
         # collapse to "no boundary". Deliberately reuses the "unnumbered slot(s)
         # re-described" phrase so the same DESCRIPTION-ONLY marking in the callers below
         # covers this shape without a second matcher.
-        return (
-            f"{unseparable} unnumbered slot(s) re-described at an unchanged position and width, "
-            "with NO separable leaf to name what changed -- INSTRUMENT LIMIT: this is the "
-            "weakest signal in this module, reporting THAT content differs at a fixed position "
-            "without being able to say WHAT, most often because the design carries no "
-            "hierarchical Block-Field labels at all (an informative-return form); real "
-            "divergence still, never proof of identity"
-        )
+        return _render_unseparable_description_changes(unseparable)
     return None
 
 
@@ -409,6 +451,44 @@ def _boundaries_for(modelo_id: str, revision: ModeloRevision) -> dict[tuple[int,
     return boundaries
 
 
+def _record_count_delta(before: tuple[str, ...], after: tuple[str, ...]) -> str | None:
+    """Describe a changed record set, or return no delta for equal-length designs."""
+    if not before or not after or len(before) == len(after):
+        return None
+    return f"{len(before)} -> {len(after)} records"
+
+
+def _box_displacement_evidence(
+    before_boxes: dict[str, int],
+    after_boxes: dict[str, int],
+    before_lengths: tuple[str, ...],
+    after_lengths: tuple[str, ...],
+) -> str | None:
+    """Describe shared boxes whose offsets changed between two designs."""
+    shared = set(before_boxes) & set(after_boxes)
+    moved = sorted(box for box in shared if before_boxes[box] != after_boxes[box])
+    if not moved:
+        return None
+    sample = ", ".join(f"[{box}] {before_boxes[box]}->{after_boxes[box]}" for box in moved[:3])
+    note = f"{len(moved)} of {len(shared)} shared boxes moved (e.g. {sample})"
+    if _record_count_delta(before_lengths, after_lengths):
+        note += " -- NOT a clean in-record displacement: the record set also changed"
+    return note
+
+
+def _page_length_evidence(before: tuple[str, ...], after: tuple[str, ...]) -> str | None:
+    """Describe page-byte-length changes and distinguish record-set changes."""
+    if not before or not after or before == after:
+        return None
+    delta = _record_count_delta(before, after)
+    headline = (
+        f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, so this is not an offset shift"
+        if delta
+        else "page byte-lengths differ, so something moved inside a record"
+    )
+    return f"{headline}: {before} vs {after}"
+
+
 def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
     """Every signal's evidence that two designs diverge; empty when they agree.
 
@@ -420,31 +500,12 @@ def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
     immediately adjacent revision's design, to prove a single-year split was
     warranted. Two questions, one comparator -- never a second, parallel diff.
     """
-    evidence: list[str] = []
-    before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
-
-    def _record_count_delta(
-        before: tuple[str, ...] = before_lengths, after: tuple[str, ...] = after_lengths
-    ) -> str | None:
-        """``'9 -> 10 records'`` when the design's record SET changed, else None."""
-        if not before or not after or len(before) == len(after):
-            return None
-        return f"{len(before)} -> {len(after)} records"
-
     before_boxes, after_boxes = _parse_design(earlier), _parse_design(later)
-    shared = set(before_boxes) & set(after_boxes)
-    moved = sorted(box for box in shared if before_boxes[box] != after_boxes[box])
-    if moved:
-        sample = ", ".join(f"[{box}] {before_boxes[box]}->{after_boxes[box]}" for box in moved[:3])
-        note = f"{len(moved)} of {len(shared)} shared boxes moved (e.g. {sample})"
-        # A displacement count measured across a decomposition change is not a
-        # clean in-record figure: a box that migrated into a NEW record counts
-        # as "moved" alongside one that shifted within its own. Both are real
-        # movement, but comparing the magnitude against a same-record
-        # boundary's is comparing different quantities.
-        if _record_count_delta():
-            note += " -- NOT a clean in-record displacement: the record set also changed"
-        evidence.append(note)
+    before_lengths, after_lengths = _page_lengths(earlier), _page_lengths(later)
+    evidence: list[str] = []
+    displacement = _box_displacement_evidence(before_boxes, after_boxes, before_lengths, after_lengths)
+    if displacement:
+        evidence.append(displacement)
 
     # FOURTH SIGNAL: the box SET changed, whether or not anything moved.
     #
@@ -469,18 +530,9 @@ def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
     if membership:
         evidence.append(membership)
 
-    if before_lengths and after_lengths and before_lengths != after_lengths:
-        delta = _record_count_delta()
-        # Say what a page-length change MEANS before showing the raw tuples. A
-        # record-count change is a different and larger event than a page growing,
-        # and stated as bare tuples it was under-read for hours by everyone
-        # looking at it, including its author.
-        headline = (
-            f"RECORD SET CHANGED ({delta}) -- the design's record decomposition differs, so this is not an offset shift"
-            if delta
-            else "page byte-lengths differ, so something moved inside a record"
-        )
-        evidence.append(f"{headline}: {before_lengths} vs {after_lengths}")
+    lengths = _page_length_evidence(before_lengths, after_lengths)
+    if lengths:
+        evidence.append(lengths)
 
     evidence.extend(_occupancy_evidence(earlier, later))
 
@@ -502,6 +554,30 @@ def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
         evidence.append(straddle)
 
     return evidence
+
+
+def _straddling_fields(
+    sheet_name: str,
+    before_fields: tuple[Any, ...],
+    after_fields: tuple[Any, ...],
+) -> list[str]:
+    """Find non-containing overlaps for one shared sheet."""
+    later_fields = sorted(after_fields, key=lambda field: field.offset)
+    starts = [field.offset for field in later_fields]
+    straddles: list[str] = []
+    for earlier_field in before_fields:
+        earlier_start, earlier_end = earlier_field.offset, earlier_field.offset + earlier_field.length - 1
+        index = bisect_right(starts, earlier_end)
+        for later_field in reversed(later_fields[:index]):
+            later_start, later_end = later_field.offset, later_field.offset + later_field.length - 1
+            if later_end < earlier_start:
+                break
+            if (earlier_start >= later_start and earlier_end <= later_end) or (
+                later_start >= earlier_start and later_end <= earlier_end
+            ):
+                continue
+            straddles.append(f"{sheet_name} @{earlier_start}-{earlier_end} vs @{later_start}-{later_end}")
+    return straddles
 
 
 def _straddle_evidence(earlier: Path, later: Path) -> str | None:
@@ -535,20 +611,7 @@ def _straddle_evidence(earlier: Path, later: Path) -> str | None:
 
     straddles: list[str] = []
     for name in sorted(set(before) & set(after)):
-        later_fields = sorted(after[name].fields, key=lambda field: field.offset)
-        starts = [field.offset for field in later_fields]
-        for a in before[name].fields:
-            a_start, a_end = a.offset, a.offset + a.length - 1
-            # Only fields starting at or before a_end can overlap; walk back far
-            # enough to catch one that starts earlier and reaches into a.
-            index = bisect_right(starts, a_end)
-            for b in reversed(later_fields[:index]):
-                b_start, b_end = b.offset, b.offset + b.length - 1
-                if b_end < a_start:
-                    break
-                if (a_start >= b_start and a_end <= b_end) or (b_start >= a_start and b_end <= a_end):
-                    continue
-                straddles.append(f"{name} @{a_start}-{a_end} vs @{b_start}-{b_end}")
+        straddles.extend(_straddling_fields(name, before[name].fields, after[name].fields))
 
     if not straddles:
         return None

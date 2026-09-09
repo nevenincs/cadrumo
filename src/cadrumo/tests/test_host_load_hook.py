@@ -12,9 +12,8 @@ or whether the bytes survive the capture layer and the hard exit.
 So every case below boots a REAL pytest subprocess against a throwaway fixture
 tree whose ``conftest.py`` delegates to the real hook module -- the exact code
 under test, not a reimplementation -- and reads what the run actually printed.
-This is the same real-subprocess idiom already established by
-:mod:`cadrumo.tests.test_worker_count_hook` and
-:mod:`cadrumo.tests.test_acceptance_wall_catalogue`.
+This is the same real-subprocess idiom used by
+:mod:`cadrumo.tests.test_worker_count_hook`.
 
 The two cases are a matched pair, and the second is what makes the first mean
 something. A stamp that appeared on every test would satisfy the first case

@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.period import Period, hydrate_scenario_filing_period
+from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import (
@@ -45,6 +45,25 @@ _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
     config=ConfigDict(strict=True),
 )
 _JSON_ARRAY_ADAPTER: TypeAdapter[list[object]] = TypeAdapter(list[object], config=ConfigDict(strict=True))
+
+
+def _hydrate_scenario_filing_period(data: object) -> object:
+    """Hydrate the parity-tape period coordinate from its legacy split fields."""
+    if not isinstance(data, dict) or "filing_period" in data:
+        return data
+    try:
+        payload = _JSON_OBJECT_ADAPTER.validate_python(data)
+    except ValidationError:
+        return data
+    filing_year = payload.get("filing_year")
+    period = payload.get("period")
+    if not isinstance(filing_year, int) or not isinstance(period, str):
+        return data
+    try:
+        filing_period = Period.from_year_and_code(filing_year, period)
+    except ValueError:
+        return data
+    return {**payload, "filing_period": filing_period}
 
 
 class ParityTapeModel(BaseModel):
@@ -79,7 +98,7 @@ class ParityScenario(ParityTapeModel):
     @model_validator(mode="before")
     @classmethod
     def _hydrate_filing_period(cls, data: object) -> object:
-        return hydrate_scenario_filing_period(data)
+        return _hydrate_scenario_filing_period(data)
 
     @model_validator(mode="after")
     def _validate_scenario(self) -> ParityScenario:
@@ -251,17 +270,13 @@ def _snapshot_for_scenario(
 
 
 def _stable_tape_dump(tape: ParityTape) -> dict[str, object]:
-    data = _as_json_object(tape.model_dump(mode="json"))
-    assert data is not None, "a model's own JSON dump is always a string-keyed object"
+    data = _JSON_OBJECT_ADAPTER.validate_python(tape.model_dump(mode="json"))
     data.pop("created_at", None)
-    workbook = _as_json_object(data["workbook"])
-    assert workbook is not None
+    workbook = _JSON_OBJECT_ADAPTER.validate_python(data["workbook"])
     workbook.pop("elapsed_seconds", None)
     data["workbook"] = workbook
-    report = _as_json_object(data["report"])
-    assert report is not None
-    report_workbook = _as_json_object(report["workbook"])
-    assert report_workbook is not None
+    report = _JSON_OBJECT_ADAPTER.validate_python(data["report"])
+    report_workbook = _JSON_OBJECT_ADAPTER.validate_python(report["workbook"])
     report_workbook.pop("elapsed_seconds", None)
     report["workbook"] = report_workbook
     data["report"] = report

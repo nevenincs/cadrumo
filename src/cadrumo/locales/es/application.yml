@@ -1497,14 +1497,6 @@ application:
           como SetupAnswers.
   workflow:
     errors:
-      adapter_missing_deadline_engine: El motor de flujo de trabajo requiere un adaptador
-        deadline_engine.
-      adapter_missing_filing_draft_builder: El motor de flujo de trabajo requiere
-        un adaptador filing_draft_builder.
-      adapter_missing_inputs_provider: El motor de flujo de trabajo requiere un proveedor
-        de entradas respaldado por depósito.
-      adapter_missing_submission_engine: El motor de flujo de trabajo requiere un
-        adaptador submission_engine.
       no_active_profile_bucket: No hay un perfil activo.
       no_run_for_period: No se encontró ejecución de flujo de trabajo para el modelo
         {modelo} período {period}. Ejecute el flujo al menos una vez antes de reanudar.

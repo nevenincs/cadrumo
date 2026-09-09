@@ -16,8 +16,6 @@ corrupt and fails the same byte-integrity gate as any other missing source.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
-from datetime import date
 from pathlib import Path
 from typing import Final
 
@@ -46,14 +44,6 @@ _NORMATIVES_TREE_PREFIX: Final = "corpus/normatives/"
 #: gap: comfortably above every observed stub, comfortably below every
 #: observed full text.
 _SOURCE_FULL_CONSOLIDATED_SIZE_FLOOR: Final = 10000
-
-
-@dataclass(frozen=True)
-class ResolvedRecordDesignBinary:
-    """One verified official binary selected for a target design epoch."""
-
-    source: GeneratedArtifactSource
-    path: Path
 
 
 def verify_source_file(root: Path, source: GeneratedArtifactSource) -> Path:
@@ -131,51 +121,6 @@ def _validate_source_corpus_tier_declaration(source: GeneratedArtifactSource, pa
             "content reader ('SourceReference.corpus_path' carries no '#anchor'), so filename "
             "convention is the only signal it can verify; rename to the convention or remove the claim",
         )
-
-
-def resolve_record_design_binary(
-    root: Path,
-    sources: Mapping[str, GeneratedArtifactSource],
-    *,
-    source_ref: str,
-    filing_year: int,
-    design_epoch: str,
-) -> ResolvedRecordDesignBinary:
-    """Select and verify one exact official binary for a filing-year design epoch.
-
-    The caller supplies the authored source reference and design epoch; this
-    function deliberately does not infer either from a revision id, filename,
-    or neighbouring export tree. The source catalogue remains the sole place
-    that records which bundled official binary is authoritative. A selection
-    without an explicit epoch, a complete applicability claim, or a matching
-    byte-exact binary is refused before a parser can consume it.
-    """
-    if not design_epoch.strip():
-        raise RegistryValidationError("record-design selection requires a non-blank design epoch")
-    source = sources.get(source_ref)
-    if source is None:
-        raise RegistryValidationError(f"record-design source {source_ref!r} is not declared in the source catalogue")
-    if source.id != source_ref:
-        raise RegistryValidationError(
-            f"source catalogue key {source_ref!r} does not match source id {source.id!r}",
-        )
-    if source.kind is not RegistrySourceKind.RECORD_DESIGN:
-        raise RegistryValidationError(f"source {source_ref!r} is not a record-design binary")
-    if source.record_design_epoch is None:
-        raise RegistryValidationError(f"record-design source {source_ref!r} does not declare a design epoch")
-    if source.record_design_epoch != design_epoch:
-        raise RegistryValidationError(
-            f"record-design source {source_ref!r} declares design epoch {source.record_design_epoch!r}, "
-            f"not requested {design_epoch!r}",
-        )
-    if source.applies_from is None:
-        raise RegistryValidationError(f"record-design source {source_ref!r} does not declare applies_from")
-
-    if not source.applies_across(date(filing_year, 1, 1), date(filing_year, 12, 31)):
-        raise RegistryValidationError(
-            f"record-design source {source_ref!r} does not apply to filing year {filing_year}",
-        )
-    return ResolvedRecordDesignBinary(source=source, path=verify_source_file(root, source))
 
 
 def _verify_manual_structure(repo_root: Path, source: GeneratedArtifactSource) -> None:

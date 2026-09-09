@@ -30,14 +30,12 @@ from pydantic import ValidationError
 
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ...core.period import Period
-from ..invoice_extraction_prompt import build_invoice_extraction_prompt
 from ..invoice_field_contract import (
     ANCHOR_KEY_SUFFIX,
     INVOICE_FIELD_CONTRACTS,
     ROLE_EVIDENCE_KEY_SUFFIX,
     InvoiceFieldContract,
     InvoiceFieldForm,
-    identity_field_names,
     role_evidence_key_for_field,
 )
 from ..invoice_field_grounding import (
@@ -45,10 +43,15 @@ from ..invoice_field_grounding import (
     ExtractedRoleEvidence,
     parse_invoice_extraction_response,
 )
+from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ANNUAL_2026 = Period.from_year_and_code(2026, "0A")
+
+
+def _identity_field_names() -> tuple[str, ...]:
+    return tuple(contract.field_name for contract in INVOICE_FIELD_CONTRACTS if contract.carries_role_evidence)
 
 
 class TestTheContractDeclaresRoleEvidenceExactlyWhereItIsMeaningful:
@@ -61,16 +64,16 @@ class TestTheContractDeclaresRoleEvidenceExactlyWhereItIsMeaningful:
         describes the enrolled set while enforcing nothing about it, which is
         the shape a ledger source-kind collection failed in before.
         """
-        assert set(identity_field_names()) == {
+        assert set(_identity_field_names()) == {
             contract.field_name
             for contract in INVOICE_FIELD_CONTRACTS
             if contract.form is InvoiceFieldForm.TAX_IDENTIFIER
         }
-        assert identity_field_names(), "the fixture must find identity fields, or every case below is vacuous"
+        assert _identity_field_names(), "the fixture must find identity fields, or every case below is vacuous"
 
     def test_the_payload_schema_carries_exactly_the_declared_identity_fields(self) -> None:
         """The schema and the declaration agree, in both directions."""
-        assert set(ExtractedRoleEvidence.model_fields) == set(identity_field_names())
+        assert set(ExtractedRoleEvidence.model_fields) == set(_identity_field_names())
 
     def test_an_identity_field_without_a_role_evidence_instruction_is_refused(self) -> None:
         """The declaration cannot ship half-made.
@@ -108,12 +111,12 @@ class TestThePromptAsksForPrintedEvidenceRatherThanAConclusion:
     def test_the_prompt_asks_for_the_role_evidence_key_of_every_identity_field(self) -> None:
         text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
 
-        for field_name in identity_field_names():
+        for field_name in _identity_field_names():
             assert f'"{role_evidence_key_for_field(field_name)}"' in text
 
     def test_the_prompt_never_asks_a_non_identity_field_to_evidence_a_role(self) -> None:
         text = build_invoice_extraction_prompt(period=_ANNUAL_2026).text
-        identity = set(identity_field_names())
+        identity = set(_identity_field_names())
 
         for contract in INVOICE_FIELD_CONTRACTS:
             if contract.field_name in identity:

@@ -10,7 +10,11 @@ from ....application.aeat_sync.workspace import (
     AeatSyncWorkspaceZoneStateV1,
 )
 from ....application.operations.models import OperationDefinitionId
-from ....application.operations.registry import OperationFrontendProjection, OperationPublicContractSetV1
+from ....application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicContractSetV1,
+    OperationPublicDefinitionContractV1,
+)
 from ....application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE, ActionCatalogue
 from ....application.operator_actions.models import ActionReference
 from ..navigation import TuiScreenContextV1
@@ -21,6 +25,48 @@ from .models import (
     AeatSyncOperationRequestV1,
     AeatSyncRouteTargetV1,
 )
+
+
+def _singleton_operation_pair(
+    actions: tuple[ActionReference, ...], operations: tuple[OperationDefinitionId, ...]
+) -> tuple[ActionReference, OperationDefinitionId] | None:
+    """Return the only candidate pair, refusing an under- or over-specified row."""
+    if len(actions) != 1 or len(operations) != 1:
+        return None
+    return actions[0], operations[0]
+
+
+def _is_canonical_action_admission(action_catalogue: ActionCatalogue, action_id: str) -> bool:
+    """Require the injected action declaration to equal the canonical declaration."""
+    try:
+        canonical = OPERATOR_ACTION_CATALOGUE.lookup(action_id)
+        admitted = action_catalogue.lookup(action_id)
+    except KeyError:
+        return False
+    return admitted == canonical
+
+
+def _operation_contract_for(
+    operation_contracts: OperationPublicContractSetV1 | None,
+    operation_id: str,
+) -> OperationPublicDefinitionContractV1 | None:
+    """Resolve one operation from the injected public contract set."""
+    if operation_contracts is None:
+        return None
+    return next(
+        (item for item in operation_contracts.definitions if str(item.definition_id) == operation_id),
+        None,
+    )
+
+
+def _contract_admits_tui_action(
+    contract: OperationPublicDefinitionContractV1 | None,
+    action: ActionReference,
+) -> bool:
+    """Require the contract's exact action join and TUI frontend capability."""
+    if contract is None or contract.action_reference != action:
+        return False
+    return OperationFrontendProjection.TUI in contract.permitted_frontends
 
 
 class AeatSyncWorkspaceController:
@@ -82,27 +128,15 @@ class AeatSyncWorkspaceController:
         only a singleton pair whose exact join is declared by the injected
         public operation contract.
         """
-        if len(actions) != 1 or len(operations) != 1:
+        pair = _singleton_operation_pair(actions, operations)
+        if pair is None:
             return None
-        action, operation = actions[0], operations[0]
+        action, operation = pair
         action_id = str(action.action_id)
-        operation_id = str(operation)
-        try:
-            canonical = OPERATOR_ACTION_CATALOGUE.lookup(action_id)
-            admitted = self.action_catalogue.lookup(action_id)
-        except KeyError:
+        if not _is_canonical_action_admission(self.action_catalogue, action_id):
             return None
-        if admitted != canonical:
-            return None
-        if self.operation_contracts is None:
-            return None
-        contract = next(
-            (item for item in self.operation_contracts.definitions if str(item.definition_id) == operation_id),
-            None,
-        )
-        if contract is None or contract.action_reference != action:
-            return None
-        if OperationFrontendProjection.TUI not in contract.permitted_frontends:
+        contract = _operation_contract_for(self.operation_contracts, str(operation))
+        if not _contract_admits_tui_action(contract, action):
             return None
         return AeatSyncOperationRequestV1(action=action, operation=operation)
 

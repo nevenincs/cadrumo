@@ -41,7 +41,6 @@ from ....adapters.persistence.storage.sql import SecureObjectRow
 from ....core.directory_scan import scan_directory
 from ....core.hashing import sha256_hex
 from ....domain.attachments.enums import AttachmentKind
-from ....domain.attachments.service import load_attachment
 from ....tests.secure_sql import isolated_runtime_profile, mutate_encrypted_secure_object_json
 from ..errors import LiveApplicationInputError
 from ..notification_documents import (
@@ -123,7 +122,7 @@ def test_the_document_bytes_land_in_the_encrypted_attachment_store(tmp_path: Pat
         record = service.persist_document(bucket_id=_BUCKET_ID, row=_read_row(), document=document).record
 
         store = AttachmentStore()
-        manifest = load_attachment(store, record.attachment_id)
+        manifest = store.load_manifest(record.attachment_id)
         assert manifest.kind is AttachmentKind.AEAT_NOTIFICATION_PDF
         assert manifest.mime_type == "application/pdf"
         assert store.read_bytes(record.attachment_id) == document.pdf_bytes

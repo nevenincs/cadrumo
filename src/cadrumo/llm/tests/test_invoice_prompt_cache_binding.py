@@ -35,8 +35,8 @@ from ...core.time.clock import now
 from ...domain.transactions.models import DecisionProvenance
 from ..evidence_draft_text import TextInvoiceFieldExtractor
 from ..evidence_draft_vision import LocalVisionDocumentTranscriber
-from ..invoice_extraction_prompt import build_invoice_extraction_prompt
 from ..models import LLMProvider, LLMRequest
+from .prompt_support import build_invoice_extraction_prompt
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 

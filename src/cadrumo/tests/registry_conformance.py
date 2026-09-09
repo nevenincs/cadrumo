@@ -2,8 +2,8 @@
 
 Nothing in the registry declares "how conformant is modelo X". Conformance is
 deduced today by a handful of independent folds — an evidence-tier coverage
-audit, a support-capability probe, a registry-scope validator, an authorization
-manifest, an external-oracle grounding relation, a classification-coherence
+audit, a support-capability probe, a registry-scope validator, an
+external-oracle grounding relation, a classification-coherence
 check — each answering one question about one axis, none of them joined. This
 module performs the join: it emits exactly one
 :class:`RevisionConformanceRow` per modelo revision in the loaded tree,
@@ -29,11 +29,7 @@ Two consequences follow and are load-bearing:
   no grounding claim; a revision that reconciles two hundred and independently
   checks none of them makes a claim and fails it. Both would read ``0.0`` if
   collapsed, so an axis that was not measured is :data:`None` here, never a
-  fabricated zero or a fabricated default. This is why a degraded read reports
-  :attr:`RevisionConformanceRow.modelo_authorization` as :data:`None` rather
-  than as ``UNAUTHORIZED`` — the latter is the default-deny VALUE, and emitting
-  it for an axis nobody checked would state a fact the composer never
-  established.
+  fabricated zero or a fabricated default.
 
 Coverage, not correctness
 -------------------------
@@ -58,8 +54,7 @@ carries its scope in its own field name and model:
   support matrix, which probes the modelo's LATEST revision only. It names the
   revision it probed and states outright whether that is this row, so a
   latest-revision capability is never read as a fact about an older one.
-* :attr:`RevisionConformanceRow.modelo_classification` and
-  :attr:`RevisionConformanceRow.modelo_authorization` are modelo-level and are
+* :attr:`RevisionConformanceRow.modelo_classification` is modelo-level and is
   named so.
 * Registry-scope diagnostics are registry-wide. A diagnostic that names its
   modelo and revision is attributed to that row; the remainder stay on
@@ -102,10 +97,13 @@ from datetime import date
 from pathlib import Path
 from typing import Literal
 
+from dev.registry.maintenance_support import UnattributedOraclePayload as _UnattributedOraclePayload
+from dev.registry.maintenance_support import (
+    load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
+)
 from pydantic import BaseModel, Field, NonNegativeInt
 
 from ..application.registry.errors import RegistryPreconditionCondition, registry_terminal_refusal
-from ..core.access_gate.authorization import ModeloAuthorization as _ModeloAuthorization
 from ..core.casilla_id import CasillaId as _CasillaId
 from ..core.export_layout_format import ExportLayoutFormat as _ExportLayoutFormat
 from ..core.filing_year import FilingYear
@@ -122,19 +120,6 @@ from ..domain.calculations.registry.export import (
     derive_export_layouts_from_bindings as _derive_export_layouts_from_bindings,
 )
 from ..domain.calculations.registry.export_parse import xml_dictionary_entries as _xml_dictionary_entries
-from ..domain.calculations.registry.external_grounding import (
-    RegistryExternalGroundingAudit as _RegistryExternalGroundingAudit,
-)
-from ..domain.calculations.registry.external_grounding import (
-    RevisionExternalGroundingRow as _RevisionExternalGroundingRow,
-)
-from ..domain.calculations.registry.external_grounding import UnattributedOraclePayload as _UnattributedOraclePayload
-from ..domain.calculations.registry.external_grounding import (
-    build_external_grounding_audit as _build_external_grounding_audit,
-)
-from ..domain.calculations.registry.external_grounding import (
-    load_bundled_external_oracle_inventory as _load_bundled_external_oracle_inventory,
-)
 from ..domain.calculations.registry.ids import BindingId as _BindingId
 from ..domain.calculations.registry.ids import FormulaId as _FormulaId
 from ..domain.calculations.registry.ids import LegalRefId as _LegalRefId
@@ -156,6 +141,15 @@ from ..domain.calculations.registry.support_matrix import ModeloEntry as _Modelo
 from ..domain.calculations.registry.support_matrix import build_support_matrix as _build_support_matrix
 from ..domain.calculations.registry.support_matrix import revision_capability_probe as _revision_capability_probe
 from ..domain.calculations.registry.validate_registry_scope import validate_registry_scope as _validate_registry_scope
+from .external_grounding import (
+    RegistryExternalGroundingAudit as _RegistryExternalGroundingAudit,
+)
+from .external_grounding import (
+    RevisionExternalGroundingRow as _RevisionExternalGroundingRow,
+)
+from .external_grounding import (
+    build_external_grounding_audit as _build_external_grounding_audit,
+)
 from .registry_classification_coherence import DeclaredAxisUsage as _DeclaredAxisUsage
 from .registry_classification_coherence import ModeloClassificationRow as _ModeloClassificationRow
 from .registry_classification_coherence import (
@@ -765,11 +759,6 @@ class RevisionConformanceRow(ConformanceModel):
             revision schema. The row remains stamped by ``registry_validated``.
         external_grounding: The external-oracle grounding row for this revision.
         modelo_classification: Modelo-level classification coherence facts.
-        modelo_authorization: The derived modelo-level authorization capability,
-            or :data:`None` when the degraded read did not consult the
-            authority. :data:`None` means UNCHECKED and is deliberately not the
-            ``UNAUTHORIZED`` value, which would assert a default-deny verdict
-            nobody established.
         scope_diagnostics: Registry-scope diagnostics naming this exact
             modelo and revision.
     """
@@ -785,7 +774,6 @@ class RevisionConformanceRow(ConformanceModel):
     casilla_provenance: tuple[RevisionCasillaProducerTrace, ...] = ()
     external_grounding: _RevisionExternalGroundingRow
     modelo_classification: _ModeloClassificationRow
-    modelo_authorization: _ModeloAuthorization | None = None
     scope_diagnostics: tuple[str, ...] = ()
 
     @property
@@ -1062,7 +1050,6 @@ def _revision_conformance_row(
     index: _AxisIndex,
     classification_row: _ModeloClassificationRow,
     support_entry: _ModeloEntry | None,
-    authorization: _ModeloAuthorization | None,
     registry_validated: bool,
     scope_diagnostics: Sequence[str],
     construct_evidence_ledgers: Mapping[tuple[_ModeloId, _RevisionId], _ConstructEvidenceLedger],
@@ -1092,7 +1079,6 @@ def _revision_conformance_row(
         casilla_provenance=_casilla_producer_traces(revision),
         external_grounding=grounding_row,
         modelo_classification=classification_row,
-        modelo_authorization=authorization,
         scope_diagnostics=_diagnostics_for(scope_diagnostics, modelo=modelo_id, revision=revision.id),
     )
 
@@ -1107,7 +1093,6 @@ def build_registry_conformance_profile(
     model_law_coverage: _RegistryCoverageAudit | None = None,
     construct_evidence: _RegistryConstructEvidenceAudit | None = None,
     support_matrix: Sequence[_ModeloEntry] | None = None,
-    authorizations: Mapping[str, _ModeloAuthorization] | None = None,
 ) -> RegistryConformanceProfile:
     """Join every conformance axis into one row per modelo revision.
 
@@ -1133,10 +1118,6 @@ def build_registry_conformance_profile(
             :data:`None` when the caller could not build validated snapshots.
         support_matrix: The modelo-level support-capability probe, or
             :data:`None` when unavailable.
-        authorizations: Derived per-modelo authorization capabilities keyed by
-            modelo id, or :data:`None` when unavailable. A modelo absent from a
-            supplied mapping reports :data:`None`, which means UNCHECKED and is
-            deliberately distinct from the ``UNAUTHORIZED`` verdict.
 
     Returns:
         The composed :class:`RegistryConformanceProfile`.
@@ -1160,7 +1141,6 @@ def build_registry_conformance_profile(
     for modelo in modelo_tuple:
         classification_row = index.require_classification_row(modelo.id)
         support_entry = index.support_entries.get(modelo.id)
-        authorization = None if authorizations is None else authorizations.get(modelo.id)
         for revision in sorted(modelo.revisions.values(), key=lambda item: item.id):
             row = _revision_conformance_row(
                 revision,
@@ -1168,7 +1148,6 @@ def build_registry_conformance_profile(
                 index=index,
                 classification_row=classification_row,
                 support_entry=support_entry,
-                authorization=authorization,
                 registry_validated=registry_validated,
                 scope_diagnostics=scope_diagnostics,
                 construct_evidence_ledgers=index.construct_evidence_ledgers,
@@ -1255,7 +1234,6 @@ def audit_bundled_registry_conformance(*, validate: bool = True) -> RegistryConf
         model_law_coverage=_audit_registry_model_law_coverage(authority),
         construct_evidence=_audit_registry_construct_evidence(authority),
         support_matrix=_build_support_matrix(authority),
-        authorizations={modelo.id: authority.authorization(modelo.id) for modelo in authority.modelos},
     )
 
 

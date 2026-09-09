@@ -1,13 +1,13 @@
 # Code-health report (issue #416), dispatch-only.
 #
-# The workflow runs `just audit-health-report`, the composed shadowing,
+# The workflow runs `just audit-health-report`, the composed
 # duplication, import-layering, and complexity dashboard (`dev/audit/report.py`),
 # on demand (operator ruling 2026-07-21: no schedules, no standing compute). Both the text and the JSON output remain in the job logs
 # (zero Actions-artifact posture; the storage quota is broken on the Free
 # plan and every other workflow already carries the same rule).
 #
 # This workflow is deliberately non-blocking. The diagnostic dashboard
-# combines import-layering, shadowing, duplication, and complexity signals.
+# combines import-layering, duplication, and complexity signals.
 # The main continuous integration (CI) workflow enforces every declared
 # `.importlinter` contract through `just check-imports`; this workflow
 # records and displays a diagnostic failure without failing the job.

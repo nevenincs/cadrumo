@@ -392,8 +392,6 @@ errors:
     exchange_rate_provider: El proveedor de tipos de cambio no respondió.
     fail_acceleration_receipt_revocation: No se ha podido eliminar el acceso rápido
       de inicio de sesión guardado de este perfil; sigue en el disco.
-    fail_access_gate_authorization_manifest: No se pudo cargar el manifiesto de autorización
-      de modelos o contiene una entrada de habilitación no válida.
     fail_borrador_parse: No se pudo interpretar el PDF del borrador de Modelo 100
       como una declaración.
     fail_browser_evasion: No se pudo aplicar la configuración de evasión del navegador.
@@ -771,8 +769,6 @@ errors:
       incompletas.
     modelo_calculate_text_input: El valor de sobrescritura de --casilla indicado no
       es válido para una casilla de texto.
-    modelo_calculation_capture_not_current: La revision de calculo ya no es actual.
-      Vuelva a leer la revision e intentelo de nuevo.
     modelo_calculation_revision_selector_ambiguous: El selector de revisión de cálculo
       coincide con más de una revisión; refine el selector.
     modelo_calculation_revision_selector_state: La revisión de cálculo seleccionada
@@ -785,8 +781,6 @@ errors:
       o selecciona un perfil y vuelve a intentarlo.
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
-    modelo_readiness_capture_not_current: El informe de disponibilidad ya no es actual.
-      Vuelva a leer el objetivo de modelo e intentelo de nuevo.
     modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
     modelo_work_capture_not_current: La seleccion de trabajo ya no es actual. Vuelva
       a leer el objetivo de trabajo e intentelo de nuevo.
@@ -795,8 +789,6 @@ errors:
     modelo_work_period_token: Periodo de modelo no válido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.
-    modelo_work_review_capture_not_current: La revision de trabajo ya no es actual.
-      Vuelva a leer el objetivo de trabajo e intentelo de nuevo.
     modelo_work_selector_ambiguous: Mas de una unidad de trabajo de modelo coincide
       con el selector.
     modelo_work_selector_contradiction: Los argumentos del selector de trabajo de

@@ -1,20 +1,17 @@
 """Shared visual design system for modelo workbook exports.
 
 This module is the single source of truth for the export look — the font
-family and the role→style palette — consumed identically by both transports
-(the offline openpyxl materializer in ``workbook_export`` and the online
-Google-Sheets apply adapter in ``_calc_sheets_apply``). Centralising the design
-here is what makes "uniform application across all exports" structural rather
-than coincidental: neither transport hard-codes a colour or a font; both import
-:data:`WORKBOOK_FONT_FAMILY` and :data:`ROLE_STYLES` and translate the same
-declarative :class:`RoleStyle` into their respective formatting API. The palette
+family and the role→style palette consumed by the Google Sheets apply adapter.
+Centralising the design
+here is what makes uniform application structural rather than coincidental.
+The adapter imports :data:`WORKBOOK_FONT_FAMILY` and :data:`ROLE_STYLES` and
+translates the declarative :class:`RoleStyle` into its formatting API. The palette
 mirrors the calm, boxed look of the official AEAT paper modelo: a slate header
 band, light blue-grey section banners, pale-yellow operator-input boxes,
 light-grey computed/protected cells, and a green-accented final result.
 
 The colours are stored as plain ``RRGGBB`` hex; :func:`hex_to_rgb_floats`
-converts to the 0..1 channel floats the Sheets API wants, and openpyxl consumes
-the hex directly (prefixed with the opaque alpha ``FF``).
+converts to the 0..1 channel floats the Sheets API wants.
 """
 
 from __future__ import annotations
@@ -24,19 +21,14 @@ from enum import StrEnum
 from typing import Final, Literal
 
 # A single declared monospace family. Roboto Mono is a native Google-Sheets
-# font (crisp online); the offline xls renderer substitutes the nearest
-# installed monospace (Consolas / Liberation Mono) when Roboto Mono is absent.
+# font rendered by the live Sheets transport.
 WORKBOOK_FONT_FAMILY: Final[str] = "Roboto Mono"
 
 STYLED_RANGE_VERTICAL_ALIGN: Final[str] = "top"
-"""Vertical alignment applied to every role-styled range, in both transports.
+"""Vertical alignment applied to every role-styled range.
 
 Unlike the horizontal alignment this is uniform across roles, which is why it
-belongs here rather than on :class:`RoleStyle`. It lived as a literal inside
-the offline materialiser instead, so the online request builder simply never
-emitted the facet and Sheets kept its bottom-aligned default -- the two
-transports disagreed on a plan they both claim to mirror, and no palette entry
-was wrong, so nothing pointed at the gap.
+belongs here rather than on :class:`RoleStyle`.
 """
 
 # Slate brand ink used for header-band text and emphasis foregrounds.
@@ -49,7 +41,7 @@ class StyleRole(StrEnum):
     """The closed set of presentation roles a styled range can carry.
 
     Each role maps to exactly one :class:`RoleStyle` in :data:`ROLE_STYLES`;
-    the engine tags ranges with a role and both transports resolve the role to
+    the engine tags ranges with a role and the renderer resolves the role to
     concrete fill / font / alignment through this module.
     """
 
@@ -116,11 +108,6 @@ def hex_to_rgb_floats(value: str) -> dict[str, float]:
     return {"red": red, "green": green, "blue": blue}
 
 
-def openpyxl_argb(value: str) -> str:
-    """Return the opaque ``AARRGGBB`` form openpyxl fills / fonts expect."""
-    return f"FF{value.lstrip('#').upper()}"
-
-
 __all__ = [
     "ROLE_STYLES",
     "STYLED_RANGE_VERTICAL_ALIGN",
@@ -129,5 +116,4 @@ __all__ = [
     "RoleStyle",
     "StyleRole",
     "hex_to_rgb_floats",
-    "openpyxl_argb",
 ]

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib
 from decimal import Decimal
-from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
@@ -20,7 +19,7 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....domain.filing.schema import ModeloValueKind
-from ....domain.modelos.calculation_repository import upsert_calculation_revision
+from ....domain.modelos.calculation_repository import CalculationRevisionPersistenceError, upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
@@ -28,10 +27,6 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.protocols import (
-    CalculationRevisionCatalogueRepositoryProtocol,
-    VerificationReportCatalogueRepositoryProtocol,
-)
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -43,22 +38,15 @@ from ....domain.modelos.verification_report import (
 )
 from ....domain.modelos.verification_repository import upsert_verification_report
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.profile_capsule import load_test_profile_record, replace_test_profile_record
-from ..action_errors import WorkUnitRevisionDivergenceError
 from ..calculation_actions import calculate_modelo_revision
 from ..work_review import (
     ModeloWorkOriginAnomaly,
     ModeloWorkProgress,
     ModeloWorkProgressDenominator,
     ModeloWorkReview,
-    ModeloWorkReviewCapture,
-    ModeloWorkReviewCaptureError,
-    ModeloWorkReviewCurrentCoordinate,
     build_modelo_work_review,
-    capture_modelo_work_review,
-    read_modelo_work_review_current_coordinate,
 )
 from ._file_flow_support import (
     DEFAULT_130_BASELINE_INPUTS,
@@ -193,7 +181,7 @@ def test_review_projects_resolvable_work_without_a_calculation_from_real_storage
 
 def test_work_review_refuses_a_persisted_revision_with_divergent_registry_coordinate(repos: Repos) -> None:
     """The operator review surface cannot render registry-interpreted stale values."""
-    work_repo, calculation_repo, _, verification_repo, _ = repos
+    _, calculation_repo, _, _, _ = repos
     work_unit = _persist_work_unit(repos)
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit.work_unit_id,
@@ -220,25 +208,8 @@ def test_work_review_refuses_a_persisted_revision_with_divergent_registry_coordi
         filing_instance_evidence=None,
         source_provenance=(),
     )
-    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), stale))
-    work_repo.save(
-        upsert_work_unit(
-            work_repo.load(),
-            work_unit.model_copy(update={"current_calculation_revision_id": revision_id}),
-        )
-    )
-
-    with pytest.raises(WorkUnitRevisionDivergenceError):
-        build_modelo_work_review(
-            work_unit.bucket_id,
-            work_unit.modelo,
-            work_unit.filing_year,
-            work_unit.period,
-            authority=bundled_authority(),
-            work_unit_repository=work_repo,
-            calculation_repository=calculation_repo,
-            verification_repository=verification_repo,
-        )
+    with pytest.raises(CalculationRevisionPersistenceError):
+        calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), stale))
 
 
 def test_review_progress_is_undefined_without_a_revision_manifest(repos: Repos) -> None:
@@ -630,85 +601,3 @@ def test_review_reads_persisted_date_bindings_without_decimal_reinterpretation(r
     )
 
     assert review.calculation_revision_id == revision_id
-
-
-class _ReviewArguments(TypedDict):
-    work_unit_repository: WorkUnitCatalogueRepositoryProtocol
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
-    verification_repository: VerificationReportCatalogueRepositoryProtocol
-
-
-def _review_arguments(repos: Repos) -> _ReviewArguments:
-    work_repo, calculation_repo, _filing_repo, verification_repo, _events = repos
-    return {
-        "work_unit_repository": work_repo,
-        "calculation_repository": calculation_repo,
-        "verification_repository": verification_repo,
-    }
-
-
-def test_captured_review_is_the_exact_assembler_record_field_for_field(repos: Repos) -> None:
-    """The capture republishes the sole assembler output without reconstruction."""
-    _persist_work_unit(repos)
-    arguments = _review_arguments(repos)
-    period = Period.from_year_and_code(2026, "1T")
-
-    assembled = build_modelo_work_review(_BUCKET_ID, _M130, 2026, period, **arguments)
-    captured = capture_modelo_work_review(_BUCKET_ID, _M130, 2026, period, **arguments)
-
-    assert captured.review == assembled
-    assert captured.review.model_fields_set == assembled.model_fields_set
-
-
-def test_review_capture_is_singleflight_and_refuses_a_superseded_coordinate(repos: Repos) -> None:
-    """An unchanged join shares a generation; a catalogue write supersedes it."""
-    unit = _persist_work_unit(repos)
-    work_repo, _calculation_repo, _filing_repo, _verification_repo, _events = repos
-    arguments = _review_arguments(repos)
-    period = Period.from_year_and_code(2026, "1T")
-
-    first = capture_modelo_work_review(_BUCKET_ID, _M130, 2026, period, **arguments)
-    second = capture_modelo_work_review(_BUCKET_ID, _M130, 2026, period, **arguments)
-
-    assert first.generation == second.generation
-    assert first.comparison_domain == second.comparison_domain
-
-    current = read_modelo_work_review_current_coordinate(_BUCKET_ID, _M130, 2026, period, **arguments)
-    assert first.require_current(current) is first
-
-    work_repo.save(upsert_work_unit(work_repo.load(), unit.model_copy(update={"name": "130-2026-1T-renamed"})))
-
-    advanced = read_modelo_work_review_current_coordinate(_BUCKET_ID, _M130, 2026, period, **arguments)
-
-    assert advanced.generation > first.generation
-    with pytest.raises(ModeloWorkReviewCaptureError):
-        first.require_current(advanced)
-
-
-def test_review_capture_contract_is_owned_by_its_defining_module() -> None:
-    """Every review symbol is defined here and bound nowhere in the package namespace."""
-    from ....application import modelo as modelo_namespace
-
-    for owned in (
-        ModeloWorkReviewCapture,
-        ModeloWorkReviewCurrentCoordinate,
-        ModeloWorkReviewCaptureError,
-        capture_modelo_work_review,
-        read_modelo_work_review_current_coordinate,
-        build_modelo_work_review,
-    ):
-        assert owned.__module__ == "cadrumo.application.modelo.work_review"
-        assert not hasattr(modelo_namespace, owned.__name__)
-
-
-def test_the_retired_projection_module_is_gone_with_no_bridge() -> None:
-    """The hard move leaves no module, shim, alias, or re-export behind."""
-    from pathlib import Path as _Path
-
-    from .. import work_review as owning_module
-
-    retired = _Path(owning_module.__file__).with_name("work_review_projection.py")
-
-    assert not retired.exists()
-    with pytest.raises(ModuleNotFoundError):
-        importlib.import_module("cadrumo.application.modelo.work_review_projection")

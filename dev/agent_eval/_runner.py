@@ -511,10 +511,11 @@ def _canonical_action_arguments(
 def _invoke_canonical_cli(argv: Sequence[str]):
     """Run the live CLI command tree once, requesting its canonical JSON envelope."""
     from click.testing import CliRunner
+    from typer.main import get_command
 
-    from cadrumo.entrypoints.cli import full_command_tree
+    from cadrumo.entrypoints.cli import app
 
-    return CliRunner().invoke(full_command_tree(), ["--format", "json", *argv])
+    return CliRunner().invoke(get_command(app), ["--format", "json", *argv])
 
 
 def _decoded_envelope(output: str) -> Mapping[str, object] | None:

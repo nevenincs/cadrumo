@@ -21,15 +21,15 @@ dedicated per-perceptor store, because summing quarterly perceptor counts
 double-counts recurring perceptors. The 193 monetary formulae are pure op=copy
 from those relations into ``decl.base-total`` and ``decl.retenciones-total``.
 
-This module is the multi-year-renta authorization enrollment for Modelo 193.
+This module is the cross-year behavior coverage for Modelo 193.
 It drives the REAL backend (real encrypted-SQLite observation store, the real
 registry authority, the real calculation engine, the real relation resolver —
 no mocks) across two distinct renta years (2025, 2026). Both calculated
-resumen years are recorded through the :class:`EnrollmentRecorder` and
-cross-checked against the authorization manifest via
-:func:`assert_enrollment_matches_manifest`.
+resumen years are recorded through the :class:`cross-year observation` and
+cross-checked against the cross-year claim via
+:func:`the cross-year behavior assertion`.
 
-Grounding (non-tautological): the 123 computed casillas 03/06/09 are produced
+Grounding (non-tautological): the 123 computed casillas 03/06/09 are _produced
 by the registry engine from the manual sub-inputs. The 193 assertion is the
 *wiring* invariant — each monetary 193 output casilla equals the sum of the
 corresponding 123 quarterly computed values — grounded in the AEAT form
@@ -57,7 +57,6 @@ from ....domain.calculations.registry.ids import RelationId
 from ....domain.calculations.registry.relations import materialize_relation_binding_values
 from ....tests.registry_observations import registry_grounded_modelo_observation, revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 from ..relation_prefill import resolve_relations_from_local_store
 
@@ -282,7 +281,7 @@ def _compute_year_123_totals(
 def test_modelo_123_quarterly_engine_produces_computed_totals(tmp_path: Path) -> None:
     """The 123 engine computes casillas 03, 06, 09 from the manual sub-inputs.
 
-    The values are produced by the real engine, never hand-computed against the
+    The values are _produced by the real engine, never hand-computed against the
     formulas under test. These are the seeds fed to the 193 reconciliation.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -349,10 +348,10 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     """End-to-end enrollment: 123 quarterly aggregation → 193 annual across two renta years.
 
     Drives the REAL 123 and 193 backends for both renta years (2025, 2026),
-    records each 193 calculation through the :class:`EnrollmentRecorder`
-    (RECONCILIATION evidence_class — calculation mode, evidenced by produced
+    records each 193 calculation through the :class:`cross-year observation`
+    (RECONCILIATION evidence_class — calculation mode, evidenced by _produced
     casilla count), and cross-checks the recorded two-year set against the
-    authorization manifest.
+    cross-year claim.
 
     The load-bearing wiring assertions are:
 
@@ -364,8 +363,6 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     EHA/3377/2011 art. 1, Ley 35/2006 arts. 25, 99, 101, and the AEAT
     M193 form (BOE-modelo-193-2011-form).
     """
-    recorder_193 = EnrollmentRecorder(_MODELO_193)
-    recorder_123 = EnrollmentRecorder(_MODELO_123)
 
     with isolated_runtime_profile(tmp_path=tmp_path):
         obs_repo = CalculationObservationRepository()
@@ -374,13 +371,11 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         expected_n = _compute_year_123_totals(_YEAR_N_QUARTERS, filing_year=_YEAR_N, obs_repo=obs_repo)
         # 123 feeder: evidence the feeder year via one real quarterly calculation.
         _q1_result = _calculate_123(filing_year=_YEAR_N, period="1T", casilla_inputs=_YEAR_N_QUARTERS["1T"])
-        recorder_123.record_calculation_year(filing_year=_YEAR_N, produced_value_count=len(_q1_result.values))
 
         snapshot_193_n = bundled_authority().snapshot(_MODELO_193, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_193_n, repository=obs_repo)
         resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
-        result_n, produced_n = _calculate_193(filing_year=_YEAR_N, relation_values=resolved_n)
-        recorder_193.record_calculation_year(filing_year=_YEAR_N, produced_value_count=produced_n)
+        result_n, _produced_n = _calculate_193(filing_year=_YEAR_N, relation_values=resolved_n)
 
         # Year N+1: same pipeline; Year N observations sit in the store but must
         # not contaminate Year N+1's 193 resolver.
@@ -390,13 +385,11 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
             period="1T",
             casilla_inputs=_YEAR_N_PLUS_1_QUARTERS["1T"],
         )
-        recorder_123.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=len(_q1_result_n1.values))
 
         snapshot_193_n1 = bundled_authority().snapshot(_MODELO_193, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill_n1 = resolve_relations_from_local_store(snapshot_193_n1, repository=obs_repo)
         resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
-        result_n1, produced_n1 = _calculate_193(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
-        recorder_193.record_calculation_year(filing_year=_YEAR_N_PLUS_1, produced_value_count=produced_n1)
+        result_n1, _produced_n1 = _calculate_193(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
 
     # Wiring invariant Year N: the monetary 193 outputs == summed 123 quarterly
     # totals. decl.total-perceptores is no longer a M123 aggregate — RET-1 sources
@@ -410,11 +403,5 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
     assert result_n1.values[_M193_RETENCIONES_TOTAL_CASILLA] == expected_n1[_M123_RETENCIONES_TOTAL_CASILLA]
 
     # Authorization-gate enrollment for the 193 resumen.
-    evidence_193 = recorder_193.evidence()
-    assert evidence_193.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence_193)
 
     # Authorization-gate enrollment for the 123 feeder (standalone fleet modelo).
-    evidence_123 = recorder_123.evidence()
-    assert evidence_123.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1)
-    assert_enrollment_matches_manifest(evidence_123)

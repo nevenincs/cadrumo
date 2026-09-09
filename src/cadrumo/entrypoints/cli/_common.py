@@ -217,14 +217,51 @@ def cli_policy_refusal_projection(error: BaseException) -> CliPolicyRefusalProje
     )
 
 
-def cli_policy_refusal_context(projection: CliPolicyRefusalProjection) -> dict[str, object] | None:
-    """Render configuration identities from typed evidence, never recovery prose."""
-    context: dict[str, object] = {}
-    for evidence in projection.precondition_action.evidence:
-        for key, value in evidence.values.items():
-            if key.endswith("_setting"):
-                context[key] = value
-    return context or None
+def _next_requested_cli_child(ctx: typer.Context, command: object, token: str) -> object | None:
+    """Resolve one non-option child while preserving the Click tree boundary."""
+    if token.startswith("-") or not hasattr(command, "get_command"):
+        return None
+    return cast(_CommandGroup, command).get_command(ctx, token)
+
+
+def _requested_cli_command_token(child: object, fallback: str) -> str:
+    """Use Click's canonical child name, falling back to the invoked token."""
+    command_name = getattr(child, "name", None)
+    return command_name if isinstance(command_name, str) and command_name else fallback
+
+
+def _walk_requested_cli_leaf(ctx: typer.Context, raw_tokens: tuple[str, ...]) -> tuple[str, ...] | None:
+    """Walk the requested Click path and return its canonical terminal path."""
+    command: object = ctx.command
+    canonical_path: list[str] = []
+    for token in raw_tokens:
+        child = _next_requested_cli_child(ctx, command, token)
+        if child is None:
+            return None
+        canonical_path.append(_requested_cli_command_token(child, token))
+        command = child
+        if not hasattr(command, "get_command"):
+            return tuple(canonical_path)
+    return None
+
+
+def _requested_cli_leaf_identity(canonical_path: tuple[str, ...]) -> str | None:
+    """Resolve the graph-owned result identity for one canonical CLI path."""
+    from .command_specs import COMMAND_GRAPH
+
+    spec = COMMAND_GRAPH.resolve_path(("aeat", *canonical_path))
+    return spec.result_schema.identity
+
+
+def _bind_requested_cli_leaf(ctx: typer.Context, requested: RequestedCliLeaf) -> None:
+    """Bind the requested leaf to Click and the invocation-scoped boundary holders."""
+    ctx.meta[REQUESTED_CLI_LEAF_META_KEY] = requested
+    token = _REQUESTED_CLI_LEAF_CONTEXT.set(requested)
+    ctx.call_on_close(partial(_REQUESTED_CLI_LEAF_CONTEXT.reset, token))
+    # Written through to the invocation-scoped holder as well, so the
+    # process boundary can still name the command after this Click
+    # context has closed. Deliberately NOT reset on close.
+    _BOUNDARY_REQUESTED_CLI_LEAF.set(requested)
 
 
 def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
@@ -236,37 +273,18 @@ def preserve_requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
         return existing
 
     raw_tokens = tuple(str(token) for token in ctx.meta.get(INVOCATION_REMAINDER_META_KEY, ()))
-    command: object = ctx.command
-    canonical_path: list[str] = []
-    for token in raw_tokens:
-        if token.startswith("-") or not hasattr(command, "get_command"):
-            break
-        child = cast(_CommandGroup, command).get_command(ctx, token)
-        if child is None:
-            return None
-        command_name = getattr(child, "name", None)
-        canonical_path.append(command_name if isinstance(command_name, str) and command_name else token)
-        command = child
-        if not hasattr(command, "get_command"):
-            from .command_specs import COMMAND_GRAPH
-
-            spec = COMMAND_GRAPH.resolve_path(("aeat", *canonical_path))
-            identity = spec.result_schema.identity
-            if identity is None:
-                return None
-            requested = RequestedCliLeaf(
-                subject_leaf_key=identity,
-                canonical_cli_path=tuple(canonical_path),
-            )
-            ctx.meta[REQUESTED_CLI_LEAF_META_KEY] = requested
-            token = _REQUESTED_CLI_LEAF_CONTEXT.set(requested)
-            ctx.call_on_close(partial(_REQUESTED_CLI_LEAF_CONTEXT.reset, token))
-            # Written through to the invocation-scoped holder as well, so the
-            # process boundary can still name the command after this Click
-            # context has closed. Deliberately NOT reset on close.
-            _BOUNDARY_REQUESTED_CLI_LEAF.set(requested)
-            return requested
-    return None
+    canonical_path = _walk_requested_cli_leaf(ctx, raw_tokens)
+    if canonical_path is None:
+        return None
+    identity = _requested_cli_leaf_identity(canonical_path)
+    if identity is None:
+        return None
+    requested = RequestedCliLeaf(
+        subject_leaf_key=identity,
+        canonical_cli_path=canonical_path,
+    )
+    _bind_requested_cli_leaf(ctx, requested)
+    return requested
 
 
 def requested_cli_leaf(ctx: typer.Context) -> RequestedCliLeaf | None:
@@ -1057,13 +1075,6 @@ def load_drafts() -> tuple[ModeloDraft, ...]:
 
     repo = _draft_repo()
     return tuple(require_modelo_draft_coordinates_current(draft) for draft in repo.iter_drafts())
-
-
-def draft_by_id(draft_id: str) -> ModeloDraft:
-    for draft in load_drafts():
-        if draft.draft_id == draft_id:
-            return draft
-    raise _bad(tr("cli.common.errors.draft_id_not_found", draft_id=draft_id))
 
 
 # ---------------------------------------------------------------------

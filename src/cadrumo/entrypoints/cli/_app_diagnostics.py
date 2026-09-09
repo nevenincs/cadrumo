@@ -43,6 +43,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import date as _date
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -63,6 +64,10 @@ from ._diagnostics_payloads import (
     RunRecordPayload,
     RunsListResult,
 )
+
+if TYPE_CHECKING:
+    from ...application.diagnostics_run_health import RunHealthReport
+    from ...core.json_contract import Notice
 
 
 def _llm_no_run_data_notice(*, code: str):
@@ -110,24 +115,16 @@ def _parse_iso_date(value: str | None, option: str) -> _date | None:
     )
 
 
-def diagnostics_run_health(
-    ctx: typer.Context,
-    since: str | None = None,
-    until: str | None = None,
-    provider: str | None = None,
-) -> None:
-    """Report recent local LLM run timing and persisted AEAT session staleness."""
-    from ...application.diagnostics_run_health import build_run_health_report
-    from ...core.json_contract import Notice, NoticeSeverity
-
-    since_date = _parse_iso_date(since, "--since")
-    until_date = _parse_iso_date(until, "--until")
-
-    report = build_run_health_report(since=since_date, until=until_date, provider=provider)
-
-    result = RunHealthResult(
-        since=since_date.isoformat() if since_date is not None else None,
-        until=until_date.isoformat() if until_date is not None else None,
+def _run_health_result(
+    *,
+    report: RunHealthReport,
+    since: _date | None,
+    until: _date | None,
+) -> RunHealthResult:
+    """Project the canonical run-health report into the CLI payload."""
+    return RunHealthResult(
+        since=since.isoformat() if since is not None else None,
+        until=until.isoformat() if until is not None else None,
         llm_providers=[
             LlmRunProviderPayload(
                 provider=row.provider,
@@ -153,9 +150,13 @@ def diagnostics_run_health(
         session_stale=report.session_stale,
     )
 
-    no_run_data_notice = (
-        _llm_no_run_data_notice(code="diagnostics.run_health.no_run_data") if not report.has_run_data else None
-    )
+
+def _run_health_lines(
+    *,
+    report: RunHealthReport,
+    no_run_data_notice: Notice | None,
+) -> list[str]:
+    """Render the stable human-readable run-health lines."""
     lines: list[str] = [tr("cli.diagnostics.run_health.header", default="LLM run health:")]
     if no_run_data_notice is not None:
         lines.append(no_run_data_notice.message)
@@ -165,16 +166,39 @@ def diagnostics_run_health(
                 f"{row.provider}\truns={row.runs}\tok={row.succeeded}\tfailed={row.failed}"
                 f"\tmin_ms={row.min_duration_ms}\tmax_ms={row.max_duration_ms}\tmean_ms={row.mean_duration_ms}",
             )
-    lines.append(
-        tr(
-            "cli.diagnostics.run_health.auth_header",
-            default="Auth session:",
+    lines.extend(
+        (
+            tr("cli.diagnostics.run_health.auth_header", default="Auth session:"),
+            f"provider\t{report.auth_provider or '(none configured)'}",
+            f"persisted_session_present\t{report.persisted_session_present}",
+            f"persisted_session_expired\t{report.persisted_session_expired}",
+            f"persisted_session_state\t{report.persisted_session_state}",
         ),
     )
-    lines.append(f"provider\t{report.auth_provider or '(none configured)'}")
-    lines.append(f"persisted_session_present\t{report.persisted_session_present}")
-    lines.append(f"persisted_session_expired\t{report.persisted_session_expired}")
-    lines.append(f"persisted_session_state\t{report.persisted_session_state}")
+    return lines
+
+
+def diagnostics_run_health(
+    ctx: typer.Context,
+    since: str | None = None,
+    until: str | None = None,
+    provider: str | None = None,
+) -> None:
+    """Report recent local LLM run timing and persisted AEAT session staleness."""
+    from ...application.diagnostics_run_health import build_run_health_report
+    from ...core.json_contract import Notice, NoticeSeverity
+
+    since_date = _parse_iso_date(since, "--since")
+    until_date = _parse_iso_date(until, "--until")
+
+    report = build_run_health_report(since=since_date, until=until_date, provider=provider)
+
+    result = _run_health_result(report=report, since=since_date, until=until_date)
+
+    no_run_data_notice = (
+        _llm_no_run_data_notice(code="diagnostics.run_health.no_run_data") if not report.has_run_data else None
+    )
+    lines = _run_health_lines(report=report, no_run_data_notice=no_run_data_notice)
 
     notices: list[Notice] = []
     if no_run_data_notice is not None:
@@ -218,7 +242,6 @@ def diagnostics_runs(
 ) -> None:
     """List recent local LLM run-timing records, most-recent-first."""
     from ...application.diagnostics_run_health import list_recent_runs
-    from ...core.json_contract import Notice
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -273,7 +296,6 @@ def diagnostics_latency(
 ) -> None:
     """Report P50/P95/P99 duration percentiles over recent local LLM runs."""
     from ...application.diagnostics_run_health import build_latency_report
-    from ...core.json_contract import Notice
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")
@@ -388,7 +410,6 @@ def diagnostics_llm_usage(
 ) -> None:
     """Report LLM run-usage totals (counts, durations, success rate) by provider and model."""
     from ...application.diagnostics_run_health import build_llm_usage_report
-    from ...core.json_contract import Notice
 
     since_date = _parse_iso_date(since, "--since")
     until_date = _parse_iso_date(until, "--until")

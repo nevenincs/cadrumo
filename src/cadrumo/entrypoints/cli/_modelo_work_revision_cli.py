@@ -14,7 +14,7 @@ schemas before handing them to
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 import typer
@@ -96,6 +96,94 @@ def _resolve_selected_revision(
         raise deps.selector_bad_parameter(exc) from exc
 
 
+def _resolve_revisions_work_unit_id(
+    *,
+    work_unit_id: str | None,
+    modelo: str | None,
+    year: int | None,
+    period: str | None,
+    revision: str | None,
+    bucket_id: str | None,
+) -> str | None:
+    """Resolve the optional visible work target used by the revisions list."""
+    if work_unit_id is None and modelo is None and year is None and period is None:
+        return work_unit_id
+    unit = resolve_work_unit_for_cli(
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+    )
+    return unit.work_unit_id
+
+
+def _revision_summary_payloads(
+    revisions: Sequence[CalculationRevision],
+) -> list[CalculationRevisionSummaryPayload]:
+    """Project persisted revisions into compact discovery rows."""
+    return [
+        CalculationRevisionSummaryPayload(
+            short_calculation_revision_id=short_id(revision.calculation_revision_id) or "",
+            calculation_revision_id=revision.calculation_revision_id,
+            short_work_unit_id=short_id(revision.work_unit_id) or "",
+            work_unit_id=revision.work_unit_id,
+            state=revision.state,
+            created_at=revision.created_at.isoformat(),
+        )
+        for revision in revisions
+    ]
+
+
+def _work_revisions_result(
+    resolved_work_unit_id: str | None,
+    revisions: Sequence[CalculationRevision],
+) -> WorkRevisionsResult:
+    """Build the typed listing payload without recomputing revision facts."""
+    return WorkRevisionsResult.model_validate(
+        {
+            "work_unit_id_filter": resolved_work_unit_id,
+            "revision_count": len(revisions),
+            "revisions": _revision_summary_payloads(revisions),
+        }
+    )
+
+
+def _work_revision_listing_lines(
+    revisions: Sequence[CalculationRevision],
+) -> list[str]:
+    """Render revision discovery rows in the application-provided order."""
+    return [
+        "\t".join(
+            (
+                short_id(revision.calculation_revision_id) or "",
+                revision.calculation_revision_id,
+                short_id(revision.work_unit_id) or "",
+                revision.work_unit_id,
+                revision.state.value,
+                revision.created_at.isoformat(),
+            )
+        )
+        for revision in revisions
+    ]
+
+
+def _work_revisions_lines(
+    resolved_work_unit_id: str | None,
+    revisions: Sequence[CalculationRevision],
+) -> list[str]:
+    """Render the stable text envelope for the revision listing."""
+    lines = [
+        "operation\tmodelo.work.revisions",
+        f"work_unit_id_filter\t{resolved_work_unit_id or ''}",
+        f"revision_count\t{len(revisions)}",
+        "short_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at",
+    ]
+    lines.extend(_work_revision_listing_lines(revisions))
+    return lines
+
+
 __all__ = ["work_observations", "work_revision", "work_revisions"]
 
 
@@ -112,49 +200,17 @@ def work_revisions(
     """List persisted :class:`CalculationRevision` rows for an optional :class:`WorkUnit`."""
     activate_subcommand_output_language(ctx, output_language)
     require_active_profile()
-    resolved_work_unit_id = work_unit_id
-    if work_unit_id is not None or modelo is not None or year is not None or (period is not None):
-        unit = resolve_work_unit_for_cli(
-            work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
-        )
-        resolved_work_unit_id = unit.work_unit_id
+    resolved_work_unit_id = _resolve_revisions_work_unit_id(
+        work_unit_id=work_unit_id,
+        modelo=modelo,
+        year=year,
+        period=period,
+        revision=revision,
+        bucket_id=bucket_id,
+    )
     revisions = list_calculation_revisions(work_unit_id=resolved_work_unit_id)
-    result = WorkRevisionsResult.model_validate(
-        {
-            "work_unit_id_filter": resolved_work_unit_id,
-            "revision_count": len(revisions),
-            "revisions": [
-                CalculationRevisionSummaryPayload(
-                    short_calculation_revision_id=short_id(rev.calculation_revision_id) or "",
-                    calculation_revision_id=rev.calculation_revision_id,
-                    short_work_unit_id=short_id(rev.work_unit_id) or "",
-                    work_unit_id=rev.work_unit_id,
-                    state=rev.state,
-                    created_at=rev.created_at.isoformat(),
-                )
-                for rev in revisions
-            ],
-        }
-    )
-    lines = [
-        "operation\tmodelo.work.revisions",
-        f"work_unit_id_filter\t{resolved_work_unit_id or ''}",
-        f"revision_count\t{len(revisions)}",
-        "short_calculation_revision_id\tcalculation_revision_id\tshort_work_unit_id\twork_unit_id\tstate\tcreated_at",
-    ]
-    lines.extend(
-        "\t".join(
-            (
-                short_id(rev.calculation_revision_id) or "",
-                rev.calculation_revision_id,
-                short_id(rev.work_unit_id) or "",
-                rev.work_unit_id,
-                rev.state.value,
-                rev.created_at.isoformat(),
-            )
-        )
-        for rev in revisions
-    )
+    result = _work_revisions_result(resolved_work_unit_id, revisions)
+    lines = _work_revisions_lines(resolved_work_unit_id, revisions)
     emit_envelope(ctx, command="modelo.work.revisions", result=result, lines=lines)
 
 

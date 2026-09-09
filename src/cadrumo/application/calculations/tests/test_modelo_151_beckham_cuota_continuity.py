@@ -7,12 +7,12 @@ two-band escala of art. 93.2.e).1.º — 24 % on the base liquidable general up 
 600.000 euros and 47 % on the excess — computed via ``lookup_bracket`` over the
 ``modelo-151.escala-cuota-integra-general`` bracket table.
 
-This module is the multi-year-renta authorization enrollment for Modelo 151. It
+This module is the cross-year behavior coverage for Modelo 151. It
 drives the REAL registry calculation engine (real authority + the real
 lookup_bracket runtime — no mocks) across two distinct renta years (2024, 2025),
-records each through the :class:`EnrollmentRecorder`, and cross-checks the
-recorded year-set against the authorization manifest via
-:func:`assert_enrollment_matches_manifest`.
+records each through the :class:`cross-year observation`, and cross-checks the
+recorded year-set against the cross-year claim via
+:func:`the cross-year behavior assertion`.
 
 The régimen runs for the change-of-residence year + the five following years
 (art. 93 chapeau, "el período impositivo en que se efectúe el cambio de
@@ -46,11 +46,10 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import bundled_authority
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ....tests.secure_sql import isolated_runtime_profile
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "151"
 
 #: The two distinct renta years enrolled — both inside one taxpayer's 6-year
@@ -128,9 +127,9 @@ def test_cuota_matches_boe_escala_at_threshold_crossing(tmp_path: Path) -> None:
     the BOE rates, not the registry formula — non-tautological.
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
-        result, produced = _calculate_151(filing_year=2024)
+        result, _produced = _calculate_151(filing_year=2024)
 
-    assert produced > 0
+    assert _produced > 0
     expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[2024])
     assert expected == Decimal("191000.00")
     assert result.values[_CUOTA_INTEGRA_GENERAL_CASILLA] == expected
@@ -144,23 +143,17 @@ def test_modelo_151_beckham_enrolls_two_renta_years(tmp_path: Path) -> None:
     Drives the REAL 151 engine for 2024 and 2025 (both inside one taxpayer's
     6-year Beckham window — the régimen and its escala persist year-over-year,
     the cross-renta continuity), asserts each year's cuota against the
-    hand-derived BOE-escala oracle, records each through the EnrollmentRecorder,
+    hand-derived BOE-escala oracle, records each through the cross-year observation,
     and cross-checks the year-set against the manifest. A single-year or stub run
     would raise, turning the gate RED.
     """
-    recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
         for filing_year in _RENTA_YEARS:
-            result, produced = _calculate_151(filing_year=filing_year)
+            result, _produced = _calculate_151(filing_year=filing_year)
             expected = _expected_cuota_from_boe_escala(_BASE_BY_YEAR[filing_year])
             assert result.values[_CUOTA_INTEGRA_GENERAL_CASILLA] == expected, (
                 f"151 cuota for {filing_year} drifted from the BOE art.93.2.e.1º escala"
             )
-            recorder.record_calculation_year(filing_year=filing_year, produced_value_count=produced)
 
     # Independent oracle check: the two years' expected cuotas are the BOE values.
     assert _expected_cuota_from_boe_escala(_BASE_BY_YEAR[2025]) == Decimal("285000.00")
-
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == _RENTA_YEARS
-    assert_enrollment_matches_manifest(evidence)

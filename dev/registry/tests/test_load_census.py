@@ -57,10 +57,8 @@ def test_the_static_closure_matches_what_a_real_load_imports(
     records function-scoped imports, which a real load never walks unless the
     function runs, so the closure is a statement about what a load can REACH and
     ``sys.modules`` is a statement about what it DID import. Demanding they match
-    made the test unsatisfiable by a legitimate construct: ``_withholding_rows``
-    imports ``withholding_bindings`` at module level and is imported back from
-    inside a function, which is the standard way to break an import cycle and
-    cannot be hoisted without restoring the cycle.
+    made the test unsatisfiable for legitimate function-scoped imports used to
+    avoid import cycles.
 
     So the difference is required to be exactly the deferred edges. Every module
     the graph reaches but the load did not import must have no module-level

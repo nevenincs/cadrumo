@@ -45,7 +45,7 @@ from ..country_vocabulary import _index_country_names
 from ..errors import IvaCatalogueError
 from ..establishment import (
     country_code_for_printed_country_name,
-    territorial_scope_for_printed_country_name,
+    territorial_scope_for_country,
 )
 from ..schema import EUMemberState
 
@@ -92,11 +92,11 @@ class TestAnUnrecognisedNameEstablishesNothing:
 
     @pytest.mark.parametrize("printed", ["Atlantis", "Kazakhstan", "", "   "])
     def test_a_name_outside_the_vocabulary_yields_no_scope(self, printed: str) -> None:
-        assert territorial_scope_for_printed_country_name(printed) is None
+        assert territorial_scope_for_country(country_code_for_printed_country_name(printed)) is None
 
     def test_an_absent_name_yields_nothing(self) -> None:
         assert country_code_for_printed_country_name(None) is None
-        assert territorial_scope_for_printed_country_name(None) is None
+        assert territorial_scope_for_country(country_code_for_printed_country_name(None)) is None
 
     @pytest.mark.parametrize(
         "printed",
@@ -112,7 +112,7 @@ class TestAnUnrecognisedNameEstablishesNothing:
         ``is None`` assertions above.
         """
         assert country_code_for_printed_country_name(printed) != "ES"
-        assert territorial_scope_for_printed_country_name(printed) not in {
+        assert territorial_scope_for_country(country_code_for_printed_country_name(printed)) not in {
             IvaTerritorialScope.ES_MAINLAND,
             IvaTerritorialScope.ES_CANARIAS,
             IvaTerritorialScope.ES_CEUTA_MELILLA,
@@ -225,10 +225,16 @@ class TestTheRungComposesRatherThanDecides:
     """Scope comes from the country resolver; this axis only names the country."""
 
     def test_a_member_state_name_establishes_the_eu_scope(self) -> None:
-        assert territorial_scope_for_printed_country_name("Deutschland") is IvaTerritorialScope.EU_MEMBER
+        assert (
+            territorial_scope_for_country(country_code_for_printed_country_name("Deutschland"))
+            is IvaTerritorialScope.EU_MEMBER
+        )
 
     def test_a_third_country_name_establishes_the_third_country_scope(self) -> None:
-        assert territorial_scope_for_printed_country_name("Suiza") is IvaTerritorialScope.THIRD_COUNTRY
+        assert (
+            territorial_scope_for_country(country_code_for_printed_country_name("Suiza"))
+            is IvaTerritorialScope.THIRD_COUNTRY
+        )
 
     def test_a_spanish_name_names_the_state_but_establishes_no_scope(self) -> None:
         """The composition proving nothing about Spain is decided twice.
@@ -239,7 +245,7 @@ class TestTheRungComposesRatherThanDecides:
         separates them.
         """
         assert country_code_for_printed_country_name("España") == "ES"
-        assert territorial_scope_for_printed_country_name("España") is None
+        assert territorial_scope_for_country(country_code_for_printed_country_name("España")) is None
 
 
 class TestTheVocabularyCoversWhatTheClassifierTurnsOn:

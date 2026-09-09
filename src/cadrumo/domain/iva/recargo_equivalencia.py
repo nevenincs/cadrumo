@@ -34,7 +34,6 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
-from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -63,109 +62,7 @@ from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError, IvaValidationError
 
 
-class LivaArt161RecargoRates(BaseModel):
-    """Frozen record of the LIVA art. 161 recargo de equivalencia rates.
-
-    Attributes:
-        general_rate: 5.2 % recargo applied alongside the 21 % IVA
-            tier (LIVA art. 161 1.º).
-        reducido_rate: 1.4 % recargo applied alongside the 10 % IVA
-            tier (LIVA art. 161 2.º, referencing art. 91 uno).
-        super_reducido_rate: 0.5 % recargo applied alongside the 4 %
-            IVA tier (LIVA art. 161 3.º, referencing art. 91 dos).
-        tabaco_rate: 1.75 % recargo applied to entregas de labores
-            del tabaco (LIVA art. 161 4.º).
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    general_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
-    reducido_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
-    super_reducido_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
-    tabaco_rate: Decimal = Field(gt=Decimal("0"), lt=Decimal("1"))
-
-
-_GENERAL_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-general"
-_REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-reducido"
-_SUPER_REDUCIDO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-super-reducido"
-_TABACO_PARAM_ID: Final[str] = "liva-art-161:recargo-rate-tabaco"
 IVA_RECARGO_FACT_ID = "iva-recargo-by-applied-rate"
-
-
-def _load_rates() -> LivaArt161RecargoRates:
-    """Read the four LIVA art. 161 rate parameters from the registry catalogue.
-
-    Routes through ``cadrumo.domain.calculations.registry.load_registry_tree``
-    so parameters land in the validated :class:`RegistryCatalogues.parameters`
-    surface (single config-resolution path). The retired direct
-    ``tomllib.load`` of ``registry/aeat/legal/iva-recargo-equivalencia.toml``
-    is replaced — bypassing the loader was the same architectural drift
-    pattern as direct ``os.environ`` reads.
-
-    Returns:
-        A :class:`LivaArt161RecargoRates` record with the four rate values.
-
-    Raises:
-        IvaCatalogueError: If any of the four expected parameter ids is absent
-            or if the registry catalogue cannot be loaded.
-    """
-    # load_legal_parameters_only is the cycle-safe entry point — the full
-    # load_registry_tree path pulls in registry._bindings which imports
-    # from cadrumo.domain.iva, triggering a circular import at this very
-    # module's import time.
-    from ..calculations.registry.errors import RegistryError
-    from ..calculations.registry.loader import load_legal_parameters_only
-
-    try:
-        parameters = load_legal_parameters_only(bundled_path("registry", "aeat"))
-    except RegistryError as exc:
-        raise IvaCatalogueError(f"failed to load IVA recargo-equivalencia legal parameters: {exc}") from exc
-    return _rates_from_catalogue(parameters)
-
-
-def _rates_from_catalogue(parameters: Mapping[str, object]) -> LivaArt161RecargoRates:
-    """Build the typed LIVA art. 161 rate record from validated registry entries."""
-    try:
-        general_raw = _parameter_value(parameters, _GENERAL_PARAM_ID)
-        reducido_raw = _parameter_value(parameters, _REDUCIDO_PARAM_ID)
-        super_reducido_raw = _parameter_value(parameters, _SUPER_REDUCIDO_PARAM_ID)
-        tabaco_raw = _parameter_value(parameters, _TABACO_PARAM_ID)
-    except KeyError as exc:
-        raise IvaCatalogueError(
-            "the IVA recargo-equivalencia legal-parameter catalogue is missing "
-            f"LIVA art. 161 parameter {exc.args[0]!r}",
-        ) from exc
-
-    try:
-        return LivaArt161RecargoRates(
-            general_rate=Decimal(general_raw),
-            reducido_rate=Decimal(reducido_raw),
-            super_reducido_rate=Decimal(super_reducido_raw),
-            tabaco_rate=Decimal(tabaco_raw),
-        )
-    except (ValueError, TypeError) as exc:
-        raise IvaValidationError(f"failed to parse recargo rates as Decimal: {exc}") from exc
-
-
-def _parameter_value(parameters: Mapping[str, object], parameter_id: str) -> str:
-    value = getattr(parameters[parameter_id], "value", None)
-    if not isinstance(value, str):
-        raise IvaValidationError(f"LIVA art. 161 parameter {parameter_id!r} has no string value")
-    return value
-
-
-def load_recargo_rates() -> LivaArt161RecargoRates:
-    """Public accessor for the LIVA art. 161 recargo de equivalencia rates.
-
-    Reads the four art. 161 rate parameters from the bundled
-    legal-parameter catalogue and returns the typed
-    :class:`LivaArt161RecargoRates` record. Use
-    :func:`recargo_rate_for_applied_rate` for the rate-and-date keyed
-    lookup; tobacco callers read ``.tabaco_rate`` directly.
-    """
-    return _load_rates()
-
-
 class RecargoRateRecord(BaseModel):
     """One recargo de equivalencia rate, paired with the IVA rate it accompanies.
 
@@ -409,13 +306,11 @@ def _recargo_fact_variant(record: RecargoRateRecord) -> GovernedFactVariant:
 
 __all__ = [
     "IVA_RECARGO_FACT_ID",
-    "LivaArt161RecargoRates",
     "RecargoRateRecord",
     "collect_iva_recargo_fact_fingerprints",
     "compile_iva_recargo_facts",
     "iva_recargo_fact_query",
     "load_recargo_rate_table",
-    "load_recargo_rates",
     "recargo_rate_for_applied_rate",
     "recargo_rate_record_from_fact",
     "reset_iva_recargo_fact_provider",

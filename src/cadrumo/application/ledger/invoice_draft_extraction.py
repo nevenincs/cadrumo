@@ -182,6 +182,38 @@ def _require_consent_token_binds_these_bytes(
     )
 
 
+def _resolve_invoice_evidence_input(
+    *,
+    bucket_id: str,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    settings: Settings,
+) -> EvidenceInput:
+    """Resolve the selected evidence reference to in-memory document bytes."""
+    store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, settings))
+    if evidence_id is not None:
+        # Both id spaces are consulted so the refusal can be precise: only the
+        # evidence-record space carries document bytes, but a catalogue-invoice id is
+        # a legitimate reference that simply has no document behind it, and must not
+        # be reported as a missing record.
+        reference = classify_evidence_reference(
+            evidence_id,
+            bucket_id=bucket_id,
+            evidence_records=PurchaseInvoiceEvidenceService(settings=settings).list_all(bucket_id=bucket_id),
+            invoices=InvoiceCatalogueRepository(bucket_id=bucket_id).load(),
+        )
+        if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:
+            raise refuse_unresolved_evidence_reference(evidence_id)
+        if reference.record is None:
+            raise refuse_reference_without_document_bytes(evidence_id)
+        return resolve_purchase_invoice_evidence_input(reference.record, store=store)
+    if attachment_id is None:
+        raise PurchaseInvoiceEvidenceInputError(
+            translated_message="errors.refused.refused_ledger_evidence_input",
+        )
+    return resolve_attachment_evidence_input(attachment_id, store=store)
+
+
 def extract_invoice_draft_from_evidence(
     *,
     bucket_id: str,
@@ -254,29 +286,12 @@ def extract_invoice_draft_from_evidence(
     # prints it. Neither could reach it before, so both were structurally
     # unreachable on the live path however completely they were built.
     filer_tax_id = _active_filer_tax_id()
-    store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
-    if evidence_id is not None:
-        # Both id spaces are consulted so the refusal can be precise: only the
-        # evidence-record space carries document bytes, but a catalogue-invoice id is
-        # a legitimate reference that simply has no document behind it, and must not
-        # be reported as a missing record.
-        reference = classify_evidence_reference(
-            evidence_id,
-            bucket_id=bucket_id,
-            evidence_records=PurchaseInvoiceEvidenceService(settings=resolved_settings).list_all(bucket_id=bucket_id),
-            invoices=InvoiceCatalogueRepository(bucket_id=bucket_id).load(),
-        )
-        if reference.outcome is EvidenceReferenceOutcome.UNRESOLVED:
-            raise refuse_unresolved_evidence_reference(evidence_id)
-        if reference.record is None:
-            raise refuse_reference_without_document_bytes(evidence_id)
-        evidence_input = resolve_purchase_invoice_evidence_input(reference.record, store=store)
-    else:
-        if attachment_id is None:
-            raise PurchaseInvoiceEvidenceInputError(
-                translated_message="errors.refused.refused_ledger_evidence_input",
-            )
-        evidence_input = resolve_attachment_evidence_input(attachment_id, store=store)
+    evidence_input = _resolve_invoice_evidence_input(
+        bucket_id=bucket_id,
+        evidence_id=evidence_id,
+        attachment_id=attachment_id,
+        settings=resolved_settings,
+    )
 
     _require_consent_token_binds_these_bytes(consent_token, evidence_input)
 

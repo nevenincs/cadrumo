@@ -23,7 +23,6 @@ from ..errors import IvaValidationError
 from ..recargo_equivalencia import (
     RecargoRateRecord,
     load_recargo_rate_table,
-    load_recargo_rates,
     recargo_rate_for_applied_rate,
 )
 
@@ -86,25 +85,6 @@ def test_an_unmodelled_combination_returns_nothing_rather_than_a_near_match(
 ) -> None:
     """No nearest-match fallback: an unmodelled pairing must refuse to guess."""
     assert recargo_rate_for_applied_rate(applied_rate, on_date) is None, why
-
-
-def test_the_ordinary_rates_match_the_operator_reviewed_parameters() -> None:
-    """The operational table must not drift from the reviewed legal record.
-
-    The art. 161 rates exist twice by design: as operator-reviewed legal
-    parameters, which are the grounding record, and in this table, which is the
-    lookup. Two stores of one number drift unless something checks, so this is
-    that check rather than a restatement.
-    """
-    reviewed = load_recargo_rates()
-    pairs = {
-        Decimal("0.21"): reviewed.general_rate,
-        Decimal("0.10"): reviewed.reducido_rate,
-        Decimal("0.04"): reviewed.super_reducido_rate,
-    }
-
-    for iva_rate, reviewed_recargo in pairs.items():
-        assert recargo_rate_for_applied_rate(iva_rate, _COLLISION_DATE) == reviewed_recargo
 
 
 def test_overlapping_windows_for_one_rate_are_refused() -> None:

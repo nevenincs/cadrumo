@@ -192,6 +192,32 @@ class ModeloWorkspaceFieldManifestV1(_ManifestModel):
 
 type _Node = tuple[_SchemaType, _NodeKind]
 type _Root = tuple[_Path, type[BaseModel]]
+type _RootClassificationRule = tuple[str, frozenset[str], _Owner, _Reason, str]
+_ROOT_CLASSIFICATION_RULES: tuple[_RootClassificationRule, ...] = (
+    ("registry_snapshot.", _REGISTRY_ROOT_FIELDS, "domain.calculations.registry", "registry_declaration", "registry"),
+    (
+        "registry_revision_inspection.",
+        _INSPECTION_ROOT_FIELDS,
+        "domain.calculations.registry",
+        "registry_declaration",
+        "inspection",
+    ),
+)
+_PROJECTED_PATH_DESTINATION_RULES: tuple[tuple[str, frozenset[_SchemaType], _Destination], ...] = (
+    (".constraint", frozenset({"CasillaId"}), "ModeloWorkspaceConstraintReferenceV1"),
+    (".export", frozenset({"CasillaId", "ExportFieldId"}), "ModeloWorkspaceExportExposureReferenceV1"),
+    (".relation", frozenset({"BindingId", "CasillaId"}), "ModeloWorkspaceRelationEndpointReferenceV1"),
+)
+_PROJECTED_SCHEMA_DESTINATIONS: dict[_SchemaType, _Destination] = {
+    "ApplicabilityRuleId": "ModeloWorkspaceApplicabilityReferenceV1",
+    "BindingId": "ModeloWorkspaceBindingReferenceV1",
+    "CasillaId": "ModeloWorkspaceCasillaReferenceV1",
+    "ContinuidadId": "ModeloWorkspaceContinuityReferenceV1",
+    "ExportFieldId": "ModeloWorkspaceExportFieldReferenceV1",
+    "FormulaId": "ModeloWorkspaceFormulaReferenceV1",
+    "ParameterId": "ModeloWorkspaceParameterReferenceV1",
+    "RelationId": "ModeloWorkspaceRelationReferenceV1",
+}
 
 
 def generate_modelo_workspace_field_manifest(snapshot: RegistrySnapshot) -> ModeloWorkspaceFieldManifestV1:
@@ -248,28 +274,6 @@ def _generate_manifest_from_roots(roots: tuple[_Root, ...]) -> ModeloWorkspaceFi
     )
 
 
-def validate_modelo_workspace_field_manifest(
-    manifest: ModeloWorkspaceFieldManifestV1,
-    snapshot: RegistrySnapshot,
-) -> ModeloWorkspaceFieldManifestV1:
-    """Refuse a manifest that is missing, duplicated, stale, or no longer classified."""
-    current = generate_modelo_workspace_field_manifest(snapshot)
-    if manifest != current:
-        raise ValueError("workspace field manifest is not the current public-schema fixed point")
-    return manifest
-
-
-def validate_modelo_workspace_field_manifest_for_inspection(
-    manifest: ModeloWorkspaceFieldManifestV1,
-    inspection: RegistryRevisionInspection,
-) -> ModeloWorkspaceFieldManifestV1:
-    """Refuse a STATIC_INSPECTION manifest that is stale or no longer classified."""
-    current = generate_modelo_workspace_field_manifest_for_inspection(inspection)
-    if manifest != current:
-        raise ValueError("workspace field manifest is not the current static-inspection fixed point")
-    return manifest
-
-
 def _selector_roots() -> tuple[_Root, ...]:
     """Return the admission-agnostic selector roots.
 
@@ -300,10 +304,7 @@ def _manifest_roots(snapshot: RegistrySnapshot) -> tuple[_Root, ...]:
     for layout_type in sorted({type(layout) for layout in generated_layouts}, key=_schema_type_label):
         roots.append((f"derived.export_layout.{_root_type_coordinate(layout_type)}", layout_type))
 
-    root_paths = tuple(path for path, _ in roots)
-    if len(root_paths) != len(set(root_paths)):
-        raise ValueError("workspace field manifest has duplicate traversal roots")
-    return tuple(sorted(roots, key=lambda root: root[0]))
+    return _sorted_unique_roots(roots)
 
 
 def _walk_annotation(
@@ -515,20 +516,11 @@ def _walk_collection(
     element_types = tuple(argument for argument in arguments if argument is not Ellipsis)
     if not element_types:
         raise ValueError(f"workspace field manifest cannot classify collection at {path}")
-    if len(element_types) == 1:
-        _walk_annotation(
-            annotation=element_types[0],
-            path=f"{path}.collection_item",
-            nodes=nodes,
-            visited=visited,
-            active=active,
-            discriminator=None,
-        )
-        return
     for index, element_type in enumerate(element_types):
+        item_suffix = "collection_item" if len(element_types) == 1 else f"collection_item{index}"
         _walk_annotation(
             annotation=element_type,
-            path=f"{path}.collection_item{index}",
+            path=f"{path}.{item_suffix}",
             nodes=nodes,
             visited=visited,
             active=active,
@@ -581,33 +573,21 @@ def _classify_node(
             path=path,
             schema_type=schema_type,
             node_kind=node_kind,
-            classification=ModeloWorkspaceSchemaClassification.BACKEND_ONLY,
             owner="domain.calculations.registry",
             reason="selector_configuration",
         )
-    if path.startswith("registry_snapshot."):
-        top_level = path.removeprefix("registry_snapshot.").split(".", maxsplit=1)[0]
-        if top_level not in _REGISTRY_ROOT_FIELDS:
-            raise ValueError(f"workspace field manifest cannot classify registry root {top_level!r}")
+    for prefix, root_fields, owner, reason, root_kind in _ROOT_CLASSIFICATION_RULES:
+        if not path.startswith(prefix):
+            continue
+        top_level = path.removeprefix(prefix).split(".", maxsplit=1)[0]
+        if top_level not in root_fields:
+            raise ValueError(f"workspace field manifest cannot classify {root_kind} root {top_level!r}")
         return _owned_entry(
             path=path,
             schema_type=schema_type,
             node_kind=node_kind,
-            classification=ModeloWorkspaceSchemaClassification.BACKEND_ONLY,
-            owner="domain.calculations.registry",
-            reason="registry_declaration",
-        )
-    if path.startswith("registry_revision_inspection."):
-        top_level = path.removeprefix("registry_revision_inspection.").split(".", maxsplit=1)[0]
-        if top_level not in _INSPECTION_ROOT_FIELDS:
-            raise ValueError(f"workspace field manifest cannot classify inspection root {top_level!r}")
-        return _owned_entry(
-            path=path,
-            schema_type=schema_type,
-            node_kind=node_kind,
-            classification=ModeloWorkspaceSchemaClassification.BACKEND_ONLY,
-            owner="domain.calculations.registry",
-            reason="registry_declaration",
+            owner=owner,
+            reason=reason,
         )
     raise ValueError(f"workspace field manifest cannot classify path {path!r}")
 
@@ -619,44 +599,14 @@ def _projected_destination(
 ) -> _Destination | None:
     if path.startswith(("selector.", "derived.export_layout.")):
         return None
-    return _projected_context_destination(path, schema_type, node_kind) or _projected_schema_destination(schema_type)
-
-
-def _projected_context_destination(
-    path: _Path,
-    schema_type: _SchemaType,
-    node_kind: _NodeKind,
-) -> _Destination | None:
     if node_kind == "union_branch" and _is_workspace_formula_operand(path, schema_type):
         return "ModeloWorkspaceFormulaOperandReferenceV1"
-    if schema_type == "ApplicabilityRuleId":
-        return "ModeloWorkspaceApplicabilityReferenceV1"
-    return _projected_path_destination(path, schema_type)
-
-
-def _projected_path_destination(path: _Path, schema_type: _SchemaType) -> _Destination | None:
-    if ".constraint" in path and schema_type == "CasillaId":
-        return "ModeloWorkspaceConstraintReferenceV1"
-    if schema_type == "ContinuidadId":
-        return "ModeloWorkspaceContinuityReferenceV1"
-    if ".export" in path and schema_type in {"CasillaId", "ExportFieldId"}:
-        return "ModeloWorkspaceExportExposureReferenceV1"
-    if ".relation" in path and schema_type in {"BindingId", "CasillaId"}:
-        return "ModeloWorkspaceRelationEndpointReferenceV1"
-
-
-def _projected_schema_destination(schema_type: _SchemaType) -> _Destination | None:
-    destinations: dict[_SchemaType, _Destination] = {
-        "ApplicabilityRuleId": "ModeloWorkspaceApplicabilityReferenceV1",
-        "BindingId": "ModeloWorkspaceBindingReferenceV1",
-        "CasillaId": "ModeloWorkspaceCasillaReferenceV1",
-        "ContinuidadId": "ModeloWorkspaceContinuityReferenceV1",
-        "ExportFieldId": "ModeloWorkspaceExportFieldReferenceV1",
-        "FormulaId": "ModeloWorkspaceFormulaReferenceV1",
-        "ParameterId": "ModeloWorkspaceParameterReferenceV1",
-        "RelationId": "ModeloWorkspaceRelationReferenceV1",
-    }
-    return destinations.get(schema_type)
+    if schema_type in ("ApplicabilityRuleId", "ContinuidadId"):
+        return _PROJECTED_SCHEMA_DESTINATIONS[schema_type]
+    for marker, schema_types, destination in _PROJECTED_PATH_DESTINATION_RULES:
+        if marker in path and schema_type in schema_types:
+            return destination
+    return _PROJECTED_SCHEMA_DESTINATIONS.get(schema_type)
 
 
 def _is_workspace_formula_operand(path: _Path, schema_type: _SchemaType) -> bool:
@@ -667,8 +617,6 @@ def _is_workspace_formula_operand(path: _Path, schema_type: _SchemaType) -> bool
     optional absence, operators, and dispatch containers remain registry-owned
     implementation grammar rather than being mislabelled as a DTO projection.
     """
-    if ".expression." not in path:
-        return False
     operand_fields: dict[str, frozenset[_SchemaType]] = {
         "casilla_id": frozenset({"CasillaId"}),
         "binding": frozenset({"BindingId"}),
@@ -677,7 +625,7 @@ def _is_workspace_formula_operand(path: _Path, schema_type: _SchemaType) -> bool
         "relation": frozenset({"RelationId"}),
         "literal": frozenset({"Decimal"}),
     }
-    return any(
+    return ".expression." in path and any(
         f".expression.{field_name}." in path and schema_type in schema_types
         for field_name, schema_types in operand_fields.items()
     )
@@ -688,7 +636,7 @@ def _owned_entry(
     path: _Path,
     schema_type: _SchemaType,
     node_kind: _NodeKind,
-    classification: ModeloWorkspaceSchemaClassification,
+    classification: ModeloWorkspaceSchemaClassification = ModeloWorkspaceSchemaClassification.BACKEND_ONLY,
     owner: _Owner,
     reason: _Reason,
 ) -> ModeloWorkspaceFieldManifestEntryV1:
@@ -794,11 +742,13 @@ def _is_model_type(annotation: object) -> TypeGuard[type[BaseModel]]:
 def _is_traversable_type_alias(annotation: TypeAliasType) -> bool:
     value = _unwrap_annotated(annotation.__value__)
     origin = get_origin(value)
-    return (
-        origin in (Union, UnionType)
-        or _is_model_type(value)
-        or _is_mapping_origin(origin)
-        or _is_collection_origin(origin)
+    return any(
+        (
+            origin in (Union, UnionType),
+            _is_model_type(value),
+            _is_mapping_origin(origin),
+            _is_collection_origin(origin),
+        )
     )
 
 
@@ -842,6 +792,13 @@ class ModeloWorkspaceManifestCaptureError(CadrumoError, RuntimeError):
     """Raised when a field manifest cannot be captured over one stable window."""
 
 
+def _manifest_capture_not_current(reason: str) -> ModeloWorkspaceManifestCaptureError:
+    return ModeloWorkspaceManifestCaptureError(
+        translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
+        context={"reason": reason},
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class ModeloWorkspaceManifestCapture:
     """One generated field manifest and its currentness coordinate.
@@ -875,32 +832,20 @@ class ModeloWorkspaceManifestCurrentCoordinate:
         _require_manifest_process_domain(self.comparison_domain)
         _require_manifest_process_domain(captured.comparison_domain)
         if self.comparison_domain != captured.comparison_domain:
-            raise ModeloWorkspaceManifestCaptureError(
-                translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
-                context={"reason": "distinct_owner_scope"},
-            )
+            raise _manifest_capture_not_current("distinct_owner_scope")
         if self.generation != captured.generation:
-            raise ModeloWorkspaceManifestCaptureError(
-                translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
-                context={"reason": "capture_superseded"},
-            )
+            raise _manifest_capture_not_current("capture_superseded")
         return self
 
 
 def _require_manifest_process_domain(domain: str) -> None:
     """Refuse a coordinate domain not minted in this process incarnation."""
     if _manifest_capture_process_pid != os.getpid():
-        raise ModeloWorkspaceManifestCaptureError(
-            translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
-            context={"reason": "forked_process"},
-        )
+        raise _manifest_capture_not_current("forked_process")
     with _manifest_capture_lock:
         known = domain in _manifest_capture_domains
     if not known:
-        raise ModeloWorkspaceManifestCaptureError(
-            translated_message="errors.refused.modelo_workspace_manifest_capture_not_current",
-            context={"reason": "foreign_process_incarnation"},
-        )
+        raise _manifest_capture_not_current("foreign_process_incarnation")
 
 
 def _manifest_comparison_domain(snapshot: RegistrySnapshot) -> str:
@@ -954,16 +899,33 @@ def _manifest_generation_for(domain: str, observation: tuple[str, ...]) -> int:
         return _manifest_capture_generation
 
 
+def _current_coordinate_for_manifest(
+    manifest: ModeloWorkspaceFieldManifestV1,
+    domain: str,
+) -> ModeloWorkspaceManifestCurrentCoordinate:
+    return ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=domain,
+        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+    )
+
+
+def _capture_for_manifest(
+    manifest: ModeloWorkspaceFieldManifestV1,
+    domain: str,
+) -> ModeloWorkspaceManifestCapture:
+    return ModeloWorkspaceManifestCapture(
+        manifest=manifest,
+        comparison_domain=domain,
+        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
+    )
+
+
 def read_modelo_workspace_manifest_current_coordinate(
     snapshot: RegistrySnapshot,
 ) -> ModeloWorkspaceManifestCurrentCoordinate:
     """Return the typed current coordinate for same-domain capture validation."""
     manifest = generate_modelo_workspace_field_manifest(snapshot)
-    domain = _manifest_comparison_domain(snapshot)
-    return ModeloWorkspaceManifestCurrentCoordinate(
-        comparison_domain=domain,
-        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
-    )
+    return _current_coordinate_for_manifest(manifest, _manifest_comparison_domain(snapshot))
 
 
 def capture_modelo_workspace_manifest(snapshot: RegistrySnapshot) -> ModeloWorkspaceManifestCapture:
@@ -974,12 +936,7 @@ def capture_modelo_workspace_manifest(snapshot: RegistrySnapshot) -> ModeloWorks
     manifest with a coordinate derived from different schema state.
     """
     manifest = generate_modelo_workspace_field_manifest(snapshot)
-    domain = _manifest_comparison_domain(snapshot)
-    return ModeloWorkspaceManifestCapture(
-        manifest=manifest,
-        comparison_domain=domain,
-        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
-    )
+    return _capture_for_manifest(manifest, _manifest_comparison_domain(snapshot))
 
 
 def read_modelo_workspace_manifest_current_coordinate_for_inspection(
@@ -987,11 +944,7 @@ def read_modelo_workspace_manifest_current_coordinate_for_inspection(
 ) -> ModeloWorkspaceManifestCurrentCoordinate:
     """Return the typed current coordinate for same-domain STATIC_INSPECTION capture validation."""
     manifest = generate_modelo_workspace_field_manifest_for_inspection(inspection)
-    domain = _inspection_manifest_comparison_domain(inspection)
-    return ModeloWorkspaceManifestCurrentCoordinate(
-        comparison_domain=domain,
-        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
-    )
+    return _current_coordinate_for_manifest(manifest, _inspection_manifest_comparison_domain(inspection))
 
 
 def capture_modelo_workspace_manifest_for_inspection(
@@ -999,12 +952,7 @@ def capture_modelo_workspace_manifest_for_inspection(
 ) -> ModeloWorkspaceManifestCapture:
     """Generate one STATIC_INSPECTION manifest and pair it with the coordinate of that same walk."""
     manifest = generate_modelo_workspace_field_manifest_for_inspection(inspection)
-    domain = _inspection_manifest_comparison_domain(inspection)
-    return ModeloWorkspaceManifestCapture(
-        manifest=manifest,
-        comparison_domain=domain,
-        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
-    )
+    return _capture_for_manifest(manifest, _inspection_manifest_comparison_domain(inspection))
 
 
 __all__ = [
@@ -1019,6 +967,4 @@ __all__ = [
     "generate_modelo_workspace_field_manifest_for_inspection",
     "read_modelo_workspace_manifest_current_coordinate",
     "read_modelo_workspace_manifest_current_coordinate_for_inspection",
-    "validate_modelo_workspace_field_manifest",
-    "validate_modelo_workspace_field_manifest_for_inspection",
 ]

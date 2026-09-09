@@ -460,33 +460,6 @@ def derive_iva_compensation_year_end_carry_partition(
     )
 
 
-def enforce_iva_compensation_four_year_window(
-    report: IvaCompensationCarryForwardReport,
-) -> IvaCompensationCarryForwardReport:
-    """Refuse remaining IVA compensation lots beyond the four-year window.
-
-    Returns the :class:`IvaCompensationCarryForwardReport` unchanged when
-    all lots are within the window.
-    """
-    expired = tuple(
-        lot
-        for lot in report.lots
-        if lot.remaining_amount > ZERO
-        and lot.expiry_review_state is IvaCompensationExpiryReviewState.EXPIRED_REVIEW_REQUIRED
-    )
-    if expired:
-        first = expired[0]
-        raise IvaCompensationCarryForwardPolicyError(
-            translated_message="errors.refused.refused_filing_calculate",
-            context={
-                "source_filing_year": str(first.source_filing_year),
-                "source_period": first.source_period.registry_token,
-                "remaining_balance_expired": True,
-            },
-        )
-    return report
-
-
 def iva_compensation_period_sort_key(period: Period) -> tuple[int, str]:
     """Order one typed IVA filing period within its filing year.
 
@@ -534,5 +507,4 @@ __all__ = [
     "build_iva_compensation_carry_forward_report",
     "derive_303_compensation_available",
     "derive_iva_compensation_year_end_carry_partition",
-    "enforce_iva_compensation_four_year_window",
 ]

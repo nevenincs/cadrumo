@@ -17,12 +17,11 @@ from ....core.directory_scan import (
     scan_directory,
 )
 from ....core.storage_materialization import STORAGE_ROOT_MODE, ensure_storage_tree
-from ....core.storage_taxonomy import StorageArea, StorageCategory, StorageNodeKind, StorageScope
-from ....core.storage_taxonomy_locations import STORAGE_TAXONOMY, storage_path
+from ....core.storage_taxonomy import StorageArea, StorageCategory
+from ....core.storage_taxonomy_locations import storage_path
 from ..models import StorageAreaDisposition, StorageOccupancy, StorageTreeIssueKind
 from ..service import (
     collect_storage_area_inventory,
-    collect_storage_inventory,
     inspect_storage_tree,
     materialise_storage_tree,
 )
@@ -53,90 +52,6 @@ class TestInventoryCoversTheDeclaration:
         assert logs.occupancy is StorageOccupancy.POPULATED
         assert logs.footprint_bytes == 5
         assert logs.reclaimable
-
-    def test_every_declared_member_gets_exactly_one_row(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            report = collect_storage_inventory()
-
-        categories = [row.category for row in report.rows]
-        assert len(categories) == len(set(categories))
-        assert set(categories) == set(STORAGE_TAXONOMY)
-
-    def test_root_scoped_rows_resolve_under_the_active_root(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            report = collect_storage_inventory()
-            for row in report.rows:
-                if row.scope is not StorageScope.ROOT:
-                    continue
-                assert row.path == storage_path(row.category)
-
-    def test_row_axes_are_carried_from_the_declaration_verbatim(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            report = collect_storage_inventory()
-
-        for row in report.rows:
-            location = STORAGE_TAXONOMY[row.category]
-            assert row.subpath == location.subpath
-            assert row.node_kind is location.node_kind
-            assert row.scope is location.scope
-            assert row.grouping is location.grouping
-            assert row.lifecycle is location.lifecycle
-            assert row.override_policy is location.override_policy
-            assert row.fingerprint_participation is location.fingerprint_participation
-            assert row.settings_field == location.settings_field
-
-    def test_a_scoped_member_reports_unresolved_rather_than_absent_with_no_profile(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            report = collect_storage_inventory()
-
-        assert report.active_bucket_id is None
-        scoped = [row for row in report.rows if row.scope is not StorageScope.ROOT]
-        assert scoped
-        for row in scoped:
-            assert row.occupancy is StorageOccupancy.UNRESOLVED
-            assert row.path is None
-
-
-class TestOccupancyIsMeasuredNotAssumed:
-    def test_an_absent_directory_reads_absent(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            assert not storage_path(StorageCategory.LOGS).exists()
-            row = _row_for(collect_storage_inventory(), StorageCategory.LOGS)
-
-        assert row.occupancy is StorageOccupancy.ABSENT
-        assert row.entry_count == 0
-
-    def test_a_materialised_but_unwritten_directory_reads_empty(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            storage_path(StorageCategory.LOGS).mkdir(parents=True, exist_ok=True)
-            row = _row_for(collect_storage_inventory(), StorageCategory.LOGS)
-
-        assert row.occupancy is StorageOccupancy.EMPTY
-        assert row.entry_count == 0
-
-    def test_a_written_directory_reads_populated_with_its_entry_count(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            target = storage_path(StorageCategory.LOGS)
-            target.mkdir(parents=True, exist_ok=True)
-            (target / "one.log").write_bytes(b"a")
-            (target / "two.log").write_bytes(b"b")
-            row = _row_for(collect_storage_inventory(), StorageCategory.LOGS)
-
-        assert row.occupancy is StorageOccupancy.POPULATED
-        assert row.entry_count == 2
-
-    def test_a_file_valued_member_reads_populated_only_when_it_carries_bytes(self, tmp_path) -> None:
-        with override_settings(cadrumo_local_storage_root=tmp_path):
-            target = storage_path(StorageCategory.USAGE_RATIOS)
-            assert STORAGE_TAXONOMY[StorageCategory.USAGE_RATIOS].node_kind is StorageNodeKind.FILE
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(b"")
-            empty = _row_for(collect_storage_inventory(), StorageCategory.USAGE_RATIOS)
-            target.write_bytes(b"{}")
-            written = _row_for(collect_storage_inventory(), StorageCategory.USAGE_RATIOS)
-
-        assert empty.occupancy is StorageOccupancy.EMPTY
-        assert written.occupancy is StorageOccupancy.POPULATED
 
 
 class TestTreeCheckReportsWithoutRepairing:
@@ -252,10 +167,3 @@ class TestMaterialisePreservesContent:
 
             assert second.created == ()
             assert marker.read_bytes() == b"survivor"
-
-
-def _row_for(report, category: StorageCategory):
-    """Return the single inventory row for ``category``."""
-    matches = [row for row in report.rows if row.category is category]
-    assert len(matches) == 1
-    return matches[0]

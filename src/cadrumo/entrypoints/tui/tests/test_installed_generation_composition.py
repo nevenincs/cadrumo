@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
 from typing import cast
@@ -49,7 +51,6 @@ from ....application.user_profile.censal_operation import (
 from ....application.user_profile.login_interaction import ProfileLoginAttempt, ProfileLoginChoice
 from ....application.user_profile.overview import ProfileOverview
 from ....application.workbench_generation import (
-    CallableWorkbenchGenerationReadDoorV1,
     InstalledWorkbenchGenerationProviderV1,
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
@@ -75,6 +76,14 @@ from ..secret.login import LoginScreen
 from ..secret.passphrase import PassphraseScreen
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+@dataclass(frozen=True, slots=True)
+class _GenerationReadDoor:
+    read: Callable[[], WorkbenchGenerationInputsV1]
+
+    def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
+        return self.read()
 
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
@@ -268,7 +277,7 @@ def _operation_runtime() -> TuiOperationCompositionV1:
 def test_generation_provider_binds_real_declarations_factory_and_calendar_projection() -> None:
     """The installed Declarations route reaches the application-built calendar."""
 
-    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(lambda: _inputs(_NOW)))
     root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
     root = compose_installed_workbench_root(root_inputs)
 
@@ -283,7 +292,7 @@ def test_generation_provider_binds_real_declarations_factory_and_calendar_projec
 
 def test_generation_provider_keeps_modelo_navigation_unavailable_without_a_captured_workspace_projection() -> None:
     """The installed factory never creates a second read or treats no capture as empty work."""
-    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(lambda: _inputs(_NOW)))
     root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
     root = compose_installed_workbench_root(root_inputs)
     route = root.destination_catalogue.resolve("workbench.declarations")
@@ -297,7 +306,7 @@ def test_generation_provider_keeps_modelo_navigation_unavailable_without_a_captu
 
 def test_generation_provider_composes_the_real_account_screen_owners_without_effects() -> None:
     """The installed root receives real account doors, not a test-only placeholder."""
-    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(lambda: _inputs(_NOW)))
     root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
     context = TuiScreenContextV1(destination="workbench.profile")
 
@@ -340,7 +349,7 @@ def test_generation_factory_receives_exact_session_operation_contract_object(
         capture_contracts,
     )
     runtime = _operation_runtime()
-    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(lambda: _inputs(_NOW)))
+    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(lambda: _inputs(_NOW)))
 
     compose_installed_workbench_generation_provider(provider, _dependencies())(runtime)
 
@@ -373,7 +382,7 @@ def test_refresh_reuses_one_generation_for_search_then_home_and_keeps_missing_so
         calls += 1
         return value
 
-    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
+    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(read))
     root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
 
     assert calls == 1
@@ -401,7 +410,7 @@ def test_a_generation_that_gains_a_source_readmits_its_destination() -> None:
     def read() -> WorkbenchGenerationInputsV1:
         return generations.pop(0) if len(generations) > 1 else generations[0]
 
-    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
+    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(read))
     root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
     root = compose_installed_workbench_root(root_inputs)
 
@@ -428,7 +437,7 @@ def test_a_generation_that_loses_a_source_stops_offering_its_destination() -> No
     def read() -> WorkbenchGenerationInputsV1:
         return generations.pop(0) if len(generations) > 1 else generations[0]
 
-    provider = InstalledWorkbenchGenerationProviderV1(CallableWorkbenchGenerationReadDoorV1(read))
+    provider = InstalledWorkbenchGenerationProviderV1(_GenerationReadDoor(read))
     root_inputs = compose_installed_workbench_generation_provider(provider, _dependencies())(_operation_runtime())
     root = compose_installed_workbench_root(root_inputs)
 
@@ -441,3 +450,5 @@ def test_a_generation_that_loses_a_source_stops_offering_its_destination() -> No
     route = refreshed.resolve("workbench.aeat_sync")
     assert route.admission.state is not WorkbenchDestinationAdmissionState.AVAILABLE
     assert route.factory is None
+
+

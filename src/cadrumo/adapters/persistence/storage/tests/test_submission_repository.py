@@ -15,7 +15,7 @@ from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
-from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from .....tests.secure_sql import TestRuntimeProfile
 from ...profile.submission import (
     SubmissionRepository,
@@ -39,7 +39,7 @@ def _make_filing(
     status: SubmissionStatus = SubmissionStatus.PRESENTADA,
 ) -> ModeloPresentado:
     submitted_at = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
-    submission_id = make_submission_id(draft_id, attempt_ordinal)
+    submission_id = "0123456789abcdef"
     attempt = SubmissionAttempt(
         attempt_id=f"{submission_id}.{attempt_ordinal}",
         started_at=submitted_at,

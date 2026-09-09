@@ -13,7 +13,7 @@ from ....adapters.outbound.aeat.auth.clave_movil_support import mint_diagnostic_
 from ....adapters.persistence.storage.secure_object_namespaces import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core.classification.policies import SensitivityClass
-from ....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ....core.errors.error_codes import build_error_envelope
 from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -179,10 +179,6 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         with pytest.raises(AuthDiagnosticPhoneStateError) as exc_info:
             record_auth_diagnostic_phone_state("diag-new", "guessed")
         assert exc_info.value.context == {"phone_state": "guessed"}
-
-
-def test_auth_diagnostic_phone_state_error_is_in_error_registry() -> None:
-    assert "REFUSED_AUTH_DIAGNOSTIC_PHONE_STATE" in ERROR_REGISTRY
 
 
 def test_auth_diagnostic_phone_state_error_round_trips_through_build_error_envelope() -> None:

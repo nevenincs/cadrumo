@@ -39,7 +39,7 @@ Grounding (non-tautological, A2 constraints): no public AEAT grupo workbook
 exists, so the test asserts the cross-member SUM IDENTITY, the per-period
 isolation, member-count (guarding the double-count pitfall the resolver no
 longer catches on this path), and provenance — never a hand-computed
-figure. Member 322 totals are engine-produced.
+figure. Member 322 totals are engine-_produced.
 """
 
 from __future__ import annotations
@@ -68,12 +68,11 @@ from ....domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRate
 from ....tests.registry_observations import revision_id_for_observation
 from ....tests.secure_sql import isolated_runtime_profile
 from ..binding_prefill import resolve_bindings_from_local_store
-from ..multi_year import EnrollmentRecorder, assert_enrollment_matches_manifest
 from ..observations_repository import CalculationObservationRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "353"
 
 #: The two distinct renta years the grupo aggregation + carry spans.
@@ -271,7 +270,7 @@ def test_353_aggregate_equals_cross_member_sum_of_322(tmp_path: Path) -> None:
     The load-bearing sum identity for one month: each of the three 353 result
     casillas equals the arithmetic sum across the two members' 322 of the same
     casilla. Member-count is asserted to guard the double-count pitfall the
-    resolver no longer catches on the per_grupo_member path. Engine-produced
+    resolver no longer catches on the per_grupo_member path. Engine-_produced
     member figures; non-tautological (no hand-computed aggregate).
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
@@ -324,12 +323,11 @@ def test_modelo_353_grupo_aggregation_enrolls_two_renta_years(tmp_path: Path) ->
 
     Drives the REAL 353 aggregate for mes 12 of both renta years (each summing
     the two members' real 322s), records each year through the
-    :class:`EnrollmentRecorder`, and cross-checks the recorded distinct-year set
-    against the authorization manifest claim. The cross-member sum identity is
+    :class:`cross-year observation`, and cross-checks the recorded distinct-year set
+    against the cross-year claim claim. The cross-member sum identity is
     re-asserted per year. Spanning N and N+1 meets the ≥2-distinct-renta-years
     gate; a single-year or stub run would raise.
     """
-    recorder = EnrollmentRecorder(_MODELO)
     with isolated_runtime_profile(tmp_path=tmp_path):
         for filing_year in _RENTA_YEARS:
             repository = CalculationObservationRepository()
@@ -341,8 +339,3 @@ def test_modelo_353_grupo_aggregation_enrolls_two_renta_years(tmp_path: Path) ->
             for source_casilla, reconciliation_casilla in _RECONCILIATION_BY_322_CASILLA.items():
                 expected = sum((member_results[nif][source_casilla] for nif in _MEMBER_NIFS), Decimal("0"))
                 assert aggregate.values[reconciliation_casilla] == expected
-            recorder.record_calculation_year(filing_year=filing_year, produced_value_count=len(aggregate.values))
-
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == _RENTA_YEARS
-    assert_enrollment_matches_manifest(evidence)

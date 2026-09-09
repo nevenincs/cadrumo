@@ -23,7 +23,7 @@ extra fields.
 from __future__ import annotations
 
 from typing import Literal
-from urllib.parse import urlsplit
+from urllib.parse import SplitResult, urlsplit
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -49,6 +49,29 @@ SHEETS_SCOPE: str = _SCOPES.spreadsheets
 REQUIRED_SCOPES: tuple[str, ...] = (OPENID_SCOPE, EMAIL_SCOPE, DRIVE_FILE_SCOPE, SHEETS_SCOPE)
 
 
+def _google_oauth_endpoint_has_https_hostname(parsed: SplitResult) -> bool:
+    """Require the endpoint transport and a hostname before later checks."""
+    return parsed.scheme == "https" and parsed.hostname is not None
+
+
+def _google_oauth_endpoint_has_no_userinfo_or_port(parsed: SplitResult, port: int | None) -> bool:
+    """Reject credentials and explicit ports before matching the host."""
+    return parsed.username is None and parsed.password is None and port is None
+
+
+def _google_oauth_endpoint_matches_host(parsed: SplitResult, expected_host: str) -> bool:
+    """Compare the normalised parsed hostname with its canonical Google host."""
+    hostname = parsed.hostname
+    return hostname is not None and hostname.lower() == expected_host
+
+
+def _google_oauth_endpoint_has_clean_path(parsed: SplitResult) -> bool:
+    """Require a path while refusing query and fragment components."""
+    if not parsed.path:
+        return False
+    return not parsed.query and not parsed.fragment
+
+
 def _validate_google_oauth_endpoint(value: str, *, field_name: str, expected_host: str) -> str:
     """Validate one persisted OAuth endpoint before an upstream library consumes it."""
     endpoint = value.strip()
@@ -58,15 +81,10 @@ def _validate_google_oauth_endpoint(value: str, *, field_name: str, expected_hos
     except ValueError as exc:
         raise ValueError(f"{field_name} must use a valid canonical Google HTTPS endpoint") from exc
     if (
-        parsed.scheme != "https"
-        or parsed.hostname is None
-        or parsed.username is not None
-        or parsed.password is not None
-        or port is not None
-        or parsed.hostname.lower() != expected_host
-        or not parsed.path
-        or parsed.query
-        or parsed.fragment
+        not _google_oauth_endpoint_has_https_hostname(parsed)
+        or not _google_oauth_endpoint_has_no_userinfo_or_port(parsed, port)
+        or not _google_oauth_endpoint_matches_host(parsed, expected_host)
+        or not _google_oauth_endpoint_has_clean_path(parsed)
     ):
         raise ValueError(
             f"{field_name} must be an absolute HTTPS endpoint on {expected_host!r} "

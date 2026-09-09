@@ -1,4 +1,4 @@
-r"""Cross-platform best-effort file-permission hardening for sensitive files.
+r"""Cross-platform best-effort directory-permission hardening for sensitive files.
 
 App-owned sensitive plaintext files must be restricted to the operator's user
 account. Browser session state is persisted through secure objects and does not
@@ -13,10 +13,6 @@ on standalone machines and domain-joined hosts.
 The Windows branch reads ``SYSTEMROOT`` and ``USERDOMAIN`` as operating-system
 ambient context only. It does not read Cadrumo configuration or make permission
 tightening an authorization decision.
-
-The public :func:`restrict_file_permissions` entry point accepts a
-:class:`~pathlib.Path` target and deliberately returns ``None`` even when the
-best-effort hardening step cannot be applied.
 
 """
 
@@ -54,13 +50,6 @@ def _run_permission_command(
         check=False,
         timeout=timeout,
     )
-
-
-def _restrict_posix_file_permissions(path: Path) -> None:
-    try:
-        os.chmod(path, 0o600)
-    except OSError:
-        _log.debug("restrict_file_permissions: chmod failed on %s", path, exc_info=True)
 
 
 def _windows_restrict_to_operator(path: Path, *, inheritable: bool) -> None:
@@ -138,29 +127,4 @@ def restrict_directory_permissions(path: Path) -> None:
         _log.debug("restrict_directory_permissions: chmod failed on %s", path, exc_info=True)
 
 
-def restrict_file_permissions(path: Path) -> None:
-    r"""Best-effort restrict a single ``path`` to the operator's user account.
-
-    POSIX applies mode ``0o600``; Windows delegates to the one ACL
-    implementation, :func:`_windows_restrict_to_operator`, with non-inheritable
-    rights.
-
-    Prefer :func:`restrict_directory_permissions` on the containing directory.
-    This per-file variant costs an ``icacls.exe`` spawn per call on Windows
-    (~28 ms measured), so it is for one-shot targets written outside a hardened
-    tree -- never for a write path that runs per record. The durable writers
-    deliberately do NOT call it; their confidentiality comes from the storage
-    tree's inherited ACL.
-
-    Best-effort: every error is swallowed and logged, so a hardening
-    side-effect never aborts the flow that triggered it.
-    """
-    if os.name == "nt":  # pragma: no cover - Windows-specific
-        _windows_restrict_to_operator(path, inheritable=False)
-        return
-    if os.name != "posix":
-        return
-    _restrict_posix_file_permissions(path)
-
-
-__all__ = ["restrict_directory_permissions", "restrict_file_permissions"]
+__all__ = ["restrict_directory_permissions"]

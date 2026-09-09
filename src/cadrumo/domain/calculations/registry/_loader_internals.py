@@ -12,7 +12,7 @@ import os
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
-from typing import cast, get_args, get_origin
+from typing import cast
 
 from pydantic import BaseModel, ValidationError
 
@@ -23,6 +23,18 @@ from ....core.directory_scan import (
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.filing_projection_ref import compile_filing_projection_ref
 from ....core.toml import freeze_toml, read_toml
+from ._loader_revision_fragments import (
+    REVISION_SECTION_FIELDS as _REVISION_SECTION_FIELDS,
+)
+from ._loader_revision_fragments import (
+    merge_revision_fragment as _merge_revision_fragment,
+)
+from ._loader_revision_fragments import (
+    merge_revision_manifest as _merge_revision_manifest,
+)
+from ._loader_revision_fragments import (
+    reject_local_catalogues as _reject_local_catalogues,
+)
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import (
     RegistryFailureClassification,
@@ -56,8 +68,12 @@ from .modelo_localization import (
     modelo_locale_key,
 )
 from .schema import (
-    REVISION_GOVERNANCE_FIELDS,
-    REVISION_MANIFEST_ONLY_FIELDS,
+    REVISION_GOVERNANCE_FIELDS as _REVISION_GOVERNANCE_FIELDS,
+)
+from .schema import (
+    REVISION_MANIFEST_ONLY_FIELDS as _REVISION_MANIFEST_ONLY_FIELDS,
+)
+from .schema import (
     ModeloDefinition,
     ModeloRevision,
     RegistryCatalogues,
@@ -68,89 +84,10 @@ from .validate_revision_identity import revision_reference_identity_failures
 
 ModeloRevisionSource = _ModeloRevisionSource
 clear_fingerprint_cache = _clear_fingerprint_cache
-_REVISION_EXPORT_LAYOUTS = "export_layouts"
-_REVISION_CONSTRUCTS = "constructs"
-_REVISION_COMPLETENESS_MANIFEST = "completeness_manifest"
-_REVISION_SPECIAL_MERGE_FIELDS = frozenset({_REVISION_EXPORT_LAYOUTS, _REVISION_CONSTRUCTS})
-
-
-def _compute_revision_append_arrays() -> frozenset[str]:
-    names: set[str] = set()
-    for field_name, field in ModeloRevision.model_fields.items():
-        if (
-            field.default == ()
-            and get_origin(field.annotation) is tuple
-            and field_name not in _REVISION_SPECIAL_MERGE_FIELDS
-        ):
-            names.add(field_name)
-    return frozenset(names)
-
-
-_REVISION_APPEND_ARRAYS: frozenset[str] = _compute_revision_append_arrays()
-
-
-def _compute_revision_section_fields() -> frozenset[str]:
-    """Return the ModeloRevision fields that are per-section fragment content.
-
-    A "section" is an array-of-tables field (bindings, casillas, formulas, …) or
-    the ``completeness_manifest`` singleton table — the content that lives in
-    per-section fragment subdirectories. Scalar metadata (label, valid_from,
-    period_selector, legal_refs, source_refs, orden_aplicabilidad, …) is NOT a
-    section: it stays inline in the fragment directory's ``revision.toml``
-    manifest. Derived from the schema so a new section field is section-classified
-    automatically.
-    """
-    sections: set[str] = {_REVISION_COMPLETENESS_MANIFEST}
-    for field_name, field in ModeloRevision.model_fields.items():
-        if get_origin(field.annotation) is not tuple:
-            continue
-        args = get_args(field.annotation)
-        element = args[0] if args else None
-        if isinstance(element, type) and issubclass(element, BaseModel):
-            sections.add(field_name)
-    return frozenset(sections)
-
-
-# Fields that MUST live in per-section fragment files, never inline in the
-# fragment directory's revision.toml manifest (the fragmented-layout invariant).
-_REVISION_SECTION_FIELDS: frozenset[str] = _compute_revision_section_fields()
-_COMPLETENESS_MANIFEST_APPEND_ARRAYS: frozenset[str] = frozenset({"casillas"})
-_CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
-    {
-        "casilla_ids",
-        "formulas",
-        "parameters",
-        "bindings",
-        "relations",
-        "export_layouts",
-        "extraction_profiles",
-        "live_cross_references",
-        "workbook_parity_refs",
-        "verification_expectations",
-        "application_links",
-        "deadline_windows",
-        "filing_schedules",
-        "dependency_classifications",
-    },
-)
+REVISION_GOVERNANCE_FIELDS = _REVISION_GOVERNANCE_FIELDS
+REVISION_MANIFEST_ONLY_FIELDS = _REVISION_MANIFEST_ONLY_FIELDS
 type _RegistryPathFingerprint = tuple[str, int, int, str]
 type _RegistryPathFingerprints = tuple[_RegistryPathFingerprint, ...]
-
-
-def _toml_table_id(value: object) -> str | None:
-    """Return the string ``id`` of a TOML table value, or ``None``."""
-    table = _as_toml_table(value)
-    if table is None:
-        return None
-    table_id = table.get("id")
-    return table_id if isinstance(table_id, str) else None
-
-
-def _reject_local_catalogues(path: Path, data: Mapping[str, object]) -> None:
-    forbidden = {"source", "sources", "legal", "legal_refs_catalogue"}
-    present = sorted(forbidden.intersection(data))
-    if present:
-        raise RegistryLoadError(f"{path}: modelo files must not define local legal/source catalogues: {present!r}")
 
 
 def load_modelo_file(path: Path) -> ModeloDefinition:
@@ -477,381 +414,6 @@ def _revision_section_fragment_paths(section_dirs: tuple[Path, ...]) -> tuple[Pa
     return tuple(sorted(fragments))
 
 
-def _read_single_revision_table(path: Path, expected_revision_id: RevisionId) -> dict[str, object]:
-    """Parse one revision TOML and return its ``[revisions."<id>"]`` table.
-
-    Enforces the shared preconditions for both the fragment-directory
-    ``revision.toml`` manifest and its per-section fragment files: no ``[modelo]``
-    table, no local catalogues, exactly one revision, and the declared id must
-    match the owning fragment directory.
-    """
-    fragment_data = freeze_toml(read_toml(path, error_factory=RegistryLoadError))
-    _reject_local_catalogues(path, fragment_data)
-    if "modelo" in fragment_data:
-        raise RegistryLoadError(f"{path}: revision fragment must not declare [modelo]; that lives in manifest.toml")
-    file_revisions = _as_toml_table(fragment_data.get("revisions"))
-    if not file_revisions:
-        raise RegistryLoadError(f"{path}: revision fragment must declare [revisions.<id>]")
-    if len(file_revisions) != 1:
-        raise RegistryLoadError(f"{path}: revision fragment must declare exactly one revision")
-    revision_id, raw_revision = next(iter(file_revisions.items()))
-    if revision_id != expected_revision_id:
-        raise RegistryLoadError(
-            f"{path}: revision fragment declares {revision_id!r}, expected {expected_revision_id!r}",
-        )
-    raw_revision_table = _as_toml_table(raw_revision)
-    if raw_revision_table is None:
-        raise RegistryLoadError(f"{path}: revision {revision_id!r} must be a table")
-    return raw_revision_table
-
-
-def _merge_revision_manifest(path: Path, expected_revision_id: RevisionId, merged_revision: dict[str, object]) -> None:
-    """Merge the fragment directory's ``revision.toml`` scalar-metadata manifest.
-
-    In the fragmented layout the ``revision.toml`` manifest carries ONLY scalar
-    revision metadata (label, valid_from/valid_to, period_selector, legal_refs,
-    source_refs, orden_aplicabilidad, continuidad_validation, authority_grade)
-    plus the declared governance stamp
-    (:data:`REVISION_GOVERNANCE_FIELDS`). Every per-section
-    array-of-tables (bindings, casillas, formulas, verification_expectations, …)
-    and the completeness_manifest live in per-section fragment subdirectories;
-    an inline section table in ``revision.toml`` is a loud load error naming the
-    fragmented layout.
-
-    Some of that scalar metadata is manifest-only in the other direction too
-    (:data:`REVISION_MANIFEST_ONLY_FIELDS`): the governance stamp, because it is
-    an authorship and signoff claim about the whole revision, ``legal_refs``,
-    ``orden_aplicabilidad`` and ``valid_to``, because they are the revision's
-    legal grounding, its approving ordenes and the date it stops applying, and
-    ``authority_grade``, because it is the claim about how far the whole
-    revision's authority reaches.
-    :func:`_merge_revision_fragment` refuses all of them inside a section
-    fragment rather than letting one hide among thousands of fragment files
-    where no reviewer would look for it.
-    """
-    raw_revision_table = _read_single_revision_table(path, expected_revision_id)
-    for key, value in raw_revision_table.items():
-        if key in _REVISION_SECTION_FIELDS:
-            raise RegistryLoadError(
-                f"{path}: revision.toml must declare only scalar revision metadata; the {key!r} section "
-                f"must live in a '{key}/' fragment subdirectory (fragmented layout), not inline in revision.toml",
-            )
-        if key in merged_revision:
-            raise RegistryLoadError(f"{path}: revision manifest redeclares field {key!r}")
-        merged_revision[key] = value
-
-
-def _merge_revision_fragment(path: Path, expected_revision_id: RevisionId, merged_revision: dict[str, object]) -> None:
-    """Merge one per-section fragment TOML into a single raw revision payload.
-
-    Two refusals govern what a fragment may declare, and the narrower one runs
-    first. A manifest-only field is refused by
-    :func:`_reject_revision_fragment_field` with the instruction that moves it to
-    ``revision.toml``; every other foreign key is refused as not belonging to the
-    folder's owned section. Ordered the other way, the owned-section refusal
-    swallows every manifest-only key — no fragment folder is named after one —
-    and tells the author to find a different fragment folder for a field whose
-    only legal home is the manifest.
-    """
-    raw_revision_table = _read_single_revision_table(path, expected_revision_id)
-    if not raw_revision_table:
-        raise RegistryLoadError(f"{path}: revision fragment declares no section fields")
-    fragment_directory = path.relative_to(path.parents[1]).parts[0]
-    section_name = "export_layouts" if fragment_directory == "export" else fragment_directory
-    for key, value in raw_revision_table.items():
-        _reject_revision_fragment_field(path, key)
-        if key != section_name:
-            raise RegistryLoadError(
-                f"{path}: revision fragment folder {fragment_directory!r} may declare only its owned section; "
-                f"found {key!r}",
-            )
-        _merge_revision_fragment_field(path, key, value, merged_revision)
-
-
-def _merge_revision_fragment_field(
-    path: Path,
-    key: str,
-    value: object,
-    merged_revision: dict[str, object],
-) -> None:
-    if key == _REVISION_CONSTRUCTS:
-        _merge_revision_fragment_constructs(path, value, merged_revision)
-        return
-    if key in _REVISION_APPEND_ARRAYS:
-        _merge_revision_fragment_append_array(path, key, value, merged_revision)
-        return
-    if key == _REVISION_EXPORT_LAYOUTS:
-        _merge_revision_fragment_export_layouts(path, value, merged_revision)
-        return
-    if key == _REVISION_COMPLETENESS_MANIFEST:
-        _merge_revision_fragment_completeness(path, value, merged_revision)
-        return
-    if key in merged_revision:
-        raise RegistryLoadError(f"{path}: revision fragment redeclares scalar field {key!r}")
-    merged_revision[key] = value
-
-
-def _reject_revision_fragment_field(path: Path, key: str) -> None:
-    """Reject revision-wide fields hidden inside a section fragment."""
-    if key in REVISION_GOVERNANCE_FIELDS:
-        raise RegistryLoadError(
-            f"{path}: revision governance field {key!r} must be declared in the revision's revision.toml "
-            f"manifest, not in a per-section fragment; the stamp is a claim about the whole revision and "
-            f"must be readable in one place",
-        )
-    if key in REVISION_MANIFEST_ONLY_FIELDS:
-        raise RegistryLoadError(
-            f"{path}: revision field {key!r} must be declared in the revision's revision.toml manifest, "
-            f"not in a per-section fragment; it is a claim about the whole revision and must be readable "
-            f"in one place",
-        )
-
-
-def _merge_revision_fragment_constructs(path: Path, value: object, merged_revision: dict[str, object]) -> None:
-    incoming = as_toml_array(value)
-    if incoming is None:
-        raise RegistryLoadError(f"{path}: revision fragment field 'constructs' must be an array")
-    existing = as_toml_array(merged_revision.get(_REVISION_CONSTRUCTS, ()))
-    if existing is None:
-        raise RegistryLoadError(f"{path}: revision fragment field 'constructs' conflicts with a non-array field")
-    merged_revision[_REVISION_CONSTRUCTS] = _merge_table_array_fragments(
-        path,
-        existing,
-        incoming,
-        item_label="construct",
-        append_array_fields=_CONSTRUCT_APPEND_ARRAYS,
-    )
-
-
-def _merge_revision_fragment_append_array(
-    path: Path,
-    key: str,
-    value: object,
-    merged_revision: dict[str, object],
-) -> None:
-    incoming = as_toml_array(value)
-    if incoming is None:
-        raise RegistryLoadError(f"{path}: revision fragment field {key!r} must be an array")
-    existing = as_toml_array(merged_revision.get(key, ()))
-    if existing is None:
-        raise RegistryLoadError(f"{path}: revision fragment field {key!r} conflicts with a non-array field")
-    merged_revision[key] = (*existing, *incoming)
-
-
-def _merge_revision_fragment_export_layouts(path: Path, value: object, merged_revision: dict[str, object]) -> None:
-    incoming = as_toml_array(value)
-    if incoming is None:
-        raise RegistryLoadError(f"{path}: revision fragment field 'export_layouts' must be an array")
-    existing = as_toml_array(merged_revision.get(_REVISION_EXPORT_LAYOUTS, ()))
-    if existing is None:
-        raise RegistryLoadError(
-            f"{path}: revision fragment field 'export_layouts' conflicts with a non-array field",
-        )
-    merged_revision[_REVISION_EXPORT_LAYOUTS] = _merge_export_layout_fragments(path, existing, incoming)
-
-
-def _merge_revision_fragment_completeness(path: Path, value: object, merged_revision: dict[str, object]) -> None:
-    merged_revision[_REVISION_COMPLETENESS_MANIFEST] = _merge_singleton_table_fragment(
-        path,
-        _REVISION_COMPLETENESS_MANIFEST,
-        merged_revision.get(_REVISION_COMPLETENESS_MANIFEST),
-        value,
-        append_array_fields=_COMPLETENESS_MANIFEST_APPEND_ARRAYS,
-    )
-
-
-def _merge_singleton_table_fragment(
-    path: Path,
-    field_name: str,
-    existing: object | None,
-    incoming: object,
-    *,
-    append_array_fields: frozenset[str],
-) -> dict[str, object]:
-    """Merge a singleton nested TOML table whose selected arrays are appendable."""
-    incoming_table = _as_toml_table(incoming)
-    if incoming_table is None:
-        raise RegistryLoadError(f"{path}: revision fragment field {field_name!r} must be a table")
-    if existing is None:
-        existing_table: dict[str, object] = {}
-    else:
-        resolved = _as_toml_table(existing)
-        if resolved is None:
-            raise RegistryLoadError(f"{path}: revision fragment field {field_name!r} conflicts with a non-table field")
-        existing_table = resolved
-
-    merged = dict(existing_table)
-    for key, value in incoming_table.items():
-        if key in append_array_fields:
-            incoming = as_toml_array(value)
-            if incoming is None:
-                raise RegistryLoadError(f"{path}: revision fragment field {field_name!r}.{key!r} must be an array")
-            existing_values = as_toml_array(merged.get(key, ()))
-            if existing_values is None:
-                raise RegistryLoadError(
-                    f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with a non-array field",
-                )
-            merged[key] = (*existing_values, *incoming)
-            continue
-        if key in merged and merged[key] != value:
-            raise RegistryLoadError(
-                f"{path}: revision fragment field {field_name!r}.{key!r} conflicts with another fragment",
-            )
-        merged[key] = value
-    return merged
-
-
-def _merge_export_layout_fragments(
-    path: Path,
-    existing: tuple[object, ...],
-    incoming: tuple[object, ...],
-) -> tuple[object, ...]:
-    """Merge export-layout fragments by layout id, appending record arrays."""
-    layouts: list[object] = list(existing)
-    index_by_id: dict[str, int] = {}
-    for index, layout in enumerate(layouts):
-        layout_id = _toml_table_id(layout)
-        if layout_id is not None:
-            index_by_id[layout_id] = index
-    for layout in incoming:
-        incoming_table = _as_toml_table(layout)
-        layout_id = None if incoming_table is None else _toml_table_id(incoming_table)
-        if incoming_table is None or layout_id is None:
-            layouts.append(layout)
-            continue
-        existing_index = index_by_id.get(layout_id)
-        if existing_index is None:
-            index_by_id[layout_id] = len(layouts)
-            layouts.append(layout)
-            continue
-        existing_layout = _as_toml_table(layouts[existing_index])
-        if existing_layout is None:
-            raise RegistryLoadError(f"{path}: export layout {layout_id!r} conflicts with a non-table layout")
-        layouts[existing_index] = _merge_export_layout_by_id(path, layout_id, existing_layout, incoming_table)
-    return tuple(layouts)
-
-
-def _merge_export_layout_by_id(
-    path: Path,
-    layout_id: str,
-    existing: dict[str, object],
-    incoming: dict[str, object],
-) -> dict[str, object]:
-    merged = dict(existing)
-    for key, value in incoming.items():
-        if key == "id":
-            continue
-        if key == "records":
-            incoming_records = as_toml_array(value)
-            if incoming_records is None:
-                raise RegistryLoadError(f"{path}: export layout {layout_id!r} records must be an array")
-            existing_records = as_toml_array(merged.get("records", ()))
-            if existing_records is None:
-                raise RegistryLoadError(f"{path}: export layout {layout_id!r} existing records are not an array")
-            merged["records"] = _merge_table_array_fragments(
-                path,
-                existing_records,
-                incoming_records,
-                item_label=f"export layout {layout_id!r} record",
-                append_array_fields=frozenset({"fields"}),
-            )
-            continue
-        if key in merged and merged[key] != value:
-            raise RegistryLoadError(
-                f"{path}: export layout {layout_id!r} field {key!r} conflicts with another fragment",
-            )
-        merged[key] = value
-    return merged
-
-
-def _merge_table_array_fragments(
-    path: Path,
-    existing: tuple[object, ...],
-    incoming: tuple[object, ...],
-    *,
-    item_label: str,
-    append_array_fields: frozenset[str],
-) -> tuple[object, ...]:
-    """Merge fragment table arrays by ``id``, appending explicitly mergeable arrays."""
-    items: list[object] = list(existing)
-    index_by_id: dict[str, int] = {}
-    for index, item in enumerate(items):
-        item_id = _toml_table_id(item)
-        if item_id is not None:
-            index_by_id[item_id] = index
-    for item in incoming:
-        incoming_table = _as_toml_table(item)
-        item_id = None if incoming_table is None else _toml_table_id(incoming_table)
-        if incoming_table is None or item_id is None:
-            items.append(item)
-            continue
-        existing_index = index_by_id.get(item_id)
-        if existing_index is None:
-            index_by_id[item_id] = len(items)
-            items.append(item)
-            continue
-        existing_item = _as_toml_table(items[existing_index])
-        if existing_item is None:
-            raise RegistryLoadError(f"{path}: {item_label} {item_id!r} conflicts with a non-table fragment")
-        items[existing_index] = _merge_table_fragment_by_id(
-            path,
-            existing_item,
-            incoming_table,
-            item_label=item_label,
-            item_id=item_id,
-            append_array_fields=append_array_fields,
-        )
-    return tuple(items)
-
-
-def _merge_table_fragment_by_id(
-    path: Path,
-    existing: dict[str, object],
-    incoming: dict[str, object],
-    *,
-    item_label: str,
-    item_id: str,
-    append_array_fields: frozenset[str],
-) -> dict[str, object]:
-    merged = dict(existing)
-    for key, value in incoming.items():
-        if key == "id":
-            continue
-        if key in append_array_fields:
-            incoming_values = as_toml_array(value)
-            if incoming_values is None:
-                raise RegistryLoadError(f"{path}: {item_label} {item_id!r} field {key!r} must be an array")
-            existing_values = as_toml_array(merged.get(key, ()))
-            if existing_values is None:
-                raise RegistryLoadError(
-                    f"{path}: {item_label} {item_id!r} field {key!r} conflicts with a non-array fragment",
-                )
-            _reject_duplicate_appended_table_ids(path, existing_values, incoming_values, item_label, item_id, key)
-            merged[key] = (*existing_values, *incoming_values)
-            continue
-        if key in merged and merged[key] != value:
-            raise RegistryLoadError(f"{path}: {item_label} {item_id!r} field {key!r} conflicts with another fragment")
-        merged[key] = value
-    return merged
-
-
-def _reject_duplicate_appended_table_ids(
-    path: Path,
-    existing: tuple[object, ...],
-    incoming: tuple[object, ...],
-    item_label: str,
-    item_id: str,
-    field: str,
-) -> None:
-    existing_ids = {iid for item in existing if (iid := _toml_table_id(item)) is not None}
-    incoming_ids = {iid for item in incoming if (iid := _toml_table_id(item)) is not None}
-    duplicate_ids = sorted(existing_ids.intersection(incoming_ids))
-    if duplicate_ids:
-        raise RegistryLoadError(
-            f"{path}: {item_label} {item_id!r} field {field!r} appends duplicate ids {duplicate_ids!r}",
-        )
-
-
 @lru_cache(maxsize=128)
 def _load_catalogue_file_cached(
     path: str,
@@ -977,13 +539,11 @@ def _live_cached_fingerprints(
 def _registry_source_fingerprints(resolved: Path) -> tuple[_RegistryPathFingerprint, ...]:
     """Fingerprint every catalogue TOML the loader will subsequently re-open.
 
-    Ordering is part of the cache key, so the sequence here (authorization
-    fragments, legal, single-file modelos, directory-mode modelos, user-profile
-    schema) is load-bearing and must not be reordered.
+    Ordering is part of the cache key, so the sequence here (legal, single-file
+    modelos, directory-mode modelos, user-profile schema) is load-bearing and
+    must not be reordered.
     """
     fingerprints: list[_RegistryPathFingerprint] = []
-    for fragment in scan_directory(resolved / "authorization.d", pattern="*.toml"):
-        fingerprints.append(_toml_fingerprint(fragment))
     for path in scan_directory(resolved / "legal", pattern="*.toml"):
         fingerprints.append(_toml_fingerprint(path))
     modelos_dir = resolved / "modelos"

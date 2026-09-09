@@ -50,8 +50,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
-from types import MappingProxyType
-from typing import TYPE_CHECKING, Final, Self
+from typing import TYPE_CHECKING, Self
 
 from pydantic import BaseModel, model_validator
 
@@ -67,7 +66,7 @@ from ..iva.schema import IvaCategory
 from .errors import InvoiceValidationError
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping
+    from collections.abc import Iterable
 
     from .models import Invoice
 
@@ -123,34 +122,6 @@ class InvoiceDecompositionDefect(StrEnum):
     The euro components are genuinely unknown, and approximating them is
     refused rather than guessed.
     """
-
-
-INVOICE_DECOMPOSITION_DEFECT_GUIDANCE: Final[Mapping[InvoiceDecompositionDefect, str]] = MappingProxyType(
-    {
-        InvoiceDecompositionDefect.IVA_TREATMENT_UNDECLARED: (
-            "declare the invoice's IVA treatment (iva_category) so an exempt operation "
-            "can be told apart from an untagged one"
-        ),
-        InvoiceDecompositionDefect.TAXABLE_BASE_ABSENT: (
-            "record the base imponible; this category carries a taxable base even when it bears no cuota"
-        ),
-        InvoiceDecompositionDefect.CATEGORY_IMPOSSIBLE_ON_THIS_KIND: (
-            "the declared IVA category cannot occur on an invoice of this kind; correct whichever "
-            "is wrong -- the category, or whether the invoice was issued or received"
-        ),
-        InvoiceDecompositionDefect.CUOTA_CONTRADICTS_CATEGORY: (
-            "the recorded cuota and the declared IVA category disagree; correct whichever is wrong"
-        ),
-        InvoiceDecompositionDefect.FX_UNRESOLVED: (
-            "resolve the invoice's conversion rate; a foreign-currency invoice has no euro figure without it"
-        ),
-    },
-)
-"""Operator remediation for each defect, one sentence per member.
-
-Lives beside the defect definitions so the surfacing layer renders guidance it
-did not have to invent, and so a new defect cannot ship without one.
-"""
 
 
 class InvoiceComponents(BaseModel):
@@ -247,26 +218,6 @@ class InvoiceDecomposition(BaseModel):
         return self.components is not None
 
 
-class InvoiceDecompositionPartition(BaseModel):
-    """Both outcome classes for a set of invoices, in one object.
-
-    The two halves travel together on purpose. A consumer that took only a
-    filtered list of usable invoices would have no handle on what it dropped,
-    which is exactly how an excluded record becomes an invisible one; holding
-    both means the excluded set is in the caller's hands whether it looks at it
-    or not.
-
-    Attributes:
-        grounded: Verdicts whose components may be consumed.
-        ungrounded: Verdicts that are excluded and must be surfaced.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    grounded: tuple[InvoiceDecomposition, ...]
-    ungrounded: tuple[InvoiceDecomposition, ...]
-
-
 def decompose_invoice(invoice: Invoice) -> InvoiceDecomposition:
     """Return the decomposition verdict for one invoice record.
 
@@ -312,23 +263,6 @@ def decompose_invoice(invoice: Invoice) -> InvoiceDecomposition:
         ),
         defects=(),
     )
-
-
-def partition_invoices(invoices: Iterable[Invoice]) -> InvoiceDecompositionPartition:
-    """Split invoices into the grounded and the excluded-but-visible.
-
-    Args:
-        invoices: Invoice records to classify.
-
-    Returns:
-        Both outcome classes, in input order within each half.
-    """
-    grounded: list[InvoiceDecomposition] = []
-    ungrounded: list[InvoiceDecomposition] = []
-    for invoice in invoices:
-        verdict = decompose_invoice(invoice)
-        (grounded if verdict.is_grounded else ungrounded).append(verdict)
-    return InvoiceDecompositionPartition(grounded=tuple(grounded), ungrounded=tuple(ungrounded))
 
 
 def _defects_for(invoice: Invoice) -> Iterable[InvoiceDecompositionDefect]:
@@ -392,11 +326,8 @@ def _carries_a_cuota_its_category_forbids(invoice: Invoice, cuota: IvaComponentP
 
 
 __all__ = [
-    "INVOICE_DECOMPOSITION_DEFECT_GUIDANCE",
     "InvoiceComponents",
     "InvoiceDecomposition",
     "InvoiceDecompositionDefect",
-    "InvoiceDecompositionPartition",
     "decompose_invoice",
-    "partition_invoices",
 ]

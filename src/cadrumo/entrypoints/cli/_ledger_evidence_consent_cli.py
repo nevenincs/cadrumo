@@ -147,4 +147,3 @@ def _dispatch_payload(dispatch: ConsentedDispatch) -> dict[str, str]:
         "surface": dispatch.surface,
         "recorded_at": dispatch.recorded_at.isoformat(),
     }
-

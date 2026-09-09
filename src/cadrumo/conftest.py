@@ -308,11 +308,11 @@ def _isolate_registry_caches() -> Iterator[None]:
     is needed for correctness, only for tidiness the temp directory does not
     require.
     """
-    from .domain.calculations.registry.loader import clear_registry_tree_cache
+    from .domain.calculations.registry import loader as registry_loader
     from .domain.calculations.registry.loader_fingerprints import clear_fingerprint_cache
 
     def _reset() -> None:
-        clear_registry_tree_cache()
+        registry_loader._load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
 
     _reset()

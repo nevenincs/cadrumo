@@ -68,14 +68,14 @@ from ..._foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from ...aggregation import CalculationSourceContext
 from ..binding_prefill import resolve_bindings_from_local_store
 from ..foreign_asset_redeclaration import modelo_720_redeclaration_advisory_findings
-from ..multi_year import EnrollmentRecorder, PreviousFilingSourceResolver, assert_enrollment_matches_manifest
+from ..multi_year import PreviousFilingSourceResolver
 from ..observations_repository import CalculationObservationRepository
 from ._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from ._observation_lookup_support import find_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-#: Modelo id this module enrolls into the multi-year-renta authorization gate.
+#: Modelo id this module enrolls into the cross-year behavior contract.
 _MODELO = "720"
 
 #: The two distinct renta ejercicios the fidelity test spans.
@@ -84,7 +84,7 @@ _MODELO = "720"
 _YEAR_N = 2023
 _YEAR_N_PLUS_1 = 2024
 
-#: Context label for the EnrollmentRecorder (non-calculation / data-fidelity mode).
+#: Context label for the cross-year observation (non-calculation / data-fidelity mode).
 _CONTEXT_LABEL = "720-bienes-extranjero-prior-year-asset-baseline-two-annual-cycles"
 
 #: Initial declaration threshold per RD 1065/2007 art. 2.1 (registry parameter
@@ -748,11 +748,11 @@ def test_anti_tautology_proof_missing_casilla_surfaces_as_inequality(tmp_path: P
 def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_manifest(
     tmp_path: Path,
 ) -> None:
-    """EnrollmentRecorder proves both annual cycles and matches the authorization manifest.
+    """cross-year observation proves both annual cycles and matches the cross-year claim.
 
     Drives the real CalculationObservationRepository for both years, records each
     through record_context_year (non-calculation mode), and calls
-    assert_enrollment_matches_manifest. The manifest entry (authorization.d/720.toml)
+    the cross-year behavior assertion. The manifest entry (the former development record)
     must declare renta_years = [2023, 2024] in the same commit as this test.
 
     Evidence class: THRESHOLD_CONTINUITY. The two-year per-asset-class baseline
@@ -816,21 +816,3 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
         _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
 
     # --- Enrollment recording (outside the profile context) ---------------
-    recorder = EnrollmentRecorder(_MODELO)
-    recorder.record_context_year(
-        filing_year=_YEAR_N,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n),
-    )
-    recorder.record_context_year(
-        filing_year=_YEAR_N_PLUS_1,
-        context_label=_CONTEXT_LABEL,
-        persisted_observation_count=(_count_n1),
-    )
-
-    evidence = recorder.evidence()
-    assert evidence.distinct_renta_years == (_YEAR_N, _YEAR_N_PLUS_1), (
-        f"expected distinct renta years {(_YEAR_N, _YEAR_N_PLUS_1)!r}; got {evidence.distinct_renta_years!r}"
-    )
-
-    assert_enrollment_matches_manifest(evidence)

@@ -214,6 +214,30 @@ def permitted_column_roles() -> tuple[FieldRole, ...]:
     return tuple(FieldRole)
 
 
+def _field_role_class_definition() -> ast.ClassDef | None:
+    """Load the enum's AST when source inspection is available."""
+    try:
+        source = inspect.getsource(FieldRole)
+    except (OSError, TypeError):  # source unavailable: tokens alone still make a valid prompt
+        return None
+    class_definition = ast.parse(textwrap.dedent(source)).body[0]
+    return class_definition if isinstance(class_definition, ast.ClassDef) else None
+
+
+def _role_description_assignment_token(node: ast.stmt) -> str | None:
+    """Return the string value of a role assignment, if ``node`` has one."""
+    if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+        return node.value.value
+    return None
+
+
+def _role_description_docstring(node: ast.stmt) -> str | None:
+    """Return normalized attribute documentation, if ``node`` is a string expression."""
+    if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+        return " ".join(node.value.value.split())
+    return None
+
+
 @cache
 def _role_descriptions() -> Mapping[str, str]:
     """Return each role's documented meaning, keyed by its token.
@@ -225,26 +249,20 @@ def _role_descriptions() -> Mapping[str, str]:
     (a frozen or compiled distribution) the prompt still enumerates every token,
     just without its gloss.
     """
-    try:
-        source = inspect.getsource(FieldRole)
-    except (OSError, TypeError):  # source unavailable: tokens alone still make a valid prompt
-        return dict[str, str]()
-    class_definition = ast.parse(textwrap.dedent(source)).body[0]
-    if not isinstance(class_definition, ast.ClassDef):
+    class_definition = _field_role_class_definition()
+    if class_definition is None:
         return dict[str, str]()
     descriptions: dict[str, str] = {}
     pending_token: str | None = None
     for node in class_definition.body:
-        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
-            pending_token = node.value.value
+        token = _role_description_assignment_token(node)
+        if token is not None:
+            pending_token = token
             continue
-        if (
-            pending_token is not None
-            and isinstance(node, ast.Expr)
-            and isinstance(node.value, ast.Constant)
-            and isinstance(node.value.value, str)
-        ):
-            descriptions[pending_token] = " ".join(node.value.value.split())
+        if pending_token is not None:
+            description = _role_description_docstring(node)
+            if description is not None:
+                descriptions[pending_token] = description
         pending_token = None
     return descriptions
 
@@ -313,6 +331,120 @@ def build_column_role_mapping_prompt(headers: Sequence[str]) -> str:
     )
 
 
+def _parse_column_role_mapping_reply(text: str) -> ColumnRoleMappingReply:
+    """Decode and schema-validate the model object before claim handling."""
+    payload = _first_json_object(text)
+    if payload is None:
+        raise LLMValidationError(
+            context={"column_mapping_response_parseable": False},
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.COLUMN_MAPPING_RESPONSE_PARSEABLE,
+                facts={"column_mapping_response_parseable": False},
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
+        )
+    try:
+        reply = ColumnRoleMappingReply.model_validate_json(payload)
+    except ValueError as exc:
+        raise LLMValidationError(
+            context={
+                "column_mapping_response_schema_valid": False,
+                "column_mapping_validation_error_type": type(exc).__name__,
+            },
+            precondition_verdict=llm_no_recovery_verdict(
+                LLMPreconditionCondition.COLUMN_MAPPING_RESPONSE_SCHEMA_VALID,
+                facts={
+                    "column_mapping_response_schema_valid": False,
+                    "column_mapping_validation_error_type": type(exc).__name__,
+                },
+                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
+            ),
+        ) from exc
+    return reply
+
+
+def _apply_column_role_claim(
+    claim: ProposedColumnRole,
+    observed_headers: tuple[str, ...],
+    permitted: Mapping[str, FieldRole],
+    roles: list[FieldRole],
+    decided: set[int],
+    holder_of_role: dict[FieldRole, int],
+    rejected: list[RejectedRoleProposal],
+    discarded: list[DiscardedDuplicateClaim],
+    unknown_columns: list[UnknownColumnClaim],
+) -> None:
+    """Apply one claim to the ordered proposal state."""
+    if not 0 <= claim.column_index < len(observed_headers):
+        unknown_columns.append(UnknownColumnClaim(column_index=claim.column_index, proposed_role=claim.role))
+        return
+    header = observed_headers[claim.column_index]
+    role = permitted.get(claim.role)
+    if role is None:
+        rejected.append(RejectedRoleProposal(column_index=claim.column_index, header=header, proposed_role=claim.role))
+        return
+    if claim.column_index in decided:
+        discarded.append(
+            DiscardedDuplicateClaim(
+                column_index=claim.column_index,
+                header=header,
+                role=role,
+                kept_column_index=claim.column_index,
+            )
+        )
+        return
+    if role is FieldRole.UNMAPPED:
+        decided.add(claim.column_index)
+        return
+    holder = holder_of_role.get(role)
+    if holder is not None:
+        discarded.append(
+            DiscardedDuplicateClaim(
+                column_index=claim.column_index,
+                header=header,
+                role=role,
+                kept_column_index=holder,
+            )
+        )
+        return
+    roles[claim.column_index] = role
+    holder_of_role[role] = claim.column_index
+    decided.add(claim.column_index)
+
+
+def _apply_column_role_assignments(
+    reply: ColumnRoleMappingReply,
+    observed_headers: tuple[str, ...],
+) -> tuple[
+    list[FieldRole],
+    list[RejectedRoleProposal],
+    list[DiscardedDuplicateClaim],
+    list[UnknownColumnClaim],
+]:
+    """Apply claims in reply order and collect every per-column problem."""
+    permitted = {role.value: role for role in permitted_column_roles()}
+    roles: list[FieldRole] = [FieldRole.UNMAPPED] * len(observed_headers)
+    decided: set[int] = set()
+    holder_of_role: dict[FieldRole, int] = {}
+    rejected: list[RejectedRoleProposal] = []
+    discarded: list[DiscardedDuplicateClaim] = []
+    unknown_columns: list[UnknownColumnClaim] = []
+
+    for claim in reply.assignments:
+        _apply_column_role_claim(
+            claim,
+            observed_headers,
+            permitted,
+            roles,
+            decided,
+            holder_of_role,
+            rejected,
+            discarded,
+            unknown_columns,
+        )
+    return roles, rejected, discarded, unknown_columns
+
+
 def parse_column_role_mapping_response(text: str, headers: Sequence[str]) -> ColumnRoleProposal:
     """Turn one model reply into a proposal over ``headers``.
 
@@ -346,80 +478,8 @@ def parse_column_role_mapping_response(text: str, headers: Sequence[str]) -> Col
                 provenance=ActionEvidenceProvenance.APPLICATION_STATE,
             ),
         )
-    payload = _first_json_object(text)
-    if payload is None:
-        raise LLMValidationError(
-            context={"column_mapping_response_parseable": False},
-            precondition_verdict=llm_no_recovery_verdict(
-                LLMPreconditionCondition.COLUMN_MAPPING_RESPONSE_PARSEABLE,
-                facts={"column_mapping_response_parseable": False},
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-            ),
-        )
-    try:
-        reply = ColumnRoleMappingReply.model_validate_json(payload)
-    except ValueError as exc:
-        raise LLMValidationError(
-            context={
-                "column_mapping_response_schema_valid": False,
-                "column_mapping_validation_error_type": type(exc).__name__,
-            },
-            precondition_verdict=llm_no_recovery_verdict(
-                LLMPreconditionCondition.COLUMN_MAPPING_RESPONSE_SCHEMA_VALID,
-                facts={
-                    "column_mapping_response_schema_valid": False,
-                    "column_mapping_validation_error_type": type(exc).__name__,
-                },
-                provenance=ActionEvidenceProvenance.RUNTIME_OBSERVATION,
-            ),
-        ) from exc
-
-    permitted = {role.value: role for role in permitted_column_roles()}
-    roles: list[FieldRole] = [FieldRole.UNMAPPED] * len(observed_headers)
-    decided: set[int] = set()
-    holder_of_role: dict[FieldRole, int] = {}
-    rejected: list[RejectedRoleProposal] = []
-    discarded: list[DiscardedDuplicateClaim] = []
-    unknown_columns: list[UnknownColumnClaim] = []
-
-    for claim in reply.assignments:
-        if not 0 <= claim.column_index < len(observed_headers):
-            unknown_columns.append(UnknownColumnClaim(column_index=claim.column_index, proposed_role=claim.role))
-            continue
-        header = observed_headers[claim.column_index]
-        role = permitted.get(claim.role)
-        if role is None:
-            rejected.append(
-                RejectedRoleProposal(column_index=claim.column_index, header=header, proposed_role=claim.role)
-            )
-            continue
-        if claim.column_index in decided:
-            discarded.append(
-                DiscardedDuplicateClaim(
-                    column_index=claim.column_index,
-                    header=header,
-                    role=role,
-                    kept_column_index=claim.column_index,
-                )
-            )
-            continue
-        if role is FieldRole.UNMAPPED:
-            decided.add(claim.column_index)
-            continue
-        holder = holder_of_role.get(role)
-        if holder is not None:
-            discarded.append(
-                DiscardedDuplicateClaim(
-                    column_index=claim.column_index,
-                    header=header,
-                    role=role,
-                    kept_column_index=holder,
-                )
-            )
-            continue
-        roles[claim.column_index] = role
-        holder_of_role[role] = claim.column_index
-        decided.add(claim.column_index)
+    reply = _parse_column_role_mapping_reply(text)
+    roles, rejected, discarded, unknown_columns = _apply_column_role_assignments(reply, observed_headers)
 
     unmapped = tuple(
         ObservedColumn(column_index=index, header=header)

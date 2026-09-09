@@ -48,7 +48,6 @@ from ._toml_helpers import as_toml_table as _as_toml_table
 from .errors import RegistryFailureClassification, RegistryFailureCondition, RegistryLoadError
 from .ids import RevisionId
 
-REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 """Environment variable backing :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`."""
 
 # The production branch's relative path, read off the taxonomy rather than an
@@ -552,7 +551,6 @@ def _toml_content_digest(path: Path) -> str:
 
 def _running_under_pytest() -> bool:
     """Whether the current process is a pytest run (including collection and xdist workers)."""
-    import os
     import sys
 
     return (

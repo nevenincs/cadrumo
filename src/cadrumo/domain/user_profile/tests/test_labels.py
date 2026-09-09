@@ -18,7 +18,6 @@ from ....core.i18n import tr
 from ..labels import (
     profile_field_label,
     profile_field_label_key,
-    profile_schema_locale_keys,
     profile_section_title,
     profile_section_title_key,
 )
@@ -131,20 +130,3 @@ def test_section_and_field_key_families_cannot_collide() -> None:
 
     assert not colliding_field.startswith(f"{section_title}.")
     assert section_title != colliding_field
-
-
-def test_every_declared_section_and_field_yields_a_key(schema) -> None:
-    """The enrolled key set covers the schema exactly, with no duplicates.
-
-    The count is derived from the loaded schema rather than pinned to a
-    literal, so adding a field to the TOML does not red this gate for a
-    reason unrelated to the property it checks.
-    """
-    keys = profile_schema_locale_keys(schema)
-    expected = len(schema.sections) + sum(len(section.fields) for section in schema.sections)
-
-    assert len(keys) == expected, "a section or field produced a duplicate or missing key"
-    for section in schema.sections:
-        assert profile_section_title_key(section.key) in keys
-        for declared in section.fields:
-            assert profile_field_label_key(section.key, declared.key) in keys

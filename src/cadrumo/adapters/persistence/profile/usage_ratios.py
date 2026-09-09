@@ -18,10 +18,12 @@ disagreement with the bound censo (no auto-migration, no silent coercion).
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
+from pydantic_core import ErrorDetails
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
@@ -102,6 +104,15 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
     return profile
 
 
+def _unknown_ratio_key_line(error: ErrorDetails, loc: Sequence[object]) -> str | None:
+    """Render the canonical eligible-category detail for an enum key error."""
+    if error.get("type") != "enum" or len(loc) < 3 or loc[0] != "ratios" or loc[-1] != "[key]":
+        return None
+    offending_key = loc[1]
+    eligible = ", ".join(sorted(category.value for category in ELIGIBLE_USAGE_RATIO_CATEGORIES))
+    return f"  - ratios.{offending_key}: unknown ratio key; eligible categories are: {eligible}"
+
+
 def _summarise_validation_errors(exc: ValidationError) -> str:
     """Render a short, operator-legible summary of a pydantic validation failure."""
     lines: list[str] = []
@@ -109,10 +120,9 @@ def _summarise_validation_errors(exc: ValidationError) -> str:
         loc = error.get("loc", ())
         location = ".".join(str(part) for part in loc)
         message = error.get("msg", "validation error")
-        if error.get("type") == "enum" and len(loc) >= 3 and loc[0] == "ratios" and loc[-1] == "[key]":
-            offending_key = loc[1]
-            eligible = ", ".join(sorted(c.value for c in ELIGIBLE_USAGE_RATIO_CATEGORIES))
-            lines.append(f"  - ratios.{offending_key}: unknown ratio key; eligible categories are: {eligible}")
+        unknown_ratio_key_line = _unknown_ratio_key_line(error, loc)
+        if unknown_ratio_key_line is not None:
+            lines.append(unknown_ratio_key_line)
             continue
         if message.startswith("Value error, "):
             message = message[len("Value error, ") :]

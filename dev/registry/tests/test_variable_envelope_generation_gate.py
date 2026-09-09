@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file
@@ -110,7 +110,7 @@ def test_real_m200_variable_envelope_is_composed_rather_than_truncated(tmp_path:
     """
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
-    inspection = bundled_revision_inspection("200", filing_year=2025, period="0A")
+    inspection = bundled_authority().inspect_revision("200", filing_year=2025, period="0A")
     parsed = load_record_design_intermediate(
         source_root,
         catalogues.sources,
@@ -175,7 +175,7 @@ def test_real_m220_composite_envelope_refuses_the_join_without_a_reviewed_contra
     """
     source_root = bundled_path()
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "is.toml"))
-    inspection = bundled_revision_inspection("220", filing_year=2025, period="0A")
+    inspection = bundled_authority().inspect_revision("220", filing_year=2025, period="0A")
     parsed = load_record_design_intermediate(
         source_root,
         catalogues.sources,

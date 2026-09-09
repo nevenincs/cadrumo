@@ -37,12 +37,11 @@ from __future__ import annotations
 
 import calendar
 import re
-from collections.abc import Mapping
 from datetime import date
 from enum import StrEnum
 from typing import Annotated, override
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, TypeAdapter, ValidationError
+from pydantic import BaseModel, BeforeValidator, Field
 
 from ..core.models import STRICT_FROZEN_CONFIG
 from .errors.hierarchy import CadrumoError
@@ -182,20 +181,6 @@ def is_administrative_period_token(token: str) -> bool:
     return _normalised_period_token(token) in _ADMINISTRATIVE_PERIOD_SET
 
 
-def accepted_period_codes() -> tuple[str, ...]:
-    """Return the fully enumerable REGISTRY period codes.
-
-    The tuple includes :class:`StandardPeriodCode`, extended OSS/IOSS literals,
-    ``AD-HOC``, and the administrative tokens. It deliberately excludes the
-    infinite ``EVENT-N`` family; pair it with :func:`accepted_period_patterns`
-    when building help text or parse-error guidance.
-
-    This is the registry-facing set. Operator surfaces describing what may be
-    FILED consume :func:`accepted_filing_period_codes` instead.
-    """
-    return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD} | _ADMINISTRATIVE_PERIOD_SET))
-
-
 def accepted_filing_period_codes() -> tuple[str, ...]:
     """Return the fully enumerable codes a :class:`Period` accepts.
 
@@ -203,15 +188,6 @@ def accepted_filing_period_codes() -> tuple[str, ...]:
     not a filing period — as is the infinite ``EVENT-<number>`` family.
     """
     return tuple(sorted(_STANDARD_PERIOD_SET | _EXTENDED_PERIOD_SET | {_AD_HOC_PERIOD}))
-
-
-def accepted_period_patterns() -> tuple[str, ...]:
-    """Return human-readable REGISTRY period-code patterns, including open regex shapes."""
-    return (
-        *accepted_filing_period_patterns(),
-        f"Administrative ({', '.join(sorted(_ADMINISTRATIVE_PERIOD_SET))})",
-        f"Symbolic registry selector (the literal {_SYMBOLIC_EVENT_SELECTOR}, which covers the EVENT-<n> scopes)",
-    )
 
 
 def accepted_filing_period_patterns() -> tuple[str, ...]:
@@ -555,44 +531,6 @@ class Period(BaseModel):
         return hash((self.filing_year, str(self.code)))
 
 
-_SCENARIO_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
-    dict[str, object], config=ConfigDict(strict=True)
-)
-
-
-def _scenario_mapping(value: object) -> dict[str, object] | None:
-    """Return a strictly typed scenario mapping when ``value`` is one."""
-    if not isinstance(value, Mapping):
-        return None
-    try:
-        return _SCENARIO_MAPPING_ADAPTER.validate_python(value)
-    except ValidationError:
-        return None
-
-
-def hydrate_scenario_filing_period(data: object) -> object:
-    """Derive ``filing_period`` from ``filing_year`` + ``period`` for a scenario payload.
-
-    The pydantic ``mode="before"`` validator body shared by the registry
-    scenario and parity-tape harnesses. Returns ``data`` unchanged when it is
-    not a mapping, already carries ``filing_period``, lacks a well-typed
-    ``filing_year``/``period`` pair, or the pair does not form a valid
-    :class:`Period`.
-    """
-    payload = _scenario_mapping(data)
-    if payload is None or "filing_period" in payload:
-        return data
-    filing_year = payload.get("filing_year")
-    period = payload.get("period")
-    if not isinstance(filing_year, int) or not isinstance(period, str):
-        return data
-    try:
-        filing_period = Period.from_year_and_code(filing_year, period)
-    except ValueError:
-        return data
-    return {**payload, "filing_period": filing_period}
-
-
 __all__ = [
     "FilingPeriodCode",
     "Period",
@@ -602,9 +540,6 @@ __all__ = [
     "StandardPeriodCode",
     "accepted_filing_period_codes",
     "accepted_filing_period_patterns",
-    "accepted_period_codes",
-    "accepted_period_patterns",
-    "hydrate_scenario_filing_period",
     "is_administrative_period_token",
     "registry_period_kind",
 ]

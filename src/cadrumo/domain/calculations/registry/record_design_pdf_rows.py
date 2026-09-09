@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import re
-import unicodedata
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final
 
+from ....core.text_fold import fold_diacritics
 from .errors import RegistryValidationError
 from .record_design_layout_markers import RECORD_TERMINATOR_PHRASE
 from .record_design_sources import SinglePositionCorrectionIndex
@@ -484,7 +484,7 @@ def naturaleza_or_none(value: str) -> str | None:
     # empty naturaleza cell whose description says BLANCOS.
     if raw and set(raw) <= {"-", "–", "_"}:
         return "Blancos"
-    normalised = unicodedata.normalize("NFKD", raw).encode("ascii", "ignore").decode("ascii").lower()
+    normalised = fold_diacritics(raw).encode("ascii", "ignore").decode("ascii").lower()
     if not normalised:
         return None
     # AEAT names the fill naturaleza in Spanish far more often than in English:

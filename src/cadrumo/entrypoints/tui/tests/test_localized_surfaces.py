@@ -34,7 +34,7 @@ from ....tests.modelo_workspace_session import real_workspace_inspection_result
 from ....tests.terminal_sizes import TERMINAL_ORDINARY
 from ..components.host import ScreenHostApp
 from ..modelo.routes import MODELO_WORKSPACE_DESTINATIONS
-from ..modelo.view.controller import ModeloWorkspaceReadSession, admit_workspace_session, semantic_identity
+from ..modelo.view.controller import ModeloWorkspaceReadSession, open_workspace_read_session, semantic_identity
 from ..modelo.view.models import ModeloWorkspaceDestinationIdV1
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -55,9 +55,7 @@ def sessions_by_language(
     with real_workspace_inspection_result(root) as seeded:
         opened: dict[OutputLanguage, ModeloWorkspaceReadSession] = {}
         for language in _LANGUAGES:
-            session, refusal = admit_workspace_session(seeded.resolve(language))
-            assert refusal is None, f"{language} was refused admission: {refusal}"
-            assert session is not None
+            session = open_workspace_read_session(seeded.resolve(language).projection)
             opened[language] = session
         yield opened
 

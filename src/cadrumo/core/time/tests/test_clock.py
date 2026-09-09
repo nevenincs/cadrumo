@@ -8,7 +8,7 @@ import pytest
 
 from ...config import override_settings
 from ...errors.hierarchy import CoreValidationError
-from ..clock import MADRID_TZ, clock_is_frozen, frozen_clock, now, today_madrid
+from ..clock import MADRID_TZ, frozen_clock, now, today_madrid
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -34,7 +34,6 @@ class TestFrozenClockSeam:
 
     def test_default_off_returns_real_wall_clock(self) -> None:
         """Outside any scope, ``now()`` is real wall-clock — zero behaviour change."""
-        assert not clock_is_frozen()
         before = datetime.now(tz=UTC)
         result = now()
         after = datetime.now(tz=UTC)
@@ -43,7 +42,6 @@ class TestFrozenClockSeam:
     def test_frozen_scope_pins_now_to_the_instant(self) -> None:
         with frozen_clock(self._INSTANT) as yielded:
             assert yielded == self._INSTANT
-            assert clock_is_frozen()
             assert now() == self._INSTANT
             # Repeated reads inside the scope are identical, not merely close.
             assert now() == now() == self._INSTANT
@@ -51,7 +49,6 @@ class TestFrozenClockSeam:
     def test_scope_restores_on_exit(self) -> None:
         with frozen_clock(self._INSTANT):
             assert now() == self._INSTANT
-        assert not clock_is_frozen()
         assert now() != self._INSTANT
 
     def test_nested_scopes_restore_the_outer_instant(self) -> None:
@@ -67,7 +64,6 @@ class TestFrozenClockSeam:
         naive = datetime(2026, 4, 14, 9, 30, 0)  # deliberately tz-naive
         with pytest.raises(CoreValidationError), frozen_clock(naive):
             pass
-        assert not clock_is_frozen()
 
     def test_refuses_under_live_test_opt_in(self) -> None:
         """The seam must stay off in live-marked test runs (no global freeze)."""
@@ -78,7 +74,6 @@ class TestFrozenClockSeam:
         ):
             pass
         # Guard did not leave a dangling frozen instant.
-        assert not clock_is_frozen()
 
     def test_calc_sheets_utc_now_alias_follows_the_seam(self) -> None:
         """The calc-sheets ``_utc_now`` alias IS ``now``, so it freezes too."""
@@ -112,4 +107,3 @@ class TestTodayMadrid:
         with frozen_clock(datetime(2026, 12, 31, 23, 30, 0, tzinfo=UTC)):
             assert now().date() == date(2026, 12, 31)
             assert today_madrid() == date(2027, 1, 1)
-        assert not clock_is_frozen()

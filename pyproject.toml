@@ -538,14 +538,6 @@ select = [
   "S",  # flake8-bandit (security)
   "T20",  # flake8-print
   "SIM",  # flake8-simplify
-  # TID251 (banned-api) ONLY, deliberately not the whole TID family. TID252
-  # (relative-imports) bans the parent-relative form that this repository
-  # MANDATES: `dev/quality/relative_imports.py` fails the build on an absolute
-  # `cadrumo.*` self-import, and `just check-relative-imports` gates it. Selecting
-  # TID252 would make two project gates demand opposite things and emit ~52k
-  # diagnostics for code that is correct by the repository's own contract. This
-  # is stated as a narrower `select` rather than an `ignore` because the rule is
-  # not suppressed debt -- it is a rule this project does not hold.
   "TID251",  # flake8-tidy-imports banned-api; enforces the table below
   "RUF",  # ruff-specific rules
   "D",  # pydocstyle (Google-style docstring conventions)
@@ -675,11 +667,6 @@ convention = "google"
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
-# The newline-pinning gate enumerates its scan corpus with a read-only
-# `git ls-files` under a fixed argv; the only interpolated values are this
-# module's own SCAN_ROOTS constants. It must read the TRACKED set rather than
-# the filesystem so a peer's untracked scratch module cannot red the gate.
-"src/cadrumo/tests/test_text_writer_newline_pinning.py" = ["S603", "S607"]
 # Runs a real `pytest --collect-only` in a child interpreter: collectability is
 # a property of a fresh import, so an in-process check would read modules this
 # process already imported. The command is built from `sys.executable` plus
@@ -939,12 +926,6 @@ convention = "google"
 "unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See src/cadrumo/tests/README.md."
 "unittest.mock".msg = "Mocks are banned. Exercise real objects and explicit production seams. See src/cadrumo/tests/README.md."
 "mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See src/cadrumo/tests/README.md."
-
-# The relative-imports mandate is enforced by the custom
-# dev/quality/relative_imports.py module, not by Ruff TID251. Ruff's
-# banned-api resolves relative imports back to their absolute path
-# before matching the banned prefix, which would flag every legitimate
-# `from .module import X` inside src/cadrumo/ when `cadrumo` is banned.
 
 [tool.ruff.format]
 quote-style = "double"
