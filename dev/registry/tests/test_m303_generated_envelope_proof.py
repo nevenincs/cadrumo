@@ -116,7 +116,11 @@ def _render_isolated_tree(tree, root: Path):
     assert not root.exists()
     semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
     registry_root = _isolated_authority(tree, root)
-    continuity_metadata_modelo_root = stage_continuity_metadata(tree, root)
+    continuity_metadata_modelo_root = stage_continuity_metadata(
+        bundled_path("registry", "aeat", "modelos", tree.modelo),
+        root,
+        revision=tree.revision,
+    )
     export_root = registry_root / "modelos" / tree.modelo / "revisions" / tree.revision / "export"
     render_complete_export_tree(
         export_root,
@@ -461,7 +465,11 @@ def test_m303_2026_publication_is_twice_reproducible_and_check_mode_is_non_mutat
 
         check_root = temp_path / "check"
         check_registry_root = _isolated_authority(tree, check_root)
-        metadata_root = stage_continuity_metadata(tree, check_root)
+        metadata_root = stage_continuity_metadata(
+            bundled_path("registry", "aeat", "modelos", tree.modelo),
+            check_root,
+            revision=tree.revision,
+        )
         published_modelo_root = check_root / "published-registry" / "aeat" / "modelos" / tree.modelo
         shutil.copytree(bundled_path("registry", "aeat", "modelos", tree.modelo), published_modelo_root)
         for sibling in (published_modelo_root / "revisions").iterdir():
