@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:3a0b9188777a1c822abf29f4dac1d1e2f92b3947ba1696bfa15d2b35438ab35a'
+body_hash: 'sha256:6403cbfa90748a2f4d8cd81d600e4797d4fb079106cb20bd083585745b0df97b'
 ---
 
 <!-- LINK RULES:
@@ -181,7 +181,7 @@ templates. -->
 Create the registry-owned envelope, closed payload families, typed queries, and resolved result contracts without touching existing domain loaders or consumers.
 
 - [x] `W01.P01.S01` - Define governed fact envelope identities and payload families; `src/cadrumo/domain/calculations/registry/facts/schema.py`.
-- [ ] `W01.P01.S02` - Define typed queries and provenance-bearing resolved results; `src/cadrumo/domain/calculations/registry/facts/resolution.py`.
+- [x] `W01.P01.S02` - Define typed queries and provenance-bearing resolved results; `src/cadrumo/domain/calculations/registry/facts/resolution.py`.
 - [ ] `W01.P01.S03` - Implement strict one-fact-per-file TOML parsing; `src/cadrumo/domain/calculations/registry/facts/loader.py`.
 
 ### Phase `W01.P02` - Implement greenfield provider authority
