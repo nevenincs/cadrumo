@@ -11,7 +11,6 @@ from ..providers import (
     FACT_PROVIDER_REGISTRATIONS,
     FactProviderCompiler,
     FactProviderRegistration,
-    fact_provider_for_directory,
     registered_fact_provider_directories,
     validate_fact_provider_registrations,
 )
@@ -49,7 +48,6 @@ def test_authored_provider_owns_compilation_identity_reset_and_directory(tmp_pat
     assert registration.owned_directories == ("facts",)
     assert len(registration.collect_fingerprints(tmp_path)) == 1
     registration.reset()
-    assert fact_provider_for_directory("facts") is registration
     assert registered_fact_provider_directories() == {"facts": registration}
 
 
@@ -76,8 +74,3 @@ def test_registration_refuses_empty_or_overlapping_directory_ownership() -> None
         validate_fact_provider_registrations(
             (_registration("first", "facts"), _registration("second", "facts/iva")),
         )
-
-
-def test_directory_lookup_fails_closed_for_an_unowned_path() -> None:
-    with pytest.raises(RegistryValidationError, match="has no registered provider"):
-        fact_provider_for_directory("iva")

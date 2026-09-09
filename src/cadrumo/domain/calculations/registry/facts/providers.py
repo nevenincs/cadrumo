@@ -21,7 +21,6 @@ __all__ = [
     "FactProviderRegistration",
     "collect_registered_fact_provider_fingerprints",
     "compile_registered_fact_providers",
-    "fact_provider_for_directory",
     "registered_fact_provider_directories",
     "reset_registered_fact_providers",
     "validate_fact_provider_directory_ownership",
@@ -141,15 +140,6 @@ def validate_fact_provider_directory_ownership(registry_root: Path) -> None:
                 raise RegistryValidationError(
                     f"governed fact directory {relative!r} has no registered provider",
                 )
-
-
-def fact_provider_for_directory(directory: str) -> FactProviderRegistration:
-    """Resolve an exact governed directory or fail closed when it is unowned."""
-    normalized = _validated_owned_directory("lookup", directory).as_posix()
-    registration = registered_fact_provider_directories().get(normalized)
-    if registration is None:
-        raise RegistryValidationError(f"governed fact directory {normalized!r} has no registered provider")
-    return registration
 
 
 def _validated_owned_directory(provider_id: str, raw_directory: str) -> PurePosixPath:

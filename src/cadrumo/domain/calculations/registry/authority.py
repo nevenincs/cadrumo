@@ -49,6 +49,7 @@ from .facts.providers import (
     reset_registered_fact_providers,
     validate_fact_provider_directory_ownership,
 )
+from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
 from .identity import (
     FingerprintTuples,
     RegistryIdentity,
@@ -451,6 +452,7 @@ class ValidatedRegistryAuthority:
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
     _authorization_manifest: AuthorizationManifest
+    _identity_digest: str = ""
     _capture_generation: int = field(default=0, init=False, repr=False)
     _capture_reset_epoch: int = field(default=0, init=False, repr=False)
     _capture_state: _AuthorityLoadState | None = field(default=None, init=False, repr=False)
@@ -503,6 +505,18 @@ class ValidatedRegistryAuthority:
             return self._modelos_by_id[modelo_id]
         except KeyError as exc:
             raise RegistrySnapshotError(f"modelo {modelo_id!r} is not present in the calculation registry") from exc
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        """Resolve one typed governed-fact query through this validated authority."""
+        with self._state_lock:
+            self.validate_registry()
+            if not self._identity_digest:
+                raise RegistryValidationError("governed fact resolution requires an authority identity digest")
+            return resolve_governed_fact(
+                self.catalogues.facts,
+                query,
+                authority_digest=self._identity_digest,
+            )
 
     def validate_modelo(self, modelo_id: str) -> ModeloDefinition:
         """Validate one modelo once and return its definition.
@@ -1160,6 +1174,7 @@ def construct_authority(
         # The manifest is fingerprinted into _collect_registry_tree_fingerprints
         # so the current-identity slot invalidates when the manifest changes on disk.
         _authorization_manifest=load_authorization_manifest(root),
+        _identity_digest=identity.digest,
     )
     return authority
 

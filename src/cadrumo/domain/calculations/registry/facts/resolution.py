@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, TypeAdapter, model_validator
 
 from ..errors import RegistryValidationError
 from ..schema_base import DateAxisField, LegalRefs, RegistryModel, RevisionReviewStatusField, SourceCitation, SourceRefs
@@ -17,6 +17,7 @@ from .schema import (
     FactOwnershipField,
     FactSelector,
     FactVariantId,
+    GovernedFactCatalogue,
     GovernedFactFamily,
     MappingFactPayload,
     MultiOutputFactPayload,
@@ -41,6 +42,7 @@ __all__ = [
     "ResolvedOverrideFact",
     "ResolvedScalarFact",
     "ScalarFactQuery",
+    "resolve_governed_fact",
 ]
 
 
@@ -207,3 +209,63 @@ ResolvedGovernedFact = Annotated[
     | ResolvedMultiOutputFact,
     Field(discriminator="family"),
 ]
+
+_RESOLVED_FACT_ADAPTER: TypeAdapter[ResolvedGovernedFact] = TypeAdapter(ResolvedGovernedFact)
+
+
+def resolve_governed_fact(
+    catalogue: GovernedFactCatalogue,
+    query: GovernedFactQuery,
+    *,
+    authority_digest: str,
+) -> ResolvedGovernedFact:
+    """Resolve one exact query while retaining its complete authority context."""
+    fact = catalogue.facts.get(query.fact_id)
+    if fact is None:
+        raise RegistryValidationError(f"governed fact {query.fact_id!r} is not registered")
+    if fact.family is not query.family:
+        raise RegistryValidationError(
+            f"governed fact {query.fact_id!r} has family {fact.family.value!r}, not {query.family.value!r}",
+        )
+    query_selectors = _selector_identity(query.selectors)
+    candidates = tuple(
+        variant
+        for variant in fact.variants
+        if variant.date_axis is query.date_axis
+        and variant.valid_from <= query.effective_date
+        and (variant.valid_to is None or query.effective_date <= variant.valid_to)
+        and _selector_identity(variant.selectors) == query_selectors
+    )
+    if not candidates:
+        raise RegistryValidationError(f"governed fact {query.fact_id!r} has no variant for the exact query context")
+    superseded = {variant_id for candidate in candidates for variant_id in candidate.precedence_over}
+    winners = tuple(candidate for candidate in candidates if candidate.variant_id not in superseded)
+    if len(winners) != 1:
+        raise RegistryValidationError(
+            f"governed fact {query.fact_id!r} query is ambiguous across variants "
+            f"{sorted(candidate.variant_id for candidate in candidates)!r}",
+        )
+    winner = winners[0]
+    return _RESOLVED_FACT_ADAPTER.validate_python(
+        {
+            "family": fact.family,
+            "fact_id": fact.fact_id,
+            "variant_id": winner.variant_id,
+            "date_axis": winner.date_axis,
+            "effective_date": query.effective_date,
+            "valid_from": winner.valid_from,
+            "valid_to": winner.valid_to,
+            "matched_selectors": winner.selectors,
+            "payload": winner.payload,
+            "legal_refs": winner.legal_refs,
+            "source_refs": winner.source_refs,
+            "source_citations": winner.source_citations,
+            "review_status": winner.review_status,
+            "ownership": winner.ownership,
+            "authority_digest": authority_digest,
+        },
+    )
+
+
+def _selector_identity(selectors: tuple[FactSelector, ...]) -> frozenset[tuple[str, type[object], object]]:
+    return frozenset((selector.name, type(selector.value), selector.value) for selector in selectors)

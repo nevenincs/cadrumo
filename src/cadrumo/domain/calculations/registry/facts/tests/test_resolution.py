@@ -9,8 +9,15 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ...schema_base import DateAxis, SourceCitation
-from ..resolution import GovernedFactQuery, ResolvedGovernedFact
-from ..schema import FactOwnership, FactSelector, GovernedFactFamily, ScalarFactPayload
+from ..resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
+from ..schema import (
+    FactOwnership,
+    FactSelector,
+    GovernedFact,
+    GovernedFactCatalogue,
+    GovernedFactFamily,
+    ScalarFactPayload,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -119,3 +126,61 @@ def test_resolved_union_refuses_a_payload_from_another_family() -> None:
 
     with pytest.raises(ValidationError):
         TypeAdapter(ResolvedGovernedFact).validate_python(data)
+
+
+def test_authority_resolver_returns_a_provenance_bearing_result_for_exact_context() -> None:
+    fact = GovernedFact.model_validate(
+        {
+            "fact_id": "iva.general.rate",
+            "family": "scalar",
+            "variants": (
+                {
+                    "variant_id": "iva.general.rate.2025",
+                    "selectors": ({"name": "territory", "value": "peninsula"},),
+                    "date_axis": "transaction_date",
+                    "valid_from": date(2025, 1, 1),
+                    "payload": {"kind": "scalar", "value": Decimal("0.21"), "unit": "ratio"},
+                    "legal_refs": ("ley-37-1992-art-90",),
+                    "source_refs": ("aeat-iva-rates",),
+                    "source_citations": (
+                        {"source_ref": "aeat-iva-rates", "required_text": ("Tipo general",)},
+                    ),
+                    "review_status": "pending_review",
+                    "ownership": "authored",
+                },
+            ),
+        },
+    )
+    query = TypeAdapter(GovernedFactQuery).validate_python(
+        {
+            "family": "scalar",
+            "fact_id": fact.fact_id,
+            "date_axis": "transaction_date",
+            "effective_date": date(2026, 1, 15),
+            "selectors": ({"name": "territory", "value": "peninsula"},),
+        },
+    )
+
+    resolved = resolve_governed_fact(
+        GovernedFactCatalogue(facts={fact.fact_id: fact}),
+        query,
+        authority_digest="b" * 64,
+    )
+
+    assert resolved.variant_id == "iva.general.rate.2025"
+    assert resolved.payload == fact.variants[0].payload
+    assert resolved.authority_digest == "b" * 64
+
+
+def test_authority_resolver_refuses_an_unregistered_fact() -> None:
+    query = TypeAdapter(GovernedFactQuery).validate_python(
+        {
+            "family": "scalar",
+            "fact_id": "missing.fact",
+            "date_axis": "filing_period",
+            "effective_date": date(2026, 1, 1),
+        },
+    )
+
+    with pytest.raises(ValueError, match="is not registered"):
+        resolve_governed_fact(GovernedFactCatalogue(), query, authority_digest="b" * 64)
