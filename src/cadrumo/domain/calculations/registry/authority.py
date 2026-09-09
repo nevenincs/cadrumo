@@ -43,7 +43,12 @@ from ._verdict_cache import (
 )
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .errors import RegistrySnapshotError, RegistryValidationError
-from .facts.providers import compile_registered_fact_providers
+from .facts.providers import (
+    collect_registered_fact_provider_fingerprints,
+    compile_registered_fact_providers,
+    reset_registered_fact_providers,
+    validate_fact_provider_directory_ownership,
+)
 from .identity import (
     FingerprintTuples,
     RegistryIdentity,
@@ -83,6 +88,7 @@ def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTu
         collect_registry_tree_fingerprints(resolved_root)
         + collect_convenio_fingerprints(resolved_root)
         + collect_supplementary_orden_fingerprints(resolved_root)
+        + collect_registered_fact_provider_fingerprints(resolved_root)
     )
 
 
@@ -1060,6 +1066,7 @@ def reset_registry_caches(
         _invalidate_authority_generations()
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
+        reset_registered_fact_providers()
 
 
 def _load_validated_authority(
@@ -1102,6 +1109,7 @@ def construct_authority(
     from .loader import load_registry_tree
 
     modelos, catalogues = load_registry_tree(root, identity=identity)
+    validate_fact_provider_directory_ownership(root)
     facts = compile_registered_fact_providers(root)
     # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
     # onto the shared catalogues so every snapshot projects the same authority.

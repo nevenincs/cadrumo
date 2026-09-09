@@ -19,9 +19,12 @@ __all__ = [
     "FACT_PROVIDER_REGISTRATIONS",
     "FactProviderCompiler",
     "FactProviderRegistration",
+    "collect_registered_fact_provider_fingerprints",
     "compile_registered_fact_providers",
     "fact_provider_for_directory",
     "registered_fact_provider_directories",
+    "reset_registered_fact_providers",
+    "validate_fact_provider_directory_ownership",
     "validate_fact_provider_registrations",
 ]
 
@@ -107,6 +110,37 @@ def compile_registered_fact_providers(registry_root: Path) -> GovernedFactCatalo
             owner_by_fact_id[fact.fact_id] = registration.provider_id
             facts[fact.fact_id] = fact
     return GovernedFactCatalogue(facts=facts)
+
+
+def collect_registered_fact_provider_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+    """Collect every provider fingerprint in canonical registration order."""
+    return tuple(
+        fingerprint
+        for registration in FACT_PROVIDER_REGISTRATIONS
+        for fingerprint in registration.collect_fingerprints(registry_root)
+    )
+
+
+def reset_registered_fact_providers() -> None:
+    """Reset every provider-owned cache in canonical registration order."""
+    for registration in FACT_PROVIDER_REGISTRATIONS:
+        registration.reset()
+
+
+def validate_fact_provider_directory_ownership(registry_root: Path) -> None:
+    """Refuse nested governed directories without an exact registered owner."""
+    owned = registered_fact_provider_directories()
+    root = registry_root.resolve()
+    for relative_directory in owned:
+        provider_root = root / Path(*PurePosixPath(relative_directory).parts)
+        if not provider_root.is_dir():
+            continue
+        for entry in scan_directory(provider_root, select=DirectoryEntryKind.DIRECTORIES, recursive=True):
+            relative = PurePosixPath(*entry.relative_to(root).parts).as_posix()
+            if relative not in owned:
+                raise RegistryValidationError(
+                    f"governed fact directory {relative!r} has no registered provider",
+                )
 
 
 def fact_provider_for_directory(directory: str) -> FactProviderRegistration:

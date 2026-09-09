@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:f73ec2b450b68672a67ce88721e8ed7ca20d556aa6aed389b03d43343c21eeda'
+body_hash: 'sha256:ff64013e5529d53018b99b75a3f746e98b49e9962909e6873d20beba6cbb2fef'
 ---
 
 <!-- LINK RULES:
@@ -190,7 +190,7 @@ Add provider enrollment, catalogue compilation, authority identity, validation, 
 
 - [x] `W01.P02.S04` - Implement provider registration and directory ownership; `src/cadrumo/domain/calculations/registry/facts/providers.py`.
 - [x] `W01.P02.S05` - Attach the fact catalogue to authority construction; `src/cadrumo/domain/calculations/registry/authority.py`.
-- [ ] `W01.P02.S06` - Enroll facts in fingerprints authority identity memoisation validation and resets; `src/cadrumo/domain/calculations/registry`.
+- [x] `W01.P02.S06` - Enroll facts in fingerprints authority identity memoisation validation and resets; `src/cadrumo/domain/calculations/registry`.
 
 ### Phase `W01.P03` - Complete migration and retirement ledger
 

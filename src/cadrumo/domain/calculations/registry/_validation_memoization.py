@@ -13,20 +13,27 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from ._source_evidence_fingerprint import SourceEvidenceFingerprint
+from .facts.schema import GovernedFactCatalogue
 from .schema import ModeloDefinition
 from .schema_references import LegalReference, SourceReference
 
-_CatalogueCacheKey = tuple[int, int, str | None, SourceEvidenceFingerprint]
-_CatalogueCacheValue = tuple[Mapping[str, LegalReference], Mapping[str, SourceReference], tuple[str, ...]]
-_ModeloValidationCacheKey = tuple[int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint]
+_CatalogueCacheKey = tuple[int, int, int, str | None, SourceEvidenceFingerprint]
+_CatalogueCacheValue = tuple[
+    Mapping[str, LegalReference], Mapping[str, SourceReference], GovernedFactCatalogue, tuple[str, ...]
+]
+_ModeloValidationCacheKey = tuple[
+    int, int, int, int, tuple[int, ...], str | None, str | None, SourceEvidenceFingerprint
+]
 _ModeloValidationCacheValue = tuple[
     ModeloDefinition,
     Mapping[str, LegalReference],
     Mapping[str, SourceReference],
+    GovernedFactCatalogue,
     tuple[str, ...],
 ]
 _RegistryValidationCacheKey = tuple[
     tuple[int, ...],
+    int,
     int,
     int,
     tuple[int, ...],
@@ -38,6 +45,7 @@ _RegistryValidationCacheValue = tuple[
     tuple[ModeloDefinition, ...],
     Mapping[str, LegalReference],
     Mapping[str, SourceReference],
+    GovernedFactCatalogue,
     tuple[str, ...],
 ]
 
