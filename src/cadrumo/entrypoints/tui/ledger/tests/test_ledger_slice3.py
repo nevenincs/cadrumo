@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import override
 
 import pytest
+from dev.tui.harness.frame import geometry_band
 from textual.containers import VerticalScroll
 from textual.widgets import Button, DataTable, Static
 
@@ -25,7 +26,6 @@ from .....core.config import override_settings
 from .....core.period import Period
 from .....domain.attachments.enums import AttachmentSource
 from ....tui.components.host import ScreenHostApp
-from ....tui.devtools.frame import geometry_band
 from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen

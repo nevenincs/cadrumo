@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import cast
 
 import pytest
+from dev.tui.harness.frame import geometry_band, screen_text
+from dev.tui.harness.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from textual.containers import VerticalScroll
 from textual.widgets import DataTable, Static
 
@@ -14,8 +16,6 @@ from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
-from ..devtools.frame import geometry_band, screen_text
-from ..devtools.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ..home import HomeScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -65,7 +65,7 @@ async def test_home_renders_the_selected_due_driven_projection_without_overflow(
         assert app.focused is not None and app.focused.id == "home-actions"
         rendered = screen_text(app, *size)
         assert "Status: Active local session" in rendered
-        assert str(screen.query_one("#home-ledger", Static).render()).startswith("Available —")
+        assert str(screen.query_one("#home-ledger", Static).render()).startswith("Available -")
         assert str(screen.query_one("#home-agenda-state", Static).render()).startswith("Available")
         assert len(projection.actions) <= 3
         action_table = screen.query_one("#home-actions", DataTable)
@@ -101,10 +101,10 @@ async def test_home_keeps_unknown_ledger_and_messages_as_unknown_not_zero() -> N
         text = "\n".join(str(widget.render()) for widget in screen.query(Static))
     assert "Ledger readiness\nLocked" in text
     assert "Messages\nLocked" in text
-    assert "Available — 0" not in text
+    assert "Available - 0" not in text
 
 
-def test_home_is_projection_only_and_does_not_import_devtools_or_application_actions() -> None:
+def test_home_is_projection_only_and_does_not_import_the_dev_harness_or_application_actions() -> None:
     path = Path(__file__).parents[1] / "home.py"
     tree = ast.parse(path.read_text(encoding="utf-8"))
     imports = {node.module for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module is not None}
@@ -113,5 +113,5 @@ def test_home_is_projection_only_and_does_not_import_devtools_or_application_act
         for node in ast.walk(tree)
         if isinstance(node, ast.Call) and isinstance(node.func, (ast.Name, ast.Attribute))
     }
-    assert not any("devtools" in name or "adapters" in name or "entrypoints.cli" in name for name in imports)
+    assert not any("harness" in name or "adapters" in name or "entrypoints.cli" in name for name in imports)
     assert not {"open", "read", "write", "read_text", "write_text", "Path"} & calls

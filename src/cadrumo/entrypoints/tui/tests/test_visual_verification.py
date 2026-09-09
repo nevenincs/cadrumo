@@ -36,6 +36,8 @@ if TYPE_CHECKING:
     from ....application.user_profile.login_session import ProfileLoginOutcome
     from ....application.user_profile.registration import ProfileRegistrationOutcome
 
+from dev.tui.harness.frame import geometry_band, key_band
+
 from ....application.flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ....application.user_profile.fact_write import apply_manager_profile_field_mutation
 from ....application.user_profile.login_session import login_profile
@@ -61,7 +63,6 @@ from ..components.theme import (
     CADRUMO_LIGHT_THEME_NAME,
 )
 from ..components.widgets import ContentScroll
-from ..devtools.frame import geometry_band, key_band
 from ..flows.app import FlowScreen
 
 pytestmark = [
@@ -96,8 +97,9 @@ _THEMES = [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME]
 
 @contextmanager
 def _registration(tmp_path: Path) -> Generator[ScreenHostApp[ProfileRegistrationOutcome | None]]:
+    from dev.tui.harness.fixture import registration_attempt
+
     from ....core.credentials import assess_profile_password
-    from ..devtools.fixture import registration_attempt
 
     del tmp_path  # unused: this surface writes nothing until a real submit, which no gate here does
     yield ScreenHostApp(RegistrationScreen(assess=assess_profile_password, register=registration_attempt))
@@ -894,7 +896,7 @@ async def test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner(
 async def test_every_surface_reports_no_geometry_findings(build, width: int, height: int, tmp_path: Path) -> None:
     """Drive the canonical geometry reader over every enrolled surface.
 
-    ``devtools.frame.geometry_band`` already judges the three painted-layout
+    ``dev.tui.harness.frame.geometry_band`` already judges the three painted-layout
     properties, and until now nothing executed it: its only caller was the
     standalone replay tool, which runs when a human chooses to and never in
     CI. A reader with no gate is weaker than an orphan, because an unused-
@@ -924,7 +926,7 @@ async def test_every_surface_reports_no_geometry_findings(build, width: int, hei
 async def test_every_declared_binding_is_actually_offered(build, tmp_path: Path) -> None:
     """A key a surface declares must be a key the operator can press.
 
-    Drives ``devtools.frame.key_band``, which reads ``active_bindings`` --
+    Drives ``dev.tui.harness.frame.key_band``, which reads ``active_bindings`` --
     what is offered on THIS screen in THIS state, not what the class
     declared. The two can disagree: a binding declared on a host whose
     content lives on sibling screens never resolves, because the host is

@@ -207,8 +207,9 @@ def _registration_screen() -> RegistrationScreen:
     Geometry never calls them, but the screen takes them because it does
     not reach up into the application layer for itself.
     """
+    from dev.tui.harness.fixture import registration_attempt
+
     from ....core.credentials import assess_profile_password
-    from ..devtools.fixture import registration_attempt
 
     return RegistrationScreen(assess=assess_profile_password, register=registration_attempt)
 
