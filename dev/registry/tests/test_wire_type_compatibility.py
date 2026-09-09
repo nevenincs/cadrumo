@@ -10,8 +10,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
-from cadrumo.domain.calculations.registry.export import resolved_export_endpoints
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from dev.registry.maintenance_support import resolved_export_endpoints
 
 from ..analysis.wire_type_compatibility import transitions_for_revision
 

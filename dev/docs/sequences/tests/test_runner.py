@@ -362,7 +362,7 @@ class TestSandboxIsolationAndDeterminism:
 
 
 class TestSandboxEvictsBoundBucketSession:
-    """A login frame's unscoped session binding must not outlive its sandbox.
+    """A login's unscoped session binding must not outlive its sandbox.
 
     ``config login`` binds its :class:`BucketSession` through the UNSCOPED
     ``bind_active_bucket_session`` so the login survives the call — correct for a
@@ -372,48 +372,28 @@ class TestSandboxEvictsBoundBucketSession:
     ``has_active_bucket_session()`` instead of resuming for its own bucket, and
     the storage runtime correctly refuses every profile-bound verb because the
     route bucket is not the session bucket.
-    """
 
-    _LOGIN_BODY = "\n".join(
-        [
-            "@setup aeat config profile create me --quiet --entity-type natural_person"
-            ' --tax-id 87654321X --name "Ana" --surnames "Garcia Lopez"',
-            "@setup aeat config repair profile --clear-active --yes",
-            "@result aeat --format json config login me",
-            "@expect exit_code == 0",
-        ],
-    )
+    The login is driven through :func:`~cadrumo.tests.user_profile.register_cli_profile`
+    rather than through ``config profile create`` / ``config login`` FRAMES.
+    Profile custody now demands an explicit bounded secret channel — the
+    ``--secrets-stdin`` / ``--secrets-fd`` payload plus the one-time recovery
+    handoff descriptor pair — and a sequence frame is argv only, with no stdin
+    and no inherited descriptors, so neither verb can execute inside the
+    hermetic runner at all. That door is not a stand-in: it registers through
+    the production ``register_profile_with_credentials`` and then calls the same
+    ``login_profile`` service ``config login`` calls, so the binding under test
+    is the real unscoped one.
+    """
 
     def test_login_binding_is_evicted_at_teardown(self, tmp_path: Path) -> None:
         """A real login binds a real session inside, and nothing survives outside."""
         from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
-        from cadrumo.tests.cli_runner import invoke_cached_cli
+        from cadrumo.tests.user_profile import register_cli_profile
 
         assert current_active_bucket_session() is None, "a prior test leaked a bucket session"
 
         with sequence_sandbox(sequence_id="runner-session-leak", sandbox_root=tmp_path / "login"):
-            created = invoke_cached_cli(
-                [
-                    "config",
-                    "profile",
-                    "create",
-                    "me",
-                    "--quiet",
-                    "--entity-type",
-                    "natural_person",
-                    "--tax-id",
-                    "87654321X",
-                    "--name",
-                    "Ana",
-                    "--surnames",
-                    "Garcia Lopez",
-                ],
-            )
-            assert created.exit_code == 0, created.stderr
-            cleared = invoke_cached_cli(["config", "repair", "profile", "--clear-active", "--yes"])
-            assert cleared.exit_code == 0, cleared.stderr
-            logged_in = invoke_cached_cli(["--format", "json", "config", "login", "me"])
-            assert logged_in.exit_code == 0, logged_in.stderr
+            register_cli_profile(label="me")
 
             # Anti-vacuity: the login really bound a session, and for a bucket
             # that is NOT this sandbox's injected profile — exactly the binding
@@ -428,16 +408,20 @@ class TestSandboxEvictsBoundBucketSession:
     def test_profile_bound_verb_serves_in_the_sandbox_after_a_login_sandbox(self, tmp_path: Path) -> None:
         """The operator-facing symptom: the NEXT sequence must still be served.
 
-        Executed as two real sequences in two real sandboxes, the shape the
-        ``how-to/troubleshooting`` page runs. With the binding left standing the
-        second sequence exits 4 (``INTEGRITY_STORAGE_VALIDATION``: the database
+        The follower runs as a real sequence in a real sandbox, the shape the
+        ``how-to/troubleshooting`` page runs. With the leading sandbox's binding
+        left standing it exits 4 (``INTEGRITY_STORAGE_VALIDATION``: the database
         route does not match the active bucket session) and
         :func:`execute_sequence` raises.
         """
-        execute_sequence(
-            _result_sequence(self._LOGIN_BODY, sequence_id="runner-session-leak-a"),
-            sandbox_root=tmp_path / "leak-a",
-        )
+        from cadrumo.adapters.persistence.storage.master_key.active_session import current_active_bucket_session
+        from cadrumo.tests.user_profile import register_cli_profile
+
+        with sequence_sandbox(sequence_id="runner-session-leak-a", sandbox_root=tmp_path / "leak-a"):
+            register_cli_profile(label="me")
+            leaked = current_active_bucket_session()
+            assert leaked is not None
+            assert leaked.bucket_id != SANDBOX_PROFILE_ID
 
         follower = execute_sequence(
             _result_sequence(

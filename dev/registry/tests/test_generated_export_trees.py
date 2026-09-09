@@ -41,10 +41,7 @@ from cadrumo.domain.calculations.registry.loader import (
     load_registry_tree,
 )
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
-from cadrumo.domain.calculations.registry.temporal import (
-    coverage_assessment_horizon,
-    revision_selection_coordinates,
-)
+from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 from ..pipeline._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ..pipeline._provenance_manifest import (

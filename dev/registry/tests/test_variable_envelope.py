@@ -8,10 +8,10 @@ import pytest
 
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation
+from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..pipeline._record_design_ir import (
     RecordDesignIntermediateRelativeSuffixMarker,

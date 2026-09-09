@@ -65,6 +65,8 @@ _MISSING_WHEEL_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
     re.compile(r"\bcould not find a version\b"),
     re.compile(r"\bno wheels? (?:are|were) available\b"),
 )
+
+
 class ProbeMode(StrEnum):
     """The two separately attributable installation modes."""
 

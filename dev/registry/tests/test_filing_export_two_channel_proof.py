@@ -15,7 +15,6 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.storage.errors import PersistenceError, SecretStoreError
-from cadrumo.application.filing.export_proof import FilingExportProofChannel, FilingExportProofCoordinate
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -25,16 +24,14 @@ from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,
     StaticGeneratedArtifactInspection,
 )
-from cadrumo.domain.calculations.registry.temporal import (
-    coverage_assessment_horizon,
-    revision_selection_coordinates,
-)
+from dev.registry.maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 from .. import filing_export_proof
 from ..diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
     load_registry_diagnostic_classification,
 )
+from ..export_proof import FilingExportProofChannel, FilingExportProofCoordinate
 from ..filing_export_proof import (
     CanonicalTwoChannelFilingExportProofAuthority,
     FilingExportConformanceEnrollmentReport,

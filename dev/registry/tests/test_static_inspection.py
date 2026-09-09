@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.directory_scan import scan_directory
-from cadrumo.domain.calculations.registry.authority import bundled_revision_inspection
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..._paths import REPO_ROOT
 
