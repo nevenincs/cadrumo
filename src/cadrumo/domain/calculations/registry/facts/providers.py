@@ -257,6 +257,24 @@ def _holiday_calendar_provider_registration() -> FactProviderRegistration:
     )
 
 
+def _statutory_constant_provider_registration() -> FactProviderRegistration:
+    from .statutory_constants import (
+        STATUTORY_CONSTANTS_PROVIDER_DIRECTORY,
+        STATUTORY_CONSTANTS_PROVIDER_ID,
+        collect_statutory_constant_fingerprints,
+        compile_statutory_constant_facts,
+        reset_statutory_constant_provider,
+    )
+
+    return FactProviderRegistration(
+        provider_id=STATUTORY_CONSTANTS_PROVIDER_ID,
+        owned_directories=(STATUTORY_CONSTANTS_PROVIDER_DIRECTORY,),
+        compile=compile_statutory_constant_facts,
+        collect_fingerprints=collect_statutory_constant_fingerprints,
+        reset=reset_statutory_constant_provider,
+    )
+
+
 FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
     (
         FactProviderRegistration(
@@ -282,6 +300,7 @@ FACT_PROVIDER_REGISTRATIONS = validate_fact_provider_registrations(
         ),
         _iva_rate_provider_registration(),
         _holiday_calendar_provider_registration(),
+        _statutory_constant_provider_registration(),
     ),
 )
 """The sole canonical declaration of governed-fact providers and ownership."""

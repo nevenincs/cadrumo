@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:601ac93d0565eac9b774b049ca8d016897cb4928fe7b465faa69e202f0c947b3'
+body_hash: 'sha256:7e8d37d1a5091bb4e60edd65aed1bc496d58530ab5e30ce1cc81a1e807ad4947'
 ---
 
 # `facts-registry` plan
@@ -107,7 +107,7 @@ Adapt convenio overrides and apoderamientos catalogues into authority-managed pr
 
 Enroll external-constant candidates and already revision-backed duplicate values through typed scalar, bracket, set, and date-window providers.
 
-- [ ] `W02.P08.S20` - Register statutory scalars schedules and classifications; `src/cadrumo/core/external_constants.py`.
+- [x] `W02.P08.S20` - Register statutory scalars schedules and classifications; `src/cadrumo/core/external_constants.py`.
 - [ ] `W02.P08.S21` - Adapt global legal parameters without duplicating authority; `src/cadrumo/_data/registry/aeat/legal`.
 - [ ] `W02.P08.S22` - Project modelo-owned facts without moving parameter files; `src/cadrumo/_data/registry/aeat/modelos`.
 
