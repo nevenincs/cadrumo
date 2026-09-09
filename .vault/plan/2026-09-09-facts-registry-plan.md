@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:3fc7b0ca63a7ae24bcb282d290e30b08ffe938a5529e92634cadc26eb08dffeb'
+body_hash: 'sha256:0d5ace46edfb43e8ad13a9ccc4441f21ba7f541e99b145f1251b83dc1937cebf'
 ---
 
 # `facts-registry` plan
@@ -143,7 +143,7 @@ Rewire maritime, maternity, descendant, Madrid, Art 20, Art 52, DT12, and SAL co
 Rewire invoice rate interpretation, IVA calculations, recargo lookup, inventory defaults, and extraction authority consumers.
 
 - [x] `W03.P12.S26` - Rewire IVA lookups while preserving domain facades; `src/cadrumo/domain/iva`.
-- [ ] `W03.P12.S27` - Rewire invoice slot percentage interpretation; `src/cadrumo/domain/invoices/enums.py`.
+- [x] `W03.P12.S27` - Rewire invoice slot percentage interpretation; `src/cadrumo/domain/invoices/enums.py`.
 - [ ] `W03.P12.S51` - Rewire extraction recargo aggregation and inventory defaults; `src/cadrumo/application/ledger and src/cadrumo/application/aggregation and src/cadrumo/domain/contribuyente/inventory`.
 
 ### Phase `W03.P13` - Migrate treaty authorization and deadline consumers
