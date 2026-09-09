@@ -25,7 +25,7 @@ permissions:
 
 jobs:
   cadrumo-full-conformance:
-    name: Cadrumo / full conformance / Python 3.13
+    name: "Test: Full conformance (Linux)"
     runs-on: [self-hosted, Linux, X64]
     # Raised from 120 when the integration suite and the dev tooling gates were
     # enrolled. The integration parallel pass alone measured 23m54s (3772 tests)

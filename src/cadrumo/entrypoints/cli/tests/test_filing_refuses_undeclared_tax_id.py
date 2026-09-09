@@ -28,7 +28,7 @@ from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ....tests.user_profile import register_cli_profile
 from .._common import cli_policy_refusal_projection, declared_tax_id
-from ..errors import CliRefusedBoundaryError, error_boundary_under_test
+from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -160,7 +160,7 @@ def test_export_identity_refusal_carries_the_profile_edit_action() -> None:
     _create_profile()
     _persist_facts(include_tax_id=False)
 
-    with error_boundary_under_test(), pytest.raises(CliRefusedBoundaryError) as raised:
+    with suspend_error_boundary(), pytest.raises(CliRefusedBoundaryError) as raised:
         cadrumo_click_command().main(
             args=[
                 "--format",

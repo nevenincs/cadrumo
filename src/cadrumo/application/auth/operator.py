@@ -488,7 +488,7 @@ async def login_operator_auth(
     fresh: bool = False,
     reset_lock: bool = False,
     settings: Settings | None = None,
-    pytest_current_test: str | None = None,
+    guarded_read_context: str | None = None,
 ) -> AuthLoginResult:
     """Acquire or verify a live AEAT session as :class:`AuthLoginResult`, and persist backend auth state.
 
@@ -512,7 +512,7 @@ async def login_operator_auth(
                 fresh=fresh,
                 reset_lock=reset_lock,
                 settings=None,
-                pytest_current_test=pytest_current_test,
+                guarded_read_context=guarded_read_context,
             )
     resolved_settings = load_settings()
     requested_kind = _provider_kind_or_none(provider)
@@ -539,7 +539,7 @@ async def login_operator_auth(
         # Outside pytest, auth login is an operational read surface and
         # proceeds to provider readiness/session checks.
         try:
-            gate.require_live_read(pytest_current_test=pytest_current_test)
+            gate.require_live_read(guarded_read_context=guarded_read_context)
         except AeatLiveReadNotEnabledError as exc:
             raise AuthLoginNotEnabledError(
                 translated_message="application.auth.operator.login.refused_live_tests_disabled",

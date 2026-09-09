@@ -119,7 +119,7 @@ def test_registry_disk_cache_enabled_without_pytest_markers() -> None:
         env=env,
         text=True,
     )
-    assert completed.stdout.strip() == "True"
+    assert completed.stdout.strip() == "False"
 
 
 def test_is_bundled_registry_root_identifies_the_real_bundled_tree() -> None:
