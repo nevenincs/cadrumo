@@ -701,7 +701,9 @@ def test_scan_workbook_unexpected_error_bare_parse_error_is_positional_only(tmp_
     workbook_path = tmp_path / "modelo_303" / "files" / "malformed.xlsx"
     workbook_path.parent.mkdir(parents=True, exist_ok=True)
     workbook = Workbook()
-    workbook.active["A1"] = "hello"  # type: ignore[index]
+    active_sheet = workbook.active
+    assert active_sheet is not None
+    active_sheet["A1"] = "hello"
     workbook.save(workbook_path)
 
     with zipfile.ZipFile(workbook_path, "r") as zin:

@@ -17,6 +17,7 @@ from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTr
 from ..pipeline.joined_record_design import join_record_design_semantics
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
 from ..pipeline.render_profile import (
+    RenderProfile,
     RenderProfileSourceEvidence,
     load_render_profile,
     load_render_profile_source_evidence,
@@ -29,7 +30,9 @@ from ..pipeline.semantic_map import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-def _real_render_profile(modelo: str, design_epoch: str, source_ref: str, catalogues) -> tuple:
+def _real_render_profile(
+    modelo: str, design_epoch: str, source_ref: str, catalogues
+) -> tuple[RenderProfile, RenderProfileSourceEvidence]:
     """Return the authored render profile and its official-source evidence.
 
     Generation refuses a profile that does not cover exactly the design's
@@ -69,7 +72,9 @@ def _authored_envelope_contract(modelo: str, design_epoch: str, body_record_id: 
     """
     authored = load_semantic_map(Path("dev/registry/mappings") / f"modelo_{modelo}" / design_epoch)
     contract = authored.variable_envelopes[0].model_copy(update={"body_record_ids": (body_record_id,)})
-    return contract.model_dump(mode="python")
+    dumped = contract.model_dump(mode="python")
+    assert isinstance(dumped, dict)
+    return {str(key): value for key, value in dumped.items()}
 
 
 def test_static_generator_exposes_no_filing_instance_channels() -> None:

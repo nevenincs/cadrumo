@@ -402,12 +402,20 @@ def _result_payload_with_occurrences(
     occurrences: tuple[dict[str, object], ...],
 ) -> dict[str, object]:
     """Re-derive result evidence so occurrence-order validation remains the failing boundary."""
-    payload = rendered.model_dump(mode="python")
+    dumped = rendered.model_dump(mode="python")
+    assert isinstance(dumped, dict)
+    payload: dict[str, object] = {str(key): value for key, value in dumped.items()}
     payload["occurrences"] = occurrences
-    emitted = rendered.prefix + b"".join(item["payload"] for item in occurrences) + rendered.closer
+    emitted = rendered.prefix + b"".join(_occurrence_payload_bytes(item) for item in occurrences) + rendered.closer
     payload["payload"] = emitted
     payload["payload_sha256"] = sha256(emitted).hexdigest()
     payload["total_length"] = len(emitted)
+    return payload
+
+
+def _occurrence_payload_bytes(item: dict[str, object]) -> bytes:
+    payload = item["payload"]
+    assert isinstance(payload, bytes)
     return payload
 
 
@@ -645,8 +653,12 @@ def _reordered_occurrences(rendered: FilingEnvelopeRenderResult) -> dict[str, ob
 
 
 def _dropped_occurrence(rendered: FilingEnvelopeRenderResult) -> dict[str, object]:
-    payload = rendered.model_dump(mode="python")
-    payload["occurrences"] = payload["occurrences"][1:]
+    dumped = rendered.model_dump(mode="python")
+    assert isinstance(dumped, dict)
+    payload: dict[str, object] = {str(key): value for key, value in dumped.items()}
+    occurrences = payload["occurrences"]
+    assert isinstance(occurrences, tuple)
+    payload["occurrences"] = occurrences[1:]
     return payload
 
 

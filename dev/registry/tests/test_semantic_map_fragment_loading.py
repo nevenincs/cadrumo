@@ -454,7 +454,7 @@ def test_refuses_mixed_fragment_source_identity(
     root = tmp_path / "semantic-map"
     root.mkdir()
     _write(root / "0001-records.toml", _fragment(fragment_id="records", body=_RECORD))
-    fragment_arguments: dict[str, object] = {identity_key: identity_value}
+    fragment_arguments: dict[str, str] = {identity_key: identity_value}
     _write(root / "0002-fields.toml", _fragment(fragment_id="fields", body=_ENTRY, **fragment_arguments))
 
     with pytest.raises(RegistryValidationError, match="conflicting modelo/design/source identities"):

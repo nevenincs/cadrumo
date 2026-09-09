@@ -40,6 +40,7 @@ import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 
 from ...quality.unread_inputs import report_unread
@@ -1017,9 +1018,9 @@ def test_a_screen_that_counts_its_conditions_states_the_right_number(
     assert not wrong, "\n".join(wrong)
 
 
-def _export_fields(authority: ValidatedRegistryAuthority) -> list[tuple[str, str, object]]:
+def _export_fields(authority: ValidatedRegistryAuthority) -> list[tuple[str, str, ExportFieldDefinition]]:
     """Return every export field in the corpus with the coordinate that owns it."""
-    found: list[tuple[str, str, object]] = []
+    found: list[tuple[str, str, ExportFieldDefinition]] = []
     for code in sorted(str(item) for item in registry_modelo_codes()):
         for revision_id, revision in authority.modelo(code).revisions.items():
             for layout in revision.export_layouts:
@@ -1322,7 +1323,7 @@ def test_every_screen_finding_type_declares_the_identity_the_contract_promises()
     assert not missing, chr(10).join(sorted(missing))
 
 
-def _non_ascii_declarations(field: object) -> list[str]:
+def _non_ascii_declarations(field: ExportFieldDefinition) -> list[str]:
     """Return each string attribute of ``field`` carrying a character outside ASCII.
 
     Shared with the proof below, so the proof exercises the judgement the gate
@@ -1615,7 +1616,7 @@ def test_every_declared_condition_has_a_live_member_or_a_written_proof(
 
     live: dict[str, set[str]] = {}
     for name, findings in _screen_findings(authority, modelo_ids):
-        kinds = {finding.kind for finding in findings if isinstance(getattr(finding, "kind", None), str)}
+        kinds = {kind for finding in findings if isinstance(kind := getattr(finding, "kind", None), str)}
         live[name] = kinds
 
     test_sources = " ".join(

@@ -16,6 +16,7 @@ from pydantic import BaseModel
 
 from cadrumo.adapters.persistence.storage.errors import PersistenceError, SecretStoreError
 from cadrumo.application.filing.export_proof import FilingExportProofChannel, FilingExportProofCoordinate
+from cadrumo.application.filing.runtime import RegistrySchemaAccessor
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -39,6 +40,8 @@ from ..filing_export_proof import (
     CanonicalTwoChannelFilingExportProofAuthority,
     FilingExportConformanceEnrollmentReport,
     FilingExportConformanceVector,
+    FilingExportSecureReplayEvidence,
+    FilingExportSecureReplayRequest,
     _derive_static_filing_export_conformance_enrollment,
     canonical_filing_export_conformance_vectors,
     canonical_two_channel_filing_export_proof_authority,
@@ -148,9 +151,22 @@ def test_canonical_authority_maps_configured_custody_storage_failure_to_typed_re
 
 
 class _ConfiguredSecureReplaySource:
-    """Minimal configured source identity for the authority exception seam."""
+    """Minimal configured source identity for the authority exception seam.
+
+    ``resolve_secure_replay`` and ``schema_provider_for_secure_replay`` are
+    never called along this test's path: the test monkeypatches
+    ``prove_secure_export_replay`` itself, which is the sole caller of both.
+    They raise if that premise ever stops holding, rather than silently
+    returning a placeholder.
+    """
 
     authority_id = "test.configured-secure-replay-source"
+
+    def resolve_secure_replay(self, request: FilingExportSecureReplayRequest) -> FilingExportSecureReplayEvidence:
+        raise NotImplementedError("unused: prove_secure_export_replay is monkeypatched in this test")
+
+    def schema_provider_for_secure_replay(self, evidence: FilingExportSecureReplayEvidence) -> RegistrySchemaAccessor:
+        raise NotImplementedError("unused: prove_secure_export_replay is monkeypatched in this test")
 
 
 class _RaisingEncryptedCustody:
@@ -302,7 +318,9 @@ def _candidate_signature(report: FilingExportConformanceEnrollmentReport) -> tup
     )
 
 
-def _residue_signature(report: FilingExportConformanceEnrollmentReport) -> tuple[object, ...]:
+def _residue_signature(
+    report: FilingExportConformanceEnrollmentReport,
+) -> tuple[tuple[str, str, tuple[str, ...], str, str, str, str], ...]:
     return tuple(
         sorted(
             (

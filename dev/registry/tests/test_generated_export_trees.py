@@ -59,7 +59,7 @@ from ..pipeline.export_fragment_provenance import (
     export_fragment_provenance_path,
     load_export_fragment_provenance_manifest,
 )
-from ..pipeline.joined_record_design import join_record_design_semantics
+from ..pipeline.joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
 from ..pipeline.render_check import (
     compare_revision_against_committed,
@@ -68,11 +68,12 @@ from ..pipeline.render_check import (
     render_refusal_dispositions,
 )
 from ..pipeline.render_profile import (
+    RenderProfile,
     RenderProfileSourceEvidence,
     load_render_profile,
     load_render_profile_source_evidence,
 )
-from ..pipeline.semantic_map import load_semantic_map
+from ..pipeline.semantic_map import SemanticMap, load_semantic_map
 from ..pipeline.source_defects import source_defects_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -327,14 +328,18 @@ def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
 
 
 def _referenced_modelos(modelo_root: Path) -> frozenset[str]:
-    return frozenset(
-        match.group("modelo")
-        for path in modelo_root.rglob("*.toml")
-        for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8"))
-    )
+    found: set[str] = set()
+    for path in modelo_root.rglob("*.toml"):
+        for match in _SOURCE_MODELO_RE.finditer(path.read_text(encoding="utf-8")):
+            modelo = match.group("modelo")
+            assert isinstance(modelo, str), "the named group always participates in this pattern"
+            found.add(modelo)
+    return frozenset(found)
 
 
-def _authorities(tree: _GeneratedTree):
+def _authorities(
+    tree: _GeneratedTree,
+) -> tuple[SemanticMap, RenderProfile, JoinedRecordDesign, RenderProfileSourceEvidence, ExportTreeTransportProfile]:
     semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_{tree.modelo}") / tree.epoch)
     render_profile = load_render_profile(Path(f"dev/registry/render_profiles/modelo_{tree.modelo}") / tree.epoch)
     modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))

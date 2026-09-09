@@ -25,7 +25,7 @@ def _provider(provider_id: str, directory: str) -> FactProviderRegistration:
     return FactProviderRegistration(
         provider_id=provider_id,
         owned_directories=(directory,),
-        compile=lambda _root: (),
+        compile=lambda registry_root: (),
         collect_fingerprints=lambda _root: (),
         reset=lambda: None,
     )
@@ -156,8 +156,8 @@ def test_gate_imports_no_modelo_denominator() -> None:
 def test_live_gate_compiles_every_registered_provider_and_uses_its_directory_denominator(tmp_path: Path) -> None:
     calls: list[Path] = []
 
-    def compile_provider(root: Path) -> tuple[GovernedFact, ...]:
-        calls.append(root)
+    def compile_provider(registry_root: Path) -> tuple[GovernedFact, ...]:
+        calls.append(registry_root)
         return (_fact("iva-rate", _variant("ordinary", date(2025, 1, 1))),)
 
     provider = FactProviderRegistration(
@@ -176,7 +176,7 @@ def test_live_gate_reports_provider_compile_failure_and_main_blocks_on_findings(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def broken_compile(_root: Path) -> tuple[GovernedFact, ...]:
+    def broken_compile(registry_root: Path) -> tuple[GovernedFact, ...]:
         raise ValueError("broken catalogue")
 
     provider = FactProviderRegistration(

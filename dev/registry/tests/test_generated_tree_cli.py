@@ -34,7 +34,8 @@ from ..pipeline.cli import (
     _require_republication_eligibility,
     app,
 )
-from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ..pipeline._tree_validation import GeneratedExportTreeValidationContext
+from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
 from ..pipeline.render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -294,7 +295,15 @@ def _publication_context_for_target(
 ) -> GeneratedExportTreePublicationContext:
     """Build a context only for the lock-state detector's private guard."""
     return GeneratedExportTreePublicationContext(
-        validation=None,  # type: ignore[arg-type]
+        # The lock-state guard under test never reads `.validation`; a real,
+        # minimally-populated context stands in rather than a suppressed None.
+        validation=GeneratedExportTreeValidationContext(
+            registry_root=target.parent / "unused-registry-root",
+            source_root=target.parent / "unused-source-root",
+            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+            filing_year=2025,
+            period="anual",
+        ),
         temporary_root=target.parent / "temporary",
         target_root=target.parent,
         target_export_root=target,

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import pathlib
 
 import pytest
@@ -333,14 +334,14 @@ def test_the_clean_property_reads_every_field_it_claims_to() -> None:
     """
     from ..analysis.load_census import CensusReport
 
-    settled = {
-        "universe": frozenset({_PLANTED}),
-        "closure": frozenset(),
-        "registry_modules": frozenset({_PLANTED}),
-        "dead_candidates": frozenset(),
-        "unresolved_dynamic_sites": (),
-    }
+    settled = CensusReport(
+        universe=frozenset({_PLANTED}),
+        closure=frozenset(),
+        registry_modules=frozenset({_PLANTED}),
+        dead_candidates=frozenset(),
+        unresolved_dynamic_sites=(),
+    )
 
-    assert CensusReport(**settled).clean, "a report with nothing outstanding must read clean"
+    assert settled.clean, "a report with nothing outstanding must read clean"
 
-    assert not CensusReport(**{**settled, "dead_candidates": frozenset({_PLANTED})}).clean
+    assert not dataclasses.replace(settled, dead_candidates=frozenset({_PLANTED})).clean

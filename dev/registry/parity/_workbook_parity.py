@@ -1141,7 +1141,11 @@ def _detect_excel_com_clsid() -> str | None:
 
 def _infer_modelo(relative_path: str) -> str | None:
     match = _MODELO_PATTERN.search(relative_path)
-    return match.group("modelo") if match else None
+    if match is None:
+        return None
+    modelo = match.group("modelo")
+    assert isinstance(modelo, str), "the named group always participates in this pattern"
+    return modelo
 
 
 def _raise_if_timed_out(started: float, timeout_seconds: float, relative: str) -> None:

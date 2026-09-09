@@ -20,14 +20,20 @@ from cadrumo.core.estado_casilla_oficial import EstadoCasillaOficial
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.export import clasificar_casillas_oficiales
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..analysis.m303_semantic_census import census_m303_semantic_map, resolve_semantic_home
 from ..pipeline.joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
-from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediate,
+    RecordDesignIntermediateField,
+    load_record_design_intermediate,
+)
 from ..pipeline.semantic_map import (
     SemanticMap,
+    SemanticMapAnchor,
     load_semantic_map,
 )
 
@@ -66,7 +72,7 @@ _EPOCH_BY_NAME = {epoch.name: epoch for epoch in _EPOCHS}
 @dataclass(frozen=True, slots=True)
 class _EpochAuthorities:
     epoch: _Epoch
-    revision: object
+    revision: ModeloRevision
     inspection: RegistryRevisionInspection
     intermediate: RecordDesignIntermediate
     semantic_map: SemanticMap
@@ -110,7 +116,7 @@ def _authorities(epoch_name: str) -> _EpochAuthorities:
     )
 
 
-def _source_anchor(field) -> tuple[str, int, str | None, str | None, str]:
+def _source_anchor(field: RecordDesignIntermediateField) -> tuple[str, int, str | None, str | None, str]:
     return (
         str(field.sheet),
         int(field.source_row),
@@ -120,7 +126,7 @@ def _source_anchor(field) -> tuple[str, int, str | None, str | None, str]:
     )
 
 
-def _semantic_anchor(anchor) -> tuple[str, int, str | None, str | None, str]:
+def _semantic_anchor(anchor: SemanticMapAnchor) -> tuple[str, int, str | None, str | None, str]:
     return (
         str(anchor.sheet),
         int(anchor.source_row),
@@ -134,7 +140,10 @@ def _joined_fields(authorities: _EpochAuthorities) -> tuple[JoinedRecordDesignFi
     return tuple(field for record in authorities.joined.records for field in record.fields)
 
 
-def _source_and_map_anchor_counts(authorities: _EpochAuthorities) -> tuple[Counter, Counter]:
+_Anchor = tuple[str, int, str | None, str | None, str]
+
+
+def _source_and_map_anchor_counts(authorities: _EpochAuthorities) -> tuple[Counter[_Anchor], Counter[_Anchor]]:
     parser_envelope = authorities.intermediate.variable_envelopes
     semantic_envelope = authorities.semantic_map.variable_envelopes
     assert len(parser_envelope) == len(semantic_envelope) == 1

@@ -251,13 +251,17 @@ def _snapshot_for_scenario(
 
 
 def _stable_tape_dump(tape: ParityTape) -> dict[str, object]:
-    data = tape.model_dump(mode="json")
+    data = _as_json_object(tape.model_dump(mode="json"))
+    assert data is not None, "a model's own JSON dump is always a string-keyed object"
     data.pop("created_at", None)
-    workbook = dict(data["workbook"])
+    workbook = _as_json_object(data["workbook"])
+    assert workbook is not None
     workbook.pop("elapsed_seconds", None)
     data["workbook"] = workbook
-    report = dict(data["report"])
-    report_workbook = dict(report["workbook"])
+    report = _as_json_object(data["report"])
+    assert report is not None
+    report_workbook = _as_json_object(report["workbook"])
+    assert report_workbook is not None
     report_workbook.pop("elapsed_seconds", None)
     report["workbook"] = report_workbook
     data["report"] = report

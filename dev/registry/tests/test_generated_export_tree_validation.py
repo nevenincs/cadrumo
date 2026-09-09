@@ -13,11 +13,12 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
 
-from ..pipeline._export_tree import RenderedExportTree, render_complete_export_tree
+from ..pipeline._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ..pipeline._tree_validation import (
     GeneratedExportTreeValidationContext,
     validate_generated_export_tree,
 )
+from ..pipeline.render_profile import RenderProfile, RenderProfileSourceEvidence
 from ..pipeline.export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
@@ -49,7 +50,9 @@ _MINIMUM_VALIDATION_NAMES = 38
 _MINIMUM_VALIDATION_ATTRIBUTES = 12
 
 
-def _real_authorities(tree: _GeneratedTree):
+def _real_authorities(
+    tree: _GeneratedTree,
+) -> tuple[JoinedRecordDesign, SemanticMap, ExportTreeTransportProfile, RenderProfile, RenderProfileSourceEvidence]:
     """Return the real (joined, semantic map, transport, render profile, evidence).
 
     A thin adapter over the enrolled drift gate's own `_authorities`, so this

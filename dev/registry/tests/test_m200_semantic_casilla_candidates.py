@@ -4,7 +4,6 @@ import ast
 import inspect
 from collections import Counter
 from pathlib import Path
-from types import SimpleNamespace
 
 import pytest
 import rtoml
@@ -14,7 +13,7 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 
 from ..analysis import m200_semantic_casilla_candidates as subject
-from ..pipeline.record_design_intermediate import load_record_design_intermediate
+from ..pipeline.record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
 from ..pipeline.semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -191,18 +190,31 @@ def test_identity_cli_has_no_filesystem_write_surface() -> None:
     assert not hasattr(subject, "_resolve_review_output_path")
 
 
-def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
-    target_field = SimpleNamespace(
-        normalized_description="Importe [02971]",
-        aeat_type="Num",
+def _record_design_field(
+    *, normalized_description: str, aeat_type: str = "Num", record_identity: str = "DP200001"
+) -> RecordDesignIntermediateField:
+    """One minimal, fully valid field, for cases where only a few attributes matter."""
+    return RecordDesignIntermediateField(
+        sheet="S1",
+        record_identity=record_identity,
+        source_row=1,
+        offset=1,
+        length=17,
+        aeat_type=aeat_type,
+        normalized_description=normalized_description,
     )
-    sibling_field = SimpleNamespace()
-    sibling_entry = SimpleNamespace(kind=CasillaFieldKind.CASILLA, casilla_id="00355")
 
+
+def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
+    target_field = _record_design_field(normalized_description="Importe [02971]")
+
+    # `_classify_sibling` does not read the sibling field or entry once the
+    # current printed identity resolves, which the two `None`s below assert:
+    # the classification below holds with no sibling evidence at all.
     disposition, reason, proposed_id, _kind = subject._classify_sibling(
         target_field,
-        sibling_field,
-        sibling_entry,
+        None,
+        None,
         authored_token="2971",  # noqa: S106 - official casilla token
         target_ids_by_number={"00355": ("00355",)},
     )
@@ -213,13 +225,12 @@ def test_current_printed_identity_beats_sibling_casilla_identity() -> None:
 
 
 def test_current_2024_casilla_identity_beats_later_sibling_filler() -> None:
-    target_field = SimpleNamespace(normalized_description="Importe [01683]", aeat_type="Num")
-    sibling_entry = SimpleNamespace(kind=CasillaFieldKind.FILLER, casilla_id=None)
+    target_field = _record_design_field(normalized_description="Importe [01683]")
 
     disposition, reason, proposed_id, _kind = subject._classify_sibling(
         target_field,
-        SimpleNamespace(),
-        sibling_entry,
+        None,
+        None,
         authored_token="1683",  # noqa: S106 - official casilla token
         target_ids_by_number={},
     )
@@ -273,56 +284,36 @@ def test_target_identity_classifier_refuses_source_anchor_omission_noncasilla_ow
 ) -> None:
     target_map, target_design, declarations, candidates = target_identity_inputs
     kwargs = {"target_declarations": declarations, "target_candidate_ids": candidates}
-    omitted = SimpleNamespace(
-        source_ref=target_map.source_ref,
-        source_sha256=target_map.source_sha256,
-        entries=target_map.entries[1:],
-    )
+    # Every variant below is a real, typed `SemanticMap`/`SemanticMapEntry`,
+    # perturbed through `model_copy` rather than duck-typed: the classifier's
+    # own checks are what must refuse the drift, not a stand-in object shaped
+    # only well enough to reach them. `model_copy` does not re-run the
+    # frozen model's validators, so the perturbed structure survives
+    # construction and reaches the classifier unresolved.
+    omitted = target_map.model_copy(update={"entries": target_map.entries[1:]})
     with pytest.raises(ValueError, match="omits"):
         subject.classify_m200_target_identities(omitted, target_design, **kwargs)
 
     first_casilla = next(entry for entry in target_map.entries if entry.kind is CasillaFieldKind.CASILLA)
-    noncasilla_owner = SimpleNamespace(
-        anchor=first_casilla.anchor,
-        export_field_id=first_casilla.export_field_id,
-        kind=CasillaFieldKind.FILLER,
-        casilla_id=first_casilla.casilla_id,
-    )
+    noncasilla_owner = first_casilla.model_copy(update={"kind": CasillaFieldKind.FILLER})
     invalid_entries = tuple(noncasilla_owner if entry is first_casilla else entry for entry in target_map.entries)
-    invalid_map = SimpleNamespace(
-        source_ref=target_map.source_ref,
-        source_sha256=target_map.source_sha256,
-        entries=invalid_entries,
-    )
+    invalid_map = target_map.model_copy(update={"entries": invalid_entries})
     with pytest.raises(ValueError, match="non-casilla"):
         subject.classify_m200_target_identities(invalid_map, target_design, **kwargs)
 
-    missing_owner = SimpleNamespace(
-        anchor=first_casilla.anchor,
-        export_field_id=first_casilla.export_field_id,
-        kind=CasillaFieldKind.CASILLA,
-        casilla_id=None,
-    )
+    missing_owner = first_casilla.model_copy(update={"casilla_id": None})
     missing_owner_entries = tuple(missing_owner if entry is first_casilla else entry for entry in target_map.entries)
-    missing_owner_map = SimpleNamespace(
-        source_ref=target_map.source_ref,
-        source_sha256=target_map.source_sha256,
-        entries=missing_owner_entries,
-    )
+    missing_owner_map = target_map.model_copy(update={"entries": missing_owner_entries})
     with pytest.raises(ValueError, match="omits its owner"):
         subject.classify_m200_target_identities(missing_owner_map, target_design, **kwargs)
 
-    drifted = SimpleNamespace(
-        source_ref=target_map.source_ref,
-        source_sha256="0" * 64,
-        entries=target_map.entries,
-    )
+    drifted = target_map.model_copy(update={"source_sha256": "0" * 64})
     with pytest.raises(ValueError, match="source identity drifted"):
         subject.classify_m200_target_identities(drifted, target_design, **kwargs)
 
 
 def test_target_identity_classifier_refuses_ambiguous_or_wrong_segment_proposals() -> None:
-    field = SimpleNamespace(record_identity="DP200018")
+    field = _record_design_field(normalized_description="Importe", record_identity="DP200018")
     with pytest.raises(ValueError, match="ambiguous"):
         subject._classify_noncanonical_map_owner(
             "588",
