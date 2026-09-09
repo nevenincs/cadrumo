@@ -167,6 +167,7 @@ class TestTheAntiDriftGateBitesInBothDirections:
             assert "13.5" in after.text
             assert after.fingerprint != baseline.fingerprint
 
+
 class TestTheNoPrintedTaxLineAsksThePaperQuestion:
     """The list of tax-free reasons must describe INVOICES, not 303 cuota outcomes.
 

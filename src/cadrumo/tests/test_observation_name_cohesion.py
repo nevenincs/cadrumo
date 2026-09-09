@@ -4,7 +4,7 @@ The bindings vocabulary requires every observation carrier to be
 name-distinguishable by domain: a single ``*Observation`` class name must not be
 defined in two unrelated modules. Existing carriers are domain-qualified
 (``WithholdingObservation``, ``IvaLedgerObservation``, ``InvoiceObservation``,
-``RentaDeductibleExpenseObservation``, ``CounterpartAggregationObservation``).
+``RentaDeductibleExpenseObservation``).
 
 This gate walks the production source tree (tests excluded) and refuses any
 ``*Observation`` class name that is defined in more than one module. A future

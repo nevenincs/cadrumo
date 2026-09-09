@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#reachability-burndown'
 date: '2026-09-04'
-modified: '2026-09-08'
+modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:32d2a35a2ebe0898cb9f1b23ee224efac973dc0c41c794c1a37e0675b35d2726'
+body_hash: 'sha256:4dfbe8d396291c48380a502ead07ef7de4cc1fe1774dbd4d8d216ef1be2904bc'
 related: []
 ---
 # `reachability-burndown` reference: live signals and cadence
@@ -515,3 +515,5 @@ When shipped manual handling only reads a bundled corpus, an unused fetch entryp
 Do not keep an immutable catalogue model when the live attachment store persists and iterates individual manifests directly and no caller constructs the aggregate. Its coercion paths, key-validation loop, mapping freezer, and collection methods are speculative duplicate storage semantics; retain the content-addressed Attachment model and store/service behavior.
 
 When the production operation registry binds a prepared transport directly into its definition, a separate service-composition wrapper over the same prepare port is duplicate assembly vocabulary. Delete the wrapper and wrapper-only imports; verify the registry fixed point and submitted operation path at the actual composition owner.
+
+When a focused gate path is discovered with rg --files, invoke that returned path verbatim. Do not reconstruct a plausible singular or plural filename from memory; a nonexistent selection wastes a runner cycle and proves nothing.

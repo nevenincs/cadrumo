@@ -568,20 +568,7 @@ def _seeded_modelo_filing_record(profile_id: UUID) -> tuple[str, str]:
 
 
 def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
-    """Admit an edit over a seeded revision and return its wire submission.
-
-    The casilla is RESOLVED FROM THE ADMISSION rather than named. The permitted
-    surface reports which scalars this revision actually accepts, so taking the
-    first writable one keeps this fixture free of a hardcoded casilla id --
-    which matters because that mapping is revision-scoped, and thirty-four
-    modules already freeze it as a literal.
-
-    The wire submission is built by
-    `ModeloEditApplySubmissionV1.from_submission`, the domain-to-wire
-    translation the contract owns, rather than by assembling the payload here.
-    A second translator would be free to disagree with the one the executor
-    reverses.
-    """
+    """Build one canonical edit DTO over the revision this fixture just persisted."""
     from ...adapters.persistence.profile.modelos_calculation import (
         CalculationRevisionCatalogueRepository,
     )
@@ -589,72 +576,92 @@ def _seeded_modelo_edit_submission(profile_id: UUID) -> tuple[str, object]:
     from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
     from ...application.modelo.edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
     from ...application.modelo.edit_models import (
-        ModeloEditAdmissionRequestV1,
-        ModeloEditAdmittedV1,
+        ModeloEditBaselineV1,
         ModeloEditScalarAddressV1,
         ModeloEditScalarIntentKind,
+        ModeloEditSchemaIdentityV1,
         ModeloEditSubmissionV1,
         ModeloEditWritableScalarSurfaceEntryV1,
         ModeloScalarEditIntentV1,
     )
-    from ...application.modelo.edit_services import (
-        admit_modelo_edit,
-        modelo_edit_request_schema_identity,
-        modelo_edit_result_schema_identity,
-    )
     from ...application.modelo.operation_definitions import ModeloEditApplySubmissionV1
-    from ...application.modelo.work_addressing import ModeloExactWorkUnitTarget
-    from ...application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
     from ...application.operations.registry import OperationSchemaIdentityV1
+    from ...core.casilla_id import validated_casilla_id
+    from ...core.hashing import content_hash_hex
+    from ...domain.calculations.registry.schema_base import CasillaDataType
 
     unit = _seeded_modelo_work_unit(profile_id)
-    calculate_modelo_revision(
+    seeded_casilla_id = validated_casilla_id("06")
+    revision = calculate_modelo_revision(
         unit.work_unit_id,
         actor=_ACTOR,
-        casilla_inputs={},
+        casilla_inputs={seeded_casilla_id: Decimal("0")},
         binding_values=_FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
     )
     objects = secure_object_repository_for_active_bucket()
+    work_catalogue = WorkUnitCatalogueRepository(objects=objects).load()
+    calculation_catalogue = CalculationRevisionCatalogueRepository(objects=objects).load()
+    current_unit = work_catalogue.get(unit.work_unit_id)
+    if current_unit is None:
+        raise AssertionError("the edit conformance fixture lost its seeded work unit")
+    casilla_id = next(iter(revision.input_values_by_casilla_id))
     identity = OperationSchemaIdentityV1(
         schema_id="modelo.edit.contract", schema_version=1, schema_fingerprint="a" * 64
     )
-    admitted = admit_modelo_edit(
-        ModeloEditAdmissionRequestV1(
-            target=ModeloWorkspaceExactWorkUnitTargetV1(
-                target=ModeloExactWorkUnitTarget(work_unit_id=unit.work_unit_id, bucket_id=unit.bucket_id)
+    compatibility = ModeloEditCompatibilityTupleV1(
+        contract_set_digest="a" * 64,
+        operation_definition_id="modelo.calculate",
+        definition_contract_digest="a" * 64,
+        request_schema=identity,
+        result_schema=identity,
+        review_projection_contract_version=None,
+        review_schema=None,
+        workspace_refresh_target_schema=identity,
+        financial_operand_schema=identity,
+    )
+    permitted_surface = (
+        ModeloEditWritableScalarSurfaceEntryV1(
+            casilla_id=casilla_id,
+            data_type=CasillaDataType.MONEY,
+            allowed_intents=(
+                ModeloEditScalarIntentKind.SET_TYPED_VALUE,
+                ModeloEditScalarIntentKind.CLEAR_DECLARED_VALUE,
             ),
-            mutation_family=ModeloEditMutationFamily.CALCULATE,
-        ),
-        bucket_id=unit.bucket_id,
-        work_catalogue=WorkUnitCatalogueRepository(objects=objects).load(),
-        calculation_catalogue=CalculationRevisionCatalogueRepository(objects=objects).load(),
-        compatibility=ModeloEditCompatibilityTupleV1(
-            contract_set_digest="a" * 64,
-            operation_definition_id="modelo.calculate",
-            definition_contract_digest="a" * 64,
-            request_schema=modelo_edit_request_schema_identity(),
-            result_schema=modelo_edit_result_schema_identity(),
-            review_projection_contract_version=None,
-            review_schema=None,
-            workspace_refresh_target_schema=identity,
-            financial_operand_schema=identity,
         ),
     )
-    if not isinstance(admitted, ModeloEditAdmittedV1):
-        raise AssertionError(f"edit admission refused for the conformance fixture: {admitted}")
-    writable = [
-        entry
-        for entry in admitted.baseline.permitted_surface
-        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1)
-    ]
-    if not writable:
-        raise AssertionError("the admitted revision permits no writable scalar; this fixture would be vacuous")
+    issued_at = datetime.now(UTC)
+    baseline = ModeloEditBaselineV1(
+        compatibility=compatibility,
+        bucket_id=current_unit.bucket_id,
+        modelo=current_unit.modelo,
+        filing_year=current_unit.filing_year,
+        period=current_unit.period,
+        work_unit_id=current_unit.work_unit_id,
+        work_catalogue_revision=content_hash_hex(work_catalogue.model_dump(mode="json")),
+        calculation_catalogue_revision=content_hash_hex(calculation_catalogue.model_dump(mode="json")),
+        current_calculation_revision_id=revision.calculation_revision_id,
+        law_selected_revision_id=current_unit.revision_id,
+        schema_identity=ModeloEditSchemaIdentityV1(
+            schema_id="modelo-edit-conformance",
+            schema_fingerprint=content_hash_hex(revision.registry_snapshot_ref.model_dump(mode="json")),
+            completeness_manifest_digest=content_hash_hex({"fixture": "calculated-revision"}),
+        ),
+        schema_version=1,
+        permitted_surface=permitted_surface,
+        permitted_surface_digest=content_hash_hex([entry.model_dump(mode="json") for entry in permitted_surface]),
+        mutation_family=ModeloEditMutationFamily.CALCULATE,
+        issued_at=issued_at,
+        expires_at=issued_at + timedelta(minutes=15),
+        baseline_id=content_hash_hex(
+            {"work_unit_id": current_unit.work_unit_id, "revision_id": revision.calculation_revision_id}
+        ),
+    )
     submission = ModeloEditSubmissionV1(
-        baseline=admitted.baseline,
+        baseline=baseline,
         mutation_family=ModeloEditMutationFamily.CALCULATE,
         scalar_intents=(
             ModeloScalarEditIntentV1(
-                address=ModeloEditScalarAddressV1(casilla_id=str(writable[0].casilla_id)),
+                address=ModeloEditScalarAddressV1(casilla_id=casilla_id),
                 kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
                 value="100.00",
             ),
