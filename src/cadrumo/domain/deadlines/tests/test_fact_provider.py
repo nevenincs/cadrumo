@@ -9,7 +9,7 @@ import pytest
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.facts.resolution import resolve_governed_fact
-from ...calculations.registry.facts.schema import GovernedFactCatalogue
+from ...calculations.registry.facts.schema import EventFactPayload, GovernedFactCatalogue
 from ..festivos import (
     HOLIDAY_EVENT_FACT_ID,
     CalendarCCAA,
@@ -42,6 +42,7 @@ def test_exact_ccaa_holiday_query_preserves_legacy_value_and_provenance() -> Non
         holiday_event_fact_query(on, jurisdiction=HolidayJurisdiction.CCAA, ccaa_code=CalendarCCAA.MADRID),
         authority_digest="c" * 64,
     )
+    assert isinstance(resolved.payload, EventFactPayload)
     outputs = {output.name: output.value for output in resolved.payload.outputs}
 
     assert resolved.payload.event_date == legacy.holiday_date

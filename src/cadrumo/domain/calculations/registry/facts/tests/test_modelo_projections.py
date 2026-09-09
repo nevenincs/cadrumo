@@ -17,6 +17,7 @@ from ..modelo_projections import (
     modelo_parameter_fact_query,
 )
 from ..providers import FACT_PROVIDER_REGISTRATIONS
+from ..schema import ScalarFactPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -68,6 +69,7 @@ def test_projection_preserves_scalar_temporal_and_provenance_contracts() -> None
     facts = {fact.fact_id: fact for fact in compile_modelo_parameter_projection_facts(modelos)}
     variant = facts[ModeloParameterFact.MATERNITY_ANNUAL_CAP].variants[0]
 
+    assert isinstance(variant.payload, ScalarFactPayload)
     assert variant.payload.value == Decimal("1200")
     assert variant.payload.unit == "EUR"
     assert variant.valid_from == date(2025, 1, 1)
@@ -83,6 +85,7 @@ def test_identical_parameter_copies_across_revisions_project_once() -> None:
     threshold = next(fact for fact in facts if fact.fact_id == ModeloParameterFact.M347_COUNTERPARTY_ANNUAL_THRESHOLD)
 
     assert len(threshold.variants) == 1
+    assert isinstance(threshold.variants[0].payload, ScalarFactPayload)
     assert threshold.variants[0].payload.value == Decimal("3005.06")
 
 

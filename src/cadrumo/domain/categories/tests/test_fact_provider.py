@@ -10,7 +10,7 @@ import pytest
 from ....core.resources.bundled_data import bundled_path
 from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.facts.resolution import resolve_governed_fact
-from ...calculations.registry.facts.schema import GovernedFactCatalogue
+from ...calculations.registry.facts.schema import GovernedFactCatalogue, MappingFactPayload, ScalarFactPayload
 from ...calculations.registry.schema_base import DateAxis
 from ..registry import (
     CATEGORY_PROFILE_FACT_ID,
@@ -49,6 +49,7 @@ def test_profile_query_preserves_legacy_profile_values_and_provenance() -> None:
         category_profile_fact_query(category, 2025),
         authority_digest="a" * 64,
     )
+    assert isinstance(resolved.payload, MappingFactPayload)
     entries = {entry.key: entry.value for entry in resolved.payload.entries}
 
     assert entries["proportionality_kind"] == legacy.proportionality.kind.value
@@ -69,6 +70,7 @@ def test_dated_cap_query_matches_legacy_exact_year_without_fallback() -> None:
         authority_digest="b" * 64,
     )
 
+    assert isinstance(resolved.payload, ScalarFactPayload)
     assert resolved.payload.value == legacy.proportionality.statutory_cap_eur
     assert resolved.payload.unit == "eur"
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
