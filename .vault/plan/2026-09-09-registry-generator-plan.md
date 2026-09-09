@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:87daedcf64d9a1dced75fdaea2d022e093bf585b7f0f32c9f5246ec5462897ef'
+body_hash: 'sha256:7958188522b798e8ef0017b901500a70bde9f9c4fda746617a8a03782d5ccf52'
 ---
 
 # `registry-generator` plan
@@ -133,12 +133,12 @@ Adds a per-field divergence verdict computed at generation time, so a disagreeme
 
 Reports a field whose typed wire shape changes between revisions without a corresponding change in the official designs as a suspect requiring explanation, without asserting correctness from stability.
 
-- [ ] `W03.P08.S30` - Compare the typed wire shape of each field identity across the revisions of its modelo; `dev/registry/analysis/`.
-- [ ] `W03.P08.S31` - Report a shape change unaccompanied by an official change as a suspect requiring explanation; `dev/registry/analysis/`.
-- [ ] `W03.P08.S32` - Record that agreement is not treated as evidence of correctness, with the bound that travels with the signal; `dev/registry/analysis/`.
-- [ ] `W03.P08.S33` - Prove the diagnostic detects a planted cross-revision shape change; `dev/registry/tests/`.
-- [ ] `W03.P08.S68` - Enrol the new diagnostic in the screens register so the invariant gate sees it; `dev/registry/analysis/screens.py`.
-- [ ] `W03.P08.S69` - Document the new diagnostic in the registry readme the invariant gate also checks; `dev/registry/README.md`.
+- [x] `W03.P08.S30` - Compare the typed wire shape of each field identity across the revisions of its modelo; `dev/registry/analysis/`.
+- [x] `W03.P08.S31` - Report a shape change unaccompanied by an official change as a suspect requiring explanation; `dev/registry/analysis/`.
+- [x] `W03.P08.S32` - Record that agreement is not treated as evidence of correctness, with the bound that travels with the signal; `dev/registry/analysis/`.
+- [x] `W03.P08.S33` - Prove the diagnostic detects a planted cross-revision shape change; `dev/registry/tests/`.
+- [x] `W03.P08.S68` - Enrol the new diagnostic in the screens register so the invariant gate sees it; `dev/registry/analysis/screens.py`.
+- [x] `W03.P08.S69` - Document the new diagnostic in the registry readme the invariant gate also checks; `dev/registry/README.md`.
 
 ## Wave `W04` - close the standing gaps
 
@@ -183,11 +183,11 @@ Promotes or retires each reporting screen that returns findings and carries a no
 
 Decodes official worked examples through the shipped codec and compares field by field, so at least one check does not originate in the generator.
 
-- [ ] `W04.P13.S47` - Extend the existing external-oracle corpus enum rather than creating a second oracle surface; `src/cadrumo/core/external_oracle_corpus.py`.
-- [ ] `W04.P13.S48` - Extend the existing grounding fold and conformance-vector mechanism to carry the new comparison; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
+- [x] `W04.P13.S47` - Extend the existing external-oracle corpus enum rather than creating a second oracle surface; `src/cadrumo/core/external_oracle_corpus.py`.
+- [x] `W04.P13.S48` - Extend the existing grounding fold and conformance-vector mechanism to carry the new comparison; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
 - [ ] `W04.P13.S70` - Confirm at least one bundled worked example carries a negative amount in an affected fixed-width slot; `src/cadrumo/_data/corpus/manual_oracles/`.
 - [ ] `W04.P13.S49` - Compare the decoded values field by field against the published figures; `src/cadrumo/domain/calculations/registry/tests/`.
-- [ ] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
+- [x] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ## Wave `W05` - the consumer lane and the held rulings
 

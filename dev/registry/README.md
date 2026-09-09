@@ -76,6 +76,7 @@ says which. What each one owns:
 | `export_ref_symmetry` | casillas claiming an export field the resolved layouts do not carry |
 | `casilla_id_grammar` | which identifier grammar each modelo uses, and which mix several |
 | `cross_revision_wire_shape` | fields whose emitted wire shape moves between revisions of one modelo, and whether the official type column moved with it |
+| `fabricated_required_ness` | every generated field with what its official validation cell said, so a required flag derived from silence is separable from one derived from a statement |
 | `continuity_integrity` | modelos with no continuity, and chains crossing a grammar or standing alone |
 | `revision_name_window` | revision names that misstate the window they declare, or claim none |
 | `temporal_site_agreement` | a revision's window, selector and deadline windows falling silent or disagreeing |

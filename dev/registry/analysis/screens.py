@@ -47,6 +47,7 @@ from .temporal_site_agreement import screen_authority as temporal_site_screen
 from .type_convention_notes import screen_authority as type_convention_screen
 from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
 from .cross_revision_wire_shape import screen_authority as cross_revision_wire_shape_screen
+from .fabricated_required_ness import screen_authority as fabricated_required_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
 #: A newline, named so the entry-point search below carries no escape.
@@ -205,6 +206,12 @@ SCREENS: tuple[ScreenEntry, ...] = (
         "cross_revision_wire_shape",
         cross_revision_wire_shape_screen,
         "fields whose emitted wire shape moves between revisions of one modelo",
+    ),
+    ScreenEntry(
+        "fabricated_required_ness",
+        fabricated_required_screen,
+        "fields declared optional because the design was silent rather than because it said so",
+        entry_returns="census",
     ),
     ScreenEntry(
         "revision_name_window",
