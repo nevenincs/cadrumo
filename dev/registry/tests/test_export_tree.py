@@ -1984,3 +1984,48 @@ def test_a_blank_run_naturaleza_the_semantic_map_calls_value_bearing_is_refused(
             render_profile=_wire_profile(),
             render_profile_source_evidence=_wire_evidence(),
         )
+
+
+def _joined_fields_by_aeat_type(modelo: str) -> dict[str, object]:
+    """Return one real joined field per official type token, from the live join.
+
+    Deliberately taken from the real record design rather than assembled here: a
+    hand-built stand-in would prove the helper's `if`, not that the official type
+    column actually reaches it.
+    """
+    from .test_generated_export_trees import _GENERATED_TREES, _authorities
+
+    tree = next(item for item in _GENERATED_TREES if item.modelo == modelo)
+    _map, _profile, joined, _evidence, _transport = _authorities(tree)
+    found: dict[str, object] = {}
+    for field in joined.fields:
+        found.setdefault(field.parser_field.aeat_type, field)
+    return found
+
+
+@pytest.mark.unit
+def test_an_unsigned_official_type_derives_an_unsigned_slot() -> None:
+    """`Num` is numerico SIN signo, and it must still render without refusal."""
+    from ..pipeline._export_tree import _require_grounded_sign
+
+    unsigned = _joined_fields_by_aeat_type("390")["Num"]
+
+    assert _require_grounded_sign(unsigned) is False
+
+
+@pytest.mark.unit
+def test_a_signed_official_type_is_refused_until_its_representation_is_grounded() -> None:
+    """`N` is numerico CON signo, and emitting one today would guess a filing byte.
+
+    The design states that a NEGATIVE carries its marker in the leading position
+    and states nothing about what a non-negative puts there. Writing either would
+    be a guess, so the slot is refused rather than emitted unsigned, which is what
+    the generator did for a fifth of the generated surface.
+    """
+    from ..pipeline._export_tree import _UNGROUNDED_SIGNED_AMOUNT_MARKER, _require_grounded_sign
+
+    signed = _joined_fields_by_aeat_type("390")["N"]
+
+    with pytest.raises(RegistryValidationError) as refused:
+        _require_grounded_sign(signed)
+    assert _UNGROUNDED_SIGNED_AMOUNT_MARKER in str(refused.value)

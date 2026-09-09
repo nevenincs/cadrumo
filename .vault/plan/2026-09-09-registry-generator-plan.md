@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:43a2748f317656db062cbff8cb5d1905945bbbd1177215291927ddd2bce7202d'
+body_hash: 'sha256:6bd9b1029151e93c32ce7c36593130b6470b8a440330e00e86c363b1fefa9ce1'
 ---
 
 # `registry-generator` plan
@@ -80,9 +80,9 @@ Makes the producer fail closed on the two axes the decision record settles: an u
 
 Prerequisite for every refusal in this Wave. The reproduction gate renders unconditionally before it consults the ledger, and the ledger model forbids extra fields and carries only the record-drift class, so a refusal raises before any row can excuse it. This Phase gives the ledger a refusal class and moves the consultation ahead of the render.
 
-- [ ] `W02.P16.S61` - Add a refusal disposition class to the ledger model under a new schema version; `dev/registry/pipeline/render_check.py`.
-- [ ] `W02.P16.S62` - Consult the ledger before the fresh render rather than after it; `dev/registry/tests/test_generated_export_trees.py`.
-- [ ] `W02.P16.S63` - Treat a ledgered refusal as an expected raise rather than an error; `dev/registry/tests/test_generated_export_trees.py`.
+- [x] `W02.P16.S61` - Add a refusal disposition class to the ledger model under a new schema version; `dev/registry/pipeline/render_check.py`.
+- [x] `W02.P16.S62` - Consult the ledger before the fresh render rather than after it; `dev/registry/tests/test_generated_export_trees.py`.
+- [x] `W02.P16.S63` - Treat a ledgered refusal as an expected raise rather than an error; `dev/registry/tests/test_generated_export_trees.py`.
 - [ ] `W02.P16.S64` - Confirm an unledgered refusal still fails the gate; `dev/registry/tests/`.
 - [ ] `W02.P16.S65` - Confirm a refusal row whose cause is repaired fails as dormant; `dev/registry/tests/`.
 
@@ -102,10 +102,10 @@ Removes the unconditional literals and the predicate fold that make the official
 
 - [ ] `W02.P05.S18` - Replace the unconditional signed literals with a value derived from the official type column; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W02.P05.S19` - Unfold the numeric predicate that collapses the signed and unsigned type tokens into one class; `dev/registry/pipeline/render_profile_eligibility.py`.
-- [ ] `W02.P05.S20` - Raise when the sign cannot be established from an authority rather than writing a constant; `dev/registry/pipeline/_export_tree.py`.
+- [x] `W02.P05.S20` - Raise when the sign cannot be established from an authority rather than writing a constant; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W02.P05.S21` - Narrow the generator parameter type so an undetermined sign is not expressible at the call site; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W02.P05.S71` - Add the runtime validator at the registry boundary that the primary control depends on; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W02.P05.S22` - Prove the refusal with a planted undetermined sign in an isolated temporary tree; `dev/registry/tests/`.
+- [x] `W02.P05.S22` - Prove the refusal with a planted undetermined sign in an isolated temporary tree; `dev/registry/tests/`.
 
 ### Phase `W02.P06` - ledger the refusals
 

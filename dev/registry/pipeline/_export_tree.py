@@ -982,6 +982,39 @@ def _labelled_enumeration_values_are_delimited(content: str) -> bool:
     return all(_LABELLED_ENUMERATION_VALUE_DELIMITER_RE.search(gap) is not None for gap in gaps)
 
 
+#: The refusal marker for an amount the official type column declares signed while
+#: no grounded rule states how it reaches the wire. A stable substring, so a
+#: disposition row can pin THIS cause and no other.
+_UNGROUNDED_SIGNED_AMOUNT_MARKER: Final[str] = "declares a signed amount with no grounded representation"
+
+
+def _require_grounded_sign(joined_field: JoinedRecordDesignField) -> bool:
+    """Return the derived sign, or refuse when the design declares one we cannot render.
+
+    The official type column separates ``Num`` (numerico SIN signo) from ``N``
+    (numerico CON signo), and this derivation wrote ``False`` for both without ever
+    reading it. That is how a fifth of the generated surface came to declare
+    unsigned the slots the design types as signed.
+
+    Reading the column is not by itself enough to emit one. A signed slot spends
+    its leading position on the sign marker, and what a NON-NEGATIVE value puts in
+    that position is stated by no official source in this corpus: the design's own
+    note says negatives carry an ``N`` there and says nothing about the rest.
+    Emitting on either reading would guess a filing byte. So the column is read and
+    a slot it declares signed is REFUSED until a rule grounds the representation.
+    That fails closed, and it leaves the shipped tree untouched, because a refusal
+    stops a REGENERATION rather than altering anything already published.
+    """
+    if joined_field.parser_field.aeat_type != "N":
+        return False
+    raise RegistryValidationError(
+        f"export field {joined_field.semantic_entry.export_field_id!r} "
+        f"{_UNGROUNDED_SIGNED_AMOUNT_MARKER}: the official type column states 'N' "
+        f"(numerico con signo) and no render rule states how a non-negative value "
+        f"occupies the sign position",
+    )
+
+
 def _numeric_derivation(
     joined_field: JoinedRecordDesignField,
     *,
@@ -1126,7 +1159,7 @@ def _numeric_derivation(
             required=_is_required(parser_field.validation),
             padding=ExportPadding.LEFT_ZERO,
             justification=ExportJustification.RIGHT,
-            signed=False,
+            signed=_require_grounded_sign(joined_field),
             export_record_id=export_record_id,
             decimals=decimals,
             derivation_code="numeric-decimal-v1",
