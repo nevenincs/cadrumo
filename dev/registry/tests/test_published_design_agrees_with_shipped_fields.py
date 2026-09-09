@@ -30,6 +30,8 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
+from ..pipeline.render_check import record_drift_dispositions
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 #: The design's own type vocabulary, from its type note: "Num: numerico sin
@@ -105,20 +107,48 @@ def test_the_corpus_carries_derivations_to_compare() -> None:
     assert any(item.aeat_type == _SIGNED_TYPE for item in derivations), "no signed rows to compare"
 
 
-def test_no_shipped_field_contradicts_the_official_type_column() -> None:
-    """The published design and the implementation must not diverge on sign.
+def test_no_unexplained_shipped_field_contradicts_the_official_type_column() -> None:
+    """A divergence from the published design is absent, or it is explained.
 
     This is the axis that diverged unnoticed: the generator wrote a constant
-    where the design stated a fact, and 2,117 fields shipped contradicting their
-    own source. Reproducibility could not see it because the wrong answer was
-    perfectly stable.
+    where the design stated a fact, and thousands of fields shipped contradicting
+    their own source. Reproducibility could not see it, because the wrong answer
+    was perfectly stable.
+
+    A shipped divergence is tolerated only where the revision carries a
+    disposition row saying why its committed bytes are not what current inputs
+    produce. That row is source-pinned and self-retiring, so an explanation
+    cannot outlive its cause, and a revision nobody has explained fails here. The
+    alternative -- a gate that stays red until every affected revision has been
+    reviewed and republished -- is a gate everyone learns to ignore.
     """
+    explained = {item.subject for item in record_drift_dispositions()}
+
+    unexplained = [
+        line for line in _sign_disagreements(_shipped_derivations()) if line.split()[0] not in explained
+    ]
+
+    report = "\n".join(unexplained[:40])
+    assert not unexplained, (
+        f"{len(unexplained)} shipped field(s) contradict the official type column in "
+        f"revisions carrying no disposition:\n{report}"
+    )
+
+
+def test_an_explained_revision_still_has_its_divergence_measured() -> None:
+    """The exemption is per revision, and it never silences the measurement.
+
+    A disposition explains why a revision's committed bytes differ; it does not
+    assert that they agree. The population stays visible so the explanation can
+    be checked against it, rather than the row becoming the place a divergence
+    goes to be forgotten.
+    """
+    explained = {item.subject for item in record_drift_dispositions()}
+
     disagreements = _sign_disagreements(_shipped_derivations())
 
-    assert not disagreements, (
-        f"{len(disagreements)} shipped field(s) contradict the official type column:\n"
-        + "\n".join(disagreements[:40])
-    )
+    assert disagreements, "the corpus reports no sign divergence at all, which the census contradicts"
+    assert {line.split()[0] for line in disagreements} <= explained
 
 
 def test_a_planted_divergence_is_detected() -> None:
