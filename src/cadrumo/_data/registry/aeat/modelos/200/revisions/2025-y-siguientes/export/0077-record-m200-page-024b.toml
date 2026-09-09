@@ -975,12 +975,11 @@ id = 'm200-2025.dp200024b.f0095'
 offset = 796
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -1000,12 +999,11 @@ id = 'm200-2025.dp200024b.f0096'
 offset = 813
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -1050,12 +1048,11 @@ id = 'm200-2025.dp200024b.f0098'
 offset = 847
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -1125,12 +1122,11 @@ id = 'm200-2025.dp200024b.f0101'
 offset = 898
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',

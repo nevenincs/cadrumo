@@ -597,8 +597,20 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
         if (parsed := parsed_tree_file(name, (tree.committed / name).read_bytes())) is None
         or parsed != parsed_tree_file(name, (fresh_root / name).read_bytes())
     ]
+    subject = f"{tree.modelo}/{tree.revision}"
+    if not differing and subject in _RECORD_DRIFT_DISPOSITIONS:
+        # The row's whole worth is that it retires when its cause does, and the
+        # dormancy check lived inside the drift branch - so it could never fire
+        # on the case that matters: a repair SUCCEEDING. Twelve rows went dormant
+        # unnoticed the moment their revisions were republished, and the gate
+        # stayed green.
+        raise AssertionError(
+            f"{tree}: a record-drift disposition stands but the tree now reproduces from its "
+            "inputs. The row is dormant and must be removed; an explanation cannot outlive its "
+            "cause without becoming a permanent exemption nobody reads.",
+        )
+
     if differing:
-        subject = f"{tree.modelo}/{tree.revision}"
         disposition = _RECORD_DRIFT_DISPOSITIONS.get(subject)
         comparison = compare_revision_against_committed(
             bundled_authority(),

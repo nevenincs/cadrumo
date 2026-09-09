@@ -10,21 +10,6 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2023.export_layouts.records.fields]]
-id = 'm322-2023.page-01.f093'
-offset = 1291
-length = 17
-kind = 'casilla'
-casilla_id = '62'
-data_type = 'decimal'
-required = false
-padding = 'left_zero'
-justification = 'right'
-decimals = 2
-signed = false
-legal_refs = ['orden-eha-3434-2007:art-1']
-source_refs = ['aeat-dr-322-2023']
-
-[[revisions.2023.export_layouts.records.fields]]
 id = 'm322-2023.page-01.f094'
 offset = 1308
 length = 1

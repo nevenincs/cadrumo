@@ -100,12 +100,11 @@ offset = 13
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.adquisiciones-interiores-exentas'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-20',
     'orden-eha-3111-2009:art-1',
@@ -119,12 +118,11 @@ offset = 30
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.adquisiciones-intracomunitarias-exentas'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-26',
     'orden-eha-3111-2009:art-1',
@@ -138,12 +136,11 @@ offset = 47
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.importaciones-exentas'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-27',
     'orden-eha-3111-2009:art-1',
@@ -157,12 +154,11 @@ offset = 64
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.base-iva-soportado-no-deducible'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-95',
@@ -177,12 +173,11 @@ offset = 81
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.operaciones-derecho-devolucion-mensual'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-115',
     'ley-37-1992:art-116',
@@ -197,12 +192,11 @@ offset = 98
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.entrega-interior-inversion-triangular'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-26',
     'ley-37-1992:art-84',
@@ -217,12 +211,11 @@ offset = 115
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.servicios-tai-inversion-sujeto-pasivo'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-69',
     'ley-37-1992:art-70',
@@ -238,12 +231,11 @@ offset = 132
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.criterio-caja-entregas.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-duodecies',
@@ -259,12 +251,11 @@ offset = 149
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.criterio-caja-entregas.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-duodecies',
@@ -280,12 +271,11 @@ offset = 166
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.criterio-caja-adquisiciones.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-quaterdecies',
     'ley-37-1992:art-163-terdecies',
@@ -300,12 +290,11 @@ offset = 183
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.especificas.criterio-caja-adquisiciones.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-quaterdecies',
     'ley-37-1992:art-163-terdecies',
