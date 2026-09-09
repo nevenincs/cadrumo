@@ -24,7 +24,7 @@ from ..pagefind_inject import (
     _inject_records,
     _materialise_records,
 )
-from ..terminology._concept_cards import project_concept_cards
+from ..terminology.concept_card_projection import project_concept_cards
 from ._http_serve_support import serve_directory
 from ._pagefind_inject_support import concept_records
 

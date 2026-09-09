@@ -14,8 +14,8 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 
 from ..analysis import m200_semantic_casilla_candidates as subject
-from ..pipeline._record_design_ir import load_record_design_intermediate
-from ..pipeline._semantic_map_loader import load_semantic_map
+from ..pipeline.record_design_intermediate import load_record_design_intermediate
+from ..pipeline.semantic_map import load_semantic_map
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -22,14 +22,18 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.loader import load_catalogue_file, load_modelo_directory
 
-from ..pipeline._record_design_ir import (
+from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
+    RecordDesignIntermediateField,
     intermediate_anchor_key,
     load_record_design_intermediate,
 )
-from ..pipeline._semantic_map import SemanticMap, SemanticMapEntry, semantic_anchor_key
-from ..pipeline._semantic_map_loader import load_semantic_map
-from ..pipeline.record_design_intermediate import RecordDesignIntermediateField
+from ..pipeline.semantic_map import (
+    SemanticMap,
+    SemanticMapEntry,
+    load_semantic_map,
+    semantic_anchor_key,
+)
 
 __all__ = [
     "M200CasillaCandidate",

@@ -2,7 +2,7 @@
 
 Projects every curated :class:`~dev.docs.terminology_handbook.schema.ConceptRecord` from the
 Terminology Handbook into a strict
-:class:`~dev.docs.terminology._concept_cards.ConceptCardRecord` -- the
+:class:`~dev.docs.terminology.concept_card_projection.ConceptCardRecord` -- the
 first-class "term card" the Ctrl-K command palette surfaces ahead of nav
 titles and full text. A reader typing "pro rata" or "prorrata" gets the
 concept's meaning (per-language short_description and definition), its
@@ -20,7 +20,7 @@ Legal grounding (the calculation-grounding contract)
 Each concept's ``legal_refs`` are resolved through the SAME legal
 catalogue the registry calculation engine grounds against -- the validated
 authority's ``catalogues.legal`` mapping -- into typed
-:class:`~dev.docs.terminology._concept_cards.LegalGroundingLink` entries
+:class:`~dev.docs.terminology.concept_card_projection.LegalGroundingLink` entries
 carrying the BOE permalink and the anchored corpus reference. A ``legal_ref``
 that does not resolve is reported, never echoed as a dead id: the Handbook
 loader's ``legal_refs_resolve_validator`` already gates this on load, so an
@@ -30,6 +30,10 @@ The Handbook is consumed AS A WHOLE including ``draft`` concepts: the
 ``lifecycle`` rides onto every card so the downstream Pagefind injection can
 choose to surface approved-only cards as first-class results while flagging
 drafts.
+
+The projection is consumed by the search-index injector in ``dev.docs``, beside
+the sibling casilla projection, so it is a public compiler module of the same
+shape rather than an internal of this package.
 """
 
 from __future__ import annotations

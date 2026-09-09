@@ -23,8 +23,8 @@ from ..pipeline._m390_auxiliary_envelope import (
     render_m390_auxiliary_envelope_bytes,
     validate_m390_auxiliary_envelope,
 )
-from ..pipeline._provenance_manifest import ExportFragmentTarget
-from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline.export_fragment_provenance import ExportFragmentTarget
+from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

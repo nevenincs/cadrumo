@@ -147,7 +147,7 @@ def test_scoop_workflow_runs_the_real_native_lifecycle_without_rebuilding() -> N
     # Every first-party module the harness executes must be staged: the smoke
     # asserts the installed venv landed on the manifest's pinned closure before
     # the tax oracle runs, so a missing constraint_effect fails the lane there.
-    assert "_command.py" in _executable_lines(stage["run"])
+    assert "command_execution.py" in _executable_lines(stage["run"])
     assert "constraint_effect.py" in _executable_lines(stage["run"])
     assert "installed_tax_oracle.py" in _executable_lines(stage["run"])
     assert "$env:CADRUMO_SCOOP_ROOT/harness/dev/packaging/smoke_scoop.ps1" in _executable_lines(smoke["run"])

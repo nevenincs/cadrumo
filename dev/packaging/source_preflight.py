@@ -8,7 +8,7 @@ from collections import Counter
 from pathlib import Path
 from typing import TypedDict
 
-from ._smoke_common import TRACKED_DATA_ROOTS, find_repo_root, tracked_source_data_paths
+from .lane_verification_core import TRACKED_DATA_ROOTS, find_repo_root, tracked_source_data_paths
 
 
 class SourceDataSummary(TypedDict):

@@ -48,7 +48,13 @@ from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 from ..conformance.manager import reset_conformance_cache
 from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
 from ._export_tree import RenderedExportTree
-from ._provenance_manifest import (
+from ._tree_paths import contains
+from ._tree_validation import (
+    GeneratedExportTreeValidationContext,
+    ValidatedGeneratedExportTree,
+    validate_generated_export_tree,
+)
+from .export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     SHA256_PATTERN,
@@ -59,15 +65,9 @@ from ._provenance_manifest import (
     loader_semantic_digest,
     verify_export_fragment_provenance_manifest,
 )
-from ._render_profile import RenderProfile, RenderProfileSourceEvidence
-from ._semantic_map import SemanticMap
-from ._semantic_map_join import JoinedRecordDesign
-from ._tree_paths import contains
-from ._tree_validation import (
-    GeneratedExportTreeValidationContext,
-    ValidatedGeneratedExportTree,
-    validate_generated_export_tree,
-)
+from .joined_record_design import JoinedRecordDesign
+from .render_profile import RenderProfile, RenderProfileSourceEvidence
+from .semantic_map import SemanticMap
 
 __all__ = [
     "GeneratedExportTreePublicationContext",

@@ -19,14 +19,14 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 
 from .._paths import REPO_ROOT, UTF_8
-from ._command import CommandResult
-from ._hashing import sha256_path, sha256_text
 from .cohort_manifest import (
     ArtifactRecord,
     LoadedReleaseCohort,
     SourceIdentity,
     load_release_cohort,
 )
+from .command_execution import CommandResult
+from .hashing import sha256_path, sha256_text
 
 _MANIFEST_NAME: Final[str] = "packaging-smoke-manifest.json"
 _EVIDENCE_SCHEMA: Final[Literal["cadrumo.distribution-evidence.v1"]] = "cadrumo.distribution-evidence.v1"
@@ -435,7 +435,7 @@ class PackagingSmokeManifest(BaseModel):
     """One packaging-smoke lane's machine-readable run record.
 
     The single typed shape shared by every ``smoke_*.py`` writer (via
-    ``dev.packaging._smoke_common.write_smoke_manifest``) and by every reader that
+    ``dev.packaging.lane_verification_core.write_smoke_manifest``) and by every reader that
     decides whether a manifest reports a genuine successful run
     (:func:`checkpoint_smoke_evidence`,
     :func:`dev.release.readiness.check_latest_packaging_smoke_evidence`). A

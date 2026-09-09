@@ -59,17 +59,19 @@ from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
 from ._export_tree import SERIALIZER_CONVENTION, ExportTreeTransportProfile, render_complete_export_tree
-from ._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
-from ._record_design_ir import load_record_design_intermediate
-from ._render_profile import (
+from .export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
+from .record_design_intermediate import load_record_design_intermediate
+from .render_profile import (
     RenderProfile,
     RenderProfileSourceEvidence,
     load_render_profile,
     load_render_profile_source_evidence,
 )
-from ._semantic_map import SemanticMap
-from ._semantic_map_join import JoinedRecordDesign, join_record_design_semantics
-from ._semantic_map_loader import load_semantic_map
+from .semantic_map import (
+    SemanticMap,
+    load_semantic_map,
+)
 from .source_defects import source_defects_for
 
 __all__ = [

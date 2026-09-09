@@ -26,7 +26,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
 def _cli_command_record():
-    from .._cli_projection import CliSurfaceRecord
+    from ..cli_projection import CliSurfaceRecord
     from ..search_record import SearchRecordKind
 
     return CliSurfaceRecord(
@@ -40,7 +40,7 @@ def _cli_command_record():
 
 
 def _cli_option_record():
-    from .._cli_projection import CliOptionRecord
+    from ..cli_projection import CliOptionRecord
     from ..search_record import SearchRecordKind
 
     return CliOptionRecord(
@@ -63,9 +63,9 @@ def _injected_unified_records():
     gate is deterministic and independent of the fragile live CLI subprocess
     walk.
     """
-    from .._concept_cards import project_concept_cards
-    from .._legal_projection import project_legal_search_records
     from ..casilla_projection import project_casilla_search_records
+    from ..concept_card_projection import project_concept_cards
+    from ..legal_projection import project_legal_search_records
     from ..unified_record import to_search_record
 
     concept_cards, _ = project_concept_cards()

@@ -47,7 +47,7 @@ from pydantic import ValidationError
 from cadrumo.core.external_constants import OutputLanguage
 
 from .._paths import REPO_ROOT, UTF_8
-from .terminology._sweep import SweepResult
+from .terminology.term_relevance_mapping import SweepResult
 from .terminology.unified_record import SearchRecord, derive_display_class, to_search_record
 
 if TYPE_CHECKING:
@@ -235,9 +235,9 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
     are loaded from the registry-backed generated legal-reference surface and
     fail closed when that authored catalogue cannot produce a safe destination.
     """
-    from .terminology._concept_cards import project_concept_cards
-    from .terminology._legal_projection import project_legal_search_records
     from .terminology.casilla_projection import project_casilla_search_records
+    from .terminology.concept_card_projection import project_concept_cards
+    from .terminology.legal_projection import project_legal_search_records
 
     out = _Materialised()
     root = repo_root if repo_root is not None else REPO_ROOT
@@ -263,7 +263,7 @@ def _materialise_records(repo_root: Path | None = None) -> _Materialised:
     out.records.extend(to_search_record(rec) for rec in legal_records)
 
     try:
-        from .terminology._cli_projection import project_cli_search_records
+        from .terminology.cli_projection import project_cli_search_records
 
         commands, options, _ = project_cli_search_records()
     except Exception as exc:  # the live CLI walk is fragile under peer churn

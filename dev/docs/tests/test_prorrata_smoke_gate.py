@@ -46,8 +46,8 @@ from ..._paths import REPO_ROOT
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
-from ..terminology._concept_cards import project_concept_cards
 from ..terminology.casilla_projection import project_casilla_search_records
+from ..terminology.concept_card_projection import project_concept_cards
 from ..terminology.unified_record import to_search_record
 from ._http_serve_support import serve_directory
 

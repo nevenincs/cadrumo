@@ -78,7 +78,7 @@ def test_a_manifest_digest_that_drifts_from_the_pin_is_refused(tmp_path: Path) -
     )
     manifest_raw = manifest_path.read_bytes()
 
-    from ..pipeline._provenance_manifest import load_export_fragment_provenance_manifest
+    from ..pipeline.export_fragment_provenance import load_export_fragment_provenance_manifest
 
     with pytest.raises(RegistryValidationError, match="does not match the pinned conformance vector"):
         build_pinned_conformance_evidence(

@@ -14,7 +14,7 @@ from ..analysis.m390_2022_anchor_census import (
     M390_2022_SCALAR_CASILLA_BOXES,
     census_m390_2022_numbered_anchors,
 )
-from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

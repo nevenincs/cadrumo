@@ -56,7 +56,7 @@ from ..casilla_reference import (
     render_casilla_reference,
 )
 from ..legal_reference import legal_reference_target, load_legal_provisions
-from ..terminology._casilla_anchor import casilla_page_anchor
+from ..terminology.casilla_anchor import casilla_page_anchor
 from ..terminology.casilla_projection import project_modelo_casillas
 from ..terminology.search_record import CasillaSearchRecord
 

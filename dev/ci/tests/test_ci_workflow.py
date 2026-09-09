@@ -13,7 +13,7 @@ import pytest
 import yaml
 
 from ..._paths import REPO_ROOT
-from ...packaging._command import run_command
+from ...packaging.command_execution import run_command
 from ..lane_reachability import declared_lanes, resolved_recipe_commands
 from ..workflow_run_text import executed_text
 

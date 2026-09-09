@@ -102,7 +102,7 @@ def test_every_rule_owns_the_code_index_and_versions_its_extractor() -> None:
 
     ``target`` is what admits these suffixes at all (none is a conventional
     source extension), and ``code`` is the domain the terminology sweep, the
-    golden-query miss-rate runs, and ``_reindex`` all read. A rule's
+    golden-query miss-rate runs, and ``reindex`` all read. A rule's
     ``extractor_version`` must equal the declared version of the extractor
     family that owns its suffix, so an extractor bump invalidates the
     upstream preprocess cache instead of serving stale extractions.

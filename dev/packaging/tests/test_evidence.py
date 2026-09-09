@@ -14,10 +14,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import iter_directory
 
-from .._command import run_command
-from .._hashing import sha256_path
 from .._proof_ledger import record_proof, reset_proof_ledger
-from .._smoke_common import write_smoke_manifest
 from ..cohort_manifest import (
     REQUIRED_ARTIFACT_KINDS,
     ArtifactRecord,
@@ -28,6 +25,7 @@ from ..cohort_manifest import (
     cohort_identifier,
     load_release_cohort,
 )
+from ..command_execution import run_command
 from ..evidence import (
     AcquisitionIdentity,
     ClientIdentity,
@@ -45,6 +43,8 @@ from ..evidence import (
     load_distribution_evidence,
     write_distribution_evidence,
 )
+from ..hashing import sha256_path
+from ..lane_verification_core import write_smoke_manifest
 from ._release_cohort_support import release_cohort
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

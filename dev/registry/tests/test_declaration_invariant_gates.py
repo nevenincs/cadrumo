@@ -650,7 +650,7 @@ def test_every_committed_export_tree_is_enrolled_in_its_reproduction_test(
     """
     from cadrumo.core.resources.bundled_data import bundled_path
 
-    from ..pipeline._provenance_manifest import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+    from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
     from .test_generated_export_trees import _GENERATED_TREES
 
     committed = {

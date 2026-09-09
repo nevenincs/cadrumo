@@ -13,7 +13,7 @@ from typing import Final
 import pytest
 
 from ..._paths import REPO_ROOT
-from .._hashing import sha256_path, sha256_text
+from ..hashing import sha256_path, sha256_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

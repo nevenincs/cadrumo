@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.record_design_schema import (
 )
 from dev.registry.maintenance_support import resolve_record_design_binary
 
-from ..pipeline._record_design_ir import (
+from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateRelativeSuffixMarker,
     load_record_design_intermediate,

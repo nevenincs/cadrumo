@@ -28,13 +28,12 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 
 from .._acquire_common import venv_bin_dir, venv_executable
-from .._command import CommandResult, run_command
-from .._hashing import sha256_path
 from .._installed_wheel_binding import (
     assert_installed_console_entry_point,
     installed_distribution_payload_sha256,
 )
 from ..cohort_manifest import LoadedReleaseCohort
+from ..command_execution import CommandResult, run_command
 from ..distribution_evidence_emit import (
     build_installed_oracle_evidence,
     emit_installed_oracle_evidence,
@@ -46,6 +45,7 @@ from ..evidence import (
     DistributionEvidence,
     EvidenceStatus,
 )
+from ..hashing import sha256_path
 from ..installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
 from ..installed_tax_oracle import (
     EXPECTED_FORMULA,

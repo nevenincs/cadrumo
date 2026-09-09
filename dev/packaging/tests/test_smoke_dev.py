@@ -24,7 +24,7 @@ import sys
 
 import pytest
 
-from .._smoke_common import run_checked_marker
+from ..lane_verification_core import run_checked_marker
 from ..smoke_dev import _DEV_COMMANDS, _assert_dev_commands
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

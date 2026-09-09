@@ -40,11 +40,11 @@ from cadrumo.domain.calculations.registry.ids import (
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 from ..terminology_handbook.enums import ConceptDomain
-from ._casilla_anchor import casilla_reference_target
-from ._cli_projection import CliOptionRecord, CliSurfaceRecord
-from ._concept_cards import ConceptCardRecord
 from ._glossary_anchor import glossary_term_anchor
+from .casilla_anchor import casilla_reference_target
 from .casilla_projection import CasillaSearchRecord
+from .cli_projection import CliOptionRecord, CliSurfaceRecord
+from .concept_card_projection import ConceptCardRecord
 from .search_record import LegalSearchRecord, ResultDisplayClass, SearchRecordKind
 
 __all__ = [
@@ -580,7 +580,7 @@ def _from_cli_option(record: CliOptionRecord, sweep_score: float | None) -> Sear
 
 def _preferred_label(record: ConceptCardRecord) -> str | None:
     """Return the concept's Spanish preferred term, if one is declared."""
-    from ._concept_cards import TermAlias
+    from .concept_card_projection import TermAlias
 
     es_preferred: TermAlias | None = next(
         (

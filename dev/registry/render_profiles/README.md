@@ -1,7 +1,7 @@
 # Render profiles — authored numeric-representation review
 
 One TOML fragment set per (modelo, design epoch), consumed by
-`dev.registry.pipeline._render_profile`. Every file is AUTHORED evidence, not
+`dev.registry.pipeline.render_profile`. Every file is AUTHORED evidence, not
 generator output: each rule carries a hand-written `[.evidence]` block with its
 decision id and justification.
 

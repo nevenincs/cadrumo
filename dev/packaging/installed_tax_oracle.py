@@ -26,10 +26,10 @@ if str(_REPO_ROOT) not in sys.path:
 if not __package__:
     __package__ = "dev.packaging"
 
-from ._command import CommandResult, run_command  # noqa: E402
-from ._hashing import sha256_path  # noqa: E402
 from ._installed_wheel_binding import installed_wheel_payload_sha256  # noqa: E402
 from ._recovery_enrollment import enrolled_profile_creation  # noqa: E402
+from .command_execution import CommandResult, run_command  # noqa: E402
+from .hashing import sha256_path  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _JSON_FORMAT: Final[tuple[str, ...]] = ("--format", "json")

@@ -1,8 +1,8 @@
 """Unit proof for the shared ``ValidationError`` rendering helper.
 
 :func:`~dev.registry.pipeline._pydantic_error_detail.validation_error_detail`
-is the one place three pipeline modules (``_provenance_manifest.py``,
-``_render_profile.py``, ``_semantic_map_loader.py``) build a message from a
+is the one place three pipeline modules (``export_fragment_provenance.py``,
+``render_profile.py``, ``semantic_map.py``) build a message from a
 caught :exc:`~pydantic.ValidationError`. These tests pin its contract
 directly, independent of any one caller's schema: it never reaches
 ``str(exc)``'s truncated payload dump, and it still names the failing field

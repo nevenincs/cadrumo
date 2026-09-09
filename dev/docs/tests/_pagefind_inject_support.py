@@ -8,7 +8,7 @@ The lane-specific fixtures stay with their own modules.
 from __future__ import annotations
 
 from ..pagefind_inject import _Materialised
-from ..terminology._concept_cards import project_concept_cards
+from ..terminology.concept_card_projection import project_concept_cards
 from ..terminology.unified_record import to_search_record
 
 

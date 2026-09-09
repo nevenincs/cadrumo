@@ -20,7 +20,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.append(str(_REPO_ROOT))
 
 from dev.packaging._distribution_names import normalise_distribution_name  # noqa: E402
-from dev.packaging._hashing import sha256_path  # noqa: E402
+from dev.packaging.hashing import sha256_path  # noqa: E402
 from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
 
 _COMPANIONS = (

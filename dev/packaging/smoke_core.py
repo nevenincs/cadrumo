@@ -1,7 +1,7 @@
 """Build and verify the core Cadrumo wheel in a fresh installed environment.
 
 This module is the ``core`` lane only. The artifact and installed-product
-checks it shares with every other lane live in :mod:`dev.packaging._smoke_common`;
+checks it shares with every other lane live in :mod:`dev.packaging.lane_verification_core`;
 what remains here is the three-wheel cohort identity rule and this lane's own
 sequencing.
 """
@@ -19,8 +19,9 @@ from packaging.requirements import Requirement
 
 from .._paths import UTF_8
 from ._distribution_names import normalise_distribution_name
-from ._hashing import sha256_path
-from ._smoke_common import (
+from .hashing import sha256_path
+from .installed_tax_oracle import run_installed_tax_oracle
+from .lane_verification_core import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
     assert_installed_data,
@@ -39,7 +40,6 @@ from ._smoke_common import (
     wheel_metadata,
     write_smoke_manifest,
 )
-from .installed_tax_oracle import run_installed_tax_oracle
 from .python_cohort import (
     COHORT_STAMPED_WHEEL_DATA_PATHS,
     assert_installed_cohort,

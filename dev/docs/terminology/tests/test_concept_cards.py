@@ -3,7 +3,7 @@
 The emitter loads the REAL bundled Terminology Handbook (the committed
 authoring tree under ``src/cadrumo/_data/terminology/concepts/``, run through
 the loader's full gate inventory) and projects one
-:class:`~dev.docs.terminology._concept_cards.ConceptCardRecord` per concept.
+:class:`~dev.docs.terminology.concept_card_projection.ConceptCardRecord` per concept.
 These gates assert one card per concept, that an approved concept carries its
 four-language short_descriptions / alias set / resolvable legal-grounding
 links, and that draft concepts are emitted but lifecycle-flagged.
@@ -24,7 +24,7 @@ from cadrumo.core.external_constants import OutputLanguage
 
 from ...terminology_handbook.enums import TermStatus
 from ...terminology_handbook.loader import load_terminology_handbook, terminology_concepts_dir
-from .._concept_cards import ConceptCardProjectionStats, ConceptCardRecord
+from ..concept_card_projection import ConceptCardProjectionStats, ConceptCardRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -34,7 +34,7 @@ _FOUR_LANGUAGES = frozenset(OutputLanguage)
 @pytest.fixture(scope="module")
 def projection() -> tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats]:
     """Project the real bundled Handbook into cards once for the module."""
-    from .._concept_cards import project_concept_cards
+    from ..concept_card_projection import project_concept_cards
 
     return project_concept_cards()
 
@@ -206,7 +206,7 @@ def test_legal_link_resolution_reports_a_missing_ref() -> None:
     only the resolved one. If this test ever passes with both links present,
     the resolver is silently inventing targets.
     """
-    from .._concept_cards import project_concept_cards
+    from ..concept_card_projection import project_concept_cards
 
     handbook = load_terminology_handbook(terminology_concepts_dir())
 

@@ -43,7 +43,7 @@ import pytest
 
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.resources.bundled_data import bundled_path
-from ....domain.calculations.registry.loader import load_modelo_path
+from dev.registry.maintenance_support import load_modelo_path
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity

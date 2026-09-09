@@ -362,7 +362,7 @@ def test_packaging_smoke_evidence_refuses_an_empty_lane(tmp_path: Path) -> None:
 def test_packaging_smoke_evidence_end_to_end_through_the_real_smoke_writer(tmp_path: Path) -> None:
     """A manifest produced by the real production writer passes the readiness reader."""
     from ...packaging._proof_ledger import record_proof, reset_proof_ledger
-    from ...packaging._smoke_common import write_smoke_manifest
+    from ...packaging.lane_verification_core import write_smoke_manifest
 
     root = _make_repo_root(tmp_path)
     work_dir = root / "var" / "packaging-smoke" / "core-20260101T000000Z"

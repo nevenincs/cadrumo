@@ -71,7 +71,7 @@ def _real_casilla_target(score: float, *, index: int = 0) -> ResolvedTarget:
 
 def _real_concept_target(score: float) -> ResolvedTarget:
     """A ResolvedTarget built from the REAL prorrata concept card."""
-    from .._concept_cards import project_concept_cards
+    from ..concept_card_projection import project_concept_cards
 
     cards, _ = project_concept_cards()
     prorrata = next(c for c in cards if c.concept_id == "prorrata")

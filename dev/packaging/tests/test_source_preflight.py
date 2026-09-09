@@ -8,7 +8,7 @@ import sys
 
 import pytest
 
-from .._smoke_common import find_repo_root, tracked_source_data_paths
+from ..lane_verification_core import find_repo_root, tracked_source_data_paths
 from ..source_preflight import _root_for, _summary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

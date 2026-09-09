@@ -23,7 +23,7 @@ from cadrumo import llm
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.optional_extras import LLM_EXTRA
 
-from .._smoke_common import (
+from ..lane_verification_core import (
     build_companion_wheels,
     build_wheel,
     create_pip_venv,

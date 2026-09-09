@@ -28,8 +28,8 @@ from ._acquire_common import (
     venv_executable,
     verify_python_cohort_download,
 )
-from ._command import CommandResult, run_command
 from .cohort_manifest import load_release_cohort
+from .command_execution import CommandResult, run_command
 from .distribution_evidence_emit import emit_installed_oracle_evidence
 from .evidence import AcquisitionIdentity, DestinationIdentity
 from .python_cohort import PythonCohort, load_python_cohort

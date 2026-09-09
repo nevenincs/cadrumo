@@ -25,7 +25,6 @@ from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ._casilla_export_refs import export_refs_by_casilla, write_generated_casilla_export_refs
 from ._export_tree import RenderedExportTree, render_complete_export_tree
-from ._provenance_manifest import SHA256_PATTERN, ExportFragmentTarget
 from ._tree_check import CheckedGeneratedExportTree, GeneratedExportTreeCheckContext, check_generated_export_tree
 from ._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -39,6 +38,7 @@ from .candidate_staging import (
     stage_continuity_metadata,
     stage_generated_export_candidate,
 )
+from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,

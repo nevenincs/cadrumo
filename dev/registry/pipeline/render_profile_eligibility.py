@@ -6,10 +6,10 @@ generator asks it before emitting, the profile validator asks it to check
 exhaustive coverage, and the pointer-only screen asks it to decide whether a
 content cell is still outstanding work. Those callers sit in different packages,
 so the contract has a public defining module of its own rather than living
-inside the profile loader's private one.
+inside the profile loader.
 
-That placement is not bookkeeping. While this function was private to
-``_render_profile``, the screen reached past it into the bare projection and
+That placement is not bookkeeping. While this function was private to the
+profile loader, the screen reached past it into the bare projection and
 passed none of the design's declarations, so it answered a different question
 from the renderer and reported a cell whose note had been read, recorded and
 acted on as a reference nobody had opened. A screen that disagrees with the

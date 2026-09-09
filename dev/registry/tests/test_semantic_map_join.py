@@ -9,12 +9,14 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
-from ..pipeline import _semantic_map_join
-from ..pipeline._record_design_ir import RecordDesignIntermediate
-from ..pipeline._semantic_map import SemanticMap
-from ..pipeline._semantic_map_join import JoinedRecordDesignField, join_record_design_semantics
+from ..pipeline import joined_record_design
 from ..pipeline._semantic_map_validation import SemanticMapAnomalyException
-from ..pipeline.record_design_intermediate import RecordDesignWorkbookFormat
+from ..pipeline.joined_record_design import JoinedRecordDesignField, join_record_design_semantics
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediate,
+    RecordDesignWorkbookFormat,
+)
+from ..pipeline.semantic_map import SemanticMap
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -266,7 +268,7 @@ def test_joined_field_refuses_direct_nonidentical_anchor_pair(m130_inspection_sn
 
 def test_join_module_rejects_forbidden_non_authoritative_surfaces() -> None:
     """Structural red guard prevents silently restoring an old admission path."""
-    source = inspect.getsource(_semantic_map_join).lower()
+    source = inspect.getsource(joined_record_design).lower()
 
     for forbidden in (
         "resolve_export_layout",

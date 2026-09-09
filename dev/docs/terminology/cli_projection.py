@@ -3,9 +3,9 @@
 Projects the immutable production ``aeat`` command graph into strict search
 records the offline docs search and the Ctrl-K command palette surface as
 first-class results: one
-:class:`~dev.docs.terminology._cli_projection.CliSurfaceRecord` per leaf
+:class:`~dev.docs.terminology.cli_projection.CliSurfaceRecord` per leaf
 command and one
-:class:`~dev.docs.terminology._cli_projection.CliOptionRecord` per option
+:class:`~dev.docs.terminology.cli_projection.CliOptionRecord` per option
 or argument. Each record carries the help text resolved into all four
 output languages (es / en / ca / hu) and a target anchor into the
 generated CLI reference page.
@@ -21,6 +21,10 @@ House pattern
 The command inventory is projected from the same immutable specifications
 used to compile the runtime. Translation keys are resolved once per language
 in a fresh subprocess with ``CADRUMO_OUTPUT_LANGUAGE=<lang>``.
+
+The search-index injector in ``dev.docs`` consumes these records alongside the
+sibling casilla, concept and legal projections, so this compiler is public for
+the same reason they are.
 """
 
 from __future__ import annotations

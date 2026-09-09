@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 from .._paths import REPO_ROOT
-from ._smoke_common import (
+from .lane_verification_core import (
     assert_attachment_and_llm_surfaces,
     assert_cli_smoke,
     assert_installed_data,

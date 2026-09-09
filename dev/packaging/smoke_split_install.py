@@ -15,8 +15,8 @@ supported command-bearing installation without both data distributions.
 The root wheel's corpus-binary shedding and each companion's sub-cap size are
 enforced where the wheels are BUILT (``python_cohort``), not here. Tests that
 need to construct a cohort from source build it with
-:func:`~dev.packaging._smoke_common.build_wheel` and
-:func:`~dev.packaging._smoke_common.build_companion_wheels`.
+:func:`~dev.packaging.lane_verification_core.build_wheel` and
+:func:`~dev.packaging.lane_verification_core.build_companion_wheels`.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 from .._paths import REPO_ROOT
-from ._smoke_common import (
+from .lane_verification_core import (
     create_pip_venv,
     isolated_product_env,
     record_proof,

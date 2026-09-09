@@ -24,8 +24,8 @@ from ._acquire_common import (
     require_command_succeeded,
     verify_release_download,
 )
-from ._command import run_command
 from .cohort_manifest import load_release_cohort
+from .command_execution import run_command
 
 _UTF_8: Final[str] = UTF_8
 _DEFAULT_REPO: Final[str] = "nevenincs/cadrumo"

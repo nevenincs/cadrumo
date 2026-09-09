@@ -12,8 +12,8 @@ from pathlib import Path
 
 import pytest
 from dev.packaging._distribution_names import normalise_distribution_name
-from dev.packaging._hashing import sha256_path
-from dev.packaging._smoke_common import (
+from dev.packaging.hashing import sha256_path
+from dev.packaging.lane_verification_core import (
     build_companion_wheels,
     build_sdist,
     build_wheel,

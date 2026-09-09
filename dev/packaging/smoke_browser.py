@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from .._paths import REPO_ROOT
-from ._smoke_common import (
+from .lane_verification_core import (
     install_wheel,
     record_proof,
     relative_manifest_path,

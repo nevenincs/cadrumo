@@ -33,8 +33,8 @@ from ..pagefind_inject import (
     build_record_injector,
     load_relevance_weights,
 )
-from ..terminology._cli_projection import project_cli_search_records
 from ..terminology.casilla_projection import project_casilla_search_records
+from ..terminology.cli_projection import project_cli_search_records
 from ..terminology.unified_record import SearchRecord, to_search_record
 from ._pagefind_inject_support import concept_records
 

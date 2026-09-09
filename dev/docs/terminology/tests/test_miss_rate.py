@@ -149,8 +149,8 @@ def _live_record_ids() -> tuple[frozenset[str], frozenset[str]]:
     from ...._paths import REPO_ROOT
     from ...legal_reference import load_legal_provisions
     from ...terminology_handbook.loader import load_terminology_handbook
-    from .._concept_cards import project_concept_cards
-    from .._legal_projection import legal_target_record_id
+    from ..concept_card_projection import project_concept_cards
+    from ..legal_projection import legal_target_record_id
     from ..unified_record import to_search_record
 
     cards, _stats = project_concept_cards(load_terminology_handbook())

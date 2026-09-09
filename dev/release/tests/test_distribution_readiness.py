@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-from ...packaging._hashing import sha256_path
 from ...packaging.evidence import (
     AcquisitionIdentity,
     CommandTranscript,
@@ -24,6 +23,7 @@ from ...packaging.evidence import (
     current_runtime_identity,
     write_distribution_evidence,
 )
+from ...packaging.hashing import sha256_path
 from ...packaging.tests._release_cohort_support import release_cohort
 from ..readiness import check_distribution_evidence_set
 

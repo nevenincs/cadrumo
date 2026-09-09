@@ -1,7 +1,7 @@
 # Semantic maps — authored record-design meaning
 
 One TOML fragment set per (modelo, design epoch), consumed by
-`dev.registry.pipeline._semantic_map_loader`. Every file is AUTHORED meaning
+`dev.registry.pipeline.semantic_map`. Every file is AUTHORED meaning
 over the official record design: provenance header (`source_ref`,
 `source_sha256`) plus hand-attributed entries with `legal_refs` and anchors.
 

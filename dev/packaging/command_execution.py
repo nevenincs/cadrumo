@@ -1,4 +1,9 @@
-"""One truthful subprocess result boundary for packaging execution lanes."""
+"""One truthful subprocess result boundary for packaging execution lanes.
+
+The result type and the runner are addressed from outside this package by the
+``dev.ci`` runtime compatibility lane, which records the same truthful subprocess
+result, so both are public here rather than internals of the packaging lanes.
+"""
 
 from __future__ import annotations
 

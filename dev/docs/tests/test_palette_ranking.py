@@ -37,7 +37,7 @@ from ..._paths import REPO_ROOT
 from ..glossary_reference import generate_glossary_reference
 from ..pagefind_index import build_search_index
 from ..pagefind_inject import _inject_records, _Materialised
-from ..terminology._concept_cards import project_concept_cards
+from ..terminology.concept_card_projection import project_concept_cards
 from ..terminology.search_record import ResultDisplayClass, SearchRecordKind
 from ..terminology.unified_record import (
     RankingTier,

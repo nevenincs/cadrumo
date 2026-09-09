@@ -16,8 +16,8 @@ from cadrumo.core.directory_scan import iter_directory, scan_directory
 
 from ..._paths import REPO_ROOT
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
-from .._hashing import sha256_path
-from .._smoke_common import (
+from ..hashing import sha256_path
+from ..lane_verification_core import (
     _CORPUS_SOURCE_PREFIX,
     _RENTA_PDF_ALLOW_LIST,
     _configured_corpus_binary_suffixes,

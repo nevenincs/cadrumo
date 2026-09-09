@@ -1,4 +1,11 @@
-"""Import-light digest helpers for packaging artifacts."""
+"""Import-light digest helpers for packaging artifacts.
+
+The digest and its codec are addressed from outside this package -- the runtime
+compatibility lane in ``dev.ci`` and the record-design corpus sync in
+``dev.corpus`` attest artifacts under the same rule -- so these helpers are
+public. A second implementation of the same digest is exactly the disagreement
+this module exists to prevent.
+"""
 
 from __future__ import annotations
 

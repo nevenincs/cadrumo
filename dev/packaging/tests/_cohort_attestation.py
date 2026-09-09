@@ -10,7 +10,7 @@ import zipfile
 from pathlib import Path
 from typing import Final
 
-from .._hashing import sha256_path
+from ..hashing import sha256_path
 from ..python_cohort import _artifact_command_projection, _projection_digest
 
 

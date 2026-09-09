@@ -55,9 +55,9 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ..._paths import REPO_ROOT, UTF_8
-from ._concept_cards import ConceptCardRecord
-from ._legal_projection import project_legal_search_records
 from .casilla_projection import project_casilla_search_records
+from .concept_card_projection import ConceptCardRecord
+from .legal_projection import project_legal_search_records
 from .search_record import SearchRecordKind
 from .unified_record import SearchRecord, to_search_record
 
@@ -771,7 +771,7 @@ def _reweight(kind: SearchRecordKind, score: float) -> float:
 
 
 def _load_concept_cards() -> tuple[ConceptCardRecord, ...]:
-    from ._concept_cards import project_concept_cards
+    from .concept_card_projection import project_concept_cards
 
     cards, _stats = project_concept_cards()
     return cards

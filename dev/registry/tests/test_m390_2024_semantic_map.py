@@ -13,10 +13,12 @@ from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 
 from ..pipeline._export_tree import render_complete_export_tree
-from ..pipeline._record_design_ir import RecordDesignIntermediate, load_record_design_intermediate
-from ..pipeline._semantic_map import SemanticMapEntry
-from ..pipeline._semantic_map_loader import load_semantic_map
+from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
 from ..pipeline.render_check import GeneratedExportBootstrapTransport, revision_render_inputs
+from ..pipeline.semantic_map import (
+    SemanticMapEntry,
+    load_semantic_map,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -23,7 +23,7 @@ import pytest
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.modelo import Modelo
 
-from .._cli_projection import CliOptionRecord, CliSurfaceRecord
+from ..cli_projection import CliOptionRecord, CliSurfaceRecord
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
@@ -32,7 +32,7 @@ _PARSEABLE_CASILLA_RECORD_ID_RE = re.compile(r"^casilla:[^:]+:.+")
 
 
 def _cli_command_record() -> CliSurfaceRecord:
-    from .._cli_projection import CliSurfaceRecord
+    from ..cli_projection import CliSurfaceRecord
     from ..search_record import SearchRecordKind
 
     return CliSurfaceRecord(
@@ -46,7 +46,7 @@ def _cli_command_record() -> CliSurfaceRecord:
 
 
 def _cli_option_record() -> CliOptionRecord:
-    from .._cli_projection import CliOptionRecord
+    from ..cli_projection import CliOptionRecord
     from ..search_record import SearchRecordKind
 
     return CliOptionRecord(
@@ -67,7 +67,7 @@ def _cli_option_record() -> CliOptionRecord:
 
 def test_concept_card_funnels_to_a_search_record() -> None:
     """A concept card funnels into a SearchRecord carrying its grounding refs."""
-    from .._concept_cards import project_concept_cards
+    from ..concept_card_projection import project_concept_cards
     from ..search_record import SearchRecordKind
     from ..unified_record import SearchRecord, to_search_record
 
@@ -131,7 +131,7 @@ def test_segmented_casilla_funnels_with_opaque_id_and_canonical_metadata() -> No
 
 def test_legal_provision_funnels_to_a_search_record_with_provenance() -> None:
     """A real registry-backed legal projection funnels into the LEGAL kind."""
-    from .._legal_projection import project_legal_search_records
+    from ..legal_projection import project_legal_search_records
     from ..search_record import SearchRecordKind
     from ..unified_record import SearchRecord, to_search_record
 
@@ -182,9 +182,9 @@ def test_cli_command_and_option_funnel_to_search_records() -> None:
 
 def test_all_kinds_serialise_to_the_same_shape() -> None:
     """Every kind serialises to the identical SearchRecord field set (homogeneous)."""
-    from .._concept_cards import project_concept_cards
-    from .._legal_projection import project_legal_search_records
     from ..casilla_projection import project_modelo_casillas
+    from ..concept_card_projection import project_concept_cards
+    from ..legal_projection import project_legal_search_records
     from ..unified_record import SearchRecord, to_search_record
 
     cards, _ = project_concept_cards()
@@ -209,7 +209,7 @@ def test_all_kinds_serialise_to_the_same_shape() -> None:
 
 def test_funnelled_records_are_json_serialisable() -> None:
     """The unified record serialises to JSON (the index-injection payload form)."""
-    from .._concept_cards import project_concept_cards
+    from ..concept_card_projection import project_concept_cards
     from ..unified_record import to_search_record
 
     cards, _ = project_concept_cards()
@@ -261,7 +261,7 @@ def test_emitted_weight_matches_the_class_the_record_is_displayed_under() -> Non
     Asserting the two agree on a real projected record catches that divergence
     for any kind, which a fixture built from an explicit display class cannot.
     """
-    from .._legal_projection import project_legal_search_records
+    from ..legal_projection import project_legal_search_records
     from ..unified_record import (
         derive_display_class,
         display_class_base_weight,
@@ -407,7 +407,7 @@ def test_search_record_is_frozen() -> None:
     """The strict-frozen contract on the unified record."""
     from pydantic import ValidationError
 
-    from .._concept_cards import project_concept_cards
+    from ..concept_card_projection import project_concept_cards
     from ..unified_record import to_search_record
 
     cards, _ = project_concept_cards()
