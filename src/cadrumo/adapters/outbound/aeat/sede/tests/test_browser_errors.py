@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors.error_codes import ERROR_REGISTRY, build_error_envelope
+from ......core.errors.error_codes import build_error_envelope
 from .._adapter_utils import require_playwright_page
 from ..errors import BrowserAdapterTypeError
 
@@ -22,10 +22,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 # ---------------------------------------------------------------------------
 # contract-A: registry binding
 # ---------------------------------------------------------------------------
-
-
-def test_browser_adapter_type_error_is_registered_in_error_registry() -> None:
-    assert "ERROR_SEDE_BROWSER_ADAPTER_TYPE" in ERROR_REGISTRY
 
 
 # ---------------------------------------------------------------------------

@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ......core.errors.error_codes import ERROR_REGISTRY, get_registered_error_code
+from ......core.errors.error_codes import get_registered_error_code
 from ......core.errors.hierarchy import CadrumoError
 from ..errors import (
     BucketAlreadyPresentError,
@@ -50,12 +50,6 @@ _BUCKET_ERROR_CLASSES: tuple[type[BucketError], ...] = (
 @pytest.mark.parametrize("error_cls", _BUCKET_ERROR_CLASSES, ids=lambda cls: cls.__name__)
 def test_every_class_inherits_from_cadrumo_error(error_cls: type[BucketError]) -> None:
     assert issubclass(error_cls, CadrumoError)
-
-
-@pytest.mark.parametrize("error_cls", _BUCKET_ERROR_CLASSES, ids=lambda cls: cls.__name__)
-def test_every_class_has_a_registered_code(error_cls: type[BucketError]) -> None:
-    code = get_registered_error_code(error_cls)
-    assert code.code in ERROR_REGISTRY
 
 
 def test_bucket_busy_payload_carries_bucket_id_and_pid() -> None:

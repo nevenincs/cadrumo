@@ -26,7 +26,7 @@ from datetime import UTC, datetime
 import pytest
 
 from .....core.period import Period
-from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus, make_submission_id
+from .....domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
 from ...profile.submission import SubmissionRepository
 from ...tests.runtime_profile_fixture import _runtime_profile
 from ..errors import SecureObjectRowIdentityError
@@ -41,7 +41,7 @@ _SUBMITTED_AT = datetime(2026, 4, 27, 10, 0, tzinfo=UTC)
 
 
 def _filing(draft_id: str) -> ModeloPresentado:
-    submission_id = make_submission_id(draft_id, 1)
+    submission_id = "0123456789abcdef"
     return ModeloPresentado(
         submission_id=submission_id,
         draft_id=draft_id,

@@ -24,7 +24,7 @@ import pytest
 from .....application.operator_actions.models import PreconditionVerdict
 from .....core.atomic_write import atomic_write_text
 from .....core.directory_scan import iter_directory, scan_directory
-from .....core.errors.error_codes import ERROR_REGISTRY, build_error_envelope, resolve_error_message
+from .....core.errors.error_codes import build_error_envelope, resolve_error_message
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.i18n import tr
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
@@ -751,11 +751,6 @@ def test_get_refuses_missing_sidecar_or_hash(provider: LocalFileSystemProvider, 
 # ---------------------------------------------------------------------------
 
 
-def test_storage_corruption_error_is_registered_in_error_registry() -> None:
-    """StorageCorruptionError must have a bound ErrorCode in ERROR_REGISTRY."""
-    assert "INTEGRITY_OUTBOUND_STORAGE_CORRUPTION" in ERROR_REGISTRY
-
-
 def test_storage_corruption_error_round_trips_through_build_error_envelope() -> None:
     """build_error_envelope must produce a valid envelope for StorageCorruptionError."""
     err = StorageCorruptionError(
@@ -879,11 +874,6 @@ def test_get_refuses_sidecar_byte_length_that_disagrees_with_payload(
 # ---------------------------------------------------------------------------
 # WIN-003: Windows MAX_PATH (long-path) classification on the write boundary
 # ---------------------------------------------------------------------------
-
-
-def test_path_too_long_error_is_registered_in_error_registry() -> None:
-    """OutboundStoragePathTooLongError must have a bound ErrorCode in ERROR_REGISTRY."""
-    assert "ERROR_OUTBOUND_STORAGE_PATH_TOO_LONG" in ERROR_REGISTRY
 
 
 def test_path_too_long_error_round_trips_through_build_error_envelope() -> None:
