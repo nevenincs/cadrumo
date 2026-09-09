@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:7958188522b798e8ef0017b901500a70bde9f9c4fda746617a8a03782d5ccf52'
+body_hash: 'sha256:e8b08b64732ad423ddae919e8bcc2183fe5728ba61c52a2122edb4d7ea3f432b'
 ---
 
 # `registry-generator` plan
@@ -55,8 +55,8 @@ Establishes from the captured official document whether the annual IVA summary s
 
 Returns the eight failing registry assertions to green on whichever side the verified premise supports, with the outcome recorded as a reviewed adjudication.
 
-- [ ] `W01.P02.S04` - Declare the width-17 signed membership rule for the annual IVA summary citing the per-page sign legend as official-source evidence; `dev/registry/render_profiles/modelo_390/`.
-- [ ] `W01.P02.S05` - Enumerate the width-17 signed anchors for each affected revision of the annual IVA summary; `dev/registry/render_profiles/modelo_390/`.
+- [x] `W01.P02.S04` - RETIRED as mis-scoped: the render profile governs only fields whose content cell is BLANK, so the annual IVA summary's rows are ineligible by construction and a membership rule for them is refused as unknown anchors. The sign is derived at the generator from the official type column instead; `dev/registry/pipeline/_export_tree.py`.
+- [x] `W01.P02.S05` - RETIRED with S04: enumerating anchors for a rule the profile cannot accept. Superseded by deriving the sign from the type column for every field, which needs no anchor list; `dev/registry/pipeline/_export_tree.py`.
 - [ ] `W01.P02.S06` - Regenerate the affected export trees through the owning generator and review the diff; `src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
 - [ ] `W01.P02.S66` - Correct the recorded justification that infers the sign from the content cell alone; `dev/registry/pipeline/source_defects.py`.
 - [ ] `W01.P02.S07` - Run the annual IVA summary registry suite and record the exit status from the run metadata; `src/cadrumo/domain/calculations/registry/tests/`.
@@ -111,7 +111,7 @@ Removes the unconditional literals and the predicate fold that make the official
 
 Records one disposition row per affected revision so the refusals land without turning the reproduction gates red, each row pinning its source and its retirement condition.
 
-- [ ] `W02.P06.S23` - Add one disposition row per affected revision pinning its source and reconsideration condition; `dev/registry/pipeline/generated_tree_dispositions.toml`.
+- [x] `W02.P06.S23` - Add one disposition row per affected revision pinning its source and reconsideration condition; landed as record_drift rather than refusal once the sign became derivable; `dev/registry/pipeline/generated_tree_dispositions.toml`.
 - [ ] `W02.P06.S24` - Confirm both reproduction gates stay green with the refusals ledgered; `dev/registry/tests/test_generated_export_trees.py`.
 - [ ] `W02.P06.S25` - Confirm the ledger gate still fails when a pin goes dormant; `dev/registry/tests/`.
 
@@ -148,8 +148,8 @@ Addresses the rulings that are independent of the refusal mechanism: the authori
 
 Changes the authoring default so a new revision scaffolds the generated path and hand-authoring becomes the declared exception, stating why.
 
-- [ ] `W04.P09.S34` - Scaffold the generated export path for a new revision instead of the hand-authored layout; `dev/registry/newmodelo/manager.py`.
-- [ ] `W04.P09.S35` - Rewrite the authoring checklist so hand-authoring is the declared exception stating why; `dev/registry/newmodelo/checklist.py`.
+- [x] `W04.P09.S34` - Scaffold the generated export path for a new revision instead of the hand-authored layout; `dev/registry/newmodelo/manager.py`.
+- [x] `W04.P09.S35` - Rewrite the authoring checklist so hand-authoring is the declared exception stating why; `dev/registry/newmodelo/checklist.py`.
 - [x] `W04.P09.S36` - Add a declaration recording whether a revision's values are derived or transcribed; `src/cadrumo/domain/calculations/registry/`.
 - [x] `W04.P09.S37` - Prove a newly scaffolded revision arrives on the generated path; `dev/registry/tests/`.
 

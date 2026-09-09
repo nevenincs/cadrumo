@@ -42,10 +42,13 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 
 from ...core.casilla_id import CasillaId
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
@@ -126,7 +129,15 @@ def _madrid_nacimiento_adopcion_eligibility_advisory_finding(
     if not is_indeterminate_unidad_familiar(fact_index):
         return None
 
-    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(fact_index, snapshot.filing_year)
+    coordinate = date(snapshot.filing_year, 12, 31)
+    family_context = FamilyFactResolutionContext(
+        authority=bundled_authority(), filing_period=coordinate, devengo_date=coordinate
+    )
+    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(
+        fact_index,
+        snapshot.filing_year,
+        context=family_context,
+    )
     if weighted_count <= 0:
         return None
 

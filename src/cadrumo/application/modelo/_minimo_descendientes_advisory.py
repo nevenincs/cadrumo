@@ -33,16 +33,19 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
+from datetime import date
 from decimal import Decimal
 from typing import NamedTuple
 
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.modelo import Modelo
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.ids import LegalRefId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente.descendant import DescendantInfo
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
+from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation import CalculationSourceDiagnostic
@@ -76,7 +79,6 @@ _DEPENDENCIA_SUPPRESSED_SOURCE_KIND = "minimo_descendientes_dependencia_suppress
 _GUARDERIA_SHAPE_SOURCE_KIND = "guarderia_spend_needs_monthly_detail"
 _SEGUNDO_CICLO_SOURCE_KIND = "guarderia_segundo_ciclo_month_undeclared"
 _COTIZACIONES_FACT_KEY = "renta_family.cotizaciones_ss_madre_2024"
-_TURNING_THREE_AGE = 3
 _COTIZACIONES_CEILING_SOURCE_KIND = "guarderia_cotizaciones_ceiling_unbounded"
 _GUARDERIA_MADRE_MESES_SOURCE_KIND = "guarderia_madre_meses_undeclared"
 
@@ -91,6 +93,15 @@ class _GuarderiaContext(NamedTuple):
     filing_year: int
     descendants: tuple[DescendantInfo, ...]
     facts: dict[str, str]
+    family_context: FamilyFactResolutionContext
+
+
+def _family_fact_context(filing_year: int) -> FamilyFactResolutionContext:
+    """Compose the advisory's explicit family fact coordinates."""
+    coordinate = date(filing_year, 12, 31)
+    return FamilyFactResolutionContext(
+        authority=bundled_authority(), filing_period=coordinate, devengo_date=coordinate
+    )
 
 
 def _has_descendiente_facts(bucket_id: str) -> bool:
@@ -427,6 +438,8 @@ def _cotizaciones_ceiling_is_unbounded(
     descendants: Sequence[DescendantInfo],
     facts: Mapping[str, str],
     filing_year: int,
+    *,
+    context: FamilyFactResolutionContext,
 ) -> bool:
     """Whether an unbounded cotizaciones ceiling can change this filing's outcome.
 
@@ -449,7 +462,7 @@ def _cotizaciones_ceiling_is_unbounded(
         return False
     return any(
         descendant.convive_con_contribuyente
-        and descendant.age_at_year_end(filing_year) == _TURNING_THREE_AGE
+        and descendant.age_at_year_end(filing_year) == context.integer("lirpf-art-58-under-three-maximum-age")
         and bool(descendant.gastos_guarderia_mensuales)
         for descendant in descendants
     )
@@ -638,6 +651,7 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
         return ()
 
     filing_year = revision.valid_to.year
+    family_context = _family_fact_context(filing_year)
     profile = _family_profile_from_facts(facts)
     available = profile.dependencia_assimilation_available
     undeclared = [
@@ -646,6 +660,7 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
         if descendant.rentas_anuales_euros is None
         and descendant.meets_non_income_conditions(
             filing_year,
+            context=family_context,
             dependencia_assimilation_available=available,
         )
     ]
@@ -712,6 +727,7 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
     if facts is None:
         return ()
     filing_year = revision.valid_to.year
+    family_context = _family_fact_context(filing_year)
     profile = _family_profile_from_facts(facts)
     available = profile.dependencia_assimilation_available
     missing = [
@@ -719,6 +735,7 @@ def collect_minimo_descendientes_entry_date_missing_diagnostics(
         for index, descendant in enumerate(profile.descendientes)
         if descendant.art_58_2_window_anchor_missing(
             filing_year,
+            context=family_context,
             dependencia_assimilation_available=available,
         )
     ]
@@ -796,6 +813,7 @@ def _guarderia_descendants(revision: ModeloRevision, *, modelo: str, bucket_id: 
         filing_year=revision.valid_to.year,
         descendants=tuple(descendant_list_from_facts(descendant_facts)),
         facts=facts,
+        family_context=_family_fact_context(revision.valid_to.year),
     )
 
 
@@ -806,19 +824,24 @@ def _guarderia_spend_shape_diagnostics(
     affected = [
         index
         for index, descendant in enumerate(context.descendants)
-        if descendant.guarderia_needs_monthly_detail(context.filing_year)
+        if descendant.guarderia_needs_monthly_detail(context.filing_year, context=context.family_context)
     ]
     needs_month = [
         index
         for index, descendant in enumerate(context.descendants)
-        if descendant.guarderia_needs_segundo_ciclo_month(context.filing_year)
+        if descendant.guarderia_needs_segundo_ciclo_month(context.filing_year, context=context.family_context)
     ]
     diagnostics: list[CalculationSourceDiagnostic] = []
     if affected:
         diagnostics.append(_guarderia_shape_advisory(affected, context.casilla_id))
     if needs_month:
         diagnostics.append(_segundo_ciclo_month_advisory(needs_month, context.casilla_id))
-    if _cotizaciones_ceiling_is_unbounded(context.descendants, context.facts, context.filing_year):
+    if _cotizaciones_ceiling_is_unbounded(
+        context.descendants,
+        context.facts,
+        context.filing_year,
+        context=context.family_context,
+    ):
         diagnostics.append(_cotizaciones_ceiling_advisory(context.casilla_id))
     return tuple(diagnostics)
 
@@ -869,8 +892,8 @@ def collect_guarderia_madre_meses_undeclared_diagnostics(
         index
         for index, descendant in enumerate(context.descendants)
         if not descendant.meses_madre_trabajo
-        and descendant.guarderia_qualifying_meses(context.filing_year) > 0
-        and descendant.guarderia_contributing_spend(context.filing_year) > 0
+        and descendant.guarderia_qualifying_meses(context.filing_year, context=context.family_context) > 0
+        and descendant.guarderia_contributing_spend(context.filing_year, context=context.family_context) > 0
     ]
     if not affected:
         return ()

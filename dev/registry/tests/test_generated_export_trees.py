@@ -317,10 +317,19 @@ _SOURCE_MODELO_RE: Final[re.Pattern[str]] = re.compile(r'^\s*source_modelo\s*=\s
 
 
 def _supporting_modelos(tree: _GeneratedTree) -> frozenset[str]:
-    """The modelos staged beside the target because the target folds them in."""
+    """The modelos staged beside the target because the target depends on them.
+
+    A revision folds a value in from another modelo, and the source declaration
+    names it. Governed-fact projections are deliberately NOT included: their two
+    target modelos pull a transitive closure of nineteen, which is very nearly
+    the whole registry, so staging them would leave a candidate containing every
+    modelo and the isolation this set exists to create would mean nothing. That
+    dependency is answered where it arises, in fact compilation.
+    """
     referenced = _referenced_modelos(bundled_path("registry", "aeat", "modelos", tree.modelo))
+    depended_on = referenced - {tree.modelo}
     return frozenset(
-        modelo for modelo in referenced - {tree.modelo} if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
+        modelo for modelo in depended_on if bundled_path("registry", "aeat", "modelos", modelo).is_dir()
     )
 
 

@@ -60,6 +60,18 @@ _TARGETS = (
 )
 
 
+def projected_modelo_ids() -> frozenset[str]:
+    """Return every modelo a projection reads from when governed facts compile.
+
+    Compilation refuses when one of these is absent, so anything assembling a
+    PARTIAL registry - the isolated candidate a generated tree is validated
+    against - depends on them exactly as it depends on a modelo the target folds
+    a value in from. Exposed so that dependency can be declared rather than
+    rediscovered as a failure.
+    """
+    return frozenset(target.modelo_id for target in _TARGETS)
+
+
 def compile_modelo_parameter_projection_facts(
     modelos: Iterable[ModeloDefinition],
 ) -> tuple[GovernedFact, ...]:
@@ -69,7 +81,20 @@ def compile_modelo_parameter_projection_facts(
     for target in _TARGETS:
         modelo = by_id.get(target.modelo_id)
         if modelo is None:
-            raise RegistryValidationError(f"modelo projection requires modelo {target.modelo_id!r}")
+            # A registry that does not CONTAIN a modelo cannot carry a fact
+            # projected from it, and refusing to compile every other fact
+            # because of that made a partial registry impossible to validate:
+            # the isolated candidate a generated tree is checked against holds
+            # one modelo by design, and the two projection targets pull a
+            # transitive closure of nineteen.
+            #
+            # The projection is omitted rather than faked. Nothing is
+            # substituted and no default appears; a caller asking for this fact
+            # against this registry gets no variant and fails at resolution,
+            # which is the boundary that knows what the value was for. A
+            # complete registry contains both targets, so this never fires
+            # there and what it publishes is unchanged.
+            continue
         variants = _target_variants(modelo, target)
         if not variants:
             raise RegistryValidationError(

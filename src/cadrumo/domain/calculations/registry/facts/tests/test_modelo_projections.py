@@ -134,3 +134,41 @@ def _modelo(modelo_id: str, revisions: dict[str, object]) -> ModeloDefinition:
     from typing import cast
 
     return cast("ModeloDefinition", SimpleNamespace(id=modelo_id, revisions=revisions))
+
+
+def test_a_registry_without_a_projected_modelo_omits_that_fact_and_keeps_the_rest() -> None:
+    """A partial registry cannot carry a fact projected from a modelo it lacks.
+
+    Refusing the whole compilation instead made a partial registry impossible to
+    validate: the isolated candidate a generated tree is checked against holds
+    one modelo by design, and these two targets pull a transitive closure of
+    nineteen, so satisfying the demand would have put nearly the entire registry
+    into every candidate and left the isolation meaning nothing.
+    """
+    facts = compile_modelo_parameter_projection_facts((_modelo_347(),))
+
+    projected = {fact.fact_id for fact in facts}
+    assert ModeloParameterFact.M347_COUNTERPARTY_ANNUAL_THRESHOLD in projected
+
+
+def test_an_omitted_projection_is_absent_rather_than_defaulted() -> None:
+    """Nothing stands in for the missing modelo's facts.
+
+    An omitted projection publishes NO variant, so a caller asking for it fails
+    at resolution, where the boundary knows what the value was for. A default or
+    a zero here would be the silent under-declaration this registry refuses.
+    """
+    facts = compile_modelo_parameter_projection_facts((_modelo_347(),))
+
+    projected = {fact.fact_id for fact in facts}
+    assert ModeloParameterFact.MATERNITY_MONTHLY_DEDUCTION not in projected
+    assert not any(fact.variants == () for fact in facts), "an empty fact is a stand-in, not an omission"
+
+
+def test_a_complete_registry_still_projects_every_target() -> None:
+    """The omission must not weaken the whole registry, which contains both targets."""
+    facts = compile_modelo_parameter_projection_facts((_modelo_100(), _modelo_347()))
+
+    projected = {fact.fact_id for fact in facts}
+    assert ModeloParameterFact.M347_COUNTERPARTY_ANNUAL_THRESHOLD in projected
+    assert ModeloParameterFact.MATERNITY_MONTHLY_DEDUCTION in projected

@@ -18,10 +18,13 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from functools import cache
 
 import pytest
 
+from ...calculations.registry.authority import bundled_authority
 from ..descendant import DescendantInfo
+from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..guarderia_mensual import parse_guarderia_mensual
 from ..meses_trabajo import parse_meses_trabajo
@@ -36,6 +39,12 @@ _THRESHOLDS = registry_thresholds(_YEAR)
 #: production from its registry parameter; named here so the expectations below
 #: read as the manual's arithmetic.
 _CAP_ANUAL = Decimal("1000")
+
+
+@cache
+def _context(filing_year: int) -> FamilyFactResolutionContext:
+    coordinate = date(filing_year, 12, 31)
+    return FamilyFactResolutionContext(bundled_authority(), coordinate, coordinate)
 
 
 def _child(
@@ -68,6 +77,7 @@ def _total(*descendientes: DescendantInfo, year: int = _YEAR) -> Decimal:
         year,
         thresholds=_THRESHOLDS if year == _YEAR else registry_thresholds(year),
         cap_anual=_CAP_ANUAL,
+        context=_context(year),
     )
 
 
@@ -283,7 +293,11 @@ class TestMaternidadLapsesWhileTheIncrementContinues:
         """
         child = _child(date(2022, 1, 20), mensual="2-6:500", segundo_ciclo_mes=9)
 
-        assert child.maternidad_contributing_meses(_YEAR + 1, thresholds=registry_thresholds(_YEAR + 1)) == 0
+        assert child.maternidad_contributing_meses(
+            _YEAR + 1,
+            thresholds=registry_thresholds(_YEAR + 1),
+            context=_context(_YEAR + 1),
+        ) == 0
         assert _total(child, year=_YEAR + 1) == Decimal("416.67")
 
     def test_a_mother_starting_work_after_the_birthday_still_carries_the_increment(self) -> None:
@@ -356,7 +370,7 @@ class TestSegundoCicloCeiling:
         child = _child(date(2022, 1, 20), mensual="1-12:500")
 
         assert _total(child, year=_YEAR + 1) == Decimal("0")
-        assert child.guarderia_needs_segundo_ciclo_month(_YEAR + 1) is True
+        assert child.guarderia_needs_segundo_ciclo_month(_YEAR + 1, context=_context(_YEAR + 1)) is True
 
     def test_a_child_who_never_turns_three_keeps_months_after_september(self) -> None:
         """The boundary pin, on AEAT's own 2020 caso — the ceiling is scoped, not general.
@@ -374,14 +388,14 @@ class TestSegundoCicloCeiling:
         """
         child = _child(date(2018, 1, 31), mensual="1-6:500;10:500;11:500")
 
-        assert child.guarderia_needs_segundo_ciclo_month(2020) is False
+        assert child.guarderia_needs_segundo_ciclo_month(2020, context=_context(2020)) is False
         assert _total(child, year=2020) == Decimal("666.67")
 
     def test_a_declared_month_is_not_needed_before_the_turning_three_period(self) -> None:
         """No ceiling, no advisory: the question is only put where it can change an answer."""
         child = _child(date(2022, 3, 1), mensual="1-12:500")
 
-        assert child.guarderia_needs_segundo_ciclo_month(_YEAR) is False
+        assert child.guarderia_needs_segundo_ciclo_month(_YEAR, context=_context(_YEAR)) is False
 
 
 class TestCotizacionesCeilingIsDisclosedNotComputed:
@@ -399,18 +413,18 @@ class TestCotizacionesCeilingIsDisclosedNotComputed:
         child = _child(date(2022, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
         profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=5000)
 
-        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR + 1) is True
+        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR + 1, context=_context(_YEAR + 1)) is True
 
     def test_it_stays_silent_when_no_cotizaciones_figure_is_declared(self) -> None:
         """With none declared the ceiling binds at zero, which the operator can already see."""
         child = _child(date(2022, 1, 20), mensual="1-12:500", segundo_ciclo_mes=9)
         profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=0)
 
-        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR + 1) is False
+        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR + 1, context=_context(_YEAR + 1)) is False
 
     def test_it_stays_silent_without_a_turning_three_child(self) -> None:
         """No ceiling applies, so the cotizaciones figure needs no bounding."""
         child = _child(date(2022, 3, 1), mensual="1-12:500")
         profile = RentaFamilyProfile(descendientes=(child,), cotizaciones_ss_madre_2024=5000)
 
-        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR) is False
+        assert profile.guarderia_cotizaciones_ceiling_is_unbounded(_YEAR, context=_context(_YEAR)) is False
