@@ -747,11 +747,14 @@ def _calendar_entry_from_obligation(
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
 ) -> _OverviewCalendarEntry:
+    from ...domain.calculations.registry.authority import bundled_authority
+
     try:
         shift = _shift_deadline(
             obligation.closes_on,
             modelo=obligation.modelo,
             ccaa_code=None,
+            authority=bundled_authority(),
         )
         adjusted = shift.adjusted_close_date
         reason = shift.shift_reason

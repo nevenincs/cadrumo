@@ -9,6 +9,7 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from .....domain.deadlines.festivos import shift_deadline
+from .....domain.deadlines.errors import DeadlineValidationError
 from ..authority import bundled_authority
 from ..corpus_catalogue import verify_source_catalogue
 from ..legal import verify_legal_catalogue
@@ -78,8 +79,8 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     # statutory date.
     assert {window.closes_on for window in revision.deadline_windows} == {date(2026, 1, 31)}
     (window,) = revision.deadline_windows
-    shift = shift_deadline(window.closes_on, modelo="345", ccaa_code=None)
-    assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (date(2026, 2, 2), True, "sabado")
+    with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
+        shift_deadline(window.closes_on, modelo="345", ccaa_code=None, authority=authority)
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-345-2025"}
     # "export" joined the surfaces when the modelo's export layout was authored;
     # the link set is a consequence of that, not a drift.
