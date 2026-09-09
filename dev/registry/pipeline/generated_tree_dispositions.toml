@@ -20,9 +20,10 @@
 # This is not a ratchet. It stores no counts and no ceilings, and shrinking it
 # is not the measure of progress.
 
-schema_version = 2
+schema_version = 3
 
 [[dispositions]]
+kind = "record_drift"
 modelo = "347"
 revision = "2011-2024"
 source_ref = "aeat-dr-347-2011"
@@ -46,6 +47,7 @@ the authoritative statement of the remedy and it predates this disposition.
 reconsideration_condition = "Remove this pin when the current semantic map reproduces the published binding_rows repeat and all per-row casilla identities."
 
 [[dispositions]]
+kind = "record_drift"
 modelo = "347"
 revision = "2025-y-siguientes"
 source_ref = "aeat-dr-347-2025"

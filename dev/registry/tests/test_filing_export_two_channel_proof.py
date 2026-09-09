@@ -31,7 +31,7 @@ from ..diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
     load_registry_diagnostic_classification,
 )
-from ..export_proof import FilingExportProofChannel, FilingExportProofCoordinate
+from ..export_proof import FilingExportProofChannel
 from ..filing_export_proof import (
     CanonicalTwoChannelFilingExportProofAuthority,
     FilingExportConformanceEnrollmentReport,
@@ -42,6 +42,7 @@ from ..filing_export_proof import (
     derive_diagnostic_filing_export_conformance_enrollment,
     derive_filing_export_conformance_enrollment,
 )
+from ..filing_export_proof_contracts import FilingExportProofCoordinate
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

@@ -376,6 +376,7 @@ class ResolvedManifestActionProfile(BaseModel):
             )
         return self
 
+
 def _index_subject_rows[
     InventoryRow: ResultSchemaInventoryRow
     | InputSchemaInventoryRow

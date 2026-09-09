@@ -184,7 +184,6 @@ class AeatClavePermanenteSurface(_Frozen):
 
     selector_access_url_template: str = Field(min_length=1)
     selector_access_path_marker: str = Field(min_length=1)
-    idp_host_marker: str = Field(min_length=1)
     username_input_selector: str = Field(min_length=1)
     password_input_selector: str = Field(min_length=1)
     submit_button_selector: str = Field(min_length=1)

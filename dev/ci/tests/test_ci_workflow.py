@@ -103,7 +103,6 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # the CLI beside it, so the two could drift and only the workflow's copy
     # was the one CI actually ran.
     assert "just check-registry" in static_commands
-    assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" in static_commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
     # The dev-tree workflow/tooling conformance gates run per-push here, via the
     # `test-dev-ci` recipe. The workflow names the recipe and the recipe owns the
@@ -690,7 +689,8 @@ def test_ci_workflow_product_surface_has_no_former_identity() -> None:
         f"workflow now has no copy of its own to fall back on: {recipe_commands}"
     )
     assert _prohibited_aeat_product_forms("\n".join(recipe_commands)) == ()
-    assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" in commands
+    assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" in recipe_commands
+    assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" not in commands
     assert not any(re.match(r"^(?:uv run(?: --no-sync)? )?cadrumo(?:\s|$)", command) for command in commands)
 
     assert _prohibited_aeat_product_forms(product_surface) == ()

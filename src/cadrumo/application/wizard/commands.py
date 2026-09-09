@@ -2020,8 +2020,6 @@ def build_wizard_command(
     signature, annotations = _wizard_command_metadata(parameters)
 
     def _command(**kwargs: object) -> None:
-        import contextlib
-
         from ...core.errors.hierarchy import CadrumoError
 
         with contextlib.ExitStack() as _language_stack:

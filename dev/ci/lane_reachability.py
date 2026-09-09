@@ -146,19 +146,6 @@ _PRUNED: Final[frozenset[str]] = frozenset(
 #: one does.
 _TOP_LEVEL_TEST_DIRS: Final[frozenset[str]] = frozenset({"src", "dev", "packaging"})
 
-#: The ONE place a test directory may be declared deliberately outside every
-#: lane's path scope, mapped to the reason it is. Empty is the correct state and
-#: the honest one: no directory in this tree is currently held out on purpose.
-#:
-#: This is a declaration channel, not an allowlist, and the difference is
-#: enforced rather than asked for. An entry does not merely silence the gate --
-#: :func:`analyse_directory_coverage` reports it back as STALE the moment the
-#: directory becomes swept or stops existing, so a parked problem surfaces
-#: instead of ageing quietly. Nothing belongs here that a lane path could fix;
-#: the remedy for an uncovered directory is a lane, and the remedy for a
-#: directory that should not exist is deleting it.
-UNSWEPT_TEST_DIRECTORIES: Final[Mapping[str, str]] = MappingProxyType({})
-
 #: Where lane declarations live. Anything else is not a lane.
 _WORKFLOW_DIR: Final[str] = ".github/workflows"
 
@@ -254,16 +241,12 @@ class DirectoryCoverageReport:
     and a walker that silently stopped matching is indistinguishable from a
     clean tree unless the corpus size is pinned alongside the finding.
 
-    ``stale`` is what keeps :data:`UNSWEPT_TEST_DIRECTORIES` from decaying into
-    an allowlist. A declaration whose directory has since been swept by a lane,
-    or which no longer names a real directory, is reported rather than honoured:
-    the entry has stopped describing the tree and now only suppresses.
+    There is no declaration channel. A test directory no lane sweeps is a
+    finding, and the remedy is a lane path or deleting the directory.
     """
 
     uncovered: tuple[str, ...]
     analysed: int
-    declared: tuple[str, ...]
-    stale: tuple[str, ...]
 
 
 def _within(candidate: str, scope: str) -> bool:
@@ -1204,7 +1187,6 @@ def analyse_directory_coverage(
     *,
     lanes: Iterable[Lane] | None = None,
     directories: Iterable[str] | None = None,
-    unswept: Mapping[str, str] | None = None,
 ) -> DirectoryCoverageReport:
     """Return every test directory no declared lane's path scope sweeps.
 
@@ -1221,32 +1203,16 @@ def analyse_directory_coverage(
         directories: Repository-relative test directories; git-tracked
             discovery when omitted. Injectable so the detector proofs can drive
             a synthetic tree that is not a git repository.
-        unswept: The deliberate-holdout declarations;
-            :data:`UNSWEPT_TEST_DIRECTORIES` when omitted.
 
     Returns:
-        The unswept directories, the corpus size they were measured against,
-        the declared holdouts, and the declarations that have gone stale.
+        The unswept directories and the corpus size they were measured against.
     """
     resolved_lanes = tuple(lanes) if lanes is not None else declared_lanes(root)
     candidates = tuple(directories) if directories is not None else tracked_test_directories(root)
-    declared = UNSWEPT_TEST_DIRECTORIES if unswept is None else unswept
 
     def swept(directory: str) -> bool:
         return any(lane.covers_directory(directory) for lane in resolved_lanes)
 
-    uncovered = tuple(sorted(name for name in candidates if not swept(name) and name not in declared))
+    uncovered = tuple(sorted(name for name in candidates if not swept(name)))
 
-    # A declaration earns its keep only while it still describes the tree. Once
-    # a lane sweeps the directory, or the directory is gone, the entry has
-    # stopped explaining anything and is only suppressing -- which is the state
-    # every allowlist reaches if nothing watches it.
-    known = frozenset(candidates)
-    stale = tuple(sorted(name for name in declared if name not in known or swept(name)))
-
-    return DirectoryCoverageReport(
-        uncovered=uncovered,
-        analysed=len(candidates),
-        declared=tuple(sorted(declared)),
-        stale=stale,
-    )
+    return DirectoryCoverageReport(uncovered=uncovered, analysed=len(candidates))

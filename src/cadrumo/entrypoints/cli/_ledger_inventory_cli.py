@@ -19,7 +19,6 @@ from ...core.i18n.render import tr
 from ...core.type_guards import is_object_list, is_str_keyed_dict
 from ...domain.contribuyente.inventory.records import (
     InventoryAcquisitionCost,
-    InventoryClosingAuthorityRecord,
     InventoryLedger,
     InventoryLedgerError,
     MovementKind,
@@ -235,6 +234,8 @@ def inventory_closing_authority_record(
     file: Path,
 ) -> None:
     """Record one complete typed authority document from its canonical file input."""
+    from ...domain.contribuyente.inventory._closing_authority_records import InventoryClosingAuthorityRecord
+
     try:
         record = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
         result = _inventory_service().closing_authority_record(

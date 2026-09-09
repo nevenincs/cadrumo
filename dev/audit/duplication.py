@@ -38,9 +38,8 @@ Two limits are deliberate, recorded here so neither is re-derived as a defect:
   is duplicate AUTHORITY in shipped code -- a second writer with weaker guards,
   not two similar-looking dev scripts. ``dev/`` is therefore unmeasured by the
   standing recipe and by the health report's D2 dimension. It is not
-  unmeasurABLE: pass a different ``source_root`` to scan it on demand, which is
-  how the two clone groups recorded in ``duplication_dispositions.toml`` were
-  found. Widening the default would fold tooling debt into the product number.
+  unmeasurABLE: pass a different ``source_root`` to scan it on demand.
+  Widening the default would fold tooling debt into the product number.
 
 * **jscpd matches token sequences.** A concept implemented twice in different
   syntax is invisible to it, and that is exactly the duplication this project's

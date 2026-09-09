@@ -186,7 +186,6 @@ class TestTheProvenanceStampNamesTheRatesTheReadUsed:
         assert local.name == "qwen2.5vl:3b", "the name is the reader, with nothing else folded in"
         assert local.revision.startswith("prompt-v")
         assert "rates-" not in local.name, "stage one compiles no rates, so it must claim none"
-        # The cache still separates the two, which is what the name-folding was
-        # incidentally buying: an off-host reading of the same model is a
-        # different trust context and must not serve an on-host question.
-        assert local.cache_key != cloud.cache_key
+        # The complete typed identity keeps the trust contexts distinct without
+        # maintaining a second derived cache-key surface.
+        assert local != cloud

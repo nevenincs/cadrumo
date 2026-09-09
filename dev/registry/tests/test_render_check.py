@@ -7,12 +7,16 @@ record drift stays pinned to its exact source authority.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 
 from ..pipeline.render_check import (
     compare_revision_against_committed,
+    disposition_ledger_from_path,
     record_drift_dispositions,
     revision_render_inputs,
 )
@@ -222,3 +226,97 @@ def test_every_manifest_stale_tree_really_does_reproduce_its_records(
                 unsafe.append(f"{code}/{revision_id}")
 
     assert not unsafe, f"trees called provenance-only whose records do not reproduce semantically: {unsafe}"
+
+
+_VALID_SHA = "0" * 64
+
+
+def _ledger_text(rows: str, *, version: int = 3) -> str:
+    return f"schema_version = {version}\n{rows}"
+
+
+_REFUSAL_ROW = f'''
+[[dispositions]]
+kind = "render_refusal"
+modelo = "390"
+revision = "2022"
+source_ref = "aeat-dr-390-2022"
+source_sha256 = "{_VALID_SHA}"
+refusal_marker = "could not determine the sign"
+reason = "The generator declines to emit a sign it did not determine."
+reconsideration_condition = "Remove when the sign is derived from the official type column."
+'''
+
+_DRIFT_ROW = f'''
+[[dispositions]]
+kind = "record_drift"
+modelo = "347"
+revision = "2011-2024"
+source_ref = "aeat-dr-347-2011"
+source_sha256 = "{_VALID_SHA}"
+reason = "Shipped bytes are right and the inputs are not."
+reconsideration_condition = "Remove when the inputs reproduce the repeat."
+'''
+
+
+def test_the_ledger_separates_a_refusal_from_a_drift(tmp_path: Path) -> None:
+    """Both classes load, and each keeps its own identity.
+
+    A refused tree does not render at all; a drifting tree renders and disagrees.
+    Collapsing them would let a refusal be excused by a pin written for drift.
+    """
+    path = tmp_path / "dispositions.toml"
+    path.write_text(_ledger_text(_DRIFT_ROW + _REFUSAL_ROW), encoding="utf-8")
+
+    loaded = disposition_ledger_from_path(path)
+
+    kinds = {item.subject: item.kind for item in loaded}
+    assert kinds == {"347/2011-2024": "record_drift", "390/2022": "render_refusal"}
+
+
+def test_a_refusal_row_without_a_named_cause_is_refused(tmp_path: Path) -> None:
+    """An empty marker would let a row absorb ANY later refusal in the same tree."""
+    path = tmp_path / "dispositions.toml"
+    path.write_text(_ledger_text(_REFUSAL_ROW.replace('"could not determine the sign"', '""')), encoding="utf-8")
+
+    with pytest.raises(ValidationError):
+        disposition_ledger_from_path(path)
+
+
+def test_a_row_declaring_no_class_is_refused(tmp_path: Path) -> None:
+    """The class is discriminating, so an untagged row cannot be admitted silently."""
+    path = tmp_path / "dispositions.toml"
+    path.write_text(_ledger_text(_DRIFT_ROW.replace('kind = "record_drift"\n', "")), encoding="utf-8")
+
+    with pytest.raises(ValidationError):
+        disposition_ledger_from_path(path)
+
+
+def test_an_unknown_class_is_refused(tmp_path: Path) -> None:
+    """A third class would otherwise be admitted and then handled by nothing."""
+    path = tmp_path / "dispositions.toml"
+    path.write_text(_ledger_text(_DRIFT_ROW.replace("record_drift", "manifest_only")), encoding="utf-8")
+
+    with pytest.raises(ValidationError):
+        disposition_ledger_from_path(path)
+
+
+def test_one_tree_cannot_be_both_refused_and_drifting(tmp_path: Path) -> None:
+    """Two rows for one subject would make the gate's verdict order-dependent."""
+    collision = _REFUSAL_ROW.replace('modelo = "390"', 'modelo = "347"').replace(
+        'revision = "2022"', 'revision = "2011-2024"'
+    )
+    path = tmp_path / "dispositions.toml"
+    path.write_text(_ledger_text(_DRIFT_ROW + collision), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="duplicate subjects"):
+        disposition_ledger_from_path(path)
+
+
+def test_the_previous_ledger_version_is_refused(tmp_path: Path) -> None:
+    """The bump is not cosmetic: version 2 rows carry no class and cannot be read as one."""
+    path = tmp_path / "dispositions.toml"
+    path.write_text(_ledger_text(_DRIFT_ROW.replace('kind = "record_drift"\n', ""), version=2), encoding="utf-8")
+
+    with pytest.raises(ValidationError):
+        disposition_ledger_from_path(path)

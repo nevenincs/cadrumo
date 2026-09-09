@@ -9,13 +9,13 @@ from typing import Any
 
 import pytest
 from click.testing import Result
+from dev.registry.maintenance_support import load_modelo_path
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.aggregation import CalculationSourceContext
 from ....application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
-from dev.registry.maintenance_support import load_modelo_path
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage

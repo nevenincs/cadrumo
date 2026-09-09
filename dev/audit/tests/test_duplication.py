@@ -1,10 +1,9 @@
-"""Duplication report shape, parsing and disposition-coverage arithmetic.
+"""Duplication report shape and parsing.
 
-In-process checks over synthetic scanner output and the committed disposition
-record: the report parses real jscpd shapes, a stdout-empty scan is a named
-defect rather than a silent zero, and the coverage read is a per-file-set
-multiset comparison so a second unrelated clone inside an already-recorded file
-cannot pass unseen.
+In-process checks over synthetic scanner output: the report parses real jscpd
+shapes, a stdout-empty scan is a named defect rather than a silent zero, and
+the actionability filter removes structural noise without hiding executable
+clones.
 
 Split from the live-scan half so each module carries one execution lane; the
 gates that actually run jscpd over the tree live in ``test_duplication_scan``.
@@ -16,11 +15,11 @@ import ast
 import pathlib
 import shutil
 import subprocess
-from collections import Counter
 from pathlib import Path
 
 import pytest
 
+from ..._paths import REPO_ROOT
 from ..duplication import (
     CloneGroup,
     DuplicationOutcome,
@@ -31,29 +30,11 @@ from ..duplication import (
     render_console_report,
     run_duplication_scan,
 )
-from ._duplication_support import (
-    _CLASSIFICATIONS,
-    _REPO_ROOT,
-    _load_dispositions,
-    _recorded_dispositions,
-    _uncovered_groups,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 _DEFECT_STDOUT_EMPTY_SCAN = "\x1b[3m\x1b[90mtime\x1b[39m\x1b[23m: 0.135ms\n"
-
-
-def _self_clone_group(path: str, first: int, second: int) -> CloneGroup:
-    """Build a clone group naming one file twice, in jscpd's console shape."""
-    return CloneGroup(
-        (
-            "Clone found (python):",
-            f" - src/cadrumo/{path} [{first}:1 - {first + 10}:9] (10 lines, 120 tokens)",
-            f"   src/cadrumo/{path} [{second}:1 - {second + 10}:9]",
-        )
-    )
 
 
 def test_command_passes_a_posix_source_path() -> None:
@@ -117,7 +98,7 @@ def test_missing_npx_is_unavailable_not_green() -> None:
     seam returning ``None`` -- a real resolver contract, not a patch of
     ``shutil.which``.
     """
-    result = run_duplication_scan(_REPO_ROOT, which=lambda _name: None)
+    result = run_duplication_scan(REPO_ROOT, which=lambda _name: None)
 
     assert result.outcome is DuplicationOutcome.UNAVAILABLE
     assert result.is_green is False
@@ -243,7 +224,7 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     assert git is not None, "git is required to enumerate the tracked tree"
     tracked = subprocess.run(  # noqa: S603 - resolved Git with test-owned declarative argv.
         [git, "ls-files"],
-        cwd=_REPO_ROOT,
+        cwd=REPO_ROOT,
         capture_output=True,
         text=True,
         check=True,
@@ -277,123 +258,10 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     builders = [
         rel
         for rel in candidates
-        if rel not in exempt and (_REPO_ROOT / rel).is_file() and _mentions_jscpd_outside_docstrings(_REPO_ROOT / rel)
+        if rel not in exempt and (REPO_ROOT / rel).is_file() and _mentions_jscpd_outside_docstrings(REPO_ROOT / rel)
     ]
 
     assert builders == [], f"jscpd must be invoked from exactly one runner; found: {builders}"
-
-
-def test_a_second_clone_inside_an_already_recorded_file_is_uncovered() -> None:
-    """A new intra-file clone must not inherit another group's disposition.
-
-    Drives the real coverage computation with one independently constructed
-    recorded self-clone file-set and one more observed group than that record
-    accounts for. Under the previous set-membership read this returned covered,
-    so this is the regression pinning the multiset semantics without requiring
-    the live disposition record to retain debt forever.
-    """
-    path = "application/modelo/example.py"
-    self_clone_set = frozenset({path})
-    recorded = Counter({self_clone_set: 1})
-    recorded_here = recorded[self_clone_set]
-
-    at_record = [_self_clone_group(path, 100 * i, 100 * i + 50) for i in range(1, recorded_here + 1)]
-    assert _uncovered_groups(at_record, recorded) == [], "observing exactly what is recorded must be covered"
-
-    one_extra = [*at_record, _self_clone_group(path, 9000, 9500)]
-    surplus = _uncovered_groups(one_extra, recorded)
-    assert len(surplus) == 1, f"one clone group beyond the record must be flagged, got {len(surplus)}"
-
-
-def test_a_landed_consolidation_does_not_fail_the_coverage_read() -> None:
-    """Observing FEWER groups than recorded is progress, not a gate failure.
-
-    The record is a superset by design. This pins the asymmetry, so a future
-    tightening cannot quietly turn the coverage read into a clone-count
-    assertion, which this project treats as advisory debt rather than a gate.
-    """
-    recorded = _recorded_dispositions()
-    assert _uncovered_groups((), recorded) == []
-
-
-def test_dispositions_arithmetic_reconciles() -> None:
-    """The dispositions file's own counts must add up.
-
-    The record once declared 65 observed groups while carrying 66 group blocks
-    whose own summary section summed to 66 -- an internal contradiction nobody
-    caught because nothing read the file. This pins two identities: the
-    summary section's four counts must equal the number of ``[[group]]``
-    blocks, and the non-actionable counts (the groups within jscpd's own
-    inventory) must equal the declared ``observed_groups``.
-    """
-    dispositions = _load_dispositions()
-
-    groups = dispositions.get("group", ())
-    summary = dispositions["summary"]
-
-    assert groups, "the record declares no groups at all; nothing was parsed"
-    assert sum(summary.values()) == len(groups), (
-        f"summary sums to {sum(summary.values())} but there are {len(groups)} recorded groups"
-    )
-    observed = summary["cluster_owned"] + summary["intentional"] + summary["advisory_residue"]
-    assert observed == dispositions["meta"]["observed_groups"], (
-        f"cluster_owned + intentional + advisory_residue ({observed}) must equal "
-        f"meta.observed_groups ({dispositions['meta']['observed_groups']})"
-    )
-
-
-def test_every_recorded_group_carries_exactly_one_known_classification() -> None:
-    """A disposition with no classification, or an invented one, is not adjudication.
-
-    The record's whole value is that each entry states what a reviewer decided.
-    An unrecognised classification string would read as a decision while
-    belonging to no vocabulary the summary counts, so the arithmetic gate above
-    would keep passing while the entry meant nothing.
-    """
-    groups = _load_dispositions()["group"]
-
-    assert groups, "the record declares no groups at all; nothing was parsed"
-    unknown = sorted({group.get("classification", "<missing>") for group in groups} - _CLASSIFICATIONS)
-
-    assert unknown == [], f"unrecognised classification(s) in the record: {unknown}"
-
-
-def test_a_cluster_owned_group_names_the_cluster_that_owns_it() -> None:
-    """`cluster-owned` without an `owner` names no owner, so it adjudicates nothing.
-
-    This is the classification's entire content: it defers the group to a named
-    consolidation cluster. An entry missing the name is indistinguishable from
-    an unreviewed group that someone labelled to make the record look complete.
-    """
-    groups = _load_dispositions()["group"]
-    cluster_owned = [group for group in groups if group.get("classification") == "cluster-owned"]
-
-    assert cluster_owned, "no cluster-owned groups were parsed; the guard has no subject"
-    unowned = [group["where"][0] for group in cluster_owned if not group.get("owner", "").strip()]
-
-    assert unowned == [], f"cluster-owned group(s) naming no owning cluster: {unowned}"
-
-
-def test_an_unavailable_scan_cannot_be_read_as_full_coverage() -> None:
-    """An unavailable scan yields no groups, which trivially satisfies coverage.
-
-    This is the false green the live reconciliation gate must refuse. A failed
-    scan carries an empty ``groups`` tuple, so feeding it to the coverage read
-    returns "nothing uncovered" -- the same answer a genuinely covered tree
-    gives. The verdict is therefore meaningless without first proving the scan
-    ran, which is why the live gate asserts the outcome before it reconciles.
-
-    Pinning the failure mode here keeps that precondition from being deleted as
-    redundant by someone reading only the coverage arithmetic.
-    """
-    unavailable = DuplicationResult.unavailable("npx was not found on PATH")
-
-    assert unavailable.is_green is False
-    assert unavailable.groups == ()
-    assert _uncovered_groups(unavailable.groups, _recorded_dispositions()) == [], (
-        "an unavailable scan trivially reports full coverage; the live gate must "
-        "reject the outcome before trusting this read"
-    )
 
 
 def test_the_corpus_refuses_a_module_it_cannot_parse(tmp_path: pathlib.Path) -> None:
@@ -484,37 +352,3 @@ def test_a_readable_corpus_still_loads(tmp_path: pathlib.Path) -> None:
     (package / "sound.py").write_text("VALUE = 1" + chr(10), encoding="utf-8")
 
     assert [module.relative for module in _load_modules(package)] == ["sound.py"]
-
-
-def test_the_summary_counts_match_the_recorded_classifications() -> None:
-    """Each summary count must equal the groups actually carrying that class.
-
-    The existing arithmetic gate compares TOTALS, so a summary can sum correctly
-    while attributing groups to the wrong class. That is not hypothetical: a
-    regeneration that failed part-way left `intentional = 0` beside a group
-    classified `intentional`, and the totals still balanced because the count had
-    been absorbed into `cluster_owned`.
-
-    Per-class equality closes that, and it is what makes the summary readable as
-    a claim about the tree rather than as a number that happens to add up.
-    """
-    dispositions = _load_dispositions()
-    groups = dispositions["group"]
-    summary = dispositions["summary"]
-
-    assert groups, "the record declares no groups at all; nothing was parsed"
-    actual = Counter(group["classification"] for group in groups)
-    mismatched = {
-        name: (summary[key], actual[name])
-        for key, name in (
-            ("cluster_owned", "cluster-owned"),
-            ("intentional", "intentional"),
-            ("advisory_residue", "advisory-residue"),
-            ("actionable", "actionable"),
-        )
-        if summary[key] != actual[name]
-    }
-
-    assert mismatched == {}, (
-        f"summary counts disagree with the recorded classifications (recorded, actual): {mismatched}"
-    )

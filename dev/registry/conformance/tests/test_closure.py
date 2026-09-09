@@ -20,7 +20,8 @@ from cadrumo.application.registry.closure import (
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 
-from ...export_proof import FilingExportProofAssessment, FilingExportProofCoordinate
+from ...export_proof import FilingExportProofAssessment
+from ...filing_export_proof_contracts import FilingExportProofCoordinate
 from ...temporal_coverage import TemporalCoverageReport, TemporalRevisionCoverage
 from ..authorities import RegistryClosureAuthorities
 from ..cli import app

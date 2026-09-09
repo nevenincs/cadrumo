@@ -58,7 +58,12 @@ from ..pipeline.export_fragment_provenance import (
 )
 from ..pipeline.joined_record_design import join_record_design_semantics
 from ..pipeline.record_design_intermediate import load_record_design_intermediate
-from ..pipeline.render_check import compare_revision_against_committed, parsed_tree_file, record_drift_dispositions
+from ..pipeline.render_check import (
+    compare_revision_against_committed,
+    parsed_tree_file,
+    record_drift_dispositions,
+    render_refusal_dispositions,
+)
 from ..pipeline.render_profile import (
     RenderProfileSourceEvidence,
     load_render_profile,
@@ -154,6 +159,7 @@ def _generated_trees() -> tuple[_GeneratedTree, ...]:
 
 _GENERATED_TREES = _generated_trees()
 _RECORD_DRIFT_DISPOSITIONS = {item.subject: item for item in record_drift_dispositions()}
+_RENDER_REFUSAL_DISPOSITIONS = {item.subject: item for item in render_refusal_dispositions()}
 _REPRODUCTION_PENDING = {
     "m185-2025-y-siguientes": _ReproductionPendingPin(
         source_ref="aeat-dr-185-2026",
@@ -493,6 +499,31 @@ def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_name
     semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
     source_defects = source_defects_for(tree.source_ref)
     fresh_root = tmp_path / "fresh" / "export"
+
+    # The refusal ledger is consulted BEFORE the render, not after it. A tree the
+    # generator declines to render raises here, so a check placed after the call
+    # could never run: the row would be unreachable and the gate would error
+    # rather than report. The row must also name its cause, so a refusal that
+    # changes reason is not silently absorbed by a pin written for another one.
+    refusal = _RENDER_REFUSAL_DISPOSITIONS.get(f"{tree.modelo}/{tree.revision}")
+    if refusal is not None:
+        assert refusal.source_ref == tree.source_ref
+        with pytest.raises(RegistryValidationError) as refused:
+            render_complete_export_tree(
+                fresh_root,
+                revision_id=tree.revision,
+                joined=joined,
+                semantic_map=semantic_map,
+                transport_profile=transport,
+                render_profile=render_profile,
+                render_profile_source_evidence=evidence,
+                source_defects=source_defects,
+            )
+        assert refusal.refusal_marker in str(refused.value), (
+            f"{tree}: render-refusal pin is dormant or its cause changed"
+        )
+        return
+
     render_complete_export_tree(
         fresh_root,
         revision_id=tree.revision,

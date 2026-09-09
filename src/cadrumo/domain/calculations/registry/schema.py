@@ -138,6 +138,7 @@ __all__ = [
 
 from ....core.filing_year import FilingYear
 from .convenio import ConvenioAuthority
+from .facts.schema import GovernedFactCatalogue
 from .modelo_localization import require_modelo_localization, resolve_modelo_localization
 from .schema_base import (
     GOVERNANCE_STAMP,
@@ -1076,11 +1077,12 @@ class SupportedFilingYearsCatalogue(RegistryModel):
 
 
 class RegistryCatalogues(RegistryModel):
-    """Collect the registry-wide legal, source, parameter, and support catalogues."""
+    """Collect the registry-wide legal, source, fact, parameter, and support catalogues."""
 
     legal: Mapping[LegalRefId, LegalReference]
     sources: Mapping[SourceRefId, SourceReference]
     parameters: Mapping[str, LegalParameter] = Field(default_factory=dict)
+    facts: GovernedFactCatalogue = Field(default_factory=GovernedFactCatalogue)
     convenio: ConvenioAuthority = Field(default_factory=ConvenioAuthority.empty)
     supplementary_ordenes: Mapping[Modelo, M303AnnualOrdenAuthority] = Field(
         default_factory=dict[Modelo, M303AnnualOrdenAuthority],

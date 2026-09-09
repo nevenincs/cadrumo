@@ -8,10 +8,10 @@ import pytest
 
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema_exports import FilingEnvelopeCloserDerivation
-from dev.registry.maintenance_support import bundled_revision_inspection
 
 from ..pipeline._variable_envelope import (
     FilingEnvelopeProvenance,
@@ -118,7 +118,7 @@ def test_real_m303_binaries_compile_the_typed_static_declaration_without_instanc
     design_epoch: str,
 ) -> None:
     """All five hash-pinned DP30300 sources yield one source-bound static grammar."""
-    inspection = bundled_revision_inspection("303", filing_year=filing_year, period=period)
+    inspection = bundled_authority().inspect_revision("303", filing_year=filing_year, period=period)
     intermediate = load_record_design_intermediate(
         inspection.source_root,
         inspection.sources,
@@ -173,7 +173,7 @@ def test_real_m303_binaries_compile_the_typed_static_declaration_without_instanc
 
 def test_m303_static_declaration_refuses_source_drift_and_reordered_body_definitions() -> None:
     """No later application authority can repair source or record-order drift."""
-    inspection = bundled_revision_inspection("303", filing_year=2026, period="4T")
+    inspection = bundled_authority().inspect_revision("303", filing_year=2026, period="4T")
     intermediate = load_record_design_intermediate(
         inspection.source_root,
         inspection.sources,

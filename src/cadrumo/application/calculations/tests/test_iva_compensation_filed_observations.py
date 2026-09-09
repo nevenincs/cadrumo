@@ -17,7 +17,6 @@ from ....core.period import Period
 from ....domain.iva_compensation.carry_forward import (
     IvaCompensationExpiryReviewState,
     build_iva_compensation_carry_forward_report,
-    enforce_iva_compensation_four_year_window,
 )
 from ....domain.iva_compensation.errors import (
     IvaCompensationCasillaReferenceError,
@@ -134,7 +133,6 @@ def test_three_year_filed_history_repository_projects_compensation_lots(tmp_path
 
         reloaded = IvaCompensationHistoryRepository().list_periods()
         report = build_iva_compensation_carry_forward_report(reloaded, as_of_year=2026)
-        enforce_iva_compensation_four_year_window(report)
 
     assert tuple(state.source_observation_key for state in reloaded) == (
         "303:2024:4T:20243034T000001",

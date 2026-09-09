@@ -40,13 +40,12 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision, Registry
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef, SourceReference
 
 from ..export_proof import (
-    FilingExportProof,
     FilingExportProofAssessment,
     FilingExportProofAuthority,
     FilingExportProofChannel,
-    FilingExportProofCoordinate,
     FilingExportProofRefusalReason,
 )
+from ..filing_export_proof_contracts import FilingExportProof, FilingExportProofCoordinate
 from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
 
 _CLOSURE_SATISFYING_OUTCOMES = frozenset(

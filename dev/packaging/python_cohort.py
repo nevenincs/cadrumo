@@ -147,7 +147,7 @@ from cadrumo.core.i18n import SUPPORTED_OUTPUT_LANGUAGES, lookup_translation_ent
 from cadrumo.core.json_contract import OutputRootSchema, OutputSchema
 from cadrumo.entrypoints import cli
 from cadrumo.entrypoints.cli.command_spec import DeferredTarget, TranslationKey
-from dev.command_graph import command_spec_for_path, command_spec_nodes
+from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
 def walk(value, kind):
     if isinstance(value, kind):
@@ -193,7 +193,7 @@ def resolve(path, target):
         raise AssertionError(f"unrecognized DeferredTarget role {path}: {target.identity}")
     return value
 
-nodes = command_spec_nodes()
+nodes = COMMAND_GRAPH.nodes()
 # Required, not defaulted. The parent below drives four modes through this one
 # variable, and a default made an unset or renamed variable indistinguishable
 # from the first of them: every run would have measured the projection, the
@@ -286,7 +286,7 @@ elif probe_mode in selected_contracts:
     if warm.exit_code != 0:
         raise AssertionError(f"installed root help failed: {warm.output}")
     before = set(sys.modules)
-    selected = command_spec_for_path(path)
+    selected = COMMAND_GRAPH.resolve_path(path)
     if selected.policy.performance != expected_performance:
         raise AssertionError(f"selected path performance class drifted: {path}")
     result = runner.invoke(get_command(cli.app), [*path[1:], "--help"])

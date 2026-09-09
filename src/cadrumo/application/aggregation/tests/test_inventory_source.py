@@ -32,8 +32,6 @@ from ....domain.contribuyente.inventory.records import (
     InventoryAcquisitionEvidence,
     InventoryAcquisitionEvidenceKind,
     InventoryClosingAuthority,
-    InventoryClosingAuthorityDecision,
-    InventoryClosingAuthorityRecord,
     InventoryClosingDecisionEvidence,
     InventoryClosingDecisionEvidenceRole,
     InventoryClosingValuationBasis,
@@ -44,7 +42,6 @@ from ....domain.contribuyente.inventory.records import (
     PhysicalClosingEvidence,
     PhysicalClosingEvidenceRole,
     PhysicalClosingObservation,
-    PriorAuthoritativeClosingLink,
     PriorClosingContinuityEvidence,
     ValuationMethod,
     fingerprint_prior_authoritative_closing,
@@ -76,6 +73,12 @@ def _ref(value: str) -> FilingEvidenceReference:
 
 
 def _ledger(actividad_id: str, *, physical_closing: Decimal | None = None) -> InventoryLedger:
+    from ....domain.contribuyente.inventory._closing_authority_records import (
+        InventoryClosingAuthorityDecision,
+        InventoryClosingAuthorityRecord,
+        PriorAuthoritativeClosingLink,
+    )
+
     continuity = (PriorClosingContinuityEvidence(reference=_ref(f"prior-{actividad_id}"), content_digest="f" * 64),)
     acquisition = InventoryAcquisitionCost(
         consideration_excluding_iva=Decimal("100.00"),

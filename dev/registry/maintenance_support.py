@@ -31,12 +31,10 @@ from cadrumo.domain.calculations.registry._verdict_cache import (
 from cadrumo.domain.calculations.registry.authority import (
     _SILENT_AUTHORITY_LIFECYCLE_OBSERVER,
     RegistryAuthorityLifecycleObserver,
-    RegistryRevisionInspection,
     _authority_load_barrier,
     _authority_load_states,
     _authority_state_lock,
     _guard_authority_process,
-    bundled_authority,
     collect_registry_identity_fingerprints,
 )
 from cadrumo.domain.calculations.registry.condition_mode import ConditionModeField
@@ -61,6 +59,7 @@ from cadrumo.domain.calculations.registry.external_grounding import (
     OraclePayload,
     RentaWebOpenReplayPayload,
 )
+from cadrumo.domain.calculations.registry.facts.providers import reset_registered_fact_providers
 from cadrumo.domain.calculations.registry.identity import (
     _LOGGER,
     REGISTRY_IDENTITY_SCHEMA_VERSION,
@@ -116,20 +115,6 @@ class OracleEnvironment(StrEnum):
     BOTH = "both"
 
 
-def bundled_revision_inspection(
-    modelo_id: str, *, filing_year: int, period: str, on: date | None = None
-) -> RegistryRevisionInspection:
-    """Return a static revision inspection without entering the filing gate.
-
-    The authority fully validates the bundled registry and its supporting
-    catalogues, then canonically selects the request's revision.  It
-    intentionally does not certify legal-review status or construct a filing
-    snapshot, because source-design inspection is not a filing operation and
-    must not be represented as one.
-    """
-    return bundled_authority().inspect_revision(modelo_id, filing_year=filing_year, period=period, on=on)
-
-
 def reset_registry_caches(
     *, lifecycle_observer: RegistryAuthorityLifecycleObserver = _SILENT_AUTHORITY_LIFECYCLE_OBSERVER
 ) -> None:
@@ -151,6 +136,7 @@ def reset_registry_caches(
         _invalidate_authority_generations()
         _load_registry_tree_cached.cache_clear()
         clear_fingerprint_cache()
+        reset_registered_fact_providers()
 
 
 def stamp_bundled_registry_release(

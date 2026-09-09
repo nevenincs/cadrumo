@@ -34,6 +34,12 @@ from ._verdict_cache import (
 )
 from .convenio import collect_convenio_fingerprints, load_convenio_authority, validate_convenio_legal_refs
 from .errors import RegistrySnapshotError, RegistryValidationError
+from .facts.providers import (
+    collect_registered_fact_provider_fingerprints,
+    compile_registered_fact_providers,
+    validate_fact_provider_directory_ownership,
+)
+from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact, resolve_governed_fact
 from .identity import (
     FingerprintTuples,
     RegistryIdentity,
@@ -71,6 +77,7 @@ def collect_registry_identity_fingerprints(resolved_root: Path) -> FingerprintTu
         collect_registry_tree_fingerprints(resolved_root)
         + collect_convenio_fingerprints(resolved_root)
         + collect_supplementary_orden_fingerprints(resolved_root)
+        + collect_registered_fact_provider_fingerprints(resolved_root)
     )
 
 
@@ -423,6 +430,7 @@ class ValidatedRegistryAuthority:
     _registry_validated: bool
     _validated_modelos: set[str]
     _snapshots: dict[_SnapshotKey, RegistrySnapshot]
+    _identity_digest: str = ""
     _capture_generation: int = field(default=0, init=False, repr=False)
     _capture_reset_epoch: int = field(default=0, init=False, repr=False)
     _capture_state: _AuthorityLoadState | None = field(default=None, init=False, repr=False)
@@ -475,6 +483,18 @@ class ValidatedRegistryAuthority:
             return self._modelos_by_id[modelo_id]
         except KeyError as exc:
             raise RegistrySnapshotError(f"modelo {modelo_id!r} is not present in the calculation registry") from exc
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        """Resolve one typed governed-fact query through this validated authority."""
+        with self._state_lock:
+            self.validate_registry()
+            if not self._identity_digest:
+                raise RegistryValidationError("governed fact resolution requires an authority identity digest")
+            return resolve_governed_fact(
+                self.catalogues.facts,
+                query,
+                authority_digest=self._identity_digest,
+            )
 
     def validate_modelo(self, modelo_id: str) -> ModeloDefinition:
         """Validate one modelo once and return its definition.
@@ -992,6 +1012,8 @@ def construct_authority(
     from .loader import load_registry_tree
 
     modelos, catalogues = load_registry_tree(root, identity=identity)
+    validate_fact_provider_directory_ownership(root)
+    facts = compile_registered_fact_providers(root)
     # Compile the cross-cutting Convenio doble imposición treaty tree and fold it
     # onto the shared catalogues so every snapshot projects the same authority.
     # Grounding gate: every treaty override must cite a treaty article defined in
@@ -1016,6 +1038,7 @@ def construct_authority(
     catalogues = catalogues.model_copy(
         update={
             "legal": {**catalogues.legal, **supplementary_ordenes.legal},
+            "facts": facts,
             "convenio": convenio,
             "supplementary_ordenes": supplementary_ordenes.authorities,
         },
@@ -1035,5 +1058,6 @@ def construct_authority(
         _registry_validated=False,
         _validated_modelos=set(),
         _snapshots={},
+        _identity_digest=identity.digest,
     )
     return authority

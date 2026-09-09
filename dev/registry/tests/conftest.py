@@ -3,7 +3,6 @@
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_authority
-from dev.registry.maintenance_support import bundled_revision_inspection
 
 
 @pytest.fixture(scope="session")
@@ -22,7 +21,7 @@ def registry_authority():
 
 @pytest.fixture
 def m200_inspection_snapshot():
-    return bundled_revision_inspection("200", filing_year=2025, period="0A")
+    return bundled_authority().inspect_revision("200", filing_year=2025, period="0A")
 
 
 @pytest.fixture
@@ -33,4 +32,4 @@ def m130_inspection_snapshot():
     checks a map against them as a bijection, so a synthetic map can no longer
     be validated against it except to test that very bijection.
     """
-    return bundled_revision_inspection("130", filing_year=2026, period="1T")
+    return bundled_authority().inspect_revision("130", filing_year=2026, period="1T")

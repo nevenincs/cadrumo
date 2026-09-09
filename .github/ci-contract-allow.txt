@@ -41,7 +41,6 @@ release-please.yml:Refuse a deadlocked release state
 # Each is a real gate that a contributor cannot run before pushing.
 #   check-semgrep          `uvx --from semgrep==1.168.0 ...`, twice, with the
 #                          version pinned in YAML rather than in the toolchain
-#   audit-oracles          `dev.registry.parity.maintenance_cli audit-oracles`
 #   check-vault            `vaultspec-core vault check all`, called raw; every
 #                          other repo in the fleet reaches the vault by recipe
 #   audit-deps             ci-full exports the lock and pipes it to `pip-audit`
@@ -53,12 +52,10 @@ release-please.yml:Refuse a deadlocked release state
 aeat-drift-detector.yml:Run GROI live drift tests
 agent-harness-eval.yml:Cadrumo agent-harness eval surface
 ci-full.yml:Semgrep regression rules (linkage-design type-uniformity)
-ci-full.yml:Audit oracle bindings
 ci-full.yml:Audit dependencies for known CVEs
 ci-full.yml:Vault structural drift (informational)
 ci-full.yml:Ledger + storage roundtrip suite
 ci.yml:Semgrep regression rules (linkage-design type-uniformity)
-ci.yml:Audit oracle bindings
 docs-publish.yml:Publish the documentation site
 
 # --- pending - the packaging and release lanes ---------------------------------
