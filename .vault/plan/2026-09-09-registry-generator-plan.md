@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:626552d59952db60dfedfa19816462fd0a820df725a9427b2bbe1e41d0e3dd18'
+body_hash: 'sha256:3fa4316f35e0e3d633c37ddf6353b2a8f9408d6c1a5aa658aefa25f4833b9e80'
 ---
 
 # `registry-generator` plan
@@ -185,7 +185,7 @@ Decodes official worked examples through the shipped codec and compares field by
 
 - [x] `W04.P13.S47` - Extend the existing external-oracle corpus enum rather than creating a second oracle surface; `src/cadrumo/core/external_oracle_corpus.py`.
 - [x] `W04.P13.S48` - Extend the existing grounding fold and conformance-vector mechanism to carry the new comparison; `src/cadrumo/domain/calculations/registry/external_grounding.py`.
-- [ ] `W04.P13.S70` - BLOCKED on official evidence: no bundled worked example carries a negative amount in a signed fixed-width slot, and an expected value for one must be captured from an official source rather than invented; `src/cadrumo/_data/corpus/manual_oracles/`.
+- [ ] `W04.P13.S70` - BLOCKED on official evidence, and the note-scope axis it sat beside is now closed: the adrift pointer population is 2, both diagnosed benign, after correcting a screen that over-reported by ninety times; `src/cadrumo/_data/corpus/manual_oracles/`.
 - [x] `W04.P13.S49` - Satisfied by the shipped worked-example oracles: the corporate-tax and instalment tests compare computed values field by field against AEAT's printed liquidacion tables, with page locators into the bundled official manuals; `src/cadrumo/application/modelo/tests/`.
 - [x] `W04.P13.S50` - Confirm no expected value in the oracle originates in the generator; `src/cadrumo/domain/calculations/registry/tests/`.
 
