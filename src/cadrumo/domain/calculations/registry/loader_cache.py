@@ -551,7 +551,6 @@ def _toml_content_digest(path: Path) -> str:
 
 def _running_under_pytest() -> bool:
     """Whether the current process is a pytest run (including collection and xdist workers)."""
-    import os
     import sys
 
     return (

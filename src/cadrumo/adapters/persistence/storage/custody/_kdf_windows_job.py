@@ -94,8 +94,6 @@ class _WindowsJob:
         return cls(int(handle), kernel32)
 
     def assign(self, process: subprocess.Popen[bytes]) -> None:
-        from ctypes import wintypes
-
         process_handle = int(cast(Any, process)._handle)
         if not self._kernel32.AssignProcessToJobObject(
             wintypes.HANDLE(self._handle),
@@ -105,7 +103,6 @@ class _WindowsJob:
 
     def contains(self, process: subprocess.Popen[bytes]) -> bool:
         """Prove the launched worker PID is present in this exact job object."""
-        from ctypes import wintypes
 
         class _BasicProcessIdList(ctypes.Structure):
             _fields_ = [
@@ -156,8 +153,6 @@ class _WindowsJob:
         }
 
     def close(self) -> None:
-        from ctypes import wintypes
-
         if self._handle:
             self._kernel32.CloseHandle(wintypes.HANDLE(self._handle))
             self._handle = 0
