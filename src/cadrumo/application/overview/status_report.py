@@ -10,12 +10,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
+from datetime import date
 from typing import TYPE_CHECKING
 
 from ...core.decimal.coercion import coerce_decimal_strict as _coerce_decimal_strict
 from ...core.logging import get_logger as _get_logger
 from ...core.modelo import Modelo as _Modelo
 from ...domain.deadlines.models import evaluate_multiple_pagadores_obligation as _evaluate_multiple_pagadores_obligation
+from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
 from .calendar_models import (
     OverviewStatusReport,
 )
@@ -48,9 +50,9 @@ def build_filing_obligation_advisories(
 
     Args:
         raw_values: Profile raw values mapping, or ``None``.
-        filing_year: The income year selecting the dated reduced limit; when
-            ``None`` the latest known reduced limit is used (the current
-            figure for a year-agnostic operator surface).
+        filing_year: The income year selecting the dated reduced limit.  A
+            yearless surface cannot make this dated legal assertion and emits
+            no advisory.
 
     Returns a tuple of ``tr()``-resolvable locale keys, empty when no
     evidence of a mandatory obligation is present. Malformed raw values are
@@ -89,12 +91,28 @@ def build_filing_obligation_advisories(
         "irpf.pagadores_total_work_income",
         raw_values.get("irpf.pagadores_total_work_income"),
     )
+    if filing_year is None:
+        # Parsing still runs so malformed profile fields are diagnosable, but a
+        # yearless surface cannot select a dated legal mapping.
+        return ()
+
+    # Authority composition is application work.  The domain evaluator only
+    # accepts this explicit context and never reads bundled facts itself.
+    from ...domain.calculations.registry.authority import bundled_authority
+
+    coordinate = date(filing_year, 12, 31)
+    facts = _DeadlineFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=coordinate,
+        submission_date=coordinate,
+    )
 
     if _evaluate_multiple_pagadores_obligation(
         pagadores_count,
         secondary_income,
         total_work_income,
-        filing_year,
+        filing_year=filing_year,
+        facts=facts,
     ):
         return (_MULTIPLE_PAGADORES_OBLIGATION_LOCALE_KEY,)
     return ()
@@ -156,7 +174,7 @@ def overview_status_report_from_projection(
         discarded_work_units=projection.workspace.discarded_work_units,
         calculation_revisions=projection.workspace.calculation_revisions,
         unreadable_rows=projection.workspace.unreadable_rows,
-        filing_obligation_advisories=build_filing_obligation_advisories(raw_values),
+        filing_obligation_advisories=(),
         unsupported_work_create_modelos=build_unsupported_work_create_modelos(raw_values),
     )
 

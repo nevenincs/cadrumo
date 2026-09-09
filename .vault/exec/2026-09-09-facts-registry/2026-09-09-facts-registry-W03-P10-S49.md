@@ -5,12 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:60478ad7e8fdce44697fa926b37bad52d68c33f2feca0a9886110eb174d6432a'
+body_hash: 'sha256:f5a270cdd4140564eae22e943be2c33a8ff252aaedc06befefee37d30e845306'
 step_id: 'S49'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
 
 # Rewire Modelo 202 and modelo classification consumers
 

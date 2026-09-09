@@ -5,7 +5,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c0d8e4d940bdf4b42fc00a7bd33089db7f470a98b48a5e25e8d9ca25d8e803d'
+body_hash: 'sha256:b2d874dd92daae32629062a7359a80edbd747d3fce0335f95ea97f2cf3267564'
 related:
   - "[[2026-09-09-registry-generator-corpus-provenance-research]]"
   - "[[2026-09-09-registry-generator-divergence-evidence-research]]"
@@ -369,3 +369,38 @@ it took one retrieval. The lesson is not that the analysis was wrong but that th
 boundary was drawn too narrowly: "no source in this corpus states it" was read as "no source states
 it". D10's independent oracle exists for exactly this gap and should be treated as load-bearing
 rather than last.
+
+**Amendment, 2026-09-09 (execution): what the consumer lane found, and the one gap that blocks the
+rest.** This record deferred whether the consuming application can be trusted with an incoherent
+registry, and warned that the answer might require amending it. It does, in three ways.
+
+The consumer is stronger than assumed and the producer disarms it. The authority raises rather than
+returning a partially valid snapshot; the fixed-width codec refuses to render an absent value for a
+field declared required, so an omitted mandatory figure cannot reach a filing as a zero; and a
+revision whose identifier claims a window its own declarations close is rejected. That guard fires
+only on a true required flag, and required-ness is derived from a single official token, with silence
+folded to false. Fourteen thousand six hundred and seventy-five fields therefore tell the codec they
+are optional when their design said nothing. The held ruling on required-ness is consequently not
+about giving the consumer a state it lacks; it is about not lying to a check that already works.
+
+An adjudication cannot reach a calculation, because it stops at generation. Every adjudication
+mechanism is generator-side and appears in the shipped package nowhere, so a reviewer's decision is
+consumed when the tree is built and leaves no trace a consumer could read. That is the case FOR the
+per-field verdict rather than against it: the attestation is the only place that judgement could
+survive.
+
+**And one gap blocks every remaining producer ruling.** Publication refuses any tree whose records
+changed, because the check it runs compares the shipped manifest against a fresh render and the
+correction IS that difference. The manifest loader compares canonical bytes, so the attestation
+format cannot gain a field either without regenerating every manifest, which needs the same
+publication. The sign correction, the per-field verdict, the required-ness state and the refusing
+validators are therefore not four independent pieces of work; they are one missing verb counted four
+times. A publication path that accepts a regenerated tree as declared intent - carrying a reason and
+a source pin, as the disposition rows already do - unblocks all of them at once.
+
+**A provability axis this record did not contemplate.** A design states part of a field's meaning in
+a note the content cell points at, and 186 shipped fields cite a label their design defines several
+times with different text. Their governing mandate has more than one plausible reading and the
+artefact records none having been chosen. This is the sign defect's mechanism one layer up, it is
+measured by an enrolled screen, and unlike everything above it is NOT blocked by the publication gap,
+because resolving note scope changes what the pipeline can prove rather than what it emits.

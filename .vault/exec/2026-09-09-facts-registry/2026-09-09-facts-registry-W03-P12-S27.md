@@ -5,12 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e01e6654bcbaa03b9dce52c4b44a387748eb11aae1dd0694b213bfeec9fd908'
+body_hash: 'sha256:0fffa21c8accf1c0348fd313710dc303b5d86385eb4cfdc215efd6294eb48da5'
 step_id: 'S27'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
 
 # Rewire invoice slot percentage interpretation
 
@@ -19,7 +18,6 @@ related:
 - `src/cadrumo/domain/invoices/enums.py`
 
 ## Changes
-
 
 - `M` `src/cadrumo/domain/invoices/enums.py`
 - `M` `src/cadrumo/domain/invoices/models.py`

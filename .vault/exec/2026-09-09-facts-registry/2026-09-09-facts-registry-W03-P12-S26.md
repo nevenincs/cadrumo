@@ -5,12 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:2eb7a9897108556570a72b44112295f28c14811f631d42cbec936a8ad3e16aef'
+body_hash: 'sha256:3bfebd51214b66c2ead38cf1b3230a8660ef0e79e56de0ae8deda3410a38b043'
 step_id: 'S26'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
 
 # Rewire IVA lookups while preserving domain facades
 
@@ -19,7 +18,6 @@ related:
 - `src/cadrumo/domain/iva`
 
 ## Changes
-
 
 - `M` `src/cadrumo/domain/iva/lookup.py`
 - `M` `src/cadrumo/domain/iva/recargo_equivalencia.py`

@@ -5,16 +5,11 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:31095d8fbbd011c2e93a19dee1450cb0db3cb0401ba18d6c267a5183b81a027f'
+body_hash: 'sha256:b6cb8dc6afa9c156e8ef61381f3cbc7ef2ff7578ca56518788436880f680d9ea'
 step_id: 'S52'
 related:
   - "[[2026-09-09-facts-registry-plan]]"
 ---
-
-<!-- Machine-owned: the filename, the frontmatter, the title heading and the
-     Scope list are all filled by `vaultspec-core vault add exec` from the
-     originating Step row; never hand-edit them. Add no frontmatter fields.
-     Wiki-links belong in `related:` only, never in the body. -->
 
 # Rewire treaty and authorization consumers
 

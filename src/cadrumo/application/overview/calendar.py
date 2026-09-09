@@ -56,6 +56,7 @@ from ...domain.deadlines.engine import DeadlineEngine as _DeadlineEngine
 from ...domain.deadlines.engine import ScheduleProducer as _ScheduleProducer
 from ...domain.deadlines.engine import classify_obligation_status as _classify_obligation_status
 from ...domain.deadlines.errors import DeadlineValidationError as _DeadlineValidationError
+from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
 from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines.festivos import shift_deadline as _shift_deadline
 from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
@@ -468,10 +469,22 @@ def _calendar_event_from_notification(
     status = read_state or row.tipo
     summary = row.concepto.strip() or row.tipo
     post_filing_kind = _classify_post_filing_event_kind(concepto=row.concepto, tipo=row.tipo)
+    # Notification service is calculated in core, while the governed legal
+    # parameter is selected at this outer application composition boundary.
+    # An undelivered row has no submission coordinate, so ``as_of`` is the
+    # explicit projection coordinate for the state that does not consume it.
+    from ...domain.calculations.registry.authority import bundled_authority
+
+    facts = _DeadlineFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=as_of,
+        submission_date=row.fecha_notificacion or as_of,
+    )
     estado_servicio = _resolve_notificacion_estado_servicio(
         fecha_notificacion=row.fecha_notificacion,
         leida=row.leida,
         as_of=as_of,
+        tacit_rejection_natural_days=facts.integer("dehu-tacit-rejection-natural-days"),
     )
     return _OverviewCalendarEvent(
         event_type=_OverviewCalendarEventType.MESSAGE,

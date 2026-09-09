@@ -18,10 +18,6 @@ from typing import Annotated, Self
 from pydantic import BaseModel, BeforeValidator, Field, NonNegativeInt, field_validator, model_validator
 
 from ...core.aggregation import ThirdPartyDeclarationRole
-from ...core.external_constants import (
-    MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR,
-    WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR,
-)
 from ...core.filing_year import FilingYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.identity import SubjectTaxId
@@ -33,6 +29,7 @@ from ...core.type_adapters import OBJECT_TUPLE_ADAPTER
 from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import UE_EEA_COUNTRY_CODES, FiscalResidency
 from .errors import DeadlineValidationError
+from .fact_context import DeadlineFactResolutionContext
 
 
 class IVARegime(StrEnum):
@@ -814,40 +811,36 @@ class TaxpayerProfile(BaseModel):
         return is_ue_eee_country_code(self.country_of_fiscal_residence)
 
 
-_MULTIPLE_PAGADORES_SECONDARY_THRESHOLD = MULTIPLE_PAGADORES_SECONDARY_THRESHOLD_EUR
-
-
-def resolve_multiple_pagadores_reduced_limit(filing_year: int | None) -> Decimal:
+def resolve_multiple_pagadores_reduced_limit(
+    filing_year: int,
+    *,
+    facts: DeadlineFactResolutionContext,
+) -> Decimal:
     """Return the Art. 96.3 LIRPF reduced work-income exemption limit for *filing_year*.
 
     The reduced limit is dated (14.000 € up to 2022, 15.000 € for 2023,
     15.876 € for 2024 onward); the authoritative per-year schedule lives in
-    :data:`~cadrumo.core.external_constants.WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR`.
-    A year before the earliest tabulated entry resolves to the earliest known
-    amount; a year after the latest entry resolves to the latest known amount
-    (forward-compatible until a new law revalues it); ``None`` resolves to the
-    latest known amount so a year-agnostic operator surface uses the current
-    figure.
+    typed governed mapping fact selected by the explicit filing-period
+    coordinate.  Missing coordinates fail closed rather than borrowing a
+    historical or future amount.
 
     Args:
-        filing_year: The year the work income was obtained, or ``None``.
+        filing_year: The year the work income was obtained.
+        facts: Authority plus explicit filing and submission coordinates.
 
     Returns:
         The reduced exemption limit in euros as a :class:`~decimal.Decimal`.
     """
-    table = WORK_INCOME_MULTIPLE_PAGADORES_REDUCED_LIMIT_EUR_BY_YEAR
-    if filing_year is None or filing_year >= max(table):
-        return table[max(table)]
-    if filing_year <= min(table):
-        return table[min(table)]
-    return table[filing_year]
+    return facts.mapping_decimal("lirpf-work-income-multiple-pagadores-reduced-limit", filing_year)
 
 
 def evaluate_multiple_pagadores_obligation(
     pagadores_count: int | None,
     secondary_income: Decimal | None,
     total_work_income: Decimal | None = None,
-    filing_year: int | None = None,
+    *,
+    filing_year: int,
+    facts: DeadlineFactResolutionContext,
 ) -> bool:
     """Return True when Art. 96.3 LIRPF mandates Modelo 100 filing.
 
@@ -870,7 +863,8 @@ def evaluate_multiple_pagadores_obligation(
             ruled out, so the rule surfaces conservatively rather than
             granting a false clear (``no-silent-under-declaration``).
         filing_year: The year the income was obtained, selecting the dated
-            reduced limit. ``None`` uses the latest known reduced limit.
+            reduced limit.
+        facts: Authority plus explicit filing and submission coordinates.
 
     Returns:
         ``True`` when the reduced-limit regime is active (count >= 2 AND
@@ -880,11 +874,14 @@ def evaluate_multiple_pagadores_obligation(
     """
     if pagadores_count is None or secondary_income is None:
         return False
-    if not (pagadores_count >= 2 and secondary_income > _MULTIPLE_PAGADORES_SECONDARY_THRESHOLD):
+    if not (
+        pagadores_count >= 2
+        and secondary_income > facts.decimal("lirpf-multiple-pagadores-secondary-threshold")
+    ):
         return False
     if total_work_income is None:
         return True
-    return total_work_income > resolve_multiple_pagadores_reduced_limit(filing_year)
+    return total_work_income > resolve_multiple_pagadores_reduced_limit(filing_year, facts=facts)
 
 
 class RecargoBand(BaseModel):

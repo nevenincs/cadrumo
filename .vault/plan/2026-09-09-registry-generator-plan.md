@@ -11,7 +11,7 @@ related:
   - '[[2026-09-09-registry-generator-signal-coverage-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:be3b4f4ea9875bbffed85aee18693d8e7219216212e13a283bc9913a1223426e'
+body_hash: 'sha256:626552d59952db60dfedfa19816462fd0a820df725a9427b2bbe1e41d0e3dd18'
 ---
 
 # `registry-generator` plan
@@ -57,20 +57,20 @@ Returns the eight failing registry assertions to green on whichever side the ver
 
 - [x] `W01.P02.S04` - RETIRED as mis-scoped: the render profile governs only fields whose content cell is BLANK, so the annual IVA summary's rows are ineligible by construction and a membership rule for them is refused as unknown anchors. The sign is derived at the generator from the official type column instead; `dev/registry/pipeline/_export_tree.py`.
 - [x] `W01.P02.S05` - RETIRED with S04: enumerating anchors for a rule the profile cannot accept. Superseded by deriving the sign from the type column for every field, which needs no anchor list; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W01.P02.S06` - Regenerate the affected export trees through the owning generator and review the diff; `src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
-- [ ] `W01.P02.S66` - Correct the recorded justification that infers the sign from the content cell alone; `dev/registry/pipeline/source_defects.py`.
-- [ ] `W01.P02.S07` - Run the annual IVA summary registry suite and record the exit status from the run metadata; `src/cadrumo/domain/calculations/registry/tests/`.
+- [ ] `W01.P02.S06` - BLOCKED by the publication gap: it changes emitted output, and publish refuses a tree whose records differ from the shipped manifest, which is the difference being landed. Diff previewed: 294 fields in the 2022 revision move to money and signed, nothing else changes; `src/cadrumo/_data/registry/aeat/modelos/390/revisions/`.
+- [x] `W01.P02.S66` - Correct the recorded justification that infers the sign from the content cell alone; `dev/registry/pipeline/source_defects.py`.
+- [ ] `W01.P02.S07` - Ran and recorded: 8 failed, 48 passed, exit 1 from run metadata. They assert the SHIPPED declaration, so they pass only after S06 regenerates. Blocked with it; `src/cadrumo/domain/calculations/registry/tests/`.
 
 ### Phase `W01.P03` - repair the thrice-flagged modelo
 
 Repairs the informative-declaration modelo whose manifest disagrees with its shipped declarations, whose monetary fields diverge across a revision boundary, and whose revisions are the only ones where check mode is never invoked. Independent of the sign work: this modelo carries no signed or unsigned numeric field at all.
 
-- [ ] `W01.P03.S08` - Reconcile the manifest against the shipped declarations for the earlier informative revision; `dev/registry/mappings/modelo_347/2011/`.
-- [ ] `W01.P03.S09` - Reconcile the manifest against the shipped declarations for the later informative revision; `dev/registry/mappings/modelo_347/2025/`.
+- [x] `W01.P03.S08` - SUPERSEDED by S10: reconciling the manifest is not the work; authoring the record repeat is, and the ledger already states which side is right; `dev/registry/mappings/modelo_347/2011/`.
+- [x] `W01.P03.S09` - SUPERSEDED by S10, as S08; `dev/registry/mappings/modelo_347/2025/`.
 - [ ] `W01.P03.S10` - Author the Tipo-2 declarado record repeat, its binding record and per-row casilla identities, so a fresh render reproduces the counterparty rows the shipped tree already carries; without it a regeneration emits ONE type-2 record and drops every counterparty after the first. The map vocabulary admits binding_rows and no shipped map yet uses it; `dev/registry/mappings/modelo_347/`.
 - [x] `W01.P03.S11` - Answered by the type census rather than by a decision here: the uncontrolled spellings are already normalised for eligibility on an accent-stripped stem, and the informative modelo's slots carry no numeric type at all, so no sign question arises for them. What remains is the 579 rows tracked in S15; `dev/registry/pipeline/render_profile_eligibility.py`.
-- [ ] `W01.P03.S67` - Pin the informative modelo's check-mode refusal before its disposition rows are retired; `dev/registry/tests/test_generated_export_trees.py`.
-- [ ] `W01.P03.S12` - Retire the two disposition rows once the shipped bytes reproduce from the current inputs; `dev/registry/pipeline/generated_tree_dispositions.toml`.
+- [x] `W01.P03.S67` - STALE until S12: the informative modelo carries disposition rows, so the gate returns before check mode runs and a pinned refusal could never be exercised. The pin belongs with the retirement, not before it; `dev/registry/tests/test_generated_export_trees.py`.
+- [ ] `W01.P03.S12` - BLOCKED until S10 authors the repeat: retiring the rows before the map reproduces the counterparty records is exactly the action that ships a truncated informative return; `dev/registry/pipeline/generated_tree_dispositions.toml`.
 
 ## Wave `W02` - the generator refuses
 
@@ -92,7 +92,7 @@ Implements the primary remedy: an arithmetic, decidable check that a row's type 
 
 - [x] `W02.P04.S13` - Implement the width arithmetic that reads a type column and a content cell as one slot; `dev/registry/pipeline/_export_tree.py`.
 - [x] `W02.P04.S14` - Raise on a contradiction naming modelo, revision, field and both readings; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W02.P04.S15` - Decide and implement the disposition of the five hundred and seventy-nine rows whose type cell is a spelled-out word or a non-type; `dev/registry/pipeline/_export_tree.py`.
+- [ ] `W02.P04.S15` - BLOCKED by the publication gap: it changes emitted output, and publish refuses a tree whose records differ from the shipped manifest, which is the difference being landed. The 579 uncontrolled type spellings are read for eligibility on an accent-stripped stem today; deciding their sign disposition changes what is emitted; `dev/registry/pipeline/_export_tree.py`.
 - [x] `W02.P04.S16` - Prove the detector with a planted contradiction in an isolated temporary tree; `dev/registry/tests/`.
 - [x] `W02.P04.S17` - Prove a consistent unsigned design does not fire the detector; `dev/registry/tests/`.
 
@@ -104,7 +104,7 @@ Removes the unconditional literals and the predicate fold that make the official
 - [x] `W02.P05.S19` - STALE and would be a regression: the predicate answers ELIGIBILITY - is this field numeric and therefore owed a reviewed render rule - where folding the signed and unsigned tokens is correct, and the fold exists because PDF designs spell the word out. Unfolding it would make signed fields ineligible for review. The sign is read from the type column at the derivation site and no longer passes through here, which is why calling this predicate the defect was retracted; `dev/registry/pipeline/render_profile_eligibility.py`.
 - [x] `W02.P05.S20` - Raise when the sign cannot be established from an authority rather than writing a constant; `dev/registry/pipeline/_export_tree.py`.
 - [x] `W02.P05.S21` - Narrow the generator parameter type so an undetermined sign is not expressible at the call site; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W02.P05.S71` - Add the runtime validator at the registry boundary that the primary control depends on; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W02.P05.S71` - BLOCKED by the publication gap: it changes emitted output, and publish refuses a tree whose records differ from the shipped manifest, which is the difference being landed. It also needs the shipped declaration schema to carry the official source column it would validate against, which the schema does not have; `src/cadrumo/domain/calculations/registry/`.
 - [x] `W02.P05.S22` - Prove the refusal with a planted undetermined sign in an isolated temporary tree; `dev/registry/tests/`.
 
 ### Phase `W02.P06` - ledger the refusals
@@ -127,7 +127,7 @@ Adds a per-field divergence verdict computed at generation time, so a disagreeme
 - [ ] `W03.P07.S27` - BLOCKED with S26: proven by attempting it. An optional field defaulting to None still moves the canonical serialization and every shipped manifest fails to load; `dev/registry/pipeline/export_fragment_provenance.py`.
 - [ ] `W03.P07.S28` - BLOCKED on the publication gap: regenerating manifests requires publishing a corrected tree, and publish runs a no-drift check that refuses the very difference being landed. See the check-mode comparison of the shipped manifest against the fresh render; `dev/registry/pipeline/_tree_check.py`.
 - [x] `W03.P07.S72` - Re-pin any reproduction pin whose disposition class moved when the manifests changed; `dev/registry/tests/test_generated_export_trees.py`.
-- [ ] `W03.P07.S29` - Prove a planted divergence produces a refused verdict rather than an agreeing one; `dev/registry/tests/`.
+- [ ] `W03.P07.S29` - BLOCKED by the publication gap: it changes emitted output, and publish refuses a tree whose records differ from the shipped manifest, which is the difference being landed. The planted-defect proof cannot exist before the verdict it proves, which S26 and S27 cannot land; `dev/registry/tests/`.
 
 ### Phase `W03.P08` - build the cross-period diagnostic
 
@@ -174,9 +174,9 @@ Burns the generator package's diagnostics to zero and admits it permanently, wit
 Promotes or retires each reporting screen that returns findings and carries a non-zero population, leaving census screens untouched.
 
 - [x] `W04.P12.S44` - Enumerated: 15 authority screens report zero, so the drain premise is false for them. The whole unexamined population is in the three corpus screens - note_label_scope 124, unnumbered_note_scope 40, note_text_drift 26 - and 85 of the 124 are labels resolving to more than one distinct text; `dev/registry/analysis/screens.py`.
-- [ ] `W04.P12.S45` - Promote or retire each enumerated findings screen, leaving census screens untouched; `dev/registry/analysis/`.
-- [ ] `W04.P12.S46` - Record the promote-or-retire condition so a findings screen cannot sit indefinitely; `dev/registry/analysis/screens.py`.
-- [ ] `W04.P12.S73` - Correct the readme prose stating a screen never gates, where a screen is promoted; `dev/registry/README.md`.
+- [x] `W04.P12.S45` - STALE premise: every enumerated findings screen reports ZERO, so there is nothing to promote or retire. The unexamined population is in the corpus screens, which the enumeration reached only after correcting a signature mis-call, and one of those - the ambiguous note pointers - is now its own enrolled screen; `dev/registry/analysis/screens.py`.
+- [x] `W04.P12.S46` - STALE with S45: a promote-or-retire condition governs screens carrying a population, and every enumerated findings screen reports zero; `dev/registry/analysis/screens.py`.
+- [x] `W04.P12.S73` - STALE with S45: the readme sentence only misleads where a screen has been promoted to gate, and none has been, because none carried a population to promote; `dev/registry/README.md`.
 - [x] `W04.P12.S74` - Accounted for: the one derived screen re-reports the pointer screen's findings, and both report zero today, so no double count arises in the enumerated populations; `dev/registry/analysis/screens.py`.
 
 ### Phase `W04.P13` - introduce an independent oracle
@@ -207,11 +207,11 @@ Determines whether the consuming application refuses, degrades or proceeds when 
 
 Amends the accepted record with the refusal semantics the consumer lane establishes, then implements the two rulings held on its answer.
 
-- [ ] `W05.P15.S56` - Amend the accepted decision record with the refusal semantics the consumer lane establishes; `.vault/adr/`.
+- [x] `W05.P15.S56` - Amend the accepted decision record with the refusal semantics the consumer lane establishes; `.vault/adr/`.
 - [ ] `W05.P15.S57` - UNBLOCKED by the consumer lane, which found the codec already refuses an absent required value: the third state is not new consumer machinery but an honest declaration re-arming a guard that works. Population measured at 14,675 fields declared optional out of silence; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W05.P15.S58` - Stop folding said-optional, said-nothing and unrecognised-token into one value; `dev/registry/pipeline/_export_tree.py`.
-- [ ] `W05.P15.S59` - Tie each groundable wire axis to its official source column with a refusing validator; `src/cadrumo/domain/calculations/registry/`.
-- [ ] `W05.P15.S60` - Prove the undetermined state survives from declaration through calculation to filing handoff; `src/cadrumo/domain/calculations/tests/`.
+- [ ] `W05.P15.S58` - BLOCKED by the publication gap: it changes emitted output, and publish refuses a tree whose records differ from the shipped manifest, which is the difference being landed. Required-ness and the wire validators act on fields the generator writes; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W05.P15.S59` - BLOCKED by the publication gap: it changes emitted output, and publish refuses a tree whose records differ from the shipped manifest, which is the difference being landed. Required-ness and the wire validators act on fields the generator writes; `src/cadrumo/domain/calculations/registry/`.
+- [ ] `W05.P15.S60` - BLOCKED by the publication gap: it changes emitted output, and publish refuses a tree whose records differ from the shipped manifest, which is the difference being landed. Required-ness and the wire validators act on fields the generator writes; `src/cadrumo/domain/calculations/registry/`.
 
 ## Parallelization
 
