@@ -59,529 +59,551 @@ record. Must not be republished.
 reconsideration_condition = "Remove this pin when the current semantic map reproduces the published binding_rows repeat and all per-row casilla identities."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "151"
 revision = "2015-2022"
 source_ref = "aeat-dr-151-2015"
 source_sha256 = "997dc9cf5230a374716d04a5ae9aed0e9c659ee9352451843dbc5232d3f2137a"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "151"
 revision = "2025-y-siguientes"
 source_ref = "aeat-dr-151-2023"
 source_sha256 = "7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "200"
 revision = "2025-y-siguientes"
 source_ref = "aeat-dr-200-2025"
 source_sha256 = "92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "202"
 revision = "2019-2022"
 source_ref = "aeat-dr-202-2019"
 source_sha256 = "96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "202"
 revision = "2023-2024"
 source_ref = "aeat-dr-202-2023"
 source_sha256 = "1e4881439e25417df5a8584bffd7149ca0952e2df53963b19c0346572259bec7"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "202"
 revision = "2025-y-siguientes"
 source_ref = "aeat-dr-202-2025"
 source_sha256 = "04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "210"
 revision = "2025"
 source_ref = "aeat-dr-210-2022"
 source_sha256 = "dce167991abaf547f31b38d7a5e51892ff6e8bd49a27a539432ab504891a0c00"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "210"
 revision = "2026-y-siguientes"
 source_ref = "aeat-dr-210-2026"
 source_sha256 = "2f86f1b95cd64a0c2d5eb3bf503052e6d3cb7f76994466a933fb2b91be2ca6c2"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "222"
 revision = "2025-y-siguientes"
 source_ref = "aeat-dr-222-2025"
 source_sha256 = "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "303"
 revision = "2022"
 source_ref = "aeat-dr-303-2022"
 source_sha256 = "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "303"
 revision = "2023"
 source_ref = "aeat-dr-303-2023"
 source_sha256 = "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "303"
 revision = "2024-desde-09-y-3t"
 source_ref = "aeat-dr-303-2024-late"
 source_sha256 = "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "303"
 revision = "2024-hasta-08-y-2t"
 source_ref = "aeat-dr-303-2024-early"
 source_sha256 = "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "303"
 revision = "2025"
 source_ref = "aeat-dr-303-2025"
 source_sha256 = "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "303"
 revision = "2026-y-siguientes"
 source_ref = "aeat-dr-303-2026"
 source_sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "322"
 revision = "2008-2022"
 source_ref = "aeat-dr-322-2022"
 source_sha256 = "be029175f11e632cfefb48b26058766f827612be9e06ad12de7157f15901830f"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "322"
 revision = "2023"
 source_ref = "aeat-dr-322-2023"
 source_sha256 = "540805f09ca397511b9c2704533dcbcffc96a781602fd7d427d11fe9264e11f0"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "322"
 revision = "2024-2025"
 source_ref = "aeat-dr-322-2024-2025"
 source_sha256 = "a70f3a2ca7dd409b6b39964b261d22b8732a767a71e3e6ef2e652e179678188b"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "390"
 revision = "2022"
 source_ref = "aeat-dr-390-2022"
 source_sha256 = "7c6554f3182df51daaec37284dd891eb925e1f92df7e69bc01b8ccfb8e4f26fe"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "390"
 revision = "2023"
 source_ref = "aeat-dr-390-2023"
 source_sha256 = "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "390"
 revision = "2024"
 source_ref = "aeat-dr-390-2024"
 source_sha256 = "8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
 
 [[dispositions]]
-kind = "render_refusal"
+kind = "record_drift"
 modelo = "390"
 revision = "2025"
 source_ref = "aeat-dr-390-2025"
 source_sha256 = "6d33d8a4245976e55dc31ff85065b420f76d1588110dc1eb541a8039c5e3f252"
-refusal_marker = "declares a signed amount with no grounded representation"
 reason = """
-The official type column declares these amounts signed, and the generator now
-refuses them rather than emitting the unsigned slot it used to write without
-reading the column at all. The refusal is not the defect; it is the defect
-becoming visible.
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
 
-What is missing is not the sign but its REPRESENTATION. A signed slot spends its
-leading position on the sign marker, and no official source in this corpus states
-what a non-negative value puts in that position: the design's note governs
-negatives only. Emitting on either reading would guess a filing byte, so the
-slot is refused until a rule grounds it.
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
 
-The shipped tree is unaffected and remains correct to load. Refusal stops a
-REGENERATION, which is exactly the property that makes this landable.
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
 """
-reconsideration_condition = "Remove this pin when a grounded rule states how a non-negative value occupies the sign position of a signed fixed-width amount, and the revision renders with the sign derived from the official type column."
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."

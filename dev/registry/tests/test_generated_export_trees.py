@@ -462,49 +462,284 @@ def test_m390_isolation_excludes_both_export_authorities_and_keeps_required_supp
     assert "generated-modelo-390-2022-fichero" in construct_text
 
     semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    rendered = render_complete_export_tree(
+        revision_root / "export",
+        revision_id=tree.revision,
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=transport,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+        source_defects=source_defects_for(tree.source_ref),
+    )
+    validate_generated_export_tree(
+        context=GeneratedExportTreeValidationContext(
+            registry_root=registry_root,
+            source_root=bundled_path(),
+            target=ExportFragmentTarget(
+                modelo=tree.modelo,
+                revision_id=tree.revision,
+                design_epoch=tree.epoch,
+            ),
+            filing_year=tree.filing_year,
+            period=tree.period,
+            supporting_modelos=_supporting_modelos(tree),
+        ),
+        joined=joined,
+        semantic_map=semantic_map,
+        rendered=rendered,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+    )
 
-    # This revision carries a render-refusal disposition: its official type column
-    # declares signed amounts whose representation is not grounded. The isolation
-    # property this test owns -- that the harness supplies everything a render
-    # needs WITHOUT copying either export authority -- is asserted above and is
-    # unaffected. The render is asserted to refuse for THAT declared cause, so
-    # this still fails if the harness breaks or if the refusal changes reason.
-    #
-    # GIVEN UP while the disposition stands: that the rendered tree then passes
-    # `validate_generated_export_tree` under the isolated root. That assertion
-    # needs a tree that renders, and every revision of this modelo now refuses.
-    # It is re-established on a rendering tree rather than left unowned.
-    refusal = _RENDER_REFUSAL_DISPOSITIONS[f"{tree.modelo}/{tree.revision}"]
-    with pytest.raises(RegistryValidationError) as refused:
-        render_complete_export_tree(
-            revision_root / "export",
-            revision_id=tree.revision,
+
+@pytest.mark.parametrize("tree", _GENERATED_TREES, ids=str)
+def test_committed_tree_is_reproducible_and_check_mode_refuses_only_for_its_named_reason(
+    tree: _GeneratedTree,
+    tmp_path: Path,
+) -> None:
+    """The committed tree equals a fresh render, and check mode's verdict is pinned.
+
+    Two questions, deliberately separated. Byte equality against a fresh render is
+    answerable today and is the drift gate: an edited map, profile or design that
+    is not accompanied by a regenerated tree reds here, and so does a hand-edited
+    fragment.
+
+    Whether the generator's own `check_generated_export_tree` PASSES is a stronger
+    question, because it validates the candidate through the real registry
+    authority and so demands a filing-complete, operator-reviewed revision. None of
+    the committed trees has reached that yet. Rather than skip the call or soften
+    it, the refusal is pinned to a named reason per tree, so the day a revision
+    becomes reviewable this test fails and the pin has to be removed.
+    """
+    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    source_defects = source_defects_for(tree.source_ref)
+    fresh_root = tmp_path / "fresh" / "export"
+
+    # The refusal ledger is consulted BEFORE the render, not after it. A tree the
+    # generator declines to render raises here, so a check placed after the call
+    # could never run: the row would be unreachable and the gate would error
+    # rather than report. The row must also name its cause, so a refusal that
+    # changes reason is not silently absorbed by a pin written for another one.
+    refusal = _RENDER_REFUSAL_DISPOSITIONS.get(f"{tree.modelo}/{tree.revision}")
+    if refusal is not None:
+        assert refusal.source_ref == tree.source_ref
+        with pytest.raises(RegistryValidationError) as refused:
+            render_complete_export_tree(
+                fresh_root,
+                revision_id=tree.revision,
+                joined=joined,
+                semantic_map=semantic_map,
+                transport_profile=transport,
+                render_profile=render_profile,
+                render_profile_source_evidence=evidence,
+                source_defects=source_defects,
+            )
+        assert refusal.refusal_marker in str(refused.value), (
+            f"{tree}: render-refusal pin is dormant or its cause changed"
+        )
+        return
+
+    render_complete_export_tree(
+        fresh_root,
+        revision_id=tree.revision,
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=transport,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+        source_defects=source_defects,
+    )
+
+    fresh_members = {path.name for path in fresh_root.iterdir()}
+    # The fresh render above already succeeded, so reaching here with no committed tree
+    # means the row is enrolled ahead of its publication rather than broken. Say that,
+    # instead of letting iterdir raise FileNotFoundError: the row is the only staleness
+    # detector the committed tree has, so the red must read as a tree owed and never
+    # invite retiring the row to clear it.
+    assert tree.committed.is_dir(), (
+        f"{tree}: enrolled with no committed export tree at {tree.committed}, though the fresh "
+        "render succeeded. Publish it through the generator's own publication authority; do not "
+        "retire the row."
+    )
+    committed_members = {path.name for path in tree.committed.iterdir()}
+    assert committed_members == fresh_members, (
+        f"{tree}: committed export tree membership differs from a fresh render; "
+        f"committed-only: {sorted(committed_members - fresh_members)}; "
+        f"fresh-only: {sorted(fresh_members - committed_members)}"
+    )
+    byte_differing = sorted(
+        name for name in fresh_members if not filecmp.cmp(fresh_root / name, tree.committed / name, shallow=False)
+    )
+    # A differing file whose parsed content is identical is a serializer change, not a
+    # change to what the tree declares. The distinction is drawn by the one helper the
+    # render comparison uses, so both surfaces agree on what "the same record" means.
+    differing = [
+        name
+        for name in byte_differing
+        if (parsed := parsed_tree_file(name, (tree.committed / name).read_bytes())) is None
+        or parsed != parsed_tree_file(name, (fresh_root / name).read_bytes())
+    ]
+    if differing:
+        subject = f"{tree.modelo}/{tree.revision}"
+        disposition = _RECORD_DRIFT_DISPOSITIONS.get(subject)
+        comparison = compare_revision_against_committed(
+            bundled_authority(),
+            modelo=tree.modelo,
+            revision=tree.revision,
+        )
+        if disposition is not None:
+            assert disposition.source_ref == tree.source_ref
+            assert comparison.disposition_class == "record_drift", (
+                f"{tree}: record-drift pin is dormant and must be removed"
+            )
+            return
+        reproduction_pin = _REPRODUCTION_PENDING.get(str(tree))
+        assert reproduction_pin is not None, (
+            f"{tree}: committed export fragment(s) differ from a fresh render: {differing}"
+        )
+        assert reproduction_pin.source_ref == tree.source_ref
+        assert comparison.disposition_class == "provenance_only", (
+            f"{tree}: reproduction pin is dormant or its failure class changed"
+        )
+
+    candidate_root = tmp_path / "candidate"
+    registry_root = _isolated_authority(tree, candidate_root)
+    continuity_metadata_modelo_root = stage_continuity_metadata(
+        bundled_path("registry", "aeat", "modelos", tree.modelo),
+        candidate_root,
+        revision=tree.revision,
+    )
+    published_modelo_root: Path | None = None
+    revisions_root = bundled_path("registry", "aeat", "modelos", tree.modelo, "revisions")
+    if len(tuple(revisions_root.iterdir())) > 1:
+        # The published layout load must see exactly the target revision, and
+        # a multi-revision modelo publishes several, so the test stages the
+        # published copy with siblings pruned -- check mode copies nothing.
+        published_modelo_root = candidate_root / "published-registry" / "aeat" / "modelos" / tree.modelo
+        shutil.copytree(
+            bundled_path("registry", "aeat", "modelos", tree.modelo),
+            published_modelo_root,
+            dirs_exist_ok=True,
+        )
+        for sibling in (published_modelo_root / "revisions").iterdir():
+            if sibling.name != tree.revision:
+                shutil.rmtree(sibling)
+    context = GeneratedExportTreeCheckContext(
+        validation=GeneratedExportTreeValidationContext(
+            registry_root=registry_root,
+            source_root=bundled_path(),
+            target=ExportFragmentTarget(
+                modelo=tree.modelo,
+                revision_id=tree.revision,
+                design_epoch=tree.epoch,
+            ),
+            filing_year=tree.filing_year,
+            period=tree.period,
+            supporting_modelos=_supporting_modelos(tree),
+            continuity_metadata_modelo_root=continuity_metadata_modelo_root,
+        ),
+        temporary_root=candidate_root,
+        target_registry_root=bundled_path("registry", "aeat"),
+        target_export_root=tree.committed,
+        published_modelo_root=published_modelo_root,
+    )
+    expected = _CHECK_MODE_PENDING.get(str(tree))
+    try:
+        checked = check_generated_export_tree(
+            context=context,
             joined=joined,
             semantic_map=semantic_map,
             transport_profile=transport,
             render_profile=render_profile,
             render_profile_source_evidence=evidence,
-            source_defects=source_defects_for(tree.source_ref),
+            source_defects=source_defects,
         )
-    assert refusal.refusal_marker in str(refused.value)
+    except RegistryValidationError as refusal:
+        assert expected is not None, f"{tree}: check mode refused with no pending reason recorded: {refusal}"
+        assert expected in str(refusal), (
+            f"{tree}: check mode refused for a reason other than the recorded {expected!r}: {refusal}"
+        )
+        return
+    assert expected is None, (
+        f"{tree}: check mode now PASSES, so the pending entry {expected!r} is stale -- remove it "
+        "from _CHECK_MODE_PENDING and let this gate assert the pass"
+    )
+    assert str(checked.candidate.layout.id) == tree.layout_id
+
+
+@pytest.mark.parametrize(
+    ("tree", "expected_literals"),
+    (
+        (
+            next(item for item in _GENERATED_TREES if str(item) == "m184-2023-2024"),
+            ("m184-2023.entidad.f008", "E", "m184-2023.socio.f008", "S"),
+        ),
+        (
+            next(item for item in _GENERATED_TREES if str(item) == "m184-2025-y-siguientes"),
+            ("m184-2025.entidad.f008", "E", "m184-2025.socio.f008", "S"),
+        ),
+    ),
+    ids=str,
+)
+def test_m184_sheet_type_literals_replace_the_blank_capable_casilla_path(
+    tree: _GeneratedTree,
+    expected_literals: tuple[str, str, str, str],
+    tmp_path: Path,
+) -> None:
+    """Both Tipo-2 record markers emit official bytes without a manual casilla path."""
+    semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id=tree.revision,
+        joined=joined,
+        semantic_map=semantic_map,
+        transport_profile=transport,
+        render_profile=render_profile,
+        render_profile_source_evidence=evidence,
+    )
+    fields = {field.id: field for record in rendered.layout.records for field in record.fields}
+    entidad_id, entidad_literal, socio_id, socio_literal = expected_literals
+
+    assert (
+        fields[entidad_id].kind.value,
+        fields[entidad_id].literal,
+        fields[entidad_id].casilla_id,
+        fields[entidad_id].required,
+    ) == ("literal", entidad_literal, None, True)
+    assert (
+        fields[socio_id].kind.value,
+        fields[socio_id].literal,
+        fields[socio_id].casilla_id,
+        fields[socio_id].required,
+    ) == ("literal", socio_literal, None, True)
+
+    revision = load_modelo_directory(bundled_path("registry", "aeat", "modelos", tree.modelo)).revisions[tree.revision]
+    casillas = {str(casilla.id): casilla for casilla in revision.casillas}
+    entidad_casilla = casillas["tipo2.tipo-hoja"]
+    assert (entidad_casilla.input_kind.value, entidad_casilla.required, entidad_casilla.export_refs) == (
+        "manual",
+        False,
+        (),
+    )
+    socio_casilla = casillas["tipo3.tipo-hoja"]
+    assert (socio_casilla.input_kind.value, socio_casilla.required, socio_casilla.export_refs) == (
+        "manual",
+        False,
+        (),
+    )
 
 
 def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tmp_path: Path) -> None:
-    """A strict landing revision cannot validate against invented predecessors.
+    """A strict 2026 landing revision cannot validate against invented predecessors.
 
-    The generic target-only isolation regression: the fresh candidate succeeds
-    only when the source-copied predecessor metadata fragments are supplied;
+    The 2026 M303 target declares transitions from five real revisions.  It is
+    the generic target-only isolation regression: the fresh candidate succeeds
+    only when those source-copied predecessor metadata fragments are supplied;
     absent, missing, or structurally mismatched predecessor declarations still
     refuse through the ordinary strict-continuity validator.
-
-    Carried by the periodic-instalment modelo because it renders. The quarterly
-    IVA modelo, whose 2026 target declares transitions from five real revisions
-    and which this regression used to ride on, now carries a render-refusal
-    disposition on every revision, so it cannot supply a rendered tree. GIVEN UP
-    while that disposition stands: the five-predecessor breadth of that instance.
-    The property itself is unchanged and is asserted here.
     """
-    tree = next(item for item in _GENERATED_TREES if item.modelo == "353" and item.revision.startswith("2026"))
+    tree = next(item for item in _GENERATED_TREES if item.modelo == "303" and item.revision == "2026-y-siguientes")
     semantic_map, render_profile, joined, evidence, transport = _authorities(tree)
     candidate_root = tmp_path / "candidate"
     registry_root = _isolated_authority(tree, candidate_root)
@@ -514,9 +749,13 @@ def test_target_only_continuity_metadata_requires_real_declared_m303_siblings(tm
         revision=tree.revision,
     )
     assert metadata_modelo_root is not None
-    staged = set(child.name for child in (metadata_modelo_root / "revisions").iterdir())
-    assert staged, "target-only staging supplied no predecessor metadata"
-    assert tree.revision not in staged, "the target must not stage itself as its own predecessor"
+    assert set(child.name for child in (metadata_modelo_root / "revisions").iterdir()) == {
+        "2022",
+        "2023",
+        "2024-hasta-08-y-2t",
+        "2024-desde-09-y-3t",
+        "2025",
+    }
 
     rendered = render_complete_export_tree(
         registry_root / "modelos" / tree.modelo / "revisions" / tree.revision / "export",
