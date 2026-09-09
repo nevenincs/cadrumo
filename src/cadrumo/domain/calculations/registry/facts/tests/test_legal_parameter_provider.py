@@ -6,6 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.facts.legal_parameters import (
@@ -96,16 +97,12 @@ def test_production_validation_rejects_a_variant_with_both_evidence_lanes_erased
     erased = fact.variants[0].model_copy(
         update={"legal_refs": (), "source_refs": (), "source_citations": ()},
     )
-    broken_fact = GovernedFact(
-        fact_id=fact.fact_id,
-        family=fact.family,
-        variants=(erased,),
-    )
-
-    assert any(
-        "must declare a complete legal or source evidence lane" in failure
-        for failure in _grounding_failures(GovernedFactCatalogue(facts={fact.fact_id: broken_fact}))
-    )
+    with pytest.raises(ValidationError, match="must declare legal or source evidence"):
+        GovernedFact(
+            fact_id=fact.fact_id,
+            family=fact.family,
+            variants=(erased,),
+        )
 
 
 def test_classification_projection_preserves_nonempty_and_explicit_empty_sets() -> None:
