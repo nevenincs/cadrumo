@@ -12,7 +12,7 @@ related:
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
 modified: '2026-09-09'
 body_schema: body-v2
-body_hash: 'sha256:c0877971db34b9698a5a6857bab5e63a11d55b5b7299f451de186d3a6275f9f8'
+body_hash: 'sha256:d8a4ede1ad840ac2cdd6bf574bc1a07c8263294ea2270d3739f6fbee5b091c48'
 ---
 
 # `facts-registry` plan
@@ -134,7 +134,7 @@ Rewire M347, M202, declaration thresholds, modelo group classifications, and agg
 
 Rewire maritime, maternity, descendant, Madrid, Art 20, Art 52, DT12, and SAL consumers.
 
-- [ ] `W03.P11.S24` - Rewire maritime Art 7p and REBECA inputs; `src/cadrumo/domain/renta/maritime_exemption.py`.
+- [x] `W03.P11.S24` - Rewire maritime Art 7p and REBECA inputs; `src/cadrumo/domain/renta/maritime_exemption.py`.
 - [ ] `W03.P11.S25` - Rewire descendant maternity custody and Madrid windows; `src/cadrumo/domain/contribuyente`.
 - [ ] `W03.P11.S50` - Rewire Art 20 Art 52 DT12 and SAL calculations; `src/cadrumo/application/modelo and src/cadrumo/domain/modelos`.
 

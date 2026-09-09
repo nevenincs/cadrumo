@@ -6,7 +6,7 @@ tags:
 date: '2026-09-09'
 modified: '2026-09-09'
 body_schema: 'body-v2'
-body_hash: 'sha256:0d9024747261e37955537af15324f9968d4e97fb18dfa27db581b6e9c8e1522c'
+body_hash: 'sha256:d08cec47bb16482a81b92f5bf07736aae0b9adc83eae17bcc57cd6719d072968'
 related:
   - '[[2026-09-09-facts-registry-W01-P01-S01]]'
   - '[[2026-09-09-facts-registry-W01-P01-S02]]'
@@ -47,6 +47,8 @@ related:
   - '[[2026-09-09-facts-registry-W02-P09-S46]]'
   - '[[2026-09-09-facts-registry-W02-P09-S47]]'
   - '[[2026-09-09-facts-registry-W02-P09-summary]]'
+  - '[[2026-09-09-facts-registry-W03-P10-S48]]'
+  - '[[2026-09-09-facts-registry-W03-P11-S24]]'
   - '[[2026-09-09-facts-registry-authority-plumbing-research]]'
   - '[[2026-09-09-facts-registry-dev-tooling-research]]'
   - '[[2026-09-09-facts-registry-discovery-blast-radius-research]]'
@@ -106,6 +108,8 @@ Auto-generated index of all documents tagged with `#facts-registry`.
 - `2026-09-09-facts-registry-W02-P09-S46` - Run canonical strict production type checking at the Wave 2 handoff
 - `2026-09-09-facts-registry-W02-P09-S47` - Run both dead-code audits at the Wave 2 handoff
 - `2026-09-09-facts-registry-W02-P09-summary` - `facts-registry` `W02.P09` summary
+- `2026-09-09-facts-registry-W03-P10-S48` - Rewire every M347 comparator validator and diagnostic to one fact
+- `2026-09-09-facts-registry-W03-P11-S24` - Rewire maritime Art 7p and REBECA inputs
 
 ### plan
 
