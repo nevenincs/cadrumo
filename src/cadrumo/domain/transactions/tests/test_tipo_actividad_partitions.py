@@ -12,6 +12,7 @@ not inferences, cited to the apartado that fixes them.
 
 from __future__ import annotations
 
+from datetime import date
 from typing import Final
 
 import pytest
@@ -22,6 +23,7 @@ from ..tipo_actividad_partitions import (
     _ART_95_SELECTORS,
     _code_set,
     load_tipo_actividad_selectors,
+    resolve_tipo_actividad_selector,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -71,6 +73,19 @@ def test_every_selected_code_is_a_real_modelo_036_code() -> None:
     """Selectors draw from the closed code set, never a free-form token."""
     for codes in load_tipo_actividad_selectors().values():
         assert all(isinstance(code, TipoActividad) for code in codes)
+
+
+def test_art_95_selector_resolution_retains_typed_fact_provenance() -> None:
+    """The activity partition facade resolves an entity-set fact at its filing coordinate."""
+    selector = resolve_tipo_actividad_selector(
+        "rirpf-art-95:selector-m036-actividades-profesionales",
+        effective_date=date(2025, 12, 31),
+    )
+
+    assert selector.payload.entities == frozenset({"A04", "A05"})
+    assert selector.effective_date == date(2025, 12, 31)
+    assert "rd-439-2007:art-95" in selector.legal_refs
+    assert selector.authority_digest
 
 
 def test_parser_refuses_a_token_that_is_not_a_modelo_036_code() -> None:

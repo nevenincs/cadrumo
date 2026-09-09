@@ -77,7 +77,7 @@ __all__ = [
 ]
 
 
-_JOURNAL_SCHEMA_VERSION: Final[int] = 1
+_JOURNAL_SCHEMA_VERSION: Final[Literal[1]] = 1
 
 
 class _StrictModel(BaseModel):

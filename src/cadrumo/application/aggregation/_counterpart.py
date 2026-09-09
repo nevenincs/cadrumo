@@ -26,11 +26,11 @@ from ...core.aggregation import (
     counterpart_source_kind,
 )
 from ...core.country_code import CountryCodeAlpha2
-from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing import IsoDateString
 from ...core.period import FilingPeriodCode, Period
+from ...domain.calculations.registry._m347_threshold import m347_declarable_party_ids
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
 
 
@@ -331,7 +331,7 @@ def declarable_counterparty_nifs_347(aggregation: CounterpartAggregation) -> fro
     totals: dict[str, Decimal] = {}
     for rollup in aggregation.rollups:
         totals[rollup.counterparty_nif] = totals.get(rollup.counterparty_nif, Decimal("0")) + rollup.total_invoice_total
-    return frozenset(nif for nif, total in totals.items() if total > M347_THRESHOLD_EUR)
+    return m347_declarable_party_ids(totals, effective_date=aggregation.period.end_date)
 
 
 def declarable_for_347(aggregation: CounterpartAggregation, *, counterparty_nif: str) -> bool:

@@ -6,7 +6,8 @@ import ast
 import inspect
 import tomllib
 from pathlib import Path
-from typing import TypedDict, get_args
+from types import ModuleType
+from typing import TypedDict, get_args, override
 
 import pytest
 import rtoml
@@ -27,6 +28,7 @@ from cadrumo.domain.calculations.registry.errors import (
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
+from cadrumo.domain.calculations.registry.schema_base import CorpusTier, RegistrySourceKind
 from cadrumo.domain.calculations.registry.schema_exports import ProjectionEndpointDeclaration, RecordDiscriminator
 from cadrumo.domain.calculations.registry.static_inspection import (
     StaticGeneratedArtifactInspection,
@@ -45,7 +47,7 @@ from ..pipeline.export_fragment_provenance import (
     load_export_fragment_provenance_manifest,
     verify_export_fragment_provenance_manifest,
 )
-from ..pipeline.joined_record_design import JoinedRecordDesign, join_record_design_semantics
+from ..pipeline.joined_record_design import JoinedRecordDesign, JoinedRecordDesignField, join_record_design_semantics
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignWorkbookFormat,
@@ -79,6 +81,7 @@ def test_toml_serialization_refusal_never_carries_the_offending_value() -> None:
     probe_value = "nif-Z-taxpayer-value"
 
     class _Unserializable:
+        @override
         def __repr__(self) -> str:
             return f"<unserializable probe_value={probe_value}>"
 
@@ -549,14 +552,14 @@ def _synthetic_static_inspection() -> StaticGeneratedArtifactInspection:
         sources={
             source_ref: StaticGeneratedArtifactSource(
                 id=source_ref,
-                kind="record_design",
+                kind=RegistrySourceKind.RECORD_DESIGN,
                 corpus_path="aeat_official/disenos_registro/modelo_130/files/synthetic.xlsx",
                 sha256="58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
                 bytes=1,
                 applies_from=None,
                 applies_to=None,
                 record_design_epoch="2019",
-                corpus_tier="full_consolidated",
+                corpus_tier=CorpusTier.FULL_CONSOLIDATED,
             ),
         },
         legal_ref_ids=frozenset(("rd-439-2007:art-110",)),
@@ -1797,7 +1800,7 @@ def test_renderer_refuses_a_fragment_prefix_that_overflows_its_padded_width() ->
         _export_tree._record_relative_path(last_in_width + 1, "generated-record")
 
 
-def _code_only_source(module: object) -> str:
+def _code_only_source(module: ModuleType) -> str:
     """Return a module's source with comments and string literals removed.
 
     Uses the tokeniser rather than a regex so an apostrophe or a `#` inside a
@@ -1979,3 +1982,48 @@ def test_a_blank_run_naturaleza_the_semantic_map_calls_value_bearing_is_refused(
             render_profile=_wire_profile(),
             render_profile_source_evidence=_wire_evidence(),
         )
+
+
+def _joined_fields_by_aeat_type(modelo: str) -> dict[str, JoinedRecordDesignField]:
+    """Return one real joined field per official type token, from the live join.
+
+    Deliberately taken from the real record design rather than assembled here: a
+    hand-built stand-in would prove the helper's `if`, not that the official type
+    column actually reaches it.
+    """
+    from .test_generated_export_trees import _GENERATED_TREES, _authorities
+
+    tree = next(item for item in _GENERATED_TREES if item.modelo == modelo)
+    _map, _profile, joined, _evidence, _transport = _authorities(tree)
+    found: dict[str, JoinedRecordDesignField] = {}
+    for field in joined.fields:
+        found.setdefault(field.parser_field.aeat_type, field)
+    return found
+
+
+@pytest.mark.unit
+def test_an_unsigned_official_type_derives_an_unsigned_slot() -> None:
+    """`Num` is numerico SIN signo, and it must still render without refusal."""
+    from ..pipeline._export_tree import _derive_sign_from_official_type
+
+    unsigned = _joined_fields_by_aeat_type("390")["Num"]
+
+    assert _derive_sign_from_official_type(unsigned) is False
+
+
+@pytest.mark.unit
+def test_a_signed_official_type_derives_a_signed_slot() -> None:
+    """`N` is numerico CON signo, and its representation is now grounded.
+
+    AEAT's "Disenos de registro" manual states the convention for every design:
+    numeric fields are right-aligned and zero-filled SIN SIGNOS, and only
+    NEGATIVE amounts are preceded by the character ``N``. So a signed slot
+    reserves no byte -- the marker displaces the leading digit when the value is
+    negative -- and the derivation reads that grounding rather than refusing, as
+    it once did before the representation was grounded.
+    """
+    from ..pipeline._export_tree import _derive_sign_from_official_type
+
+    signed = _joined_fields_by_aeat_type("390")["N"]
+
+    assert _derive_sign_from_official_type(signed) is True

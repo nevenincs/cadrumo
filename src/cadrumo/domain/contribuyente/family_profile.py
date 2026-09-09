@@ -8,13 +8,12 @@ from typing import cast
 
 from pydantic import BaseModel, Field, field_validator
 
-from ...core.external_constants import CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .constants import SUPPORTED_PROFILE_SCHEMA_VERSION, ProfileSchemaVersion
 from .descendant import DescendantInfo
 from .errors import ProfileValidationError
+from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
-    MAX_AGE_MENOR_TRES,
     MinimoDescendientesThresholds,
     RentaAscendantProfile,
     RentaDescendantProfile,
@@ -180,20 +179,20 @@ class RentaFamilyProfile(BaseModel):
             if descendant.dependencia_economica is True and not descendant.convive_con_contribuyente
         )
 
-    def descendientes_menores_3_year_end(self, filing_year: int) -> int:
+    def descendientes_menores_3_year_end(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Count of eligible descendientes whose age at year-end < 3 (Art. 58.2)."""
-        return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year))
+        return sum(1 for d in self.descendientes if d.is_eligible_menor_tres(filing_year, context=context))
 
-    def descendientes_guarderia_count(self, filing_year: int) -> int:
+    def descendientes_guarderia_count(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Count of descendants who may carry an Art. 81.2 guardería increase.
 
         Wider than the Art. 58.2 menor-de-tres count by exactly the turning-three
         period. Kept separate rather than widening that count, which has its own
         registry binding and its own statutory meaning for the supplement.
         """
-        return sum(1 for d in self.descendientes if d.is_eligible_guarderia(filing_year))
+        return sum(1 for d in self.descendientes if d.is_eligible_guarderia(filing_year, context=context))
 
-    def gastos_guarderia_reales(self, filing_year: int) -> int:
+    def gastos_guarderia_reales(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Sum of the Art. 81.2 guardería spend every descendant contributes in *filing_year*.
 
         Sums :meth:`DescendantInfo.guarderia_contributing_spend`, which applies
@@ -209,7 +208,7 @@ class RentaFamilyProfile(BaseModel):
         would have forced that path to keep its own parallel sum, which is how
         the monthly map could be declared and contribute nothing.
         """
-        return sum(d.guarderia_contributing_spend(filing_year) for d in self.descendientes)
+        return sum(d.guarderia_contributing_spend(filing_year, context=context) for d in self.descendientes)
 
     def incremento_guarderia_0613(
         self,
@@ -217,6 +216,7 @@ class RentaFamilyProfile(BaseModel):
         *,
         thresholds: MinimoDescendientesThresholds,
         cap_anual: Decimal,
+        context: FamilyFactResolutionContext,
     ) -> Decimal:
         """Art. 81.2 guardería increment (casilla 0613), prorated and capped PER CHILD.
 
@@ -275,12 +275,13 @@ class RentaFamilyProfile(BaseModel):
             meses = descendant.guarderia_simultaneous_meses(
                 filing_year,
                 thresholds=thresholds,
+                context=context,
                 dependencia_assimilation_available=available,
             )
             if meses <= 0:
                 continue
             prorated_cap = round_to_cents(cap_anual / Decimal(12) * Decimal(meses))
-            spend = Decimal(descendant.guarderia_contributing_spend(filing_year))
+            spend = Decimal(descendant.guarderia_contributing_spend(filing_year, context=context))
             total += min(prorated_cap, spend)
         return total
 
@@ -289,6 +290,7 @@ class RentaFamilyProfile(BaseModel):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
     ) -> tuple[tuple[str, int], ...]:
         """The Art. 81.1 ``(hijo_id, meses)`` pairs this profile contributes in *filing_year*.
 
@@ -324,29 +326,36 @@ class RentaFamilyProfile(BaseModel):
                 meses := descendant.maternidad_contributing_meses(
                     filing_year,
                     thresholds=thresholds,
+                    context=context,
                     dependencia_assimilation_available=available,
                 )
             )
             > 0
         )
 
-    def guarderia_needs_monthly_detail_indices(self, filing_year: int) -> tuple[int, ...]:
+    def guarderia_needs_monthly_detail_indices(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> tuple[int, ...]:
         """Indices whose declared spend contributes nothing only because of its shape."""
         return tuple(
             index
             for index, descendant in enumerate(self.descendientes)
-            if descendant.guarderia_needs_monthly_detail(filing_year)
+            if descendant.guarderia_needs_monthly_detail(filing_year, context=context)
         )
 
-    def guarderia_needs_segundo_ciclo_month_indices(self, filing_year: int) -> tuple[int, ...]:
+    def guarderia_needs_segundo_ciclo_month_indices(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> tuple[int, ...]:
         """Indices whose turning-three window is withheld for want of a declared month."""
         return tuple(
             index
             for index, descendant in enumerate(self.descendientes)
-            if descendant.guarderia_needs_segundo_ciclo_month(filing_year)
+            if descendant.guarderia_needs_segundo_ciclo_month(filing_year, context=context)
         )
 
-    def guarderia_cotizaciones_ceiling_is_unbounded(self, filing_year: int) -> bool:
+    def guarderia_cotizaciones_ceiling_is_unbounded(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> bool:
         """True when the cotizaciones ceiling is NOT limited to the second-cycle window.
 
         The SECOND consumer of the second-cycle month, and the one this application
@@ -378,7 +387,7 @@ class RentaFamilyProfile(BaseModel):
             return False
         return any(
             descendant.convive_con_contribuyente
-            and descendant.age_at_year_end(filing_year) == MAX_AGE_MENOR_TRES
+            and descendant.age_at_year_end(filing_year) == context.integer("lirpf-art-58-under-three-maximum-age")
             and bool(descendant.gastos_guarderia_mensuales)
             for descendant in self.descendientes
         )
@@ -388,6 +397,7 @@ class RentaFamilyProfile(BaseModel):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
     ) -> int:
         """Count of descendientes eligible for the ordinary Art. 58.1 mínimo.
 
@@ -403,6 +413,7 @@ class RentaFamilyProfile(BaseModel):
             if d.is_eligible_ordinary(
                 filing_year,
                 thresholds=thresholds,
+                context=context,
                 dependencia_assimilation_available=available,
             )
         )
@@ -412,6 +423,7 @@ class RentaFamilyProfile(BaseModel):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
     ) -> int:
         """Count of eligible descendientes with custodia_compartida=True.
 
@@ -429,6 +441,7 @@ class RentaFamilyProfile(BaseModel):
             and d.is_eligible_ordinary(
                 filing_year,
                 thresholds=thresholds,
+                context=context,
                 dependencia_assimilation_available=self.dependencia_assimilation_available,
             )
         )
@@ -439,6 +452,7 @@ class RentaFamilyProfile(BaseModel):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
         second_filer_indicated: bool = False,
     ) -> Decimal:
         """Return the Art. 61 norma 1ª prorrata factor for one descendant.
@@ -459,7 +473,8 @@ class RentaFamilyProfile(BaseModel):
         3. *second_filer_indicated* — the caller's derivation from profile
            signals, used only when nothing above answered the question.
 
-        Returns :data:`CUSTODIA_COMPARTIDA_PRORRATA_FACTOR` (``0.5``) when the
+        Returns the ``lirpf-art-61-shared-custody-proration-factor`` governed
+        fact (``0.5`` today) when the
         descendant is mínimo-eligible and any of the above indicates a second
         entitled contribuyente, otherwise ``Decimal("1")``. A non-eligible
         descendant always returns ``Decimal("1")`` because there is no mínimo
@@ -468,13 +483,16 @@ class RentaFamilyProfile(BaseModel):
         if not descendant.is_eligible_ordinary(
             filing_year,
             thresholds=thresholds,
+            context=context,
             dependencia_assimilation_available=self.dependencia_assimilation_available,
         ):
             return Decimal("1")
         if descendant.prorrata_minimo is not None:
-            return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR if descendant.prorrata_minimo else Decimal("1")
+            if descendant.prorrata_minimo:
+                return context.decimal("lirpf-art-61-shared-custody-proration-factor")
+            return Decimal("1")
         if descendant.custodia_compartida or second_filer_indicated:
-            return CUSTODIA_COMPARTIDA_PRORRATA_FACTOR
+            return context.decimal("lirpf-art-61-shared-custody-proration-factor")
         return Decimal("1")
 
     def minimo_descendientes_estatal(
@@ -485,6 +503,7 @@ class RentaFamilyProfile(BaseModel):
         menor_tres_supplement: Decimal,
         fallecimiento_amount: Decimal,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
         second_filer_indicated: bool = False,
     ) -> Decimal:
         """Compute the Art. 58 mínimo por descendientes aggregate (casillas 0513/0514).
@@ -569,6 +588,7 @@ class RentaFamilyProfile(BaseModel):
                 if d.is_eligible_ordinary(
                     filing_year,
                     thresholds=thresholds,
+                    context=context,
                     dependencia_assimilation_available=self.dependencia_assimilation_available,
                 )
             ),
@@ -588,12 +608,13 @@ class RentaFamilyProfile(BaseModel):
                 ordinal = rank_by_position[position]
                 tranche_index = min(ordinal, len(birth_order_amounts) - 1)
                 amount = birth_order_amounts[tranche_index]
-            if descendant.is_eligible_minimo_incremento_menor_tres(filing_year):
+            if descendant.is_eligible_minimo_incremento_menor_tres(filing_year, context=context):
                 amount += menor_tres_supplement
             total += amount * self.minimo_prorrata_factor(
                 descendant,
                 filing_year,
                 thresholds=thresholds,
+                context=context,
                 second_filer_indicated=second_filer_indicated,
             )
         return total
@@ -603,6 +624,7 @@ class RentaFamilyProfile(BaseModel):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
     ) -> str | None:
         """Return the translated Art. 61 prorrata advisory string, or ``None``.
 
@@ -613,7 +635,7 @@ class RentaFamilyProfile(BaseModel):
         """
         from ...core.i18n import tr
 
-        count = self.custodia_compartida_count(filing_year, thresholds=thresholds)
+        count = self.custodia_compartida_count(filing_year, thresholds=thresholds, context=context)
         if count > 0:
             return tr(
                 "profile.descendiente.custodia_compartida_prorrata_applied",
@@ -626,15 +648,21 @@ class RentaFamilyProfile(BaseModel):
     # autonómica (DL 1/2010 arts. 4 y 18.1) — casilla 1039 framework primitives
     # ------------------------------------------------------------------
 
-    def madrid_nacimiento_adopcion_eligible_count(self, filing_year: int) -> int:
+    def madrid_nacimiento_adopcion_eligible_count(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> int:
         """Count of descendants inside the Madrid nacimiento/adopción window who cohabit.
 
         The raw (unweighted) eligible count; ``madrid_nacimiento_adopcion_weighted_count``
         applies the per-descendant prorrateo the registry cuantía is multiplied by.
         """
-        return sum(1 for d in self.descendientes if d.is_nacimiento_adopcion_eligible(filing_year))
+        return sum(
+            1 for d in self.descendientes if d.is_nacimiento_adopcion_eligible(filing_year, context=context)
+        )
 
-    def madrid_nacimiento_adopcion_weighted_count(self, filing_year: int) -> Decimal:
+    def madrid_nacimiento_adopcion_weighted_count(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> Decimal:
         """Prorrateo-weighted eligible-descendant count for the Madrid deducción.
 
         Each eligible descendant contributes its prorrateo share (``1``, or
@@ -645,8 +673,8 @@ class RentaFamilyProfile(BaseModel):
         """
         total = Decimal("0")
         for descendant in self.descendientes:
-            if descendant.is_nacimiento_adopcion_eligible(filing_year):
-                total += descendant.nacimiento_adopcion_prorrateo_share()
+            if descendant.is_nacimiento_adopcion_eligible(filing_year, context=context):
+                total += descendant.nacimiento_adopcion_prorrateo_share(context=context)
         return total
 
     def unidad_familiar_otros_miembros_base(self) -> Decimal:

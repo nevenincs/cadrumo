@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from ...core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES, DescendantRelacion
 from .descendant_record import DescendantRecordBase
+from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
-    ART_81_1_ENTRY_WINDOW_YEARS,
-    MAX_AGE_MENOR_TRES,
     MinimoDescendientesThresholds,
     months_of_year_between,
 )
@@ -15,7 +14,7 @@ from .family_types import (
 class DescendantMaternityMixin(DescendantRecordBase):
     """The maternity deduction facts a descendant carries."""
 
-    def maternidad_eligible_meses(self, filing_year: int) -> int:
+    def maternidad_eligible_meses(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Months of *filing_year* the Art. 81.1 deducción may reach for this descendant.
 
         The whole eligible window, not one limb of it: the under-three months
@@ -44,17 +43,21 @@ class DescendantMaternityMixin(DescendantRecordBase):
         A descendant with no entry date is unclipped, so an ordinary child is
         unaffected and the method degenerates to the under-three limb.
         """
-        return len(self._maternidad_eligible_months(filing_year))
+        return len(self._maternidad_eligible_months(filing_year, context=context))
 
-    def _maternidad_eligible_months(self, filing_year: int) -> frozenset[int]:
+    def _maternidad_eligible_months(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> frozenset[int]:
         """The Art. 81.1 eligible months: both limbs, clipped to the entry anchor."""
-        months = self._maternidad_edad_months(filing_year) | self._maternidad_entry_window_months(filing_year)
+        months = self._maternidad_edad_months(filing_year, context=context) | self._maternidad_entry_window_months(
+            filing_year, context=context
+        )
         anchor = self.art_58_2_entry_date()
         if anchor is None:
             return months
         return frozenset(month for month in months if (filing_year, month) >= (anchor.year, anchor.month))
 
-    def _maternidad_edad_months(self, filing_year: int) -> frozenset[int]:
+    def _maternidad_edad_months(self, filing_year: int, *, context: FamilyFactResolutionContext) -> frozenset[int]:
         """The months of *filing_year* covered by the Art. 81.1 under-three limb.
 
         The article runs "hasta que el menor alcance los tres años de edad",
@@ -68,11 +71,11 @@ class DescendantMaternityMixin(DescendantRecordBase):
         """
         return months_of_year_between(
             (self.birth_date.year, self.birth_date.month),
-            (self.birth_date.year + MAX_AGE_MENOR_TRES, self.birth_date.month),
+            (self.birth_date.year + context.integer("lirpf-art-58-under-three-maximum-age"), self.birth_date.month),
             filing_year,
         )
 
-    def art_81_1_entry_window_meses(self, filing_year: int) -> int:
+    def art_81_1_entry_window_meses(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Months of *filing_year* inside the Art. 81.1 adopción/acogimiento window.
 
         A SEPARATE window from the Art. 58.2 one, and separate because the two
@@ -110,16 +113,18 @@ class DescendantMaternityMixin(DescendantRecordBase):
         Returns ``0`` for a relación the statutes exclude and for an entitling
         relación whose entry date is not yet recorded.
         """
-        return len(self._maternidad_entry_window_months(filing_year))
+        return len(self._maternidad_entry_window_months(filing_year, context=context))
 
-    def _maternidad_entry_window_months(self, filing_year: int) -> frozenset[int]:
+    def _maternidad_entry_window_months(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> frozenset[int]:
         """The months of *filing_year* covered by the Art. 81.1 entry-event limb."""
         anchor = self.art_58_2_entry_date()
         if anchor is None:
             return frozenset[int]()
         return months_of_year_between(
             (anchor.year, anchor.month),
-            (anchor.year + ART_81_1_ENTRY_WINDOW_YEARS, anchor.month),
+            (anchor.year + context.integer("lirpf-art-81-adoption-entry-window-years"), anchor.month),
             filing_year,
         )
 
@@ -128,6 +133,7 @@ class DescendantMaternityMixin(DescendantRecordBase):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
         dependencia_assimilation_available: bool = False,
     ) -> int:
         """Art. 81.1 months this descendant contributes to the deducción in *filing_year*.
@@ -192,10 +198,11 @@ class DescendantMaternityMixin(DescendantRecordBase):
         if not self.is_eligible_ordinary(
             filing_year,
             thresholds=thresholds,
+            context=context,
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
             return 0
-        return len(frozenset(self.meses_madre_trabajo) & self._maternidad_eligible_months(filing_year))
+        return len(frozenset(self.meses_madre_trabajo) & self._maternidad_eligible_months(filing_year, context=context))
 
 
 def relacion_is_ambiguous_for_maternidad(relacion: DescendantRelacion) -> bool:

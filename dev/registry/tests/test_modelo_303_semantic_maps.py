@@ -108,7 +108,7 @@ _AnchorAttribute = Literal["casilla_id", "computed_key", "producer_key", "kind",
 #: Facts every reviewed epoch asserts about the same anchors.  The page and
 #: activity markers are structural, so an epoch that moved one would be
 #: reporting a re-layout rather than a re-vocabulary.
-_SHARED_ANCHOR_FACTS: Final[tuple[tuple[str, int, _AnchorAttribute, object], ...]] = (
+_SHARED_ANCHOR_FACTS: Final[tuple[tuple[str, str, _AnchorAttribute, object], ...]] = (
     ("DP30303", "20", "casilla_id", "iva.compensacion-pendiente-periodos-anteriores"),
     ("DP30303", "22", "casilla_id", "iva.compensacion-pendiente-periodos-posteriores"),
     ("DP30301", "5", "literal", ""),
@@ -198,7 +198,7 @@ _M303_2025_SUPERFICIE_ADDITIONS: Final[tuple[tuple[int, str, str, int, int], ...
 #: later epoch re-asserts it explicitly: the rows require this region to be
 #: hand-reviewed per epoch rather than inherited by silence, and naming the
 #: shared tuple keeps that assertion honest without re-transcribing it.
-_M303_RECTIFICATIVA_EVIDENCE: Final[tuple[tuple[str, int, _AnchorAttribute, object], ...]] = (
+_M303_RECTIFICATIVA_EVIDENCE: Final[tuple[tuple[str, str, _AnchorAttribute, object], ...]] = (
     ("DP30303", "29", "producer_key", "amendment_evidence.is_rectificativa"),
     ("DP30303", "30", "producer_key", "amendment_evidence.original_aeat_receipt"),
     ("DP30303", "31", "producer_key", "prior_domiciliation.action"),
@@ -1417,7 +1417,7 @@ def test_each_epoch_carries_its_own_map_and_render_profile_identity() -> None:
     assert len(set(profile_digests.values())) == len(_DESIGN_EPOCHS), profile_digests
 
 
-def _homes_by_anchor(semantic_map: SemanticMap) -> dict[str, tuple[str, int]]:
+def _homes_by_anchor(semantic_map: SemanticMap) -> dict[str, tuple[str, str | None]]:
     """Return each distinct home identity and one anchor that carries it.
 
     Identities come from the census module's single home resolver, so this
@@ -1512,8 +1512,8 @@ def test_a_paired_anchor_keeps_the_home_its_predecessor_gave_it(epoch: _EpochAut
 
 def _review_mismatch(
     label: str,
-    measured: Mapping[str, tuple[str, int]],
-    reviewed: Mapping[str, tuple[str, int]],
+    measured: Mapping[str, tuple[str, str | None]],
+    reviewed: Mapping[str, tuple[str, str]],
 ) -> str:
     """Explain a review mismatch by cause, not by dumping two mappings.
 

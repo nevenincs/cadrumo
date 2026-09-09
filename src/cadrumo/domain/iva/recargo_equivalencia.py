@@ -34,6 +34,7 @@ from datetime import date
 from decimal import Decimal
 from functools import lru_cache
 from pathlib import Path
+from typing import TYPE_CHECKING, cast
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -42,10 +43,29 @@ from ...core.external_constants import UTF_8_ENCODING
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.paths import path_stat_fingerprint
 from ...core.resources.bundled_data import bundled_path
+from ...core.revision_review import RevisionReviewStatus
 from ...core.type_guards import is_object_list
 from ...core.unit_proportion import UnitProportion
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.facts.schema import (
+    FactOwnership,
+    FactSelector,
+    GovernedFact,
+    GovernedFactFamily,
+    GovernedFactVariant,
+    MappingFactEntry,
+    MappingFactPayload,
+)
+from ..calculations.registry.loader_cache import toml_file_fingerprint
+from ..calculations.registry.loader_fingerprints import RegistryPathFingerprints
+from ..calculations.registry.schema_base import DateAxis
 from ._grounding import verify_table_legal_refs
 from .errors import IvaCatalogueError, IvaValidationError
+
+if TYPE_CHECKING:
+    from ..calculations.registry.authority import ValidatedRegistryAuthority
+
+IVA_RECARGO_FACT_ID = "iva-recargo-by-applied-rate"
 
 
 class RecargoRateRecord(BaseModel):
@@ -217,14 +237,133 @@ def recargo_rate_for_applied_rate(applied_rate: Decimal, on_date: date) -> Decim
     to a product rather than to an accompanying IVA rate, and is read from
     ``LIVA_ART_161_RECARGO.tabaco_rate``.
     """
-    for record in load_recargo_rate_table():
-        if record.iva_rate == applied_rate and record.covers(on_date):
-            return record.recargo_rate
-    return None
+    if not _recargo_fact_candidate_exists(applied_rate, on_date):
+        return None
+    return recargo_rate_record_from_fact(resolve_recargo_rate_for_applied_rate(applied_rate, on_date)).recargo_rate
+
+
+def resolve_recargo_rate_for_applied_rate(
+    applied_rate: Decimal,
+    on_date: date,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> ResolvedMappingFact:
+    """Resolve the dated recargo pairing with its complete governed-fact provenance."""
+    if authority is None:
+        from ..calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    resolved = authority.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=IVA_RECARGO_FACT_ID,
+            date_axis=DateAxis.DEVENGO_DATE,
+            effective_date=on_date,
+            selectors=(FactSelector(name="applied_rate", value=applied_rate),),
+        ),
+    )
+    return cast("ResolvedMappingFact", resolved)
+
+
+def _recargo_fact_candidate_exists(
+    applied_rate: Decimal,
+    on_date: date,
+    *,
+    authority: ValidatedRegistryAuthority | None = None,
+) -> bool:
+    """Return false only for an unmodelled applied-rate/date pairing.
+
+    A candidate still resolves through the authority afterwards, so any overlap
+    or other invalid exact selection remains a loud fail-closed error rather
+    than being mistaken for the public ``None`` sentinel.
+    """
+    if authority is None:
+        from ..calculations.registry.authority import bundled_authority
+
+        authority = bundled_authority()
+    authority.validate_registry()
+    fact = authority.catalogues.facts.facts.get(IVA_RECARGO_FACT_ID)
+    if fact is None:
+        return False
+    return any(
+        variant.date_axis is DateAxis.DEVENGO_DATE
+        and variant.valid_from <= on_date
+        and (variant.valid_to is None or on_date <= variant.valid_to)
+        and {selector.name: selector.value for selector in variant.selectors}.get("applied_rate") == applied_rate
+        for variant in fact.variants
+    )
+
+
+def compile_iva_recargo_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
+    """Project the legacy applied-rate schedule into governed facts."""
+    records = load_recargo_rate_table(registry_root.resolve() / "iva" / "recargo-rates.toml")
+    return (
+        GovernedFact(
+            fact_id=IVA_RECARGO_FACT_ID,
+            family=GovernedFactFamily.MAPPING,
+            variants=tuple(_recargo_fact_variant(record) for record in records),
+        ),
+    )
+
+
+def collect_iva_recargo_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
+    """Fingerprint the exact recargo schedule owned by the IVA provider.
+
+    An absent schedule contributes NO fingerprint rather than raising, for the
+    reason the sibling rate collector states: a partial registry carries only
+    what its subject needs, and there is no content to invalidate on.
+    """
+    path = (registry_root.resolve() / "iva" / "recargo-rates.toml").resolve()
+    if not path.is_file():
+        return ()
+    return (toml_file_fingerprint(path),)
+
+
+def reset_iva_recargo_fact_provider() -> None:
+    """Clear the recargo parser cache under the authority reset barrier."""
+    _load_recargo_rate_table_cached.cache_clear()
+
+
+def recargo_rate_record_from_fact(resolved: ResolvedMappingFact) -> RecargoRateRecord:
+    """Project a provenance-bearing authority result onto the retained public record."""
+    selectors = {selector.name: selector.value for selector in resolved.matched_selectors}
+    payload = {str(entry.key): entry.value for entry in resolved.payload.entries}
+    return RecargoRateRecord(
+        iva_rate=Decimal(str(selectors["applied_rate"])),
+        recargo_rate=Decimal(str(payload["recargo_rate"])),
+        effective_from=resolved.valid_from,
+        effective_until=resolved.valid_to,
+        legal_refs=resolved.legal_refs,
+        notes=str(payload["notes"]),
+    )
+
+
+def _recargo_fact_variant(record: RecargoRateRecord) -> GovernedFactVariant:
+    return GovernedFactVariant(
+        variant_id=f"iva-recargo.{record.iva_rate}.{record.effective_from}",
+        selectors=(FactSelector(name="applied_rate", value=record.iva_rate),),
+        date_axis=DateAxis.DEVENGO_DATE,
+        valid_from=record.effective_from,
+        valid_to=record.effective_until,
+        payload=MappingFactPayload(
+            entries=(
+                MappingFactEntry(key="recargo_rate", value=record.recargo_rate),
+                MappingFactEntry(key="notes", value=record.notes),
+            ),
+        ),
+        legal_refs=record.legal_refs,
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,
+        ownership=FactOwnership.GENERATED,
+    )
 
 
 __all__ = [
+    "IVA_RECARGO_FACT_ID",
     "RecargoRateRecord",
+    "collect_iva_recargo_fact_fingerprints",
+    "compile_iva_recargo_facts",
     "load_recargo_rate_table",
     "recargo_rate_for_applied_rate",
+    "recargo_rate_record_from_fact",
+    "reset_iva_recargo_fact_provider",
+    "resolve_recargo_rate_for_applied_rate",
 ]

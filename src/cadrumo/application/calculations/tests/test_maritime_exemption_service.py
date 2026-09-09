@@ -18,7 +18,6 @@ import pytest
 
 from ....domain.renta.errors import RentaValidationError
 from ....domain.renta.maritime_exemption import (
-    ART_7P_EXEMPTION_CAP_EUR,
     RENTA_EXENTA_CASILLA,
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
@@ -34,8 +33,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
 _REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
-_ART_7P_SOURCE_REFS = ("boe-lirpf-art-7-authority",)
-_REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-authority",)
+_ART_7P_SOURCE_REFS = ("boe-lirpf-statutory-facts",)
+_REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
 
 
 class TestResolveMaritimeExemptionArt7p:
@@ -91,7 +90,7 @@ class TestResolveMaritimeExemptionArt7p:
             annual_salary=Decimal("120000"),
             qualifying_days=365,
         )
-        assert result.observations[0].value == ART_7P_EXEMPTION_CAP_EUR
+        assert result.observations[0].value == Decimal("60100")
 
     def test_casilla_values_derived_view_matches_observations(self) -> None:
         result = resolve_maritime_exemption(

@@ -17,28 +17,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator
 
-from ...core.external_constants import (
-    ART_81_1_ENTRY_WINDOW_YEARS as _ART_81_1_ENTRY_WINDOW_YEARS,
-)
-from ...core.external_constants import (
-    MINIMO_DESCENDIENTE_MAX_AGE,
-    MINIMO_MENOR_TRES_MAX_AGE,
-)
-from ...core.external_constants import (
-    NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS as _NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
-)
 from ...core.identity import SubjectTaxId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.text_bounds import CalendarMonth
 from .errors import ProfileValidationError
-
-# Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
-# (DL 1/2010, de 21 octubre, arts. 4 y 18.1). Ámbito temporal: the deducción
-# applies in the period of nacimiento/adopción AND in each of the two following
-# periods. The figure itself lives beside its Art. 58 / Art. 61 siblings in the
-# curated external-constants layer; the alias keeps internal call sites stable.
-NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS = _NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS
 
 
 def within_multi_year_applicability_window(
@@ -64,20 +47,6 @@ def within_multi_year_applicability_window(
     if following_periods < 0:
         raise ProfileValidationError("following_periods must be non-negative")
     return entry_year <= filing_year <= entry_year + following_periods
-
-
-# Art. 58 thresholds sourced from the central authority: age < 25 (exclusive)
-# for ordinary mínimo eligibility, age < 3 (exclusive) for the bajo-3-años
-# supplement. The module-private aliases keep the internal call sites stable.
-MAX_AGE_ORDINARY = MINIMO_DESCENDIENTE_MAX_AGE
-MAX_AGE_MENOR_TRES = MINIMO_MENOR_TRES_MAX_AGE
-
-# Art. 81.1 LIRPF: the adopción/acogimiento limb runs "durante los tres años
-# siguientes a la fecha de la inscripción en el Registro Civil". Counted in
-# YEARS from a date, unlike the Art. 58.2 limb above, which counts whole tax
-# PERIODS from the entry period — hence a separate constant rather than a reuse
-# of the period count, which would read as the same rule and is not.
-ART_81_1_ENTRY_WINDOW_YEARS = _ART_81_1_ENTRY_WINDOW_YEARS
 
 
 def months_of_year_between(

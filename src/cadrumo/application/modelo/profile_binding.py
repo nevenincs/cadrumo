@@ -44,10 +44,12 @@ from pydantic import BaseModel
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.decimal.coercion import coerce_decimal
-from ...core.external_constants import DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR, UTF_8_ENCODING
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.parsing.dates import parse_iso8601_date
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.runtime_graph import (
@@ -61,6 +63,7 @@ from ...domain.calculations.registry.schema_formula import ParameterDefinition
 from ...domain.contribuyente.ccaa import CCAA
 from ...domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611
 from ...domain.contribuyente.descendant_facts import descendant_list_from_facts
+from ...domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.contribuyente.family_types import MinimoDescendientesThresholds
 from ...domain.contribuyente.marriage_facts import marriage_full_year, marriage_month_start
@@ -80,6 +83,16 @@ from ..user_profile.projections import profile_fact_index
 
 _PROFILE_RESOLVER_ID = "profile"
 _PROFILE_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (BindingSourceKind.PROFILE,)
+
+
+def _family_fact_context(snapshot: RegistrySnapshot) -> FamilyFactResolutionContext:
+    """Compose the family governed-fact context for one modelo snapshot."""
+    coordinate = date(snapshot.filing_year, 12, 31)
+    return FamilyFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=coordinate,
+        devengo_date=coordinate,
+    )
 # Marital-status token sets, derived from the enum rather than restated.
 #
 # Every predicate below reads ``renta_taxpayer.marital_status``, which the
@@ -201,6 +214,8 @@ def _inject_derived_family_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
     declared_selectors: frozenset[str],
+    *,
+    context: FamilyFactResolutionContext | None = None,
 ) -> None:
     """Inject the two Art. 81.2 guardería terms of the 0613 cap into *fact_index*.
 
@@ -241,14 +256,19 @@ def _inject_derived_family_facts(
     The two are different populations and always were; only one of them was
     misnamed.
     """
+    context = context if context is not None else FamilyFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=date(filing_year, 12, 31),
+        devengo_date=date(filing_year, 12, 31),
+    )
     guarderia_key = f"renta_family.descendientes_guarderia_{filing_year}"
     gastos_key = f"renta_family.gastos_guarderia_reales_{filing_year}"
     if guarderia_key not in declared_selectors and gastos_key not in declared_selectors:
         return
 
     profile = _renta_family_profile_from_facts(fact_index)
-    fact_index[guarderia_key] = Decimal(profile.descendientes_guarderia_count(filing_year))
-    fact_index[gastos_key] = Decimal(profile.gastos_guarderia_reales(filing_year))
+    fact_index[guarderia_key] = Decimal(profile.descendientes_guarderia_count(filing_year, context=context))
+    fact_index[gastos_key] = Decimal(profile.gastos_guarderia_reales(filing_year, context=context))
 
 
 def _renta_family_profile_from_facts(
@@ -370,7 +390,11 @@ def resolve_maternidad_meses(
     rather than letting a declared figure vanish.
     """
     fact_index = profile_fact_index(record, schema if schema is not None else load_user_profile_schema())
-    return _resolve_maternidad_meses_from_fact_index(fact_index, snapshot)
+    return _resolve_maternidad_meses_from_fact_index(
+        fact_index,
+        snapshot,
+        context=_family_fact_context(snapshot),
+    )
 
 
 def _fact_index_declares_maternidad_months(fact_index: Mapping[str, UserProfileFactValue]) -> bool:
@@ -418,12 +442,14 @@ def _maternidad_alta_posterior_hijos(
     contributed: Mapping[str, int],
     *,
     filing_year: int,
+    context: FamilyFactResolutionContext,
 ) -> frozenset[str]:
     """Return eligible descendants carrying the post-birth alta increment."""
     return frozenset(
         str(index)
         for index, descendant in enumerate(profile.descendientes)
-        if contributed.get(str(index), 0) > 0 and descendant.maternidad_alta_posterior_increment_applies(filing_year)
+        if contributed.get(str(index), 0) > 0
+        and descendant.maternidad_alta_posterior_increment_applies(filing_year, context=context)
     )
 
 
@@ -433,6 +459,7 @@ def _maternidad_resolved_resolution(
     *,
     filing_year: int,
     declares_meses: bool,
+    context: FamilyFactResolutionContext,
 ) -> MaternidadMesesResolution:
     """Project eligible pairs and their dependent maternity diagnostics."""
     contributed = dict(pairs)
@@ -445,6 +472,7 @@ def _maternidad_resolved_resolution(
             profile,
             contributed,
             filing_year=filing_year,
+            context=context,
         ),
     )
 
@@ -452,6 +480,8 @@ def _maternidad_resolved_resolution(
 def _resolve_maternidad_meses_from_fact_index(
     fact_index: Mapping[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
+    *,
+    context: FamilyFactResolutionContext,
 ) -> MaternidadMesesResolution:
     """Resolve maternidad months from the canonical profile fact projection.
 
@@ -461,7 +491,18 @@ def _resolve_maternidad_meses_from_fact_index(
     reconstructing the family a second way.
     """
     declares_meses = _fact_index_declares_maternidad_months(fact_index)
-    if snapshot.filing_year < DEDUCCION_MATERNIDAD_COTIZACIONES_CEILING_RETIRED_FILING_YEAR:
+    try:
+        cotizaciones_ceiling_retired_year = context.integer(
+            "lirpf-art-81-contribution-ceiling-retired-effective-year"
+        )
+    except RegistryValidationError:
+        # The retired-ceiling fact begins with the amendment that removed it.
+        # An earlier filing coordinate cannot establish that later legal fact,
+        # so preserve the established refusal rather than infer a cutoff.
+        return _maternidad_ceiling_unavailable_resolution(
+            declares_meses=declares_meses,
+        )
+    if snapshot.filing_year < cotizaciones_ceiling_retired_year:
         # Until 2022 the deducción was capped at the mother's cotizaciones
         # devengadas in the period. The engine cannot apply that cap: the
         # cotizaciones binding exists only in the 2024 revision and the profile
@@ -481,12 +522,15 @@ def _resolve_maternidad_meses_from_fact_index(
     # resolver used to build it inline while `meses_maternidad_por_descendiente`
     # computed the same thing with no production caller -- two authorities for
     # one answer, which is how the guarderia half once drifted from its record.
-    pairs = profile.meses_maternidad_por_descendiente(snapshot.filing_year, thresholds=thresholds)
+    pairs = profile.meses_maternidad_por_descendiente(
+        snapshot.filing_year, thresholds=thresholds, context=context
+    )
     return _maternidad_resolved_resolution(
         profile,
         pairs,
         filing_year=snapshot.filing_year,
         declares_meses=declares_meses,
+        context=context,
     )
 
 
@@ -691,6 +735,8 @@ def second_entitled_filer_indicated(fact_index: Mapping[str, UserProfileFactValu
 def inject_derived_minimo_descendientes_facts(
     fact_index: dict[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
+    *,
+    context: FamilyFactResolutionContext | None = None,
 ) -> None:
     """Inject the Art. 58/61 LIRPF mínimo por descendientes aggregates (casillas 0513/0514).
 
@@ -735,6 +781,7 @@ def inject_derived_minimo_descendientes_facts(
     is the same ground the former year frozenset covered but derived from the
     registry rather than restated as a Python constant.
     """
+    context = context if context is not None else _family_fact_context(snapshot)
     estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.filing_year}"
     autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot.filing_year}"
 
@@ -764,6 +811,7 @@ def inject_derived_minimo_descendientes_facts(
         menor_tres_supplement=menor_tres_supplement,
         fallecimiento_amount=fallecimiento_amount,
         thresholds=thresholds,
+        context=context,
         second_filer_indicated=second_filer_indicated,
     )
 
@@ -787,6 +835,7 @@ def inject_derived_minimo_descendientes_facts(
         menor_tres_supplement=menor_tres_supplement,
         fallecimiento_amount=fallecimiento_amount,
         thresholds=thresholds,
+        context=context,
         second_filer_indicated=second_filer_indicated,
     )
 
@@ -822,6 +871,8 @@ def _declared_anualidades_alimentos(
 def inject_derived_anualidades_eligibility_facts(
     fact_index: dict[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
+    *,
+    context: FamilyFactResolutionContext | None = None,
 ) -> None:
     """Inject the LIRPF art. 64/75 anualidades separate-escala eligibility flag.
 
@@ -875,6 +926,7 @@ def inject_derived_anualidades_eligibility_facts(
     Whoever lands that attribution must revisit this function in the same
     change.
     """
+    context = context if context is not None else _family_fact_context(snapshot)
     filing_year = snapshot.filing_year
     key = f"renta_family.anualidades_sin_minimo_descendientes_{filing_year}"
     if key not in _declared_profile_selectors(snapshot.revision):
@@ -895,6 +947,7 @@ def inject_derived_anualidades_eligibility_facts(
         and descendant.is_eligible_ordinary(
             filing_year,
             thresholds=thresholds,
+            context=context,
             # Explicitly False: this régimen only exists for a filer who PAYS
             # anualidades, and a paying filer already has the dependency
             # assimilation suppressed for every descendant. See this function's
@@ -939,6 +992,8 @@ def is_indeterminate_unidad_familiar(fact_index: Mapping[str, UserProfileFactVal
 def madrid_nacimiento_adopcion_candidate_weighted_count(
     fact_index: Mapping[str, UserProfileFactValue],
     filing_year: int,
+    *,
+    context: FamilyFactResolutionContext | None = None,
 ) -> Decimal:
     """Return the prorrateo-weighted Madrid nacimiento/adopción eligible count.
 
@@ -951,19 +1006,26 @@ def madrid_nacimiento_adopcion_candidate_weighted_count(
     indeterminate (conjunta/married) unit that should not silently resolve to
     zero.
     """
+    context = context if context is not None else FamilyFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=date(filing_year, 12, 31),
+        devengo_date=date(filing_year, 12, 31),
+    )
     descendant_facts = {
         key: str(value) for key, value in fact_index.items() if key.startswith("renta_family.descendiente.")
     }
     weighted_count = Decimal("0")
     for descendant in descendant_list_from_facts(descendant_facts):
-        if descendant.is_nacimiento_adopcion_eligible(filing_year):
-            weighted_count += descendant.nacimiento_adopcion_prorrateo_share()
+        if descendant.is_nacimiento_adopcion_eligible(filing_year, context=context):
+            weighted_count += descendant.nacimiento_adopcion_prorrateo_share(context=context)
     return weighted_count
 
 
 def inject_derived_autonomic_deduccion_facts(
     fact_index: dict[str, UserProfileFactValue],
     filing_year: int,
+    *,
+    context: FamilyFactResolutionContext | None = None,
 ) -> None:
     """Inject the Madrid nacimiento/adopción deducción derived facts (casilla 1039).
 
@@ -990,6 +1052,11 @@ def inject_derived_autonomic_deduccion_facts(
     """
     if filing_year != MADRID_AUTONOMIC_DEDUCCION_FILING_YEAR:
         return
+    context = context if context is not None else FamilyFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=date(filing_year, 12, 31),
+        devengo_date=date(filing_year, 12, 31),
+    )
 
     # Always supply a neutral 0 default so the casilla-1039 formula's two profile
     # bindings resolve for EVERY M100 2025 filer — non-Madrid, tributación
@@ -1005,7 +1072,9 @@ def inject_derived_autonomic_deduccion_facts(
     if is_indeterminate_unidad_familiar(fact_index):
         return
 
-    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(fact_index, filing_year)
+    weighted_count = madrid_nacimiento_adopcion_candidate_weighted_count(
+        fact_index, filing_year, context=context
+    )
     if weighted_count <= 0:
         return
 
@@ -1036,6 +1105,8 @@ def _inject_derived_incremento_guarderia_facts(
     fact_index: dict[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
     declared_selectors: frozenset[str],
+    *,
+    context: FamilyFactResolutionContext | None = None,
 ) -> None:
     """Inject the Art. 81.2 guardería increment (casilla 0613) into *fact_index*.
 
@@ -1061,6 +1132,7 @@ def _inject_derived_incremento_guarderia_facts(
     so extending coverage to another revision is registry work with no code
     change here.
     """
+    context = context if context is not None else _family_fact_context(snapshot)
     key = f"renta_family.incremento_guarderia_{snapshot.filing_year}"
     if key not in declared_selectors:
         return
@@ -1077,6 +1149,7 @@ def _inject_derived_incremento_guarderia_facts(
         snapshot.filing_year,
         thresholds=thresholds,
         cap_anual=cap_anual,
+        context=context,
     )
 
 
@@ -1084,6 +1157,8 @@ def _inject_derived_deduccion_maternidad_facts(
     fact_index: dict[str, UserProfileFactValue],
     snapshot: RegistrySnapshot,
     declared_selectors: frozenset[str],
+    *,
+    context: FamilyFactResolutionContext | None = None,
 ) -> None:
     """Inject the Art. 81.1 maternidad deduction (casilla 0611) into *fact_index*.
 
@@ -1099,11 +1174,12 @@ def _inject_derived_deduccion_maternidad_facts(
     the missing legal basis.  Never preserve a stored value at this synthetic
     selector: it is derived from the descendant record at calculation time.
     """
+    context = context if context is not None else _family_fact_context(snapshot)
     key = f"renta_family.deduccion_maternidad_{snapshot.filing_year}"
     if key not in declared_selectors:
         return
 
-    resolution = _resolve_maternidad_meses_from_fact_index(fact_index, snapshot)
+    resolution = _resolve_maternidad_meses_from_fact_index(fact_index, snapshot, context=context)
     if not resolution.ceilings_resolved or resolution.cotizaciones_ceiling_inexpressible:
         return
 
@@ -1337,14 +1413,15 @@ def _load_profile_facts(
     profile_record_fingerprint = _profile_record_fingerprint(record)
     resolved_schema = schema if schema is not None else load_user_profile_schema()
     fact_index = profile_fact_index(record, resolved_schema)
+    family_context = _family_fact_context(snapshot)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     declared_selectors = _declared_profile_selectors(snapshot.revision)
-    _inject_derived_family_facts(fact_index, snapshot.filing_year, declared_selectors)
-    inject_derived_anualidades_eligibility_facts(fact_index, snapshot)
-    inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
-    inject_derived_minimo_descendientes_facts(fact_index, snapshot)
-    _inject_derived_deduccion_maternidad_facts(fact_index, snapshot, declared_selectors)
-    _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors)
+    _inject_derived_family_facts(fact_index, snapshot.filing_year, declared_selectors, context=family_context)
+    inject_derived_anualidades_eligibility_facts(fact_index, snapshot, context=family_context)
+    inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year, context=family_context)
+    inject_derived_minimo_descendientes_facts(fact_index, snapshot, context=family_context)
+    _inject_derived_deduccion_maternidad_facts(fact_index, snapshot, declared_selectors, context=family_context)
+    _inject_derived_incremento_guarderia_facts(fact_index, snapshot, declared_selectors, context=family_context)
     if "tax_residence.state_attribution_ratio" in {
         selector for binding in selected_bindings for selector in profile_binding_selectors(binding.selector)
     }:

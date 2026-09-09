@@ -336,7 +336,9 @@ _MODELO_180_DECLARANTE_FIELDS: dict[tuple[int, int], str] = {
     # blank cannot parse against the layout it is meant to exercise.
     (58, 58): "T",
     (136, 144): "000000002",
-    (145, 160): " " + "100050".zfill(15),
+    # A non-negative signed amount is all digits: AEAT fills numeric fields with
+    # zeros and carries them sin signos, reserving no byte for the sign.
+    (145, 160): "100050".zfill(16),
     (161, 175): "19010".zfill(15),
 }
 

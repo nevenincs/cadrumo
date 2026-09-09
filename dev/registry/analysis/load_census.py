@@ -59,7 +59,7 @@ import json
 import subprocess
 import sys
 import tempfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, TypeGuard
@@ -198,7 +198,7 @@ def module_level_importers(module: str) -> frozenset[str]:
             unread.append(f"{path}: {type(error).__name__}: {error}")
             continue
         owner = _module_name_for(path)
-        if owner == module:
+        if owner is None or owner == module:
             continue
         for node in _module_level_statements(tree):
             if _import_targets(node, owner=owner) & {module}:
@@ -230,7 +230,7 @@ def _import_targets(node: ast.stmt, *, owner: str) -> frozenset[str]:
     if isinstance(node, ast.Import):
         return frozenset(alias.name for alias in node.names)
     if not isinstance(node, ast.ImportFrom):
-        return frozenset()
+        return frozenset[str]()
     if node.level:
         base = owner.rsplit(".", node.level)[0] if node.level <= owner.count(".") else ""
         head = f"{base}.{node.module}" if node.module else base
@@ -401,7 +401,7 @@ def _string_tuple_constants(tree: ast.Module) -> dict[str, tuple[str, ...]]:
     """Collect module-level names bound to a tuple or list of string literals."""
     constants: dict[str, tuple[str, ...]] = {}
     for node in tree.body:
-        targets: list[ast.expr]
+        targets: Sequence[ast.expr]
         if isinstance(node, ast.Assign):
             targets, value = list(node.targets), node.value
         elif isinstance(node, ast.AnnAssign) and node.value is not None:
@@ -466,7 +466,12 @@ def evaluated_string_sequence(module: str, name: str) -> tuple[str, ...] | None:
         members = json.loads(completed.stdout.decode(_UTF_8))
     except (ValueError, UnicodeDecodeError):
         return None
-    return tuple(members)
+    if not isinstance(members, list):
+        return None
+    strings = tuple(member for member in members if isinstance(member, str))
+    if len(strings) != len(members):
+        return None
+    return strings
 
 
 def _loop_resolved_targets(
@@ -616,7 +621,7 @@ class ReferenceMap:
         Returns:
             Production and test consumers combined.
         """
-        return self.production.get(module, frozenset()) | self.tests.get(module, frozenset())
+        return self.production.get(module, frozenset[str]()) | self.tests.get(module, frozenset[str]())
 
 
 def build_reference_map() -> ReferenceMap:
@@ -813,7 +818,10 @@ def trace_regime(regime: str) -> frozenset[str]:
         )
         if completed.returncode != 0 or not output.exists():
             raise LoadCensusError(f"{regime} trace failed:\n{completed.stderr}")
-        return frozenset(json.loads(output.read_text(encoding="utf-8")))
+        modules = json.loads(output.read_text(encoding="utf-8"))
+        if not isinstance(modules, list) or not all(isinstance(entry, str) for entry in modules):
+            raise LoadCensusError(f"{regime} trace produced a non-string module list")
+        return frozenset[str](modules)
 
 
 @dataclass(frozen=True)

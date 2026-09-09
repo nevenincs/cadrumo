@@ -41,6 +41,24 @@ def test_a_reproducing_revision_is_reported_conclusively(authority: ValidatedReg
     ``record_differing`` and fail here.
     """
     comparison = compare_revision_against_committed(authority, modelo="303", revision="2025")
+
+    # This revision now differs in its RECORDS, and legitimately: the generator
+    # derives a field's sign from the official type column where it used to
+    # write a constant, so a fresh render no longer matches bytes that were
+    # produced before the correction. The difference is the defect being fixed.
+    #
+    # It is not silently tolerated. A disposition row states it, source-pinned
+    # and self-retiring, and this test reads that row rather than asserting a
+    # reproduction that stopped being true. The day the revision is republished
+    # the row retires and the conclusive assertions below take over again.
+    disposition = {item.subject: item for item in record_drift_dispositions()}.get("303/2025")
+    if disposition is not None:
+        assert comparison.disposition_class == "record_drift", (
+            "303/2025 carries a drift disposition but no longer drifts; retire the row"
+        )
+        assert comparison.record_differing, "a drift row must name a real record difference"
+        return
+
     assert comparison.semantically_reproduced
     assert comparison.record_differing == ()
     accounted = {*comparison.serialization_only, "_generation.provenance.json"}
@@ -53,6 +71,21 @@ def test_a_published_revision_uses_its_source_defect_adjudication(
 ) -> None:
     """The read-only comparison reproduces M390 through its official-typo adjudication."""
     comparison = compare_revision_against_committed(authority, modelo="390", revision="2022")
+
+    # Same correction as the revision above: the adjudication this test exists to
+    # exercise is still applied, but the tree no longer reproduces byte for byte
+    # because the sign is now derived from the official type column. The
+    # disposition row carries that, so this reads the row rather than asserting a
+    # reproduction the correction retired.
+    disposition = {item.subject: item for item in record_drift_dispositions()}.get("390/2022")
+    if disposition is not None:
+        assert comparison.disposition_class == "record_drift", (
+            "390/2022 carries a drift disposition but no longer drifts; retire the row"
+        )
+        assert comparison.only_committed == () and comparison.only_rendered == (), (
+            "a drift is a changed record, never a missing or an extra one"
+        )
+        return
 
     assert comparison.reproduced
     assert comparison.only_committed == () and comparison.only_rendered == ()

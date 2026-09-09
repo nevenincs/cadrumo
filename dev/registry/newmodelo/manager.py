@@ -48,13 +48,21 @@ _REVISION_ID_RE = re.compile(r"^[a-z0-9][a-z0-9._:-]*[a-z0-9]$|^[a-z0-9]$")
 # internal field order; a schema field with no scaffolded fragment directory
 # (e.g. `parameters`) is optional and only needed by a
 # subset of modelos, so it is not force-created by default.
+#
+# `export_layouts` is deliberately ABSENT. A hand-authored fixed-width layout is
+# a transcription of the official record design, and a scaffold that creates the
+# directory makes transcription the path of least resistance: the authored export
+# surface grew back faster than it was migrated, one new revision at a time. The
+# supported path is to author the generator inputs -- the semantic map and the
+# render profile -- and let the export tree be GENERATED from the design, so a
+# shipped field can be traced to the row it came from. Hand-authoring remains
+# possible and is now the declared exception, which checklist item 8 states.
 _SECTION_DIRECTORIES: tuple[str, ...] = (
     "casillas",
     "formulas",
     "bindings",
     "completeness_manifest",
     "verification_expectations",
-    "export_layouts",
     "extraction_profiles",
     "application_links",
 )
@@ -187,7 +195,6 @@ _SECTION_CHECKLIST_HINTS: dict[str, str] = {
     "bindings": "author bindings for every data-sourced casilla (checklist item 5).",
     "completeness_manifest": "close the calculation-completeness manifest (checklist item 6).",
     "verification_expectations": "author verification expectations and predicates (checklist item 7).",
-    "export_layouts": "register the export layout(s) (checklist item 8).",
     "extraction_profiles": "register an extraction profile, if applicable (checklist item 9).",
     "application_links": "declare any cross-modelo application links this revision depends on.",
 }

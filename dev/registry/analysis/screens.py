@@ -46,6 +46,10 @@ from .rule_grounding_coverage import screen_authority as rule_grounding_screen
 from .temporal_site_agreement import screen_authority as temporal_site_screen
 from .type_convention_notes import screen_authority as type_convention_screen
 from .unnumbered_note_scope import screen_corpus as unnumbered_note_scope_screen
+from .cross_revision_wire_shape import screen_authority as cross_revision_wire_shape_screen
+from .export_derivation_attestation import screen_authority as export_attestation_screen
+from .fabricated_required_ness import screen_authority as fabricated_required_screen
+from .unresolvable_note_pointers import screen_authority as unresolvable_note_pointer_screen
 from .wire_type_compatibility import screen_authority as wire_type_screen
 
 #: A newline, named so the entry-point search below carries no escape.
@@ -200,6 +204,28 @@ FINDING_IDENTITY_CONTRACT: tuple[str, ...] = ("modelo",)
 SCREENS: tuple[ScreenEntry, ...] = (
     ScreenEntry("export_ref_symmetry", export_ref_screen, "casillas claiming an uncarried export field"),
     ScreenEntry("casilla_id_grammar", _mixing_modelos, "modelos mixing identifier grammars"),
+    ScreenEntry(
+        "cross_revision_wire_shape",
+        cross_revision_wire_shape_screen,
+        "fields whose emitted wire shape moves between revisions of one modelo",
+    ),
+    ScreenEntry(
+        "export_derivation_attestation",
+        export_attestation_screen,
+        "shipped export revisions, and whether each records a derivation or only cites a design",
+        entry_returns="census",
+    ),
+    ScreenEntry(
+        "unresolvable_note_pointers",
+        unresolvable_note_pointer_screen,
+        "shipped fields whose governing note label carries several texts, so no reading is provable",
+    ),
+    ScreenEntry(
+        "fabricated_required_ness",
+        fabricated_required_screen,
+        "fields declared optional because the design was silent rather than because it said so",
+        entry_returns="census",
+    ),
     ScreenEntry(
         "revision_name_window",
         revision_name_screen,

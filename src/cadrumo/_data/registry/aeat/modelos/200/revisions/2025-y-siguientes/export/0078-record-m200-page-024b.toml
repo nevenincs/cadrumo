@@ -335,12 +335,11 @@ id = 'm200-2025.dp200024b.f0124'
 offset = 1199
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -360,12 +359,11 @@ id = 'm200-2025.dp200024b.f0125'
 offset = 1216
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -410,12 +408,11 @@ id = 'm200-2025.dp200024b.f0127'
 offset = 1250
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -485,12 +482,11 @@ id = 'm200-2025.dp200024b.f0130'
 offset = 1301
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -1081,12 +1077,11 @@ id = 'm200-2025.dp200024b.f0153'
 offset = 1602
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -1106,12 +1101,11 @@ id = 'm200-2025.dp200024b.f0154'
 offset = 1619
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -1156,12 +1150,11 @@ id = 'm200-2025.dp200024b.f0156'
 offset = 1653
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -1231,12 +1224,11 @@ id = 'm200-2025.dp200024b.f0159'
 offset = 1704
 length = 17
 kind = 'projection'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -1375,5 +1367,30 @@ source_refs = ['aeat-dr-200-2025']
 projection_kind = 'm200_entidad_participada'
 slot = 3
 field = 'deduccion_produccion_espectaculos_canarias'
+
+[[revisions.2025-y-siguientes.export_layouts.records.fields]]
+id = 'm200-2025.dp200024b.f0165'
+offset = 1806
+length = 17
+kind = 'projection'
+data_type = 'decimal'
+required = false
+padding = 'left_zero'
+justification = 'right'
+decimals = 2
+signed = false
+legal_refs = [
+    'ley-27-2014:art-41',
+    'ley-27-2014:art-39',
+    'ley-27-2014:art-19',
+    'ley-27-2014:art-100',
+    'rd-634-2015:art-3',
+]
+source_refs = ['aeat-dr-200-2025']
+
+[revisions.2025-y-siguientes.export_layouts.records.fields.projection_ref]
+projection_kind = 'm200_entidad_participada'
+slot = 3
+field = 'deduccion_resto_inversion_canarias'
 
 [revisions.2025-y-siguientes.export_layouts.records.row_field_casilla_ids]

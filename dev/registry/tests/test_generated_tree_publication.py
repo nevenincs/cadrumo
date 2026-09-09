@@ -7,7 +7,6 @@ import inspect
 import os
 from pathlib import Path
 from shutil import rmtree
-from types import SimpleNamespace
 from typing import Literal
 
 import pytest
@@ -22,12 +21,17 @@ from ..pipeline._tree_publication import (
     GeneratedExportTreeTargetStateReceipt,
     publish_validated_generated_export_tree,
 )
-from ..pipeline._tree_validation import validate_generated_export_tree
+from ..pipeline._export_tree import RenderedExportTree
+from ..pipeline._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
 from ..pipeline.export_fragment_provenance import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
 )
+from ..pipeline.joined_record_design import JoinedRecordDesign
+from ..pipeline.render_profile import RenderProfile, RenderProfileSourceEvidence
+from ..pipeline.semantic_map import SemanticMap
 from ..pipeline.render_check import RevisionRenderInputs
 from .test_export_tree import _wire_evidence, _wire_profile
 from .test_generated_export_tree_validation import (
@@ -166,12 +170,38 @@ def _legacy_orphan_context(tmp_path: Path) -> GeneratedExportTreePublicationCont
     target_export_root = target_root / "modelos" / "200" / "revisions" / "2025" / "export"
     target_export_root.parent.mkdir(parents=True)
     return GeneratedExportTreePublicationContext(
-        validation=SimpleNamespace(target=SimpleNamespace(modelo="200", revision_id="2025")),  # type: ignore[arg-type]
+        # This legacy-orphan recovery path never reads past `.target.modelo`
+        # and `.target.revision_id` (the journal comparison at the top of
+        # `_recover_interrupted_publication`), so a real, minimally-populated
+        # validation context stands in rather than a duck-typed one -- the
+        # other fields (`registry_root`, `source_root`, `filing_year`,
+        # `period`) are never inspected on this path.
+        validation=GeneratedExportTreeValidationContext(
+            registry_root=tmp_path / "unused-registry-root",
+            source_root=tmp_path / "unused-source-root",
+            target=ExportFragmentTarget(modelo="200", revision_id="2025", design_epoch="2025"),
+            filing_year=2025,
+            period="anual",
+        ),
         temporary_root=tmp_path / "temporary-root",
         target_root=target_root,
         target_export_root=target_export_root,
         expected_target_state=GeneratedExportTreeTargetStateReceipt(manifest_sha256=None, output_files=()),
     )
+
+
+#: The legacy-orphan recovery path retires or refuses a journal before ever
+#: reading a joined design, semantic map, rendered tree, or render profile
+#: (see `_recover_interrupted_publication`, which only inspects
+#: `context.validation.target`). These stand in as real instances of the
+#: exact required types, built through pydantic's unvalidated-construction
+#: API rather than duck-typed placeholders, since no field on any of them is
+#: ever read along this path.
+_UNREACHED_JOINED = JoinedRecordDesign.model_construct()
+_UNREACHED_SEMANTIC_MAP = SemanticMap.model_construct()
+_UNREACHED_RENDERED = RenderedExportTree.model_construct()
+_UNREACHED_RENDER_PROFILE = RenderProfile.model_construct()
+_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE = RenderProfileSourceEvidence.model_construct()
 
 
 def _legacy_orphan_journal(
@@ -233,11 +263,11 @@ def test_recovery_retires_only_a_provably_completed_legacy_cross_volume_orphan(t
         context=context,
         target_export_root=context.target_export_root,
         journal_path=journal_path,
-        joined=None,  # type: ignore[arg-type]
-        semantic_map=None,  # type: ignore[arg-type]
-        rendered=None,  # type: ignore[arg-type]
-        render_profile=None,  # type: ignore[arg-type]
-        render_profile_source_evidence=None,  # type: ignore[arg-type]
+        joined=_UNREACHED_JOINED,
+        semantic_map=_UNREACHED_SEMANTIC_MAP,
+        rendered=_UNREACHED_RENDERED,
+        render_profile=_UNREACHED_RENDER_PROFILE,
+        render_profile_source_evidence=_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE,
     )
     assert not journal_path.exists(), "the completed legacy orphan journal was not retired"
     assert not context.target_export_root.exists(), (
@@ -307,11 +337,11 @@ def test_recovery_refuses_unsafe_legacy_orphan_shapes(
             context=context,
             target_export_root=context.target_export_root,
             journal_path=journal_path,
-            joined=None,  # type: ignore[arg-type]
-            semantic_map=None,  # type: ignore[arg-type]
-            rendered=None,  # type: ignore[arg-type]
-            render_profile=None,  # type: ignore[arg-type]
-            render_profile_source_evidence=None,  # type: ignore[arg-type]
+            joined=_UNREACHED_JOINED,
+            semantic_map=_UNREACHED_SEMANTIC_MAP,
+            rendered=_UNREACHED_RENDERED,
+            render_profile=_UNREACHED_RENDER_PROFILE,
+            render_profile_source_evidence=_UNREACHED_RENDER_PROFILE_SOURCE_EVIDENCE,
         )
     assert journal_path.exists()
     # Three cases are NAMED for something surviving the refusal, created it,

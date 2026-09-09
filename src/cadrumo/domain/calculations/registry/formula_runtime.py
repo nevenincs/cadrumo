@@ -43,7 +43,6 @@ from ._formula_operator_contracts import require_formula_operator_arity
 from .bindings import CasillaObservation
 from .casilla_membership import casillas_by_id as _casillas_by_id
 from .casilla_membership import duplicate_casilla_ids
-from .convenio import ConvenioAuthority
 from .errors import CasillaConstraintViolationError, RegistryValidationError
 from .formula_initial_values import (
     binding_values_with_absent_by_design_defaults as _binding_values_with_absent_by_design_defaults,
@@ -568,7 +567,6 @@ def _evaluate_formula_target(
             date_binding_values=resolved.resolved_date_bindings,
             filing_year=snapshot.filing_year,
             text_values=state.resolved_text_inputs,
-            convenio=snapshot.convenio,
         )
     except _UnresolvedFormulaOutcomeError as exc:
         state.unresolved_casilla_ids.add(target)
@@ -743,7 +741,6 @@ def _evaluate_expression(
     date_binding_values: Mapping[BindingId, date] | None = None,
     filing_year: int = 0,
     text_values: Mapping[CasillaId, str] | None = None,
-    convenio: ConvenioAuthority | None = None,
 ) -> Decimal:
     """Build the shared :class:`_EvalContext` for one formula tree and evaluate it.
 
@@ -758,7 +755,6 @@ def _evaluate_expression(
     resolved_enum_bindings: Mapping[BindingId, str] = enum_binding_values or dict[BindingId, str]()
     resolved_date_bindings: Mapping[BindingId, date] = date_binding_values or dict[BindingId, date]()
     resolved_text_values: Mapping[CasillaId, str] = text_values or dict[CasillaId, str]()
-    resolved_convenio: ConvenioAuthority = convenio if convenio is not None else ConvenioAuthority.empty()
     ctx = _EvalContext(
         values=values,
         binding_values=binding_values,
@@ -775,7 +771,6 @@ def _evaluate_expression(
         date_binding_values=resolved_date_bindings,
         filing_year=filing_year,
         text_values=resolved_text_values,
-        convenio=resolved_convenio,
     )
     return _evaluate_with_ctx(expression, ctx)
 
@@ -809,7 +804,6 @@ class _EvalContext:
     filing_year: int
     unresolved_binding_ids: frozenset[BindingId] = frozenset()
     text_values: Mapping[CasillaId, str] = field(default_factory=lambda: dict[CasillaId, str]())
-    convenio: ConvenioAuthority = field(default_factory=ConvenioAuthority.empty)
 
 
 def _evaluate_with_ctx(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:

@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core.aggregation import BindingSourceKind
-from ....core.external_constants import M347_THRESHOLD_EUR
 from ....core.period import Period
+from ....domain.calculations.registry._m347_threshold import (
+    m347_threshold_decimal,
+    resolve_m347_counterparty_annual_threshold,
+)
 from .._counterpart import (
     CounterpartAggregation,
     CounterpartObservation,
@@ -24,6 +28,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
+_M347_THRESHOLD = m347_threshold_decimal(
+    resolve_m347_counterparty_annual_threshold(effective_date=date(2025, 12, 31)),
+)
 
 
 def _obs(
@@ -110,7 +117,7 @@ class TestAggregate347:
 
 class TestThreshold347:
     def test_threshold_is_canonical_3005_06(self) -> None:
-        assert Decimal("3005.06") == M347_THRESHOLD_EUR
+        assert Decimal("3005.06") == _M347_THRESHOLD
 
     def test_declarable_when_above_threshold(self) -> None:
         observations = (

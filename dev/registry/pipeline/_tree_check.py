@@ -164,7 +164,7 @@ def check_generated_export_tree(
     )
 
 
-def _prepare_check_roots(context: GeneratedExportTreeCheckContext) -> tuple[Path, Path, Path]:
+def _prepare_check_roots(context: GeneratedExportTreeCheckContext) -> tuple[Path, Path]:
     temporary_root = _require_narrow_root(context.temporary_root, subject="generated check temporary root")
     candidate_registry_root = _require_descendant_directory(
         context.validation.registry_root,

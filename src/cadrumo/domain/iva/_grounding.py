@@ -7,10 +7,11 @@ between a value and a wrong filing, and until a table's loader resolves it the
 citation is validated by nothing: an identifier naming a provision nobody defined
 parses exactly like one naming a provision the BOE actually carries.
 
-This module is the one place an IVA table's citations are turned into verified
-grounding, and it does it by delegating to the registry's own evidence validator
-rather than by re-implementing a check beside each table. That delegation is the
-load-bearing part. :func:`~domain.calculations.registry.verify_legal_reference_grounding`
+Authority-enrolled IVA facts are verified by the registry facts validator. This
+module remains the legacy facade for direct table loaders and for IVA tables not
+yet enrolled as providers, and it delegates to the registry's own evidence
+validator rather than re-implementing a check beside each table. That delegation
+is the load-bearing part. :func:`~domain.calculations.registry.verify_legal_reference_grounding`
 resolves the cited catalogue entry's ``corpus_ref`` to the ANCHORED unit of the
 bundled consolidated text and checks the entry's ``required_text`` inside that
 unit; a check written locally against a whole consolidated law would pass on any

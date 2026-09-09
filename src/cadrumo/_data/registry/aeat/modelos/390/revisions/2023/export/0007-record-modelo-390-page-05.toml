@@ -466,12 +466,11 @@ offset = 260
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2023.page_5.260-276.operaciones-reg-simplificado-actividad-1-f-resultado'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -944,12 +943,11 @@ offset = 580
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2023.page_5.580-596.operaciones-reg-simplificado-actividad-2-f-resultado'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -1144,12 +1142,11 @@ offset = 712
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2023.page_5.712-728.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-1-cuota-derivada-regimen-simplif'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -1264,12 +1261,11 @@ offset = 788
 length = 17
 kind = 'binding'
 binding = 'modelo-390-2023.page_5.788-804.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-2-cuota-derivada-regimen-simplif'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',
@@ -1370,6 +1366,25 @@ padding = 'left_zero'
 justification = 'right'
 decimals = 2
 signed = false
+legal_refs = [
+    'ley-37-1992:art-122',
+    'ley-37-1992:art-123',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2023']
+
+[[revisions.2023.export_layouts.records.fields]]
+id = 'modelo-390-page-05-864-operaciones-reg-simplificado-act-agricolas-y-ganader'
+offset = 864
+length = 17
+kind = 'binding'
+binding = 'modelo-390-2023.page_5.864-880.operaciones-reg-simplificado-act-agricolas-y-ganaderas-actividad-3-cuota-derivada-regimen-simplif'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
 legal_refs = [
     'ley-37-1992:art-122',
     'ley-37-1992:art-123',

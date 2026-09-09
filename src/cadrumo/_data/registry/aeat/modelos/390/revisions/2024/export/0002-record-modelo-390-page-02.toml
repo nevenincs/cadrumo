@@ -87,12 +87,11 @@ offset = 13
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-0.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -108,12 +107,11 @@ offset = 30
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-0.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -129,12 +127,11 @@ offset = 47
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-2.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -151,12 +148,11 @@ offset = 64
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-2.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -173,12 +169,11 @@ offset = 81
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -194,12 +189,11 @@ offset = 98
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -215,12 +209,11 @@ offset = 115
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -237,12 +230,11 @@ offset = 132
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -259,12 +251,11 @@ offset = 149
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-7-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -281,12 +272,11 @@ offset = 166
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-7-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -303,12 +293,11 @@ offset = 183
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -324,12 +313,11 @@ offset = 200
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -345,12 +333,11 @@ offset = 217
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -366,12 +353,11 @@ offset = 234
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -387,12 +373,11 @@ offset = 251
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-0.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -410,12 +395,11 @@ offset = 268
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-0.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -433,12 +417,11 @@ offset = 285
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-2.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -457,12 +440,11 @@ offset = 302
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-2.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -481,12 +463,11 @@ offset = 319
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -504,12 +485,11 @@ offset = 336
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -527,12 +507,11 @@ offset = 353
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -550,12 +529,11 @@ offset = 370
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -573,12 +551,11 @@ offset = 387
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-7-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -597,12 +574,11 @@ offset = 404
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-7-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -621,12 +597,11 @@ offset = 421
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -644,12 +619,11 @@ offset = 438
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -667,12 +641,11 @@ offset = 455
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -690,12 +663,11 @@ offset = 472
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.intragrupo.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -713,12 +685,11 @@ offset = 489
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-0.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -736,12 +707,11 @@ offset = 506
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-0.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -759,12 +729,11 @@ offset = 523
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-2.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -783,12 +752,11 @@ offset = 540
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-2.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -807,12 +775,11 @@ offset = 557
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -830,12 +797,11 @@ offset = 574
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -853,12 +819,11 @@ offset = 591
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -876,12 +841,11 @@ offset = 608
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -899,12 +863,11 @@ offset = 625
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-7-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -923,12 +886,11 @@ offset = 642
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-7-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -947,12 +909,11 @@ offset = 659
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -970,12 +931,11 @@ offset = 676
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -993,12 +953,11 @@ offset = 693
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -1016,12 +975,11 @@ offset = 710
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.criterio-caja.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-decies',
     'ley-37-1992:art-163-undecies',
@@ -1039,12 +997,11 @@ offset = 727
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-0.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1060,12 +1017,11 @@ offset = 744
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-0.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1081,12 +1037,11 @@ offset = 761
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-2.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1103,12 +1058,11 @@ offset = 778
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-2.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1125,12 +1079,11 @@ offset = 795
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1146,12 +1099,11 @@ offset = 812
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1167,12 +1119,11 @@ offset = 829
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1188,12 +1139,11 @@ offset = 846
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1209,12 +1159,11 @@ offset = 863
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-7-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1231,12 +1180,11 @@ offset = 880
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-7-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1253,12 +1201,11 @@ offset = 897
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1274,12 +1221,11 @@ offset = 914
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1295,12 +1241,11 @@ offset = 931
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1316,12 +1261,11 @@ offset = 948
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.bienes-usados.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1337,12 +1281,11 @@ offset = 965
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.agencias-viajes.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1358,12 +1301,11 @@ offset = 982
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.repercutido.agencias-viajes.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-88',
     'ley-37-1992:art-90',
@@ -1379,12 +1321,53 @@ offset = 999
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.aic.bienes.tipo-0.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-0-cuota'
+offset = 1016
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-0.cuota'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = [
+    'ley-37-1992:art-13',
+    'ley-37-1992:art-69',
+    'ley-37-1992:art-70',
+    'ley-37-1992:art-85',
+    'rd-1624-1992:art-71',
+    'orden-eha-3111-2009:art-1',
+]
+source_refs = ['aeat-dr-390-2024']
+
+[[revisions.2024.export_layouts.records.fields]]
+id = 'modelo-390-page-02-casilla-aic-bienes-tipo-2-base'
+offset = 1033
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.aic.bienes.tipo-2.base'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
 legal_refs = [
     'ley-37-1992:art-13',
     'ley-37-1992:art-69',

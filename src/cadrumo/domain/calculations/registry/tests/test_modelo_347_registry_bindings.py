@@ -23,7 +23,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.aggregation import BindingAggregationOp, BindingSourceKind
-from .....core.external_constants import M347_THRESHOLD_EUR
+from .._m347_threshold import m347_threshold_decimal, resolve_m347_counterparty_annual_threshold
 from ..binding_selector_utils import selector_as_dict
 from ..invoice_bindings import InvoiceObservation, resolve_invoice_binding_values
 from ._registry_schema_support import _committed_modelo
@@ -56,6 +56,10 @@ _M347_2025_ERA_SOURCE_REFS = {"aeat-dr-347-2025"}
 
 _M347_EARLY_REVISION = "2011-2024"
 _M347_LATER_REVISION = "2025-y-siguientes"
+_M347_EFFECTIVE_DATE = date(2025, 12, 31)
+_M347_THRESHOLD = m347_threshold_decimal(
+    resolve_m347_counterparty_annual_threshold(effective_date=_M347_EFFECTIVE_DATE),
+)
 
 
 def _modelo_347_revision(revision_id: str = _M347_EARLY_REVISION):
@@ -151,20 +155,20 @@ def test_modelo_347_invoice_summary_bindings_apply_invoice_total_declaration_thr
             party_tax_id="B00000001",
             source_kind=BindingSourceKind.PAYABLE_INVOICE,
             base_amount=Decimal("1000.00"),
-            invoice_total_amount=M347_THRESHOLD_EUR - Decimal("1815.00") + Decimal("0.01"),
+            invoice_total_amount=_M347_THRESHOLD - Decimal("1815.00") + Decimal("0.01"),
         ),
         _counterpart_summary_observation(
             source_id="below-threshold-control",
             party_tax_id="B00000002",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
             base_amount=Decimal("4000.00"),
-            invoice_total_amount=M347_THRESHOLD_EUR,
+            invoice_total_amount=_M347_THRESHOLD,
         ),
     )
 
-    resolved = resolve_invoice_binding_values(revision, observations)
+    resolved = resolve_invoice_binding_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     assert resolved == {
         _M347_COUNT_BINDING: Decimal("1"),
-        _M347_AMOUNT_BINDING: M347_THRESHOLD_EUR + Decimal("0.01"),
+        _M347_AMOUNT_BINDING: _M347_THRESHOLD + Decimal("0.01"),
     }

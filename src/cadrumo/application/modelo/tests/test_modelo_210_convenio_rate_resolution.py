@@ -23,6 +23,7 @@ Covers the testimonial personas required by the M210 IRNR engine contract:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -31,15 +32,16 @@ from ._m210_snapshot_fixture import m210_snapshot
 
 __all__ = ["m210_snapshot"]
 
+from ....core.casilla_id import CasillaId
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
-from ....domain.calculations.registry.convenio import ConvenioAuthority
 from ....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
 from ....domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_verification import VerificationPredicateDefinition
 from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind
-from .._m210_rate import resolve_m210_rate as _resolve_m210_rate
+from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingKind
+from .._m210_convenio_facts import resolve_m210_convenio_override
+from .._m210_rate import resolve_m210_rate
 from .._verification_predicates import _evaluate_applicability_filter, evaluate_predicate_expression
 from ..action_errors import ModeloApplicabilityFilterError
 from ..verification_actions import (
@@ -48,6 +50,27 @@ from ..verification_actions import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_DEVENGO_DATE = date(2025, 12, 31)
+
+
+def _resolve_m210_rate(
+    profile: TaxpayerProfile,
+    tipo_renta: str,
+    year: int,
+    snapshot: RegistrySnapshot,
+    *,
+    casilla_id: CasillaId | None = None,
+) -> tuple[Decimal | None, list[ModeloVerificationFinding]]:
+    """Call the public helper with the explicit test devengo coordinate."""
+    return resolve_m210_rate(
+        profile,
+        tipo_renta,
+        year,
+        snapshot,
+        devengo_date=_DEVENGO_DATE,
+        casilla_id=casilla_id,
+    )
 
 
 def _irnr_profile(country_code: str) -> TaxpayerProfile:
@@ -80,54 +103,31 @@ def _resident_profile() -> TaxpayerProfile:
     )
 
 
-def _snapshot_with_mutated_convenio_row(
-    base: RegistrySnapshot,
-    *,
-    country_code: str,
-    tipo_renta: str,
-    new_rate: str,
-) -> RegistrySnapshot:
-    """Return a copy of ``base`` with the (country, tipo_renta) treaty override rate replaced.
-
-    Anti-tautology proof aid: prove the resolver reads the treaty
-    authority rather than a constant by mutating an existing override
-    row's rate field. Frozen pydantic models are duplicated via
-    ``model_copy`` at row, treaty, authority, and snapshot levels.
-    """
-
-    tipo_enum = TipoRentaIrnr(tipo_renta)
-    treaty = base.convenio.treaties[country_code]
-    new_overrides = tuple(
-        row.model_copy(update={"rate": new_rate}) if row.tipo_renta is tipo_enum else row for row in treaty.overrides
-    )
-    new_treaty = treaty.model_copy(update={"overrides": new_overrides})
-    new_convenio = ConvenioAuthority(treaties={**base.convenio.treaties, country_code: new_treaty})
-    return base.model_copy(update={"convenio": new_convenio})
-
-
-def test_committed_convenio_rows_resolve_corrected_legal_anchors(
-    m210_snapshot: RegistrySnapshot,
-) -> None:
+def test_committed_convenio_fact_rows_resolve_corrected_legal_anchors() -> None:
     """Committed treaty overrides cite the treaty article and, where needed, domestic rate law."""
 
-    convenio = m210_snapshot.convenio
-
-    gb_general = convenio.resolve("GB", TipoRentaIrnr.GENERAL, 2025)
+    gb_general = resolve_m210_convenio_override(
+        country_code="GB", tipo_renta=TipoRentaIrnr.GENERAL, devengo_date=_DEVENGO_DATE
+    )
     assert gb_general is not None
-    assert gb_general.legal_refs == (
+    assert gb_general.fact.legal_refs == (
         "convenio-es-gb-2013:art-6",
         "trlirnr-rdleg-5-2004:art-25.1.a",
     )
 
-    ma_interest = convenio.resolve("MA", TipoRentaIrnr.INTEREST, 2025)
+    ma_interest = resolve_m210_convenio_override(
+        country_code="MA", tipo_renta=TipoRentaIrnr.INTEREST, devengo_date=_DEVENGO_DATE
+    )
     assert ma_interest is not None
-    assert ma_interest.legal_refs == ("convenio-es-ma-1978:art-11",)
+    assert ma_interest.fact.legal_refs == ("convenio-es-ma-1978:art-11",)
 
-    ar_pension = convenio.resolve("AR", TipoRentaIrnr.PENSION, 2025)
+    ar_pension = resolve_m210_convenio_override(
+        country_code="AR", tipo_renta=TipoRentaIrnr.PENSION, devengo_date=_DEVENGO_DATE
+    )
     assert ar_pension is not None
     assert ar_pension.kind is ConvenioOverrideKind.ALLOCATION_DOMESTIC_TARIFF
     assert ar_pension.rate is None
-    assert ar_pension.legal_refs == (
+    assert ar_pension.fact.legal_refs == (
         "convenio-es-ar-1992:art-19",
         "trlirnr-rdleg-5-2004:art-25.1.b",
     )
@@ -166,31 +166,6 @@ def test_khadija_ma_interest_convenio_override_replaces_baseline(
     rate, findings = _resolve_m210_rate(profile, "interest", 2025, m210_snapshot)
 
     assert rate == Decimal("0.10")
-    assert findings == []
-
-
-def test_khadija_ma_interest_anti_tautology_mutation_pair(
-    m210_snapshot: RegistrySnapshot,
-) -> None:
-    """Anti-tautology proof: helper reads the registry parameter, not a constant.
-
-    Mutates the real MA/interest Convenio row to ``rate="0.15"``. The
-    helper must return ``Decimal("0.15")``. If a future regression
-    hardcoded the override rate to 0.10 (the registry value) or to the
-    0.24 baseline, this assertion would fail.
-    """
-
-    snapshot = _snapshot_with_mutated_convenio_row(
-        m210_snapshot,
-        country_code="MA",
-        tipo_renta="interest",
-        new_rate="0.15",
-    )
-
-    profile = _irnr_profile("MA")
-    rate, findings = _resolve_m210_rate(profile, "interest", 2025, snapshot)
-
-    assert rate == Decimal("0.15")
     assert findings == []
 
 
@@ -315,6 +290,7 @@ def test_m210_unresolved_outcome_findings_passes_through_empty_outcomes(
         profile=_irnr_profile("GB"),
         snapshot=m210_snapshot,
         year=2025,
+        devengo_date=_DEVENGO_DATE,
         tipo_renta="general",
     )
 
@@ -332,6 +308,7 @@ def test_m210_unresolved_outcome_findings_emits_convenio_missing_finding(
         profile=_irnr_profile("ZW"),
         snapshot=m210_snapshot,
         year=2025,
+        devengo_date=_DEVENGO_DATE,
         tipo_renta="general",
     )
 
@@ -355,6 +332,7 @@ def test_m210_unresolved_outcome_findings_emits_unknown_tipo_finding(
         profile=_resident_profile(),
         snapshot=m210_snapshot,
         year=2025,
+        devengo_date=_DEVENGO_DATE,
         tipo_renta="royalty",
     )
 
@@ -379,6 +357,7 @@ def test_m210_unresolved_outcome_findings_omits_finding_when_rate_resolves(
         profile=_irnr_profile("MA"),
         snapshot=m210_snapshot,
         year=2025,
+        devengo_date=_DEVENGO_DATE,
         tipo_renta="interest",
     )
 

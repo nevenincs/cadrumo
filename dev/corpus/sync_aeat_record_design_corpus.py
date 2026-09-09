@@ -737,7 +737,40 @@ def check() -> None:
     print(f"OK: {len(_REQUIRED)} required official URLs and {len(manifests)} manifests")
 
 
+#: Exit status for "the question could not be asked", as distinct from a pass or
+#: a drift finding. AEAT republishes on its own schedule and its site is not
+#: always reachable; a run that could not read the official pages has learned
+#: NOTHING about staleness, and reporting that as either outcome would be a lie
+#: in one direction or the other. Callers key on this status rather than parsing
+#: the message.
+LIVE_CHECK_UNAVAILABLE: Final[int] = 75
+
+
 def _live_check() -> None:
+    """Compare the captured corpus against the live official pages.
+
+    Three outcomes, deliberately distinguished. The corpus matches; the corpus
+    has drifted and the differences are named; or the official source could not
+    be read at all, which is reported as a LIMITATION and never as either of the
+    other two.
+    """
+    try:
+        _live_check_against_official_pages()
+    except (httpx.TransportError, httpx.HTTPStatusError) as unreachable:
+        status = getattr(getattr(unreachable, "response", None), "status_code", None)
+        if isinstance(unreachable, httpx.HTTPStatusError) and status is not None and status < 500:
+            # A 4xx on a URL the corpus expects is a finding about the corpus,
+            # not about the network: the official page stopped serving it.
+            raise SystemExit(f"official URL no longer served ({status}): {unreachable.request.url}") from unreachable
+        print(
+            f"LIMITATION: the official source could not be read ({type(unreachable).__name__}); "
+            f"staleness is UNKNOWN, not clean",
+            file=sys.stderr,
+        )
+        raise SystemExit(LIVE_CHECK_UNAVAILABLE) from unreachable
+
+
+def _live_check_against_official_pages() -> None:
     manifests = _load_manifests()
     historical_exclusions = _load_historical_exclusions()
     root = json.loads((_CORPUS / "manifest.json").read_text(encoding=_UTF_8))

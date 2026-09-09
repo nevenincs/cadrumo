@@ -18,7 +18,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 
 from ...quality.unread_inputs import report_unread
 from ..analysis.corpus import bundled_modelo_ids
-from ..analysis.rule_grounding_coverage import KINDS, revision_findings, screen_authority
+from ..analysis.rule_grounding_coverage import KINDS, GroundingFinding, revision_findings, screen_authority
 from ..analysis.type_convention_notes import revision_findings as type_conventions
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -46,11 +46,11 @@ def authority() -> ValidatedRegistryAuthority:
 
 
 @pytest.fixture(scope="module")
-def corpus(authority: ValidatedRegistryAuthority) -> tuple[object, ...]:
+def corpus(authority: ValidatedRegistryAuthority) -> tuple[GroundingFinding, ...]:
     return screen_authority(authority, bundled_modelo_ids())
 
 
-def test_the_join_separates_grounded_from_ungrounded_fields(corpus: tuple[object, ...]) -> None:
+def test_the_join_separates_grounded_from_ungrounded_fields(corpus: tuple[GroundingFinding, ...]) -> None:
     """The join discriminates rather than reporting every field the same way.
 
     A join reporting every field the same way would still produce rows and a
@@ -90,7 +90,7 @@ def test_the_join_separates_grounded_from_ungrounded_fields(corpus: tuple[object
 
 
 def test_every_live_grounded_row_names_a_note_its_own_sheet_really_defines(
-    corpus: tuple[object, ...],
+    corpus: tuple[GroundingFinding, ...],
 ) -> None:
     """The live floor the two emptied ones were re-pointed at.
 
@@ -131,7 +131,7 @@ def test_every_live_grounded_row_names_a_note_its_own_sheet_really_defines(
 
 
 def test_a_grounded_field_names_notes_that_really_cover_its_type(
-    authority: ValidatedRegistryAuthority, corpus: tuple[object, ...]
+    authority: ValidatedRegistryAuthority, corpus: tuple[GroundingFinding, ...]
 ) -> None:
     """Every note credited to a field states a convention for that field's type.
 
@@ -178,7 +178,7 @@ def test_a_grounded_field_names_notes_that_really_cover_its_type(
 
 
 def test_a_field_grounded_only_by_a_design_note_names_that_note(
-    corpus: tuple[object, ...],
+    corpus: tuple[GroundingFinding, ...],
 ) -> None:
     """Weaker grounding is reported as itself, never as a type convention.
 
@@ -494,7 +494,7 @@ def test_an_unmeasured_caller_gets_no_claim_about_drift() -> None:
     assert grounding_worklist((finding,))[0].grounding_drifts is False
 
 
-def _grounding_finding(*, modelo: str, revision: str, cell: str) -> object:
+def _grounding_finding(*, modelo: str, revision: str, cell: str) -> GroundingFinding:
     """One census row, written here so the contradiction below is the only variable."""
     from ..analysis.rule_grounding_coverage import GroundingFinding
 

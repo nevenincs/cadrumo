@@ -2,7 +2,6 @@ schema_version = 1
 source_path = "src/cadrumo/core/external_constants.py"
 declaration_count = 37
 consumer_count = 53
-classification = "governed_fact"
 provider_step = "W02.P08.S20"
 deletion_step = "W04.P16.S31"
 declaration_disposition = "delete_after_provider_enrollment_and_consumer_migration"
@@ -487,6 +486,8 @@ consumers = [
   { path = "src/cadrumo/application/aggregation/_counterpart.py", symbol = "declarable_counterparty_nifs_347" },
   { path = "src/cadrumo/application/modelo/calculate_input.py", symbol = "_validate_detail_rows" },
   { path = "src/cadrumo/domain/calculations/registry/_m347_threshold.py", symbol = "m347_declarable_party_ids" },
+  { path = "src/cadrumo/domain/calculations/registry/invoice_bindings.py", symbol = "_m347_declarable_party_ids" },
+  { path = "src/cadrumo/domain/calculations/registry/invoice_bindings.py", symbol = "_m347_row_family_threshold_filter" },
   { path = "src/cadrumo/domain/modelos/row_models.py", symbol = "Modelo347ThresholdError.__init__" },
   { path = "src/cadrumo/domain/modelos/row_models.py", symbol = "validate_m347_threshold" },
 ]
@@ -495,7 +496,10 @@ consumers = [
 symbol = "M347_CLAVE_C_THRESHOLD_EUR"
 family = "scalar"
 migration_step = "W03.P10.S48"
-consumers = [{ path = "src/cadrumo/domain/calculations/registry/_m347_threshold.py", symbol = "m347_clave_c_declarable_party_ids" }]
+consumers = [
+  { path = "src/cadrumo/domain/calculations/registry/_m347_threshold.py", symbol = "m347_clave_c_declarable_party_ids" },
+  { path = "src/cadrumo/domain/calculations/registry/invoice_bindings.py", symbol = "_m347_row_family_threshold_filter" },
+]
 
 [[declarations]]
 symbol = "IVA_BIEN_ESCASO_VALOR_UMBRAL_EUR"

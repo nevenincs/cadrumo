@@ -47,12 +47,15 @@ from ...domain.invoices.enums import (
     InvoiceOperationDateRole,
     IvaRate,
     PaymentStatus,
-    numeric_iva_rate_slots,
+)
+from ...domain.invoices.enums import (
+    resolve_iva_rate_slot as resolve_iva_rate_slot_for_date,
 )
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import IvaCategory
 from ._catalogue_mutation import mutate_catalogue
 
@@ -192,8 +195,8 @@ def _require_operation_type_where_the_category_cannot_settle_it(
     )
 
 
-def resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
-    """Map a percentage to its rate slot, refusing one the taxonomy does not carry.
+def resolve_iva_rate_slot(iva_rate: Decimal | None, on_date: date) -> IvaRate:
+    """Map a printed percentage to its dated authority-backed persisted slot.
 
     ``None`` resolves to :attr:`IvaRate.EXEMPT` so a base-only invoice with no
     cuota is accepted. A percentage outside the closed slot taxonomy is refused
@@ -206,18 +209,19 @@ def resolve_iva_rate_slot(iva_rate: Decimal | None) -> IvaRate:
     accepted set, the other a raw English one -- so which message an operator
     saw depended on whether their document happened to print a cuota.
     """
-    if iva_rate is None:
-        return IvaRate.EXEMPT
-    slots = numeric_iva_rate_slots()
-    slot = slots.get(iva_rate)
-    if slot is None:
-        accepted = ", ".join(format(rate, "f") for rate in sorted(slots))
+    try:
+        return resolve_iva_rate_slot_for_date(iva_rate, on_date)
+    except IvaRateNotFoundError as exc:
+        accepted = (exc.context or {}).get("accepted", "")
         raise InvoiceValidationError(
             "iva_rate is not a recognised IVA percentage",
             translated_message="application.invoices.creation.errors.unsupported_iva_rate",
-            context={"iva_rate": format(iva_rate, "f"), "accepted": accepted},
-        )
-    return slot
+            context={
+                "iva_rate": "" if iva_rate is None else format(iva_rate, "f"),
+                "on_date": on_date.isoformat(),
+                "accepted": accepted,
+            },
+        ) from exc
 
 
 def _resolve_invoice_line_totals(
@@ -390,24 +394,18 @@ def build_catalogue_invoice(
     identity. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
     """
-    from ...domain.invoices.enums import iva_rate_slot_percentage
+    from ...domain.invoices.enums import iva_rate_percentage
 
     # Normalise once, before either the persisted payload or the FX lookup
     # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
     # SAME provider rate as its canonical "GBP" form, not silently miss the
     # rate and leave the invoice unstamped.
     currency = normalise_iso_4217_currency(currency)
-    rate_slot = resolve_iva_rate_slot(iva_rate)
-    # Resolve the cuota through the same undated helper the Invoice line
-    # validator uses (``iva_rate_slot_percentage(self.iva_rate)``), so the
-    # synthesised ``iva_amount`` matches the model's own re-derivation within
-    # tolerance and the line-arithmetic invariant holds. The rate comes from the
-    # slot the operator chose, never a hand-typed percentage. Whether that rate
-    # was in force is settled by the invoice-level validator against the
-    # operation date, not here -- resolving it against today would refuse to
-    # record a legitimate 2024 transitional-rate invoice. EXEMPT / NOT_SUBJECT
-    # resolve to None and carry a zero cuota.
-    pct = iva_rate_slot_percentage(rate_slot)
+    devengo_date = operation_date or issued_at
+    rate_slot = resolve_iva_rate_slot(iva_rate, devengo_date)
+    # The exact devengo date is present at this composition boundary, so both
+    # synthesis and Invoice validation project the same authority fact.
+    pct = iva_rate_percentage(rate_slot, devengo_date)
     base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
         taxable_base=taxable_base,
         lines=lines,

@@ -32,6 +32,8 @@ from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_M347_EFFECTIVE_DATE = date(2026, 12, 31)
+
 
 def _synthetic_contraparte_binding(binding_id: str, row_field: str) -> DataBindingDefinition:
     return DataBindingDefinition.model_validate(
@@ -113,7 +115,7 @@ def test_contraparte_clave_groups_by_country_party_and_clave_summing_invoice_tot
         _observation(party="A87654321", country="ES", invoice_total="3200.00", clave="A"),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     # Groups sorted by (country_code, party_tax_id, clave): (ES, A87654321, A), (ES, B12345674, B)
     assert resolved == {
@@ -143,7 +145,7 @@ def test_contraparte_clave_ignores_observations_without_an_operation_clave() -> 
         _observation(party="B12345674", country="ES", invoice_total="4200.00", clave="B"),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     assert resolved == {
         ("m347-contraparte-row-nif", 1): "B12345674",
@@ -165,7 +167,7 @@ def test_contraparte_clave_materialization_backfills_a_later_legal_name() -> Non
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     assert resolved[("m347-contraparte-row-importe", 1)] == Decimal("4500.00")
     assert resolved[("m347-contraparte-row-name", 1)] == "SOCIEDAD EJEMPLO SL"

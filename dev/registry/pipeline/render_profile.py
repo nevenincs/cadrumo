@@ -69,7 +69,7 @@ __all__ = [
 ]
 
 
-RENDER_PROFILE_SCHEMA_VERSION: Final[int] = 1
+RENDER_PROFILE_SCHEMA_VERSION: Final[Literal[1]] = 1
 
 
 class _StrictModel(BaseModel):

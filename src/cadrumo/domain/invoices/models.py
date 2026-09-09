@@ -48,7 +48,6 @@ from .enums import (
     IvaRate,
     PaymentStatus,
     iva_rate_percentage,
-    iva_rate_slot_percentage,
 )
 from .errors import InvoiceValidationError
 
@@ -214,22 +213,10 @@ class InvoiceLine(BaseModel):
         expected_subtotal = (self.quantity * self.unit_price).quantize(Decimal("0.0001"))
         if abs(self.subtotal - expected_subtotal) > CENT:
             raise InvoiceValidationError("subtotal must equal quantity * unit_price within 1 cent")
-        # The undated helper: this checks the line's ARITHMETIC, which needs the
-        # number the operator applied, not whether the statute still offers it.
-        # A line carries no date of its own, so the dated helper would resolve a
-        # 2024 transitional-rate line against today and refuse to build it. The
-        # in-force question is asked by the invoice-level validator below, which
-        # has the operation date to ask it against.
-        rate = iva_rate_slot_percentage(self.iva_rate)
-        if self.oss_rate_kind is not None:
-            return self
-        if rate is None:
-            if self.iva_amount != Decimal("0"):
-                raise InvoiceValidationError("iva_amount must be zero for EXEMPT / NOT_SUBJECT lines")
-        else:
-            expected_iva = (self.subtotal * rate).quantize(Decimal("0.0001"))
-            if abs(self.iva_amount - expected_iva) > CENT:
-                raise InvoiceValidationError("iva_amount must equal subtotal * iva_rate within 1 cent")
+        # IVA-rate arithmetic has an explicit devengo-date dependency.  A line
+        # deliberately has no date of its own, so the enclosing Invoice checks
+        # it once its operation/issue date is available rather than parsing a
+        # number from this persisted token.
         return self
 
 
@@ -556,11 +543,20 @@ class Invoice(BaseModel):
         devengo_date = self.operation_date or self.issued_at
         for line in self.lines:
             try:
-                iva_rate_percentage(line.iva_rate, devengo_date)
+                rate = iva_rate_percentage(line.iva_rate, devengo_date)
             except IvaRateNotFoundError as exc:
                 raise InvoiceValidationError(
                     f"line rate {line.iva_rate.name} was not in force on {devengo_date.isoformat()}: {exc}",
                 ) from exc
+            if line.oss_rate_kind is not None:
+                continue
+            if rate is None:
+                if line.iva_amount != Decimal("0"):
+                    raise InvoiceValidationError("iva_amount must be zero for EXEMPT / NOT_SUBJECT lines")
+                continue
+            expected_iva = (line.subtotal * rate).quantize(Decimal("0.0001"))
+            if abs(line.iva_amount - expected_iva) > CENT:
+                raise InvoiceValidationError("iva_amount must equal subtotal * iva_rate within 1 cent")
         return self
 
     @model_validator(mode="after")
@@ -584,7 +580,7 @@ class Invoice(BaseModel):
             self.base_total + self.iva_total + recargo + suplido,
             "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
         )
-        all_non_numeric = all(iva_rate_slot_percentage(line.iva_rate) is None for line in self.lines)
+        all_non_numeric = all(line.iva_rate in {IvaRate.EXEMPT, IvaRate.NOT_SUBJECT} for line in self.lines)
         if all_non_numeric:
             # Checked before the grand-total equality below so the operator is
             # told which component is impossible, rather than being handed a

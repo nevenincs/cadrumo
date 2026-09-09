@@ -87,12 +87,11 @@ offset = 13
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-corrientes.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-94',
@@ -109,12 +108,11 @@ offset = 30
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-corrientes.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-94',
@@ -131,12 +129,11 @@ offset = 47
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-corrientes.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-94',
@@ -153,12 +150,11 @@ offset = 64
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-corrientes.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-94',
@@ -175,12 +171,11 @@ offset = 81
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-corrientes.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-94',
@@ -197,12 +192,11 @@ offset = 98
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-corrientes.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-94',
@@ -219,12 +213,11 @@ offset = 115
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-corrientes.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-94',
@@ -241,12 +234,11 @@ offset = 132
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-corrientes.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'ley-37-1992:art-94',
@@ -263,12 +255,11 @@ offset = 149
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.soportado.interiores.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'orden-eha-3111-2009:art-1',
@@ -282,12 +273,11 @@ offset = 166
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.soportado.interiores'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-92',
     'rd-1624-1992:art-71',
@@ -301,12 +291,11 @@ offset = 183
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -325,12 +314,11 @@ offset = 200
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -349,12 +337,11 @@ offset = 217
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -373,12 +360,11 @@ offset = 234
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -397,12 +383,11 @@ offset = 251
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -421,12 +406,11 @@ offset = 268
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -445,12 +429,11 @@ offset = 285
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -469,12 +452,11 @@ offset = 302
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -493,12 +475,11 @@ offset = 319
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.total.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -517,12 +498,11 @@ offset = 336
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-corrientes.total.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-163-nonies',
     'ley-37-1992:art-163-sexies',
@@ -541,12 +521,11 @@ offset = 353
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -565,12 +544,11 @@ offset = 370
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -589,12 +567,11 @@ offset = 387
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -613,12 +590,11 @@ offset = 404
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -637,12 +613,11 @@ offset = 421
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -661,12 +636,11 @@ offset = 438
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -685,12 +659,11 @@ offset = 455
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -709,12 +682,11 @@ offset = 472
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -733,12 +705,11 @@ offset = 489
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.total.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -757,12 +728,11 @@ offset = 506
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.interiores-inversion.total.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-92',
@@ -781,12 +751,11 @@ offset = 523
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -807,12 +776,11 @@ offset = 540
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -833,12 +801,11 @@ offset = 557
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -859,12 +826,11 @@ offset = 574
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -885,12 +851,11 @@ offset = 591
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -911,12 +876,11 @@ offset = 608
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -937,12 +901,11 @@ offset = 625
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -963,12 +926,11 @@ offset = 642
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -989,12 +951,11 @@ offset = 659
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.total.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -1015,12 +976,11 @@ offset = 676
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.intragrupo-inversion.total.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-163-nonies',
@@ -1041,12 +1001,11 @@ offset = 693
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1064,12 +1023,11 @@ offset = 710
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1087,12 +1045,11 @@ offset = 727
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1110,12 +1067,11 @@ offset = 744
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1133,12 +1089,11 @@ offset = 761
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1156,12 +1111,11 @@ offset = 778
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.tipo-10.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1179,12 +1133,11 @@ offset = 795
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.tipo-21.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1202,12 +1155,11 @@ offset = 812
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.tipo-21.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1225,12 +1177,11 @@ offset = 829
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-corrientes.total.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-86',
     'ley-37-1992:art-92',
@@ -1248,12 +1199,11 @@ offset = 846
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.soportado.importaciones'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-17',
     'ley-37-1992:art-92',
@@ -1268,12 +1218,11 @@ offset = 863
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-inversion.tipo-4.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -1293,12 +1242,11 @@ offset = 880
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-inversion.tipo-4.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -1318,12 +1266,11 @@ offset = 897
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-inversion.tipo-5.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -1343,12 +1290,11 @@ offset = 914
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-inversion.tipo-5.cuota'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',
@@ -1368,12 +1314,59 @@ offset = 931
 length = 17
 kind = 'casilla'
 casilla_id = 'iva.anual.deducible.importaciones-inversion.tipo-10.base'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
+legal_refs = [
+    'ley-37-1992:art-107',
+    'ley-37-1992:art-86',
+    'ley-37-1992:art-92',
+    'ley-37-1992:art-94',
+    'ley-37-1992:art-95',
+    'ley-37-1992:art-97',
+    'ley-37-1992:art-99',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-03-casilla-deducible-importaciones-inversion-tipo-10-cuota'
+offset = 948
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.deducible.importaciones-inversion.tipo-10.cuota'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+legal_refs = [
+    'ley-37-1992:art-107',
+    'ley-37-1992:art-86',
+    'ley-37-1992:art-92',
+    'ley-37-1992:art-94',
+    'ley-37-1992:art-95',
+    'ley-37-1992:art-97',
+    'ley-37-1992:art-99',
+    'orden-eha-3111-2009:art-1',
+    'rd-1624-1992:art-71',
+]
+source_refs = ['aeat-dr-390-2022']
+
+[[revisions.2022.export_layouts.records.fields]]
+id = 'modelo-390-page-03-casilla-deducible-importaciones-inversion-tipo-21-base'
+offset = 965
+length = 17
+kind = 'casilla'
+casilla_id = 'iva.anual.deducible.importaciones-inversion.tipo-21.base'
+data_type = 'money'
+required = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
 legal_refs = [
     'ley-37-1992:art-107',
     'ley-37-1992:art-86',

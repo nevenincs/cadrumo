@@ -100,9 +100,9 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n import lookup_translation_entry
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.domain.calculations.registry.authority import bundled_authority
+from cadrumo.tests.registry_coverage import CoverageAuthorityScope
 from cadrumo.tests.registry_conformance import (
     AnnualCasillaPopulationComparison,
-    CoverageAuthorityScope,
     RegistryConformanceProfile,
     RevisionCasillaProducerTrace,
     RevisionConformanceRow,
@@ -271,7 +271,7 @@ class ConformanceCoordinate(ConformanceModel):
     schema_comparison: AnnualCasillaPopulationComparison
     classification: ConformanceCoordinateClassification
     provisional: bool
-    authority_scope: CoverageAuthorityScope = "filing"
+    authority_scope: CoverageAuthorityScope = CoverageAuthorityScope.FILING
 
     @model_validator(mode="after")
     def _schema_comparison_matches_coordinate(self) -> ConformanceCoordinate:
@@ -303,7 +303,9 @@ class ConformanceCoordinate(ConformanceModel):
         handler: SerializerFunctionWrapHandler,
     ) -> dict[str, object]:
         """Expose computed divergence properties in the JSON projection."""
-        payload: dict[str, object] = handler(self)
+        wrapped = handler(self)
+        assert isinstance(wrapped, dict)
+        payload: dict[str, object] = {str(key): value for key, value in wrapped.items()}
         comparison = self.schema_comparison
         comparison_payload = comparison.model_dump(mode="json")
         comparison_payload.update(
@@ -691,7 +693,7 @@ def _read_locale_coverage() -> tuple[LocaleCoverageIndex, tuple[str, ...]]:
     try:
         modelos = bundled_authority().modelos
     except Exception:
-        return {}, ("<bundled-registry>",)
+        return index, ("<bundled-registry>",)
     for modelo in modelos:
         modelo_id = str(modelo.id)
         for revision_id, revision in modelo.revisions.items():
@@ -814,7 +816,7 @@ def build_annual_coordinate_matrix() -> ConformanceCoordinateMatrix:
             ),
         )
     coordinates = tuple(coordinate_items)
-    classification_census = {classification: 0 for classification in COORDINATE_CLASSIFICATIONS}
+    classification_census: dict[str, int] = {classification: 0 for classification in COORDINATE_CLASSIFICATIONS}
     for coordinate in coordinates:
         classification_census[coordinate.classification] += 1
     return ConformanceCoordinateMatrix(

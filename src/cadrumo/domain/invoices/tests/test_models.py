@@ -16,8 +16,6 @@ from ..enums import (
     IvaRate,
     PaymentStatus,
     iva_rate_percentage,
-    iva_rate_slot_percentage,
-    numeric_iva_rate_slots,
 )
 from ..errors import InvoiceValidationError
 from ..models import (
@@ -37,14 +35,12 @@ def _valid_line(
     quantity: str = "1",
     unit_price: str = "100.00",
     iva_rate: IvaRate = IvaRate.RATE_21,
+    on_date: date = date(2026, 4, 1),
 ) -> InvoiceLine:
     quantity_dec = Decimal(quantity)
     unit_price_dec = Decimal(unit_price)
     subtotal = quantity_dec * unit_price_dec
-    # The undated helper, matching what InvoiceLine's own arithmetic validator
-    # uses: a transitional-rate line must be buildable here without the fixture
-    # having to know which statutory window the rate belonged to.
-    rate = iva_rate_slot_percentage(iva_rate)
+    rate = iva_rate_percentage(iva_rate, on_date)
     iva_amount = Decimal("0") if rate is None else (subtotal * rate)
     return InvoiceLine(
         description=description,
@@ -102,7 +98,7 @@ def test_invoice_accepts_a_transitional_food_rate_inside_its_window() -> None:
     """
     invoice = _valid_invoice(
         issued_at=date(2024, 11, 15),
-        lines=(_valid_line(iva_rate=IvaRate.RATE_2),),
+        lines=(_valid_line(iva_rate=IvaRate.RATE_2, on_date=date(2024, 11, 15)),),
     )
 
     assert invoice.lines[0].iva_rate is IvaRate.RATE_2
@@ -121,7 +117,7 @@ def test_invoice_refuses_a_transitional_food_rate_outside_its_window() -> None:
     with pytest.raises(ValidationError, match=r"was not in force"):
         _valid_invoice(
             issued_at=date(2025, 6, 1),
-            lines=(_valid_line(iva_rate=IvaRate.RATE_2),),
+            lines=(_valid_line(iva_rate=IvaRate.RATE_2, on_date=date(2024, 11, 15)),),
         )
 
 
@@ -353,15 +349,17 @@ def test_iva_rate_percentage_is_resolved_against_centralized_iva_substrate() -> 
 def test_invoice_exempt_lines_require_zero_iva() -> None:
     """EXEMPT and NOT_SUBJECT lines must carry iva_amount == 0 exactly."""
     with pytest.raises(ValidationError, match=r"iva_amount must be zero for EXEMPT / NOT_SUBJECT"):
-        InvoiceLine.model_validate(
-            {
-                "description": "Exempt with iva",
-                "quantity": Decimal("1"),
-                "unit_price": Decimal("10"),
-                "subtotal": Decimal("10"),
-                "iva_rate": IvaRate.EXEMPT,
-                "iva_amount": Decimal("0.01"),
-            },
+        _valid_invoice(
+            lines=(
+                InvoiceLine(
+                    description="Exempt with iva",
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("10"),
+                    subtotal=Decimal("10"),
+                    iva_rate=IvaRate.EXEMPT,
+                    iva_amount=Decimal("0.01"),
+                ),
+            ),
         )
 
 
@@ -550,37 +548,6 @@ def test_catalogue_iteration_yields_invoices() -> None:
     assert len(catalogue) == 2
 
 
-# ---------------------------------------------------------------------------
-# numeric IVA rate slots
-# ---------------------------------------------------------------------------
-
-
-def test_numeric_iva_rate_slots_track_rate_members_only() -> None:
-    """The slot mapping contains canonical percentages for ``RATE_*`` members only.
-
-    Derivation test: if a new ``RATE_<n>`` slot is added to
-    :class:`IvaRate` the helper must pick it up without code changes.
-    """
-    result = numeric_iva_rate_slots()
-    rate_members = [m for m in IvaRate if m.value.startswith("RATE_")]
-
-    # One percentage per RATE_ member, and nothing else. Pinning the literal set
-    # here would contradict this test's own premise: it claims a new slot is
-    # picked up without code changes, and a hardcoded set makes every new slot a
-    # code change. It did exactly that when the transitional food rates landed.
-    assert len(result) == len(rate_members)
-    assert len(result) < len(IvaRate)
-    assert [m for m in IvaRate if not m.value.startswith("RATE_")] == [IvaRate.EXEMPT, IvaRate.NOT_SUBJECT]
-
-    # Anchors, so the length check above cannot pass over a set of the right
-    # size but the wrong values -- the standing LIVA tiers must always resolve.
-    assert {Decimal("0"), Decimal("4"), Decimal("10"), Decimal("21")} <= result.keys()
-
-    # And the parse is by value, not by member name: RATE_7_5 names a slot whose
-    # percentage is seven and a half, not seventy-five.
-    if hasattr(IvaRate, "RATE_7_5"):
-        assert Decimal("7.5") in result
-        assert Decimal("75") not in result
 
 
 @pytest.mark.parametrize(

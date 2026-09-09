@@ -615,6 +615,7 @@ def _build_confirmed_invoice_candidate(
     confirmed_lines = confirmed_lines_from_the_document(
         draft=draft,
         invoice_number=resolved_invoice_number,
+        devengo_date=operation_date or resolved_invoice_date,
         taxable_base=resolved_taxable_base,
         iva_rate=resolved_iva_rate,
         iva_amount=iva_amount,

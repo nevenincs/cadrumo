@@ -237,12 +237,11 @@ offset = 117
 length = 17
 kind = 'casilla'
 casilla_id = 'p05.rendimientos-negativos-rendimiento-neto-7'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-35-2006:art-93',
     'rd-439-2007:art-113',

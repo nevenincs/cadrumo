@@ -4,11 +4,16 @@ from __future__ import annotations
 
 import tomllib
 from pathlib import Path
+from typing import TypedDict
 
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.filing_projection_ref import M303RegimenSimplificadoFact, compile_filing_projection_ref
+from cadrumo.core.filing_projection_ref import (
+    M303RegimenSimplificadoFact,
+    M303RegimenSimplificadoFactProjectionRef,
+    compile_filing_projection_ref,
+)
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
@@ -173,7 +178,20 @@ def test_persisted_matrix_reflects_the_two_corrected_constants() -> None:
     assert tuple(by_epoch[epoch].simplified for epoch in DP30302_EPOCHS) == (134, 130, 140, 142, 142)
 
 
-def _projection_endpoints(revision_id: str) -> tuple[dict, ...]:
+class _ProjectionEndpoint(TypedDict):
+    """One persisted projection-endpoint entry, as ``tomllib`` returns it."""
+
+    projection_ref: dict[str, object]
+
+
+def _projection_kind(endpoint: _ProjectionEndpoint) -> str:
+    """Return the endpoint's discriminant, typed as the ``str`` it is persisted as."""
+    kind = endpoint["projection_ref"].get("projection_kind", "")
+    assert isinstance(kind, str), f"projection_kind must be a string, found {kind!r}"
+    return kind
+
+
+def _projection_endpoints(revision_id: str) -> tuple[_ProjectionEndpoint, ...]:
     """Return every projection endpoint a revision declares, across its fragments.
 
     A revision declares its sections in fragmented files, and the modelo tree's
@@ -186,7 +204,7 @@ def _projection_endpoints(revision_id: str) -> tuple[dict, ...]:
     directory = (
         REPO_ROOT / "src/cadrumo/_data/registry/aeat/modelos/303/revisions" / revision_id / "projection_endpoints"
     )
-    endpoints: list[dict] = []
+    endpoints: list[_ProjectionEndpoint] = []
     for fragment in sorted(directory.glob("*.toml")):
         payload = tomllib.loads(fragment.read_text(encoding="utf-8"))
         endpoints.extend(payload["revisions"][revision_id]["projection_endpoints"])
@@ -204,7 +222,7 @@ def test_real_dp30302_anchors_keep_other_countries_refund_distinct_from_quarterl
     non_agricultural_slot_one = {
         ref.fact
         for ref in refs
-        if getattr(ref, "projection_kind", None) == "m303_regimen_simplificado_fact"
+        if isinstance(ref, M303RegimenSimplificadoFactProjectionRef)
         and ref.cohort.value == "no_agricola"
         and ref.slot == 1
     }
@@ -244,14 +262,14 @@ def test_real_dp30302_declarations_keep_the_reviewed_epoch_multiplicity() -> Non
     for revision_id, (total, simplified, epoch_specific) in expected.items():
         endpoints = _projection_endpoints(revision_id)
         simplified_endpoints = tuple(
-            item
-            for item in endpoints
-            if item["projection_ref"].get("projection_kind", "").startswith("m303_regimen_simplificado_")
+            item for item in endpoints if _projection_kind(item).startswith("m303_regimen_simplificado_")
         )
         simplified_refs = tuple(
-            compile_filing_projection_ref(item["projection_ref"])
+            compiled
             for item in simplified_endpoints
-            if item["projection_ref"].get("projection_kind") == "m303_regimen_simplificado_fact"
+            if _projection_kind(item) == "m303_regimen_simplificado_fact"
+            for compiled in (compile_filing_projection_ref(item["projection_ref"]),)
+            if isinstance(compiled, M303RegimenSimplificadoFactProjectionRef)
         )
         assert len(endpoints) == total
         assert len(simplified_endpoints) == simplified

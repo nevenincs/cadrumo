@@ -10,19 +10,27 @@ aeat-quality-gates rule.
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import CoreValidationError
+from ....domain.calculations.registry.authority import bundled_authority
 from ..dt12_reduccion import compute_dt12_reduccion_plan_pensiones
 from ..errors import PensionReduccionError
+from ..modelo_fact_context import ModeloFactResolutionContext
 from ..sal_reserva_especial import compute_sal_reserva_especial_dotacion
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _ReductionCompute = Callable[..., Decimal]
+_CONTEXT = ModeloFactResolutionContext(
+    authority=bundled_authority(),
+    filing_period=date(2025, 12, 31),
+    devengo_date=date(2025, 12, 31),
+)
 
 _GUARD_ERROR_CASES: tuple[tuple[str, _ReductionCompute, dict[str, Decimal], str, str], ...] = (
     (
@@ -108,7 +116,7 @@ _GUARD_ERROR_CASES: tuple[tuple[str, _ReductionCompute, dict[str, Decimal], str,
 def test_fiscal_reduction_guard_errors_carry_context() -> None:
     for case_id, compute, kwargs, message, field_name in _GUARD_ERROR_CASES:
         with pytest.raises(PensionReduccionError, match=message) as exc_info:
-            compute(**kwargs)
+            compute(**kwargs, context=_CONTEXT)
         exc = exc_info.value
         assert field_name in str(exc), case_id
         assert exc.context is not None, case_id
@@ -135,6 +143,7 @@ class TestDt12ReduccionPlanPensiones:
             gross_rescate=Decimal("60000"),
             aportaciones_pre_2007=Decimal("9600"),
             aportaciones_totales=Decimal("33000"),
+            context=_CONTEXT,
         )
         assert result == Decimal("6981.82")
 
@@ -144,12 +153,14 @@ class TestDt12ReduccionPlanPensiones:
             gross_rescate=Decimal("60000"),
             aportaciones_pre_2007=Decimal("9600"),
             aportaciones_totales=Decimal("33000"),
+            context=_CONTEXT,
         )
         # Halve the pre-2007 fraction -> ~half the reducción
         result_half = compute_dt12_reduccion_plan_pensiones(
             gross_rescate=Decimal("60000"),
             aportaciones_pre_2007=Decimal("4800"),
             aportaciones_totales=Decimal("33000"),
+            context=_CONTEXT,
         )
         assert result_carla != result_half
         # 4800/33000 * 60000 * 0.40 = 3490.9090... -> 3490.91
@@ -161,6 +172,7 @@ class TestDt12ReduccionPlanPensiones:
             gross_rescate=Decimal("60000"),
             aportaciones_pre_2007=Decimal("0"),
             aportaciones_totales=Decimal("33000"),
+            context=_CONTEXT,
         )
         assert result == Decimal("0.00")
 
@@ -174,6 +186,7 @@ class TestDt12ReduccionPlanPensiones:
             gross_rescate=Decimal("60000"),
             aportaciones_pre_2007=Decimal("33000"),
             aportaciones_totales=Decimal("33000"),
+            context=_CONTEXT,
         )
         assert result == Decimal("24000.00")
 
@@ -194,6 +207,7 @@ class TestSalReservaEspecialDotacion:
             beneficio_neto=Decimal("120000"),
             reserva_dotada=Decimal("30000"),
             capital_social=Decimal("100000"),
+            context=_CONTEXT,
         )
         assert result == Decimal("12000.00")
 
@@ -210,6 +224,7 @@ class TestSalReservaEspecialDotacion:
             beneficio_neto=Decimal("120000"),
             reserva_dotada=Decimal("195000"),
             capital_social=Decimal("100000"),
+            context=_CONTEXT,
         )
         assert result == Decimal("5000.01")
 
@@ -219,6 +234,7 @@ class TestSalReservaEspecialDotacion:
             beneficio_neto=Decimal("120000"),
             reserva_dotada=Decimal("200000"),
             capital_social=Decimal("100000"),
+            context=_CONTEXT,
         )
         assert result == Decimal("0.01")
 
@@ -228,6 +244,7 @@ class TestSalReservaEspecialDotacion:
             beneficio_neto=Decimal("120000"),
             reserva_dotada=Decimal("200000.01"),
             capital_social=Decimal("100000"),
+            context=_CONTEXT,
         )
         assert result == Decimal("0.00")
 
@@ -237,6 +254,7 @@ class TestSalReservaEspecialDotacion:
             beneficio_neto=Decimal("120000"),
             reserva_dotada=Decimal("210000"),
             capital_social=Decimal("100000"),
+            context=_CONTEXT,
         )
         assert result == Decimal("0.00")
 
@@ -259,6 +277,7 @@ class TestPensionReduccionErrorEnvelope:
                 gross_rescate=Decimal("60000"),
                 aportaciones_pre_2007=Decimal("9600"),
                 aportaciones_totales=Decimal("0"),
+                context=_CONTEXT,
             )
         except PensionReduccionError as exc:
             code = get_registered_error_code(exc)

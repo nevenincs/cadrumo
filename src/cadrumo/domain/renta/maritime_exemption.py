@@ -44,14 +44,18 @@ Provisions outside scope:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Final, Literal
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.external_constants import ART_7P_EXEMPTION_CAP_EUR, REBECA_MARITIME_EXEMPTION_FRACTION
+from ..calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ..calculations.registry.bindings import CasillaObservation
-from ..calculations.registry.ids import LegalRefId, SourceRefId
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from ..calculations.registry.ids import LegalRefId
+from ..calculations.registry.schema_base import DateAxis
 from .errors import RentaError, RentaValidationError
 
 # Casilla in Modelo 100 that receives exempt income (renta exenta section).
@@ -63,13 +67,11 @@ RENTA_EXENTA_CASILLA: CasillaId = validated_casilla_id("0525", surface="RENTA_EX
 
 # Legal references carried through every observation — sourced from the
 # trabajador_del_mar.toml binding entries.
-_ART_7P_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-7",)
-_REBECA_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-19-1994:art-75",)
 _DA41_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:da-41",)
 _RETMAR_LEGAL_REFS: tuple[LegalRefId, ...] = ("ley-35-2006:art-96",)
 
-_ART_7P_SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-lirpf-art-7-authority",)
-_REBECA_SOURCE_REFS: tuple[SourceRefId, ...] = ("boe-ley-19-1994-art-75-authority",)
+_ART_7P_EXEMPTION_CAP_FACT_ID = "lirpf-art-7p-exemption-cap"
+_REBECA_EXEMPTION_FRACTION_FACT_ID = "rebeca-maritime-exemption-fraction"
 
 
 class MaritimeExemptionInactiveError(RentaError):
@@ -239,11 +241,33 @@ def da41_eligible(facts: MaritimeWorkerFacts) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def _resolve_decimal_fact(
+    *,
+    authority: ValidatedRegistryAuthority,
+    fact_id: str,
+    date_axis: DateAxis,
+    effective_date: date,
+) -> ResolvedScalarFact:
+    """Resolve one decimal scalar fact through the validated authority."""
+    resolved = authority.resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id=fact_id,
+            date_axis=date_axis,
+            effective_date=effective_date,
+        )
+    )
+    if not isinstance(resolved, ResolvedScalarFact) or not isinstance(resolved.payload.value, Decimal):
+        raise RegistryValidationError(f"governed fact {fact_id!r} must resolve to a Decimal scalar")
+    return resolved
+
+
 def calculate_art_7p_exemption(
     *,
     annual_salary: Decimal,
     qualifying_days: int,
     facts: MaritimeWorkerFacts,
+    authority: ValidatedRegistryAuthority | None = None,
+    filing_period: date | None = None,
 ) -> CasillaObservation:
     """Calculate the Art. 7.p) exempt amount and return a :class:`CasillaObservation`.
 
@@ -259,6 +283,9 @@ def calculate_art_7p_exemption(
             Spanish territory within the tax year. Must be in [1, 365].
         facts: Resolved MaritimeWorkerFacts. art_7p_eligible must be True;
             raises RentaValidationError otherwise.
+        authority: Validated governed-fact authority. Defaults to the bundled
+            authority when the public calculation is called directly.
+        filing_period: Filing-period coordinate for the Art. 7.p) cap.
 
     Returns:
         :class:`CasillaObservation` for the renta exenta casilla with the exempt
@@ -275,8 +302,18 @@ def calculate_art_7p_exemption(
     if not (1 <= qualifying_days <= 365):
         raise RentaValidationError("qualifying_days must be in [1, 365]")
 
+    if authority is None:
+        authority = bundled_authority()
+    if filing_period is None:
+        filing_period = date.today()
+    resolved_cap = _resolve_decimal_fact(
+        authority=authority,
+        fact_id=_ART_7P_EXEMPTION_CAP_FACT_ID,
+        date_axis=DateAxis.FILING_PERIOD,
+        effective_date=filing_period,
+    )
     raw_exempt = annual_salary / Decimal("365") * Decimal(qualifying_days)
-    exempt_amount = min(raw_exempt, ART_7P_EXEMPTION_CAP_EUR)
+    exempt_amount = min(raw_exempt, resolved_cap.payload.value)
 
     return CasillaObservation(
         casilla_id=RENTA_EXENTA_CASILLA,
@@ -286,8 +323,8 @@ def calculate_art_7p_exemption(
         operand_refs=(),
         operand_casilla_refs=(),
         operand_values=(),
-        legal_refs=_ART_7P_LEGAL_REFS,
-        source_refs=_ART_7P_SOURCE_REFS,
+        legal_refs=resolved_cap.legal_refs,
+        source_refs=resolved_cap.source_refs,
         absent_by_design=False,
     )
 
@@ -296,6 +333,8 @@ def calculate_rebeca_exemption(
     *,
     gross_navigation_income: Decimal,
     facts: MaritimeWorkerFacts,
+    authority: ValidatedRegistryAuthority | None = None,
+    devengo_date: date | None = None,
 ) -> CasillaObservation:
     """Calculate the REBECA 50% exempt amount and return a typed CasillaObservation.
 
@@ -309,6 +348,9 @@ def calculate_rebeca_exemption(
             in EUR (Decimal). Must be positive.
         facts: Resolved MaritimeWorkerFacts. rebeca_eligible must be True;
             raises RentaValidationError otherwise.
+        authority: Validated governed-fact authority. Defaults to the bundled
+            authority when the public calculation is called directly.
+        devengo_date: Devengo-date coordinate for the REBECA fraction.
 
     Returns:
         :class:`CasillaObservation` for the renta exenta casilla with the exempt
@@ -323,7 +365,17 @@ def calculate_rebeca_exemption(
     if not gross_navigation_income.is_finite() or gross_navigation_income <= Decimal("0"):
         raise RentaValidationError("gross_navigation_income must be a positive finite Decimal")
 
-    exempt_amount = gross_navigation_income * REBECA_MARITIME_EXEMPTION_FRACTION
+    if authority is None:
+        authority = bundled_authority()
+    if devengo_date is None:
+        devengo_date = date.today()
+    resolved_fraction = _resolve_decimal_fact(
+        authority=authority,
+        fact_id=_REBECA_EXEMPTION_FRACTION_FACT_ID,
+        date_axis=DateAxis.DEVENGO_DATE,
+        effective_date=devengo_date,
+    )
+    exempt_amount = gross_navigation_income * resolved_fraction.payload.value
 
     return CasillaObservation(
         casilla_id=RENTA_EXENTA_CASILLA,
@@ -333,8 +385,8 @@ def calculate_rebeca_exemption(
         operand_refs=(),
         operand_casilla_refs=(),
         operand_values=(),
-        legal_refs=_REBECA_LEGAL_REFS,
-        source_refs=_REBECA_SOURCE_REFS,
+        legal_refs=resolved_fraction.legal_refs,
+        source_refs=resolved_fraction.source_refs,
         absent_by_design=False,
     )
 
@@ -398,7 +450,6 @@ def check_retmar_mandatory_filing(facts: MaritimeWorkerFacts) -> None:
 
 
 __all__ = [
-    "ART_7P_EXEMPTION_CAP_EUR",
     "RENTA_EXENTA_CASILLA",
     "MaritimeExemptionInactiveError",
     "MaritimeWorkerFacts",

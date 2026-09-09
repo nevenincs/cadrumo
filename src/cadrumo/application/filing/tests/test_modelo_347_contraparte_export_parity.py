@@ -25,8 +25,12 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
-from ....core.external_constants import M347_CLAVE_C_THRESHOLD_EUR, M347_THRESHOLD_EUR
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry._m347_threshold import (
+    m347_threshold_decimal,
+    resolve_m347_clave_c_declaration_threshold,
+    resolve_m347_counterparty_annual_threshold,
+)
 from ....domain.calculations.registry.export import derive_export_layouts_from_bindings
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.invoice_bindings import InvoiceObservation, resolve_invoice_binding_row_values
@@ -36,6 +40,13 @@ from ....domain.calculations.registry.schema_exports import ExportRecordDefiniti
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _REPOINTED_REVISIONS = ("2025-y-siguientes", "2011-2024")
+_M347_EFFECTIVE_DATE = date(2025, 12, 31)
+_M347_THRESHOLD = m347_threshold_decimal(
+    resolve_m347_counterparty_annual_threshold(effective_date=_M347_EFFECTIVE_DATE),
+)
+_M347_CLAVE_C_THRESHOLD = m347_threshold_decimal(
+    resolve_m347_clave_c_declaration_threshold(effective_date=_M347_EFFECTIVE_DATE),
+)
 
 
 def _revision(revision_id: str):
@@ -117,7 +128,7 @@ def test_two_counterparties_resolve_two_distinct_rows_not_a_truncation(revision_
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
     row_indexes = {row_index for (_binding_id, row_index) in resolved}
 
     assert row_indexes == {1, 2}
@@ -143,7 +154,7 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
             party_tax_id="B11111112",
             party_legal_name="Contraparte Bajo Umbral SL",
             transaction_date=date(2025, 2, 10),
-            total=str(M347_THRESHOLD_EUR - Decimal("0.01")),
+            total=str(_M347_THRESHOLD - Decimal("0.01")),
             operation_clave="A",
         ),
         _observation(
@@ -151,7 +162,7 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
             party_tax_id="C22222229",
             party_legal_name="Contraparte Umbral Exacto SA",
             transaction_date=date(2025, 6, 15),
-            total=str(M347_THRESHOLD_EUR),
+            total=str(_M347_THRESHOLD),
             operation_clave="B",
             source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
         ),
@@ -160,12 +171,12 @@ def test_declaration_floor_gates_the_per_row_family_through_the_real_resolver(re
             party_tax_id="D33333335",
             party_legal_name="Contraparte Sobre Umbral SL",
             transaction_date=date(2025, 9, 1),
-            total=str(M347_THRESHOLD_EUR + Decimal("0.01")),
+            total=str(_M347_THRESHOLD + Decimal("0.01")),
             operation_clave="A",
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
     row_indexes = {row_index for (_binding_id, row_index) in resolved}
 
     # Only the above-threshold counterparty produces a row: one row, not three.
@@ -195,7 +206,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             party_tax_id="B11111112",
             party_legal_name="Colegiado Bajo Umbral SL",
             transaction_date=date(2025, 2, 10),
-            total=str(M347_CLAVE_C_THRESHOLD_EUR - Decimal("0.01")),
+            total=str(_M347_CLAVE_C_THRESHOLD - Decimal("0.01")),
             operation_clave="C",
         ),
         _observation(
@@ -203,7 +214,7 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             party_tax_id="C22222229",
             party_legal_name="Colegiado Sobre Umbral SA",
             transaction_date=date(2025, 6, 15),
-            total=str(M347_CLAVE_C_THRESHOLD_EUR + Decimal("0.01")),
+            total=str(_M347_CLAVE_C_THRESHOLD + Decimal("0.01")),
             operation_clave="C",
         ),
         _observation(
@@ -211,12 +222,12 @@ def test_clave_c_uses_its_own_lower_floor_alongside_the_general_one(revision_id:
             party_tax_id="B11111112",
             party_legal_name="Colegiado Bajo Umbral SL",
             transaction_date=date(2025, 3, 1),
-            total=str(M347_CLAVE_C_THRESHOLD_EUR + Decimal("100.00")),
+            total=str(_M347_CLAVE_C_THRESHOLD + Decimal("100.00")),
             operation_clave="B",
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
     resolved_values = set(resolved.values())
 
     # Only the above-clave-C-floor beneficiary produces a row.
@@ -262,7 +273,7 @@ def test_binding_rows_rendering_emits_one_occurrence_per_counterparty(revision_i
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
     binding_values: dict[tuple[BindingId, int | None], object] = dict(resolved.items())
     rendered = _record_render_rows(record, binding_values, {})
 
@@ -315,7 +326,7 @@ def test_quarterly_amounts_sum_to_the_annual_total_for_a_real_multi_quarter_coun
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     def _value(binding_suffix: str) -> Decimal:
         binding_id = next(bid for (bid, _row) in resolved if bid.endswith(binding_suffix))
@@ -362,7 +373,7 @@ def test_a_quarter_boundary_date_classifies_into_the_correct_quarter(revision_id
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     def _value(binding_suffix: str) -> Decimal:
         binding_id = next(bid for (bid, _row) in resolved if bid.endswith(binding_suffix))
@@ -445,7 +456,7 @@ def test_each_counterparty_renders_its_own_country_not_the_first_ones(revision_i
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
     pais_binding_id = next(bid for (bid, _row) in resolved if bid.endswith("-pais-codigo"))
     countries_by_row = {row: resolved[(pais_binding_id, row)] for (bid, row) in resolved if bid == pais_binding_id}
 

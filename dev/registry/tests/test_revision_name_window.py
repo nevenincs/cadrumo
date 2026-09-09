@@ -117,6 +117,7 @@ def test_screen_reports_disagreeing_window_sources(authority: ValidatedRegistryA
     """
     revision = authority.modelo("303").revisions["2025"]
     selector = revision.period_selector
+    assert selector.year_from is not None, "this revision's period selector must declare a starting year"
 
     moved = revision.model_copy(update={"valid_from": datetime.date(selector.year_from - 3, 1, 1)})
     kinds = {finding.kind for finding in name_window_findings(moved, modelo_id="303")}

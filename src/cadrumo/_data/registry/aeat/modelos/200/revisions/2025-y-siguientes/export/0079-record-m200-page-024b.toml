@@ -10,31 +10,6 @@ line_ending = 'crlf'
 required = true
 
 [[revisions.2025-y-siguientes.export_layouts.records.fields]]
-id = 'm200-2025.dp200024b.f0165'
-offset = 1806
-length = 17
-kind = 'projection'
-data_type = 'decimal'
-required = false
-padding = 'left_zero'
-justification = 'right'
-decimals = 2
-signed = false
-legal_refs = [
-    'ley-27-2014:art-41',
-    'ley-27-2014:art-39',
-    'ley-27-2014:art-19',
-    'ley-27-2014:art-100',
-    'rd-634-2015:art-3',
-]
-source_refs = ['aeat-dr-200-2025']
-
-[revisions.2025-y-siguientes.export_layouts.records.fields.projection_ref]
-projection_kind = 'm200_entidad_participada'
-slot = 3
-field = 'deduccion_resto_inversion_canarias'
-
-[[revisions.2025-y-siguientes.export_layouts.records.fields]]
 id = 'm200-2025.dp200024b.f0166'
 offset = 1823
 length = 17
@@ -215,12 +190,11 @@ offset = 1942
 length = 17
 kind = 'casilla'
 casilla_id = '01279'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -236,12 +210,11 @@ offset = 1959
 length = 17
 kind = 'casilla'
 casilla_id = '01455'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -278,12 +251,11 @@ offset = 1993
 length = 17
 kind = 'casilla'
 casilla_id = '01458'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',
@@ -341,12 +313,11 @@ offset = 2044
 length = 17
 kind = 'casilla'
 casilla_id = '01461'
-data_type = 'decimal'
+data_type = 'money'
 required = false
 padding = 'left_zero'
 justification = 'right'
-decimals = 2
-signed = false
+signed = true
 legal_refs = [
     'ley-27-2014:art-41',
     'ley-27-2014:art-39',

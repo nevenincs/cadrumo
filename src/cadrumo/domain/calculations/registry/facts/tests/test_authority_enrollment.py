@@ -52,7 +52,11 @@ unit = "EUR"
     )
 
 
-def test_fact_content_participates_in_authority_identity(tmp_path: Path) -> None:
+def test_fact_content_participates_in_authority_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", FACT_PROVIDER_REGISTRATIONS[:1])
     facts_dir = tmp_path / "facts"
     facts_dir.mkdir()
     path = facts_dir / "0001-test-limit.toml"
@@ -68,7 +72,11 @@ def test_fact_content_participates_in_authority_identity(tmp_path: Path) -> None
     assert before != after
 
 
-def test_fact_catalogue_identity_prevents_reusing_a_green_validation_memo(tmp_path: Path) -> None:
+def test_fact_catalogue_identity_prevents_reusing_a_green_validation_memo(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(provider_module, "FACT_PROVIDER_REGISTRATIONS", FACT_PROVIDER_REGISTRATIONS[:1])
     shared_legal: dict[str, LegalReference] = {}
     shared_sources: dict[str, SourceReference] = {}
     RegistryValidator(RegistryCatalogues(legal=shared_legal, sources=shared_sources)).validate_registry(())
@@ -85,10 +93,19 @@ def test_fact_catalogue_identity_prevents_reusing_a_green_validation_memo(tmp_pa
         RegistryValidator(changed_catalogues).validate_registry(())
 
 
-def test_nested_governed_directory_requires_an_exact_provider_owner(tmp_path: Path) -> None:
+def test_top_level_sibling_under_the_governed_root_requires_an_exact_provider_owner(tmp_path: Path) -> None:
     (tmp_path / "facts" / "unregistered").mkdir(parents=True)
 
     with pytest.raises(RegistryValidationError, match="has no registered provider"):
+        validate_fact_provider_directory_ownership(tmp_path)
+
+
+def test_unregistered_governed_top_level_sibling_is_detected_by_the_fragment_census(tmp_path: Path) -> None:
+    sibling = tmp_path / "unregistered-facts"
+    sibling.mkdir()
+    (sibling / "0001-shadow-fact.toml").write_text("[fact]\n", encoding="utf-8")
+
+    with pytest.raises(RegistryValidationError, match=r"unregistered-facts.*has no registered provider"):
         validate_fact_provider_directory_ownership(tmp_path)
 
 

@@ -59,7 +59,11 @@ def test_a_self_scaling_wire_type_is_not_reported_as_unscaled(authority: Validat
         f"only {len(monetary)} monetary endpoint(s) resolved for m303 2025; below this the screen "
         "examined almost nothing and the absence below says nothing about scaling"
     )
-    unscaled_wires = {str(endpoint.field.data_type) for endpoint in monetary} - _SELF_SCALING_WIRE_TYPES
+    unscaled_wires: set[str] = set()
+    for endpoint in monetary:
+        assert endpoint.field is not None, "monetary was already filtered to endpoints carrying a field"
+        unscaled_wires.add(str(endpoint.field.data_type))
+    unscaled_wires -= _SELF_SCALING_WIRE_TYPES
     assert not unscaled_wires, f"this revision no longer exercises a self-scaling wire: {sorted(unscaled_wires)}"
 
     findings = scale_findings(revision, modelo_id="303")

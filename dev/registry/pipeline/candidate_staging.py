@@ -17,6 +17,8 @@ from typing import Final, Literal
 
 import rtoml
 
+from cadrumo.core.resources.bundled_data import bundled_path
+
 from cadrumo.domain.calculations.registry.loader import load_modelo_directory
 
 __all__ = [
@@ -155,6 +157,19 @@ def stage_continuity_metadata(
     return metadata_modelo_root
 
 
+#: Authority directories resolved BY NAME at registry load, beside `legal` and
+#: the modelo trees. Read from the shipped tree rather than hardcoded, so a
+#: provider directory introduced by another change is staged without this module
+#: being edited to notice it.
+def _fact_provider_directories() -> frozenset[str]:
+    root = bundled_path("registry", "aeat")
+    skip = {"legal", "modelos", "user_profile", "m303_orden_anual"}
+    return frozenset(entry.name for entry in root.iterdir() if entry.is_dir() and entry.name not in skip)
+
+
+_FACT_PROVIDER_DIRECTORIES = _fact_provider_directories()
+
+
 def stage_generated_export_candidate(
     source_root: Path,
     candidate_root: Path,
@@ -170,6 +185,16 @@ def stage_generated_export_candidate(
             f"bootstrap target {bootstrap_target.modelo}/{bootstrap_target.revision} cannot stage {modelo}/{revision}",
         )
     shutil.copytree(source_root / "legal", candidate_root / "legal")
+    # The governed-fact provider directories are part of the authority a
+    # candidate must validate against, not optional decoration: the registry
+    # load resolves them by name, so a candidate root without them fails to
+    # fingerprint rather than validating a narrower tree. Staged whole, like
+    # `legal`, and staged by iteration so a directory added later is carried
+    # without this list being the thing that remembered to mention it.
+    for provider_directory in sorted(_FACT_PROVIDER_DIRECTORIES):
+        source_provider = source_root / provider_directory
+        if source_provider.is_dir():
+            shutil.copytree(source_provider, candidate_root / provider_directory)
     stage_supplementary_orden_authority(
         source_root,
         candidate_root,

@@ -222,7 +222,11 @@ def _invoice_resolution_from_observations(
     owned_sources: tuple[BindingSourceKind, ...],
 ) -> CalculationSourceResolution:
     observations = tuple(observation for _, observation in observed_items)
-    binding_values = resolve_invoice_binding_values(context.revision, observations)
+    binding_values = resolve_invoice_binding_values(
+        context.revision,
+        observations,
+        effective_date=date(context.filing_year, 12, 31),
+    )
     declared_invoices = tuple(invoice for invoice, _ in observed_items)
     diagnostics = _m349_incoherence_diagnostics(incoherent, resolver_id=resolver_id)
     diagnostics += _unconverted_foreign_diagnostics(
@@ -1035,7 +1039,11 @@ def _m349_operador_rows_from_observations(
 ) -> tuple[Modelo349OperadorRow, ...]:
     if context.modelo != Modelo.M349.value or not observations:
         return ()
-    row_values = resolve_invoice_binding_row_values(context.revision, observations)
+    row_values = resolve_invoice_binding_row_values(
+        context.revision,
+        observations,
+        effective_date=date(context.filing_year, 12, 31),
+    )
     return tuple(
         _m349_operador_row_from_values(
             _m349_operador_row_values(row_values, row_index=row_index),

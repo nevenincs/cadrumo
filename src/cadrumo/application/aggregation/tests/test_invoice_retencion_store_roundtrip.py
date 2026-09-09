@@ -72,7 +72,7 @@ _PERCEPTOR_NIF = "B12345674"
 
 def _received_invoice() -> Invoice:
     """A received professional invoice carrying a declared retencion."""
-    rate = iva_rate_percentage(IvaRate.RATE_21)
+    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",

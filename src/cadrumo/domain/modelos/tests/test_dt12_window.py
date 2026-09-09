@@ -17,15 +17,24 @@ aeat-quality-gates rule:
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
+from ....domain.calculations.registry.authority import bundled_authority
 from ...modelos.dt12_reduccion import (
     Dt12WindowBranch,
     dt12_regime_window_eligibility,
 )
 from ...modelos.errors import PensionReduccionError
+from ...modelos.modelo_fact_context import ModeloFactResolutionContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+_CONTEXT = ModeloFactResolutionContext(
+    authority=bundled_authority(),
+    filing_period=date(2025, 12, 31),
+    devengo_date=date(2025, 12, 31),
+)
 
 
 class TestDt12WindowGeneralBranch:
@@ -42,6 +51,7 @@ class TestDt12WindowGeneralBranch:
             verdict = dt12_regime_window_eligibility(
                 contingencia_year=contingencia_year,
                 rescate_year=rescate_year,
+                context=_CONTEXT,
             )
             assert verdict.branch is Dt12WindowBranch.GENERAL
             assert verdict.eligible is expected_eligible, (contingencia_year, rescate_year)
@@ -62,6 +72,7 @@ class TestDt12WindowTransitional2011To2014Branch:
             verdict = dt12_regime_window_eligibility(
                 contingencia_year=contingencia_year,
                 rescate_year=rescate_year,
+                context=_CONTEXT,
             )
             assert verdict.branch is Dt12WindowBranch.TRANSITIONAL_2011_2014
             assert verdict.eligible is expected_eligible, (contingencia_year, rescate_year)
@@ -84,6 +95,7 @@ class TestDt12WindowCliff2010OrEarlierBranch:
             verdict = dt12_regime_window_eligibility(
                 contingencia_year=contingencia_year,
                 rescate_year=rescate_year,
+                context=_CONTEXT,
             )
             assert verdict.branch is Dt12WindowBranch.CLIFF_2010_OR_EARLIER
             assert verdict.eligible is expected_eligible, (contingencia_year, rescate_year)
@@ -109,4 +121,5 @@ class TestDt12WindowInputGuards:
                 dt12_regime_window_eligibility(
                     contingencia_year=contingencia_year,
                     rescate_year=rescate_year,
+                    context=_CONTEXT,
                 )

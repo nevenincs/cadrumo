@@ -9,6 +9,8 @@ import pytest
 from pydantic import ValidationError
 
 from ....filing_evidence import FilingEvidenceReference
+from ....iva.lookup import lookup_rate
+from ....iva.schema import EUMemberState, IvaRateKind
 from ..records import (
     InventoryAcquisitionCompleteness,
     InventoryAcquisitionCost,
@@ -101,6 +103,18 @@ def _purchase(**overrides: object) -> MovementRecord:
     }
     fields.update(overrides)
     return MovementRecord.model_validate(fields)
+
+
+def test_omitted_inventory_rate_resolves_general_iva_on_movement_devengo() -> None:
+    movement_date = date(2025, 2, 1)
+    movement = MovementRecord(
+        movement_id="opening-implicit-rate",
+        movement_date=movement_date,
+        kind=MovementKind.OPENING,
+        quantity=Decimal("1"),
+    )
+
+    assert movement.iva_rate == lookup_rate(EUMemberState.ES, IvaRateKind.GENERAL, movement_date).pct
 
 
 def test_complete_acquisition_is_the_sole_fifo_and_pmp_cost_authority() -> None:

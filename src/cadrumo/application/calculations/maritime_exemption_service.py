@@ -42,12 +42,14 @@ blocking calculation error.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.renta.errors import RentaValidationError
 from ...domain.renta.maritime_exemption import (
@@ -95,6 +97,9 @@ def resolve_maritime_exemption(
     annual_salary: Decimal | None = None,
     qualifying_days: int | None = None,
     gross_navigation_income: Decimal | None = None,
+    authority: ValidatedRegistryAuthority | None = None,
+    filing_period: date | None = None,
+    devengo_date: date | None = None,
 ) -> MaritimeExemptionResult:
     """Resolve the applicable maritime exemption pathway and produce typed observations.
 
@@ -127,6 +132,9 @@ def resolve_maritime_exemption(
             when Art. 7.p) is potentially eligible.
         gross_navigation_income: Total gross navigation income in EUR.
             Required when REBECA is potentially eligible.
+        authority: Validated governed-fact authority for both calculations.
+        filing_period: Filing-period coordinate for the Art. 7.p) cap.
+        devengo_date: Devengo-date coordinate for the REBECA fraction.
 
     Returns:
         :class:`MaritimeExemptionResult` with typed observations and flat view.
@@ -143,6 +151,12 @@ def resolve_maritime_exemption(
     # RETMAR completeness gate — callers catch and surface to operator.
     check_retmar_mandatory_filing(facts)
 
+    if authority is None:
+        authority = bundled_authority()
+    resolved_on = date.today()
+    filing_period = filing_period or resolved_on
+    devengo_date = devengo_date or resolved_on
+
     observations: list[CasillaObservation] = []
 
     if art_7p_eligible(facts):
@@ -158,6 +172,8 @@ def resolve_maritime_exemption(
             annual_salary=annual_salary,
             qualifying_days=qualifying_days,
             facts=facts,
+            authority=authority,
+            filing_period=filing_period,
         )
         observations.append(obs)
 
@@ -170,6 +186,8 @@ def resolve_maritime_exemption(
         obs = calculate_rebeca_exemption(
             gross_navigation_income=gross_navigation_income,
             facts=facts,
+            authority=authority,
+            devengo_date=devengo_date,
         )
         observations.append(obs)
 

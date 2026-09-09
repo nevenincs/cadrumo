@@ -1,0 +1,115 @@
+[sources."boe-rd-1065-2007-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rd-1065-2007.html"
+sha256 = "2eca1cb3778002315999fae39750c8ff90bd23df1a0595d022825929304ef2b5"
+bytes = 1359113
+retrieved_at = 2026-09-09
+published_at = 2007-09-05
+applies_from = 2008-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-15984"
+review_status = "agent_reviewed"
+
+[sources."boe-liva-art-108-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-37-1992-art-108.html"
+sha256 = "a49bf319e8a4babcfc379c6a219573edf30aed3217b2e7ac912897445b702aa7"
+bytes = 1280
+retrieved_at = 2026-09-09
+published_at = 1992-12-29
+applies_from = 1993-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a108"
+review_status = "agent_reviewed"
+
+[sources."boe-rdl-2-2004-art-82-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rdl-2-2004-art-82.html"
+sha256 = "71f9e026059cef5b262a1ea738402a63eaa263f94dbec07ee5fe9e9a5eaf3616"
+bytes = 9846
+retrieved_at = 2026-09-09
+published_at = 2004-03-09
+applies_from = 2004-03-10
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4214#a82"
+review_status = "agent_reviewed"
+
+[sources."boe-lirpf-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-35-2006.html"
+sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
+bytes = 1921157
+retrieved_at = 2026-09-09
+published_at = 2006-11-29
+applies_from = 2007-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
+review_status = "agent_reviewed"
+
+[sources."boe-lis-art-40-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-27-2014-art-40.html"
+sha256 = "895c3c1d9f6bd6af7479fdc3be2e65a7606e9c82590c9c8b4ad271ce9d1ea595"
+bytes = 4708
+retrieved_at = 2026-09-09
+published_at = 2014-11-28
+applies_from = 2015-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a40"
+review_status = "agent_reviewed"
+
+[sources."boe-ley-19-1994-art-75-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-19-1994-art-75.html"
+sha256 = "344657dee928cc9c7728dcd3ceab364b60252db3bf13dd2d5ee8aa8e77155dbe"
+bytes = 2188
+retrieved_at = 2026-09-09
+published_at = 1994-07-07
+applies_from = 1994-07-08
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a75"
+review_status = "agent_reviewed"
+
+[sources."aeat-madrid-birth-adoption-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf.extracted.md"
+sha256 = "cd3541131b9850aaf2a791c0c0c0002b24a2a96d2f80f6a63a4045f1dcb35656"
+bytes = 1594333
+retrieved_at = 2026-09-09
+applies_from = 2023-01-01
+source_url = "https://sede.agenciatributaria.gob.es/Sede/Ayuda/24Manual/100.html"
+review_status = "agent_reviewed"
+
+[sources."boe-ley-44-2015-art-14-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-44-2015-art-14.html"
+sha256 = "63a249cb3f343529de8e30eabadd6fa451c5cb74d9399d362dc93f45ae55d80e"
+bytes = 1264
+retrieved_at = 2026-09-09
+published_at = 2015-10-22
+applies_from = 2015-10-24
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11071#a14"
+review_status = "agent_reviewed"
+
+[sources."boe-ley-39-2015-art-43-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-39-2015-art-43.html"
+sha256 = "dc5e8e313f2c3e02ae878573fced2c2364764cd01ce1b3bdca5f24d2e3a1b954"
+bytes = 2476
+retrieved_at = 2026-09-09
+published_at = 2015-10-02
+applies_from = 2016-10-02
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a43"
+review_status = "agent_reviewed"

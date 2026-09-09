@@ -20,11 +20,15 @@ from decimal import Decimal
 import pytest
 
 from ....core.descendant_relacion import DescendantRelacion
+from ...calculations.registry.authority import bundled_authority
 from ..descendant import DescendantInfo
+from ..family_fact_context import FamilyFactResolutionContext
 from ..family_profile import RentaFamilyProfile
 from ..family_types import within_multi_year_applicability_window
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_CONTEXT = FamilyFactResolutionContext(bundled_authority(), date(2025, 12, 31), date(2025, 12, 31))
 
 
 def test_applicability_window_three_period_span_for_filing_year_2025() -> None:
@@ -71,7 +75,7 @@ def test_eligibility_uses_inscripcion_date_as_entry_when_present() -> None:
     """A child born in 2018 but adopted in 2024 is in the 2025 window via the inscription."""
     child = _child(birth=date(2018, 5, 1), adoption=date(2024, 3, 10))
     assert child.entry_year() == 2024
-    assert child.is_nacimiento_adopcion_eligible(2025) is True
+    assert child.is_nacimiento_adopcion_eligible(2025, context=_CONTEXT) is True
 
 
 def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
@@ -89,10 +93,10 @@ def test_acogimiento_resolucion_never_moves_the_madrid_entry_year() -> None:
         acogimiento_resolucion_date=date(2024, 3, 10),
     )
     assert fostered.entry_year() == 2018
-    assert fostered.is_nacimiento_adopcion_eligible(2025) is False
+    assert fostered.is_nacimiento_adopcion_eligible(2025, context=_CONTEXT) is False
     # The same placement DOES open the Art. 58.2 window, which is what makes the
     # two anchors genuinely different rather than one being unused.
-    assert fostered.is_eligible_minimo_incremento_menor_tres(2025) is True
+    assert fostered.is_eligible_minimo_incremento_menor_tres(2025, context=_CONTEXT) is True
 
 
 def test_eligibility_excludes_non_cohabiting_and_out_of_window_children() -> None:
@@ -101,7 +105,7 @@ def test_eligibility_excludes_non_cohabiting_and_out_of_window_children() -> Non
         ("out-of-window", _child(birth=date(2020, 1, 1))),
     )
     for case_id, child in cases:
-        assert child.is_nacimiento_adopcion_eligible(2025) is False, case_id
+        assert child.is_nacimiento_adopcion_eligible(2025, context=_CONTEXT) is False, case_id
 
 
 def test_prorrateo_share_reflects_shared_custody() -> None:
@@ -110,7 +114,7 @@ def test_prorrateo_share_reflects_shared_custody() -> None:
         ("shared", _child(birth=date(2024, 1, 1), shared=True), Decimal("0.5")),
     )
     for case_id, child, expected in cases:
-        assert child.nacimiento_adopcion_prorrateo_share() == expected, case_id
+        assert child.nacimiento_adopcion_prorrateo_share(context=_CONTEXT) == expected, case_id
 
 
 def test_profile_eligible_count_ignores_out_of_window_and_non_cohabiting() -> None:
@@ -122,7 +126,7 @@ def test_profile_eligible_count_ignores_out_of_window_and_non_cohabiting() -> No
             _child(birth=date(2025, 1, 1), convive=False),  # non-cohabiting
         ),
     )
-    assert profile.madrid_nacimiento_adopcion_eligible_count(2025) == 2
+    assert profile.madrid_nacimiento_adopcion_eligible_count(2025, context=_CONTEXT) == 2
 
 
 def test_profile_weighted_count_embeds_prorrateo() -> None:
@@ -133,12 +137,12 @@ def test_profile_weighted_count_embeds_prorrateo() -> None:
             _child(birth=date(2025, 1, 1), shared=True),
         ),
     )
-    assert profile.madrid_nacimiento_adopcion_weighted_count(2025) == Decimal("1.5")
+    assert profile.madrid_nacimiento_adopcion_weighted_count(2025, context=_CONTEXT) == Decimal("1.5")
 
 
 def test_profile_weighted_count_zero_when_no_eligible_descendants() -> None:
     profile = RentaFamilyProfile(descendientes=(_child(birth=date(2019, 1, 1)),))
-    assert profile.madrid_nacimiento_adopcion_weighted_count(2025) == Decimal("0")
+    assert profile.madrid_nacimiento_adopcion_weighted_count(2025, context=_CONTEXT) == Decimal("0")
 
 
 def test_unidad_familiar_otros_miembros_base_is_zero_for_single_filer() -> None:

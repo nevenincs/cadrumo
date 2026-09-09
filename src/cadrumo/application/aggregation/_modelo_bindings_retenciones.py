@@ -87,6 +87,11 @@ class RetencionesAggregationSourceResolver:
         """
         return _RETENCIONES_AGGREGATORS[modelo](tuple(observations), period=period)
 
+    @staticmethod
+    def supports_modelo(modelo: str) -> bool:
+        """Return whether this canonical retenciones dispatcher owns ``modelo``."""
+        return modelo in _RETENCIONES_AGGREGATORS
+
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         if not revision_has_binding_source(context.revision, "retenciones_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)

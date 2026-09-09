@@ -15,7 +15,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Literal
 
-from pydantic import NonNegativeInt, field_validator, model_validator
+from pydantic import NonNegativeInt, model_validator
 
 from ...adapters.persistence.storage.custody.records import PostChangePasswordGeneration
 from ...application.auth.apoderado_service import RepresentedNif
@@ -45,7 +45,7 @@ from ...core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ...core.requirement import RequirementValue
 from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.time.utc import validate_utc_aware
-from ...domain.auth.apoderamientos.catalogue import ApoderadoScopeCode, ApoderadoScopeName
+from ...domain.auth.apoderamientos.catalogue import ApoderadoScope
 from ...domain.user_profile.values import PayloadSchemaVersion, ProfileSetupState
 from ._config_quarantine_payloads import QuarantineNamespacePayload
 
@@ -1070,40 +1070,16 @@ class ApoderadoClearResult(OutputSchema):
     cleared: bool
 
 
-class ApoderadoScopePayload(OutputSchema):
-    """One representative-scope row, mirroring :class:`ApoderadoScope`.
-
-    Carries the same bounds and the same uppercase/alphanumeric ``code``
-    invariant the domain catalogue enforces, so a malformed scope entry is
-    refused rather than forwarded.
-    """
-
-    code: ApoderadoScopeCode
-    name_es: ApoderadoScopeName
-    name_en: ApoderadoScopeName
-    modelo_codes: list[str] = []
-
-    @field_validator("code")
-    @classmethod
-    def _code_is_uppercase_alnum(cls, value: str) -> str:
-        if not value.isupper():
-            raise ValueError(f"scope code must be uppercase, got {value!r}")
-        if not value.replace("_", "").isalnum():
-            raise ValueError(f"scope code must be alphanumeric (underscores allowed), got {value!r}")
-        return value
-
-
 class ApoderadoScopesListResult(OutputSchema):
     """JSON envelope for ``aeat config auth apoderado scopes list``.
 
-    Projects the apoderado scope catalogue payload from
-    :class:`ApoderamientosCatalogue` -- the non-blank ``catalogue_version``
-    and every :class:`ApoderadoScopePayload` row -- instead of forwarding an
-    arbitrary dumped shape.
+    Projects the apoderado scope catalogue payload from its authoritative
+    domain :class:`ApoderamientosCatalogue` records without restating their
+    validation rules in the transport layer.
     """
 
     catalogue_version: NonEmptyStr
-    scopes: list[ApoderadoScopePayload]
+    scopes: list[ApoderadoScope]
 
 
 # Certificate source registry verb result schemas

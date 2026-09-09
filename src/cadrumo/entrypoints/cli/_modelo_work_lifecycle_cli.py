@@ -178,7 +178,10 @@ def _modelo_100_obligation_advisory_output(unit: WorkUnit) -> tuple[list[Notice]
         return ([], [])
     record = ProfileRecordRepository.for_current_session(bucket).load(bucket)
     raw = record_to_values(record)
-    messages = [tr(advisory_key) for advisory_key in build_filing_obligation_advisories(raw)]
+    messages = [
+        tr(advisory_key)
+        for advisory_key in build_filing_obligation_advisories(raw, filing_year=unit.filing_year)
+    ]
     notices = [advisory_notice("modelo.work.create.filing_obligation", message) for message in messages]
     return (notices, messages)
 

@@ -20,11 +20,14 @@ See Also:
         Advisory builder under test.
     :func:`~application.modelo._m210_rate.resolve_m210_rate`
         Rate resolver that owns the blocking missing-row branch.
-    :class:`~domain.calculations.registry.ConvenioAuthority`
-        Cross-cutting treaty authority consumed by the advisory and resolver.
+    ``irnr.convenio.override``
+        Canonical treaty fact consumed by the advisory and resolver.
 """
 
 from __future__ import annotations
+
+from collections.abc import Mapping
+from datetime import date
 
 import pytest
 
@@ -32,15 +35,34 @@ from ._m210_snapshot_fixture import m210_snapshot
 
 __all__ = ["m210_snapshot"]
 
-from ....core.casilla_id import validated_casilla_id
+from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.deadlines.models import FiscalResidency, IVARegime, TaxpayerProfile
-from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
-from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding
+from ....domain.modelos.verification_report import (
+    ModeloVerificationFinding,
+    ModeloVerificationFindingKind,
+    ModeloVerificationFindingSeverity,
+)
+from .._m210_convenio_lob_advisory import _m210_convenio_lob_advisory_finding as _build_lob_advisory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _TIPO_RENTA = validated_casilla_id("tipo_renta", surface="test_m210_convenio_lob_advisory")
+_DEVENGO_DATE = date(2025, 12, 31)
+
+
+def _m210_convenio_lob_advisory_finding(
+    snapshot: RegistrySnapshot,
+    profile: TaxpayerProfile,
+    input_values_by_casilla_id: Mapping[CasillaId, str],
+) -> ModeloVerificationFinding | None:
+    """Call the application advisory with the explicit test devengo coordinate."""
+    return _build_lob_advisory(
+        snapshot,
+        profile,
+        input_values_by_casilla_id,
+        devengo_date=_DEVENGO_DATE,
+    )
 
 
 def _irnr_profile(country_code: str) -> TaxpayerProfile:

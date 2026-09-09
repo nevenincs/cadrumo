@@ -13,7 +13,11 @@ from cadrumo.domain.calculations.registry.loader import load_registry_tree
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 
 from ..pipeline._export_tree import render_complete_export_tree
-from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediate,
+    RecordDesignIntermediateField,
+    load_record_design_intermediate,
+)
 from ..pipeline.render_check import GeneratedExportBootstrapTransport, revision_render_inputs
 from ..pipeline.semantic_map import (
     SemanticMapEntry,
@@ -68,15 +72,20 @@ def _design(source_ref: str, *, filing_year: int, epoch: str) -> RecordDesignInt
     )
 
 
-def _field_index(design: RecordDesignIntermediate) -> dict[tuple[str, str], object]:
-    return {(sheet.record_identity, field.source_cell): field for sheet in design.sheets for field in sheet.fields}
+def _field_index(design: RecordDesignIntermediate) -> dict[tuple[str, str], RecordDesignIntermediateField]:
+    return {
+        (sheet.record_identity, field.source_cell or ""): field for sheet in design.sheets for field in sheet.fields
+    }
 
 
 def _entry_index(entries: tuple[SemanticMapEntry, ...]) -> dict[tuple[str, str], SemanticMapEntry]:
     return {(entry.anchor.record_identity, entry.anchor.source_cell or ""): entry for entry in entries}
 
 
-def _stable_payload(entry: SemanticMapEntry, revision: str) -> tuple[str, str | None, ...]:
+_StablePayload = tuple[str, str | None, str | None, str | None, str | None, str | None, str | None, str | None]
+
+
+def _stable_payload(entry: SemanticMapEntry, revision: str) -> _StablePayload:
     binding = None if entry.binding is None else str(entry.binding).replace(f"modelo-390-{revision}.", "modelo-390-X.")
     return (
         entry.kind.value,
@@ -151,7 +160,7 @@ def test_m390_2025_bijects_every_parser_anchor_to_the_reviewed_revision_owner() 
             if field.offset is not None and field.length is not None
         }
         for field in sheet.fields:
-            anchor = (sheet.record_identity, field.source_cell)
+            anchor = (sheet.record_identity, field.source_cell or "")
             entry = entries[anchor]
             layout_field = layout_fields[(field.offset, field.length)]
             _assert_layout_owner(entry, layout_field)

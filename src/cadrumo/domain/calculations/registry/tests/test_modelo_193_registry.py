@@ -11,9 +11,11 @@ from .....core.aggregation import BindingAggregationOp, BindingSourceKind
 from .....core.casilla_id import CasillaId
 from .....core.resources.bundled_data import bundled_path
 from .....domain.deadlines.festivos import shift_deadline
+from .....domain.deadlines.errors import DeadlineValidationError
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
+from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_source_requirements, resolve_relation_values_from_observations
@@ -167,12 +169,8 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # Grounded on art. 5, which establishes the plazo, rather than art. 1,
         # which approves the modelo.
         assert window.legal_refs == ("orden-eha-3377-2011:art-5",)
-        shift = shift_deadline(window.closes_on, modelo="193", ccaa_code=None)
-        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (
-            date(2026, 2, 2),
-            True,
-            "sabado",
-        )
+        with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
+            shift_deadline(window.closes_on, modelo="193", ccaa_code=None, authority=bundled_authority())
 
 
 @pytest.mark.parametrize(

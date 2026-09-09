@@ -146,6 +146,27 @@ def test_irnr_resolve_tipo_gravamen_resolves_dividend_baseline_rate() -> None:
     assert result.values["cuota_integra"] == Decimal("190.00")
 
 
+def test_irnr_resolve_tipo_gravamen_retains_selected_treaty_fact_provenance() -> None:
+    """A dated treaty lookup is visible in the computed formula lineage."""
+    snapshot = _current_m210_snapshot()
+
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs={
+            _M210_RENDIMIENTOS_INTEGROS_CASILLA: Decimal("1000"),
+            _M210_GASTOS_DEDUCIBLES_CASILLA: Decimal("0"),
+            _M210_RETENCION_PRACTICADA_CASILLA: Decimal("0"),
+        },
+        enum_binding_values={_M210_COUNTRY_BINDING: "BE"},
+        text_inputs={_M210_TIPO_RENTA_CASILLA: "dividend"},
+        date_context={"filing_period": date(2025, 12, 31)},
+    )
+
+    assert result.values[_M210_TIPO_GRAVAMEN_CASILLA] == Decimal("0.15")
+    entry = next(entry for entry in result.entries if entry.target_casilla_id == _M210_TIPO_GRAVAMEN_CASILLA)
+    assert any(ref.startswith("irnr.convenio.override:") for ref in entry.operand_refs)
+
+
 def test_keyed_bracket_resolution_rejects_overlapping_official_m210_rate_windows() -> None:
     """A contradictory rate row must not silently replace Art. 25.1.f's 19% dividend rate."""
     snapshot = _current_m210_snapshot()

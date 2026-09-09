@@ -220,18 +220,16 @@ def test_transaction_artifact_components_cannot_escape_the_workspace(tmp_path: P
     root.mkdir(parents=True)
     workspace.mkdir()
     (root / "c00001.toml").write_bytes(b"old\n")
-    arguments: dict[str, object] = {
-        "casillas_root": root,
-        "rendered": {root / "c00001.toml": "new\n"},
-        "verifier": _verify({"c00001.toml": b"new\n"}),
-        "journal_name": ".journal.json",
-        "stage_prefix": ".stage-",
-        "backup_prefix": ".backup-",
-        "transaction_root": workspace,
-    }
-    arguments[keyword] = value
 
     with pytest.raises(RegistryValidationError, match="single path component"):
-        subject.publish_verified_casilla_tree(**arguments)  # type: ignore[arg-type]
+        subject.publish_verified_casilla_tree(
+            casillas_root=root,
+            rendered={root / "c00001.toml": "new\n"},
+            verifier=_verify({"c00001.toml": b"new\n"}),
+            journal_name=value if keyword == "journal_name" else ".journal.json",
+            stage_prefix=value if keyword == "stage_prefix" else ".stage-",
+            backup_prefix=value if keyword == "backup_prefix" else ".backup-",
+            transaction_root=workspace,
+        )
     assert _tree(root) == {"c00001.toml": b"old\n"}
     assert not tuple(workspace.iterdir())

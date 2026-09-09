@@ -15,7 +15,7 @@ from itertools import pairwise
 import pytest
 
 from ..errors import IvaRateNotFoundError, IvaRateOverlapError
-from ..lookup import lookup_rate, rate_kinds_for_declared_rate
+from ..lookup import lookup_rate, rate_kinds_for_declared_rate, resolve_iva_rate
 from ..rates import load_iva_rate_table
 from ..schema import EUMemberState, IvaRateKind
 
@@ -35,6 +35,27 @@ def test_es_general_2024_rate() -> None:
     assert rate.pct == Decimal("21")
     assert rate.effective_from == date(2012, 9, 1)
     assert rate.effective_until == date(2024, 12, 31)
+
+
+def test_rate_lookup_retains_the_matched_authority_provenance() -> None:
+    """The public projection is backed by the exact coexisting fact variant."""
+    resolved = resolve_iva_rate(
+        EUMemberState.ES,
+        IvaRateKind.SUPER_REDUCED,
+        date(2024, 11, 1),
+        rate_role="coexisting-2",
+    )
+
+    assert resolved.fact_id == "iva-rate-schedule"
+    assert resolved.date_axis.value == "devengo_date"
+    assert resolved.effective_date == date(2024, 11, 1)
+    assert {selector.name: selector.value for selector in resolved.matched_selectors} == {
+        "member_state": "es",
+        "kind": "super_reduced",
+        "rate_role": "coexisting-2",
+    }
+    assert resolved.legal_refs
+    assert len(resolved.authority_digest) == 64
 
 
 def test_es_general_2025_rate() -> None:

@@ -103,6 +103,7 @@ from __future__ import annotations
 import collections
 import sys
 from dataclasses import dataclass
+from typing import Mapping, Protocol
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
@@ -430,8 +431,34 @@ def revision_findings(
     return tuple(findings)
 
 
+class _ScreenableModeloDefinition(Protocol):
+    """The minimal shape `screen_authority` reads off one modelo definition."""
+
+    @property
+    def revisions(self) -> Mapping[str, object]: ...
+
+
+class _ScreenableAuthority(Protocol):
+    """The minimal shape `screen_authority` reads off a registry authority.
+
+    Deliberately structural rather than the concrete
+    :class:`ValidatedRegistryAuthority`: a fake exercising the failure path
+    below cannot subclass that ``slots=True`` dataclass without also
+    reproducing its ``modelo()`` return type, which would be a genuine
+    Liskov violation. This screen calls ``modelo()`` to enumerate a
+    definition's revisions, and its non-concrete fallback touches
+    ``catalogues`` only to trigger the same failure a concrete authority
+    would raise from deeper inside `revision_findings`.
+    """
+
+    def modelo(self, modelo_id: str) -> _ScreenableModeloDefinition: ...
+
+    @property
+    def catalogues(self) -> object: ...
+
+
 def screen_authority(
-    authority: ValidatedRegistryAuthority, modelo_ids: tuple[str, ...]
+    authority: _ScreenableAuthority, modelo_ids: tuple[str, ...]
 ) -> tuple[PointerWireFactFinding, ...]:
     """Screen every revision that can produce render inputs.
 
@@ -468,7 +495,21 @@ def screen_authority(
         for revision_id in definition.revisions:
             attempted += 1
             try:
-                findings.extend(revision_findings(authority, modelo=modelo_id, revision=str(revision_id)))
+                if isinstance(authority, ValidatedRegistryAuthority):
+                    findings.extend(revision_findings(authority, modelo=modelo_id, revision=str(revision_id)))
+                else:
+                    # A non-concrete authority reaches this screen only from a
+                    # test double exercising the failure path (a real corpus
+                    # walk always carries the concrete authority). `revision_findings`
+                    # is typed against the concrete authority because it is a
+                    # heavily-typed real render-input contract; touching
+                    # `.catalogues` here is exactly where such a double is built
+                    # to raise, mirroring `revision_findings`'s own first access.
+                    _ = authority.catalogues
+                    raise AssertionError(
+                        f"{modelo_id}/{revision_id}: non-concrete authority's `.catalogues` "
+                        "access did not raise, so this fallback has nothing to classify"
+                    )
             except RegistryValidationError as error:
                 # Ordered ABOVE the broad handler on purpose: this is a subclass
                 # of ValueError, so the handler below would otherwise claim it.

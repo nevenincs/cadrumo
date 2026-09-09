@@ -11,7 +11,11 @@ from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.loader import load_registry_tree
 
 from ..pipeline._export_tree import render_complete_export_tree
-from ..pipeline.record_design_intermediate import RecordDesignIntermediate, load_record_design_intermediate
+from ..pipeline.record_design_intermediate import (
+    RecordDesignIntermediate,
+    RecordDesignIntermediateField,
+    load_record_design_intermediate,
+)
 from ..pipeline.render_check import GeneratedExportBootstrapTransport, revision_render_inputs
 from ..pipeline.semantic_map import (
     SemanticMapEntry,
@@ -128,8 +132,10 @@ def _design(source_ref: str, *, filing_year: int, epoch: str) -> RecordDesignInt
     )
 
 
-def _field_index(design: RecordDesignIntermediate) -> dict[tuple[str, str], object]:
-    return {(sheet.record_identity, field.source_cell): field for sheet in design.sheets for field in sheet.fields}
+def _field_index(design: RecordDesignIntermediate) -> dict[tuple[str, str], RecordDesignIntermediateField]:
+    return {
+        (sheet.record_identity, field.source_cell or ""): field for sheet in design.sheets for field in sheet.fields
+    }
 
 
 def _normalized_reused_owner(

@@ -379,7 +379,11 @@ def _title_from_label(label: str) -> str | None:
     if not core:
         return None
     wrapped = _WRAPPING_QUOTES.match(core)
-    return (wrapped.group("title") if wrapped else core).strip()
+    if wrapped is None:
+        return core.strip()
+    title = wrapped.group("title")
+    assert isinstance(title, str)
+    return title.strip()
 
 
 def extract_occurrences(

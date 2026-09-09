@@ -15,6 +15,7 @@ from cadrumo.core.filing_projection_ref import (
 )
 from cadrumo.domain.calculations.registry.authority import bundled_authority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ..pipeline import _semantic_map_validation
 from ..pipeline._semantic_map_validation import (
@@ -242,7 +243,7 @@ def _entry(
     }
 
 
-def _real_source_sha256(snapshot, source_ref: str = "aeat-dr-200-2025") -> str:
+def _real_source_sha256(snapshot: RegistryRevisionInspection, source_ref: str = "aeat-dr-200-2025") -> str:
     return snapshot.sources[source_ref].sha256
 
 

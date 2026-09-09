@@ -39,6 +39,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -116,23 +117,25 @@ def default_invoice_extraction_period() -> Period:
 def _overlapping_iva_rate_pcts(period: Period) -> tuple[Decimal, ...]:
     """Return every registered Spanish IVA percentage overlapping ``period``.
 
-    The authority is read at CALL time, not bound at import. A module-level
-    ``from ... import load_iva_rate_table`` captures the function object once, so
-    a registry change reaching the authority afterwards would not reach this
-    resolver -- the compiled prompt would keep enumerating the rates that were in
-    force when the process started. The same import-time-snapshot trap already
-    caught the template scanner in this feature once.
+    Every lookup goes through the retained typed IVA facade at the exact devengo
+    day being considered. Iterating the period makes a mid-period transition
+    visible without reading the legacy table or taking a consumer-local
+    authority snapshot.
     """
-    from ...domain.iva.rates import load_iva_rate_table
-    from ...domain.iva.schema import EUMemberState
+    from ...domain.iva.errors import IvaRateNotFoundError
+    from ...domain.iva.lookup import coexisting_tier_rates, lookup_rate
+    from ...domain.iva.schema import EUMemberState, IvaRateKind
 
-    start = period.start_date
-    end = period.end_date
-    overlapping = {
-        record.pct
-        for record in load_iva_rate_table().get(EUMemberState.ES, ())
-        if record.effective_from <= end and (record.effective_until is None or record.effective_until >= start)
-    }
+    overlapping: set[Decimal] = set()
+    on_date = period.start_date
+    while on_date <= period.end_date:
+        for kind in IvaRateKind:
+            try:
+                overlapping.add(lookup_rate(EUMemberState.ES, kind, on_date).pct)
+            except IvaRateNotFoundError:
+                continue
+            overlapping.update(rate.pct for rate in coexisting_tier_rates(EUMemberState.ES, kind, on_date))
+        on_date += timedelta(days=1)
     return tuple(sorted(overlapping))
 
 

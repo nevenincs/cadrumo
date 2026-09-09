@@ -525,6 +525,7 @@ def resolve_invoice_family_row_values(
     validate_selector: Callable[[DataBindingDefinition], _InvoiceSelector],
     observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
     cohort_by_source: bool,
+    m347_threshold_filter: Callable[[tuple[InvoiceObservation, ...]], tuple[InvoiceObservation, ...]],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer bindings on a :class:`ModeloRevision` for one invoice family into per-row values.
 
@@ -555,7 +556,13 @@ def resolve_invoice_family_row_values(
     )
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for members in cohorts.values():
-        resolved.update(_resolve_invoice_row_cohort(members, observations_for_binding))
+        resolved.update(
+            _resolve_invoice_row_cohort(
+                members,
+                observations_for_binding,
+                m347_threshold_filter=m347_threshold_filter,
+            ),
+        )
     return resolved
 
 
@@ -610,6 +617,8 @@ def _invoice_row_cohort_key(
 def _resolve_invoice_row_cohort(
     members: _InvoiceRowCohortMembers,
     observations_for_binding: Callable[[DataBindingDefinition], tuple[InvoiceObservation, ...]],
+    *,
+    m347_threshold_filter: Callable[[tuple[InvoiceObservation, ...]], tuple[InvoiceObservation, ...]],
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Materialize one cohort and project each member's requested row field."""
     sample_binding, sample_selector = members[0]
@@ -624,7 +633,7 @@ def _resolve_invoice_row_cohort(
     rows = build_invoice_rows(
         grouping,
         scope_filtered,
-        m347_threshold_filter=_m347_row_family_threshold_filter,
+        m347_threshold_filter=m347_threshold_filter,
     )
     resolved: dict[tuple[BindingId, int], Decimal | str] = {}
     for binding, selector in members:
@@ -646,6 +655,8 @@ def _resolve_invoice_row_cohort(
 def resolve_invoice_binding_values(
     revision: ModeloRevision,
     observations: Iterable[InvoiceObservation],
+    *,
+    effective_date: date | None = None,
 ) -> dict[BindingId, Decimal]:
     """Resolve scalar invoice-source bindings into Decimal aggregates.
 
@@ -655,9 +666,15 @@ def resolve_invoice_binding_values(
     Args:
         revision: The :class:`ModeloRevision` whose bindings are resolved.
         observations: Invoice ledger lines to aggregate over.
+        effective_date: Filing-period date required when the revision contains
+            M347 declarante-summary threshold bindings; otherwise unused.
     """
     available = tuple(observations)
-    m347_summary_values, invoice_family_revision = _resolve_m347_declarante_summary_values(revision, available)
+    m347_summary_values, invoice_family_revision = _resolve_m347_declarante_summary_values(
+        revision,
+        available,
+        effective_date=effective_date,
+    )
     invoice_family_values = resolve_invoice_family_scalar_values(
         invoice_family_revision,
         source_kinds=INVOICE_BINDING_SOURCE_KINDS,
@@ -670,6 +687,8 @@ def resolve_invoice_binding_values(
 def resolve_invoice_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[InvoiceObservation],
+    *,
+    effective_date: date | None = None,
 ) -> dict[tuple[BindingId, int], Decimal | str]:
     """Resolve row-producer invoice bindings into per-row indexed values.
 
@@ -685,6 +704,8 @@ def resolve_invoice_binding_row_values(
         revision: The :class:`ModeloRevision` whose row-producer bindings to resolve.
         observations: Typed :class:`InvoiceObservation` rows the row-producer
             bindings group, filter, and aggregate into indexed row values.
+        effective_date: Filing-period date required when a ``contraparte_clave``
+            row family needs the M347 declaration threshold; otherwise unused.
     """
     available = tuple(observations)
     rows = resolve_invoice_family_row_values(
@@ -693,6 +714,10 @@ def resolve_invoice_binding_row_values(
         validate_selector=_validated_invoice_selector,
         observations_for_binding=lambda binding: _observations_for_binding_source(available, binding),
         cohort_by_source=True,
+        m347_threshold_filter=lambda candidates: _m347_row_family_threshold_filter(
+            candidates,
+            effective_date=_require_m347_effective_date(effective_date),
+        ),
     )
     return m349_public_row_union(normalise_m349_nif_export_rows(rows))
 
@@ -721,6 +746,8 @@ def _observations_for_binding_source(
 def _resolve_m347_declarante_summary_values(
     revision: ModeloRevision,
     available: tuple[InvoiceObservation, ...],
+    *,
+    effective_date: date | None = None,
 ) -> tuple[dict[BindingId, Decimal], ModeloRevision]:
     summary_bindings: list[DataBindingDefinition] = []
     invoice_family_bindings: list[DataBindingDefinition] = []
@@ -737,7 +764,10 @@ def _resolve_m347_declarante_summary_values(
     if not summary_bindings:
         return {}, revision
 
-    declarable_party_ids = _m347_declarable_party_ids(available)
+    declarable_party_ids = _m347_declarable_party_ids(
+        available,
+        effective_date=_require_m347_effective_date(effective_date),
+    )
     thresholded = tuple(observation for observation in available if observation.party_tax_id in declarable_party_ids)
     resolved: dict[BindingId, Decimal] = {}
     for binding in summary_bindings:
@@ -750,17 +780,23 @@ def _resolve_m347_declarante_summary_values(
     return resolved, revision.model_copy(update={"bindings": tuple(invoice_family_bindings)})
 
 
-def _m347_declarable_party_ids(observations: tuple[InvoiceObservation, ...]) -> frozenset[str]:
+def _m347_declarable_party_ids(
+    observations: tuple[InvoiceObservation, ...],
+    *,
+    effective_date: date,
+) -> frozenset[str]:
     totals: dict[str, Decimal] = {}
     for observation in observations:
         totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
             observation,
         )
-    return m347_declarable_party_ids(totals)
+    return m347_declarable_party_ids(totals, effective_date=effective_date)
 
 
 def _m347_row_family_threshold_filter(
     observations: tuple[InvoiceObservation, ...],
+    *,
+    effective_date: date,
 ) -> tuple[InvoiceObservation, ...]:
     """Filter the per-row family's observations, clave C judged on its own floor.
 
@@ -783,14 +819,23 @@ def _m347_row_family_threshold_filter(
         totals[observation.party_tax_id] = totals.get(observation.party_tax_id, Decimal("0")) + _invoice_total_amount(
             observation,
         )
-    clave_c_declarable = m347_clave_c_declarable_party_ids(clave_c_totals)
-    general_declarable = m347_declarable_party_ids(general_totals)
+    clave_c_declarable = m347_clave_c_declarable_party_ids(clave_c_totals, effective_date=effective_date)
+    general_declarable = m347_declarable_party_ids(general_totals, effective_date=effective_date)
     return tuple(
         observation
         for observation in observations
         if (observation.operation_clave == "C" and observation.party_tax_id in clave_c_declarable)
         or (observation.operation_clave != "C" and observation.party_tax_id in general_declarable)
     )
+
+
+def _require_m347_effective_date(effective_date: date | None) -> date:
+    """Refuse M347 threshold resolution unless its filing-period date is stated."""
+    if effective_date is None:
+        raise RegistryValidationError(
+            "M347 invoice threshold resolution requires an explicit effective_date",
+        )
+    return effective_date
 
 
 def _invoice_total_amount(observation: InvoiceObservation) -> Decimal:

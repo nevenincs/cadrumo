@@ -559,14 +559,48 @@ def test_required_text_slot_absent_still_refuses(absent: object) -> None:
         render_fixed_width_export_field(field, absent)
 
 
-def test_absent_optional_signed_numeric_keeps_its_sign_marker_slot() -> None:
-    """A signed field's leading marker byte is never consumed by the zero fill."""
+def test_an_absent_signed_numeric_is_filled_with_zeros_and_no_sign_marker() -> None:
+    """A non-negative signed slot is all digits; the sign reserves no byte.
+
+    AEAT's "Disenos de registro" manual states that numeric fields are filled
+    with zeros on the left and carried SIN SIGNOS, and that only NEGATIVE amounts
+    are preceded by the character N. A blank belongs to alphanumeric fields.
+
+    This previously asserted a leading blank, which is what the renderer used to
+    emit and what AEAT does not authorise; a filing carrying it put a space where
+    the official format specifies a digit.
+    """
     field = _field(data_type="money", signed=True, required=False, length=17)
 
     rendered = render_fixed_width_export_field(field, None)
 
-    assert rendered == " " + "0" * 16
+    assert rendered == "0" * 17
     assert parse_fixed_width_export_field(field, rendered) == Decimal(0)
+
+
+def test_a_negative_signed_numeric_is_preceded_by_n_which_displaces_a_digit() -> None:
+    """The marker takes the leading position from the magnitude, not an extra byte."""
+    field = _field(data_type="money", signed=True, required=True, length=17)
+
+    rendered = render_fixed_width_export_field(field, Decimal("-1000.50"))
+
+    assert rendered == "N" + "100050".rjust(16, "0")
+    assert parse_fixed_width_export_field(field, rendered) == Decimal("-1000.50")
+
+
+def test_a_non_negative_signed_numeric_uses_its_whole_width_for_digits() -> None:
+    """Fifteen integer digits fit a seventeen-byte slot when the value is positive.
+
+    The corporate-tax design states exactly this: "15 enteros (o N + 14) y 2
+    decimales". Reserving a sign byte unconditionally made the stated capacity
+    unrepresentable.
+    """
+    field = _field(data_type="money", signed=True, required=True, length=17)
+
+    rendered = render_fixed_width_export_field(field, Decimal("999999999999999.99"))
+
+    assert rendered == "9" * 17
+    assert parse_fixed_width_export_field(field, rendered) == Decimal("999999999999999.99")
 
 
 def test_absent_optional_numeric_slot_parses_back_as_its_declared_zero() -> None:

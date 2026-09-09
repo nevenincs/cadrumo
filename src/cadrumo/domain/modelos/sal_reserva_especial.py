@@ -11,9 +11,12 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ...core.external_constants import SAL_RESERVA_CAPITAL_MULTIPLE, SAL_RESERVA_DOTACION_RATE
 from ...core.money.rounding import CENT, round_to_cents
 from .errors import PensionReduccionError
+from .modelo_fact_context import ModeloFactResolutionContext
+
+_SAL_RESERVA_DOTACION_RATE_FACT_ID = "sal-special-reserve-allocation-rate"
+_SAL_RESERVA_CAPITAL_MULTIPLE_FACT_ID = "sal-special-reserve-capital-multiple"
 
 
 def compute_sal_reserva_especial_dotacion(
@@ -21,6 +24,7 @@ def compute_sal_reserva_especial_dotacion(
     beneficio_neto: Decimal,
     reserva_dotada: Decimal,
     capital_social: Decimal,
+    context: ModeloFactResolutionContext,
 ) -> Decimal:
     """Compute the Ley 44/2015 art. 14 SAL/SLL reserva especial dotacion.
 
@@ -50,9 +54,9 @@ def compute_sal_reserva_especial_dotacion(
             context={"field": "reserva_dotada", "value": str(reserva_dotada)},
         )
 
-    double_capital = round_to_cents(capital_social * SAL_RESERVA_CAPITAL_MULTIPLE)
+    double_capital = round_to_cents(capital_social * context.decimal(_SAL_RESERVA_CAPITAL_MULTIPLE_FACT_ID))
     minimum_reserve_above_double = double_capital + CENT
     headroom = max(Decimal("0.00"), minimum_reserve_above_double - reserva_dotada)
-    dotacion_obligatoria = round_to_cents(beneficio_neto * SAL_RESERVA_DOTACION_RATE)
+    dotacion_obligatoria = round_to_cents(beneficio_neto * context.decimal(_SAL_RESERVA_DOTACION_RATE_FACT_ID))
     dotacion = min(dotacion_obligatoria, headroom)
     return round_to_cents(dotacion)

@@ -25,6 +25,7 @@ def test_external_constants_retirement_census_matches_live_source() -> None:
     declarations = ledger["declarations"]
     classifications = ledger["classifications"]
 
+    assert "classification" not in ledger
     assert len(declarations) == ledger["declaration_count"] == 37
     assert len(classifications) == ledger["declaration_count"]
     assert (

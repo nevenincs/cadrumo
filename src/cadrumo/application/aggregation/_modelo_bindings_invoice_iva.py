@@ -18,7 +18,7 @@ from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
-from ...domain.invoices.enums import IvaRate, iva_rate_kind, iva_rate_slot_percentage
+from ...domain.invoices.enums import IvaRate, iva_rate_kind, iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.iva.classification import InvoiceKind
@@ -740,12 +740,9 @@ def _recargo_rate_divergence(invoice: Invoice, *, devengo_date: date) -> _Recarg
     if line_index is None:
         return None
     line = invoice.lines[line_index]
-    # The line carries a rate SLOT, not a number, and the table is keyed on the
-    # number. Converted through the UNDATED derivation on purpose: the dated one
-    # re-asks whether the slot was in force, which the invoice validator has
-    # already established at construction, and asking it again here against a
-    # different date would refuse a line the record legitimately holds.
-    applied_rate = iva_rate_slot_percentage(line.iva_rate)
+    # The diagnostic has the same explicit devengo date as the recargo fact,
+    # so it resolves the persisted slot through the exact IVA authority fact.
+    applied_rate = iva_rate_percentage(line.iva_rate, devengo_date)
     if applied_rate is None:
         # Exempt and not-subject slots name no percentage, so there is no
         # pairing to look up and nothing to disagree with.

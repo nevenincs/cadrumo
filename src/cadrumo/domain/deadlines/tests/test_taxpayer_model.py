@@ -21,6 +21,10 @@ from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.period import Period
 from ...calculations.registry.applicability import derive_tax_route
 from ...calculations.registry.applicability_routes import TaxRoute
+from ...calculations.registry.authority import bundled_authority
+from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.schema_base import DateAxis
+from ..fact_context import DeadlineFactResolutionContext
 from ..models import (
     CrossPeriodGroupMemberRoster,
     EntityType,
@@ -39,6 +43,11 @@ from ..models import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+def _deadline_facts(filing_year: int) -> DeadlineFactResolutionContext:
+    coordinate = date(filing_year, 12, 31)
+    return DeadlineFactResolutionContext(bundled_authority(), coordinate, coordinate)
 
 
 def _fully_populated_taxpayer() -> TaxpayerProfile:
@@ -557,7 +566,13 @@ class TestMultiplePagadoresObligation:
             (None, None, False),
         )
         for pagadores_count, secondary_income, expected in cases:
-            assert evaluate_multiple_pagadores_obligation(pagadores_count, secondary_income) is expected, (
+            assert evaluate_multiple_pagadores_obligation(
+                pagadores_count,
+                secondary_income,
+                None,
+                filing_year=2024,
+                facts=_deadline_facts(2024),
+            ) is expected, (
                 pagadores_count,
                 secondary_income,
             )
@@ -600,12 +615,21 @@ class TestMultiplePagadoresReducedLimitSchedule:
             (2023, Decimal("15000")),
             (2024, Decimal("15876")),
             (2025, Decimal("15876")),
-            (2015, Decimal("14000")),
-            (2099, Decimal("15876")),
-            (None, Decimal("15876")),
         )
         for year, expected in cases:
-            assert resolve_multiple_pagadores_reduced_limit(year) == expected, year
+            assert resolve_multiple_pagadores_reduced_limit(year, facts=_deadline_facts(year)) == expected, year
+
+    @pytest.mark.parametrize("filing_year", (2015, 2027))
+    def test_reduced_limit_fails_closed_outside_the_published_mapping(self, filing_year: int) -> None:
+        with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
+            resolve_multiple_pagadores_reduced_limit(filing_year, facts=_deadline_facts(filing_year))
+
+    def test_reduced_limit_resolution_retains_mapping_provenance(self) -> None:
+        resolved = _deadline_facts(2024).resolved_mapping("lirpf-work-income-multiple-pagadores-reduced-limit")
+        assert resolved.date_axis is DateAxis.FILING_PERIOD
+        assert resolved.effective_date == date(2024, 12, 31)
+        assert resolved.legal_refs == ("ley-35-2006:art-96",)
+        assert resolved.source_refs
 
 
 class TestMultiplePagadoresObligationWithTotalIncome:
@@ -636,7 +660,8 @@ class TestMultiplePagadoresObligationWithTotalIncome:
                     pagadores_count,
                     secondary_income,
                     total_income,
-                    year,
+                    filing_year=year,
+                    facts=_deadline_facts(year),
                 )
                 is expected
             ), (

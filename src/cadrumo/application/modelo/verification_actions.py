@@ -48,7 +48,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Final
@@ -91,6 +91,7 @@ from ...domain.modelos.calculation_revision import (
     CalculationSourceIssue,
 )
 from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -1262,17 +1263,36 @@ def _append_revision_advisory_findings(
     profile: TaxpayerProfile,
     snapshot: RegistrySnapshot,
 ) -> None:
+    fact_coordinate = date(work_unit.filing_year, 12, 31)
+    modelo_fact_context = ModeloFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=fact_coordinate,
+        devengo_date=fact_coordinate,
+    )
     for finding in (
         _dt12_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
-        _art20_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
-        _art52_reduccion_advisory_finding(snapshot.revision, target.casilla_values),
+        _art20_reduccion_advisory_finding(
+            snapshot.revision,
+            target.casilla_values,
+            context=modelo_fact_context,
+        ),
+        _art52_reduccion_advisory_finding(
+            snapshot.revision,
+            target.casilla_values,
+            context=modelo_fact_context,
+        ),
         _dt12_antiquity_advisory_finding(snapshot.revision, target.casilla_values),
         _madrid_nacimiento_adopcion_advisory_finding_for_work_unit(
             snapshot,
             target.casilla_values,
             work_unit=work_unit,
         ),
-        _m210_convenio_lob_advisory_finding(snapshot, profile, target.input_values_by_casilla_id),
+        _m210_convenio_lob_advisory_finding(
+            snapshot,
+            profile,
+            target.input_values_by_casilla_id,
+            devengo_date=fact_coordinate,
+        ),
     ):
         if finding is not None:
             findings.append(finding)
@@ -1608,6 +1628,7 @@ def _append_unresolved_outcome_findings(
             profile=predicate_profile,
             snapshot=snapshot,
             year=work_unit.filing_year,
+            devengo_date=date(work_unit.filing_year, 12, 31),
             tipo_renta="",
             blocking_finding_observer=lambda finding, outcome: failures_by_finding_id.__setitem__(
                 id(finding),

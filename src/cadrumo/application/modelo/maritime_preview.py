@@ -29,6 +29,7 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from datetime import date
 from decimal import Decimal
 from typing import Literal
 
@@ -38,6 +39,7 @@ from ...application.calculations.maritime_exemption_service import (
 )
 from ...application.user_profile.projections import fact_value
 from ...core.parsing import parse_bool
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.renta.maritime_exemption import (
     MaritimeWorkerFacts,
     ProfileCompletenessError,
@@ -213,12 +215,17 @@ def preview_maritime_exemption_for_active_profile(
             Typed observation carrier stored on the preview.
     """
     facts = maritime_facts_from_active_profile()
+    authority = bundled_authority()
+    resolved_on = date.today()
     try:
         result = resolve_maritime_exemption(
             facts=facts,
             annual_salary=annual_salary,
             qualifying_days=qualifying_days,
             gross_navigation_income=gross_navigation_income,
+            authority=authority,
+            filing_period=resolved_on,
+            devengo_date=resolved_on,
         )
     except ProfileCompletenessError as exc:
         facts_without_retmar = replace(facts, retmar_registered=False)
@@ -227,6 +234,9 @@ def preview_maritime_exemption_for_active_profile(
             annual_salary=annual_salary,
             qualifying_days=qualifying_days,
             gross_navigation_income=gross_navigation_income,
+            authority=authority,
+            filing_period=resolved_on,
+            devengo_date=resolved_on,
         )
         return ModeloMaritimeExemptionPreview(
             facts=facts,

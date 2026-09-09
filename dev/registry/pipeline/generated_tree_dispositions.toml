@@ -28,6 +28,7 @@ modelo = "347"
 revision = "2011-2024"
 source_ref = "aeat-dr-347-2011"
 source_sha256 = "4cdfb401624e26abe3da3758ddcdcfc85b6b05ffa74e724b2d3f5eeb0c58e809"
+remedy = "repair_inputs"
 reason = """
 The shipped declarado record repeats over binding rows and carries nine
 binding-kind fields, so one authored row becomes one emitted record. A fresh
@@ -52,8 +53,270 @@ modelo = "347"
 revision = "2025-y-siguientes"
 source_ref = "aeat-dr-347-2025"
 source_sha256 = "14583ea5ee04441356c4572d30630d46bfe0818366e575ac186370dd3fe38361"
+remedy = "repair_inputs"
 reason = """
 Same defect as the earlier revision of this modelo, in the same declarado
 record. Must not be republished.
 """
 reconsideration_condition = "Remove this pin when the current semantic map reproduces the published binding_rows repeat and all per-row casilla identities."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "202"
+revision = "2019-2022"
+source_ref = "aeat-dr-202-2019"
+source_sha256 = "96160cf2a82a4e6f2c9c9848c6061b2cfe5c4877de7a455126704af86f3ac7db"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "202"
+revision = "2023-2024"
+source_ref = "aeat-dr-202-2023"
+source_sha256 = "1e4881439e25417df5a8584bffd7149ca0952e2df53963b19c0346572259bec7"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "202"
+revision = "2025-y-siguientes"
+source_ref = "aeat-dr-202-2025"
+source_sha256 = "04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "222"
+revision = "2025-y-siguientes"
+source_ref = "aeat-dr-222-2025"
+source_sha256 = "0a44cd6bcae3b6ecbdb7bba1e54ddfad519506b91545b655c8da8454a3a63f51"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "303"
+revision = "2022"
+source_ref = "aeat-dr-303-2022"
+source_sha256 = "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "303"
+revision = "2023"
+source_ref = "aeat-dr-303-2023"
+source_sha256 = "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "303"
+revision = "2024-desde-09-y-3t"
+source_ref = "aeat-dr-303-2024-late"
+source_sha256 = "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "303"
+revision = "2024-hasta-08-y-2t"
+source_ref = "aeat-dr-303-2024-early"
+source_sha256 = "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "303"
+revision = "2025"
+source_ref = "aeat-dr-303-2025"
+source_sha256 = "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+
+[[dispositions]]
+kind = "record_drift"
+modelo = "303"
+revision = "2026-y-siguientes"
+source_ref = "aeat-dr-303-2026"
+source_sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
+remedy = "republish"
+reason = """
+The shipped records declare these amounts unsigned while the official type
+column declares them signed, so a fresh render no longer reproduces the
+committed bytes. The difference is the defect being corrected, not drift away
+from a correct tree.
+
+The representation is now grounded. AEAT states the convention for every design:
+numeric fields are zero-filled and carried sin signos, and only negative amounts
+are preceded by the character N, which displaces the leading digit rather than
+claiming a byte. The generator therefore derives the sign from the type column
+instead of writing a constant.
+
+The tree must not be republished on the strength of that alone. Publication
+checks through the real authority and demands a filing-complete, reviewed
+revision, and rewriting shipped filing data is a per-revision decision rather
+than a consequence of a code fix.
+"""
+reconsideration_condition = "Remove this pin when the revision has been reviewed and republished with the sign derived from the official type column, so a fresh render reproduces the shipped bytes."
+

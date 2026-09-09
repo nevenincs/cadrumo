@@ -14,7 +14,7 @@ evidence a transition table would be authored from; the gate comes after the
 table, not before it.
 
 It reads the resolved surface through
-:func:`~cadrumo.domain.calculations.registry.export.resolved_export_endpoints`
+:func:`~dev.registry.maintenance_support.resolved_export_endpoints`
 and carries no walk of its own. A partial walk of that surface is the known
 defect mode on this codebase and has produced four wrong figures; the accessor's
 docstring enumerates the three linkage paths.

@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from ...core.descendant_relacion import ART_81_1_MATERNIDAD_RELACIONES
-from ...core.external_constants import DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR
 from .descendant_maternity import DescendantMaternityMixin
+from .family_fact_context import FamilyFactResolutionContext
 from .family_types import (
-    MAX_AGE_MENOR_TRES,
-    NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS,
     MinimoDescendientesThresholds,
     months_of_year_between,
 )
@@ -21,6 +19,7 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
         dependencia_assimilation_available: bool = False,
     ) -> int:
         """Art. 81.1 months the guardería increment prorates by in *filing_year*.
@@ -65,20 +64,24 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         if not self.is_eligible_ordinary(
             filing_year,
             thresholds=thresholds,
+            context=context,
             dependencia_assimilation_available=dependencia_assimilation_available,
         ):
             return 0
-        return len(self._guarderia_art_81_1_months(filing_year))
+        return len(self._guarderia_art_81_1_months(filing_year, context=context))
 
-    def _guarderia_art_81_1_months(self, filing_year: int) -> frozenset[int]:
+    def _guarderia_art_81_1_months(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> frozenset[int]:
         """The Art. 81.1 months, clipped to the increment's own requirement window."""
-        return frozenset(self.meses_madre_trabajo) & self._guarderia_requirement_months(filing_year)
+        return frozenset(self.meses_madre_trabajo) & self._guarderia_requirement_months(filing_year, context=context)
 
     def guarderia_simultaneous_meses(
         self,
         filing_year: int,
         *,
         thresholds: MinimoDescendientesThresholds,
+        context: FamilyFactResolutionContext,
         dependencia_assimilation_available: bool = False,
     ) -> int:
         """Months in which the Art. 81.1 AND Art. 81.2 requirements BOTH held.
@@ -105,35 +108,40 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         mother = self.guarderia_art_81_1_meses(
             filing_year,
             thresholds=thresholds,
+            context=context,
             dependencia_assimilation_available=dependencia_assimilation_available,
         )
         if mother <= 0:
             return 0
-        nursery = self.guarderia_qualifying_months(filing_year)
+        nursery = self.guarderia_qualifying_months(filing_year, context=context)
         if nursery is None:
-            return min(mother, self.guarderia_qualifying_meses(filing_year))
-        return len(self._guarderia_art_81_1_months(filing_year) & nursery)
+            return min(mother, self.guarderia_qualifying_meses(filing_year, context=context))
+        return len(self._guarderia_art_81_1_months(filing_year, context=context) & nursery)
 
-    def _guarderia_requirement_months(self, filing_year: int) -> frozenset[int]:
+    def _guarderia_requirement_months(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> frozenset[int]:
         """The Art. 81.1 requirement months for the increment: the deducción window without its age ceiling."""
         entitling = months_of_year_between(
             (self.birth_date.year, self.birth_date.month),
             (filing_year + 1, 1),
             filing_year,
-        ) | self._maternidad_entry_window_months(filing_year)
+        ) | self._maternidad_entry_window_months(filing_year, context=context)
         anchor = self.art_58_2_entry_date()
         if anchor is None:
             return entitling
         return frozenset(month for month in entitling if (filing_year, month) >= (anchor.year, anchor.month))
 
-    def maternidad_alta_posterior_increment_applies(self, filing_year: int) -> bool:
+    def maternidad_alta_posterior_increment_applies(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> bool:
         """Whether Art. 81.1's post-birth alta increment applies to this child in *filing_year*.
 
         Two conditions, both the operator's to supply and neither this method's
         to infer: a completion month must be declared
         (``alta_posterior_nacimiento_mes``), and *filing_year* must be at or
-        after :data:`~cadrumo.core.external_constants.DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR`
-        — the route did not exist before it, so a month recorded against an
+        after the ``lirpf-art-81-maternity-post-birth-enrollment-effective-year``
+        governed fact — the route did not exist before it, so a month recorded against an
         earlier filing carries no increment.
 
         Does not itself re-check :meth:`maternidad_contributing_meses`'s
@@ -143,10 +151,10 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         """
         return (
             self.alta_posterior_nacimiento_mes is not None
-            and filing_year >= DEDUCCION_MATERNIDAD_ALTA_POSTERIOR_FIRST_FILING_YEAR
+            and filing_year >= context.integer("lirpf-art-81-maternity-post-birth-enrollment-effective-year")
         )
 
-    def guarderia_contributing_spend(self, filing_year: int) -> int:
+    def guarderia_contributing_spend(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Art. 81.2 guardería spend this descendant contributes in *filing_year*.
 
         The THIRD BIRTHDAY IS NOT A BOUNDARY HERE, and that is the whole subtlety
@@ -191,20 +199,21 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         if not self.convive_con_contribuyente:
             return 0
         age_at_year_end = self.age_at_year_end(filing_year)
-        if age_at_year_end > MAX_AGE_MENOR_TRES:
+        maximum_age = context.integer("lirpf-art-58-under-three-maximum-age")
+        if age_at_year_end > maximum_age:
             return 0
         if self.gastos_guarderia_mensuales:
             # Every declared month counts in both periods: under three the child
             # qualifies throughout, and in the turning-three period the birthday
             # draws no line.
             return sum(entry.amount_euros for entry in self.gastos_guarderia_mensuales)
-        if age_at_year_end < MAX_AGE_MENOR_TRES:
+        if age_at_year_end < maximum_age:
             # An annual total needs no apportioning while the child is under
             # three for the whole period.
             return self.gastos_guarderia_euros
         return 0
 
-    def guarderia_qualifying_meses(self, filing_year: int) -> int:
+    def guarderia_qualifying_meses(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Art. 81.2 qualifying MONTH count for this descendant in *filing_year*.
 
         The proration basis for the increment's per-child cap, which the manual
@@ -252,15 +261,18 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         if not self.convive_con_contribuyente:
             return 0
         age_at_year_end = self.age_at_year_end(filing_year)
-        if age_at_year_end > MAX_AGE_MENOR_TRES:
+        maximum_age = context.integer("lirpf-art-58-under-three-maximum-age")
+        if age_at_year_end > maximum_age:
             return 0
         if self.gastos_guarderia_mensuales:
             return len(self.gastos_guarderia_mensuales)
-        if age_at_year_end < MAX_AGE_MENOR_TRES:
-            return self.age_eligible_guarderia_meses(filing_year)
+        if age_at_year_end < maximum_age:
+            return self.age_eligible_guarderia_meses(filing_year, context=context)
         return 0
 
-    def guarderia_qualifying_months(self, filing_year: int) -> frozenset[int] | None:
+    def guarderia_qualifying_months(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> frozenset[int] | None:
         """WHICH months this descendant's declared nursery spend covers, or ``None``.
 
         The Art. 81.2 half of the simultaneity intersection, as months rather
@@ -277,14 +289,14 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         """
         if not self.convive_con_contribuyente:
             return frozenset[int]()
-        if self.age_at_year_end(filing_year) > MAX_AGE_MENOR_TRES:
+        if self.age_at_year_end(filing_year) > context.integer("lirpf-art-58-under-three-maximum-age"):
             return frozenset[int]()
         if self.gastos_guarderia_mensuales:
             declared = frozenset(entry.month for entry in self.gastos_guarderia_mensuales)
-            return declared & self._segundo_ciclo_window(filing_year)
+            return declared & self._segundo_ciclo_window(filing_year, context=context)
         return None
 
-    def _segundo_ciclo_window(self, filing_year: int) -> frozenset[int]:
+    def _segundo_ciclo_window(self, filing_year: int, *, context: FamilyFactResolutionContext) -> frozenset[int]:
         """Months the Art. 81.2 gastos may fall in, bounded by the second-cycle ceiling.
 
         Art. 81.2 admits the gastos "hasta el mes anterior a aquel en el que PUEDA
@@ -309,13 +321,13 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         over-taxes; opening would over-grant, which under-declares. Between two
         wrong answers the recoverable one is the one the operator can see and fix.
         """
-        if self.age_at_year_end(filing_year) != MAX_AGE_MENOR_TRES:
+        if self.age_at_year_end(filing_year) != context.integer("lirpf-art-58-under-three-maximum-age"):
             return frozenset(range(1, 13))
         if self.segundo_ciclo_infantil_inicio_mes is None:
             return frozenset[int]()
         return frozenset(range(1, self.segundo_ciclo_infantil_inicio_mes))
 
-    def age_eligible_guarderia_meses(self, filing_year: int) -> int:
+    def age_eligible_guarderia_meses(self, filing_year: int, *, context: FamilyFactResolutionContext) -> int:
         """Months of *filing_year* in which this descendant was alive and under three.
 
         Computable from the birth date alone, which is why the Art. 81.2 side of
@@ -354,7 +366,7 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         if self.birth_date.year > filing_year:
             return 0
         first_month = self.birth_date.month if self.birth_date.year == filing_year else 1
-        third_birthday_year = self.birth_date.year + 3
+        third_birthday_year = self.birth_date.year + context.integer("lirpf-art-58-under-three-maximum-age")
         if third_birthday_year < filing_year:
             return 0
         # In the year the child turns three they are under three only until the
@@ -364,7 +376,7 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         last_month = self.birth_date.month - 1 if third_birthday_year == filing_year else 12
         return max(0, last_month - first_month + 1)
 
-    def guarderia_needs_monthly_detail(self, filing_year: int) -> bool:
+    def guarderia_needs_monthly_detail(self, filing_year: int, *, context: FamilyFactResolutionContext) -> bool:
         """True when only an annual total is on record for the turning-three period.
 
         The one state where declared spend contributes nothing purely because of
@@ -374,11 +386,11 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         """
         if not self.convive_con_contribuyente:
             return False
-        if self.age_at_year_end(filing_year) != MAX_AGE_MENOR_TRES:
+        if self.age_at_year_end(filing_year) != context.integer("lirpf-art-58-under-three-maximum-age"):
             return False
         return self.gastos_guarderia_euros > 0 and not self.gastos_guarderia_mensuales
 
-    def guarderia_needs_segundo_ciclo_month(self, filing_year: int) -> bool:
+    def guarderia_needs_segundo_ciclo_month(self, filing_year: int, *, context: FamilyFactResolutionContext) -> bool:
         """True when declared spend is withheld only for want of the second-cycle month.
 
         Fires on exactly the population the ceiling governs: a cohabiting child
@@ -396,13 +408,13 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         """
         if not self.convive_con_contribuyente:
             return False
-        if self.age_at_year_end(filing_year) != MAX_AGE_MENOR_TRES:
+        if self.age_at_year_end(filing_year) != context.integer("lirpf-art-58-under-three-maximum-age"):
             return False
         if not self.gastos_guarderia_mensuales:
             return False
         return self.segundo_ciclo_infantil_inicio_mes is None
 
-    def is_eligible_guarderia(self, filing_year: int) -> bool:
+    def is_eligible_guarderia(self, filing_year: int, *, context: FamilyFactResolutionContext) -> bool:
         """True when this descendant may carry an Art. 81.2 guardería increase at all.
 
         Wider than :meth:`is_eligible_menor_tres`, which tests age under three at
@@ -420,9 +432,11 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         """
         if not self.convive_con_contribuyente:
             return False
-        return self.age_at_year_end(filing_year) <= MAX_AGE_MENOR_TRES
+        return self.age_at_year_end(filing_year) <= context.integer("lirpf-art-58-under-three-maximum-age")
 
-    def is_eligible_minimo_incremento_menor_tres(self, filing_year: int) -> bool:
+    def is_eligible_minimo_incremento_menor_tres(
+        self, filing_year: int, *, context: FamilyFactResolutionContext
+    ) -> bool:
         """True when Art. 58.2 grants the bajo-3-años increase for this descendant.
 
         Two independent limbs, and the second is why this is separate from
@@ -457,10 +471,10 @@ class DescendantGuarderiaMixin(DescendantMaternityMixin):
         """
         if not self.convive_con_contribuyente:
             return False
-        if self.age_at_year_end(filing_year) < MAX_AGE_MENOR_TRES:
+        if self.age_at_year_end(filing_year) < context.integer("lirpf-art-58-under-three-maximum-age"):
             return True
         entry_date = self.art_58_2_entry_date()
         if entry_date is None:
             return False
         periods_since_entry = filing_year - entry_date.year
-        return 0 <= periods_since_entry <= NACIMIENTO_ADOPCION_APPLICABILITY_FOLLOWING_PERIODS
+        return 0 <= periods_since_entry <= context.integer("madrid-birth-adoption-following-periods")

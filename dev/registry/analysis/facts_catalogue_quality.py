@@ -7,20 +7,30 @@ conformance denominator.
 
 from __future__ import annotations
 
+import argparse
+import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.providers import (
+    FACT_PROVIDER_REGISTRATIONS,
     FactProviderRegistration,
     validate_fact_provider_registrations,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactVariant
 
-__all__ = ["FactQualityFinding", "FactQualityKind", "facts_catalogue_findings"]
+__all__ = [
+    "FactQualityFinding",
+    "FactQualityKind",
+    "facts_catalogue_findings",
+    "live_facts_catalogue_findings",
+    "main",
+]
 
 
 class FactQualityKind(StrEnum):
@@ -86,14 +96,19 @@ def _fact_findings(provider_id: str, fact: GovernedFact) -> list[FactQualityFind
                 )
             )
         cited = {citation.source_ref for citation in variant.source_citations}
-        if not variant.legal_refs or not variant.source_refs or cited != set(variant.source_refs):
+        source_lane_declared = bool(variant.source_refs or variant.source_citations)
+        source_lane_complete = bool(variant.source_refs) and cited == set(variant.source_refs)
+        legal_lane_complete = bool(variant.legal_refs)
+        if (source_lane_declared and not source_lane_complete) or (
+            not source_lane_declared and not legal_lane_complete
+        ):
             findings.append(
                 FactQualityFinding(
                     FactQualityKind.MISSING_PROVENANCE,
                     provider_id,
                     fact.fact_id,
                     variant.variant_id,
-                    "legal_refs, source_refs and citations must form a complete evidence set",
+                    "declare a legal_refs lane or a complete source_refs/source_citations lane",
                 )
             )
     for index, left in enumerate(fact.variants):
@@ -190,3 +205,55 @@ def facts_catalogue_findings(
                     variant_owners[variant.variant_id] = (provider_id, fact.fact_id)
             findings.extend(_fact_findings(provider_id, fact))
     return tuple(sorted(set(findings)))
+
+
+def live_facts_catalogue_findings(
+    registry_root: Path,
+    registrations: Iterable[FactProviderRegistration] = FACT_PROVIDER_REGISTRATIONS,
+) -> tuple[FactQualityFinding, ...]:
+    """Compile every live registered provider and evaluate its owned directories."""
+    frozen = tuple(registrations)
+    compiled: dict[str, tuple[GovernedFact, ...]] = {}
+    compile_findings: list[FactQualityFinding] = []
+    for registration in frozen:
+        try:
+            compiled[registration.provider_id] = registration.compile(registry_root)
+        except Exception as error:
+            compile_findings.append(
+                FactQualityFinding(
+                    FactQualityKind.INVALID_PROVIDER,
+                    registration.provider_id,
+                    detail=f"compile failed: {type(error).__name__}: {error}",
+                )
+            )
+    governed_directories = tuple(
+        directory
+        for registration in frozen
+        for directory in registration.owned_directories
+    )
+    return tuple(
+        sorted(
+            {
+                *compile_findings,
+                *facts_catalogue_findings(frozen, compiled, governed_directories),
+            }
+        )
+    )
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the blocking live facts structural gate."""
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
+    parser.add_argument("--registry-root", type=Path, default=bundled_path("registry", "aeat"))
+    args = parser.parse_args(argv)
+    findings = live_facts_catalogue_findings(args.registry_root)
+    for finding in findings:
+        sys.stdout.write(
+            f"{finding.kind} provider={finding.provider_id} fact={finding.fact_id} "
+            f"variant={finding.variant_id} detail={finding.detail}\n"
+        )
+    return 1 if findings else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

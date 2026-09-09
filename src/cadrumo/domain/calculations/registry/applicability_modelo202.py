@@ -6,19 +6,24 @@ INCN facts, then delegates to the raw-input modality rule used by calculation.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated, cast
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ....core.external_constants import MODELO_202_ART_40_3_INCN_THRESHOLD_EUR
 from ....core.modelo import Modelo
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...contribuyente.entity_type import EntityType
 from ...deadlines.models import TaxpayerProfile
 from .errors import RegistryFailureClassification, RegistryFailureCondition
+from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
 from .ids import LegalRefId
+from .schema_base import DateAxis
+
+if TYPE_CHECKING:
+    from .authority import ValidatedRegistryAuthority
 
 type _OperatorReason = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
 
@@ -27,6 +32,8 @@ _MODELO_202_MODALITY_LEGAL_REFS: tuple[LegalRefId, ...] = (
     "ley-27-2014:art-40-3",
 )
 """Scoped registry citation keys grounding the Modelo 202 modality gate."""
+
+_MODELO_202_ART_40_3_INCN_THRESHOLD_FACT_ID = "lis-art-40-3-incn-threshold"
 
 
 class Modelo202Modality(StrEnum):
@@ -47,6 +54,8 @@ class Modelo202ModalityVerdict(BaseModel):
     legal_refs: tuple[LegalRefId, ...] = Field(min_length=1)
     failure: RegistryFailureClassification | None = None
     """Domain facts for a boundary to project when the modality is incomplete."""
+    threshold_fact: ResolvedScalarFact | None = None
+    """Resolved statutory threshold, including the authority provenance used."""
 
 
 _MODELO_202_ART_40_3_MANDATORY_REASON = (
@@ -78,10 +87,44 @@ _MODELO_202_NOT_APPLICABLE_REASON = (
 )
 
 
+def resolve_modelo_202_art_40_3_incn_threshold(
+    *,
+    effective_date: date,
+    authority: "ValidatedRegistryAuthority | None" = None,
+) -> ResolvedScalarFact:
+    """Resolve the LIS art. 40.3 INCN threshold with complete authority provenance."""
+    if authority is None:
+        from .authority import bundled_authority
+
+        authority = bundled_authority()
+    resolved = authority.resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id=_MODELO_202_ART_40_3_INCN_THRESHOLD_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=effective_date,
+        ),
+    )
+    return cast("ResolvedScalarFact", resolved)
+
+
+def modelo_202_incn_threshold_decimal(threshold: ResolvedScalarFact) -> Decimal:
+    """Return the Modelo 202 INCN threshold only when the governed payload is decimal."""
+    value = threshold.payload.value
+    if not isinstance(value, Decimal):
+        from .errors import RegistryValidationError
+
+        raise RegistryValidationError(
+            f"Modelo 202 INCN threshold fact {threshold.fact_id!r} resolved non-decimal payload {value!r}",
+        )
+    return value
+
+
 def modelo_202_modality_from_inputs(
     *,
     entity_type: EntityType | None,
     incn_prior_12_months: Decimal | None,
+    effective_date: date | None = None,
+    authority: "ValidatedRegistryAuthority | None" = None,
 ) -> Modelo202ModalityVerdict:
     """Derive the Modelo 202 modality from the two raw inputs (entity type + INCN).
 
@@ -115,16 +158,22 @@ def modelo_202_modality_from_inputs(
                 },
             ),
         )
-    if incn_prior_12_months > MODELO_202_ART_40_3_INCN_THRESHOLD_EUR:
+    threshold_fact = resolve_modelo_202_art_40_3_incn_threshold(
+        effective_date=effective_date or date.today(),
+        authority=authority,
+    )
+    if incn_prior_12_months > modelo_202_incn_threshold_decimal(threshold_fact):
         return Modelo202ModalityVerdict(
             modality=Modelo202Modality.ART_40_3_MANDATORY,
             reason=_MODELO_202_ART_40_3_MANDATORY_REASON,
             legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
+            threshold_fact=threshold_fact,
         )
     return Modelo202ModalityVerdict(
         modality=Modelo202Modality.ART_40_2_OPTIONAL,
         reason=_MODELO_202_ART_40_2_OPTIONAL_REASON,
         legal_refs=_MODELO_202_MODALITY_LEGAL_REFS,
+        threshold_fact=threshold_fact,
     )
 
 
@@ -144,4 +193,7 @@ __all__ = [
     "Modelo202Modality",
     "Modelo202ModalityVerdict",
     "derive_modelo_202_modality",
+    "modelo_202_incn_threshold_decimal",
+    "modelo_202_modality_from_inputs",
+    "resolve_modelo_202_art_40_3_incn_threshold",
 ]

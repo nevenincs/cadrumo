@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
-from ....core.external_constants import M347_THRESHOLD_EUR
+from ...calculations.registry._m347_threshold import resolve_m347_counterparty_annual_threshold
 from ..calculation_revision import derive_calculation_revision_id
 from ..row_models import (
     Modelo184MemberRow,
@@ -146,8 +147,14 @@ class TestModelo347ContraparteRow:
         with pytest.raises((ValidationError, TypeError)):
             row.__setattr__("nif", "99999999Z")
 
-    def test_threshold_constant_matches_rd_1065_2007(self) -> None:
-        assert Decimal("3005.06") == M347_THRESHOLD_EUR
+    def test_threshold_fact_matches_rd_1065_2007_with_provenance(self) -> None:
+        threshold = resolve_m347_counterparty_annual_threshold(effective_date=date(2025, 12, 31))
+
+        assert threshold.fact_id == "declarations.m347.counterparty-annual-threshold"
+        assert threshold.payload.value == Decimal("3005.06")
+        assert threshold.legal_refs == ("rd-1065-2007:art-33", "orden-eha-3012-2008:art-1")
+        assert threshold.source_refs == ("aeat-modelo-347-procedure",)
+        assert threshold.source_citations
 
     def test_two_rows_distinguish_by_quarterly_importe(self) -> None:
         row1 = Modelo347ContraparteRow(nif="11111111A", importe_Q1=Decimal("5000"))

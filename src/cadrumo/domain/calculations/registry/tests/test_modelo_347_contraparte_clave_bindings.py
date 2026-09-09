@@ -30,6 +30,8 @@ from ._registry_schema_support import _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_M347_EFFECTIVE_DATE = date(2026, 12, 31)
+
 
 def _modelo_347_revision() -> ModeloRevision:
     modelo, _catalogues = _committed_modelo("347")
@@ -88,7 +90,7 @@ def test_a_purchase_and_a_sale_share_one_row_sequence_not_two_colliding_ones() -
         ),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     # Sorted by (country_code, party_tax_id, clave): (ES, A22222223, A), (ES, B11111112, B)
     assert resolved["modelo-347-contraparte-row-nif", 1] == "A22222223"
@@ -110,7 +112,7 @@ def test_a_real_multi_counterparty_declaration_emits_one_row_per_counterparty() 
         _observation(party="A22222223", country="ES", name="Cliente Dos SA", total="9000.00", clave="B"),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     # Sorted by (country_code, party_tax_id, clave): (ES, A22222223, B), (ES, B11111112, B)
     assert resolved["modelo-347-contraparte-row-nif", 1] == "A22222223"
@@ -128,7 +130,7 @@ def test_a_single_counterparty_still_resolves_to_exactly_one_row() -> None:
     revision = _modelo_347_revision()
     observations = (_observation(party="B11111112", country="ES", name="Cliente Uno SL", total="4000.00", clave="B"),)
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     row_indexes = {row_index for (_binding_id, row_index) in resolved}
     assert row_indexes == {1}
@@ -143,7 +145,7 @@ def test_an_unclassified_clave_contributes_no_row() -> None:
         _observation(party="B11111112", country="ES", name="Cliente Uno SL", total="4000.00", clave="B"),
     )
 
-    resolved = resolve_invoice_binding_row_values(revision, observations)
+    resolved = resolve_invoice_binding_row_values(revision, observations, effective_date=_M347_EFFECTIVE_DATE)
 
     row_indexes = {row_index for (_binding_id, row_index) in resolved}
     assert row_indexes == {1}

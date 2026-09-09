@@ -12,14 +12,15 @@ Expected values are grounded in:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ...calculations.registry.authority import bundled_authority
 from ...calculations.registry.bindings import CasillaObservation
+from ...calculations.registry.errors import RegistryValidationError
 from ..maritime_exemption import (
-    ART_7P_EXEMPTION_CAP_EUR,
     RENTA_EXENTA_CASILLA,
     MaritimeExemptionInactiveError,
     MaritimeWorkerFacts,
@@ -40,8 +41,11 @@ _ART_7P_LEGAL_REFS = ("ley-35-2006:art-7",)
 _REBECA_LEGAL_REFS = ("ley-19-1994:art-75",)
 _DA41_LEGAL_REFS = ("ley-35-2006:da-41",)
 _RETMAR_LEGAL_REFS = ("ley-35-2006:art-96",)
-_ART_7P_SOURCE_REFS = ("boe-lirpf-art-7-authority",)
-_REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-authority",)
+_ART_7P_SOURCE_REFS = ("boe-lirpf-statutory-facts",)
+_REBECA_SOURCE_REFS = ("boe-ley-19-1994-art-75-statutory-facts",)
+_AUTHORITY = bundled_authority()
+_FILING_PERIOD = date(2025, 12, 31)
+_DEVENGO_DATE = date(2025, 12, 31)
 
 _ART_7P_SELECTOR_CASES = (
     (
@@ -317,7 +321,7 @@ class TestCalculateArt7pExemption:
         )
         assert isinstance(obs, CasillaObservation)
         assert isinstance(obs.value, Decimal)
-        assert obs.value < ART_7P_EXEMPTION_CAP_EUR
+        assert obs.value < Decimal("60100")
         assert obs.value > Decimal("0")
 
     def test_cap_applied_when_formula_exceeds_60100(self) -> None:
@@ -328,7 +332,7 @@ class TestCalculateArt7pExemption:
             qualifying_days=365,
             facts=self._BASE_FACTS,
         )
-        assert obs.value == ART_7P_EXEMPTION_CAP_EUR
+        assert obs.value == Decimal("60100")
 
     def test_exactly_at_cap_is_not_reduced(self) -> None:
         # annual_salary = 60100, qualifying_days = 365: formula = 60100 EUR
@@ -337,7 +341,7 @@ class TestCalculateArt7pExemption:
             qualifying_days=365,
             facts=self._BASE_FACTS,
         )
-        assert obs.value == ART_7P_EXEMPTION_CAP_EUR
+        assert obs.value == Decimal("60100")
 
     def test_single_qualifying_day(self) -> None:
         # Edge-of-range prorate (1 qualifying day). No published worked
@@ -351,7 +355,7 @@ class TestCalculateArt7pExemption:
         )
         assert isinstance(obs.value, Decimal)
         assert obs.value > Decimal("0")
-        assert obs.value < ART_7P_EXEMPTION_CAP_EUR
+        assert obs.value < Decimal("60100")
 
     def test_observation_carries_art7p_legal_refs(self) -> None:
         # Close gate: CasillaObservation.legal_refs must carry the canonical
@@ -569,6 +573,38 @@ def test_rebeca_legal_refs_contain_no_wrong_provision() -> None:
         facts=facts,
     )
     assert obs.legal_refs == _REBECA_LEGAL_REFS
+
+
+def test_calculations_resolve_fact_specific_temporal_axes_and_provenance() -> None:
+    art7p = calculate_art_7p_exemption(
+        annual_salary=Decimal("73000"),
+        qualifying_days=365,
+        facts=MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_flag="foreign"),
+        authority=_AUTHORITY,
+        filing_period=_FILING_PERIOD,
+    )
+    rebeca = calculate_rebeca_exemption(
+        gross_navigation_income=Decimal("30000"),
+        facts=MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_registry=VesselRegistry.REBECA),
+        authority=_AUTHORITY,
+        devengo_date=_DEVENGO_DATE,
+    )
+
+    assert art7p.value == Decimal("60100")
+    assert art7p.source_refs == _ART_7P_SOURCE_REFS
+    assert rebeca.value == Decimal("15000")
+    assert rebeca.source_refs == _REBECA_SOURCE_REFS
+
+
+def test_art7p_resolution_fails_closed_outside_fact_temporal_coverage() -> None:
+    with pytest.raises(RegistryValidationError):
+        calculate_art_7p_exemption(
+            annual_salary=Decimal("73000"),
+            qualifying_days=365,
+            facts=MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_flag="foreign"),
+            authority=_AUTHORITY,
+            filing_period=date(1900, 1, 1),
+        )
 
 
 def test_runtime_legal_and_source_refs_resolve_to_bundled_catalogues() -> None:

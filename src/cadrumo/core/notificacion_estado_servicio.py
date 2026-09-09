@@ -38,8 +38,6 @@ from __future__ import annotations
 from datetime import date
 from enum import StrEnum
 
-from .external_constants import DEHU_RECHAZO_TACITO_DIAS_NATURALES
-
 
 class NotificacionEstadoServicio(StrEnum):
     """Service state of one electronic notification under Ley 39/2015 art. 43.2.
@@ -72,6 +70,7 @@ def resolve_notificacion_estado_servicio(
     fecha_notificacion: date | None,
     leida: bool | None,
     as_of: date,
+    tacit_rejection_natural_days: int,
 ) -> NotificacionEstadoServicio:
     """Return the art. 43.2 service state of one notification as of ``as_of``.
 
@@ -82,6 +81,8 @@ def resolve_notificacion_estado_servicio(
             carried no value, which is treated as not accessed.
         as_of: The date the window is evaluated against. Explicit so a
             projection is reproducible; never defaulted to today.
+        tacit_rejection_natural_days: The art. 43.2 window resolved by the
+            outer authority composition on its submission-date coordinate.
 
     Returns:
         The single :class:`NotificacionEstadoServicio` member describing this
@@ -98,7 +99,7 @@ def resolve_notificacion_estado_servicio(
     # A negative elapsed count means ``as_of`` precedes the puesta a disposición,
     # so the window has not opened; EN_PLAZO is correct for it.
     elapsed_dias_naturales = (as_of - fecha_notificacion).days
-    if elapsed_dias_naturales >= DEHU_RECHAZO_TACITO_DIAS_NATURALES:
+    if elapsed_dias_naturales >= tacit_rejection_natural_days:
         return NotificacionEstadoServicio.RECHAZO_TACITO
     return NotificacionEstadoServicio.EN_PLAZO
 

@@ -11,10 +11,12 @@ from .....core.aggregation import RetencionClave
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from .....domain.deadlines.festivos import shift_deadline
+from .....domain.deadlines.errors import DeadlineValidationError
 from .....tests.aeat_literal_fixtures import aeat_host
 from .....tests.registry_observations import registry_grounded_modelo_observation
 from .....tests.registry_snapshot import build_snapshot
 from .._validate import RegistryValidator
+from ..authority import bundled_authority
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import (
@@ -227,8 +229,12 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert window.closes_on == closes_on
     assert window.legal_refs == expected_legal_refs
     assert {"aeat-modelo-190-procedure", "boe-modelo-190-2025-form"} <= set(window.source_refs)
-    shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None)
-    assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
+    if window.closes_on.year == 2026:
+        with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
+            shift_deadline(window.closes_on, modelo="190", ccaa_code=None, authority=bundled_authority())
+    else:
+        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, authority=bundled_authority())
+        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
     # A close date that is NOT the statutory month-end has been moved off a
     # non-working day, and the only sanctioned reason to move it is AEAT's own
     # published calendar -- so such a window must cite the calendar it was read

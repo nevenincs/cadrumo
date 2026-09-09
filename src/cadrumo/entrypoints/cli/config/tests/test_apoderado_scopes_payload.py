@@ -3,9 +3,8 @@
 ``ApoderadoScopesListResult`` used to be an untyped ``extra="allow"`` shell.
 It now projects :class:`~cadrumo.domain.auth.apoderamientos.ApoderamientosCatalogue`
 directly: a non-blank ``catalogue_version`` and typed
-:class:`~cadrumo.entrypoints.cli.config_payloads.ApoderadoScopePayload` rows
-carrying the same uppercase/alphanumeric ``code`` invariant and bounded
-localized names the domain catalogue enforces.
+:class:`~cadrumo.domain.auth.apoderamientos.catalogue.ApoderadoScope` rows,
+without duplicating the domain catalogue's validation in the CLI transport.
 """
 
 from __future__ import annotations
@@ -14,8 +13,8 @@ import pytest
 from pydantic import ValidationError
 
 from .....core.json_contract import strict_round_trip
-from .....domain.auth.apoderamientos.catalogue import load_default_catalogue
-from ...config_payloads import ApoderadoScopePayload, ApoderadoScopesListResult
+from .....domain.auth.apoderamientos.catalogue import ApoderadoScope, load_default_catalogue
+from ...config_payloads import ApoderadoScopesListResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -56,8 +55,8 @@ def test_apoderado_scopes_list_result_refuses_unknown_top_level_field() -> None:
         ApoderadoScopesListResult.model_validate({"catalogue_version": "1", "scopes": [], "extra": 1})
 
 
-def test_apoderado_scope_payload_round_trips_valid_row() -> None:
-    row = ApoderadoScopePayload(code="IVA", name_es="IVA", name_en="VAT", modelo_codes=["303", "390"])
+def test_apoderado_scope_result_retains_the_domain_row_type() -> None:
+    row = ApoderadoScope(code="IVA", name_es="IVA", name_en="VAT", modelo_codes=("303", "390"))
 
     assert row.code == "IVA"
-    assert row.modelo_codes == ["303", "390"]
+    assert row.modelo_codes == ("303", "390")

@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Literal
 
@@ -38,7 +39,6 @@ from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogue
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.external_constants import M347_THRESHOLD_EUR
 from ...core.irnr import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
     M210_TIPO_RENTA_CODE_PROJECTION,
@@ -47,6 +47,7 @@ from ...core.irnr import (
 from ...core.modelo import Modelo
 from ...core.rescate_type import RescateType
 from ...core.resources.bundled_data import bundled_path
+from ...domain.calculations.registry.authority import bundled_authority
 from ...domain.calculations.registry.binding_selector_utils import boolean_binding_encoded_values
 from ...domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
@@ -79,6 +80,7 @@ from ...domain.modelos.dt12_reduccion import (
     dt12_regime_window_eligibility,
 )
 from ...domain.modelos.errors import ModeloError
+from ...domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ...domain.modelos.row_models import (
     Modelo184MemberRow,
     Modelo184ShareSumError,
@@ -493,9 +495,9 @@ def build_work_calculate_input_bundle(
     translated into semantic-role casilla values or backend-owned bindings by
     :func:`cadrumo.application.modelo.apply_calculation_shortcut_inputs`.
     """
-    _validate_detail_rows(detail_rows)
     catalogue, bucket_id = _capture_work_catalogue(work_unit_id)
     work_unit = _selected_work_unit(work_unit_id=work_unit_id, catalogue=catalogue, bucket_id=bucket_id)
+    _validate_detail_rows(detail_rows, effective_date=date(work_unit.filing_year, 12, 31))
     revision = _revision_for_work_unit(work_unit)
     casilla_inputs, text_casilla_inputs, m210_official_tipo_renta_code = _resolve_casilla_overrides(
         casilla_overrides,
@@ -507,6 +509,7 @@ def build_work_calculate_input_bundle(
         work_unit=work_unit,
         casilla_inputs=casilla_inputs,
         binding_values=binding_values,
+        fact_context=_modelo_fact_context(work_unit),
         prestacion_inss_exenta=prestacion_inss_exenta,
         rescate_plan_pensiones_capital=rescate_plan_pensiones_capital,
         rescate_plan_pensiones_aportaciones_pre_2007=rescate_plan_pensiones_aportaciones_pre_2007,
@@ -536,7 +539,7 @@ def build_work_calculate_input_bundle(
     )
 
 
-def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
+def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...], *, effective_date: date | None = None) -> None:
     member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
     try:
         validate_m184_member_share_sum(member_rows)
@@ -548,10 +551,10 @@ def _validate_detail_rows(rows: tuple[ModeloDetailRow, ...]) -> None:
 
     contraparte_rows = [row for row in rows if isinstance(row, Modelo347ContraparteRow)]
     try:
-        validate_m347_threshold(contraparte_rows)
+        validate_m347_threshold(contraparte_rows, effective_date=effective_date)
     except Modelo347ThresholdError as exc:
         raise ModeloCalculateDetailRowsError(
-            context={"nif": exc.nif, "total": str(exc.total), "threshold": str(M347_THRESHOLD_EUR)},
+            context={"nif": exc.nif, "total": str(exc.total), "threshold": str(exc.threshold.payload.value)},
             translated_message="application.modelo.errors.calculate_m347_threshold_not_met",
         ) from exc
 
@@ -1192,6 +1195,7 @@ def _pension_rescate_contributions(
     tipo: RescateType | None,
     contingencia_year: int | None,
     rescate_year: int | None,
+    fact_context: ModeloFactResolutionContext,
 ) -> tuple[dict[CasillaId, Decimal], list[CalculationSourceDiagnostic]]:
     """Resolve the DT 12ª pension-rescate reducción and its window advisories.
 
@@ -1214,6 +1218,7 @@ def _pension_rescate_contributions(
         gross_rescate=gross_rescate,
         aportaciones_pre_2007=resolved_pre_2007,
         aportaciones_totales=resolved_totales,
+        context=fact_context,
     )
     reduccion_casilla_id = _semantic_role_casilla_id(work_unit, _REDUCCION_TRABAJO_SEMANTIC_ROLE)
     inject, window_advisory = _dt12_window_decision(
@@ -1222,6 +1227,7 @@ def _pension_rescate_contributions(
             work_unit=work_unit,
             contingencia_year=contingencia_year,
             rescate_year=rescate_year,
+            fact_context=fact_context,
         ),
         reduccion_casilla_id=reduccion_casilla_id,
     )
@@ -1242,6 +1248,7 @@ def _sal_reserva_especial_contribution(
     beneficio_neto: Decimal | None,
     reserva_dotada: Decimal | None,
     capital_social: Decimal | None,
+    fact_context: ModeloFactResolutionContext,
 ) -> dict[CasillaId, Decimal]:
     """Resolve the SAL reserva-especial dotación into its semantic-role casilla."""
     supplied = _supplied_option_group(
@@ -1258,6 +1265,7 @@ def _sal_reserva_especial_contribution(
                 beneficio_neto=resolved_neto,
                 reserva_dotada=resolved_dotada,
                 capital_social=resolved_capital,
+                context=fact_context,
             )
         ),
     }
@@ -1268,6 +1276,7 @@ def apply_calculation_shortcut_inputs(
     work_unit: WorkUnit,
     casilla_inputs: Mapping[CasillaId, Decimal],
     binding_values: Mapping[BindingId, Decimal],
+    fact_context: ModeloFactResolutionContext,
     prestacion_inss_exenta: Decimal | None = None,
     rescate_plan_pensiones_capital: Decimal | None = None,
     rescate_plan_pensiones_aportaciones_pre_2007: Decimal | None = None,
@@ -1330,6 +1339,7 @@ def apply_calculation_shortcut_inputs(
         tipo=rescate_plan_pensiones_tipo,
         contingencia_year=rescate_plan_pensiones_contingencia_year,
         rescate_year=rescate_plan_pensiones_rescate_year,
+        fact_context=fact_context,
     )
     resolved_casilla_values.update(pension_casilla_values)
     advisories.extend(pension_advisories)
@@ -1340,6 +1350,7 @@ def apply_calculation_shortcut_inputs(
             beneficio_neto=sal_beneficio_neto,
             reserva_dotada=sal_reserva_dotada,
             capital_social=sal_capital_social,
+            fact_context=fact_context,
         ),
     )
 
@@ -1354,6 +1365,7 @@ def _dt12_window_verdict(
     work_unit: WorkUnit,
     contingencia_year: int | None,
     rescate_year: int | None,
+    fact_context: ModeloFactResolutionContext,
 ) -> Dt12WindowEligibility | None:
     """Evaluate the DT 12ª apartado-3 window when the contingencia year is declared.
 
@@ -1368,6 +1380,17 @@ def _dt12_window_verdict(
     return dt12_regime_window_eligibility(
         contingencia_year=contingencia_year,
         rescate_year=resolved_rescate_year,
+        context=fact_context,
+    )
+
+
+def _modelo_fact_context(work_unit: WorkUnit) -> ModeloFactResolutionContext:
+    """Compose the explicit filing/devengo coordinate for modelo scalar facts."""
+    coordinate = date(work_unit.filing_year, 12, 31)
+    return ModeloFactResolutionContext(
+        authority=bundled_authority(),
+        filing_period=coordinate,
+        devengo_date=coordinate,
     )
 
 

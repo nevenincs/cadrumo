@@ -8,10 +8,13 @@ provably absent for a modelo that is honestly not filed here.
 
 from __future__ import annotations
 
+from typing import override
+
 import pytest
 
 from cadrumo.application.modelo.registry_discovery import registry_modelo_codes
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority, bundled_authority
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..analysis.modelo_capability import capability_census, screen_authority
 
@@ -72,18 +75,27 @@ def test_a_filing_claim_with_no_layout_behind_it_is_reported(authority: Validate
     assert "claims_filing_without_layout" in finding_kinds
 
 
-class _SingleModeloAuthority:
+class _SingleModeloAuthority(ValidatedRegistryAuthority):
     """The narrowest thing the census reads: one modelo lookup.
 
     The census calls exactly ``authority.modelo(id)``, so a defect is shown to
     be caught by handing it a real definition carrying a constructed change
     rather than by mutating the shipped registry the whole suite reads.
+    Subclassing rather than duck-typing keeps this a real (though partial)
+    ``ValidatedRegistryAuthority``: unlike the analogous stand-in in
+    ``test_footnote_only_wire_facts.py``, ``modelo`` here returns the exact
+    same ``ModeloDefinition`` type the real method does, so overriding it is
+    not a Liskov violation.
     """
 
-    def __init__(self, definition) -> None:
-        self._definition = definition
+    __slots__ = ("_definition",)
+    _definition: ModeloDefinition
 
-    def modelo(self, modelo_id: str):
+    def __init__(self, definition: ModeloDefinition) -> None:
+        object.__setattr__(self, "_definition", definition)
+
+    @override
+    def modelo(self, modelo_id: str) -> ModeloDefinition:
         return self._definition
 
 

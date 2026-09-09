@@ -18,7 +18,6 @@ from datetime import date, timedelta
 import pytest
 
 from ... import core as core_facade
-from ..external_constants import DEHU_RECHAZO_TACITO_DIAS_NATURALES
 from ..notificacion_estado_servicio import NotificacionEstadoServicio, resolve_notificacion_estado_servicio
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -27,12 +26,15 @@ PUESTA_A_DISPOSICION = date(2026, 3, 2)
 """An arbitrary delivery date. Deliberately spans a weekend in every window
 below, so a dias-habiles implementation would disagree with these expectations."""
 
+_TACIT_REJECTION_NATURAL_DAYS = 10
+
 
 def _estado(*, elapsed_days: int, leida: bool | None = False) -> NotificacionEstadoServicio:
     return resolve_notificacion_estado_servicio(
         fecha_notificacion=PUESTA_A_DISPOSICION,
         leida=leida,
         as_of=PUESTA_A_DISPOSICION + timedelta(days=elapsed_days),
+        tacit_rejection_natural_days=_TACIT_REJECTION_NATURAL_DAYS,
     )
 
 
@@ -63,6 +65,7 @@ def test_an_undelivered_row_has_no_window() -> None:
             fecha_notificacion=None,
             leida=False,
             as_of=PUESTA_A_DISPOSICION,
+            tacit_rejection_natural_days=_TACIT_REJECTION_NATURAL_DAYS,
         )
         is NotificacionEstadoServicio.NO_ENTREGADA
     )
@@ -80,6 +83,7 @@ def test_an_undelivered_row_is_not_promoted_by_a_stray_access_flag() -> None:
             fecha_notificacion=None,
             leida=True,
             as_of=PUESTA_A_DISPOSICION,
+            tacit_rejection_natural_days=_TACIT_REJECTION_NATURAL_DAYS,
         )
         is NotificacionEstadoServicio.NO_ENTREGADA
     )
@@ -112,16 +116,10 @@ def test_an_as_of_before_delivery_has_not_opened_the_window() -> None:
     assert _estado(elapsed_days=-5) is NotificacionEstadoServicio.EN_PLAZO
 
 
-def test_the_boundary_is_the_pinned_statutory_constant() -> None:
-    """The window boundary is the pinned constant, not a literal in the function.
-
-    Anchors the boundary tests above to the grounded constant: if the constant
-    were re-pinned, the day-9 / day-10 expectations would be measuring a
-    different rule than the one production reads.
-    """
-    assert DEHU_RECHAZO_TACITO_DIAS_NATURALES == 10
-    assert _estado(elapsed_days=DEHU_RECHAZO_TACITO_DIAS_NATURALES - 1) is NotificacionEstadoServicio.EN_PLAZO
-    assert _estado(elapsed_days=DEHU_RECHAZO_TACITO_DIAS_NATURALES) is NotificacionEstadoServicio.RECHAZO_TACITO
+def test_the_boundary_is_the_injected_governed_fact_value() -> None:
+    """The core facade consumes its outer-composed legal parameter."""
+    assert _estado(elapsed_days=_TACIT_REJECTION_NATURAL_DAYS - 1) is NotificacionEstadoServicio.EN_PLAZO
+    assert _estado(elapsed_days=_TACIT_REJECTION_NATURAL_DAYS) is NotificacionEstadoServicio.RECHAZO_TACITO
 
 
 def test_the_day_ten_assertion_discriminates_against_an_off_by_one_boundary() -> None:
@@ -139,11 +137,11 @@ def test_the_day_ten_assertion_discriminates_against_an_off_by_one_boundary() ->
     """
 
     def off_by_one_reading(elapsed_days: int) -> NotificacionEstadoServicio:
-        if elapsed_days > DEHU_RECHAZO_TACITO_DIAS_NATURALES:
+        if elapsed_days > _TACIT_REJECTION_NATURAL_DAYS:
             return NotificacionEstadoServicio.RECHAZO_TACITO
         return NotificacionEstadoServicio.EN_PLAZO
 
-    at_boundary = DEHU_RECHAZO_TACITO_DIAS_NATURALES
+    at_boundary = _TACIT_REJECTION_NATURAL_DAYS
     assert _estado(elapsed_days=at_boundary) is not off_by_one_reading(at_boundary)
     assert _estado(elapsed_days=at_boundary - 1) is off_by_one_reading(at_boundary - 1)
     assert _estado(elapsed_days=at_boundary + 1) is off_by_one_reading(at_boundary + 1)

@@ -55,7 +55,7 @@ one casilla is correct there, and the pair together carries the value.
 Export fields are derived from bindings when a revision loads, so the authored
 collection holds template and inline fields only. Any figure about what an export
 carries must come from
-`cadrumo.domain.calculations.registry.export.resolved_export_endpoints`, which
+`dev.registry.maintenance_support.resolved_export_endpoints`, which
 returns the surface whole with all three paths unioned.
 
 This is not a style preference, and the declaration-hardening review produced

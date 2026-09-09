@@ -87,9 +87,9 @@ def derive_regulatory_literal_findings(
             continue
         symbols = _enclosing_symbols(tree)
         for node in ast.walk(tree):
-            condition = node.test if isinstance(node, ast.If) else node.subject if isinstance(node, ast.Match) else None
-            if condition is None:
+            if not isinstance(node, ast.If | ast.Match):
                 continue
+            condition = node.test if isinstance(node, ast.If) else node.subject
             modelos = _modelo_members(condition)
             literals = _numeric_literals(condition)
             if modelos and literals:

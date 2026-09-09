@@ -73,7 +73,7 @@ _RETENCION_RATE = Decimal("0.15")
 
 def _retention_invoice() -> Invoice:
     """A received professional invoice declaring both retencion fields."""
-    rate = iva_rate_percentage(IvaRate.RATE_21)
+    rate = iva_rate_percentage(IvaRate.RATE_21, date(2026, 1, 1))
     assert rate is not None
     line = InvoiceLine(
         description="Servicios profesionales",

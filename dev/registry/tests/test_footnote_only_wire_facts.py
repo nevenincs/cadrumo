@@ -37,6 +37,7 @@ from ..analysis.footnote_only_wire_facts import (
     ADJUDICATED_KINDS,
     KINDS,
     OUTSTANDING_KINDS,
+    PointerWireFactFinding,
     cell_adjudication,
     cell_applicability_reading,
     field_is_render_profile_eligible,
@@ -110,11 +111,11 @@ def authority() -> ValidatedRegistryAuthority:
 
 
 @pytest.fixture(scope="module")
-def modelo_200(authority: ValidatedRegistryAuthority) -> tuple[object, ...]:
+def modelo_200(authority: ValidatedRegistryAuthority) -> tuple[PointerWireFactFinding, ...]:
     return revision_findings(authority, modelo="200", revision="2025-y-siguientes")
 
 
-def test_the_screen_reports_the_footnoted_corporate_tax_amounts(modelo_200: tuple[object, ...]) -> None:
+def test_the_screen_reports_the_footnoted_corporate_tax_amounts(modelo_200: tuple[PointerWireFactFinding, ...]) -> None:
     """Modelo 200's pointer-only cells are found, and every row is identifiable.
 
     Held by the shape of a row rather than by the count, which moves whenever a
@@ -133,7 +134,7 @@ def test_the_screen_reports_the_footnoted_corporate_tax_amounts(modelo_200: tupl
 
 
 def test_every_reported_field_is_one_the_predicate_would_newly_admit(
-    authority: ValidatedRegistryAuthority, modelo_200: tuple[object, ...]
+    authority: ValidatedRegistryAuthority, modelo_200: tuple[PointerWireFactFinding, ...]
 ) -> None:
     """The population is exactly the fields the correction would add.
 
@@ -553,7 +554,22 @@ class _RevisionDefinition:
 
 
 class _AuthorityRaising:
-    """An authority whose revision walk ends in one given error."""
+    """An authority whose revision walk ends in one given error.
+
+    A real ``ValidatedRegistryAuthority`` cannot be made to raise from
+    ``catalogues`` without first assembling a whole validated snapshot, and
+    the classification under test is about the SCREEN's handling of the
+    error, not about producing it authentically. Subclassing was tried and
+    rejected: ``ValidatedRegistryAuthority`` is a ``slots=True`` dataclass
+    whose real ``modelo`` returns ``ModeloDefinition``, so overriding it with
+    ``_RevisionDefinition`` is a genuine Liskov violation, not a typing
+    technicality -- the two return types share almost no surface a caller
+    could rely on. `screen_authority`'s parameter stays declared as the
+    concrete authority type, which lives in
+    ``dev/registry/analysis/footnote_only_wire_facts.py`` outside this
+    partition; narrowing it to a structural protocol is the correct fix and
+    belongs there.
+    """
 
     def __init__(self, error: Exception) -> None:
         self._error = error

@@ -11,7 +11,12 @@ import pytest
 from cadrumo.domain.calculations.registry.facts.providers import FactProviderRegistration
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact
 
-from ..analysis.facts_catalogue_quality import FactQualityKind, facts_catalogue_findings
+from ..analysis.facts_catalogue_quality import (
+    FactQualityKind,
+    facts_catalogue_findings,
+    live_facts_catalogue_findings,
+    main,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -20,7 +25,7 @@ def _provider(provider_id: str, directory: str) -> FactProviderRegistration:
     return FactProviderRegistration(
         provider_id=provider_id,
         owned_directories=(directory,),
-        compile=lambda _root: (),
+        compile=lambda registry_root: (),
         collect_fingerprints=lambda _root: (),
         reset=lambda: None,
     )
@@ -59,6 +64,58 @@ def test_clean_facts_provider_catalogue_has_no_findings() -> None:
     fact = _fact("iva-rate", _variant("ordinary", date(2025, 1, 1)))
 
     assert facts_catalogue_findings((provider,), {"authored": (fact,)}, ("facts",)) == ()
+
+
+def test_complete_legal_only_and_source_only_provenance_lanes_are_accepted() -> None:
+    provider = _provider("authored", "facts")
+    legal_only = _fact(
+        "legal-only",
+        _variant("legal", date(2025, 1, 1), source_refs=(), citation_refs=()),
+    )
+    source_only_variant = _fact("source-only", _variant("source", date(2025, 1, 1))).variants[0].model_copy(
+        update={"legal_refs": ()},
+    )
+    source_only = _fact("source-only", _variant("source", date(2025, 1, 1))).model_copy(
+        update={"variants": (source_only_variant,)},
+    )
+
+    assert facts_catalogue_findings(
+        (provider,),
+        {"authored": (legal_only, source_only)},
+        ("facts",),
+    ) == ()
+
+
+def test_neither_partial_and_mismatched_provenance_lanes_are_rejected() -> None:
+    provider = _provider("authored", "facts")
+    base = _fact("broken", _variant("broken", date(2025, 1, 1)))
+    variant = base.variants[0]
+    neither = base.model_copy(
+        update={
+            "variants": (
+                variant.model_copy(update={"legal_refs": (), "source_refs": (), "source_citations": ()}),
+            ),
+        },
+    )
+    partial = _fact(
+        "partial",
+        _variant("partial", date(2025, 1, 1), source_refs=("aeat-source",), citation_refs=()),
+    )
+    mismatched = base.model_copy(
+        update={
+            "fact_id": "mismatched",
+            "variants": (variant.model_copy(update={"variant_id": "mismatched", "source_refs": ("other",)}),),
+        },
+    )
+
+    findings = facts_catalogue_findings(
+        (provider,),
+        {"authored": (neither, partial, mismatched)},
+        ("facts",),
+    )
+
+    assert len(findings) == 3
+    assert {finding.kind for finding in findings} == {FactQualityKind.MISSING_PROVENANCE}
 
 
 def test_provider_ownership_and_compilation_identity_bite() -> None:
@@ -137,3 +194,46 @@ def test_gate_imports_no_modelo_denominator() -> None:
     }
 
     assert not {name for name in imports if "modelo" in name.lower()}
+
+
+def test_live_gate_compiles_every_registered_provider_and_uses_its_directory_denominator(tmp_path: Path) -> None:
+    calls: list[Path] = []
+
+    def compile_provider(registry_root: Path) -> tuple[GovernedFact, ...]:
+        calls.append(registry_root)
+        return (_fact("iva-rate", _variant("ordinary", date(2025, 1, 1))),)
+
+    provider = FactProviderRegistration(
+        provider_id="live-provider",
+        owned_directories=("facts/iva",),
+        compile=compile_provider,
+        collect_fingerprints=lambda _root: (),
+        reset=lambda: None,
+    )
+
+    assert live_facts_catalogue_findings(tmp_path, (provider,)) == ()
+    assert calls == [tmp_path]
+
+
+def test_live_gate_reports_provider_compile_failure_and_main_blocks_on_findings(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def broken_compile(registry_root: Path) -> tuple[GovernedFact, ...]:
+        raise ValueError("broken catalogue")
+
+    provider = FactProviderRegistration(
+        provider_id="broken-provider",
+        owned_directories=("facts",),
+        compile=broken_compile,
+        collect_fingerprints=lambda _root: (),
+        reset=lambda: None,
+    )
+    findings = live_facts_catalogue_findings(tmp_path, (provider,))
+    assert {finding.kind for finding in findings} == {FactQualityKind.INVALID_PROVIDER}
+
+    monkeypatch.setattr(
+        "dev.registry.analysis.facts_catalogue_quality.live_facts_catalogue_findings",
+        lambda _root: findings,
+    )
+    assert main(["--registry-root", str(tmp_path)]) == 1

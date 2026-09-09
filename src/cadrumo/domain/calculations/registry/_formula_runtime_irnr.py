@@ -35,8 +35,10 @@ from ....core.casilla_id import CasillaId
 from ....core.decimal.constants import ZERO
 from ....core.irnr import ConvenioOverrideKind, TipoRentaIrnr
 from ...contribuyente.renta_codes import UE_EEA_COUNTRY_CODES
-from .convenio import ConvenioOverride
+from .convenio import CONVENIO_OVERRIDE_FACT_ID
 from .errors import RegistryValidationError
+from .facts.resolution import OverrideFactQuery, ResolvedOverrideFact
+from .facts.schema import FactSelector
 from .formula_runtime_ops import (
     RegistryUnresolvedOutcomeReason,
     UnresolvedFormulaOutcomeError,
@@ -52,6 +54,7 @@ from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
 from .ids import BindingId, ParameterId
+from .schema_base import DateAxis
 from .schema_formula import FormulaExpression
 
 if TYPE_CHECKING:
@@ -89,6 +92,15 @@ class _M210ResolveBaseArgs:
     no_catastral_fraction_parameter: ParameterId
 
 
+@dataclass(frozen=True, slots=True)
+class _ResolvedConvenioOverride:
+    """The provider-selected treaty override and its retained provenance."""
+
+    kind: ConvenioOverrideKind
+    rate: Decimal | None
+    fact: ResolvedOverrideFact
+
+
 def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _EvalContext) -> Decimal:
     """Resolve the IRNR tipo de gravamen rate, applying any treaty override.
 
@@ -96,7 +108,8 @@ def evaluate_irnr_resolve_tipo_gravamen(expression: FormulaExpression, ctx: _Eva
     (Modelo 210 today, the retenciones-a-no-residentes modelos when they
     land). It resolves the TRLIRNR domestic baseline and, when the profile
     declares a fiscal-residence country, consults the cross-cutting
-    :class:`~._convenio.ConvenioAuthority` projected onto the snapshot. On a
+    ``irnr.convenio.override`` governed fact at the explicit filing-period
+    devengo date. On a
     matched override it branches on the typed
     :class:`~core.ConvenioOverrideKind`:
 
@@ -226,7 +239,7 @@ def _resolve_convenio_override(
     *,
     country: str,
     tipo_renta: str,
-) -> ConvenioOverride | None:
+) -> _ResolvedConvenioOverride | None:
     """Resolve the treaty override for the declared country + income type, or None.
 
     Hydrates the free-text ``tipo_renta`` casilla value to the closed
@@ -239,10 +252,54 @@ def _resolve_convenio_override(
         tipo_enum = TipoRentaIrnr(tipo_renta)
     except ValueError:
         return None
-    return ctx.convenio.resolve(country.upper(), tipo_enum, ctx.filing_year)
+    devengo_date = ctx.date_context.get("filing_period")
+    if not isinstance(devengo_date, date):
+        raise RegistryValidationError("IRNR convenio override requires a filing_period devengo date")
+    from .authority import bundled_authority
+
+    authority = bundled_authority()
+    authority.validate_registry()
+    selectors = (
+        FactSelector(name="country_code", value=country.upper()),
+        FactSelector(name="tipo_renta", value=tipo_enum.value),
+    )
+    fact = authority.catalogues.facts.facts.get(CONVENIO_OVERRIDE_FACT_ID)
+    if fact is None:
+        raise RegistryValidationError(f"governed fact {CONVENIO_OVERRIDE_FACT_ID!r} is not registered")
+    selector_identity = frozenset((selector.name, type(selector.value), selector.value) for selector in selectors)
+    if not any(
+        variant.date_axis is DateAxis.DEVENGO_DATE
+        and variant.valid_from <= devengo_date
+        and (variant.valid_to is None or devengo_date <= variant.valid_to)
+        and frozenset((selector.name, type(selector.value), selector.value) for selector in variant.selectors)
+        == selector_identity
+        for variant in fact.variants
+    ):
+        return None
+    resolved = authority.resolve_governed_fact(
+        OverrideFactQuery(
+            fact_id=CONVENIO_OVERRIDE_FACT_ID,
+            date_axis=DateAxis.DEVENGO_DATE,
+            effective_date=devengo_date,
+            selectors=selectors,
+        ),
+    )
+    if not isinstance(resolved, ResolvedOverrideFact):
+        raise RegistryValidationError(f"convenio override resolved non-override fact {resolved.fact_id!r}")
+    try:
+        kind = ConvenioOverrideKind(resolved.payload.override_code)
+    except ValueError as exc:
+        raise RegistryValidationError(
+            f"convenio override fact {resolved.fact_id!r} has unknown kind {resolved.payload.override_code!r}",
+        ) from exc
+    rate = resolved.payload.value
+    if rate is not None and not isinstance(rate, Decimal):
+        raise RegistryValidationError(f"convenio override fact {resolved.fact_id!r} resolved non-decimal rate {rate!r}")
+    ctx.operand_refs.append(f"{resolved.fact_id}:{resolved.variant_id}")
+    return _ResolvedConvenioOverride(kind=kind, rate=rate, fact=resolved)
 
 
-def _apply_convenio_override(override: ConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal | None:
+def _apply_convenio_override(override: _ResolvedConvenioOverride, *, baseline_rate: Decimal | None) -> Decimal | None:
     """Apply a non-pension treaty override to the domestic baseline rate."""
     kind = override.kind
     if kind is ConvenioOverrideKind.EXEMPT:
@@ -263,7 +320,7 @@ def _irnr_pension_effective_rate(
     args: _IrnrResolveTipoGravamenArgs,
     ctx: _EvalContext,
     *,
-    override: ConvenioOverride | None,
+    override: _ResolvedConvenioOverride | None,
     country: str,
 ) -> Decimal | None:
     if country:

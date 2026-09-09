@@ -15,27 +15,26 @@ module surfaces a non-blocking :class:`ModeloVerificationFinding` telling the
 operator to confirm LOB eligibility against the specific treaty text — never
 silently trusting the residence declaration (``no-silent-under-declaration``).
 
-The advisory is derived from the :class:`~domain.calculations.registry.RegistrySnapshot`
-carrying the cross-cutting :class:`~domain.calculations.registry.ConvenioAuthority`
-projection and the filer's :class:`~domain.deadlines.TaxpayerProfile`
+The advisory is derived from the canonical ``irnr.convenio.override`` fact and
+the filer's :class:`~domain.deadlines.TaxpayerProfile`
 ``country_of_fiscal_residence``.
 
 See Also:
     :func:`~application.modelo._m210_rate.resolve_m210_rate`
         Application-layer replay of the same tipo-de-gravamen resolution path;
-        this advisory reads the same :class:`~domain.calculations.registry.ConvenioAuthority`
-        projection to detect whether an override actually matched.
+        this advisory reads the same governed fact to detect a matched override.
     :func:`~application.modelo._verification_actions._collect_revision_verification_findings`
         Verification collector that appends this advisory beside the DT 12ª /
         art. 20 / art. 52 advisories using the same non-blocking mechanism.
-    :class:`~domain.calculations.registry.ConvenioAuthority`
-        Cross-cutting treaty-override authority whose ``resolve`` lookup this
-        advisory consults to detect a matched treaty row.
+    ``irnr.convenio.override``
+        Cross-cutting treaty-override governed fact whose typed query detects a
+        matched treaty row.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 
 from ...core.casilla_id import CasillaId
 from ...core.irnr import TipoRentaIrnr
@@ -47,6 +46,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ._m210_convenio_facts import resolve_m210_convenio_override
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 
 _IRNR_TIPO_RENTA_ROLE = "irnr_tipo_renta"
@@ -56,12 +56,14 @@ def _m210_convenio_lob_advisory_finding(
     snapshot: RegistrySnapshot,
     profile: TaxpayerProfile,
     input_values_by_casilla_id: Mapping[CasillaId, str],
+    *,
+    devengo_date: date,
 ) -> ModeloVerificationFinding | None:
     """Warn to confirm treaty LOB eligibility when a Convenio override applies.
 
     Fires only when the profile declares a ``country_of_fiscal_residence`` AND
-    the cross-cutting :class:`~domain.calculations.registry.ConvenioAuthority`
-    actually resolves a treaty override row for ``(country, tipo_renta)`` — i.e.
+    the canonical fact authority resolves a treaty override row at
+    ``devengo_date`` for ``(country, tipo_renta)`` — i.e.
     only when treaty-based relief is genuinely being claimed, never for a filer
     on the plain TRLIRNR domestic baseline. The finding is ADVISORY because
     beneficial-ownership and limitation-of-benefits eligibility depend on facts
@@ -89,7 +91,11 @@ def _m210_convenio_lob_advisory_finding(
     except ValueError:
         return None
 
-    override = snapshot.convenio.resolve(country.upper(), tipo_renta, snapshot.filing_year)
+    override = resolve_m210_convenio_override(
+        country_code=country,
+        tipo_renta=tipo_renta,
+        devengo_date=devengo_date,
+    )
     if override is None:
         return None
 
@@ -103,7 +109,8 @@ def _m210_convenio_lob_advisory_finding(
             "document_id": override.document_id,
             "tipo_renta_code": tipo_renta.value,
         },
-        legal_refs=override.legal_refs,
+        legal_refs=override.fact.legal_refs,
+        source_refs=override.fact.source_refs,
     )
 
 

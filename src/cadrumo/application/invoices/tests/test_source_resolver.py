@@ -22,9 +22,12 @@ from ....core.aggregation import (
 )
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
-from ....core.external_constants import M347_THRESHOLD_EUR
 from ....core.period import Period
 from ....core.resources.bundled_data import bundled_path
+from ....domain.calculations.registry._m347_threshold import (
+    m347_threshold_decimal,
+    resolve_m347_counterparty_annual_threshold,
+)
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.loader import load_modelo_directory
 from ....domain.calculations.registry.temporal import select_revision
@@ -74,6 +77,9 @@ class TestInvoiceDirectionToSourceKind:
 
 _BUCKET_ID = "24242424-2424-4242-8242-242424242424"
 _OTHER_BUCKET_ID = "25252525-2525-4252-8252-252525252525"
+_M347_THRESHOLD = m347_threshold_decimal(
+    resolve_m347_counterparty_annual_threshold(effective_date=date(2025, 12, 31)),
+)
 
 
 def _modelo_revision(modelo_id: str, revision_id: str):
@@ -357,11 +363,11 @@ def test_invoice_catalogue_source_resolver_projects_domestic_m347_summary_from_i
         ),
     )
 
-    assert floor_control.grand_total == M347_THRESHOLD_EUR
+    assert floor_control.grand_total == _M347_THRESHOLD
     assert m347_resolution.binding_values["modelo-347-declarante-numero-personas-entidades"] == Decimal("1")
     assert m347_resolution.binding_values[
         "modelo-347-declarante-importe-total-anual-operaciones"
-    ] == M347_THRESHOLD_EUR + Decimal("0.01")
+    ] == _M347_THRESHOLD + Decimal("0.01")
     assert m347_resolution.detail_rows == ()
     assert {item.source_ref for item in m347_resolution.provenance} == {
         f"collectible_invoice:{collectible.invoice_id}",
