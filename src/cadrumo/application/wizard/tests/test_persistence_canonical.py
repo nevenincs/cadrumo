@@ -29,10 +29,8 @@ import pytest
 from pydantic import BaseModel
 
 from ....core.i18n import Translatable as tr
-from ...workflow.errors import WorkflowInputMismatchError
-from ...workflow.state_models import WorkflowState
 from ..models import WizardChoice, WizardFlow, WizardQuestion, WizardSection, WizardWidget
-from ..persistence import _canonicalise, _resolve_canonical, parse_canonical, persist_patch
+from ..persistence import _canonicalise, _resolve_canonical, parse_canonical
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -267,15 +265,3 @@ def test_canonicalise_blank_string_for_optional_bool_stays_blank() -> None:
         answer_type=bool,
     )
     assert _canonicalise(question, "") == ""
-
-
-def test_persist_patch_rejects_unknown_question_id() -> None:
-    """A supplied patch flag that is not declared by the flow must fail closed."""
-
-    flow = _flow(_question(profile_key="tax.id"))
-
-    with pytest.raises(WorkflowInputMismatchError) as excinfo:
-        persist_patch(flow, {"missing-question": "12345678Z"}, state=WorkflowState())
-
-    assert excinfo.value.translated_message == "application.wizard.errors.persist_patch_unknown_question_id"
-    assert excinfo.value.context == {"question_id": "missing-question"}

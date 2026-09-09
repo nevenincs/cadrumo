@@ -1149,21 +1149,6 @@ class InstalledWorkbenchGenerationProviderV1:
         return assemble_workbench_generation_from(self.read_door)
 
 
-@dataclass(frozen=True, slots=True)
-class CallableWorkbenchGenerationReadDoorV1:
-    """Small typed adapter for a preloaded input callable.
-
-    This value only invokes the supplied function.  It does not choose a
-    repository, open storage, contact a backend, or invent a timestamp.
-    """
-
-    read: Callable[[], WorkbenchGenerationInputsV1]
-
-    def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
-        """Read the caller-owned, already-composed input bundle once."""
-        return self.read()
-
-
 def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> WorkbenchGenerationV1:
     """Build one immutable generation from already-loaded public inputs.
 
@@ -1347,7 +1332,6 @@ def _missing_search(
 
 
 __all__ = [
-    "CallableWorkbenchGenerationReadDoorV1",
     "InstalledWorkbenchGenerationProviderV1",
     "ProfileRecordReadRepositoryV1",
     "SecureProfileWorkbenchGenerationReadDoorV1",

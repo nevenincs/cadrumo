@@ -20,7 +20,10 @@ from uuid import UUID, uuid4
 import pytest
 
 from ......application.user_profile.capsule_record import ProfileRecordSession
-from ......application.user_profile.capsule_restore import restore_profile_from_source_with_recovery_artifact
+from ......application.user_profile.capsule_restore import (
+    read_profile_capsule_source,
+    restore_profile_capsule_with_recovery_artifact,
+)
 from ......application.user_profile.custody_ports import (
     create_profile_custody_registration_material,
     unlock_profile_custody_password,
@@ -137,17 +140,17 @@ def test_one_profiles_recovery_artifact_cannot_restore_another(tmp_path: Path) -
         profile_a.export(target)
 
         with pytest.raises(ProfileCustodyRecordError, match="does not match its named target"):
-            restore_profile_from_source_with_recovery_artifact(
+            restore_profile_capsule_with_recovery_artifact(
                 label="Isolation B restored",
-                source=profile_b.capsule_path,
+                capsule=read_profile_capsule_source(profile_b.capsule_path),
                 artifact_source=target,
                 recovery_secret=profile_a.enrollment.recovery_key.mnemonic,
                 root=tmp_path / "restored-b",
             )
 
-        restored = restore_profile_from_source_with_recovery_artifact(
+        restored = restore_profile_capsule_with_recovery_artifact(
             label="Isolation A restored",
-            source=profile_a.capsule_path,
+            capsule=read_profile_capsule_source(profile_a.capsule_path),
             artifact_source=target,
             recovery_secret=profile_a.enrollment.recovery_key.mnemonic,
             root=tmp_path / "restored-a",

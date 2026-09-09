@@ -42,7 +42,6 @@ from ..overview.tests.calendar_test_support import modelo_record
 from ..search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from ..user_profile.censal_operation import CENSAL_OPERATION_DEFINITION, build_censal_operation_registration
 from ..workbench_generation import (
-    CallableWorkbenchGenerationReadDoorV1,
     InstalledWorkbenchGenerationProviderV1,
     SecureProfileWorkbenchGenerationReadDoorV1,
     WorkbenchGenerationAvailability,
@@ -611,22 +610,6 @@ def test_input_admissions_must_name_the_installed_search_destinations() -> None:
     values["declarations_admission"] = _admission("workbench.ledger")
     with pytest.raises(ValidationError, match=r"workbench\.declarations"):
         WorkbenchGenerationInputsV1.model_validate(values)
-
-
-def test_read_door_is_injected_and_invoked_once() -> None:
-    """The application boundary reads one caller-owned bundle exactly once."""
-    calls = 0
-    inputs = _inputs()
-
-    def read() -> WorkbenchGenerationInputsV1:
-        nonlocal calls
-        calls += 1
-        return inputs
-
-    generation = assemble_workbench_generation_from(CallableWorkbenchGenerationReadDoorV1(read))
-
-    assert calls == 1
-    assert generation.assembled_at == _NOW
 
 
 def test_output_has_no_source_value_field_or_input_wrapper() -> None:
