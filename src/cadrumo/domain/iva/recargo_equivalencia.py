@@ -306,8 +306,15 @@ def compile_iva_recargo_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
 
 
 def collect_iva_recargo_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-    """Fingerprint the exact recargo schedule owned by the IVA provider."""
+    """Fingerprint the exact recargo schedule owned by the IVA provider.
+
+    An absent schedule contributes NO fingerprint rather than raising, for the
+    reason the sibling rate collector states: a partial registry carries only
+    what its subject needs, and there is no content to invalidate on.
+    """
     path = (registry_root.resolve() / "iva" / "recargo-rates.toml").resolve()
+    if not path.is_file():
+        return ()
     return (toml_file_fingerprint(path),)
 
 

@@ -310,8 +310,22 @@ def compile_iva_rate_facts(registry_root: Path) -> tuple[GovernedFact, ...]:
 
 
 def collect_iva_rate_fact_fingerprints(registry_root: Path) -> RegistryPathFingerprints:
-    """Fingerprint the exact legacy declaration owned by the adapter."""
-    return (toml_file_fingerprint((registry_root.resolve() / "iva" / "rates.toml").resolve()),)
+    """Fingerprint the exact legacy declaration owned by the adapter.
+
+    An absent declaration contributes NO fingerprint rather than raising. A
+    partial registry - the isolated candidate a generated tree is validated
+    against, or a minimal tree a fixture builds - carries only what its subject
+    needs, and demanding this file turned its absence into a load failure named
+    after a path the caller never asked for.
+
+    Contributing nothing is the correct identity too: there is no content to
+    invalidate on, and if the declaration later appears the fingerprint set
+    changes and the cache invalidates exactly as it should.
+    """
+    target = (registry_root.resolve() / "iva" / "rates.toml").resolve()
+    if not target.is_file():
+        return ()
+    return (toml_file_fingerprint(target),)
 
 
 def reset_iva_rate_fact_provider() -> None:
