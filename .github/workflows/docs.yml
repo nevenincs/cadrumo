@@ -67,15 +67,15 @@ on:
 # The cost that is real: a completed verdict may name a sha a few commits old.
 # That is strictly better than the no-verdict-at-all this replaces.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: docs-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
 
 jobs:
   cadrumo-docs:
-    name: Cadrumo / docs conformance / Python 3.13
+    name: "Check: Documentation conformance (Linux)"
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64]
     # The nitpicky warnings-as-errors Sphinx build is multi-minute by design;

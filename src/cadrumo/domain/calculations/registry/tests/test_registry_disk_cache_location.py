@@ -10,7 +10,6 @@ resolver with real inputs and the live accessor under pytest.
 
 from __future__ import annotations
 
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -28,7 +27,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_production_derives_cache_registry_under_storage_root(tmp_path: Path) -> None:
     resolved = _resolve_registry_disk_cache_dir(
         override=None,
-        under_pytest=False,
         storage_root=tmp_path / "state",
     )
     # Pinned against the taxonomy's declared subpath rather than a restated
@@ -40,48 +38,14 @@ def test_production_derives_cache_registry_under_storage_root(tmp_path: Path) ->
     assert resolved == tmp_path / "state" / "cache" / "registry"
 
 
-def test_pytest_without_override_uses_host_shared_temp(tmp_path: Path) -> None:
-    resolved = _resolve_registry_disk_cache_dir(
-        override=None,
-        under_pytest=True,
-        storage_root=tmp_path / "state",
-    )
-    assert resolved == Path(tempfile.gettempdir())
-
-
-def test_pytest_branch_is_a_declared_test_pinned_exception() -> None:
-    """The pytest branch's divergence from the declared subpath is a positive
-    declaration on the member, not an undeclared special case -- and every
-    other member stays silent on the axis."""
-    location = storage_location(StorageCategory.REGISTRY_DISK_CACHE)
-    assert location.test_pinned_exception is not None
-    assert location.test_pinned_exception.strip()
-    other_members_with_exceptions = [
-        category.value
-        for category in StorageCategory
-        if category is not StorageCategory.REGISTRY_DISK_CACHE
-        and storage_location(category).test_pinned_exception is not None
-    ]
-    assert other_members_with_exceptions == []
-
-
-def test_explicit_override_wins_in_either_environment(tmp_path: Path) -> None:
+def test_explicit_override_wins(tmp_path: Path) -> None:
     override = tmp_path / "operator-cache"
-    for under_pytest in (True, False):
-        resolved = _resolve_registry_disk_cache_dir(
-            override=override,
-            under_pytest=under_pytest,
-            storage_root=tmp_path / "state",
-        )
-        assert resolved == override
+    resolved = _resolve_registry_disk_cache_dir(override=override, storage_root=tmp_path / "state")
+    assert resolved == override
 
 
-def test_live_accessor_under_pytest_returns_host_temp() -> None:
-    # With no override, the live accessor resolves the host-shared temp
-    # directory under pytest, keeping the bundled-root pickle shared across
-    # xdist workers. Clear any ambient override so the assertion is
-    # deterministic regardless of a sibling test's environment.
+def test_live_accessor_uses_the_configured_storage_root(tmp_path: Path) -> None:
     from .....core.config import override_settings
 
-    with override_settings(cadrumo_registry_disk_cache_dir=None):
-        assert registry_disk_cache_dir() == Path(tempfile.gettempdir())
+    with override_settings(cadrumo_registry_disk_cache_dir=None, cadrumo_local_storage_root=tmp_path):
+        assert registry_disk_cache_dir() == tmp_path / "cache" / "registry"

@@ -19,13 +19,13 @@ permissions:
   actions: write
 
 concurrency:
-  group: release-please
-  cancel-in-progress: false
+  group: release-please-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   release-please:
     timeout-minutes: 30
-    name: Release Please
+    name: "Build: Release proposal (Linux)"
     runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Run release-please

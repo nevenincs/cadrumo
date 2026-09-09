@@ -103,6 +103,7 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # the CLI beside it, so the two could drift and only the workflow's copy
     # was the one CI actually ran.
     assert "just check-registry" in static_commands
+    assert "uv run --no-sync python -m dev.registry.parity.maintenance_cli audit-oracles" not in static_commands
     assert "semgrep --config .semgrep/rules/ --error src/cadrumo/" in static_commands
     # The dev-tree workflow/tooling conformance gates run per-push here, via the
     # `test-dev-ci` recipe. The workflow names the recipe and the recipe owns the

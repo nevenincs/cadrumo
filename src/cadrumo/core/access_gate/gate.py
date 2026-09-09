@@ -29,8 +29,6 @@ See Also:
 
 from __future__ import annotations
 
-import os
-import sys
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -47,11 +45,8 @@ if TYPE_CHECKING:
     from ..config import Settings
 
 
-_PYTEST_CURRENT_TEST_ENV = "PYTEST_CURRENT_TEST"
-
-
 class AeatGateEnvSnapshot(BaseModel):
-    """Frozen snapshot of the env vars that still matter for live-test access.
+    """Frozen snapshot of explicit inputs that matter for guarded live access.
 
     The record is safe to log and safe to serialise into historical
     audit payloads. Values are raw strings as read from ``os.environ``;
@@ -59,15 +54,13 @@ class AeatGateEnvSnapshot(BaseModel):
 
     Attributes:
         cadrumo_live_tests_enabled: Value of ``CADRUMO_LIVE_TESTS_ENABLED``.
-        pytest_current_test: Value of ``PYTEST_CURRENT_TEST`` (pytest
-            sets this automatically during a test run; presence alone
-            is the signal - the value is recorded for traceability).
+        guarded_read_context: Explicit caller-supplied guarded-read context.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     cadrumo_live_tests_enabled: str
-    pytest_current_test: str
+    guarded_read_context: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,23 +77,17 @@ class AeatAccessGate:
 
     settings: Settings
 
-    def _pytest_current_test_value(self, pytest_current_test: str | None = None) -> str:
-        """Return pytest's current-test marker, with an explicit test seam."""
-        return os.environ.get(_PYTEST_CURRENT_TEST_ENV, "") if pytest_current_test is None else pytest_current_test
-
-    def live_read_requires_test_opt_in(self, *, pytest_current_test: str | None = None) -> bool:
-        """Return whether the current live read is executing under pytest.
+    def live_read_requires_test_opt_in(self, *, guarded_read_context: str | None = None) -> bool:
+        """Return whether the caller explicitly requested the guarded-read path.
 
         ``CADRUMO_LIVE_TESTS_ENABLED`` is a test runner opt-in, not an
         operational CLI switch. A live read in a normal operator shell
         still passes through auth/profile/read-only guards, but it is
         not refused by the pytest-only environment variable.
         """
-        if pytest_current_test is not None:
-            return bool(pytest_current_test)
-        return bool(self._pytest_current_test_value()) or "pytest" in sys.modules
+        return bool(guarded_read_context)
 
-    def require_live_read(self, *, pytest_current_test: str | None = None) -> None:
+    def require_live_read(self, *, guarded_read_context: str | None = None) -> None:
         """Refuse pytest-driven live AEAT reads unless the test opt-in is on.
 
         Routes the check through :class:`core.config.Settings`
@@ -114,7 +101,7 @@ class AeatAccessGate:
             AeatLiveReadNotEnabledError: During pytest execution, when
                 ``Settings.cadrumo_live_tests_enabled`` is not ``"1"``.
         """
-        if self.live_read_requires_test_opt_in(pytest_current_test=pytest_current_test) and (
+        if self.live_read_requires_test_opt_in(guarded_read_context=guarded_read_context) and (
             not self.settings.live_tests_enabled
         ):
             raise AeatLiveReadNotEnabledError(
@@ -143,29 +130,24 @@ class AeatAccessGate:
     def snapshot_env(
         self,
         *,
-        pytest_current_test: str | None = None,
+        guarded_read_context: str | None = None,
     ) -> AeatGateEnvSnapshot:
         """Return a frozen snapshot of the gate-relevant variables.
 
         The AEAT-prefixed variable is read from the validated Settings
-        surface (single config-read invariant). ``PYTEST_CURRENT_TEST``
-        is pytest infrastructure, set by the pytest runner itself for
-        each test; it is not AEAT configuration and has no Settings
-        field, so it is read directly from ``os.environ`` as the only
-        legitimate exception in this surface.
+        surface (single config-read invariant). The context is ordinary,
+        explicit call data; shipped code does not inspect its host process to
+        discover whether a test harness is present.
 
         Args:
-            pytest_current_test: DI seam for tests. When ``None``
-                (production), the helper reads ``os.environ``; when
-                ``""``, the helper records the "absent" path; when any
-                other string, the helper records the explicit value.
+            guarded_read_context: Explicit context to record. ``None`` and
+                ``""`` both record the absent path.
 
         Returns:
             A :class:`AeatGateEnvSnapshot` capturing the current
             gate-relevant variables.
         """
-        resolved_pytest = self._pytest_current_test_value(pytest_current_test)
         return AeatGateEnvSnapshot(
             cadrumo_live_tests_enabled=self.settings.cadrumo_live_tests_enabled,
-            pytest_current_test=resolved_pytest,
+            guarded_read_context=guarded_read_context or "",
         )

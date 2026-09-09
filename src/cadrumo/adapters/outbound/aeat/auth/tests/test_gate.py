@@ -15,23 +15,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 def test_snapshot_env_reports_present_values() -> None:
     with override_settings(cadrumo_live_tests_enabled="1"):
         settings = Settings(cadrumo_live_tests_enabled="1")
-        snapshot = AeatAccessGate(settings).snapshot_env(pytest_current_test="")
+        snapshot = AeatAccessGate(settings).snapshot_env(guarded_read_context="")
         assert isinstance(snapshot, AeatGateEnvSnapshot)
         assert snapshot.cadrumo_live_tests_enabled == "1"
-        assert snapshot.pytest_current_test == ""
+        assert snapshot.guarded_read_context == ""
 
 
 def test_snapshot_env_reflects_settings_field_value() -> None:
     # snapshot_env reports ``settings.cadrumo_live_tests_enabled`` (Settings
-    # surface) and ``os.environ[PYTEST_CURRENT_TEST]`` (pytest
+    # surface) and ``os.environ[CADRUMO_GUARDED_READ_CONTEXT]`` (pytest
     # infrastructure only — not AEAT config, no Settings mirror). Tests
     # pass an explicit value via the snapshot_env DI seam rather than
     # mutating the real env var.
     with override_settings(cadrumo_live_tests_enabled=""):
         settings = Settings(cadrumo_live_tests_enabled="")
-        snapshot = AeatAccessGate(settings).snapshot_env(pytest_current_test="")
+        snapshot = AeatAccessGate(settings).snapshot_env(guarded_read_context="")
         assert snapshot.cadrumo_live_tests_enabled == settings.cadrumo_live_tests_enabled
-        assert snapshot.pytest_current_test == ""
+        assert snapshot.guarded_read_context == ""
 
 
 def test_require_live_read_passes_when_enabled() -> None:
@@ -45,7 +45,7 @@ def test_require_live_read_passes_when_enabled() -> None:
 def test_require_live_read_allows_operator_context_without_test_opt_in() -> None:
     with override_settings(cadrumo_live_tests_enabled=""):
         settings = Settings(cadrumo_live_tests_enabled="")
-        result = AeatAccessGate(settings).require_live_read(pytest_current_test="")
+        result = AeatAccessGate(settings).require_live_read(guarded_read_context="")
         assert result is None
 
 
@@ -53,7 +53,7 @@ def test_require_live_read_still_blocks_pytest_context_without_test_opt_in() -> 
     with override_settings(cadrumo_live_tests_enabled=""):
         settings = Settings(cadrumo_live_tests_enabled="")
         with pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
-            AeatAccessGate(settings).require_live_read(pytest_current_test="test_gate.py::case (call)")
+            AeatAccessGate(settings).require_live_read(guarded_read_context="test_gate.py::case (call)")
         assert excinfo.value.context is not None
         assert excinfo.value.context["env_var"] == "CADRUMO_LIVE_TESTS_ENABLED"
 
@@ -62,14 +62,14 @@ def test_require_live_read_raises_when_unset() -> None:
     with override_settings(cadrumo_live_tests_enabled=""):
         settings = Settings(cadrumo_live_tests_enabled="")
         with pytest.raises(AeatLiveReadNotEnabledError, match=r"CADRUMO_LIVE_TESTS_ENABLED|live"):
-            AeatAccessGate(settings).require_live_read()
+            AeatAccessGate(settings).require_live_read(guarded_read_context="unset-opt-in")
 
 
 def test_require_live_read_raises_when_not_one() -> None:
     with override_settings(cadrumo_live_tests_enabled="true"):
         settings = Settings(cadrumo_live_tests_enabled="true")
         with pytest.raises(AeatLiveReadNotEnabledError, match=r"CADRUMO_LIVE_TESTS_ENABLED|live"):
-            AeatAccessGate(settings).require_live_read()
+            AeatAccessGate(settings).require_live_read(guarded_read_context="invalid-opt-in")
 
 
 def test_require_live_read_refusal_states_only_literal_one_is_accepted() -> None:
@@ -84,7 +84,7 @@ def test_require_live_read_refusal_states_only_literal_one_is_accepted() -> None
     with override_settings(cadrumo_live_tests_enabled="true"):
         settings = Settings(cadrumo_live_tests_enabled="true")
         with pytest.raises(AeatLiveReadNotEnabledError) as excinfo:
-            AeatAccessGate(settings).require_live_read()
+            AeatAccessGate(settings).require_live_read(guarded_read_context="invalid-opt-in")
         # The refusal names the literal accepted value and what was actually set,
         # as machine facts rather than a sentence.
         context = excinfo.value.context

@@ -355,21 +355,6 @@ class StorageLocation(BaseModel):
     :attr:`consumer_module` is set.
     """
 
-    test_pinned_exception: str | None = None
-    """Why this member's resolution deliberately diverges from its declared subpath under pytest.
-
-    ``None`` for every member but one. The registry disk cache is the sole
-    case: under pytest its resolver selects the host-shared OS temp directory
-    instead of ``<root>/cache/registry``, so every xdist worker and every
-    subprocess-spawning test shares one compiled pickle for the immutable
-    bundled tree rather than each getting a private, per-worker cache. Without
-    this field that branch reads as an undeclared special case buried in one
-    consumer; stating the reason here turns it into a positive, member-level
-    declaration the taxonomy alone carries -- the same discipline
-    :data:`EXTERNAL_PATH_SETTINGS_FIELDS` applies to a whole field escaping the
-    taxonomy, narrowed to one member's one runtime branch.
-    """
-
     @model_validator(mode="after")
     def _fixed_override_policy_forbids_a_settings_field(self) -> StorageLocation:
         """Refuse a FIXED member that also exposes an operator-facing settings field.

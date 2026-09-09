@@ -54,8 +54,8 @@ on:
       - ".github/workflows/runner-fleet-health.yml"
 
 concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
+  group: runner-fleet-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
@@ -69,7 +69,7 @@ jobs:
     # to hang unobserved itself. Enforced by
     # dev/ci/tests/test_runner_queue_watchdog.py, which refused this workflow
     # until the job was added. See dev/ci/runner_queue_watchdog.py.
-    name: Cadrumo / runner queue watchdog
+    name: "Check: Runner queue (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
     permissions:
@@ -94,7 +94,7 @@ jobs:
     # image and, before this job, had no capability check at all — half the fleet
     # was unmodelled. Runs first and cheaply: a missing tool here is a coin-flip
     # failure, because a job lands on whichever labelled runner is free.
-    name: Capabilities / ${{ matrix.label }}
+    name: "Check: Runner capabilities (${{ matrix.label }})"
     strategy:
       fail-fast: false
       matrix:
@@ -127,7 +127,7 @@ jobs:
     # The Linux X64 runners are containers, so their capabilities are pinned by
     # the `runner` stage rather than provisioned by hand. Building here proves
     # the stage still resolves against the live upstream base and package feeds.
-    name: Runner image (build + verify)
+    name: "Build: Runner image (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 45
 
@@ -164,7 +164,7 @@ jobs:
     # dependency group pins for vaultspec-rag. Building it on every push would
     # fight the fleet's disk hygiene for little return, since the devcontainer is
     # a contributor environment that CI never consumes.
-    name: Devcontainer image (build + verify)
+    name: "Build: Development image (Linux)"
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.include_dev_image }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 90

@@ -42,6 +42,7 @@ permissions:
 
 jobs:
   drift-check:
+    name: "Check: Tax surface drift (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
 

@@ -536,7 +536,7 @@ def test_invalid_persisted_provider_fails_closed_across_snapshot_consumers() -> 
         assert invalid_selector not in readiness.model_dump_json()
 
     with pytest.raises(AuthLoginPreconditionError) as excinfo:
-        asyncio.run(login_operator_auth(pytest_current_test=""))
+        asyncio.run(login_operator_auth(guarded_read_context=""))
 
     assert excinfo.value.translated_message == "application.auth.operator.errors.provider_not_configured"
     assert invalid_selector not in str(excinfo.value)

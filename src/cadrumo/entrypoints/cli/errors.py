@@ -24,7 +24,7 @@ The :func:`command_error_boundary` decorator wraps a callback so that
 :func:`decorate_typer_app` walks a
 :class:`~typer.Typer` tree and applies the error boundary to every graph-materialized command
 and group callback (with an opt-out via ``skip_paths``).
-:func:`error_boundary_under_test` toggles the
+:func:`suspend_error_boundary` toggles the
 boundary off for tests that want to assert on the raised exception directly.
 """
 
@@ -64,7 +64,7 @@ from ...domain.user_profile.errors import StoredProfileDriftError
 
 _log = logging.getLogger(__name__)
 
-_UNDER_TEST: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_under_test", default=False)
+_BOUNDARY_SUSPENDED: ContextVar[bool] = ContextVar("cadrumo_cli_error_boundary_suspended", default=False)
 #: Dotted identifier of the command whose callback is currently executing,
 #: set by :func:`command_error_boundary` at entry so the error spine's
 #: ``command`` field can name the failing command (byte-identical to the
@@ -482,7 +482,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     Typer/Click control-flow exceptions (e.g. :exc:`~click.exceptions.Exit`,
     :exc:`~click.Abort`, :exc:`~typer.Exit`) propagate untouched so the
     framework can act on them. When
-    :func:`error_boundary_under_test` is active
+    :func:`suspend_error_boundary` is active
     the original exception is re-raised instead of being emitted.
 
     Calls are memoised by callback identity so wrapping the same
@@ -520,7 +520,7 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
             # Everything else routes through the ordered specificity dispatch.
             if _is_click_control_flow(error):
                 raise
-            if _UNDER_TEST.get():
+            if _BOUNDARY_SUSPENDED.get():
                 raise
             emit_error_and_exit(_project_boundary_error(error, callback))
         finally:
@@ -839,7 +839,7 @@ def emit_error_and_exit(error: CadrumoError) -> Never:
 
 
 @contextmanager
-def error_boundary_under_test() -> Generator[None]:
+def suspend_error_boundary() -> Generator[None]:
     """Temporarily force :func:`command_error_boundary` to re-raise originals.
 
     Tests that need to assert on the raised exception type rather than
@@ -852,11 +852,11 @@ def error_boundary_under_test() -> Generator[None]:
         ``None``. The context's only purpose is the side effect on the internal
         flag.
     """
-    token: Token[bool] = _UNDER_TEST.set(True)
+    token: Token[bool] = _BOUNDARY_SUSPENDED.set(True)
     try:
         yield
     finally:
-        _UNDER_TEST.reset(token)
+        _BOUNDARY_SUSPENDED.reset(token)
 
 
 def _decorate_typer_node(
@@ -1255,8 +1255,8 @@ __all__ = [
     "CliValidationBoundaryError",
     "boundary_no_recovery_verdict",
     "decorate_typer_app",
-    "error_boundary_under_test",
     "internal_record_fault_context",
     "project_cli_boundary_error",
+    "suspend_error_boundary",
     "write_stderr",
 ]

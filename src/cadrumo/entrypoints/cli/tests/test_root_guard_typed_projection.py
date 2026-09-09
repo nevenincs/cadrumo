@@ -25,7 +25,7 @@ from .._common import (
     project_cli_policy_refusal,
 )
 from ..command_suggestions import INVOCATION_REMAINDER_META_KEY
-from ..errors import CliRefusedBoundaryError, error_boundary_under_test
+from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -125,7 +125,7 @@ def test_real_root_fallback_refusal_attaches_the_typed_projection(tmp_path: Path
     """The real root callback, not a manual helper call, owns the handoff."""
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        error_boundary_under_test(),
+        suspend_error_boundary(),
         pytest.raises(CliRefusedBoundaryError) as raised,
     ):
         cadrumo_click_command().main(
@@ -151,7 +151,7 @@ def test_real_explicit_database_refusal_attaches_the_closed_projection(tmp_path:
             cadrumo_database_url=f"sqlite:///{(tmp_path / 'explicit.db').as_posix()}",
             cadrumo_active_profile=None,
         ),
-        error_boundary_under_test(),
+        suspend_error_boundary(),
         pytest.raises(CliRefusedBoundaryError) as raised,
     ):
         cadrumo_click_command().main(
@@ -173,7 +173,7 @@ def test_real_common_guard_projects_profile_create_when_none_are_registered(tmp_
     """A read-shaped leaf reaches the common no-profile producer and keeps its leaf."""
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        error_boundary_under_test(),
+        suspend_error_boundary(),
         pytest.raises(CliRefusedBoundaryError) as raised,
     ):
         cadrumo_click_command().main(
@@ -210,7 +210,7 @@ def test_real_common_guard_projects_login_when_profiles_are_unselected(tmp_path:
         assert active_pointer.is_file()
         active_pointer.unlink()
 
-        with error_boundary_under_test(), pytest.raises(CliRefusedBoundaryError) as raised:
+        with suspend_error_boundary(), pytest.raises(CliRefusedBoundaryError) as raised:
             cadrumo_click_command().main(
                 args=["app", "ledger", "list"],
                 prog_name="aeat",
@@ -241,7 +241,7 @@ def test_real_root_profile_override_projects_list_for_unresolved_selection(
 ) -> None:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
-        error_boundary_under_test(),
+        suspend_error_boundary(),
         pytest.raises(CliRefusedBoundaryError) as raised,
     ):
         cadrumo_click_command().main(
@@ -267,7 +267,7 @@ def test_requested_leaf_binding_clears_between_sequential_root_invocations(tmp_p
     )
     with isolated_profile_storage_root(tmp_path=tmp_path):
         for arguments, expected_leaf in cases:
-            with error_boundary_under_test(), pytest.raises(CliRefusedBoundaryError) as raised:
+            with suspend_error_boundary(), pytest.raises(CliRefusedBoundaryError) as raised:
                 cadrumo_click_command().main(
                     args=list(arguments),
                     prog_name="aeat",

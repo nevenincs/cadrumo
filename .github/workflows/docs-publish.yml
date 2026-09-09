@@ -45,7 +45,7 @@ permissions:
 jobs:
   publish-docs:
     timeout-minutes: 45
-    name: Build and publish the documentation site
+    name: "Build: Documentation site (Linux)"
     runs-on: [self-hosted, Linux, X64]
     # The protected environment is the product boundary on a shared runner
     # fleet: the role is assumable only from this repository and this

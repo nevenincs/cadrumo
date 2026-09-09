@@ -51,7 +51,7 @@ from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, seman
 from ....tests.profile_capsule import open_test_profile_session
 from ....tests.secure_sql import isolated_profile_storage_root
 from .._common import cli_policy_refusal_projection
-from ..errors import CliRefusedBoundaryError, error_boundary_under_test
+from ..errors import CliRefusedBoundaryError, suspend_error_boundary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -424,7 +424,7 @@ class TestFailClosedRefusals:
 
         with (
             override_settings(cadrumo_secret_passphrase=None),
-            error_boundary_under_test(),
+            suspend_error_boundary(),
             pytest.raises(CliRefusedBoundaryError) as raised,
         ):
             cadrumo_click_command().main(

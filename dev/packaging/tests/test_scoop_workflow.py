@@ -35,7 +35,7 @@ def test_scoop_workflow_declares_the_native_release_row() -> None:
     assert set(document["jobs"]) == {"cadrumo-scoop-acquisition", "runner-queue-watchdog"}
 
     job = document["jobs"]["cadrumo-scoop-acquisition"]
-    assert job["name"] == "Cadrumo / Windows / x64 / Scoop Native"
+    assert job["name"] == "Test: Channel acquisition (Windows)"
     assert job["runs-on"] == ["self-hosted", "Windows", "X64", "windows-scoop"]
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Windows native release row")
     assert 'PROCESSOR_ARCHITECTURE -ne "AMD64"' in _executable_lines(preflight["run"])

@@ -29,7 +29,7 @@ jobs:
     # deliberate policy. A publish that never happened must fail loudly, not
     # hang. Enforced by dev/ci/tests/test_runner_queue_watchdog.py, which
     # refused this workflow until the job was added.
-    name: Cadrumo / runner queue watchdog
+    name: "Check: Runner queue (Linux)"
     # Shares the smoke lane's dependencies deliberately. GitHub does not
     # create a dependent job's record until its dependencies resolve, so an
     # ungated watchdog would open and close its bounded window before
@@ -56,7 +56,7 @@ jobs:
 
   runtime-inventory:
     timeout-minutes: 20
-    name: Validate stable runtime inventory
+    name: "Check: Runtime inventory (Linux)"
     runs-on: [self-hosted, Linux, X64]
     outputs:
       matrix: ${{ steps.emit-matrix.outputs.matrix }}
@@ -89,7 +89,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          matrix="$(uv run --no-sync python -c 'import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps({"include":[{"os":os,"runtime-id":row.identifier,"python-version":row.selector,"python-minor":row.minor,"phase":row.phase.value,"blocking":row.blocking} for row in inventory.stable for os in (["self-hosted","Linux","X64"],["self-hosted","macOS","ARM64"],["self-hosted","Windows","X64"])]}, separators=(",",":")))')"
+          matrix="$(uv run --no-sync python -c 'import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); print(json.dumps({"include":[{"os":os,"runtime-id":row.identifier,"python-version":row.selector,"python-minor":row.minor,"phase":row.phase.value,"blocking":row.blocking,"check-name":f"Test: Release artifacts {row.minor} {row.phase.value} ({os[1]})"} for row in inventory.stable for os in (["self-hosted","Linux","X64"],["self-hosted","macOS","ARM64"],["self-hosted","Windows","X64"])]}, separators=(",",":")))')"
           # `-n` passes on `{"include":[]}`, which expands to zero smoke jobs.
           # A matrix job with no combinations does not fail, so publication
           # would proceed having proved nothing on any platform. Count the
@@ -108,7 +108,7 @@ jobs:
 
   build:
     timeout-minutes: 120
-    name: Build
+    name: "Build: Release artifacts (Linux)"
     needs: runtime-inventory
     # Hosted. The three distributions are py3-none-any, so the build host
     # cannot affect the artifact, and this repository is public. A release
@@ -161,12 +161,13 @@ jobs:
           retention-days: 5
 
   smoke-test:
-    name: Smoke Test
+    name: "${{ matrix.check-name }}"
     needs: [build, runtime-inventory]
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.runtime-inventory.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 120
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -206,7 +207,7 @@ jobs:
 
   publish-pypi:
     timeout-minutes: 30
-    name: Publish to PyPI
+    name: "Build: Package publication (Linux)"
     needs: smoke-test
     runs-on: [self-hosted, Linux, X64]
     environment:

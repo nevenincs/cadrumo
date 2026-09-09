@@ -33,7 +33,7 @@ jobs:
   # earlier would hold one of only two Linux runner slots through a long build
   # for no coverage. See dev/ci/runner_queue_watchdog.py.
   runner-queue-watchdog:
-    name: Cadrumo / runner queue watchdog
+    name: "Check: Runner queue (Linux)"
     needs: build-release-cohort
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
@@ -55,7 +55,7 @@ jobs:
         run: python3 -m dev.ci.runner_queue_watchdog
 
   cadrumo-packaging-smoke:
-    name: Cadrumo / Ubuntu / Python 3.13 / wheel artifacts
+    name: "Test: Distribution artifacts (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 90
     # Waits on the single cohort build so every lane consumes identical bytes.
@@ -169,7 +169,7 @@ jobs:
   # `set windows-shell := pwsh` drives each recipe, and the smoke modules already
   # branch on os.name for Scripts/.exe layouts.
   cadrumo-packaging-smoke-windows:
-    name: Cadrumo / Windows / Python 3.13 / wheel artifacts
+    name: "Test: Distribution artifacts (Windows)"
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 120
     # Upload-only leg; the sole creator is build-release-cohort (see above).
@@ -269,7 +269,7 @@ jobs:
   # `packaging-smoke` aggregate as the Windows leg; the Linux-only reclamation
   # and sampler are omitted, and no host package-manager (Homebrew) lane runs.
   cadrumo-packaging-smoke-macos:
-    name: Cadrumo / macOS / Python 3.13 / wheel artifacts
+    name: "Test: Distribution artifacts (macOS)"
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 120
     # Upload-only leg; the sole creator is build-release-cohort (see above).
@@ -356,7 +356,7 @@ jobs:
   # id (a per-OS rebuild would diverge the id). Pure-Python generators - no node.
   # This is also the stored bytes the publish authority promotes without rebuild.
   build-release-cohort:
-    name: Cadrumo / build immutable release cohort
+    name: "Build: Release cohort (Linux)"
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 60
     steps:
@@ -423,7 +423,7 @@ jobs:
   # on each claimed platform, minting the sanctioned python-<os> row bound to the
   # one cohort. The three legs stay parallel behind the single cheap build.
   oracle-emit-linux:
-    name: Cadrumo / Linux / immutable-cohort oracle + emit
+    name: "Test: Installed transports (Linux)"
     needs: build-release-cohort
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 60
@@ -469,7 +469,7 @@ jobs:
           overwrite: true
 
   oracle-emit-windows:
-    name: Cadrumo / Windows / immutable-cohort oracle + emit
+    name: "Test: Installed transports (Windows)"
     needs: build-release-cohort
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
@@ -514,7 +514,7 @@ jobs:
           overwrite: true
 
   oracle-emit-macos:
-    name: Cadrumo / macOS / immutable-cohort oracle + emit
+    name: "Test: Installed transports (macOS)"
     needs: build-release-cohort
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 90
